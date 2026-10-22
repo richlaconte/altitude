@@ -521,7 +521,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 /* An avatar that waited for its data sits inside its loading wrapper (display: contents at rest), so the overlap is
    counted from the group's own children either way, imprints included. */
 .alt-avatar-group > .alt-avatar:not(:first-child),
-.alt-avatar-group > :is(.alt-await, .alt-await-wait):not(:first-child) :is(.alt-avatar, .alt-avatar-imprint) { margin-inline-start: calc(var(--size, 36px) * -0.15); }
+.alt-avatar-group > :is(.alt-await, .alt-await-wait):not(:first-child) :is(.alt-avatar, .alt-avatar-imprint) { margin-inline-start: calc(var(--size, 36px) * -0.12); }
 .alt-avatar-group .alt-avatar .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), var(--av-sh); }
 .alt-avatar-group .alt-avatar:is([data-status="offline"], [data-more]) .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), var(--av-plate); }
 .alt-avatar-group .alt-avatar:is([data-live], [data-interactive]:hover, [data-interactive]:focus-visible) .alt-avatar-face { z-index: 5; }

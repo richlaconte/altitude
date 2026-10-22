@@ -21,7 +21,7 @@ The lamp is cut out of the face by a 2px ring of ground. It shows at 24px and la
 
 **Sizes.** 24px in dense rows and tables, 28–32px in lists and groups, 36px (the default) beside a name, 44px on cards, 64px in a profile header.
 
-In an `AvatarGroup`, every face stands on one ground line, each cut out of the one before it by a ring of ground, overlapping by 15% so the initials beneath stay whole. Offline faces are flush plates in the row; a live face lifts in front of its neighbours. `max` caps the faces shown and the rest become a flush "+N" plate whose label names them ("2 more: Eli Ward, Kai Ito"); `size` sizes every face that doesn't set its own. The group is a `role="group"` labelled with how many people it holds ("7 people"); pass your own `aria-label` for something more specific ("Editing now").
+In an `AvatarGroup`, every face stands on one ground line, each cut out of the one before it by a ring of ground, overlapping by 12% so the initials beneath stay whole. Offline faces are flush plates in the row; a live face lifts in front of its neighbours. `max` caps the faces shown and the rest become a flush "+N" plate whose label names them ("2 more: Eli Ward, Kai Ito"); `size` sizes every face that doesn't set its own. The group is a `role="group"` labelled with how many people it holds ("7 people"); pass your own `aria-label` for something more specific ("Editing now").
 
 **Loading.** While `name` is undefined (`user?.name` while your data loads), or a promise, the avatar is an imprint of its `size` and `shape`; it rises out of it when the name arrives (see `Await`).
 
