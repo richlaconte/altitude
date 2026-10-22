@@ -29,6 +29,8 @@
       "require": "./dist/index.cjs"
     },
     "./altitude.css": "./dist/altitude.css",
+    "./altitude.no-fonts.css": "./dist/altitude.no-fonts.css",
+    "./fonts.css": "./dist/fonts.css",
     "./tokens.css": "./dist/tokens.css",
     "./tokens.json": "./dist/tokens.json",
     "./altitude.iife.js": "./dist/altitude.iife.js",

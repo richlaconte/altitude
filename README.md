@@ -33,6 +33,8 @@ Render `AltitudeProvider` once around your app. Schemes are `daylight`, `nightfa
 |---|---|
 | `altitude-design` | the components (ESM and CommonJS, with types) |
 | `altitude-design/altitude.css` | tokens and component styles in one file (it also loads Instrument Sans and JetBrains Mono from Google Fonts) |
+| `altitude-design/altitude.no-fonts.css` | the same styles without the Google Fonts import, so the page makes no third-party request; self-host the fonts or set `--font-sans` and `--font-mono` to your own (both fall back to system fonts) |
+| `altitude-design/fonts.css` | just the Google Fonts import, to pair with `tokens.css` or `altitude.no-fonts.css` |
 | `altitude-design/tokens.css`, `altitude-design/tokens.json` | the tokens on their own |
 | `altitude-design/altitude.iife.js` | a `<script>` build that sets `window.Altitude`, for pages without a bundler; it expects React 18's UMD builds as `window.React` and `window.ReactDOM` |
 

@@ -1,7 +1,9 @@
 // Builds the npm package into dist/ from the design system's own sources in project/.
 //   dist/index.js, dist/index.cjs   the components (ESM and CommonJS; React is a peer dependency)
 //   dist/types/                     declarations emitted from the sources
-//   dist/altitude.css               tokens and component styles in one file
+//   dist/altitude.css               tokens and component styles in one file, with the Google Fonts import
+//   dist/altitude.no-fonts.css      the same without the font import: no third-party request
+//   dist/fonts.css                  the font import on its own
 //   dist/tokens.css, tokens.json    the tokens on their own
 //   dist/altitude.iife.js           the same bundle the design system uses: a <script> that sets window.Altitude
 // --css-only writes just the stylesheets (Storybook uses it).
@@ -21,6 +23,8 @@ if (!cssOnly) rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist', { recursive: true });
 writeFileSync('dist/tokens.css', tokens);
 writeFileSync('dist/altitude.css', fontImport + '\n' + tokens + '\n' + rest);
+writeFileSync('dist/altitude.no-fonts.css', tokens + '\n' + rest);
+writeFileSync('dist/fonts.css', fontImport);
 if (cssOnly) { console.log('css ok'); process.exit(0); }
 
 copyFileSync('project/tokens.json', 'dist/tokens.json');

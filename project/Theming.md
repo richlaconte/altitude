@@ -34,6 +34,19 @@ Add a theme to `tokens.json` and give it a value for every color and shadow toke
 - Button and key walls are derived (the face colour mixed 34% toward black; `surface-trench` under neutral faces), so a new scheme or a custom accent gets correct walls without new tokens.
 - Shadows keep the four-layer structure (rim, ring, key, ambient) at every level, including `elev-0`, `well` and `trench`, so transitions interpolate.
 
+## Your own fonts
+
+`altitude.css` loads Instrument Sans and JetBrains Mono from Google Fonts. To make no third-party request, import `altitude-design/altitude.no-fonts.css` instead (the same tokens and styles without the `@import`) and either self-host those two families or point the type at your own:
+
+```css
+:root {
+  --font-sans: "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+```
+
+Both tokens already fall back to system fonts, so without either the components still render, in the system face. `altitude-design/fonts.css` is the font import on its own, if you pair `tokens.css` with your own styles but want the fonts. Typography carries no elevation signal, so nothing about height changes with the face.
+
 ## With shadcn/ui
 
 The props mirror shadcn/ui, and the tokens can drive shadcn's own components. Both systems define a variable called `--accent` (in shadcn it means a hover tint), so don't redefine shadcn's `:root` variables on top of Altitude's. Point Tailwind's theme straight at Altitude's tokens instead (Tailwind v4, shadcn's current setup), and delete shadcn's generated color variables:
