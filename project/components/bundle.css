@@ -456,71 +456,75 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 @media (prefers-reduced-motion: reduce) { .alt-badge-lamp[data-pulse] { animation: none; } }
 [data-motion="reduced"] .alt-badge-lamp[data-pulse] { animation: none; }
 
-/* ── Avatar: presence as height, drawn the way the eye judges height above a floor: by the gap between a thing and
-   its shadow (Kersten, Mamassian & Knill 1997). Every face is a disc with a cast shadow on the ground beneath it.
-   Active people hover: the face lifts off and its shadow shrinks and fades. Idle people rest: a tight contact
-   shadow right under them. Offline people lie flat in the page, grey, with no shadow at all. Someone live
-   (speaking, typing, presenting) drifts gently up and down. --hr is the height as a fraction of the face. ── */
+/* ── Avatar: a person is a disc. While they're here (active or idle) it rests on the page like a card, at level 1 with
+   its contact shadow; when they're not (offline) it's part of the record, a plate set flush into the page, grey. Faces
+   are neutral: status hues never stand for a person, and colour stays in the lamp, as on a Badge (filled when active,
+   an empty ring when idle). Only someone live (speaking, typing, presenting), or an avatar you can press under the
+   pointer, leaves the ground: the face lifts and a shadow appears on the page beneath it, smaller and fainter the
+   higher it goes. A detached shadow is what makes an object read as floating rather than resting (Kersten, Mamassian
+   & Knill 1997). --hr is the height as a fraction of the face. ── */
 @property --hr { syntax: "<number>"; inherits: true; initial-value: 0; }
 .alt-avatar {
   --size: 36px; --hr: 0; --lift: calc(var(--size) * var(--hr) * var(--alt-travel));
+  --av-sh: var(--elev-1); --av-plate: inset 0 1px 1.5px color-mix(in oklab, var(--ink) 16%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--ink) 9%, transparent);
   position: relative; isolation: isolate; display: inline-grid; flex: none; width: var(--size); height: var(--size); vertical-align: middle;
   transition: --hr var(--dur-travel-3) var(--ease-settle);
 }
 .alt-avatar-face {
-  position: relative; z-index: 1; display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; border-radius: var(--radius-full);
-  background-color: var(--surface-raised); background-image: radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.2), transparent 60%);
-  box-shadow: inset 0 0 0 1px var(--alt-ring); color: var(--ink);
-  font: 600 calc(var(--size) * 0.36) / 1 var(--font-sans); letter-spacing: 0.01em; user-select: none;
+  position: relative; z-index: 1; display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; border-radius: var(--av-r, var(--radius-full));
+  background: var(--surface-raised); box-shadow: var(--av-sh); color: var(--ink);
+  font: 600 calc(var(--size) * 0.36) / 1 var(--font-sans); user-select: none;
   transform: translateY(calc(-1 * var(--lift)));
-  transition: background-color var(--dur-travel-2), color var(--dur-travel-2), filter var(--dur-travel-2), box-shadow var(--dur-travel-2);
+  transition: background-color var(--dur-travel-2), color var(--dur-travel-2), box-shadow var(--dur-travel-2) var(--ease-rise);
 }
 .alt-avatar-face img { width: 100%; height: 100%; object-fit: cover; }
-/* The cast shadow. The higher the face, the smaller and fainter it gets — that gap is what reads as height. */
+/* One letter has room to be bigger: small faces (under 28px) show only the first. */
+.alt-avatar-face[data-one] { font-size: calc(var(--size) * 0.46); }
+/* A team, an organisation, a bot or an agent is a square tile; its corners (--av-r) grow with its size, from
+   radius-xs to radius-lg. Its shadow, lamp and states are a person's. */
+.alt-avatar[data-shape="square"] .alt-avatar-lamp { inset-inline-end: calc(var(--lamp) * -0.3); bottom: calc(var(--lamp) * -0.3); }
+.alt-avatar[data-shape="square"] .alt-avatar-shadow { left: 8%; right: 8%; border-radius: var(--radius-sm); }
+/* The shadow on the page. At rest it isn't there (the face's own level-1 shadow is its contact shadow); it fades in
+   as the face leaves the ground, then shrinks and fades the higher the face goes: that gap is what reads as height. */
 .alt-avatar-shadow {
-  position: absolute; left: 7%; right: 7%; top: 100%; height: calc(var(--size) * 0.2); margin-top: calc(var(--size) * -0.1);
-  border-radius: 50%; background: radial-gradient(closest-side, var(--alt-cast-deep), var(--alt-cast-deep) 25%, transparent); pointer-events: none;
-  scale: calc(1 - var(--hr) * 1.15); opacity: calc(1 - var(--hr) * 1.7);
+  position: absolute; left: 14%; right: 14%; top: 100%; height: calc(var(--size) * 0.14); margin-top: calc(var(--size) * -0.07);
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, var(--alt-cast-deep), color-mix(in oklab, var(--alt-cast-deep) 55%, transparent) 50%, transparent);
+  opacity: calc(clamp(0, var(--hr) * 12, 1) * (1 - var(--hr) * 1.4)); scale: calc(1 - var(--hr) * 1.1);
 }
-.alt-avatar[data-tint="accent"] .alt-avatar-face { background-color: var(--accent-soft); }
-.alt-avatar[data-tint="positive"] .alt-avatar-face { background-color: var(--positive-soft); }
-.alt-avatar[data-tint="caution"] .alt-avatar-face { background-color: var(--caution-soft); }
-.alt-avatar[data-tint="critical"] .alt-avatar-face { background-color: var(--critical-soft); }
-.alt-avatar[data-status="active"] { --hr: 0.15; }
-.alt-avatar[data-status="offline"] .alt-avatar-face, .alt-avatar[data-tint="more"] .alt-avatar-face {
-  background-color: var(--surface-well); background-image: none; color: var(--ink-muted); box-shadow: inset 0 0 0 1px var(--alt-ring), inset 0 1px 2px var(--alt-cast);
+.alt-avatar:is([data-status="offline"], [data-more]) .alt-avatar-face {
+  background: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%); color: var(--ink-muted); box-shadow: var(--av-plate), 0 1px 0 0 var(--alt-lip);
 }
-.alt-avatar[data-status="offline"] .alt-avatar-face { filter: grayscale(1); }
-.alt-avatar[data-status="offline"] .alt-avatar-face img { opacity: 0.6; }
-.alt-avatar[data-status="offline"] .alt-avatar-shadow, .alt-avatar[data-tint="more"] .alt-avatar-shadow { opacity: 0; }
-.alt-avatar[data-tint="more"] .alt-avatar-face { font-size: calc(var(--size) * 0.32); }
-.alt-avatar[data-live] { animation: alt-drift var(--dur-hover) ease-in-out infinite alternate; }
-@keyframes alt-drift { from { --hr: 0.15; } to { --hr: 0.24; } }
-@media (prefers-reduced-motion: reduce) { .alt-avatar[data-live] { animation: none; --hr: 0.2; } }
-[data-motion="reduced"] .alt-avatar[data-live] { animation: none; --hr: 0.2; }
-.alt-avatar[data-presence] .alt-avatar-face { outline: 2px solid var(--alt-presence); outline-offset: 1px; }
+.alt-avatar[data-status="offline"] .alt-avatar-face img { filter: grayscale(1); opacity: 0.5; }
+.alt-avatar[data-more] .alt-avatar-face { font-size: calc(var(--size) * 0.32); font-weight: 550; font-variant-numeric: tabular-nums; }
+.alt-avatar[data-live] { --av-sh: var(--elev-2); animation: alt-drift var(--dur-hover) ease-in-out infinite alternate; }
+@keyframes alt-drift { from { --hr: 0.14; } to { --hr: 0.22; } }
+@media (prefers-reduced-motion: reduce) { .alt-avatar[data-live] { animation: none; --hr: 0.18; } }
+[data-motion="reduced"] .alt-avatar[data-live] { animation: none; --hr: 0.18; }
+/* Presence colour, drawn as a hold is (heldBy): 2px, 2px out. */
+.alt-avatar[data-presence] .alt-avatar-face { outline: 2px solid var(--alt-presence); outline-offset: 2px; }
+/* The lamp is a Badge lamp, cut out of the face by a ring of ground: filled when active, an empty ring when idle. */
 .alt-avatar-lamp {
-  --b-lamp: var(--positive);
-  position: absolute; z-index: 2; right: 0; bottom: 0; width: max(8px, calc(var(--size) * 0.24)); height: max(8px, calc(var(--size) * 0.24)); border-radius: var(--radius-full);
+  --b-lamp: var(--positive); --lamp: clamp(8px, calc(var(--size) * 0.2), 12px);
+  position: absolute; z-index: 2; inset-inline-end: 0; bottom: 0; width: var(--lamp); height: var(--lamp); border-radius: var(--radius-full);
   background: var(--b-lamp); box-shadow: 0 0 0 2px var(--surface-ground); transform: translateY(calc(-1 * var(--lift)));
 }
-.alt-avatar[data-status="idle"] .alt-avatar-lamp { --b-lamp: var(--caution); }
-.alt-avatar[data-interactive]:hover, .alt-avatar[data-interactive]:focus-visible { --hr: 0.3; }
+.alt-avatar[data-status="idle"] .alt-avatar-lamp { background: var(--surface-raised); box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 clamp(2px, calc(var(--size) * 0.05), 3px) var(--caution); }
 .alt-avatar[data-interactive] { cursor: pointer; outline: none; }
+.alt-avatar[data-interactive]:hover, .alt-avatar[data-interactive]:focus-visible { --hr: 0.26; --av-sh: var(--elev-2); }
+.alt-avatar[data-interactive]:active { --hr: 0; --av-sh: var(--elev-0); transition-duration: var(--dur-press); }
 .alt-avatar[data-interactive]:focus-visible .alt-avatar-face { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
-.alt-avatar-group { isolation: isolate; display: inline-flex; align-items: flex-end; padding: calc(var(--size, 36px) * 0.32) 0 calc(var(--size, 36px) * 0.1); }
+/* Group: every face stands on one ground line, cut out of the one before it by a ring of ground. Later faces are
+   laid on top, overlapping by 15% of a face, which keeps the initials beneath whole. */
+.alt-avatar-group { isolation: isolate; display: inline-flex; align-items: flex-end; padding: calc(var(--size, 36px) * 0.26) 0 calc(var(--size, 36px) * 0.08); }
 .alt-avatar-group .alt-avatar { isolation: auto; }
-/* Faces overlap by a fifth. An avatar that waited for its data sits inside its loading wrapper (display: contents at
-   rest), so the overlap is counted from the group's own children either way, imprints included. */
+/* An avatar that waited for its data sits inside its loading wrapper (display: contents at rest), so the overlap is
+   counted from the group's own children either way, imprints included. */
 .alt-avatar-group > .alt-avatar:not(:first-child),
-.alt-avatar-group > :is(.alt-await, .alt-await-wait):not(:first-child) :is(.alt-avatar, .alt-avatar-imprint) { margin-left: calc(var(--size, 36px) * -0.22); }
-/* Overlapping faces are cut out of each other with a ring of ground; higher faces sit in front. */
-.alt-avatar-group .alt-avatar .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring); }
-.alt-avatar-group .alt-avatar[data-status="offline"] .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring), inset 0 1px 2px var(--alt-cast); }
-.alt-avatar-group .alt-avatar[data-status="active"] .alt-avatar-face { z-index: 3; }
-.alt-avatar-group .alt-avatar[data-status="idle"] .alt-avatar-face { z-index: 2; }
-.alt-avatar-group .alt-avatar:not([data-tint="more"]):hover { --hr: 0.32; }
-.alt-avatar-group .alt-avatar:not([data-tint="more"]):hover .alt-avatar-face { z-index: 5; }
+.alt-avatar-group > :is(.alt-await, .alt-await-wait):not(:first-child) :is(.alt-avatar, .alt-avatar-imprint) { margin-inline-start: calc(var(--size, 36px) * -0.15); }
+.alt-avatar-group .alt-avatar .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), var(--av-sh); }
+.alt-avatar-group .alt-avatar:is([data-status="offline"], [data-more]) .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), var(--av-plate); }
+.alt-avatar-group .alt-avatar:is([data-live], [data-interactive]:hover, [data-interactive]:focus-visible) .alt-avatar-face { z-index: 5; }
 .alt-avatar-group .alt-avatar-lamp { display: none; }
 
 /* ── Skeleton: an imprint of the content to come, pressed into the page. Light passes over it while it waits; when the
@@ -1492,5 +1496,6 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   .alt-board-card { border: 1px solid CanvasText; } .alt-board-card[data-carried] { border-width: 2px; } .alt-board[data-carrying] .alt-board-col { border: 1px dashed CanvasText; } .alt-board[data-carrying] .alt-board-col[data-over] { border: 2px dashed Highlight; } .alt-board-slot { outline-color: CanvasText; }
   .alt-tr[data-row-held] > .alt-td { border-block: 2px solid CanvasText; } .alt-table-slot { outline-color: CanvasText; } .alt-table-wrap[data-top] .alt-th { border-bottom: 1px solid CanvasText; }
   .alt-step[data-state="current"] { border: 1px solid CanvasText; } .alt-step[data-state="upcoming"] { border: 1px dashed CanvasText; } .alt-step-mark { border: 1px solid CanvasText; } .alt-step-line[data-done] { background: Highlight; }
-  .alt-avatar[data-status="offline"] .alt-avatar-face { border: 1px dashed CanvasText; } .alt-avatar[data-status="active"] .alt-avatar-face { border: 2px solid CanvasText; }
+  .alt-avatar:is([data-status="offline"], [data-more]) .alt-avatar-face { border-color: GrayText; } .alt-avatar[data-live] .alt-avatar-face { border-width: 2px; }
+  .alt-avatar[data-status="active"] .alt-avatar-lamp { forced-color-adjust: none; background: CanvasText; }
 }

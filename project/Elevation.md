@@ -35,7 +35,7 @@ Rules that follow:
 - **One camera.** Everything is seen from slightly in front of and above the page. Under a raised face you see its front wall; inside an opening you see its back wall, just below the top edge. Buttons and steps show the first; empty fields and the accordion's compartment show the second.
 - **Visible thickness.** Pressable things (buttons, keys, breadcrumb steps) show their height as a wall under the face: `wall-1` (2px) at level 1, `wall-2` (4px) at level 2, 1px more on hover, none when pressed. It's the same cue as the cast shadow, displacement read as height, made solid.
 - **Shading polarity.** Pressable things carry `--alt-sheen`, a 2–5 L* light-to-dark face gradient (convex), and wells carry a dark top edge (concave). That polarity is the cue the visual system reads before attention; pressing flattens the sheen.
-- **Detached shadows.** A disc that hovers (an avatar) casts its own shadow on the ground beneath it; the gap between them, and how small and faint the shadow gets, is the height. Moving a shadow alone is enough to make people see an object rise (Kersten et al., see **Research**).
+- **Detached shadows.** A disc that leaves the page (a live avatar) casts its own shadow on the ground beneath it; the gap between them, and how small and faint the shadow gets, is the height. A contact shadow reads as resting and a detached one as floating, and moving a shadow alone is enough to make people see an object rise (Kersten et al., see **Research**).
 - **One light, straight above.** Shadows fall only downward, so layouts mirror cleanly for right-to-left languages.
 
 ## What height tells you
@@ -46,7 +46,7 @@ Rules that follow:
 | **Affordance** | raised + wall + sheen = press it; sunk = fill it | every control |
 | **Interactivity** | only things that act lift on hover | `Card interactive`, `Surface interactive` |
 | **Selection** | every choice is built like the Switch: off is an empty trench; on pours the accent in and sets a raised white mark on it (the switch and radio thumb, the checkbox's check). A radio group is one switch with several positions, so its single thumb slides to the chosen option. In folder tabs the chosen tab and its panel are one raised sheet on top of the others | `Switch`, `Checkbox`, `RadioGroup`, `Tabs` |
-| **Presence** | the gap between a face and its shadow: active people hover (the shadow drops away), idle ones rest on the page, offline ones lie flat and grey; someone live drifts | `Avatar` |
+| **Presence** | people who are here rest on the page at level 1 (a filled lamp when active, an empty ring when idle); offline people are plates flush in the page, grey; someone live lifts off their shadow and drifts | `Avatar` |
 | **Loading** | content to come is an imprint pressed into the page; it rises out of the imprint when it lands. Components whose content is still undefined (or a promise) draw their own imprint, at their own size, from their own Suspense boundary | `Skeleton`, `Await` (Suspense-native `Avatar`, `Badge`, `Card`, `DataTable`) |
 | **Status** | status that informs is a tinted sheet resting on the page (paper edge, contact shadow); status that asks for action is a raised card; dismissing lifts the sheet off; several make a stack whose peeking sheets show their tones | `Alert`, `AlertStack` |
 | **Labels** | a label is part of the record: an indicator plate set flush into the page, with a lamp for status that relights when it changes; only a count, which wants your attention, floats | `Badge` |

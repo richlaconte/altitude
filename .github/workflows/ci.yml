@@ -59,6 +59,7 @@ jobs:
           node shoot.mjs "" daylight,nightfall,mesa,alpine 960
           node checks/approach-and-lamps.mjs
           node checks/field-focus.mjs
+          node checks/avatar.mjs
 
       - name: Type-check against React 19
         run: npm run typecheck

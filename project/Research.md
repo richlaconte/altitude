@@ -41,7 +41,7 @@ So elevation should encode **a few ordered categories**, never a continuous valu
 - **Workspace awareness**: in shared spaces, people need to see who is working where and on what ([Gutwin & Greenberg, 2002](https://collablab.northwestern.edu/CollabolabDistro/nucmc/GutwinGreenberg_FrameworkWorkspaceAwareness.pdf)).
 - **Design frictions**: small, deliberate obstacles that prompt a moment of reflection before consequential actions ([Cox et al., 2016](https://oro.open.ac.uk/47011)).
 - **Illusion of completeness**: people stop scrolling when a page looks finished ([Nielsen Norman Group](https://www.nngroup.com/videos/illusion-completeness/)). Scroll shadows are a long-standing CSS answer ([Verou, 2012](https://lea.verou.me/2012/04/background-attachment-local/)).
-- **Cast shadows carry height.** When only a ball's shadow moves, people see the ball itself rise off the floor ([Kersten, Mamassian & Knill, 1997](https://journals.sagepub.com/doi/10.1068/p260171); [demonstrations](https://kerstenlab.psych.umn.edu/demos/shadows)). Avatars use exactly this: presence is the gap between a face and its shadow.
+- **Cast shadows carry height.** When only a ball's shadow moves, people see the ball itself rise off the floor ([Kersten, Mamassian & Knill, 1997](https://journals.sagepub.com/doi/10.1068/p260171); [demonstrations](https://kerstenlab.psych.umn.edu/demos/shadows)). Avatars use exactly this: a live face lifts off its shadow, while everyone else here rests on theirs (see E12).
 - Apple's 2025 Liquid Glass puts controls on a functional layer floating above content and says to avoid glass on glass ([WWDC25](https://developer.apple.com/videos/play/wwdc2025/219)), the same rule as Altitude's "one summit".
 
 ### Anticipation and feedforward
@@ -128,7 +128,7 @@ Three treatments were prototyped against the original (flat face, drop shadow) a
 A design review, not a measurement: each candidate was rendered in Daylight and Nightfall at 2× and judged against two questions: does it say the component's meaning in Altitude's own vocabulary, and does it suggest an affordance it doesn't have?
 
 - **Badges.** Ten treatments: strong deboss, deboss with an inside wall, embossed label tape, sticker, rubber stamp, engraved type, inlay, severity steps, a trench socket with a raised mark, and an indicator plate with a lamp. The **lamp plate** won: it extends the hardware the system already has (keys with walls, switch tracks and thumbs) and keeps colour in a small lit bead, so plates stay calm in dense tables. The socket read as a toggle switch (a false affordance), severity steps read as signal strength (an inverted meaning), and the stamps and stickers looked like every other library's badge.
-- **Avatars.** Keycap tiles with walls were rejected because walls mean "press it" everywhere else. The **detached shadow** was kept: it draws presence with a cue people already read as height (above), needs no outline, and survives dark schemes once the shadow core is dense enough.
+- **Avatars.** Keycap tiles with walls were rejected because walls mean "press it" everywhere else. The **detached shadow** was kept: it draws presence with a cue people already read as height (above), needs no outline, and survives dark schemes once the shadow core is dense enough. (Revised in E12: the detached shadow now belongs to live people only.)
 - **Tabs.** A walled pill carried between tabs fought the smooth glide people liked. **Folder tabs** say "the sheet on top is the one you're reading" with one raised piece and no extra decoration; the glide survives as the segmented variant.
 - **Alerts.** A flush band carried no elevation at all; a plaque set into the page looked heavy. A **sheet resting on the page** (paper edge, contact shadow) keeps alerts on the ground tier while giving them the same physicality as Pile and Drilldown, and lets several of them stack.
 
@@ -161,6 +161,22 @@ A review of three things that looked right in stills and didn't hold up in use. 
 - **Deepening under the action only.** Deepening whenever a pointer crossed the region would spend motion on every pass. Deepening only while the primary action is pointed at or focused previews what pressing it does (a record lands here), which makes it feedforward.
 - **No pulse.** Anything looping on an empty state spends the attention budget on the least important thing on screen.
 
+### E12 · Why didn't the avatar look like the rest of the system?
+
+A design review like E8: the avatar was rendered beside Badge, Button, Card, Stepper and Pile in all four schemes at 2×, then two directions were rendered side by side with photos, sizes from 24 to 64px, a group, and the avatar in a list row and a card. It was compared with the avatar guidance of Fluent 2, Primer, Atlassian and Carbon, and with Slack's and Teams' presence conventions.
+
+What didn't fit, each against a rule the rest of the system already keeps:
+
+- **Status colours as identity.** Faces were tinted from `accent`, `positive`, `caution` and `critical` by a hash of the name, so a person could wear `critical-soft` and read as an error, and in the dark schemes the tints went muddy. The README reserves those hues for status. Fluent and Flux hash names into a palette of 12–30 identity colours that has no other meaning; Altitude has no such palette, and inventing one would break "never invent an in-between colour". Badge already answered the same question (E8, E10): keep the plate calm and put colour in a small lamp.
+- **Offline drawn as an opening.** The offline face was `surface-well` with an inset shadow: the sunk tier, which means "waiting to receive". An offline person is part of the record, so the face is now a badge plate: flush, ground tier.
+- **Three heights one level apart.** Active hovered about 15% of its size and idle rested, both inside the raised tier, which the laws forbid when the difference is a meaning. At 24–44px the gap between them was 3–6px and the soft shadow under an active face read as a grey underline. In collaborative tools presence is coarse ([Gutwin & Greenberg](https://grouplab.cpsc.ucalgary.ca/grouplab/uploads/Publications/Publications/1995-Awareness.NZ.pdf)), and Slack itself shows only active and away, as a filled or a hollow dot.
+- **A gloss of its own.** A radial white highlight that nothing else in the system uses.
+- **A ragged group that lifted on hover.** Active faces stood higher than idle ones, and every face lifted under the pointer whether or not clicking did anything, against "hover is a promise".
+
+**Decision.** Height says whether a person is here, not how busy they are. Everyone here rests on the page at level 1 with the card's own shadow; active and idle differ by the lamp's shape (filled, or an empty ring, as Badge's unlit lamp), so the difference survives colour blindness and forced colours (a common complaint about Teams' green and yellow, which differ by hue alone). The detached shadow is kept for what it says best: in "The art of the float" ([2023](https://pmc.ncbi.nlm.nih.gov/articles/PMC10434713)), a contact shadow made an object read as resting and a detached one as floating, so leaving the ground is now a categorical signal, used only by someone live and by a pressable avatar under the pointer. Faces are neutral `surface-raised`. Groups stand on one ground line with 15% overlap, because at a fifth plus the ground cut-out a later face covered the initials beneath it. Initials take the first and last words and skip punctuation and emoji, after the problems listed in ["Names are complex"](https://hey.georgie.nu/avatar-initials/) for "Mara de Quist"-style names; below 28px they drop to one letter.
+
+**Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
@@ -170,6 +186,7 @@ A review of three things that looked right in stills and didn't hold up in use. 
 - **Pointer-driven parallax, tilt and lean.** Motion parallax is a strong depth cue, but continuous parallax is a vestibular trigger and adds motion that isn't tied to a change of state. Lean (a face following the pointer by up to 2px) and raised things climbing toward an approaching pointer were tried and removed: see E10. Approach survives only as an opening deepening, bounded, local and removed under reduced motion.
 - **Glossy lamps and accent rims on fields.** See E10.
 - **Keycap avatars, socket badges, severity bars.** See E8.
+- **Hashed identity tints and presence as three heights on avatars.** See E12.
 - **Read wear as altitude.** Frequent use is a different idea from "now", and raising frequently used items would make positions drift. A worn-edge treatment may suit it better; not built.
 
 ## How to validate with people
