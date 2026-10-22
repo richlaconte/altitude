@@ -2,12 +2,28 @@ import type * as React from 'react';
 
 /** The eight rungs of the elevation ladder. Negative = sunk into the ground, positive = raised above it. */
 export type Level = -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5;
-export type Scheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
+export type BuiltInScheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
+/** A built-in scheme, or the name of your own [data-theme="…"] block. */
+export type Scheme = BuiltInScheme | (string & {});
+export type SchemeColorToken = 'surface-trench' | 'surface-well' | 'surface-ground' | 'surface-raised' | 'surface-lifted' | 'surface-floating' | 'surface-overlay' | 'surface-modal'
+  | 'ink' | 'ink-muted' | 'ink-faint' | 'line' | 'line-control' | 'accent' | 'on-accent' | 'accent-ink' | 'accent-soft'
+  | 'positive' | 'positive-soft' | 'caution' | 'caution-soft' | 'critical' | 'critical-soft' | 'on-critical'
+  | 'presence-1' | 'presence-2' | 'presence-3' | 'on-presence' | 'scrim';
+export type SchemeShadowToken = 'trench' | 'well' | 'elev-0' | 'elev-1' | 'elev-2' | 'elev-3' | 'elev-4' | 'elev-5' | 'lip-top' | 'lip-bottom';
+/** Your own scheme: tokens laid over a built-in one, scoped to the provider. It must keep the invariants checkScheme tests. */
+export interface CustomScheme {
+  /** Stamped as data-scheme on the provider's root. */
+  name: string;
+  /** The built-in scheme under your tokens: tokens you leave out, and light or dark handling, come from it. nightfall or alpine for a dark scheme. Default 'daylight'. */
+  base?: BuiltInScheme;
+  /** Colour and shadow tokens by name, without `--`. Shadows keep the four-layer structure; under high contrast they give way to slabs as the built-in ones do. */
+  tokens: Partial<Record<SchemeColorToken | SchemeShadowToken, string>>;
+}
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical';
 
 export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** A built-in scheme. Omit to inherit the scheme set on <html data-theme>. */
-  scheme?: Scheme;
+  /** A built-in scheme, the name of your own [data-theme] block, or a CustomScheme (which warns in the console if it breaks the invariants). Omit to inherit the scheme set on <html data-theme>. */
+  scheme?: Scheme | CustomScheme;
   /** Any hex colour. accent, on-accent, accent-ink and accent-soft are derived to stay legible on every surface of the scheme. */
   accent?: string;
   /** 'system' follows prefers-reduced-motion. 'reduced' keeps altitude changes but removes travel and scale. Default 'system'. */
@@ -745,6 +761,12 @@ export declare function Drilldown(props: DrilldownProps): React.ReactElement;
 export declare function deriveAccent(accent: string, surfaces: string[]): React.CSSProperties;
 /** WCAG contrast ratio of two hex colours. */
 export declare function contrast(a: string, b: string): number;
+/**
+ * Check a scheme's colours against the invariants every scheme keeps (the surface ladder climbs; text, control edges and
+ * presence colours hold contrast on every surface). Pass the colour tokens by name, or an element to read them from.
+ * Returns one sentence per problem; [] passes.
+ */
+export declare function checkScheme(colors: Partial<Record<SchemeColorToken, string>> | Element): string[];
 
 declare global {
   interface Window {
@@ -758,7 +780,7 @@ declare global {
       HoldButton: typeof HoldButton; Pile: typeof Pile; ScrollArea: typeof ScrollArea; DropZone: typeof DropZone; SortableList: typeof SortableList; Drilldown: typeof Drilldown; useDepth: typeof useDepth; useApproach: typeof useApproach;
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
-      CommandPalette: typeof CommandPalette; commandScore: typeof commandScore;
+      CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
       Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; Stepper: typeof Stepper;
       Board: typeof Board; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

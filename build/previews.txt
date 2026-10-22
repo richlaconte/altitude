@@ -86,23 +86,30 @@ function App() {
   </>;
 }
 
-=== AltitudeProvider | <!-- @dsCard group="Foundations" height=300 subtitle="Schemes and a custom accent" -->
+=== AltitudeProvider | <!-- @dsCard group="Foundations" height=520 subtitle="Schemes, a custom accent and a custom scheme" -->
 --- css
-.schemes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.schemes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .shell { border-radius: var(--radius-lg); border: 1px solid var(--line); overflow: hidden; }
 .scheme { padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 220px; }
 .scheme h4 { margin: 0; font: 600 14px/20px var(--font-sans); }
 .scheme small { margin-top: -8px; font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
 .scheme .alt-btn { align-self: flex-start; }
 --- jsx
-const list = [['daylight'], ['nightfall'], ['mesa'], ['alpine'], ['daylight', '#0f8a6b']];
+// A custom scheme: warm paper grounds and green ink laid over mesa. checkScheme() passes it.
+const paper = { name: 'paper', base: 'mesa', tokens: {
+  'surface-trench': '#e5e1d2', 'surface-well': '#edeadf', 'surface-ground': '#f5f3ea', 'surface-raised': '#fffdf7',
+  'surface-lifted': '#fffdf8', 'surface-floating': '#fffefa', 'surface-overlay': '#fffefb', 'surface-modal': '#fffefc',
+  ink: '#1f3329', 'ink-muted': '#4b5d53', 'ink-faint': '#949b8e', line: '#e2ded0', 'line-control': '#76806f',
+  accent: '#284d39', 'on-accent': '#ffffff', 'accent-ink': '#284d39', 'accent-soft': '#e1e9dc',
+} };
+const list = [['daylight'], ['nightfall'], ['mesa'], ['alpine'], ['daylight', '#0f8a6b'], [paper]];
 function App() {
   return (
     <div className="schemes">
       {list.map(([s, accent], i) => (
         <A.AltitudeProvider key={i} scheme={s} accent={accent} className="shell"><div className="scheme">
-          <h4>{s[0].toUpperCase() + s.slice(1)}</h4>
-          <small>{accent ? 'accent="' + accent + '"' : 'scheme="' + s + '"'}</small>
+          <h4>{typeof s === 'string' ? s[0].toUpperCase() + s.slice(1) : 'Custom'}</h4>
+          <small>{accent ? 'accent="' + accent + '"' : typeof s === 'string' ? 'scheme="' + s + '"' : 'scheme={paper}'}</small>
           <A.Button variant="primary" size="sm">Publish</A.Button>
           <A.Input size="sm" placeholder="Search" />
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><A.Switch defaultChecked aria-label="Enabled" /><A.Badge tone="accent">Beta</A.Badge></div>

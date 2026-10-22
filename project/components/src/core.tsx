@@ -221,15 +221,88 @@ export function deriveAccent(accent: string, surfaces: string[]) {
   } as React.CSSProperties;
 }
 
+/* ───────────────────────── custom schemes ───────────────────────── */
+
+const SURFACES = ['surface-trench', 'surface-well', 'surface-ground', 'surface-raised', 'surface-lifted', 'surface-floating', 'surface-overlay', 'surface-modal'] as const;
+export type SchemeColorToken = typeof SURFACES[number] | 'ink' | 'ink-muted' | 'ink-faint' | 'line' | 'line-control'
+  | 'accent' | 'on-accent' | 'accent-ink' | 'accent-soft' | 'positive' | 'positive-soft' | 'caution' | 'caution-soft'
+  | 'critical' | 'critical-soft' | 'on-critical' | 'presence-1' | 'presence-2' | 'presence-3' | 'on-presence' | 'scrim';
+export type SchemeShadowToken = 'trench' | 'well' | 'elev-0' | 'elev-1' | 'elev-2' | 'elev-3' | 'elev-4' | 'elev-5' | 'lip-top' | 'lip-bottom';
+
+// The invariants of Theming.md ("Making a new scheme"), as [text, ground, minimum ratio]; build/tokens.py checks the same.
+const PAIRS: Array<[string, string, number]> = [];
+for (const t of ['ink', 'ink-muted', 'accent-ink', 'positive', 'caution', 'critical']) for (const g of SURFACES) PAIRS.push([t, g, 4.5]);
+for (const [t, g] of [['ink', 'accent-soft'], ['accent-ink', 'accent-soft'], ['positive', 'positive-soft'], ['caution', 'caution-soft'], ['critical', 'critical-soft'],
+  ['ink', 'critical-soft'], ['ink', 'positive-soft'], ['ink', 'caution-soft'], ['ink-muted', 'accent-soft'], ['on-accent', 'accent'], ['on-critical', 'critical']]) PAIRS.push([t, g, 4.5]);
+for (const g of ['surface-ground', 'surface-well', 'surface-raised', 'surface-trench']) PAIRS.push(['line-control', g, 3], ['accent', g, 3]);
+for (const p of ['presence-1', 'presence-2', 'presence-3']) { PAIRS.push(['on-presence', p, 4.5]); for (const g of SURFACES) PAIRS.push([p, g, 3]); }
+const isHex = (v: string) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v);
+
+/**
+ * Check a scheme against the invariants every scheme keeps: the surfaces climb in lightness (trench < well < ground
+ * < raised ≤ … ≤ modal) and text, control edges and presence colours hold their contrast on every surface. Pass the
+ * colour tokens by name (without `--`), or an element to read them from. Returns one sentence per problem; [] passes.
+ * Only hex values can be measured; any other value of a checked token is reported.
+ */
+export function checkScheme(colors: Partial<Record<SchemeColorToken, string>> | Element): string[] {
+  const cs = typeof Element !== 'undefined' && colors instanceof Element ? getComputedStyle(colors) : null;
+  const get = (n: string) => (cs ? cs.getPropertyValue('--' + n) : (colors as Record<string, string | undefined>)[n] ?? '').trim();
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const ok = (n: string) => {
+    const v = get(n);
+    if (isHex(v)) return true;
+    if (!seen.has(n)) { seen.add(n); out.push(v ? `${n} is ${v}: use a 3- or 6-digit hex colour so it can be checked.` : `${n} is missing.`); }
+    return false;
+  };
+  const L = (n: string) => lum(hexToRgb(get(n)));
+  for (let i = 1; i < SURFACES.length; i++) {
+    const lo = SURFACES[i - 1], hi = SURFACES[i];
+    if (!ok(lo) || !ok(hi)) continue;
+    // Light schemes reach white at raised, so the upper rungs may tie; the lower three must step.
+    if (i <= 3 ? L(hi) <= L(lo) : L(hi) < L(lo)) out.push(`${hi} (${get(hi)}) must be ${i <= 3 ? 'lighter than' : 'at least as light as'} ${lo} (${get(lo)}).`);
+  }
+  for (const [t, g, min] of PAIRS) {
+    if (!ok(t) || !ok(g)) continue;
+    const r = contrast(get(t), get(g));
+    if (r < min) out.push(`${t} on ${g} is ${r.toFixed(2)}:1; it needs ${min}:1.`);
+  }
+  return out;
+}
+
+export interface CustomScheme {
+  /** Stamped as data-scheme on the provider's root. */
+  name: string;
+  /** The built-in scheme your tokens are laid over: any token you leave out comes from it, and so does light or dark
+   *  handling (casts, rims, walls). Use nightfall or alpine for a dark scheme. Default 'daylight'. */
+  base?: BuiltInScheme;
+  /** Colour and shadow tokens by name, without `--`. */
+  tokens: Partial<Record<SchemeColorToken | SchemeShadowToken, string>>;
+}
+
+const SHADOW_OR_LINE = /^(trench|well|elev-\d|lip-top|lip-bottom|line)$/;
+/** A custom scheme as a stylesheet scoped to one provider. Shadows and `line` give way to high contrast, as the built-in ones do. */
+function schemeCss(sel: string, tokens: CustomScheme['tokens']) {
+  const decl = (keep: (k: string) => boolean) => Object.entries(tokens)
+    .filter(([k, v]) => keep(k) && typeof v === 'string' && /^[\w-]+$/.test(k) && !/[;{}<>]/.test(v))
+    .map(([k, v]) => `--${k}: ${v};`).join(' ');
+  const plain = decl((k) => !SHADOW_OR_LINE.test(k)), soft = decl((k) => SHADOW_OR_LINE.test(k));
+  let css = plain ? `${sel} { ${plain} }` : '';
+  if (soft) css += `@media not (prefers-contrast: more) { ${sel}:not([data-contrast="more"], [data-contrast="more"] *) { ${soft} } }`;
+  return css;
+}
+
 /* ───────────────────────── provider ───────────────────────── */
 
-export type Scheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
+export type BuiltInScheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
+/** A built-in scheme, the name of your own [data-theme="…"] block, or a CustomScheme. */
+export type Scheme = BuiltInScheme | (string & {});
 type Ctx = { host: HTMLElement | null; pushLayer: () => () => void };
 const AltitudeContext = React.createContext<Ctx | null>(null);
 export const useAltitude = () => React.useContext(AltitudeContext);
 
 export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivElement> {
-  scheme?: Scheme;
+  scheme?: Scheme | CustomScheme;
   accent?: string;
   motion?: 'system' | 'full' | 'reduced';
   /** 'more' renders elevation as hard, high-contrast slabs (offset = height). 'system' follows prefers-contrast. */
@@ -244,6 +317,19 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
   const [host, setHost] = React.useState<HTMLElement | null>(null);
   const [layers, setLayers] = React.useState(0);
   const [accentVars, setAccentVars] = React.useState<React.CSSProperties | null>(null);
+  const custom = scheme && typeof scheme === 'object' ? scheme : null;
+  const schemeKey = custom ? JSON.stringify(custom) : (scheme as string | undefined);
+  const scope = React.useId();
+  const schemeSel = `.alt-root[data-scheme-id="${scope}"]`;
+
+  // A custom scheme that breaks the invariants says so, once per version of it.
+  const warned = React.useRef('');
+  React.useEffect(() => {
+    if (!custom || !rootRef.current || warned.current === schemeKey) return;
+    warned.current = schemeKey!;
+    const issues = checkScheme(rootRef.current);
+    if (issues.length) console.warn(`Altitude: the scheme "${custom.name}" breaks ${issues.length} of the scheme invariants (see Theming.md):\n` + issues.join('\n'));
+  }, [schemeKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useIsoLayoutEffect(() => {
     if (!accent || !rootRef.current) { setAccentVars(null); return; }
@@ -257,7 +343,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
     const mo = new MutationObserver(compute);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => mo.disconnect();
-  }, [accent, scheme]);
+  }, [accent, schemeKey]);
 
   const api = React.useMemo<Ctx>(() => ({
     host,
@@ -266,9 +352,11 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
 
   return (
     <AltitudeContext.Provider value={api}>
-      <div ref={rootRef} className={cx('alt-root', className)} data-theme={scheme}
+      <div ref={rootRef} className={cx('alt-root', className)} data-theme={custom ? custom.base ?? 'daylight' : scheme}
+        data-scheme={custom?.name} data-scheme-id={custom ? scope : undefined}
         data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined}
         data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>
+        {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
         <div className="alt-stage" data-receded={recede && layers > 0 ? '' : undefined}>{children}</div>
         <div className="alt-layers" ref={setHost} />
       </div>

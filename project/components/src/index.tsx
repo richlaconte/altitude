@@ -1,4 +1,5 @@
-export { AltitudeProvider, useAltitude, useDepth, useApproach, riseDelay, Layer, Surface, Kbd, Icons, Spinner, deriveAccent, contrast, usePresence } from './core';
+export { AltitudeProvider, useAltitude, useDepth, useApproach, riseDelay, Layer, Surface, Kbd, Icons, Spinner, deriveAccent, contrast, checkScheme, usePresence } from './core';
+export type { Scheme, BuiltInScheme, CustomScheme, SchemeColorToken, SchemeShadowToken } from './core';
 export {
   Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter,
   Input, Textarea, Field, Checkbox, RadioGroup, Radio, Switch,

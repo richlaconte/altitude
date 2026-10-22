@@ -24,9 +24,40 @@ Set a scheme with `<AltitudeProvider scheme="mesa">`, or with `data-theme="mesa"
 
 The derivation reruns when the scheme changes, so one brand color works in light and dark. Very pale accents (yellows, pastels) still need checking: a checked checkbox's fill should hold 3:1 against the ground.
 
+## Your own scheme
+
+When a brand needs more than an accent (its own grounds, ink and status colours), pass a custom scheme to the provider:
+
+```tsx
+<AltitudeProvider scheme={{
+  name: 'paper',
+  base: 'mesa',            // light or dark handling, and every token you leave out
+  tokens: {
+    'surface-trench': '#e5e1d2', 'surface-well': '#edeadf', 'surface-ground': '#f5f3ea', 'surface-raised': '#fffdf7',
+    'surface-lifted': '#fffdf8', 'surface-floating': '#fffefa', 'surface-overlay': '#fffefb', 'surface-modal': '#fffefc',
+    ink: '#1f3329', 'ink-muted': '#4b5d53', line: '#e2ded0', 'line-control': '#76806f',
+    accent: '#284d39', 'on-accent': '#ffffff', 'accent-ink': '#284d39', 'accent-soft': '#e1e9dc',
+  },
+}}>
+```
+
+Token names are the ones in `tokens.json`, without `--`; any colour or shadow token can be set. `base` must be `nightfall` or `alpine` for a dark scheme, since casts, rims and the inside walls of openings are drawn differently on dark grounds. The provider scopes the tokens to its own root, so a custom scheme nests like a built-in one; `accent` still works on top of it (derived against your surfaces); and shadows and `line` give way to high contrast as the built-in ones do. Forced colours replaces every colour with the system's, as it does for any scheme.
+
+A custom scheme has to keep the invariants below, or the elevation language and its contrast quietly break. The provider checks them when the scheme is applied and warns in the console with one line per problem. Check them in your own tests too: `checkScheme` takes the colour tokens by name (merge your tokens over the base's from `altitude-design/tokens.json`) or an element to read them from, and returns the problems, `[]` if there are none.
+
+```ts
+import { checkScheme } from 'altitude-design';
+import tokens from 'altitude-design/tokens.json';
+
+const base = Object.fromEntries(tokens.color.tokens.map((t) => [t.name, typeof t.value === 'string' ? t.value : t.value.mesa]));
+expect(checkScheme({ ...base, ...paper.tokens })).toEqual([]);
+```
+
+Only hex colours can be measured; `checkScheme` reports any other value it was asked to check. To ship a scheme as CSS instead, write a `[data-theme="paper"]` block that sets the tokens and pass `scheme="paper"`. Anything the block leaves out falls back to daylight, and nothing checks it for you, so run `checkScheme(element)` on it in a test.
+
 ## Making a new scheme
 
-Add a theme to `tokens.json` and give it a value for every color and shadow token. Keep these invariants:
+To add a scheme to Altitude itself, add a theme to `tokens.json` and give it a value for every color and shadow token. Keep these invariants:
 
 - The surfaces form a ladder: trench < well < ground < raised ≤ lifted ≤ floating ≤ overlay ≤ modal in lightness (dark schemes step up about 3% per level; light schemes go to white at raised).
 - `ink`, `ink-muted`, `accent-ink` and the three status colors each clear 4.5:1 on all eight surfaces. `line-control` and `accent` clear 3:1 on ground, well, trench and raised.
