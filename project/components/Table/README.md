@@ -26,6 +26,8 @@ The header stays flush until rows scroll under it, then rises to `elev-2` (as in
 | `onReorder` | move handles; hidden while a sort is active |
 | `toolbar`, `maxHeight`, `empty` | a filter field or button at the toolbar's end; scroll height; text for no rows |
 
+**Loading.** While `DataTable`'s `rows` is undefined (your query hasn't returned) or a promise, the table keeps its real header over `skeleton.lines` rows of imprinted cells (default 5), so columns don't jump (see `Await`). An empty array is an empty table.
+
 **You provide:** the data or the rows, short column headers in sentence case, numbers right-aligned (`align="end"`), and a `getRowLabel` that names each row the way people refer to it.
 
 - Do filter in place with `relevance` when position matters (a ranked list, a schedule); remove rows instead when it doesn't.

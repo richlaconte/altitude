@@ -506,15 +506,18 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-avatar[data-interactive] { cursor: pointer; outline: none; }
 .alt-avatar[data-interactive]:focus-visible .alt-avatar-face { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .alt-avatar-group { isolation: isolate; display: inline-flex; align-items: flex-end; padding: calc(var(--size, 36px) * 0.32) 0 calc(var(--size, 36px) * 0.1); }
-.alt-avatar-group > .alt-avatar { isolation: auto; margin-left: calc(var(--size) * -0.22); }
-.alt-avatar-group > .alt-avatar:first-child { margin-left: 0; }
+.alt-avatar-group .alt-avatar { isolation: auto; }
+/* Faces overlap by a fifth. An avatar that waited for its data sits inside its loading wrapper (display: contents at
+   rest), so the overlap is counted from the group's own children either way, imprints included. */
+.alt-avatar-group > .alt-avatar:not(:first-child),
+.alt-avatar-group > :is(.alt-await, .alt-await-wait):not(:first-child) :is(.alt-avatar, .alt-avatar-imprint) { margin-left: calc(var(--size, 36px) * -0.22); }
 /* Overlapping faces are cut out of each other with a ring of ground; higher faces sit in front. */
-.alt-avatar-group > .alt-avatar .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring); }
-.alt-avatar-group > .alt-avatar[data-status="offline"] .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring), inset 0 1px 2px var(--alt-cast); }
-.alt-avatar-group > .alt-avatar[data-status="active"] .alt-avatar-face { z-index: 3; }
-.alt-avatar-group > .alt-avatar[data-status="idle"] .alt-avatar-face { z-index: 2; }
-.alt-avatar-group > .alt-avatar:not([data-tint="more"]):hover { --hr: 0.32; }
-.alt-avatar-group > .alt-avatar:not([data-tint="more"]):hover .alt-avatar-face { z-index: 5; }
+.alt-avatar-group .alt-avatar .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring); }
+.alt-avatar-group .alt-avatar[data-status="offline"] .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring), inset 0 1px 2px var(--alt-cast); }
+.alt-avatar-group .alt-avatar[data-status="active"] .alt-avatar-face { z-index: 3; }
+.alt-avatar-group .alt-avatar[data-status="idle"] .alt-avatar-face { z-index: 2; }
+.alt-avatar-group .alt-avatar:not([data-tint="more"]):hover { --hr: 0.32; }
+.alt-avatar-group .alt-avatar:not([data-tint="more"]):hover .alt-avatar-face { z-index: 5; }
 .alt-avatar-group .alt-avatar-lamp { display: none; }
 
 /* ── Skeleton: an imprint of the content to come, pressed into the page. Light passes over it while it waits; when the
@@ -537,6 +540,38 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   to { clip-path: inset(0 round var(--radius-sm)); background-color: transparent; box-shadow: var(--elev-0); }
 }
 @keyframes alt-rise-out { from { transform: translateY(calc(100% * var(--alt-travel))); opacity: 0.25; } }
+
+/* ── Suspense: imprints that come with the component. A component given a promise (Avatar's name or src, a Badge's or
+   a card title's text, a DataTable's rows) holds its own Suspense boundary, and its fallback is its own imprint, drawn
+   from the same props and tokens, so it's the size and shape of what's coming. Card and CardContent hold one for
+   anything of yours that suspends inside them. An imprint waits dur-grace before it shows, so quick loads show nothing;
+   when content lands it rises 8px out of its imprint as the imprint fills in behind it, within the attention budget.
+   Containers just let their content rise. In a RevealGroup, content that lands early stays an imprint until the rest
+   arrive. At rest the wrapper is display: contents: it adds nothing to layout or to your selectors' parent chain. ── */
+.alt-await-wait { display: block; animation: alt-onset var(--dur-travel-1) ease-out var(--dur-grace) backwards; }
+.alt-await-wait[data-inline] { display: inline-block; vertical-align: middle; line-height: 0; }
+.alt-await, .alt-await > .alt-await-face { display: contents; }
+.alt-await[data-phase] { display: block; position: relative; isolation: isolate; }
+.alt-await[data-phase] > .alt-await-face { display: block; }
+.alt-await[data-phase][data-inline], .alt-await[data-phase][data-inline] > .alt-await-face { display: inline-block; vertical-align: middle; line-height: 0; }
+.alt-await-imprint { position: absolute; inset: 0; z-index: -1; }
+.alt-await[data-phase="held"] > .alt-await-face { position: absolute; inset: 0 0 auto; visibility: hidden; }
+.alt-await-held { display: block; }
+.alt-await-held[data-early] { animation: alt-onset var(--dur-travel-1) ease-out var(--alt-grace-left, 0ms) backwards; }
+.alt-await[data-inline] > .alt-await-held { display: inline-block; vertical-align: middle; line-height: 0; }
+.alt-await[data-phase="reveal"] > .alt-await-face { --alt-from-y: 8px; animation: alt-emerge var(--dur-travel-3) var(--ease-rise) var(--alt-rise-delay, 0ms) backwards; }
+.alt-await[data-phase="reveal"] > .alt-await-imprint { animation: alt-await-fill var(--dur-travel-3) linear var(--alt-rise-delay, 0ms) forwards; }
+@keyframes alt-await-fill { to { opacity: 0; } }
+/* Text imprints are as tall as the text they stand for: one line-height of the surrounding type per line. */
+.alt-await-lines { display: flex; flex-direction: column; justify-content: space-around; height: calc(var(--lines, 1) * 1lh); max-width: 100%; }
+.alt-await-lines > .alt-skeleton { flex: none; height: 0.6em; }
+.alt-await-card { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
+.alt-await-card-body { font: 400 15px/23px var(--font-sans); }
+.alt-avatar-imprint { display: inline-block; vertical-align: middle; }
+.alt-badge-imprint { display: inline-block; vertical-align: middle; width: 64px; height: 22px; }
+.alt-badge-imprint[data-variant="count"] { width: 22px; border-radius: var(--radius-full); }
+.alt-check-imprint { display: block; width: 22px; height: 22px; border-radius: var(--radius-xs); }
+.alt-cell-imprint { display: block; height: 0.6em; margin: calc((1lh - 0.6em) / 2) 0; }
 
 /* ── Alert: a sheet laid on the page. Status that informs is a thin tinted sheet resting on the ground — you can see
    its paper edge and the contact shadow under it — and it never floats. Status that asks you to act is a raised
@@ -1424,6 +1459,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 /* Forced colours (Windows High Contrast) drop every box-shadow, which erases elevation entirely
    (measured: the ladder renders as blank). Height falls back to border weight and style. */
 @media (forced-colors: active) {
+  .alt-skeleton { outline: 1px dashed CanvasText; outline-offset: -1px; }
   .alt-surface[data-level="1"], .alt-surface[data-level="2"], .alt-card, .alt-btn:not([data-variant="ghost"]), .alt-tabs-indicator,
   .alt-switch-thumb, .alt-slider-thumb, .alt-kbd, .alt-avatar-face, .alt-sort-item, .alt-pile-top, .alt-pile-sheet, .alt-scroll { border: 1px solid CanvasText; }
   .alt-surface[data-level="3"], .alt-surface[data-level="4"], .alt-pop, .alt-tip, .alt-toast, .alt-sort-item[data-held], [data-held] { border: 2px solid CanvasText; }

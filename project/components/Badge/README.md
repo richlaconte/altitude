@@ -13,6 +13,8 @@ Labels status or metadata. A badge is an **indicator plate**: part of the record
 | `outline` | a `line-control` hairline only | Versions, IDs, counts of things that don't need attention. |
 | `count` | a number on a floating pill (`elev-2`) | Unread or waiting items: the one badge that rises, because it wants you. It pops up when the number changes. Solid `accent` or `critical`; neutral is `surface-floating`. Position it yourself (for example absolutely, over a Button's corner). |
 
+**Loading.** While the label is undefined (your data hasn't arrived) or a promise, the badge is a plate-shaped imprint (see `Await`).
+
 **You provide:** a short label (one or two words, sentence case) or a number for `count`, `tone`, optionally `variant` and `lamp`.
 
 - Do pair status colour with the word: "Outage", never a lamp alone.

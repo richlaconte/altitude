@@ -408,6 +408,49 @@ function App() {
   );
 }
 
+=== Await | <!-- @dsCard group="Display" height=330 subtitle="Pass your data as it is: undefined parts imprint themselves" -->
+--- css
+.card { width: 440px; }
+.who { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+--- jsx
+const USER = { name: 'Mara Quist', role: 'Platform engineer, Lisbon', bio: 'Merged “Faster cold starts” into main. Cold starts are down 38% across all regions.' };
+// Stands in for useQuery or useSWR: undefined until the data arrives.
+function useLoaded(value, ms) {
+  const [data, setData] = React.useState(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setData(value), ms); return () => clearTimeout(t); }, []);
+  return data;
+}
+function Member() {
+  const user = useLoaded(USER, 1200);
+  const status = useLoaded('On call', 1800);
+  return (
+    <A.Card className="card">
+      <A.CardHeader>
+        <div className="who">
+          <A.Avatar name={user?.name} size={44} status="active" />
+          <div className="id">
+            <A.CardTitle>{user?.name}</A.CardTitle>
+            <A.CardDescription skeleton={{ lines: 1, width: '70%' }}>{user?.role}</A.CardDescription>
+          </div>
+          <A.Badge tone="positive">{status}</A.Badge>
+        </div>
+      </A.CardHeader>
+      <A.CardContent skeleton={{ lines: 2 }}>{user?.bio}</A.CardContent>
+    </A.Card>
+  );
+}
+function App() {
+  const [round, setRound] = React.useState(0);
+  React.useEffect(() => { const t = setTimeout(() => setRound((r) => r + 1), 4400); return () => clearTimeout(t); }, [round]);
+  return (
+    <div className="col">
+      <Member key={round} />
+      <p className="cap">No skeleton code: while user is undefined, each part imprints itself at its own size, and rises out of it when the data arrives.</p>
+    </div>
+  );
+}
+
 === Alert | <!-- @dsCard group="Display" height=470 subtitle="Sheets laid on the page; a stack when there are several" -->
 --- css
 .wrap { max-width: 580px; }

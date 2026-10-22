@@ -5,6 +5,6 @@ const config: StorybookConfig = {
   stories: ['./generated/*.mdx', './generated/*.stories.jsx'],
   addons: ['@storybook/addon-docs'],
   core: { disableTelemetry: true },
-  // Served from https://<owner>.github.io/<repo>/: Storybook's static build uses relative paths, so no base is needed.
+  // Served from https://<owner>.github.io/<repo>/storybook/: Storybook's static build uses relative paths, so no base is needed.
 };
 export default config;

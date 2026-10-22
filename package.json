@@ -53,7 +53,8 @@
     "build": "node scripts/build-package.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit --declaration false --emitDeclarationOnly false",
     "storybook": "node scripts/stories.mjs && storybook dev -p 6006",
-    "build-storybook": "node scripts/stories.mjs && storybook build -o storybook-static --quiet"
+    "build-storybook": "node scripts/stories.mjs && storybook build -o storybook-static --quiet",
+    "build-site": "node scripts/build-site.mjs"
   },
   "devDependencies": {
     "@storybook/addon-docs": "10.6.1",
