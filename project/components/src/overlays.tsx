@@ -257,13 +257,16 @@ export interface ModalOptions {
   /** Move focus into the panel once it has risen. Default true. */
   autoFocus?: boolean;
   focusSelector?: string;
+  /** Put focus back where it was on close. Default: autoFocus. */
+  restoreFocus?: boolean;
 }
 /**
  * The machinery every layer above the page shares: presence (mount, rise, exit), the receding page,
  * scroll lock, focus in and back out, Escape and the Tab trap. Dialog, Sheet and CommandPalette use it.
  */
+export const MODAL_FOCUS = '[data-autofocus], input, textarea, select';
 export function useModal({ open, onDismiss, exitMs, panel, modal = true, dismissible = true, summit = false, autoFocus = true,
-  focusSelector = '[data-autofocus], input, textarea, select' }: ModalOptions) {
+  focusSelector = MODAL_FOCUS, restoreFocus = autoFocus }: ModalOptions) {
   const ctx = useAltitude();
   const restore = React.useRef<HTMLElement | null>(null);
   const presence = usePresence(open, exitMs);
@@ -279,7 +282,7 @@ export function useModal({ open, onDismiss, exitMs, panel, modal = true, dismiss
       pop?.();
       if (modal) document.body.style.overflow = prev;
       if (summit) summits--;
-      if (autoFocus) restore.current?.focus?.({ preventScroll: true });
+      if (restoreFocus) restore.current?.focus?.({ preventScroll: true });
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -320,13 +323,19 @@ export interface DialogProps {
   size?: 'sm' | 'md' | 'lg';
   /** Set false for decisions that must be answered: the scrim and Escape won't close it. */
   dismissible?: boolean;
+  /** Where focus goes once it has risen: the first field (the default), the title (for a read surface), or nowhere (you move it yourself). */
+  initialFocus?: 'first-field' | 'title' | false;
+  /** What 'first-field' looks for. Default '[data-autofocus], input, textarea, select'; the panel itself if nothing matches. */
+  focusSelector?: string;
   className?: string;
 }
-export function Dialog({ open, defaultOpen = false, onOpenChange, trigger, title, description, children, footer, size = 'md', dismissible = true, className }: DialogProps) {
+export function Dialog({ open, defaultOpen = false, onOpenChange, trigger, title, description, children, footer, size = 'md', dismissible = true,
+  initialFocus = 'first-field', focusSelector = MODAL_FOCUS, className }: DialogProps) {
   const [isOpen, set] = useControllable(open, defaultOpen, onOpenChange);
   const panel = React.useRef<HTMLDivElement>(null);
   const id = React.useId();
-  const { mounted, state, onKeyDown } = useModal({ open: isOpen, onDismiss: () => set(false), exitMs: EXIT_5, panel, dismissible, summit: true });
+  const { mounted, state, onKeyDown } = useModal({ open: isOpen, onDismiss: () => set(false), exitMs: EXIT_5, panel, dismissible, summit: true,
+    autoFocus: initialFocus !== false, focusSelector: initialFocus === 'title' ? '.alt-dialog-title' : focusSelector, restoreFocus: true });
 
   return (
     <>
@@ -338,7 +347,7 @@ export function Dialog({ open, defaultOpen = false, onOpenChange, trigger, title
             <div ref={panel} role="dialog" aria-modal="true" aria-labelledby={`${id}-t`} aria-describedby={description ? `${id}-d` : undefined}
               tabIndex={-1} className={cx('alt-dialog', className)} data-size={size}>
               <div className="alt-dialog-head">
-                <h2 className="alt-dialog-title" id={`${id}-t`}>{title}</h2>
+                <h2 className="alt-dialog-title" id={`${id}-t`} tabIndex={initialFocus === 'title' ? -1 : undefined}>{title}</h2>
                 {description && <p className="alt-dialog-desc" id={`${id}-d`}>{description}</p>}
               </div>
               {children && <div className="alt-dialog-body">{children}</div>}

@@ -773,6 +773,9 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 .alt-dialog-head { display: flex; flex-direction: column; gap: 6px; padding-right: var(--space-8); }
 .alt-dialog-title { margin: 0; font: 600 19px/26px var(--font-sans); letter-spacing: -0.01em; }
+/* A title that takes focus (initialFocus="title") isn't a control: no ring after a click, the usual ring from the keyboard. */
+.alt-dialog-title:focus { outline: none; }
+.alt-dialog-title:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-xs); }
 .alt-dialog-desc { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink-muted); }
 .alt-dialog-body { margin-top: var(--space-5); font: 400 15px/23px var(--font-sans); }
 .alt-dialog-footer { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-6); }

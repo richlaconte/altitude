@@ -495,6 +495,14 @@ export interface DialogProps {
   size?: 'sm' | 'md' | 'lg';
   /** false: scrim clicks and Escape don't close it, and there is no close button. Default true. */
   dismissible?: boolean;
+  /**
+   * Where focus goes once the dialog has risen. 'first-field' (default): the first match for focusSelector, else the
+   * panel. 'title': the title, for a read surface whose first control is far down. false: nowhere; move it yourself.
+   * Focus returns to where it was on close in every case.
+   */
+  initialFocus?: 'first-field' | 'title' | false;
+  /** What 'first-field' looks for. Default '[data-autofocus], input, textarea, select'. */
+  focusSelector?: string;
   className?: string;
 }
 export declare function Dialog(props: DialogProps): React.ReactElement;

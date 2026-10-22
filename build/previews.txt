@@ -563,10 +563,15 @@ function App() {
 --- jsx
 function App() {
   const [open, setOpen] = React.useState(true);
+  const [note, setNote] = React.useState(false);
   return (
     <div className="col">
-      <div className="row"><A.Button variant="primary" onClick={() => setOpen(true)}>Delete project…</A.Button></div>
+      <div className="row"><A.Button variant="primary" onClick={() => setOpen(true)}>Delete project…</A.Button><A.Button onClick={() => setNote(true)}>View release note</A.Button></div>
       <div className="page"><A.Card /><A.Card /><A.Card /></div>
+      <A.Dialog open={note} onOpenChange={setNote} initialFocus="title" title="Release 2.4" description="Published by Mara Quist on 12 March."
+        footer={<A.Button onClick={() => setNote(false)}>Edit note</A.Button>}>
+        <p className="body">Deployments now keep their logs for 30 days. Preview links work for anyone on the team, and rollbacks finish in under a minute.</p>
+      </A.Dialog>
       <A.Dialog open={open} onOpenChange={setOpen} size="sm" title="Delete “Northwind”?"
         description="This removes 14 deployments and their logs. It can't be undone."
         footer={<><A.Button variant="ghost" onClick={() => setOpen(false)}>Cancel</A.Button><A.Button variant="danger" onClick={() => setOpen(false)} data-autofocus>Delete project</A.Button></>} />
