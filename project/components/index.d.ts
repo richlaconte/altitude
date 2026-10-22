@@ -757,6 +757,27 @@ export interface DrilldownProps extends React.HTMLAttributes<HTMLDivElement> { r
 /** Descend into children, ascend back; the breadcrumb steps down a notch per level. */
 export declare function Drilldown(props: DrilldownProps): React.ReactElement;
 
+export interface EmptyStateProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  /** A line icon, drawn in ink-muted: 24px, or 18px at size sm. */
+  icon?: React.ReactNode;
+  /** What is empty, as a statement ("No gift ideas yet"). It names the region (aria-labelledby). */
+  title: React.ReactNode;
+  /** Why it's empty, or what will appear here. Linked with aria-describedby. */
+  description?: React.ReactNode;
+  /** The one obvious next step: usually a primary Button with a verb-first label. */
+  action?: React.ReactNode;
+  /** A quieter alternative beside it: usually a ghost Button or a link. */
+  secondary?: React.ReactNode;
+  /** md fills a page or a panel; sm fits a widget or a list. Default 'md'. */
+  size?: 'sm' | 'md';
+  /** The title's heading level. Default 3. */
+  headingLevel?: 2 | 3 | 4;
+  /** Announce it politely when it appears, for an empty that follows a change (a filter, a search). true says the title, if it's text; a string says that. */
+  announce?: boolean | string;
+}
+/** An opening the first record will fill: a sunk well with a dashed rim, a title naming what's empty, and one next action. */
+export declare function EmptyState(props: EmptyStateProps): React.ReactElement;
+
 /** Derive accent, on-accent, accent-ink and accent-soft for a brand colour against a scheme's surfaces (first = ground). */
 export declare function deriveAccent(accent: string, surfaces: string[]): React.CSSProperties;
 /** WCAG contrast ratio of two hex colours. */
@@ -781,7 +802,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; Stepper: typeof Stepper;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
       Board: typeof Board; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;

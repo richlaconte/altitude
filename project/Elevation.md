@@ -60,6 +60,7 @@ Rules that follow:
 | **Commitment** | a pending write hovers (after `dur-grace`), a confirmed one lands, a failed one drops into a trench | `status` on `Surface`, `Card` |
 | **Possession** | whatever is in a hand floats at level 3, tilted; a collaborator's hold wears their `presence-*` colour and name | `heldBy`, `SortableList`, `BoardCard heldBy` |
 | **Readiness to receive** | receptacles open (sink) only while something could be dropped into them, and deepen under the pointer | `DropZone`, the slot in `SortableList` |
+| **Emptiness** | a region with nothing in it yet is an opening, a well with a dashed rim that the first record will fill; pointing at its action deepens it to a trench | `EmptyState` |
 | **Relevance** | filtering lifts matches and sinks misses instead of removing them, so positions survive | `relevance` on `Surface`, `Card`, `TableRow` |
 | **Overflow** | edges curve away where content continues; a header rises when content passes under it | `ScrollArea` |
 | **Quantity** | a group shows 0–3 sheets beneath it (2–3, 4–9, 10+ items), with the exact number in a badge; hovering it fans the sheets a little; click it and its items fan out from under the top card, each its own card, floating over the page below without moving anything | `Pile` |

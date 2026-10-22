@@ -13,4 +13,5 @@ export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '.
 export { CommandPalette, commandScore } from './command';
 export { Select, SelectItem, Combobox } from './select';
 export { Stepper } from './stepper';
+export { EmptyState } from './empty';
 export { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption, DataTable, Board, BoardColumn, BoardCard } from './collections';
