@@ -44,6 +44,10 @@ export interface CommandPaletteProps {
   empty?: React.ReactNode | ((query: string) => React.ReactNode);
   /** The letter that opens and closes the palette with ⌘ (macOS) or Ctrl. Default 'k'; false for none. */
   shortcut?: string | false;
+  /** The query, controlled. The palette never clears it on opening: the caller owns it, e.g. a persistent field handing over what was typed. */
+  query?: string;
+  /** What the query is each time the palette opens, uncontrolled. Default ''. */
+  defaultQuery?: string;
   onQueryChange?: (query: string) => void;
   /** Close once an item is chosen. Default true. */
   closeOnSelect?: boolean;
@@ -126,9 +130,10 @@ type Row = { key: string; item: CommandItem; group: CommandGroup; predicted: boo
  * when results change, surviving rows travel to their new places and new ones rise in, a few at a time.
  */
 export function CommandPalette({ items, open, defaultOpen = false, onOpenChange, onSelect, placeholder = 'Type a command or search…', filter, empty,
-  shortcut = 'k', onQueryChange, closeOnSelect = true, hints = true, className, ...rest }: CommandPaletteProps) {
+  shortcut = 'k', query: queryProp, defaultQuery = '', onQueryChange, closeOnSelect = true, hints = true, className, ...rest }: CommandPaletteProps) {
   const [isOpen, set] = useControllable(open, defaultOpen, onOpenChange);
-  const [query, setQuery] = React.useState('');
+  const [innerQuery, setInnerQuery] = React.useState(defaultQuery);
+  const query = queryProp ?? innerQuery;
   const [active, setActive] = React.useState(0);
   const [onset, setOnset] = React.useState(true);
   const [said, setSaid] = React.useState('');
@@ -139,6 +144,9 @@ export function CommandPalette({ items, open, defaultOpen = false, onOpenChange,
   const rowEls = React.useRef(new Map<string, HTMLElement>());
   const prevTops = React.useRef<Map<string, number> | null>(null);
   const byKeyboard = React.useRef(false);
+  const caretPlaced = React.useRef(false);
+  const seed = React.useRef(defaultQuery);
+  seed.current = defaultQuery;
   // Layer mounts its portal a render later; effects that measure rows wait for the panel to exist.
   const [panelEl, setPanelEl] = React.useState<HTMLDivElement | null>(null);
   const panelRef = React.useCallback((el: HTMLDivElement | null) => { (panel as React.MutableRefObject<HTMLDivElement | null>).current = el; setPanelEl(el); }, []);
@@ -157,7 +165,10 @@ export function CommandPalette({ items, open, defaultOpen = false, onOpenChange,
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
   }, [shortcut, isOpen, set]);
-  React.useEffect(() => { if (isOpen) { setQuery(''); setActive(0); setOnset(true); } }, [isOpen]);
+  // Each opening starts from the seed (a controlled query is left as the caller has it).
+  React.useEffect(() => { if (isOpen) { setInnerQuery(seed.current); setActive(0); setOnset(true); caretPlaced.current = false; } }, [isOpen]);
+  // A query changed from outside (a controlled one) starts again from the best match, as typing does.
+  React.useEffect(() => { setActive(0); }, [query]);
 
   // Rank: within each group by score, and groups by their best item, so the best match is on top.
   const q = query.trim();
@@ -265,7 +276,9 @@ export function CommandPalette({ items, open, defaultOpen = false, onOpenChange,
               role="combobox" aria-label={placeholder.replace(/[….]+$/, '')} aria-expanded={flat.length > 0} aria-controls={`${id}-list`}
               aria-autocomplete="list" aria-activedescendant={activeIndex >= 0 ? `${id}-o-${activeIndex}` : undefined}
               leading={<SearchIcon />} trailing={<span aria-hidden="true"><Kbd>esc</Kbd></span>}
-              onChange={(e) => { setQuery(e.target.value); setActive(0); setOnset(false); onQueryChange?.(e.target.value); }}
+              onChange={(e) => { setInnerQuery(e.target.value); setActive(0); setOnset(false); onQueryChange?.(e.target.value); }}
+              // A query carried in is continued, not replaced: the caret lands after it.
+              onFocus={(e) => { if (caretPlaced.current) return; caretPlaced.current = true; const n = e.currentTarget.value.length; e.currentTarget.setSelectionRange(n, n); }}
               onKeyDown={onInputKeyDown} />
           </div>
           <div className="alt-cmd-viewport" ref={viewport}>

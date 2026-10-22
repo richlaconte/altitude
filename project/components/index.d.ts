@@ -494,6 +494,10 @@ export interface CommandPaletteProps {
   empty?: React.ReactNode | ((query: string) => React.ReactNode);
   /** The letter that toggles it with ⌘ (macOS) or Ctrl. Default 'k'; false for none. It won't open while a Dialog holds the summit. */
   shortcut?: string | false;
+  /** The query, controlled. It isn't cleared on opening: the caller owns it (a persistent search field handing over what was typed, a filter already applied). */
+  query?: string;
+  /** The query each time it opens, uncontrolled. Default ''. Either way the caret lands after a carried query, so typing continues it. */
+  defaultQuery?: string;
   onQueryChange?: (query: string) => void;
   /** Close once an item is chosen. Default true. */
   closeOnSelect?: boolean;

@@ -737,7 +737,7 @@ function App() { return <div className="wrap"><A.Drilldown root={tree} /></div>;
 .bar b { font: 600 15px/22px var(--font-sans); }
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .grid > * { height: 92px; }
-.find { margin-left: auto; min-width: 220px; justify-content: space-between; color: var(--ink-muted); }
+.find { margin-left: auto; width: 280px; }
 --- jsx
 const I = {
   up: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M7 17L17 7M9 7h8v8" })),
@@ -768,10 +768,19 @@ const groups = [
     { label: "Billing", icon: I.key, disabled: true }
   ] }
 ];
+const searchIcon = /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "11", cy: "11", r: "7" }), /* @__PURE__ */ React.createElement("path", { d: "M20 20l-3.5-3.5" }));
 function App() {
   const [open, setOpen] = React.useState(true);
+  const [text, setText] = React.useState("");
   const [last, setLast] = React.useState(null);
-  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("b", null, "Northwind"), /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Operational"), /* @__PURE__ */ React.createElement(A.Button, { className: "find", onClick: () => setOpen(true), trailing: /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(A.Kbd, null, "\u2318"), /* @__PURE__ */ React.createElement(A.Kbd, null, "K")) }, "Search or run a command")), /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Chose \u201C${last}\u201D.` : "Type \u201Cdep\u201D: the best match moves to the top and the rows that stay travel there. Arrow keys move the highlight; Enter chooses."), /* @__PURE__ */ React.createElement(A.CommandPalette, { open, onOpenChange: setOpen, items: groups, onSelect: (item) => setLast(item.label) }));
+  const onOpenChange = (v) => {
+    setOpen(v);
+    if (!v) setText("");
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("b", null, "Northwind"), /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Operational"), /* @__PURE__ */ React.createElement(A.Input, { className: "find", "aria-label": "Search or run a command", placeholder: "Search or run a command", value: text, leading: searchIcon, trailing: /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, /* @__PURE__ */ React.createElement(A.Kbd, null, "\u2318"), /* @__PURE__ */ React.createElement(A.Kbd, null, "K")), onChange: (e) => {
+    setText(e.target.value);
+    if (e.target.value) setOpen(true);
+  } })), /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Chose \u201C${last}\u201D.` : "Type \u201Cdep\u201D: the best match moves to the top and the rows that stay travel there. Close it and type in the search field: the palette opens with what you typed."), /* @__PURE__ */ React.createElement(A.CommandPalette, { open, onOpenChange, query: text, onQueryChange: setText, items: groups, onSelect: (item) => setLast(item.label) }));
 }
 
 === Sheet | <!-- @dsCard group="Overlays" height=480 subtitle="Level 4, risen at its edge; closing lifts it off" -->
