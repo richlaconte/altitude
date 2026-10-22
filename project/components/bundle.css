@@ -506,15 +506,18 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-avatar[data-interactive] { cursor: pointer; outline: none; }
 .alt-avatar[data-interactive]:focus-visible .alt-avatar-face { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .alt-avatar-group { isolation: isolate; display: inline-flex; align-items: flex-end; padding: calc(var(--size, 36px) * 0.32) 0 calc(var(--size, 36px) * 0.1); }
-.alt-avatar-group > .alt-avatar { isolation: auto; margin-left: calc(var(--size) * -0.22); }
-.alt-avatar-group > .alt-avatar:first-child { margin-left: 0; }
+.alt-avatar-group .alt-avatar { isolation: auto; }
+/* Faces overlap by a fifth. An avatar that waited for its data sits inside its loading wrapper (display: contents at
+   rest), so the overlap is counted from the group's own children either way, imprints included. */
+.alt-avatar-group > .alt-avatar:not(:first-child),
+.alt-avatar-group > :is(.alt-await, .alt-await-wait):not(:first-child) :is(.alt-avatar, .alt-avatar-imprint) { margin-left: calc(var(--size, 36px) * -0.22); }
 /* Overlapping faces are cut out of each other with a ring of ground; higher faces sit in front. */
-.alt-avatar-group > .alt-avatar .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring); }
-.alt-avatar-group > .alt-avatar[data-status="offline"] .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring), inset 0 1px 2px var(--alt-cast); }
-.alt-avatar-group > .alt-avatar[data-status="active"] .alt-avatar-face { z-index: 3; }
-.alt-avatar-group > .alt-avatar[data-status="idle"] .alt-avatar-face { z-index: 2; }
-.alt-avatar-group > .alt-avatar:not([data-tint="more"]):hover { --hr: 0.32; }
-.alt-avatar-group > .alt-avatar:not([data-tint="more"]):hover .alt-avatar-face { z-index: 5; }
+.alt-avatar-group .alt-avatar .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring); }
+.alt-avatar-group .alt-avatar[data-status="offline"] .alt-avatar-face { box-shadow: 0 0 0 2px var(--surface-ground), inset 0 0 0 1px var(--alt-ring), inset 0 1px 2px var(--alt-cast); }
+.alt-avatar-group .alt-avatar[data-status="active"] .alt-avatar-face { z-index: 3; }
+.alt-avatar-group .alt-avatar[data-status="idle"] .alt-avatar-face { z-index: 2; }
+.alt-avatar-group .alt-avatar:not([data-tint="more"]):hover { --hr: 0.32; }
+.alt-avatar-group .alt-avatar:not([data-tint="more"]):hover .alt-avatar-face { z-index: 5; }
 .alt-avatar-group .alt-avatar-lamp { display: none; }
 
 /* ── Skeleton: an imprint of the content to come, pressed into the page. Light passes over it while it waits; when the

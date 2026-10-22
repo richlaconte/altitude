@@ -1,24 +1,23 @@
-// The code shown on the landing page. "Inside Avatar" and "Await" are trimmed from project/components/src, keeping the
+// The code shown on the landing page. "Avatar", "useArrival" and "Await" are trimmed from project/components/src, keeping the
 // lines that do the work; if those change, update these.
 
-export const yourCode = `// app/team/[id]/page.tsx: a server component.
-// Start the requests; don't await them. Each part waits for its own data.
-export default function Member({ id }: { id: string }) {
-  const user = getUser(id);
-  const deploys = getDeploys(id);
+export const yourCode = `// Written the way you would anyway. While a query loads its data is undefined,
+// and each component shows its own skeleton until it isn't.
+function Member({ id }: { id: string }) {
+  const { data: user } = useQuery(userQuery(id));
+  const { data: presence } = useQuery(presenceQuery(id));
+  const { data: deploys } = useQuery(deploysQuery(id));
 
   return (
     <>
       <Card>
         <CardHeader>
-          <Avatar name={user.then((u) => u.name)} size={44} status="active" />
-          <CardTitle>{user.then((u) => u.name)}</CardTitle>
-          <CardDescription>{user.then((u) => u.role)}</CardDescription>
-          <Badge tone="positive">{user.then((u) => u.status)}</Badge>
+          <Avatar name={user?.name} size={44} status="active" />
+          <CardTitle>{user?.name}</CardTitle>
+          <CardDescription>{user?.role}</CardDescription>
+          <Badge tone="positive">{presence?.label}</Badge>
         </CardHeader>
-        <CardContent>
-          <LatestNote userId={id} /> {/* yours: it suspends, the card imprints its body */}
-        </CardContent>
+        <CardContent>{user?.bio}</CardContent>
       </Card>
       <DataTable columns={columns} rows={deploys} getRowId={(d) => d.id} />
     </>
@@ -26,23 +25,47 @@ export default function Member({ id }: { id: string }) {
 }`;
 
 export const insideAvatar = `export function Avatar({ skeleton, ...props }: AvatarProps) {
-  // Plain values take the old path: no boundary, no extra element.
-  if (!isPromise(props.name) && !isPromise(props.src)) return <AvatarFace {...props} />;
+  // undefined: your data hasn't arrived yet. (null would mean there's no one.)
+  const missing = skeleton !== false && props.name === undefined;
+  useReportWaiting(missing);            // tells its Card, so optional parts wait with it
+  const arrival = useArrival(missing);  // a promise that resolves once name turns up
 
-  // A promise: hold a boundary whose fallback is this avatar's own imprint,
+  // Never waited: the plain path, exactly as before.
+  if (!useHasWaited(missing)) return <AvatarFace {...props} />;
+
+  // Waiting: hold a boundary whose fallback is this avatar's own imprint,
   // a disc of the same size, so nothing moves when the face lands.
   const size = props.size ?? 36;
   return (
-    <Await inline shape="circle" enabled={skeleton !== false}
+    <Await inline shape="circle"
       imprint={<span className="alt-skeleton" data-shape="circle" style={{ width: size, height: size }} />}>
-      <AvatarLanded {...props} />
+      <Arrive when={arrival}>
+        <AvatarFace {...props} />
+      </Arrive>
     </Await>
   );
+}`;
+
+export const arrivalCode = `// "Not here yet" becomes a suspension, so React's own Suspense boundary
+// (inside the component) shows the imprint, and the same reveal runs
+// whether you passed undefined or a promise.
+export function useArrival(waiting: boolean) {
+  const pending = React.useRef(null);
+  if (waiting && !pending.current) {
+    let done;
+    pending.current = { promise: new Promise((r) => (done = r)), done };
+  }
+  const current = pending.current;
+  React.useLayoutEffect(() => {
+    // Your data arrived: let the suspended part render.
+    if (!waiting && current) { current.done(); pending.current = null; }
+  });
+  return waiting ? current.promise : null;
 }
 
-function AvatarLanded(props: AvatarProps) {
-  // Suspends until both have landed.
-  return <AvatarFace {...props} name={readPromised(props.name)} src={readPromised(props.src)} />;
+export function Arrive({ when, children }) {
+  if (when) readPromised(when);   // React 19's use(); the same contract by hand on 18
+  return children;
 }`;
 
 export const insideAwait = `export function Await({ imprint, shape, inline, enabled = true, children }: AwaitProps) {
@@ -65,26 +88,6 @@ export const insideAwait = `export function Await({ imprint, shape, inline, enab
 //   it did                    → rise 8px out of it while it fills in behind,
 //                               staggered by riseDelay(): four rises at a time
 //   inside a RevealGroup      → stay an imprint until the slowest part lands`;
-
-export const readPromisedCode = `const use = (React as any).use;   // React 19
-
-export function readPromised<T>(value: T | PromiseLike<T>): T {
-  if (!isPromise(value)) return value;
-  if (use) return use(value);
-
-  // React 18 has no use(): keep the same contract by hand. Throw the
-  // promise to the nearest Suspense boundary and remember how it settled.
-  let r = settled.get(value);
-  if (!r) {
-    r = { status: 'pending' };
-    settled.set(value, r);
-    value.then((v) => { r.status = 'done'; r.value = v; },
-               (e) => { r.status = 'error'; r.error = e; });
-  }
-  if (r.status === 'done') return r.value;
-  if (r.status === 'error') throw r.error;   // to your error boundary
-  throw value;                              // to the nearest Suspense
-}`;
 
 export const install = `npm install altitude-design`;
 

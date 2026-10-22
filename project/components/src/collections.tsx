@@ -2,7 +2,7 @@ import * as React from 'react';
 import { cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEffect } from './core';
 import { Badge, Button, Checkbox } from './controls';
 import { Pile } from './pile';
-import { Await, hint, isPromise, Promised, readPromised, SkeletonOption } from './suspense';
+import { Arrive, Await, hint, isPromise, Promised, readPromised, SkeletonOption, useArrival, useHasWaited, useReportWaiting } from './suspense';
 
 /* ───────────────────────── shared: carrying things to their new places (FLIP) ───────────────────────── */
 
@@ -184,9 +184,9 @@ export interface DataTableColumn<T> {
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
-  /** The rows, or a promise of them: until they land, the table is its header over `skeleton.lines` imprinted rows (default 5). */
-  rows: Promised<T[]>;
-  /** While promised rows load: how many rows to imprint (`lines`). `false` suspends to your own boundary. */
+  /** The rows. Undefined while your data loads, or a promise: until they arrive the table is its header over `skeleton.lines` imprinted rows (default 5). */
+  rows: Promised<T[]> | undefined;
+  /** While the rows are on their way: how many rows to imprint (`lines`). `false`: undefined rows render as empty, and a promise suspends to your own boundary. */
   skeleton?: SkeletonOption;
   getRowId: (row: T) => string;
   /** A row's name, for screen readers (its checkbox, its move handle, announcements) and its button with onRowClick. */
@@ -227,7 +227,10 @@ const GripIcon = () => (
  * rise (counted by a floating Badge in the toolbar), filtering in place, interactive rows and reordering by hand.
  */
 export function DataTable<T>({ skeleton, ...props }: DataTableProps<T>) {
-  if (!isPromise(props.rows)) return <DataTableFace {...props} rows={props.rows as T[]} />;
+  const missing = skeleton !== false && props.rows === undefined;
+  useReportWaiting(missing || (skeleton !== false && isPromise(props.rows)));
+  const arrival = useArrival(missing);
+  if (!useHasWaited(missing || isPromise(props.rows))) return <DataTableFace {...props} rows={(props.rows as T[] | undefined) ?? []} />;
   const { lines = 5 } = hint(skeleton);
   const { columns, selectable, toolbar, maxHeight, className } = props;
   return (
@@ -256,13 +259,13 @@ export function DataTable<T>({ skeleton, ...props }: DataTableProps<T>) {
         </Table>
       </div>
     }>
-      <DataTableLanded {...props} />
+      <Arrive when={arrival}><DataTableLanded {...props} /></Arrive>
     </Await>
   );
 }
 const CELL_WIDTHS = ['72%', '54%', '86%', '63%', '78%'];
 function DataTableLanded<T>(props: Omit<DataTableProps<T>, 'skeleton'>) {
-  return <DataTableFace {...props} rows={readPromised(props.rows)} />;
+  return <DataTableFace {...props} rows={readPromised(props.rows) ?? []} />;
 }
 function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, selected, defaultSelected = [], onSelectedChange, actions, toolbar,
   sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className, ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {

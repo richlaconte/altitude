@@ -1,13 +1,15 @@
 import * as React from 'react';
 import { cx, riseDelay, useIsoLayoutEffect } from './core';
 
-/* ───────────────────────── Suspense: imprints that come with the component ─────────────────────────
+/* ───────────────────────── Loading: imprints that come with the component ─────────────────────────
  *
- * Components that can take a promise (Avatar's name and src, a Badge's or a card title's text, a DataTable's rows) hold
- * their own Suspense boundary, and its fallback is their own imprint: the same size and shape as what is coming, pressed
- * into the page, because it is drawn from the same props and tokens. Containers (Card, CardContent) hold one too, for
- * anything of yours inside them that suspends. When the content lands it rises out of its imprint, within the attention
- * budget. Nothing changes for values that aren't promises: no boundary, no extra element.
+ * Pass what you have. A component whose content is `undefined` (your data hasn't arrived: `user?.name` while a query
+ * loads) or a promise holds its own Suspense boundary, and its fallback is its own imprint: the same size and shape as
+ * what is coming, pressed into the page, because it is drawn from the same props and tokens. `null` means there is
+ * nothing, and renders as empty. Optional parts of a card (its description, its body text) wait only while the card's
+ * required parts do, so a field that is simply missing never leaves an imprint behind. Containers (Card, CardContent)
+ * also catch anything of yours that suspends inside them. When the content lands it rises out of its imprint, within
+ * the attention budget. A component that has never waited renders exactly as before: no boundary, no extra element.
  */
 
 /** A value, or a promise of one. A component that takes one shows its own imprint until it lands. */
@@ -18,6 +20,9 @@ export type SkeletonOption = boolean | { lines?: number; width?: number | string
 
 export const isPromise = (v: unknown): v is PromiseLike<unknown> =>
   !!v && (typeof v === 'object' || typeof v === 'function') && typeof (v as { then?: unknown }).then === 'function';
+
+/** Content that may still be on its way: `undefined` while your data loads, or a promise. `null` means there is nothing. */
+export type Pending<T> = T | PromiseLike<T> | undefined;
 
 /** Children that hold a promise, at the top level or one level down (`Welcome back, {name}`). */
 export const hasPromise = (children: unknown) => (Array.isArray(children) ? children.some(isPromise) : isPromise(children));
@@ -49,6 +54,61 @@ export function readPromised<T>(v: Promised<T>): T {
 export function readChildren(children: unknown): React.ReactNode {
   return (Array.isArray(children) ? children.map((c) => readPromised(c)) : readPromised(children)) as React.ReactNode;
 }
+
+/* ── Arrival: undefined means "not here yet" ── */
+
+/**
+ * Turns "not here yet" into a suspension: while `waiting`, returns a promise that resolves once it stops, for the
+ * component's inner part to read (see Arrive), so its own boundary shows the imprint. Call it in the outer part, which
+ * stays mounted and re-renders when your data arrives.
+ */
+export function useArrival(waiting: boolean): PromiseLike<void> | null {
+  const d = React.useRef<{ p: Promise<void>; done: () => void } | null>(null);
+  if (waiting && !d.current) {
+    let done!: () => void;
+    d.current = { p: new Promise<void>((r) => { done = r; }), done };
+  }
+  const cur = d.current;
+  useIsoLayoutEffect(() => {
+    if (!waiting && cur) { cur.done(); if (d.current === cur) d.current = null; }
+  });
+  return waiting && cur ? cur.p : null;
+}
+/** Suspends while `when` is pending; renders its children once it isn't. */
+export function Arrive({ when, children }: { when: PromiseLike<void> | null; children?: React.ReactNode }) {
+  if (when) readPromised(when);
+  return <>{children}</>;
+}
+/** True from the first render that waited onwards, so the boundary stays mounted and the content can rise out of it. */
+export function useHasWaited(waiting: boolean) {
+  const r = React.useRef(false);
+  if (waiting) r.current = true;
+  return r.current;
+}
+
+/** A card's loading scope: required parts say whether they're still waiting; optional parts wait only while the card does. */
+type Scope = { report: (id: object, waiting: boolean) => void; waiting: boolean };
+const ScopeContext = React.createContext<Scope | null>(null);
+export function LoadingScope({ children }: { children?: React.ReactNode }) {
+  const [members] = React.useState(() => new Set<object>());
+  const [waiting, setWaiting] = React.useState(false);
+  const report = React.useCallback((id: object, w: boolean) => {
+    if (w) members.add(id); else members.delete(id);
+    setWaiting(members.size > 0);
+  }, [members]);
+  const value = React.useMemo(() => ({ report, waiting }), [report, waiting]);
+  return <ScopeContext.Provider value={value}>{children}</ScopeContext.Provider>;
+}
+/** For required content (an avatar's name, a title, a badge's label, a table's rows): says whether it's still on its way. */
+export function useReportWaiting(waiting: boolean) {
+  const scope = React.useContext(ScopeContext);
+  const [id] = React.useState(() => ({}));
+  const report = scope?.report;
+  useIsoLayoutEffect(() => { report?.(id, waiting); }, [report, waiting]);
+  useIsoLayoutEffect(() => () => report?.(id, false), [report]);
+}
+/** For optional content: is the card it's in still waiting for its required parts? */
+export const useScopeWaiting = () => !!React.useContext(ScopeContext)?.waiting;
 
 /* ── RevealGroup: imprints that land together ── */
 

@@ -89,21 +89,25 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement>, DepthPr
   /**
    * The card holds a Suspense boundary: while anything of yours inside it suspends, the card stays up and its body is an
    * imprint (a title line and `lines` lines, default 3). `false` lets it suspend to your own boundary.
+   * It's also a loading scope: its optional parts (description, body text) wait while its required parts do.
    */
   skeleton?: SkeletonOption;
 }
 export declare const Card: React.ForwardRefExoticComponent<CardProps & React.RefAttributes<HTMLDivElement>>;
 export declare function CardHeader(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
-/** Text that may be promised: `<CardTitle>{user.then((u) => u.name)}</CardTitle>`, or one promise among plain text. */
+/** Text that may still be on its way: undefined while your data loads (`{user?.name}`), a promise, or one promise among plain text. null renders nothing. */
 export type PromisedTextProps<E> = Omit<React.HTMLAttributes<E>, 'children'> & {
   children?: React.ReactNode | PromiseLike<React.ReactNode> | Array<React.ReactNode | PromiseLike<React.ReactNode>>;
-  /** While promised text loads, its imprint: `lines` (one for a title, two for a description) and `width`. `false` suspends to your own boundary. */
+  /**
+   * While the text is on its way, its imprint: `lines` (one for a title, two for a description) and `width`. A title waits
+   * whenever it's undefined; a description waits only while its card's required parts do. false: render what you pass as it is.
+   */
   skeleton?: SkeletonOption;
 };
 export declare function CardTitle(props: PromisedTextProps<HTMLHeadingElement>): React.ReactElement;
 export declare function CardDescription(props: PromisedTextProps<HTMLParagraphElement>): React.ReactElement;
 export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** The body holds a Suspense boundary: while anything of yours inside it suspends, it's `lines` lines of imprint (default 3). `false` suspends to your own boundary. */
+  /** The body holds a Suspense boundary: while anything of yours inside it suspends, or its text (`{user?.bio}`) is undefined while the card's other parts are, it's `lines` lines of imprint (default 3). false suspends to your own boundary. */
   skeleton?: SkeletonOption;
 }
 export declare function CardContent(props: CardContentProps): React.ReactElement;
@@ -284,16 +288,16 @@ export interface BadgeProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 
   lamp?: boolean | 'pulse';
   /** @deprecated Use lamp. */
   dot?: boolean;
-  /** The label, or a promise of it: until it lands the badge is a plate-shaped imprint. */
+  /** The label. Undefined while your data loads, or a promise: until it arrives the badge is a plate-shaped imprint. null renders an empty plate. */
   children?: React.ReactNode | PromiseLike<React.ReactNode> | Array<React.ReactNode | PromiseLike<React.ReactNode>>;
-  /** While a promised label loads: the imprint's `width` (default 64px; a count is round). `false` suspends to your own boundary. */
+  /** While the label is on its way: the imprint's `width` (default 64px; a count is round). false: render what you pass as it is. */
   skeleton?: SkeletonOption;
 }
 export declare function Badge(props: BadgeProps): React.ReactElement;
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
-  /** Used for initials, the tint and the accessible name (status is appended). May be a promise: until it lands the avatar is a round imprint of its size. */
-  name: Promised<string>;
+  /** Used for initials, the tint and the accessible name (status is appended). Undefined while your data loads (`user?.name`), or a promise: until it arrives the avatar is a round imprint of its size. */
+  name: Promised<string> | undefined;
   /** May be a promise, like name. */
   src?: Promised<string | undefined>;
   /** Pixels. Default 36. */
@@ -306,7 +310,7 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
   presence?: 1 | 2 | 3;
   /** Status lamp (green active, amber idle). Default: shown with a status at 24px and up; never inside AvatarGroup. */
   lamp?: boolean;
-  /** false: a promised name or src suspends to your own boundary instead of showing the avatar's imprint. */
+  /** false: no imprint. An undefined name renders an empty face; a promised one suspends to your own boundary. */
   skeleton?: boolean;
 }
 export declare function Avatar(props: AvatarProps): React.ReactElement;
@@ -328,6 +332,8 @@ export declare function Skeleton(props: SkeletonProps): React.ReactElement;
 
 /** A value, or a promise of one. A component that takes one shows its own imprint until it lands. */
 export type Promised<T> = T | PromiseLike<T>;
+/** Content that may still be on its way: undefined while your data loads, or a promise. null means there is nothing. */
+export type Pending<T> = T | PromiseLike<T> | undefined;
 /** Hints for a component's imprint (`lines`, `width`), or false to let it suspend to your own boundary instead. */
 export type SkeletonOption = boolean | { lines?: number; width?: number | string };
 export interface AwaitProps {
@@ -349,6 +355,11 @@ export interface AwaitProps {
 export declare function Await(props: AwaitProps): React.ReactElement;
 /** Imprints inside land together: each one that finishes stays an imprint until the slowest lands, then they all rise. */
 export declare function RevealGroup(props: { children?: React.ReactNode }): React.ReactElement;
+/**
+ * A loading scope, as every Card is one: required parts inside (an avatar's name, a title, a badge's label, a table's rows)
+ * report whether they're still undefined, and optional parts (a description, body text) wait only while they do.
+ */
+export declare function LoadingScope(props: { children?: React.ReactNode }): React.ReactElement;
 /** Reads a promised value, suspending until it lands: React 19's use(), or the same contract by hand on React 18. */
 export declare function readPromised<T>(value: Promised<T>): T;
 
@@ -655,9 +666,9 @@ export interface DataTableColumn<T> {
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
-  /** The rows, or a promise of them: until they land the table is its header over skeleton.lines imprinted rows (default 5). */
-  rows: Promised<T[]>;
-  /** While promised rows load: how many rows to imprint (lines). false suspends to your own boundary. */
+  /** The rows. Undefined while your data loads, or a promise: until they arrive the table is its header over skeleton.lines imprinted rows (default 5). */
+  rows: Promised<T[]> | undefined;
+  /** While the rows are on their way: how many rows to imprint (lines). false: undefined rows render as empty, and a promise suspends to your own boundary. */
   skeleton?: SkeletonOption;
   getRowId: (row: T) => string;
   /** A row's name for screen readers (its checkbox, its move handle, announcements). Default: its id. */
@@ -857,7 +868,7 @@ declare global {
       Board: typeof Board; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
-      Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised;
+      Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
     };
   }
 }

@@ -3,10 +3,11 @@ import { createRoot } from 'react-dom/client';
 import {
   AltitudeProvider, Avatar, AvatarGroup, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle,
   DataTable, Field, Input, Kbd, Progress, RevealGroup, Select, Surface, Switch, Tabs, TabsContent, TabsList, TabsTrigger,
-  Toaster, readPromised, toast,
+  Toaster, toast,
 } from '../project/components/src/index';
-import type { BuiltInScheme, Level } from '../project/components/src/index';
-import { insideAvatar, insideAwait, install, quickStart, readPromisedCode, yourCode } from './snippets';
+import type { BuiltInScheme } from '../project/components/src/index';
+type Level = NonNullable<React.ComponentProps<typeof Surface>['level']>;
+import { arrivalCode, insideAvatar, insideAwait, install, quickStart, yourCode } from './snippets';
 
 const LINKS = {
   storybook: 'https://richlaconte.github.io/altitude/storybook/',
@@ -88,22 +89,20 @@ function Ladder() {
 /* ───────────── the Suspense demo ───────────── */
 
 type Latency = 'fast' | 'typical' | 'slow' | 'uneven';
-type PartKey = 'identity' | 'role' | 'status' | 'note' | 'deploys';
-const PARTS: { key: PartKey; label: string }[] = [
-  { key: 'identity', label: 'Avatar and name' },
-  { key: 'role', label: 'Role' },
-  { key: 'status', label: 'Status badge' },
-  { key: 'note', label: 'Latest note (yours)' },
-  { key: 'deploys', label: 'Deploys table' },
+type PartKey = 'user' | 'presence' | 'deploys';
+const PARTS: { key: PartKey; label: string; what: string }[] = [
+  { key: 'user', label: 'User', what: 'avatar, name, role, bio' },
+  { key: 'presence', label: 'Presence', what: 'status badge' },
+  { key: 'deploys', label: 'Deploys', what: 'table rows' },
 ];
 const AXIS = 3500;
 const PLANS: Record<Latency, () => Record<PartKey, number>> = {
-  fast: () => ({ identity: 120, role: 150, status: 170, note: 200, deploys: 240 }),
-  typical: () => ({ identity: 650, role: 800, status: 1000, note: 1350, deploys: 1750 }),
-  slow: () => ({ identity: 2000, role: 2250, status: 2600, note: 2900, deploys: 3300 }),
+  fast: () => ({ user: 120, presence: 180, deploys: 240 }),
+  typical: () => ({ user: 700, presence: 1100, deploys: 1700 }),
+  slow: () => ({ user: 2000, presence: 2600, deploys: 3300 }),
   uneven: () => {
     const r = () => Math.round((300 + Math.random() * 2900) / 50) * 50;
-    return { identity: r(), role: r(), status: r(), note: r(), deploys: r() };
+    return { user: r(), presence: r(), deploys: r() };
   },
 };
 const LATENCY_LABEL: Record<Latency, string> = { fast: 'Fast', typical: 'Typical', slow: 'Slow', uneven: 'Uneven' };
@@ -121,51 +120,45 @@ const columns = [
   { key: 'duration', header: 'Duration', align: 'end' as const },
   { key: 'result', header: 'Result', cell: (d: Deploy) => <Badge tone={d.ok ? 'positive' : 'critical'}>{d.ok ? 'Live' : 'Failed'}</Badge> },
 ];
+const USER = { name: 'Mara Quist', role: 'Platform engineer, Lisbon', bio: 'Merged “Faster cold starts” into main. Cold starts are down 38% across all regions.' };
+const PRESENCE = { label: 'On call' };
 
-const wait = <T,>(ms: number, v: T) => new Promise<T>((r) => setTimeout(() => r(v), ms));
-function startLoad(latency: Latency) {
-  const delays = PLANS[latency]();
-  return {
-    delays,
-    name: wait(delays.identity, 'Mara Quist'),
-    role: wait(delays.role, 'Platform engineer, Lisbon'),
-    status: wait(delays.status, 'On call'),
-    note: wait(delays.note, 'Merged “Faster cold starts” into main. Cold starts are down 38% across all regions.'),
-    deploys: wait(delays.deploys, DEPLOYS),
-  };
-}
-type Load = ReturnType<typeof startLoad>;
-
-/** A component of yours that reads its own data. It suspends; the CardContent around it imprints itself. */
-function LatestNote({ note }: { note: Promise<string> }) {
-  return <p className="note">{readPromised(note)}</p>;
+/** Stands in for useQuery or useSWR: `data` is undefined until the response arrives. */
+function useFakeQuery<T>(value: T, ms: number): { data: T | undefined } {
+  const [data, setData] = React.useState<T | undefined>(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setData(value), ms); return () => clearTimeout(t); }, [value, ms]);
+  return { data };
 }
 
-function Member({ load }: { load: Load }) {
+/** Written the way you'd write it anyway: no loading flags, no skeleton markup. */
+function Member({ delays }: { delays: Record<PartKey, number> }) {
+  const { data: user } = useFakeQuery(USER, delays.user);
+  const { data: presence } = useFakeQuery(PRESENCE, delays.presence);
+  const { data: deploys } = useFakeQuery(DEPLOYS, delays.deploys);
   return (
     <div className="stage-stack">
       <Card className="member">
         <CardHeader>
           <div className="who">
-            <Avatar name={load.name} size={44} status="active" />
+            <Avatar name={user?.name} size={44} status="active" />
             <div className="who-id">
-              <CardTitle>{load.name}</CardTitle>
-              <CardDescription skeleton={{ lines: 1, width: '72%' }}>{load.role}</CardDescription>
+              <CardTitle>{user?.name}</CardTitle>
+              <CardDescription skeleton={{ lines: 1, width: '72%' }}>{user?.role}</CardDescription>
             </div>
-            <Badge tone="positive">{load.status}</Badge>
+            <Badge tone="positive">{presence?.label}</Badge>
           </div>
         </CardHeader>
-        <CardContent skeleton={{ lines: 2 }}><LatestNote note={load.note} /></CardContent>
+        <CardContent skeleton={{ lines: 2 }}>{user?.bio}</CardContent>
       </Card>
-      <DataTable aria-label="Recent deploys" columns={columns} rows={load.deploys} getRowId={(d) => d.id} getRowLabel={(d) => d.service} skeleton={{ lines: 4 }} />
+      <DataTable aria-label="Recent deploys" columns={columns} rows={deploys} getRowId={(d) => d.id} getRowLabel={(d) => d.service} skeleton={{ lines: 4 }} />
     </div>
   );
 }
 
-function Lane({ part, delay, landed, round }: { part: string; delay: number; landed: boolean; round: number }) {
+function Lane({ part, what, delay, landed, round }: { part: string; what: string; delay: number; landed: boolean; round: number }) {
   return (
     <li className="lane-row">
-      <span className="lane-label">{part}</span>
+      <span className="lane-label">{part}<span className="lane-what">{what}</span></span>
       <span className="lane" aria-hidden="true">
         <span className="lane-grace" />
         <span key={round} className="lane-fill" data-landed={landed ? '' : undefined}
@@ -181,19 +174,16 @@ function SuspenseDemo() {
   const [latency, setLatency] = React.useState<Latency>('typical');
   const [together, setTogether] = React.useState(false);
   const [round, setRound] = React.useState(0);
-  const [load, setLoad] = React.useState<Load>(() => startLoad('typical'));
+  const [delays, setDelays] = React.useState(() => PLANS.typical());
   const [landed, setLanded] = React.useState<Partial<Record<PartKey, boolean>>>({});
 
-  const reload = (l: Latency = latency) => { setLanded({}); setLoad(startLoad(l)); setRound((r) => r + 1); };
+  const reload = (l: Latency = latency) => { setLanded({}); setDelays(PLANS[l]()); setRound((r) => r + 1); };
   React.useEffect(() => {
-    let live = true;
-    const mark = (k: PartKey) => () => { if (live) setLanded((x) => ({ ...x, [k]: true })); };
-    load.name.then(mark('identity')); load.role.then(mark('role')); load.status.then(mark('status'));
-    load.note.then(mark('note')); load.deploys.then(mark('deploys'));
-    return () => { live = false; };
-  }, [load]);
+    const ts = PARTS.map((p) => setTimeout(() => setLanded((x) => ({ ...x, [p.key]: true })), delays[p.key]));
+    return () => ts.forEach(clearTimeout);
+  }, [delays, round]);
 
-  const member = <Member key={round} load={load} />;
+  const member = <Member key={round} delays={delays} />;
   const all = PARTS.every((p) => landed[p.key]);
   return (
     <div className="demo">
@@ -209,8 +199,8 @@ function SuspenseDemo() {
             </TabsList>
           </Tabs>
         </div>
-        <ol className="lanes" aria-label="When each part's data arrives">
-          {PARTS.map((p) => <Lane key={p.key} part={p.label} delay={load.delays[p.key]} landed={!!landed[p.key]} round={round} />)}
+        <ol className="lanes" aria-label="When each query's data arrives">
+          {PARTS.map((p) => <Lane key={p.key} part={p.label} what={p.what} delay={delays[p.key]} landed={!!landed[p.key]} round={round} />)}
         </ol>
         <div className="lane-row lane-axis" aria-hidden="true">
           <span className="lane-label" />
@@ -242,13 +232,13 @@ function CodeTabs() {
       <TabsList aria-label="Code">
         <TabsTrigger value="yours">Your code</TabsTrigger>
         <TabsTrigger value="avatar">Avatar</TabsTrigger>
+        <TabsTrigger value="arrival">useArrival</TabsTrigger>
         <TabsTrigger value="await">Await</TabsTrigger>
-        <TabsTrigger value="read">readPromised</TabsTrigger>
       </TabsList>
       <TabsContent value="yours"><Code label="Your code" code={yourCode} /></TabsContent>
       <TabsContent value="avatar"><Code label="Inside Avatar" code={insideAvatar} /></TabsContent>
+      <TabsContent value="arrival"><Code label="useArrival" code={arrivalCode} /></TabsContent>
       <TabsContent value="await"><Code label="Await" code={insideAwait} /></TabsContent>
-      <TabsContent value="read"><Code label="readPromised" code={readPromisedCode} /></TabsContent>
     </Tabs>
   );
 }
@@ -410,22 +400,22 @@ function Page() {
               <p className="kicker">Suspense, built in</p>
               <h2 className="h2" id="loading-title">Skeletons you don't write.</h2>
               <p className="lede">
-                Hand a component a promise instead of a value. Until it lands, the component shows its own imprint at its own size, drawn
-                from the same props and tokens, so nothing jumps. When the data arrives, the content rises out of the imprint.
-                Change the network below and reload.
+                Pass your data the way you already do. While it's still undefined, each component shows its own imprint at its own
+                size, drawn from the same props and tokens, so nothing jumps. When the data arrives, the content rises out of the
+                imprint. Change the network below and reload.
               </p>
             </div>
             <SuspenseDemo />
             <div className="code-head">
               <h3 className="h3">How it's handled</h3>
-              <p className="lede small">You pass promises. Each Suspense-native component holds its own boundary, and its fallback is its own imprint. Values that aren't promises take the old path: no boundary, no extra element. <a href={LINKS.awaitDocs}>Read the Await guide</a>.</p>
+              <p className="lede small">Undefined means "not here yet". The component turns that into a suspension inside its own Suspense boundary, whose fallback is its own imprint. A component that never waits takes the old path: no boundary, no extra element. <a href={LINKS.awaitDocs}>Read the loading guide</a>.</p>
             </div>
             <CodeTabs />
             <ul className="facts">
-              <li><strong>Avatar, Badge, CardTitle, CardDescription, DataTable</strong> take promises. <strong>Card</strong> and <strong>CardContent</strong> catch anything of yours that suspends inside them.</li>
+              <li><strong>Undefined means not here yet.</strong> Pass <code>user?.name</code> while your query loads. <code>null</code> means there's nothing, and renders empty.</li>
+              <li><strong>Optional parts wait with their card.</strong> An undefined description or body waits only while the card's required parts do, so a missing field never leaves a skeleton behind.</li>
               <li><strong>Under 300ms, nothing shows.</strong> The imprint waits out <Kbd>dur-grace</Kbd> before fading in, so fast loads never flash.</li>
-              <li><strong>Four rises at a time.</strong> When many parts land at once they're staggered, so the page doesn't pop like corn.</li>
-              <li><strong>React 18 and 19.</strong> It uses <code>use()</code> where React has it and keeps the same contract by hand where it doesn't.</li>
+              <li><strong>Promises work too.</strong> From a server component, pass a promise instead of the value; React 18 and 19 both work.</li>
             </ul>
           </div>
         </section>
