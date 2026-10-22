@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cx, DepthProps, Icons, inert, riseDelay, Spinner, useApproach, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus } from './core';
+import { Await, hasPromise, hint, isPromise, Promised, readChildren, readPromised, SkeletonOption, TextImprint } from './suspense';
 
 /* ───────────────────────── Button ───────────────────────── */
 
@@ -30,20 +31,61 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement>, DepthProps {
   /** Lifts on hover and presses on click. Only set it when the whole card does something. */
   interactive?: boolean;
+  /**
+   * The card holds a Suspense boundary: while anything of yours inside it suspends, the card stays up and its body is an
+   * imprint (a title line and `lines` lines of text, default 3). `false` lets it suspend to your own boundary.
+   */
+  skeleton?: SkeletonOption;
 }
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
-  { interactive, className, onKeyDown, settle, status, heldBy, relevance, style, ...rest }, ref) {
+  { interactive, className, onKeyDown, settle, status, heldBy, relevance, style, skeleton, children, ...rest }, ref) {
   const actionable = interactive && !!rest.onClick;
   const { style: depthStyle, ...depth } = useDepth({ settle, status, heldBy, relevance });
+  const { lines = 3 } = hint(skeleton);
   return <div ref={ref} className={cx('alt-card', interactive && 'alt-lift', className)}
     role={actionable ? 'button' : undefined} tabIndex={actionable ? 0 : undefined}
     onKeyDown={actionable ? (e) => { onKeyDown?.(e); if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as HTMLElement).click(); } } : onKeyDown}
-    {...depth} style={{ ...depthStyle, ...style }} {...rest} />;
+    {...depth} style={{ ...depthStyle, ...style }} {...rest}>
+    <Await shape="none" enabled={skeleton !== false} imprint={
+      <span className="alt-await-card">
+        <TextImprint className="alt-card-title" width="45%" />
+        <TextImprint className="alt-await-card-body" lines={lines} />
+      </span>
+    }>{children}</Await>
+  </div>;
 });
 export const CardHeader = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => <div className={cx('alt-card-header', className)} {...p} />;
-export const CardTitle = ({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) => <h3 className={cx('alt-card-title', className)} {...p} />;
-export const CardDescription = ({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) => <p className={cx('alt-card-desc', className)} {...p} />;
-export const CardContent = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => <div className={cx('alt-card-content', className)} {...p} />;
+
+/** Text that may be promised: `<CardTitle>{user.then((u) => u.name)}</CardTitle>`, or one promise among plain text. */
+type PromisedText<E> = Omit<React.HTMLAttributes<E>, 'children'> & {
+  children?: React.ReactNode | PromiseLike<React.ReactNode> | Array<React.ReactNode | PromiseLike<React.ReactNode>>;
+  /** While promised text loads, its imprint: `lines` (one for a title, two for a description) and `width`. `false` suspends to your own boundary. */
+  skeleton?: SkeletonOption;
+};
+const Promised$ = ({ children }: { children: unknown }) => <>{readChildren(children)}</>;
+function promisedText(children: unknown, skeleton: SkeletonOption | undefined, lines: number, width?: string) {
+  if (!hasPromise(children)) return children as React.ReactNode;
+  const h = hint(skeleton);
+  return (
+    <Await shape="text" enabled={skeleton !== false} imprint={<TextImprint lines={h.lines ?? lines} width={h.width ?? width} />}>
+      <Promised$>{children}</Promised$>
+    </Await>
+  );
+}
+export const CardTitle = ({ className, children, skeleton, ...p }: PromisedText<HTMLHeadingElement>) =>
+  <h3 className={cx('alt-card-title', className)} {...p}>{promisedText(children, skeleton, 1, '55%')}</h3>;
+export const CardDescription = ({ className, children, skeleton, ...p }: PromisedText<HTMLParagraphElement>) =>
+  <p className={cx('alt-card-desc', className)} {...p}>{promisedText(children, skeleton, 2)}</p>;
+export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** The body holds a Suspense boundary: while anything of yours inside it suspends, it's `lines` lines of imprint (default 3). `false` suspends to your own boundary. */
+  skeleton?: SkeletonOption;
+}
+export const CardContent = ({ className, skeleton, children, ...p }: CardContentProps) => {
+  const { lines = 3 } = hint(skeleton);
+  return <div className={cx('alt-card-content', className)} {...p}>
+    <Await shape="none" enabled={skeleton !== false} imprint={<TextImprint lines={lines} />}>{children}</Await>
+  </div>;
+};
 export const CardFooter = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => <div className={cx('alt-card-footer', className)} {...p} />;
 
 /* ───────────────────────── Input / Textarea / Field ───────────────────────── */
@@ -350,7 +392,7 @@ export function Progress({ value = null, max = 100, className, ...rest }: Progre
 
 /* ───────────────────────── Badge ───────────────────────── */
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface BadgeProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
   tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical';
   /**
    * plate (default): an indicator plate set flush into the page. tinted: the plate takes its tone's colour.
@@ -362,9 +404,26 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   lamp?: boolean | 'pulse';
   /** @deprecated Use `lamp`. */
   dot?: boolean;
+  /** The label, or a promise of it: until it lands the badge is a plate-shaped imprint. */
+  children?: React.ReactNode | PromiseLike<React.ReactNode> | Array<React.ReactNode | PromiseLike<React.ReactNode>>;
+  /** While a promised label loads: the imprint's `width` (default 64px; a count is round). `false` suspends to your own boundary. */
+  skeleton?: SkeletonOption;
 }
 /** A label stamped into the record. Status carries a lamp that relights when it changes; a changed label is re-stamped. */
-export function Badge({ tone = 'neutral', variant = 'plate', lamp, dot, className, children, ...rest }: BadgeProps) {
+export function Badge({ children, skeleton, ...props }: BadgeProps) {
+  if (!hasPromise(children)) return <BadgeFace {...props}>{children as React.ReactNode}</BadgeFace>;
+  const h = hint(skeleton);
+  return (
+    <Await inline shape="block" enabled={skeleton !== false}
+      imprint={<span className="alt-skeleton alt-badge-imprint" data-variant={props.variant === 'count' ? 'count' : undefined} style={{ width: h.width }} />}>
+      <BadgeLanded {...props}>{children}</BadgeLanded>
+    </Await>
+  );
+}
+function BadgeLanded({ children, ...props }: Omit<BadgeProps, 'skeleton'>) {
+  return <BadgeFace {...props}>{readChildren(children)}</BadgeFace>;
+}
+function BadgeFace({ tone = 'neutral', variant = 'plate', lamp, dot, className, children, ...rest }: Omit<BadgeProps, 'skeleton' | 'children'> & { children?: React.ReactNode }) {
   const v = variant === 'soft' ? 'tinted' : variant;
   const showLamp = v !== 'count' && !!(lamp ?? (dot || tone === 'positive' || tone === 'caution' || tone === 'critical'));
   const label = typeof children === 'string' || typeof children === 'number' ? String(children) : undefined;
@@ -389,8 +448,10 @@ export function Badge({ tone = 'neutral', variant = 'plate', lamp, dot, classNam
 
 const TINTS = ['accent', 'positive', 'caution', 'critical'];
 export interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
-  name: string;
-  src?: string;
+  /** Always given: it's the accessible label. May be a promise: until it lands the avatar is a round imprint of its size. */
+  name: Promised<string>;
+  /** May be a promise, like `name`. */
+  src?: Promised<string | undefined>;
   size?: number;
   /** Presence as height: active people hover above the page (their shadow drops away), idle ones rest on it, offline ones lie flat and grey. */
   status?: 'active' | 'idle' | 'offline';
@@ -400,9 +461,24 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
   presence?: 1 | 2 | 3;
   /** The status lamp (green active, amber idle). Default: shown when there is a status and the avatar is 24px or larger. Never shown inside AvatarGroup. */
   lamp?: boolean;
+  /** `false`: a promised `name` or `src` suspends to your own boundary instead of showing the avatar's imprint. */
+  skeleton?: boolean;
 }
 /** A disc above its own shadow. The gap between them is how high the person is: how present they are right now. */
-export function Avatar({ name, src, size = 36, status, live, presence, lamp, className, style, onClick, ...rest }: AvatarProps) {
+export function Avatar({ skeleton, ...props }: AvatarProps) {
+  if (!isPromise(props.name) && !isPromise(props.src)) return <AvatarFace {...props} name={props.name as string} src={props.src as string | undefined} />;
+  const size = props.size ?? 36;
+  return (
+    <Await inline shape="circle" enabled={skeleton !== false}
+      imprint={<span className="alt-skeleton alt-avatar-imprint" data-shape="circle" style={{ width: size, height: size }} />}>
+      <AvatarLanded {...props} />
+    </Await>
+  );
+}
+function AvatarLanded(props: Omit<AvatarProps, 'skeleton'>) {
+  return <AvatarFace {...props} name={readPromised(props.name)} src={readPromised(props.src)} />;
+}
+function AvatarFace({ name, src, size = 36, status, live, presence, lamp, className, style, onClick, ...rest }: Omit<AvatarProps, 'skeleton' | 'name' | 'src'> & { name: string; src?: string }) {
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join('');
   const tint = TINTS[[...name].reduce((a, c) => a + c.charCodeAt(0), 0) % TINTS.length];
   const label = [name, status, live && 'live'].filter(Boolean).join(', ');

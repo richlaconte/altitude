@@ -2,7 +2,8 @@
 
 A React component library where **height is the interface**. Its one idea: the ground is the record. Settled content sits on the ground; anything live rises above it; anything waiting to receive sinks below it.
 
-- **Storybook:** every component, with its guidelines and a live preview in all four schemes: https://richlaconte.github.io/altitude/
+- **Site:** https://richlaconte.github.io/altitude/
+- **Storybook:** every component, with its guidelines and a live preview in all four schemes: https://richlaconte.github.io/altitude/storybook/
 - **The design guide:** [`project/README.md`](https://github.com/richlaconte/altitude/blob/main/project/README.md), then [Elevation](https://github.com/richlaconte/altitude/blob/main/project/Elevation.md), [Motion](https://github.com/richlaconte/altitude/blob/main/project/Motion.md), [Theming](https://github.com/richlaconte/altitude/blob/main/project/Theming.md) and [Research](https://github.com/richlaconte/altitude/blob/main/project/Research.md)
 
 ## Install
@@ -44,7 +45,8 @@ Render `AltitudeProvider` once around your app. Schemes are `daylight`, `nightfa
 project/   the design system itself: guides, tokens.json, components/src/*.tsx, bundle.css,
            and the built bundle.js and previews (the same files as the design system on claude.ai)
 build/     the kit that builds and checks project/ (see build/SETUP.md)
-scripts/   the npm package build and the Storybook story generator
+scripts/   the npm package build, the Storybook story generator and the landing page build
+site/      the landing page (React, built from the components' own sources into site-dist/)
 .storybook/
 ```
 
@@ -55,6 +57,7 @@ There is one source for each thing. Components live in `project/components/src`,
 ```sh
 npm install && npm install --prefix build
 npm run storybook          # http://localhost:6006
+npm run build-site         # the landing page, into site-dist/index.html
 ```
 
 After changing a component, rebuild the design system's bundle and previews, and commit what they produce:
@@ -71,7 +74,7 @@ Every push and pull request runs the checks: the bundle and previews are rebuilt
 
 A push to `main` then also:
 
-- deploys Storybook to GitHub Pages;
+- deploys the landing page to GitHub Pages, with Storybook under `/storybook/`;
 - publishes to npm **if the version in `package.json` isn't published yet**, and tags the commit `v<version>`. To release, bump the version (`npm version patch`, `minor` or `major`) and push.
 
 ## Found a bug, or need something it doesn't do?

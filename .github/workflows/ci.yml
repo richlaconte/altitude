@@ -1,7 +1,7 @@
 # One pipeline for everything.
 #   Every push and pull request: check the design system is in sync with its sources, render every preview in every
 #   scheme, run the interaction checks, and build the package and Storybook.
-#   Pushes to main then also: deploy Storybook to GitHub Pages, and publish to npm if package.json has a new version.
+#   Pushes to main then also: deploy the landing page and Storybook (under /storybook/) to GitHub Pages, and publish to npm if package.json has a new version.
 name: CI
 
 on:
@@ -69,6 +69,12 @@ jobs:
       - name: Build Storybook
         run: npm run build-storybook
 
+      # The landing page is served at the Pages root and Storybook under /storybook/.
+      - name: Build the landing page
+        run: |
+          npm run build-site
+          cp -r storybook-static site-dist/storybook
+
       - name: Keep the screenshots of a failed run
         if: failure()
         uses: actions/upload-artifact@v7
@@ -77,11 +83,11 @@ jobs:
           path: build/test/shot-*.png
           if-no-files-found: ignore
 
-      - name: Hand Storybook to the Pages deploy
+      - name: Hand the site to the Pages deploy
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v5
         with:
-          path: storybook-static
+          path: site-dist
 
   pages:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

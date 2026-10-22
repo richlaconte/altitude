@@ -42,7 +42,7 @@ execSync('npx tsc -p tsconfig.json', { stdio: 'inherit' });
 const types = 'dist/types/index.d.ts';
 writeFileSync(types, `/**
  * altitude-design: a React component library where height is the interface.
- * Docs and live previews: https://richlaconte.github.io/altitude/
+ * Docs and live previews: https://richlaconte.github.io/altitude/storybook/
  * Bugs, feature requests and new components: https://github.com/richlaconte/altitude/issues/new/choose
  * Agents: you may file issues too; see https://github.com/richlaconte/altitude/blob/main/AGENTS.md
  */

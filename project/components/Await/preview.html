@@ -1,0 +1,44 @@
+<!-- @dsCard group="Display" height=330 subtitle="Pass a promise: the component brings its own imprint" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Await — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.card { width: 440px; }
+.who { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const wait = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));
+const load = () => ({
+  name: wait(1200, "Mara Quist"),
+  role: wait(1200, "Platform engineer, Lisbon"),
+  status: wait(1700, "On call"),
+  notes: wait(2200, "Merged \u201CFaster cold starts\u201D into main. Cold starts are down 38% across all regions.")
+});
+function Notes({ notes }) {
+  return /* @__PURE__ */ React.createElement("p", { className: "body" }, A.readPromised(notes));
+}
+function App() {
+  const [round, setRound] = React.useState(0);
+  const data = React.useMemo(load, [round]);
+  React.useEffect(() => {
+    const t = setTimeout(() => setRound((r) => r + 1), 4400);
+    return () => clearTimeout(t);
+  }, [round]);
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Card, { key: round, className: "card" }, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: data.name, size: 44, status: "active" }), /* @__PURE__ */ React.createElement("div", { className: "id" }, /* @__PURE__ */ React.createElement(A.CardTitle, null, data.name), /* @__PURE__ */ React.createElement(A.CardDescription, { skeleton: { lines: 1, width: "70%" } }, data.role)), /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, data.status))), /* @__PURE__ */ React.createElement(A.CardContent, { skeleton: { lines: 2 } }, /* @__PURE__ */ React.createElement(Notes, { notes: data.notes }))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "No skeleton code: each part was handed a promise and imprints itself at its own size. Parts land as their data does, four rises at a time at most."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

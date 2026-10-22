@@ -14,6 +14,8 @@ The lamp is a flat dot in `positive` (active) or `caution` (idle), the same colo
 
 In an `AvatarGroup`, faces are cut out of each other with a ring of ground and higher faces sit in front; you can read who's here from the heights alone. The face under the pointer lifts out of the stack. The overflow is a flat "+N" disc.
 
+**Loading.** `name` and `src` may be promises: until they land the avatar is a round imprint of its `size` (see `Await`).
+
 **You provide:** `name` (always: it's the accessible label, with the status appended), optional `src`, `size` in pixels (default 36), `status`, `live`, `presence`, `lamp`, `onClick`.
 
 - Leave about a fifth of the avatar's size free below it for the shadow, and a third above a group for faces that rise.

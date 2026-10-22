@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEffect } from './core';
 import { Badge, Button, Checkbox } from './controls';
 import { Pile } from './pile';
+import { Await, hint, isPromise, Promised, readPromised, SkeletonOption } from './suspense';
 
 /* ───────────────────────── shared: carrying things to their new places (FLIP) ───────────────────────── */
 
@@ -183,7 +184,10 @@ export interface DataTableColumn<T> {
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
-  rows: T[];
+  /** The rows, or a promise of them: until they land, the table is its header over `skeleton.lines` imprinted rows (default 5). */
+  rows: Promised<T[]>;
+  /** While promised rows load: how many rows to imprint (`lines`). `false` suspends to your own boundary. */
+  skeleton?: SkeletonOption;
   getRowId: (row: T) => string;
   /** A row's name, for screen readers (its checkbox, its move handle, announcements) and its button with onRowClick. */
   getRowLabel?: (row: T) => string;
@@ -222,8 +226,46 @@ const GripIcon = () => (
  * A table from data: sortable columns whose rows are carried to their new places, a checkbox column whose selected rows
  * rise (counted by a floating Badge in the toolbar), filtering in place, interactive rows and reordering by hand.
  */
-export function DataTable<T>({ columns, rows, getRowId, getRowLabel, selectable, selected, defaultSelected = [], onSelectedChange, actions, toolbar,
-  sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className, ...rest }: DataTableProps<T>) {
+export function DataTable<T>({ skeleton, ...props }: DataTableProps<T>) {
+  if (!isPromise(props.rows)) return <DataTableFace {...props} rows={props.rows as T[]} />;
+  const { lines = 5 } = hint(skeleton);
+  const { columns, selectable, toolbar, maxHeight, className } = props;
+  return (
+    <Await shape="none" enabled={skeleton !== false} imprint={
+      <div className={cx('alt-data-table', className)}>
+        {(selectable || toolbar) && <div className="alt-table-tools">{toolbar && <div className="alt-table-tools-end">{toolbar}</div>}</div>}
+        <Table maxHeight={maxHeight} aria-label={props['aria-label']}>
+          <TableHeader>
+            <TableRow>
+              {selectable && <TableHead className="alt-th-check"><span className="alt-skeleton alt-check-imprint" /></TableHead>}
+              {columns.map((c) => <TableHead key={c.key} align={c.align} style={{ width: c.width }}>{c.header}</TableHead>)}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: lines }, (_, i) => (
+              <TableRow key={i}>
+                {selectable && <TableCell className="alt-td-check"><span className="alt-skeleton alt-check-imprint" /></TableCell>}
+                {columns.map((c, ci) => (
+                  <TableCell key={c.key} align={c.align}>
+                    <span className="alt-skeleton alt-cell-imprint" data-shape="text" style={{ width: CELL_WIDTHS[(i + ci) % CELL_WIDTHS.length], ['--i' as string]: i }} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    }>
+      <DataTableLanded {...props} />
+    </Await>
+  );
+}
+const CELL_WIDTHS = ['72%', '54%', '86%', '63%', '78%'];
+function DataTableLanded<T>(props: Omit<DataTableProps<T>, 'skeleton'>) {
+  return <DataTableFace {...props} rows={readPromised(props.rows)} />;
+}
+function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, selected, defaultSelected = [], onSelectedChange, actions, toolbar,
+  sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className, ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
   const [sel, setSel] = useControllable(selected, defaultSelected, onSelectedChange);
   const [srt, setSrt] = useControllable<TableSort>(sort, defaultSort, onSortChange);
   const [said, setSaid] = React.useState('');

@@ -56,6 +56,7 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 
 ## Using the components
 
+- Pass promises instead of values where data loads (`Avatar`'s `src`, a `CardTitle`'s text, a `DataTable`'s `rows`): each part imprints itself until it lands, with no skeleton code (see `Await`).
 - Wrap the app once in `AltitudeProvider`. It sets the scheme, derives a custom accent, honors reduced motion and high contrast, and hosts dialogs and toasts so the page can recede behind them. Render `Toaster` once inside it.
 - Put depth signals on any `Surface` or `Card` with props: `settle` (afterglow when a value changes), `status` (pending, committed, failed), `heldBy` (a collaborator's hold) and `relevance` (match or miss). In your own components, spread `useDepth(...)` onto the element.
 - The bundle exposes everything on `window.Altitude` and expects React 18. It is a dependency-free reference implementation; the props mirror shadcn/ui, so the same styles can wrap Radix primitives in a production package.

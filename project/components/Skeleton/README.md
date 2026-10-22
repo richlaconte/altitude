@@ -4,6 +4,8 @@ Stands in for loading content as an **imprint**: the shape of what's coming, pre
 
 Imprints are wells (`surface-well`, inset shadow) because they're openings waiting to receive something. While waiting, a soft band of light passes over them every `dur-sweep`, staggered line by line; it stops under reduced motion. When `loaded` turns true, the children rise from the bottom of the imprint over `dur-travel-3` while the well fades out. Reveals share the attention budget, so if many land at once, no more than four begin together and the rest follow in order.
 
+**Or don't.** Components that take a promise (`Avatar`, `Badge`, `CardTitle`, `CardDescription`, `DataTable`) and containers (`Card`, `CardContent`) draw their own imprint while they wait; see `Await`. Use Skeleton for your own layouts, or when loading is a flag rather than a promise.
+
 **You provide:** the real content as children, `loaded`, and a shape that matches it: `shape="circle"` with a `width`, `shape="text"` with `lines`, or a block with `width` and `height`.
 
 - Match the real layout so nothing jumps when content arrives.
