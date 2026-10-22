@@ -93,16 +93,19 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   transition: box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise),
     color var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-2) var(--ease-settle);
 }
-/* Focus ring: wraps the whole slab, face and wall, so it follows the button's real shape at every height. */
+/* Focus ring: wraps the whole slab, face and wall, so it follows the button's real shape at every height. It's an
+   outline 2px off a box that covers the face and the wall, because an outline never adds to the page's scrollable
+   area: a button at the edge of a narrow screen must not give the page a sideways scroll. At rest the box is the face
+   alone, so only a keyboard-focused button's wall (the box's bottom edge, at most 5px) reaches past its own box. */
 .alt-btn:focus-visible, .alt-crumbs button:focus-visible { outline: none; }
 .alt-btn::after, .alt-crumbs button::after {
   content: ""; position: absolute; pointer-events: none; opacity: 0;
-  inset: -4px -4px calc(-4px - var(--wall, 0px) - 1px) -4px; border: 2px solid var(--accent-ink); border-radius: calc(var(--radius-md) + 4px);
-  transition: opacity var(--dur-travel-1) var(--ease-rise), inset var(--dur-press) ease-out;
+  inset: 0; outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-md);
+  transition: opacity var(--dur-travel-1) var(--ease-rise), bottom var(--dur-press) ease-out;
 }
-.alt-btn[data-size="sm"]::after, .alt-crumbs button::after { border-radius: calc(var(--radius-sm) + 4px); }
-.alt-btn:focus-visible::after, .alt-crumbs button:focus-visible::after { opacity: 1; }
-.alt-btn:active::after, .alt-btn[data-loading]::after { inset: -4px; }
+.alt-btn[data-size="sm"]::after, .alt-crumbs button::after { border-radius: var(--radius-sm); }
+.alt-btn:focus-visible::after, .alt-crumbs button:focus-visible::after { opacity: 1; bottom: calc(-1 * var(--wall, 0px) - 1px); }
+.alt-btn:active::after, .alt-btn[data-loading]::after { bottom: 0; }
 .alt-btn-label { display: inline-flex; align-items: center; gap: var(--space-2); transition: opacity var(--dur-travel-1) var(--ease-rise); }
 .alt-btn-label > svg { flex: none; margin-inline: -2px; }
 .alt-btn[data-variant="primary"] {
@@ -498,7 +501,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-avatar[data-presence] .alt-avatar-face { outline: 2px solid var(--alt-presence); outline-offset: 1px; }
 .alt-avatar-lamp {
   --b-lamp: var(--positive);
-  position: absolute; z-index: 2; right: -1px; bottom: -1px; width: max(8px, calc(var(--size) * 0.24)); height: max(8px, calc(var(--size) * 0.24)); border-radius: var(--radius-full);
+  position: absolute; z-index: 2; right: 0; bottom: 0; width: max(8px, calc(var(--size) * 0.24)); height: max(8px, calc(var(--size) * 0.24)); border-radius: var(--radius-full);
   background: var(--b-lamp); box-shadow: 0 0 0 2px var(--surface-ground); transform: translateY(calc(-1 * var(--lift)));
 }
 .alt-avatar[data-status="idle"] .alt-avatar-lamp { --b-lamp: var(--caution); }
