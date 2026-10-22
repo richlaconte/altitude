@@ -472,25 +472,27 @@ function BadgeFace({ tone = 'neutral', variant = 'plate', lamp, dot, className, 
 
 /* ───────────────────────── Avatar ───────────────────────── */
 
-const TINTS = ['accent', 'positive', 'caution', 'critical'];
 export interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
-  /** The accessible label. Undefined while your data loads (`user?.name`), or a promise: until it arrives the avatar is a round imprint of its size. */
+  /** The accessible label. Undefined while your data loads (`user?.name`), or a promise: until it arrives the avatar is an imprint of its size and shape. */
   name: Promised<string> | undefined;
-  /** May be a promise, like `name`. */
+  /** May be a promise, like `name`. If the image fails to load, the initials show instead. */
   src?: Promised<string | undefined>;
+  /** In pixels. Default 36. */
   size?: number;
-  /** Presence as height: active people hover above the page (their shadow drops away), idle ones rest on it, offline ones lie flat and grey. */
+  /** `circle` (default) for a person; `square` for a team, an organisation, a bot or an agent. */
+  shape?: 'circle' | 'square';
+  /** Presence: active and idle people are here, so they rest on the page (a filled lamp or an empty one says which); offline people lie flat in it, grey. */
   status?: 'active' | 'idle' | 'offline';
-  /** Speaking, typing or presenting right now: the avatar drifts gently. */
+  /** Speaking, typing or presenting right now: the face leaves the ground and drifts above its shadow. */
   live?: boolean;
   /** Ties the person to their presence colour, the same ring they wear on anything they're holding. */
   presence?: 1 | 2 | 3;
-  /** The status lamp (green active, amber idle). Default: shown when there is a status and the avatar is 24px or larger. Never shown inside AvatarGroup. */
+  /** The status lamp (filled green active, empty amber ring idle). Default: shown when there is a status and the avatar is 24px or larger. Never shown inside AvatarGroup. */
   lamp?: boolean;
   /** `false`: no imprint. An undefined `name` renders an empty face; a promised one suspends to your own boundary. */
   skeleton?: boolean;
 }
-/** A disc above its own shadow. The gap between them is how high the person is: how present they are right now. */
+/** A disc resting on the page while the person is here, flush in it when they're not; live, it lifts off its shadow. */
 export function Avatar({ skeleton, ...props }: AvatarProps) {
   const missing = skeleton !== false && props.name === undefined;
   const promised = isPromise(props.name) || isPromise(props.src);
@@ -498,9 +500,11 @@ export function Avatar({ skeleton, ...props }: AvatarProps) {
   const arrival = useArrival(missing);
   if (!useHasWaited(missing || promised)) return <AvatarFace {...props} name={(props.name as string | undefined) ?? ''} src={props.src as string | undefined} />;
   const size = props.size ?? 36;
+  const square = props.shape === 'square';
   return (
-    <Await inline shape="circle" enabled={skeleton !== false}
-      imprint={<span className="alt-skeleton alt-avatar-imprint" data-shape="circle" style={{ width: size, height: size }} />}>
+    <Await inline shape={square ? 'block' : 'circle'} enabled={skeleton !== false}
+      imprint={<span className="alt-skeleton alt-avatar-imprint" data-shape={square ? 'block' : 'circle'}
+        style={{ width: size, height: size, borderRadius: square ? avatarRadius(size) : undefined }} />}>
       <Arrive when={arrival}><AvatarLanded {...props} /></Arrive>
     </Await>
   );
@@ -508,35 +512,55 @@ export function Avatar({ skeleton, ...props }: AvatarProps) {
 function AvatarLanded(props: Omit<AvatarProps, 'skeleton'>) {
   return <AvatarFace {...props} name={readPromised(props.name) ?? ''} src={readPromised(props.src)} />;
 }
-function AvatarFace({ name, src, size = 36, status, live, presence, lamp, className, style, onClick, ...rest }: Omit<AvatarProps, 'skeleton' | 'name' | 'src'> & { name: string; src?: string }) {
-  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join('');
-  const tint = TINTS[[...name].reduce((a, c) => a + c.charCodeAt(0), 0) % TINTS.length];
+/** The first letter of the first and last words, skipping punctuation and emoji ("Mara de Quist" is MQ); one letter on small faces. */
+function avatarInitials(name: string, count: 1 | 2) {
+  const firsts = name.split(/\s+/).map((w) => w.match(/[\p{L}\p{N}]/u)?.[0]).filter((c): c is string => !!c);
+  return (firsts.length > 1 && count === 2 ? firsts[0]! + firsts[firsts.length - 1]! : firsts[0] ?? '').toUpperCase();
+}
+/** A square face's corners grow with it, as every surface's do. */
+function avatarRadius(size: number) {
+  return `var(--radius-${size <= 24 ? 'xs' : size <= 36 ? 'sm' : size <= 48 ? 'md' : 'lg'})`;
+}
+function AvatarFace({ name, src, size = 36, shape, status, live, presence, lamp, className, style, onClick, ...rest }: Omit<AvatarProps, 'skeleton' | 'name' | 'src'> & { name: string; src?: string }) {
+  const initials = avatarInitials(name, size < 28 ? 1 : 2);
+  const [broken, setBroken] = React.useState<string>();
   const label = [name, status, live && 'live'].filter(Boolean).join(', ');
   const showLamp = (lamp ?? size >= 24) && (status === 'active' || status === 'idle');
   return (
-    <span className={cx('alt-avatar', className)} data-tint={tint} data-status={status} data-live={live ? '' : undefined}
+    <span className={cx('alt-avatar', className)} data-shape={shape === 'square' ? 'square' : undefined} data-status={status} data-live={live ? '' : undefined}
       data-presence={presence ? String(presence) : undefined} data-interactive={onClick ? '' : undefined}
       role={onClick ? 'button' : 'img'} tabIndex={onClick ? 0 : undefined} aria-label={label} title={label} onClick={onClick}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as HTMLElement).click(); } } : undefined}
-      style={{ ['--size' as any]: size + 'px', ...style }} {...rest}>
+      style={{ ['--size' as any]: size + 'px', ...(shape === 'square' && { ['--av-r' as any]: avatarRadius(size) }), ...style }} {...rest}>
       <span className="alt-avatar-shadow" aria-hidden="true" />
-      <span className="alt-avatar-face">{src ? <img src={src} alt="" /> : initials}</span>
+      <span className="alt-avatar-face" data-one={[...initials].length === 1 ? '' : undefined}>{src && broken !== src ? <img src={src} alt="" onError={() => setBroken(src)} /> : initials}</span>
       {showLamp && <span className="alt-avatar-lamp" aria-hidden="true" />}
     </span>
   );
 }
-export function AvatarGroup({ className, children, max, style, ...rest }: React.HTMLAttributes<HTMLDivElement> & { max?: number }) {
-  const all = React.Children.toArray(children);
-  const shown = max ? all.slice(0, max) : all;
-  const extra = all.length - shown.length;
-  const size = (shown[0] as any)?.props?.size || 36;
+export interface AvatarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Show at most this many faces; the rest become a "+N" plate that names them. */
+  max?: number;
+  /** In pixels, for every face that doesn't set its own. Default: the first face's size, or 36. */
+  size?: number;
+}
+/** Faces standing on one ground line, each cut out of the one before it. */
+export function AvatarGroup({ className, children, max, size: groupSize, style, ...rest }: AvatarGroupProps) {
+  const all = React.Children.toArray(children).filter(React.isValidElement) as React.ReactElement<AvatarProps>[];
+  const size = groupSize ?? all[0]?.props.size ?? 36;
+  const sized = groupSize ? all.map((c) => (c.props.size ? c : React.cloneElement(c, { size: groupSize }))) : all;
+  const shown = max ? sized.slice(0, max) : sized;
+  const hidden = sized.slice(shown.length);
+  const names = hidden.map((c) => c.props.name).filter((n): n is string => typeof n === 'string');
+  const more = hidden.length ? `${hidden.length} more${names.length === hidden.length ? ': ' + names.join(', ') : ''}` : '';
   return (
-    <div className={cx('alt-avatar-group', className)} style={{ ['--size' as any]: size + 'px', ...style }} {...rest}>
+    <div className={cx('alt-avatar-group', className)} role="group" aria-label={`${all.length} ${all.length === 1 ? 'person' : 'people'}`}
+      style={{ ['--size' as any]: size + 'px', ...style }} {...rest}>
       {shown}
-      {extra > 0 && (
-        <span className="alt-avatar" data-tint="more" role="img" aria-label={`${extra} more`} style={{ ['--size' as any]: size + 'px' }}>
+      {hidden.length > 0 && (
+        <span className="alt-avatar" data-more="" role="img" aria-label={more} title={more} style={{ ['--size' as any]: size + 'px' }}>
           <span className="alt-avatar-shadow" aria-hidden="true" />
-          <span className="alt-avatar-face">+{extra}</span>
+          <span className="alt-avatar-face">+{hidden.length}</span>
         </span>
       )}
     </div>

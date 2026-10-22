@@ -363,9 +363,9 @@ function App() {
   );
 }
 
-=== Avatar | <!-- @dsCard group="Display" height=230 subtitle="Presence is the gap between a face and its shadow" -->
+=== Avatar | <!-- @dsCard group="Display" height=300 subtitle="Here rests on the page; live lifts off it" -->
 --- css
-.people { display: flex; gap: 30px; align-items: flex-end; }
+.people { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-end; }
 .who { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 --- jsx
 function App() {
@@ -376,11 +376,17 @@ function App() {
         <div className="who"><A.Avatar name="Jon Reyes" size={44} status="active" /><span className="cap">active</span></div>
         <div className="who"><A.Avatar name="Lena Park" size={44} status="idle" /><span className="cap">idle</span></div>
         <div className="who"><A.Avatar name="Sam Okafor" size={44} status="offline" /><span className="cap">offline</span></div>
-        <A.AvatarGroup max={5}>
-          {[['Ada Obi', 'active'], ['Ivy Chen', 'idle'], ['Theo Marsh', 'active'], ['Rui Costa', 'idle'], ['Noa Levi', 'offline'], ['Eli Ward', 'offline'], ['Kai Ito', 'offline']].map(([n, st]) => <A.Avatar key={n} name={n} status={st} />)}
-        </A.AvatarGroup>
+        <div className="who"><A.Avatar name="Noa Levi" size={44} status="active" onClick={() => {}} /><span className="cap">pressable</span></div>
+        <div className="who"><A.Avatar name="Northwind Studio" size={44} shape="square" /><span className="cap">team</span></div>
+        <div className="who"><A.Avatar name="Deploy bot" size={44} shape="square" status="active" /><span className="cap">bot</span></div>
       </div>
-      <p className="cap">Active people hover: their shadow drops away beneath them. Idle people rest on the page; offline people lie flat and grey. Mara is speaking, so she drifts, ringed in her presence colour. Hover a face in the group to lift it out.</p>
+      <div className="people" style={{ alignItems: 'center' }}>
+        <A.AvatarGroup max={5} size={32}>
+          {[['Ada Obi', 'active', true], ['Ivy Chen', 'idle'], ['Theo Marsh', 'active'], ['Rui Costa', 'idle'], ['Noa Levi', 'offline'], ['Eli Ward', 'offline'], ['Kai Ito', 'offline']].map(([n, st, live]) => <A.Avatar key={n} name={n} status={st} live={live} />)}
+        </A.AvatarGroup>
+        {[24, 36, 64].map((s) => <A.Avatar key={s} name="Ines Park" size={s} status="active" />)}
+      </div>
+      <p className="cap">People who are here rest on the page: a filled lamp when they're active, an empty one when they're away. Offline people lie flush and grey. Mara is speaking, so she lifts off her shadow, ringed in her presence colour. Teams and bots are square. Hover Noa: an avatar you can press rises like everything else that acts.</p>
     </div>
   );
 }

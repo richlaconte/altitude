@@ -99,9 +99,10 @@ for (const [name, sel] of [['Drilldown', '.alt-crumbs button'], ['Board', '.alt-
   const neu = lamps.find((l) => l[3] === 'neutral'); expect(neu && neu[1] === 'rgba(0, 0, 0, 0)' && neu[2].includes('inset'), 'neutral lamp is an empty ring');
   await page.close(); }
 { const page = await open('Avatar');
-  const l = await page.evaluate(() => [...document.querySelectorAll('.alt-avatar-lamp')].map((x) => [getComputedStyle(x).backgroundImage, getComputedStyle(x).backgroundColor, x.closest('.alt-avatar').dataset.status]));
+  const l = await page.evaluate(() => [...document.querySelectorAll('.alt-avatar-lamp')].map((x) => [getComputedStyle(x).backgroundImage, getComputedStyle(x).backgroundColor, x.closest('.alt-avatar').dataset.status, getComputedStyle(x).boxShadow]));
   expect(l.length >= 3 && l.every((x) => x[0] === 'none'), 'avatar lamps are flat');
-  expect(l.find((x) => x[2] === 'idle')?.[1] === 'rgb(135, 84, 0)', 'idle is the caution token');
+  expect(l.find((x) => x[2] === 'active')?.[1] === 'rgb(19, 115, 79)', 'active is lit: the positive token itself');
+  const idle = l.find((x) => x[2] === 'idle'); expect(idle && idle[1] === 'rgb(255, 255, 255)' && idle[3].includes('rgb(135, 84, 0)') && idle[3].includes('inset'), 'idle is an empty ring in the caution token: ' + idle?.[3]);
   await page.close(); }
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
