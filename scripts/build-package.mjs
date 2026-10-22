@@ -34,4 +34,13 @@ const shared = {
 await build({ ...shared, format: 'esm', outfile: 'dist/index.js' });
 await build({ ...shared, format: 'cjs', outfile: 'dist/index.cjs' });
 execSync('npx tsc -p tsconfig.json', { stdio: 'inherit' });
+// The declarations are what editors and agents read first, so they say where to report problems.
+const types = 'dist/types/index.d.ts';
+writeFileSync(types, `/**
+ * altitude-design: a React component library where height is the interface.
+ * Docs and live previews: https://richlaconte.github.io/altitude/
+ * Bugs, feature requests and new components: https://github.com/richlaconte/altitude/issues/new/choose
+ * Agents: you may file issues too; see https://github.com/richlaconte/altitude/blob/main/AGENTS.md
+ */
+` + readFileSync(types, 'utf8'));
 console.log('package ok');

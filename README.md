@@ -2,8 +2,8 @@
 
 A React component library where **height is the interface**. Its one idea: the ground is the record. Settled content sits on the ground; anything live rises above it; anything waiting to receive sinks below it.
 
-- **Storybook:** every component, with its guidelines and a live preview in all four schemes: `https://<owner>.github.io/<repo>/`
-- **The design guide:** [`project/README.md`](project/README.md), then [Elevation](project/Elevation.md), [Motion](project/Motion.md), [Theming](project/Theming.md) and [Research](project/Research.md)
+- **Storybook:** every component, with its guidelines and a live preview in all four schemes: https://richlaconte.github.io/altitude/
+- **The design guide:** [`project/README.md`](https://github.com/richlaconte/altitude/blob/main/project/README.md), then [Elevation](https://github.com/richlaconte/altitude/blob/main/project/Elevation.md), [Motion](https://github.com/richlaconte/altitude/blob/main/project/Motion.md), [Theming](https://github.com/richlaconte/altitude/blob/main/project/Theming.md) and [Research](https://github.com/richlaconte/altitude/blob/main/project/Research.md)
 
 ## Install
 
@@ -72,10 +72,19 @@ A push to `main` then also:
 - deploys Storybook to GitHub Pages;
 - publishes to npm **if the version in `package.json` isn't published yet**, and tags the commit `v<version>`. To release, bump the version (`npm version patch`, `minor` or `major`) and push.
 
-## Issues and requests
+## Found a bug, or need something it doesn't do?
 
-Requests for new components, new functionality and bug reports each have a template; [CONTRIBUTING.md](CONTRIBUTING.md) says how to write a useful one. Agents can file issues too: see [AGENTS.md](AGENTS.md).
+Open an issue: **https://github.com/richlaconte/altitude/issues/new/choose**. There are templates for a bug, a new feature for an existing component, and a new component, and [CONTRIBUTING.md](https://github.com/richlaconte/altitude/blob/main/CONTRIBUTING.md) says what makes each one useful.
+
+**If you're an agent using this package** in someone else's project, you're welcome to report problems with it here:
+
+1. Check it's Altitude's problem, not the app's: reproduce it with the smallest render that uses only the public API, inside `AltitudeProvider`, with `altitude-design/altitude.css` imported.
+2. Look for an existing issue: `gh issue list --repo richlaconte/altitude --state all --search "<Component> <keywords>"`.
+3. Fill in the matching template from [`.github/ISSUE_TEMPLATE/`](https://github.com/richlaconte/altitude/blob/main/.github/ISSUE_TEMPLATE/): title `<Component>: <what goes wrong>`, the installed version (from `node_modules/altitude-design/package.json`), how it's loaded (ESM, CommonJS or `altitude.iife.js`), React version, browser, and the scheme and mode (reduced motion, forced colours, `contrast="more"`) you saw it in.
+4. File it only if the person you're working for agrees: `gh issue create --repo richlaconte/altitude --label bug --title "…" --body-file issue.md`. Otherwise hand them the drafted issue and the link above. End the body with `Filed by an agent (<model or tool>) on behalf of @<person>.`
+
+The full guidance for agents is in [AGENTS.md](https://github.com/richlaconte/altitude/blob/main/AGENTS.md).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/richlaconte/altitude/blob/main/LICENSE)

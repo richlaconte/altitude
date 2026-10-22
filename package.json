@@ -10,6 +10,14 @@
     "ui"
   ],
   "license": "MIT",
+  "homepage": "https://richlaconte.github.io/altitude/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/richlaconte/altitude.git"
+  },
+  "bugs": {
+    "url": "https://github.com/richlaconte/altitude/issues/new/choose"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

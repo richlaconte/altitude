@@ -12,6 +12,10 @@ You may open issues on this repository for:
 
 File them when the person you're working for asks you to, or when you find a bug or a missing capability while working on or with Altitude and they agree it's worth recording. The structure and the bar for each kind are in [CONTRIBUTING.md](CONTRIBUTING.md) ("Issues"); the skeletons are the templates in [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/). Use them as written. Don't invent your own headings.
 
+## If you're using the package, not working in this repository
+
+You won't have `build/`, the checks or these docs in `node_modules`, and you don't need them. Reproduce the problem with the public API only, note the installed version from `node_modules/altitude-design/package.json`, pass `--repo richlaconte/altitude` to every `gh` command below, and skip anything that says to run `shoot.mjs` or check against `main`. The person you're working for owns the decision to file: if they haven't agreed, give them the drafted issue and https://github.com/richlaconte/altitude/issues/new/choose instead.
+
 ## How to file one
 
 1. **Search for duplicates.** `gh issue list --state all --search "<Component> <keywords>"`. If one exists, comment on it with anything new instead of opening another.
