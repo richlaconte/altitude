@@ -74,4 +74,4 @@ A push to `main` then also:
 
 ## License
 
-Not yet chosen; until a license is added, all rights are reserved.
+[MIT](LICENSE)
