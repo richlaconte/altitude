@@ -1,0 +1,35 @@
+<!-- @dsCard group="Overlays" height=300 subtitle="A depth stack: older toasts sink behind" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Toaster — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const msgs = [
+  { title: "Deployment queued", description: "northwind-web \xB7 main@8dc01b2" },
+  { title: "Domain verified", description: "acme.dev now points here.", tone: "positive" },
+  { title: "Build failed", description: "Missing DATABASE_URL.", tone: "critical", action: { label: "Retry", onClick: () => {
+  } } }
+];
+function App() {
+  React.useEffect(() => {
+    msgs.forEach((m, i) => setTimeout(() => A.toast({ ...m, duration: 6e4 }), 300 + i * 450));
+  }, []);
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => A.toast({ title: "Changes saved", tone: "positive" }) }, "Toast"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => A.toast({ title: "Running low on storage", description: "92% used", tone: "caution" }) }, "Warning")), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { maxWidth: 300 } }, "Hover the stack to fan it out; timers pause while you read."), /* @__PURE__ */ React.createElement(A.Toaster, null));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

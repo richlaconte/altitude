@@ -1,0 +1,929 @@
+=== Elevation | <!-- @dsCard group="Foundations" height=470 page subtitle="Four tiers you can read, eight levels you can feel" -->
+--- css
+.ladder { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 14px; align-items: start; padding: 40px 4px 8px; }
+.rung { display: flex; flex-direction: column; gap: 10px; }
+.tile { height: 112px; border-radius: var(--radius-lg); display: grid; place-items: center; font: 600 22px/1 var(--font-sans); color: var(--ink-muted); }
+.tile[data-level="-2"], .tile[data-level="-1"] { border: 1px solid var(--line); }
+.tile[data-level="0"] { outline: 1px dashed var(--line-control); outline-offset: -1px; }
+.step { transition: transform var(--dur-travel-3) var(--ease-rise); }
+.meta b { display: block; font: 600 13px/18px var(--font-sans); color: var(--ink); }
+.meta span { display: block; font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
+.meta p { margin: 4px 0 0; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.note { margin: 18px 4px 0; font: 400 13.5px/20px var(--font-sans); color: var(--ink-muted); max-width: 760px; }
+.tiers { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 14px; padding: 8px 4px 0; }
+.tier { border-top: 2px solid var(--line-control); padding-top: 6px; font: 600 12.5px/17px var(--font-sans); color: var(--ink); }
+.tier small { display: block; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+--- jsx
+const rungs = [
+  [-2, 'Trench', 'trench', 'Tracks: slider, switch, progress'],
+  [-1, 'Well', 'well', 'Receptacles: inputs, tab track'],
+  [0, 'Ground', 'elev-0', 'The page; badges, ghost, disabled'],
+  [1, 'Raised', 'elev-1', 'Cards, buttons, thumbs'],
+  [2, 'Lifted', 'elev-2', 'Hover; the primary action'],
+  [3, 'Floating', 'elev-3', 'Tooltips, menus, popovers'],
+  [4, 'Overlay', 'elev-4', 'Toasts, sheets'],
+  [5, 'Modal', 'elev-5', 'Dialogs, one at a time'],
+];
+const tiers = [['Sunk', 'an opening', 2], ['Ground', 'settled', 1], ['Raised', 'live in the page', 2], ['Floating', 'above the page', 3]];
+function App() {
+  return <>
+    <div className="tiers">{tiers.map(([t, m, n]) => <div key={t} className="tier" style={{ gridColumn: 'span ' + n }}>{t}<small>{m}</small></div>)}</div>
+    <div className="ladder">
+      {rungs.map(([lvl, name, tok, use]) => (
+        <div className="rung" key={lvl}>
+          <div className="step" style={{ transform: `translateY(${-lvl * 5}px)` }}>
+            <A.Surface level={lvl} interactive={lvl >= 0 && lvl < 5} className="tile">{lvl > 0 ? '+' + lvl : lvl}</A.Surface>
+          </div>
+          <div className="meta"><b>{name}</b><span>--{tok}</span><p>{use}</p></div>
+        </div>
+      ))}
+    </div>
+    <p className="note">The ground is the record. Live things rise above it; openings sink below it. Meaning lives in the four tiers, because adjacent levels inside a tier can't be told apart at a glance. The levels are for motion: hover a tile and it climbs one rung; press it and it returns to the ground.</p>
+  </>;
+}
+
+=== Motion | <!-- @dsCard group="Foundations" height=400 page subtitle="Duration is distance travelled" -->
+--- css
+.lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 8px 4px; }
+.lane { display: flex; flex-direction: column; gap: 14px; }
+.pad { height: 170px; border-radius: var(--radius-lg); background: var(--surface-well); box-shadow: var(--well); border: 1px solid var(--line); display: grid; place-items: end center; padding: 18px; overflow: hidden; }
+.puck { width: 64%; height: 64px; border-radius: var(--radius-md); }
+.lane-meta { display: flex; justify-content: space-between; align-items: center; }
+.lane-meta b { font: 600 14px/20px var(--font-sans); }
+.lane-meta span { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
+.curves { display: flex; gap: 24px; padding: 18px 4px 0; flex-wrap: wrap; }
+.curve { display: flex; align-items: center; gap: 10px; font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
+.curve svg { overflow: visible; }
+.curve path { fill: none; stroke: var(--accent-ink); stroke-width: 2; stroke-linecap: round; }
+.curve rect { fill: none; stroke: var(--line); }
+--- jsx
+const lanes = [[1, 'dur-travel-1', '140ms', 'Hover lift'], [3, 'dur-travel-3', '220ms', 'Menu, tooltip'], [5, 'dur-travel-5', '300ms', 'Dialog']];
+const curves = [['ease-rise', [0.2, 0.9, 0.25, 1]], ['ease-sink', [0.45, 0, 0.8, 0.35]], ['ease-settle', [0.3, 1.3, 0.45, 1]], ['ease-glide', [0.65, 0, 0.35, 1]]];
+function Lane({ lvl, tok, ms, use, up }) {
+  const pose = up
+    ? { transform: `translateY(${-lvl * 14}px)`, boxShadow: `var(--elev-${lvl})`, background: lvl >= 3 ? 'var(--surface-floating)' : 'var(--surface-raised)', transition: `transform var(--${tok}) var(--ease-rise), box-shadow var(--${tok}) var(--ease-rise)` }
+    : { transform: 'none', boxShadow: 'var(--elev-0)', background: 'var(--surface-raised)', transition: `transform calc(var(--${tok}) * .7) var(--ease-sink), box-shadow calc(var(--${tok}) * .7) var(--ease-sink)` };
+  return (
+    <div className="lane">
+      <div className="pad"><div className="puck" style={pose} /></div>
+      <div className="lane-meta"><b>{lvl} level{lvl > 1 ? 's' : ''} · {use}</b><span>{ms}</span></div>
+    </div>
+  );
+}
+function App() {
+  const [up, setUp] = React.useState(false);
+  React.useEffect(() => { const t = setInterval(() => setUp((u) => !u), 1400); return () => clearInterval(t); }, []);
+  return <>
+    <div className="lanes">{lanes.map(([l, t, m, u]) => <Lane key={l} lvl={l} tok={t} ms={m} use={u} up={up} />)}</div>
+    <div className="curves">
+      {curves.map(([name, [a, b, c, d]]) => (
+        <div className="curve" key={name}>
+          <svg width="36" height="36" viewBox="0 0 36 36"><rect x="0.5" y="0.5" width="35" height="35" rx="6" /><path d={`M4 32 C ${4 + a * 28} ${32 - b * 28}, ${4 + c * 28} ${32 - d * 28}, 32 4`} /></svg>
+          {name}
+        </div>
+      ))}
+    </div>
+  </>;
+}
+
+=== AltitudeProvider | <!-- @dsCard group="Foundations" height=300 subtitle="Schemes and a custom accent" -->
+--- css
+.schemes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.shell { border-radius: var(--radius-lg); border: 1px solid var(--line); overflow: hidden; }
+.scheme { padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 220px; }
+.scheme h4 { margin: 0; font: 600 14px/20px var(--font-sans); }
+.scheme small { margin-top: -8px; font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
+.scheme .alt-btn { align-self: flex-start; }
+--- jsx
+const list = [['daylight'], ['nightfall'], ['mesa'], ['alpine'], ['daylight', '#0f8a6b']];
+function App() {
+  return (
+    <div className="schemes">
+      {list.map(([s, accent], i) => (
+        <A.AltitudeProvider key={i} scheme={s} accent={accent} className="shell"><div className="scheme">
+          <h4>{s[0].toUpperCase() + s.slice(1)}</h4>
+          <small>{accent ? 'accent="' + accent + '"' : 'scheme="' + s + '"'}</small>
+          <A.Button variant="primary" size="sm">Publish</A.Button>
+          <A.Input size="sm" placeholder="Search" />
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><A.Switch defaultChecked aria-label="Enabled" /><A.Badge tone="accent">Beta</A.Badge></div>
+        </div></A.AltitudeProvider>
+      ))}
+    </div>
+  );
+}
+
+=== Surface | <!-- @dsCard group="Foundations" height=220 subtitle="The primitive every component is built from" -->
+--- css
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.s { padding: 18px; min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; }
+.s b { font: 600 15px/22px var(--font-sans); }
+.s span { font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+--- jsx
+function App() {
+  return (
+    <div className="grid">
+      <A.Surface level={-1} className="s"><b>level={'{-1}'}</b><span>A well. Holds things; never lifts.</span></A.Surface>
+      <A.Surface level={1} className="s"><b>level={'{1}'}</b><span>Static grouping. Doesn't react to the pointer.</span></A.Surface>
+      <A.Surface level={1} interactive className="s" onClick={() => {}}><b>level={'{1}'} interactive</b><span>Hover: climbs to 2. Press: drops to ground.</span></A.Surface>
+    </div>
+  );
+}
+
+=== Button | <!-- @dsCard group="Actions" height=200 subtitle="Importance is altitude" -->
+--- jsx
+function App() {
+  const [busy, setBusy] = React.useState(false);
+  return (
+    <div className="col">
+      <div className="row">
+        <A.Button variant="primary">Publish changes</A.Button>
+        <A.Button>Preview</A.Button>
+        <A.Button variant="ghost">Cancel</A.Button>
+        <A.Button variant="danger">Delete project</A.Button>
+      </div>
+      <div className="row">
+        <A.Button variant="primary" size="sm">Small</A.Button>
+        <A.Button variant="primary" size="lg">Large</A.Button>
+        <A.Button square aria-label="Close"><A.Icons.X /></A.Button>
+        <A.Button variant="primary" loading={busy} onClick={() => { setBusy(true); setTimeout(() => setBusy(false), 1600); }}>Save</A.Button>
+        <A.Button disabled>Disabled</A.Button>
+      </div>
+      <p className="cap">Primary rests at level 2, secondary at 1, ghost at 0. Hover climbs one level; pressing returns to the ground. Click Save: a loading button stays pressed.</p>
+    </div>
+  );
+}
+
+=== Card | <!-- @dsCard group="Display" height=250 subtitle="Only actionable cards move" -->
+--- css
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+--- jsx
+function App() {
+  const [n, setN] = React.useState(0);
+  return (
+    <div className="grid">
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Usage this month</A.CardTitle><A.CardDescription>Static: a grouping surface, it never lifts.</A.CardDescription></A.CardHeader>
+        <A.CardContent>18,240 requests · 62% of plan</A.CardContent>
+      </A.Card>
+      <A.Card interactive onClick={() => setN(n + 1)}>
+        <A.CardHeader><A.CardTitle>Open project</A.CardTitle><A.CardDescription>Interactive: the whole card is the target, so it lifts and presses.</A.CardDescription></A.CardHeader>
+        <A.CardContent>{n ? `Opened ${n}×` : 'Click or press Enter'}</A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
+=== Input | <!-- @dsCard group="Inputs" height=320 subtitle="An opening: you see its wall until it's filled" -->
+--- css
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 640px; }
+--- jsx
+function App() {
+  const [note, setNote] = React.useState('Ship the cold-start fix behind a flag first.');
+  const [email, setEmail] = React.useState('');
+  return (
+    <div className="col">
+      <div className="grid">
+        <A.Input placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <A.Input defaultValue="mara@northwind.dev" />
+        <A.Input placeholder="Search projects" leading={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>} trailing={<A.Kbd>/</A.Kbd>} />
+        <A.Input defaultValue="not-an-email" invalid />
+        <div style={{ gridColumn: '1 / -1' }}><A.Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={80} placeholder="Leave a note for your team…" /></div>
+      </div>
+      <p className="cap">An empty field shows its inside wall below the top edge, and deepens as your pointer comes near. Type and the floor rises flush with the page. Invalid drops it to trench depth.</p>
+    </div>
+  );
+}
+
+=== Field | <!-- @dsCard group="Inputs" height=230 subtitle="Label, hint, and an error that emerges" -->
+--- css
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; max-width: 640px; }
+--- jsx
+function App() {
+  const [v, setV] = React.useState('acme');
+  const err = v.length < 5 ? 'Use at least 5 characters.' : null;
+  return (
+    <div className="grid">
+      <A.Field label="Workspace name" hint="Shown to everyone you invite.">
+        <A.Input defaultValue="Northwind Studio" />
+      </A.Field>
+      <A.Field label="URL slug" required error={err}>
+        <A.Input value={v} onChange={(e) => setV(e.target.value)} />
+      </A.Field>
+    </div>
+  );
+}
+
+=== Checkbox | <!-- @dsCard group="Inputs" height=230 subtitle="A one-position switch" -->
+--- css
+.family { display: flex; gap: 22px; align-items: center; padding-top: 4px; }
+--- jsx
+function App() {
+  const [a, setA] = React.useState(true);
+  const [b, setB] = React.useState(false);
+  return (
+    <div className="col">
+      <A.Checkbox label="Select all" checked={a && b} indeterminate={a !== b} onCheckedChange={(c) => { setA(c); setB(c); }} />
+      <div className="col" style={{ paddingLeft: 34 }}>
+        <A.Checkbox label="Weekly digest" description="A summary every Monday morning." checked={a} onCheckedChange={setA} />
+        <A.Checkbox label="Product updates" checked={b} onCheckedChange={setB} />
+      </div>
+      <A.Checkbox label="Disabled" disabled defaultChecked />
+      <div className="family"><span className="cap">Same build as</span><A.Switch defaultChecked aria-label="Switch" /><A.Switch aria-label="Switch off" /></div>
+    </div>
+  );
+}
+
+=== RadioGroup | <!-- @dsCard group="Inputs" height=190 subtitle="One switch, several positions" -->
+--- css
+.pair { display: flex; gap: 64px; align-items: flex-start; }
+--- jsx
+function App() {
+  return (
+    <div className="pair">
+      <A.RadioGroup defaultValue="team" aria-label="Plan">
+        <A.Radio value="solo" label="Solo" description="One seat, unlimited projects." />
+        <A.Radio value="team" label="Team" description="Up to 20 seats and shared libraries." />
+        <A.Radio value="org" label="Organization" disabled description="Talk to us." />
+      </A.RadioGroup>
+      <A.RadioGroup defaultValue="m" orientation="horizontal" aria-label="Size">
+        <A.Radio value="s" label="Small" /><A.Radio value="m" label="Medium" /><A.Radio value="l" label="Large" />
+      </A.RadioGroup>
+    </div>
+  );
+}
+
+=== Switch | <!-- @dsCard group="Inputs" height=150 subtitle="A raised thumb over a trench" -->
+--- jsx
+function App() {
+  return (
+    <div className="col">
+      <A.Switch label="Sync across devices" defaultChecked />
+      <A.Switch label="Email me when someone comments" />
+      <A.Switch label="Disabled" disabled />
+      <p className="cap">Hold the pointer down: the thumb stretches before it travels.</p>
+    </div>
+  );
+}
+
+=== Tabs | <!-- @dsCard group="Navigation" height=300 subtitle="The sheet on top is the one you're reading" -->
+--- css
+.stack { display: flex; flex-direction: column; gap: 28px; max-width: 620px; }
+--- jsx
+function App() {
+  return (
+    <div className="stack">
+      <A.Tabs defaultValue="overview">
+        <A.TabsList aria-label="Project">
+          <A.TabsTrigger value="overview">Overview</A.TabsTrigger>
+          <A.TabsTrigger value="activity">Activity</A.TabsTrigger>
+          <A.TabsTrigger value="settings">Settings</A.TabsTrigger>
+          <A.TabsTrigger value="members">Members</A.TabsTrigger>
+        </A.TabsList>
+        <A.TabsContent value="overview"><p className="body">Three deployments this week. Everything is healthy.</p></A.TabsContent>
+        <A.TabsContent value="activity"><p className="body">Mara merged “Faster cold starts” 2 hours ago.</p></A.TabsContent>
+        <A.TabsContent value="settings"><p className="body">Region, domains and environment variables.</p></A.TabsContent>
+        <A.TabsContent value="members"><p className="body">Six people have access to this project.</p></A.TabsContent>
+      </A.Tabs>
+      <A.Tabs defaultValue="week" variant="segmented">
+        <A.TabsList aria-label="Range">
+          <A.TabsTrigger value="day">Day</A.TabsTrigger>
+          <A.TabsTrigger value="week">Week</A.TabsTrigger>
+          <A.TabsTrigger value="month">Month</A.TabsTrigger>
+        </A.TabsList>
+      </A.Tabs>
+    </div>
+  );
+}
+
+=== Slider | <!-- @dsCard group="Inputs" height=170 subtitle="Grab the thumb: it floats to level 3" -->
+--- css
+.wrap { max-width: 420px; padding-top: 28px; }
+--- jsx
+function App() {
+  const [v, setV] = React.useState(64);
+  return (
+    <div className="col wrap">
+      <A.Slider value={v} onValueChange={setV} aria-label="Volume" format={(n) => n + '%'} />
+      <A.Slider defaultValue={30} disabled aria-label="Disabled" />
+      <p className="cap">Volume {v}% — drag, or focus and use the arrow keys.</p>
+    </div>
+  );
+}
+
+=== Progress | <!-- @dsCard group="Display" height=150 subtitle="A fill rising out of a trench" -->
+--- css
+.wrap { max-width: 420px; }
+--- jsx
+function App() {
+  const [v, setV] = React.useState(20);
+  React.useEffect(() => { const t = setInterval(() => setV((x) => (x >= 100 ? 8 : x + 23)), 1100); return () => clearInterval(t); }, []);
+  return (
+    <div className="col wrap">
+      <A.Progress value={v} aria-label="Upload" />
+      <A.Progress aria-label="Loading" />
+      <p className="cap">Determinate glides between values; indeterminate travels.</p>
+    </div>
+  );
+}
+
+=== Badge | <!-- @dsCard group="Display" height=200 subtitle="Indicator plates set into the page" -->
+--- css
+.anchor { position: relative; display: inline-flex; }
+.anchor .alt-badge { position: absolute; top: -9px; right: -10px; }
+--- jsx
+function App() {
+  const [deploying, setDeploying] = React.useState(true);
+  const [n, setN] = React.useState(3);
+  React.useEffect(() => { const t = setInterval(() => { setDeploying((d) => !d); setN((x) => (x % 5) + 1); }, 2400); return () => clearInterval(t); }, []);
+  return (
+    <div className="col">
+      <div className="row">
+        <A.Badge lamp>Draft</A.Badge>
+        <A.Badge tone="accent">Beta</A.Badge>
+        <A.Badge tone="positive">Operational</A.Badge>
+        <A.Badge tone="caution">Degraded</A.Badge>
+        <A.Badge tone="critical">Outage</A.Badge>
+        <A.Badge tone={deploying ? 'accent' : 'positive'} lamp={deploying ? 'pulse' : true}>{deploying ? 'Deploying' : 'Live'}</A.Badge>
+      </div>
+      <div className="row">
+        <A.Badge tone="positive" variant="tinted">Operational</A.Badge>
+        <A.Badge tone="critical" variant="tinted">Outage</A.Badge>
+        <A.Badge variant="outline">v2.4.0</A.Badge>
+        <span className="anchor"><A.Button>Inbox</A.Button><A.Badge variant="count" tone="critical">{n}</A.Badge></span>
+      </div>
+      <p className="cap">Labels are stamped into the record; status wears a lamp that relights when it changes. A count is the one badge that floats, because it wants you.</p>
+    </div>
+  );
+}
+
+=== Avatar | <!-- @dsCard group="Display" height=230 subtitle="Presence is the gap between a face and its shadow" -->
+--- css
+.people { display: flex; gap: 30px; align-items: flex-end; }
+.who { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+--- jsx
+function App() {
+  return (
+    <div className="col" style={{ gap: 22 }}>
+      <div className="people">
+        <div className="who"><A.Avatar name="Mara Quist" size={44} status="active" live presence={1} /><span className="cap">live</span></div>
+        <div className="who"><A.Avatar name="Jon Reyes" size={44} status="active" /><span className="cap">active</span></div>
+        <div className="who"><A.Avatar name="Lena Park" size={44} status="idle" /><span className="cap">idle</span></div>
+        <div className="who"><A.Avatar name="Sam Okafor" size={44} status="offline" /><span className="cap">offline</span></div>
+        <A.AvatarGroup max={5}>
+          {[['Ada Obi', 'active'], ['Ivy Chen', 'idle'], ['Theo Marsh', 'active'], ['Rui Costa', 'idle'], ['Noa Levi', 'offline'], ['Eli Ward', 'offline'], ['Kai Ito', 'offline']].map(([n, st]) => <A.Avatar key={n} name={n} status={st} />)}
+        </A.AvatarGroup>
+      </div>
+      <p className="cap">Active people hover: their shadow drops away beneath them. Idle people rest on the page; offline people lie flat and grey. Mara is speaking, so she drifts, ringed in her presence colour. Hover a face in the group to lift it out.</p>
+    </div>
+  );
+}
+
+=== Skeleton | <!-- @dsCard group="Display" height=210 subtitle="An imprint the content rises out of" -->
+--- css
+.card { display: flex; gap: 14px; align-items: flex-start; padding: 16px; width: 420px; }
+.lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.txt { font: 400 13.5px/20px var(--font-sans); color: var(--ink-muted); margin: 0; }
+--- jsx
+function App() {
+  const [loaded, setLoaded] = React.useState(false);
+  React.useEffect(() => { const t = setInterval(() => setLoaded((l) => !l), 2600); return () => clearInterval(t); }, []);
+  return (
+    <div className="col">
+      <A.Surface level={1} className="card">
+        <A.Skeleton loaded={loaded} shape="circle" width={44}><A.Avatar name="Mara Quist" size={44} status="active" /></A.Skeleton>
+        <div className="lines">
+          <A.Skeleton loaded={loaded} width="45%" height={14}><b style={{ font: '600 14px/20px var(--font-sans)' }}>Mara Quist</b></A.Skeleton>
+          <A.Skeleton loaded={loaded} shape="text" lines={2}><p className="txt">Merged “Faster cold starts” into main. Cold starts are down 38% across all regions.</p></A.Skeleton>
+        </div>
+      </A.Surface>
+      <p className="cap">While it loads, the layout is pressed into the page; when content lands it rises out of its imprint, four at a time at most.</p>
+    </div>
+  );
+}
+
+=== Alert | <!-- @dsCard group="Display" height=470 subtitle="Sheets laid on the page; a stack when there are several" -->
+--- css
+.wrap { max-width: 580px; }
+--- jsx
+const queue = [
+  { id: 'b', tone: 'critical', title: 'Build failed', body: 'Missing environment variable DATABASE_URL.' },
+  { id: 'c', tone: 'caution', title: 'Certificate renews in 3 days', body: 'Renewal is automatic; nothing to do.' },
+  { id: 'd', tone: 'accent', title: 'New region available', body: 'Frankfurt (eu-central-2) is now open.' },
+];
+function App() {
+  const [items, setItems] = React.useState(queue);
+  React.useEffect(() => { if (!items.length) { const t = setTimeout(() => setItems(queue), 900); return () => clearTimeout(t); } }, [items]);
+  return (
+    <div className="col wrap">
+      <A.Alert title="Scheduled maintenance">The API will be read-only on Sunday from 02:00 to 02:30 UTC.</A.Alert>
+      <A.Alert tone="positive" title="Domain verified">acme.dev now points at this project.</A.Alert>
+      <A.Alert tone="caution" variant="raised" title="You're at 90% of your plan" action={<A.Button size="sm" variant="primary">Upgrade</A.Button>} />
+      <A.AlertStack>
+        {items.map((a) => <A.Alert key={a.id} tone={a.tone} title={a.title} onDismiss={() => setItems((xs) => xs.filter((x) => x.id !== a.id))}>{a.body}</A.Alert>)}
+      </A.AlertStack>
+    </div>
+  );
+}
+
+=== Accordion | <!-- @dsCard group="Navigation" height=330 subtitle="Lift the lid; the content sits in the compartment" -->
+--- css
+.wrap { max-width: 560px; }
+--- jsx
+const items = [
+  { value: 'a', title: 'What does elevation mean here?', content: 'Height says how much something matters right now and what you can do with it: raised things are pushed, sunk things are filled.' },
+  { value: 'b', title: 'Can I bring my own colour?', content: 'Pass any hex as accent to AltitudeProvider. The accent text and soft tints are derived to stay legible on every surface.' },
+  { value: 'c', title: 'Does it respect reduced motion?', content: 'Yes. Surfaces still change level, tint and shadow, but nothing travels or scales.' },
+];
+function App() { return <div className="wrap"><A.Accordion items={items} defaultValue={['b']} /></div>; }
+
+=== Kbd | <!-- @dsCard group="Display" height=110 subtitle="Keys that press when you press them" -->
+--- jsx
+function App() {
+  return (
+    <div className="col">
+      <div className="row"><span className="body">Open the command menu</span><span><A.Kbd listen="Meta">⌘</A.Kbd><A.Kbd listen="k">K</A.Kbd></span></div>
+      <p className="cap">Click into this card and press ⌘K, or hold K.</p>
+    </div>
+  );
+}
+
+=== Tooltip | <!-- @dsCard group="Overlays" height=140 subtitle="Level 3, warm-up between neighbours" -->
+--- css
+.row { padding-top: 40px; }
+--- jsx
+function App() {
+  return (
+    <div className="row">
+      <A.Tooltip content="Bold  ⌘B" defaultOpen><A.Button square variant="ghost" aria-label="Bold"><b>B</b></A.Button></A.Tooltip>
+      <A.Tooltip content="Italic  ⌘I"><A.Button square variant="ghost" aria-label="Italic"><i style={{ fontFamily: 'serif', fontSize: 17 }}>I</i></A.Button></A.Tooltip>
+      <A.Tooltip content="Underline  ⌘U"><A.Button square variant="ghost" aria-label="Underline"><u>U</u></A.Button></A.Tooltip>
+      <span className="cap" style={{ marginLeft: 12 }}>Hover one, then slide to the next: no second delay.</span>
+    </div>
+  );
+}
+
+=== Popover | <!-- @dsCard group="Overlays" height=280 subtitle="Rises from its trigger" -->
+--- jsx
+function App() {
+  return (
+    <A.Popover defaultOpen aria-label="Share" trigger={<A.Button>Share</A.Button>}>
+      <div className="col" style={{ width: 280, gap: 12 }}>
+        <b style={{ font: '600 14px/20px var(--font-sans)' }}>Invite to project</b>
+        <A.Input size="sm" placeholder="name@company.com" />
+        <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}><A.Button size="sm" variant="primary">Send invite</A.Button></div>
+      </div>
+    </A.Popover>
+  );
+}
+
+=== DropdownMenu | <!-- @dsCard group="Overlays" height=340 subtitle="One gliding highlight; predicted items arrive first" -->
+--- css
+.pair { display: flex; gap: 220px; }
+--- jsx
+const items = [
+  { type: 'label', label: 'Project' },
+  { label: 'Rename', shortcut: 'R' },
+  { label: 'Duplicate', shortcut: '⌘D' },
+  { label: 'Move to…' },
+  { label: 'Archive', disabled: true },
+  { type: 'separator' },
+  { label: 'Delete project', tone: 'critical', shortcut: '⌫' },
+];
+const predicted = [
+  { label: 'Copy link', shortcut: '⌘L', predicted: true },
+  { label: 'Share…', predicted: true },
+  { label: 'Rename', shortcut: 'R' },
+  { label: 'Duplicate', shortcut: '⌘D' },
+  { label: 'Export as PDF' },
+  { label: 'Version history' },
+];
+function App() {
+  return (
+    <div className="pair">
+      <A.DropdownMenu defaultOpen items={items} trigger={<A.Button trailing={<A.Icons.ChevronDown />}>Actions</A.Button>} />
+      <A.DropdownMenu items={predicted} trigger={<A.Button trailing={<A.Icons.ChevronDown />}>Predicted</A.Button>} />
+    </div>
+  );
+}
+
+=== Dialog | <!-- @dsCard group="Overlays" height=380 subtitle="Level 5: the page recedes beneath it" -->
+--- css
+.page { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.page > * { height: 80px; }
+--- jsx
+function App() {
+  const [open, setOpen] = React.useState(true);
+  return (
+    <div className="col">
+      <div className="row"><A.Button variant="primary" onClick={() => setOpen(true)}>Delete project…</A.Button></div>
+      <div className="page"><A.Card /><A.Card /><A.Card /></div>
+      <A.Dialog open={open} onOpenChange={setOpen} size="sm" title="Delete “Northwind”?"
+        description="This removes 14 deployments and their logs. It can't be undone."
+        footer={<><A.Button variant="ghost" onClick={() => setOpen(false)}>Cancel</A.Button><A.Button variant="danger" onClick={() => setOpen(false)} data-autofocus>Delete project</A.Button></>} />
+    </div>
+  );
+}
+
+=== Toaster | <!-- @dsCard group="Overlays" height=300 subtitle="A depth stack: older toasts sink behind" -->
+--- jsx
+const msgs = [
+  { title: 'Deployment queued', description: 'northwind-web · main@8dc01b2' },
+  { title: 'Domain verified', description: 'acme.dev now points here.', tone: 'positive' },
+  { title: 'Build failed', description: 'Missing DATABASE_URL.', tone: 'critical', action: { label: 'Retry', onClick: () => {} } },
+];
+function App() {
+  React.useEffect(() => { msgs.forEach((m, i) => setTimeout(() => A.toast({ ...m, duration: 60000 }), 300 + i * 450)); }, []);
+  return (
+    <div className="col">
+      <div className="row">
+        <A.Button onClick={() => A.toast({ title: 'Changes saved', tone: 'positive' })}>Toast</A.Button>
+        <A.Button variant="ghost" onClick={() => A.toast({ title: 'Running low on storage', description: '92% used', tone: 'caution' })}>Warning</A.Button>
+      </div>
+      <p className="cap" style={{ maxWidth: 300 }}>Hover the stack to fan it out; timers pause while you read.</p>
+      <A.Toaster />
+    </div>
+  );
+}
+
+=== Signals | <!-- @dsCard group="Foundations" height=560 page subtitle="What height can tell you beyond hierarchy" -->
+--- css
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 24px; }
+.cell { display: flex; flex-direction: column; gap: 12px; }
+.cell h4 { margin: 0; font: 600 14px/20px var(--font-sans); }
+.cell .cap { min-height: 34px; }
+.card { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card b { font: 500 14px/20px var(--font-sans); }
+.card .sub { font: 400 12.5px/17px var(--font-mono); color: var(--ink-muted); }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tile { padding: 10px; border-radius: var(--radius-md); font: 500 13px/18px var(--font-sans); text-align: center; }
+--- jsx
+const names = ['Atlas', 'Beacon', 'Cinder', 'Delta', 'Ember', 'Fable', 'Garnet', 'Harbor'];
+function App() {
+  const [rev, setRev] = React.useState(3);
+  const [status, setStatus] = React.useState('committed');
+  const [q, setQ] = React.useState('ar');
+  const save = (fail) => { setStatus('pending'); setTimeout(() => setStatus(fail ? 'failed' : 'committed'), 1800); };
+  return (
+    <div className="grid">
+      <div className="cell">
+        <h4>Recency · afterglow</h4>
+        <p className="cap">Changed content arrives lifted and tinted, then settles to the ground over 8s. No badge needed to say what just changed.</p>
+        <A.Surface level={1} className="card" settle={rev}><div><b>Northwind · production</b><br /><span className="sub">build #{rev}</span></div><A.Button size="sm" onClick={() => setRev(rev + 1)}>Deploy</A.Button></A.Surface>
+      </div>
+      <div className="cell">
+        <h4>Commitment · pending, landed, failed</h4>
+        <p className="cap">An optimistic write hovers above the ground until the server confirms, then lands. A failure drops into a trench.</p>
+        <A.Surface level={1} className="card" status={status}><div><b>Rename to “Northwind 2”</b><br /><span className="sub">{status}</span></div>
+          <span style={{ display: 'flex', gap: 6 }}><A.Button size="sm" onClick={() => save(false)}>Save</A.Button><A.Button size="sm" variant="ghost" onClick={() => save(true)}>Save (fail)</A.Button></span></A.Surface>
+      </div>
+      <div className="cell">
+        <h4>Possession · held by someone</h4>
+        <p className="cap">A collaborator editing a card is holding it: it's lifted out of the page, wearing their colour and name.</p>
+        <A.Surface level={1} className="card" heldBy={{ name: 'Mara', presence: 1 }}><div><b>Pricing page copy</b><br /><span className="sub">editing now</span></div></A.Surface>
+      </div>
+      <div className="cell">
+        <h4>Relevance · focus+context</h4>
+        <A.Input size="sm" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter" />
+        <div className="tiles">{names.map((n) => <A.Surface key={n} level={1} className="tile" relevance={!q ? undefined : n.toLowerCase().includes(q.toLowerCase()) ? 'match' : 'miss'}>{n}</A.Surface>)}</div>
+      </div>
+    </div>
+  );
+}
+
+=== Contrast | <!-- @dsCard group="Foundations" height=300 page subtitle="Elevation for people who can't see shadows" -->
+--- css
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.half { padding: 18px; border-radius: var(--radius-lg); border: 1px solid var(--line); }
+.half h4 { margin: 0 0 14px; font: 600 13px/18px var(--font-sans); color: var(--ink-muted); }
+.row5 { display: flex; gap: 12px; align-items: flex-end; }
+.t { width: 44px; height: 44px; border-radius: var(--radius-md); display: grid; place-items: center; font: 600 13px/1 var(--font-sans); color: var(--ink-muted); }
+.ctl { display: flex; gap: 10px; margin-top: 18px; align-items: center; }
+--- jsx
+function Ladder() {
+  return <>
+    <div className="row5">{[-2, -1, 0, 1, 2, 3, 5].map((l) => <A.Surface key={l} level={l} className="t">{l}</A.Surface>)}</div>
+    <div className="ctl"><A.Button variant="primary" size="sm">Publish</A.Button><A.Button size="sm">Preview</A.Button><A.Input size="sm" placeholder="Search" style={{ width: 104 }} /><A.Switch defaultChecked aria-label="On" /></div>
+  </>;
+}
+function App() {
+  return (
+    <div className="pair">
+      <div className="half"><h4>Default</h4><Ladder /></div>
+      <A.AltitudeProvider contrast="more" className="half"><h4>contrast="more" · prefers-contrast: more</h4><Ladder /></A.AltitudeProvider>
+    </div>
+  );
+}
+
+=== HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
+--- jsx
+function App() {
+  const [n, setN] = React.useState(0);
+  return (
+    <div className="col">
+      <div className="row">
+        <A.HoldButton onConfirm={() => {}} holdingLabel="Keep holding…" doneLabel="Project deleted">Hold to delete</A.HoldButton>
+        <A.HoldButton variant="primary" duration={700} repeatable onConfirm={() => setN(n + 1)} doneLabel="Published">Hold to publish</A.HoldButton>
+      </div>
+      <p className="cap">Press and hold (or hold Space). The button sinks below the ground as the fuse burns; let go early and it springs back. Once done it lies flat and can't be pressed again, unless it's <code>repeatable</code> (published {n}×).</p>
+    </div>
+  );
+}
+
+=== Pile | <!-- @dsCard group="Display" height=480 subtitle="Thickness says how many; click to fan it out" -->
+--- css
+.piles { display: flex; gap: 28px; align-items: flex-start; }
+.p { width: 168px; }
+.p.wide { width: 280px; }
+.face { padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+.face b { font: 600 14px/20px var(--font-sans); }
+.face span { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.doc b { display: block; font: 600 14px/20px var(--font-sans); }
+.doc span { display: block; margin-top: 4px; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+.doc small { display: block; margin-top: 10px; font: 500 12px/16px var(--font-mono); color: var(--ink-muted); }
+--- jsx
+const docs = [
+  ['Pricing page copy', 'Three tiers, annual toggle, FAQ.', 'Mara · 2h'], ['Onboarding emails', 'Five-step drip for new workspaces.', 'Jon · yesterday'],
+  ['Q4 launch plan', 'Milestones, owners and risks.', 'Lena · Mon'], ['Release notes 2.4', 'Faster cold starts, new regions.', 'Sam · Mon'],
+  ['Support macros', 'Twelve canned replies, reviewed.', 'Ivy · last week'], ['Brand voice', 'How we sound, with examples.', 'Ada · last week'],
+  ['Security review', 'Findings from the October audit.', 'Theo · Oct 2'],
+];
+function App() {
+  const [picked, setPicked] = React.useState(null);
+  return (
+    <div className="col">
+      <div className="piles">
+        <A.Pile count={1} className="p"><div className="face"><b>Drafts</b><span>1 document</span></div></A.Pile>
+        <A.Pile count={3} interactive className="p"><div className="face"><b>Approved</b><span>3 documents</span></div></A.Pile>
+        <A.Pile items={docs} className="p wide" onSelect={(d) => setPicked(d[0])} defaultOpen maxHeight={300}
+          renderItem={([t, d, m]) => <div className="doc"><b>{t}</b><span>{d}</span><small>{m}</small></div>}>
+          <div className="face"><b>In review</b><span>{docs.length} documents · click to fan out</span></div>
+        </A.Pile>
+      </div>
+      <p className="cap">{picked ? `Opened “${picked}”.` : 'One sheet for 2–3 items, two for 4–9, three for 10+; the badge carries the number. Click a pile with items and they fan out over the page below it.'}</p>
+    </div>
+  );
+}
+
+=== ScrollArea | <!-- @dsCard group="Layout" height=330 subtitle="Edges curve away where content continues" -->
+--- css
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 760px; }
+.item { display: flex; justify-content: space-between; padding: 10px 16px; font: 400 14px/20px var(--font-sans); border-top: 1px solid var(--line); }
+.item span { color: var(--ink-muted); font: 400 12.5px/20px var(--font-mono); }
+.head { font: 600 14px/20px var(--font-sans); }
+--- jsx
+const rows = Array.from({ length: 18 }, (_, i) => ['Invoice #' + (2041 + i), '$' + (120 + i * 37) + '.00']);
+function App() {
+  return (
+    <div className="pair">
+      <A.ScrollArea maxHeight={240} aria-label="Invoices">{rows.map(([a, b]) => <div className="item" key={a}>{a}<span>{b}</span></div>)}</A.ScrollArea>
+      <A.ScrollArea maxHeight={196} header={<div className="head">Invoices · October</div>} aria-label="Invoices with header">{rows.map(([a, b]) => <div className="item" key={a}>{a}<span>{b}</span></div>)}</A.ScrollArea>
+    </div>
+  );
+}
+
+=== SortableList | <!-- @dsCard group="Layout" height=330 subtitle="Pick up, the slot opens, it lands" -->
+--- css
+.wrap { max-width: 420px; }
+.it { display: flex; justify-content: space-between; align-items: center; }
+--- jsx
+function App() {
+  const [items, setItems] = React.useState([
+    { id: 'a', t: 'Write release notes', p: 'High' }, { id: 'b', t: 'Review pricing copy', p: 'Med' },
+    { id: 'c', t: 'Fix cold-start regression', p: 'High' }, { id: 'd', t: 'Update onboarding emails', p: 'Low' }, { id: 'e', t: 'Plan Q1 roadmap', p: 'Med' },
+  ]);
+  return (
+    <div className="col wrap">
+      <A.SortableList aria-label="Priorities" items={items} getKey={(i) => i.id} getLabel={(i) => i.t} onReorder={setItems}
+        renderItem={(i) => <div className="it">{i.t}<A.Badge tone={i.p === 'High' ? 'critical' : i.p === 'Med' ? 'caution' : 'neutral'}>{i.p}</A.Badge></div>} />
+      <p className="cap">Drag, or focus a row and press Space, then the arrow keys.</p>
+    </div>
+  );
+}
+
+=== DropZone | <!-- @dsCard group="Inputs" height=230 subtitle="Receptacles open when they're needed" -->
+--- css
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.lab { font: 500 12px/16px var(--font-mono); color: var(--ink-muted); margin-bottom: 8px; }
+--- jsx
+const Body = () => <><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" /></svg><span>Drop files or <u>browse</u></span></>;
+function App() {
+  return (
+    <div className="three">
+      <div><div className="lab">idle · flush</div><A.DropZone state="idle"><Body /></A.DropZone></div>
+      <div><div className="lab">armed · a file is in flight</div><A.DropZone state="armed"><Body /></A.DropZone></div>
+      <div><div className="lab">over · ready to receive</div><A.DropZone state="over"><Body /></A.DropZone></div>
+    </div>
+  );
+}
+
+=== Drilldown | <!-- @dsCard group="Navigation" height=330 subtitle="Descend into children, ascend back" -->
+--- css
+.wrap { max-width: 460px; }
+--- jsx
+const tree = { id: 'ws', title: 'Workspace', children: [
+  { id: 'nw', title: 'Northwind', description: 'Marketing site', children: [
+    { id: 'prod', title: 'Production', description: 'acme.dev', children: [
+      { id: 'b42', title: 'Build #42', description: 'main@8dc01b2 · 2h ago', content: 'Deployed by Mara. 14 routes, 2.1 MB, healthy.' },
+      { id: 'b41', title: 'Build #41', description: 'main@51ac9e0 · yesterday', content: 'Rolled back after a cold-start regression.' } ] },
+    { id: 'prev', title: 'Preview', description: '3 branches', content: 'Preview deployments for open pull requests.' } ] },
+  { id: 'bc', title: 'Beacon', description: 'Internal dashboard', content: 'No deployments yet.' },
+  { id: 'st', title: 'Settings', description: 'Members, billing, domains', content: 'Workspace settings.' } ] };
+function App() { return <div className="wrap"><A.Drilldown root={tree} /></div>; }
+
+=== CommandPalette | <!-- @dsCard group="Overlays" height=500 subtitle="The summit: ranked results that travel when they change" -->
+--- css
+.app { display: flex; flex-direction: column; gap: 14px; }
+.bar { display: flex; align-items: center; gap: 12px; }
+.bar b { font: 600 15px/22px var(--font-sans); }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.grid > * { height: 92px; }
+.find { margin-left: auto; min-width: 220px; justify-content: space-between; color: var(--ink-muted); }
+--- jsx
+const I = {
+  up: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M7 17L17 7M9 7h8v8" })),
+  folder: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" })),
+  plus: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M12 5v14M5 12h14" })),
+  user: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "8", r: "4" }), /* @__PURE__ */ React.createElement("path", { d: "M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" })),
+  key: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "8", cy: "15", r: "4" }), /* @__PURE__ */ React.createElement("path", { d: "M11 12l9-9M17 6l3 3" })),
+  trash: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" }))
+};
+const groups = [
+  { label: "Recent", predicted: true, items: [
+    { label: "Deploy to production", icon: I.up, shortcut: ["\u2318", "D"], keywords: ["ship", "release"] },
+    { label: "Open Northwind", icon: I.folder, description: "Marketing site" }
+  ] },
+  { label: "Actions", items: [
+    { label: "New project", icon: I.plus, shortcut: ["\u2318", "N"] },
+    { label: "Invite people", icon: I.user, keywords: ["team", "member"] },
+    { label: "Deploy preview", icon: I.up, description: "main@8dc01b2" },
+    { label: "Delete project\u2026", icon: I.trash, tone: "critical" }
+  ] },
+  { label: "Projects", items: [
+    { label: "Northwind", icon: I.folder, description: "acme.dev" },
+    { label: "Beacon", icon: I.folder, description: "Internal dashboard" },
+    { label: "Cinder", icon: I.folder, description: "API gateway" }
+  ] },
+  { label: "Settings", items: [
+    { label: "Environment variables", icon: I.key, keywords: ["env", "secrets", "dependencies"] },
+    { label: "Billing", icon: I.key, disabled: true }
+  ] }
+];
+function App() {
+  const [open, setOpen] = React.useState(true);
+  const [last, setLast] = React.useState(null);
+  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("b", null, "Northwind"), /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Operational"), /* @__PURE__ */ React.createElement(A.Button, { className: "find", onClick: () => setOpen(true), trailing: /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(A.Kbd, null, "\u2318"), /* @__PURE__ */ React.createElement(A.Kbd, null, "K")) }, "Search or run a command")), /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Chose \u201C${last}\u201D.` : "Type \u201Cdep\u201D: the best match moves to the top and the rows that stay travel there. Arrow keys move the highlight; Enter chooses."), /* @__PURE__ */ React.createElement(A.CommandPalette, { open, onOpenChange: setOpen, items: groups, onSelect: (item) => setLast(item.label) }));
+}
+
+=== Sheet | <!-- @dsCard group="Overlays" height=480 subtitle="Level 4, risen at its edge; closing lifts it off" -->
+--- css
+.page { display: flex; flex-direction: column; gap: 14px; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.grid > * { height: 92px; }
+.form { display: flex; flex-direction: column; gap: 16px; }
+--- jsx
+function App() {
+  const [edit, setEdit] = React.useState(true);
+  return /* @__PURE__ */ React.createElement("div", { className: "page" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(true) }, "Edit project"), /* @__PURE__ */ React.createElement(A.Sheet, { side: "bottom", size: "sm", trigger: /* @__PURE__ */ React.createElement(A.Button, null, "Share") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Share Northwind"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Anyone with the link can view the latest deployment.")), /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "https://acme.dev/n/8dc01b2", readOnly: true }), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Copy link"))), /* @__PURE__ */ React.createElement(A.Sheet, { side: "left", size: "sm", modal: false, trigger: /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost" }, "Filters") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Filters"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "The page stays usable while this is open.")), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Production", defaultChecked: true }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Preview" }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Failed builds only" }))), /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement(A.Sheet, { open: edit, onOpenChange: setEdit }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Edit project"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Changes apply to every environment.")), /* @__PURE__ */ React.createElement("div", { className: "form" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Project name" }, /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "Northwind" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Description", hint: "Shown on the project's card." }, /* @__PURE__ */ React.createElement(A.Textarea, { placeholder: "What is this project for?" })), /* @__PURE__ */ React.createElement(A.Switch, { label: "Deploy previews for every branch", defaultChecked: true })), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => setEdit(false) }, "Cancel"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(false) }, "Save changes"))));
+}
+
+=== Select | <!-- @dsCard group="Inputs" height=380 subtitle="An opening you fill by choosing; the list rises at level 3" -->
+--- css
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 24px; max-width: 900px; align-items: start; }
+--- jsx
+const regions = [
+  { value: "iad", label: "Virginia", description: "us-east-1" },
+  { value: "fra", label: "Frankfurt", description: "eu-central-2" },
+  { value: "sin", label: "Singapore", description: "ap-southeast-1" },
+  { value: "gru", label: "S\xE3o Paulo", description: "sa-east-1" },
+  { value: "syd", label: "Sydney", description: "Opens in March", disabled: true }
+];
+function App() {
+  const [plan, setPlan] = React.useState("team");
+  const [tz, setTz] = React.useState("");
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Region", hint: "Where your deployments run." }, /* @__PURE__ */ React.createElement(A.Select, { items: regions, placeholder: "Choose a region", name: "region" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Plan" }, /* @__PURE__ */ React.createElement(A.Select, { value: plan, onValueChange: setPlan }, /* @__PURE__ */ React.createElement(A.SelectItem, { value: "solo" }, "Solo"), /* @__PURE__ */ React.createElement(A.SelectItem, { value: "team" }, "Team"), /* @__PURE__ */ React.createElement(A.SelectItem, { value: "org" }, "Organization"))), /* @__PURE__ */ React.createElement(A.Field, { label: "Timezone", required: true, error: tz ? null : "Choose a timezone." }, /* @__PURE__ */ React.createElement(
+    A.Select,
+    {
+      value: tz,
+      onValueChange: setTz,
+      placeholder: "Choose a timezone",
+      items: [{ value: "utc", label: "UTC" }, { value: "lis", label: "Europe/Lisbon" }, { value: "nyc", label: "America/New_York" }]
+    }
+  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Runtime" }, /* @__PURE__ */ React.createElement(A.Select, { defaultValue: "node", defaultOpen: true, items: [{ value: "node", label: "Node.js 22" }, { value: "bun", label: "Bun 1.2" }, { value: "deno", label: "Deno 2" }, { value: "edge", label: "Edge (V8 isolates)" }] })), /* @__PURE__ */ React.createElement(A.Field, { label: "Owner" }, /* @__PURE__ */ React.createElement(A.Select, { disabled: true, defaultValue: "mara", items: [{ value: "mara", label: "Mara Quist" }] }))), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 150 } }, "Empty fields are holes with their back wall showing; choosing raises the floor flush. Type a letter on a focused field to jump to it."));
+}
+
+=== Combobox | <!-- @dsCard group="Inputs" height=400 subtitle="Type to filter; a query stays an opening until you choose" -->
+--- css
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; max-width: 640px; }
+--- jsx
+const people = ["Ada Obi", "Eli Ward", "Ivy Chen", "Jon Reyes", "Kai Ito", "Lena Park", "Mara Quist", "Noa Levi", "Rui Costa", "Sam Okafor", "Theo Marsh"].map((n) => ({ value: n.toLowerCase().replace(" ", "-"), label: n }));
+const countries = ["Brazil", "Canada", "Germany", "Japan", "Peru", "Portugal", "Singapore", "Spain"].map((c) => ({ value: c.toLowerCase(), label: c }));
+function App() {
+  const [who, setWho] = React.useState("");
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Assignee", hint: who ? "Assigned." : "Start typing a name." }, /* @__PURE__ */ React.createElement(A.Combobox, { items: people, value: who, onValueChange: setWho, placeholder: "Search people" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Country" }, /* @__PURE__ */ React.createElement(A.Combobox, { items: countries, defaultValue: "portugal", defaultOpen: true }))));
+}
+
+=== Stepper | <!-- @dsCard group="Navigation" height=420 subtitle="Done steps settle into the record; the next rises out of its imprint" -->
+--- css
+.wrap { display: flex; flex-direction: column; gap: 18px; max-width: 820px; }
+.pair { display: grid; grid-template-columns: 300px 1fr; gap: 32px; align-items: start; }
+--- jsx
+const steps = [{ title: "Account" }, { title: "Workspace" }, { title: "Invite team" }, { title: "Billing" }, { title: "Launch" }];
+const setup = [
+  { title: "Connect repository", description: "github.com/acme/northwind" },
+  { title: "Configure build", description: "Framework, output directory, env" },
+  { title: "Deploy", description: "First production deployment" }
+];
+function App() {
+  const [at, setAt] = React.useState(2);
+  return /* @__PURE__ */ React.createElement("div", { className: "wrap" }, /* @__PURE__ */ React.createElement(A.Stepper, { steps, current: at, onStepChange: setAt, "aria-label": "Workspace setup" }), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", disabled: at === 0, onClick: () => setAt(at - 1) }, "Back"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", disabled: at === steps.length, onClick: () => setAt(at + 1) }, at >= steps.length - 1 ? "Finish" : "Continue"), /* @__PURE__ */ React.createElement("span", { className: "cap" }, "Continue presses the current step into the record and raises the next one; click a completed step to go back.")), /* @__PURE__ */ React.createElement("div", { className: "pair" }, /* @__PURE__ */ React.createElement(A.Stepper, { steps: setup, current: 1, orientation: "vertical", "aria-label": "Deployment setup" }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Vertical: the same plates, stacked. Completed steps are flush and checked, the current one stands on its wall, and steps to come are imprints.")));
+}
+
+=== Table | <!-- @dsCard group="Display" height=470 subtitle="Rows are the record: only selected, matching and interactive rows rise" -->
+--- css
+.filter { width: 210px; }
+--- jsx
+const data = [
+  { id: "nw", name: "Northwind", env: "Production", owner: "Mara Quist", updated: 2, req: 1240 },
+  { id: "bc", name: "Beacon", env: "Preview", owner: "Jon Reyes", updated: 5, req: 312 },
+  { id: "ci", name: "Cinder", env: "Production", owner: "Lena Park", updated: 26, req: 5906 },
+  { id: "dl", name: "Delta", env: "Staging", owner: "Sam Okafor", updated: 49, req: 88 },
+  { id: "em", name: "Ember", env: "Production", owner: "Ivy Chen", updated: 70, req: 2410 },
+  { id: "fb", name: "Fable", env: "Preview", owner: "Ada Obi", updated: 96, req: 19 },
+  { id: "gn", name: "Garnet", env: "Staging", owner: "Theo Marsh", updated: 120, req: 640 },
+  { id: "hb", name: "Harbor", env: "Production", owner: "Noa Levi", updated: 168, req: 3120 }
+];
+const tone = { Production: "positive", Preview: "accent", Staging: "neutral" };
+function App() {
+  const [rows, setRows] = React.useState(data);
+  const [q, setQ] = React.useState("");
+  const [opened, setOpened] = React.useState(null);
+  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 8 } }, /* @__PURE__ */ React.createElement(
+    A.DataTable,
+    {
+      "aria-label": "Projects",
+      rows,
+      onReorder: setRows,
+      getRowId: (r) => r.id,
+      getRowLabel: (r) => r.name,
+      selectable: true,
+      defaultSelected: ["bc", "ci"],
+      maxHeight: 300,
+      onRowClick: (r) => setOpened(r.name),
+      relevance: (r) => q ? r.name.toLowerCase().includes(q.toLowerCase()) || r.owner.toLowerCase().includes(q.toLowerCase()) ? "match" : "miss" : void 0,
+      actions: () => /* @__PURE__ */ React.createElement(A.Button, { size: "sm" }, "Archive"),
+      toolbar: /* @__PURE__ */ React.createElement("div", { className: "filter" }, /* @__PURE__ */ React.createElement(A.Input, { size: "sm", placeholder: "Filter in place", value: q, onChange: (e) => setQ(e.target.value), "aria-label": "Filter projects" })),
+      columns: [
+        { key: "name", header: "Project", sortValue: (r) => r.name },
+        { key: "env", header: "Environment", cell: (r) => /* @__PURE__ */ React.createElement(A.Badge, { tone: tone[r.env] }, r.env), sortValue: (r) => r.env },
+        { key: "owner", header: "Owner", sortValue: (r) => r.owner },
+        { key: "updated", header: "Updated", align: "end", sortValue: (r) => r.updated, cell: (r) => r.updated < 24 ? r.updated + "h ago" : Math.round(r.updated / 24) + "d ago" },
+        { key: "req", header: "Requests", align: "end", sortValue: (r) => r.req, cell: (r) => r.req.toLocaleString("en-US") }
+      ]
+    }
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys."));
+}
+
+=== Board | <!-- @dsCard group="Layout" height=430 subtitle="Columns open to receive; a carried card floats at level 3" -->
+--- css
+.alt-board-col { width: 214px; }
+.alt-board-col[data-collapsed] { width: 168px; }
+--- jsx
+const start = {
+  todo: [{ id: "c1", t: "Write release notes", m: "Docs \xB7 Jon" }, { id: "c2", t: "Fix cold-start regression", m: "Runtime \xB7 Lena" }, { id: "c3", t: "Plan Q1 roadmap", m: "Planning \xB7 Ada" }],
+  doing: [{ id: "c4", t: "Pricing page copy", m: "Marketing \xB7 Mara", held: { name: "Mara", presence: 1 } }, { id: "c5", t: "Support macros", m: "Support \xB7 Ivy" }],
+  review: [{ id: "c6", t: "Brand voice", m: "Design \xB7 Ada" }],
+  done: Array.from({ length: 12 }, (_, i) => ({ id: "d" + i, t: "Shipped item " + (i + 1), m: "Done" }))
+};
+const titles = { todo: "To do", doing: "In progress", review: "Review", done: "Done" };
+function App() {
+  const [cols, setCols] = React.useState(start);
+  const [last, setLast] = React.useState(null);
+  const move = ({ cardId, from, to }) => setCols((c) => {
+    const next = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.slice()]));
+    const [card] = next[from.column].splice(from.index, 1);
+    next[to.column].splice(to.index, 0, card);
+    setLast(`${card.t} \u2192 ${titles[to.column]}`);
+    return next;
+  });
+  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 4 } }, /* @__PURE__ */ React.createElement(A.Board, { onMove: move, "aria-label": "Launch board" }, Object.keys(titles).map((k) => /* @__PURE__ */ React.createElement(A.BoardColumn, { key: k, id: k, title: titles[k], collapsible: k === "done", defaultCollapsed: k === "done" }, cols[k].map((c) => /* @__PURE__ */ React.createElement(A.BoardCard, { key: c.id, id: c.id, label: c.t, heldBy: c.held }, c.t, /* @__PURE__ */ React.createElement("small", null, c.m)))))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Moved: ${last}.` : "Drag a card, or focus one and press Space, then the arrow keys. Columns open while you carry it; Done is collapsed into a pile and still takes cards."));
+}
+
+=== HoverCard | <!-- @dsCard group="Overlays" height=300 subtitle="A preview that rises after hover intent; neighbours open warm" -->
+--- css
+.para { margin: 0; max-width: 620px; font: 400 15px/26px var(--font-sans); color: var(--ink); }
+.para a { color: var(--accent-ink); text-decoration: underline dotted; text-underline-offset: 3px; }
+.who { display: flex; gap: 12px; align-items: center; }
+.who b { display: block; font: 600 14px/20px var(--font-sans); }
+.who span { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.bio { margin: 10px 0 12px; font: 400 13.5px/20px var(--font-sans); }
+.stats { display: flex; gap: 14px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.stats b { color: var(--ink); }
+--- jsx
+const people = {
+  mara: { name: "Mara Quist", role: "Platform \xB7 Lisbon", bio: "Owns deploys and the edge runtime. Usually reviews within the hour.", s: [42, 6, 3] },
+  jon: { name: "Jon Reyes", role: "Docs \xB7 Lima", bio: "Writes the release notes and keeps the changelog honest.", s: [18, 2, 5] }
+};
+const Card = ({ p }) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: p.name, size: 40, status: "active" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, p.name), /* @__PURE__ */ React.createElement("span", null, p.role))), /* @__PURE__ */ React.createElement("p", { className: "bio" }, p.bio), /* @__PURE__ */ React.createElement("div", { className: "stats" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[0]), " merged"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[1]), " open"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[2]), " projects")));
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 18 } }, /* @__PURE__ */ React.createElement("p", { className: "para" }, "Merged by ", /* @__PURE__ */ React.createElement(A.HoverCard, { defaultOpen: true, trigger: /* @__PURE__ */ React.createElement("a", { href: "#mara" }, "Mara Quist") }, /* @__PURE__ */ React.createElement(Card, { p: people.mara })), " two hours ago, after review from ", /* @__PURE__ */ React.createElement(A.HoverCard, { trigger: /* @__PURE__ */ React.createElement("a", { href: "#jon" }, "Jon Reyes") }, /* @__PURE__ */ React.createElement(Card, { p: people.jon })), "."), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 160 } }, "Rest the pointer on a name; once one card has shown, the other opens at once. Focus a link with Tab to open it from the keyboard; Escape closes it."));
+}

@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "es2020", "module": "esnext", "moduleResolution": "bundler", "jsx": "react",
+    "strict": true, "skipLibCheck": true, "lib": ["es2021", "dom", "dom.iterable"], "types": [],
+    "declaration": true, "emitDeclarationOnly": true, "outDir": "dist/types", "rootDir": "project/components/src"
+  },
+  "include": ["project/components/src/*.tsx"]
+}

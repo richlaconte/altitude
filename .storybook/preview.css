@@ -1,0 +1,6 @@
+/* The helper classes every preview card shares (the same ones build/previews.mjs puts in each preview.html). */
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+html, body { background: var(--surface-ground); }

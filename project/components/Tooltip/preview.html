@@ -1,0 +1,26 @@
+<!-- @dsCard group="Overlays" height=140 subtitle="Level 3, warm-up between neighbours" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tooltip — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.row { padding-top: 40px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Tooltip, { content: "Bold  \u2318B", defaultOpen: true }, /* @__PURE__ */ React.createElement(A.Button, { square: true, variant: "ghost", "aria-label": "Bold" }, /* @__PURE__ */ React.createElement("b", null, "B"))), /* @__PURE__ */ React.createElement(A.Tooltip, { content: "Italic  \u2318I" }, /* @__PURE__ */ React.createElement(A.Button, { square: true, variant: "ghost", "aria-label": "Italic" }, /* @__PURE__ */ React.createElement("i", { style: { fontFamily: "serif", fontSize: 17 } }, "I"))), /* @__PURE__ */ React.createElement(A.Tooltip, { content: "Underline  \u2318U" }, /* @__PURE__ */ React.createElement(A.Button, { square: true, variant: "ghost", "aria-label": "Underline" }, /* @__PURE__ */ React.createElement("u", null, "U"))), /* @__PURE__ */ React.createElement("span", { className: "cap", style: { marginLeft: 12 } }, "Hover one, then slide to the next: no second delay."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

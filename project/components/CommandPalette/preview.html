@@ -1,0 +1,62 @@
+<!-- @dsCard group="Overlays" height=500 subtitle="The summit: ranked results that travel when they change" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CommandPalette — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.app { display: flex; flex-direction: column; gap: 14px; }
+.bar { display: flex; align-items: center; gap: 12px; }
+.bar b { font: 600 15px/22px var(--font-sans); }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.grid > * { height: 92px; }
+.find { margin-left: auto; min-width: 220px; justify-content: space-between; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const I = {
+  up: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M7 17L17 7M9 7h8v8" })),
+  folder: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" })),
+  plus: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M12 5v14M5 12h14" })),
+  user: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "8", r: "4" }), /* @__PURE__ */ React.createElement("path", { d: "M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" })),
+  key: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "8", cy: "15", r: "4" }), /* @__PURE__ */ React.createElement("path", { d: "M11 12l9-9M17 6l3 3" })),
+  trash: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" }))
+};
+const groups = [
+  { label: "Recent", predicted: true, items: [
+    { label: "Deploy to production", icon: I.up, shortcut: ["\u2318", "D"], keywords: ["ship", "release"] },
+    { label: "Open Northwind", icon: I.folder, description: "Marketing site" }
+  ] },
+  { label: "Actions", items: [
+    { label: "New project", icon: I.plus, shortcut: ["\u2318", "N"] },
+    { label: "Invite people", icon: I.user, keywords: ["team", "member"] },
+    { label: "Deploy preview", icon: I.up, description: "main@8dc01b2" },
+    { label: "Delete project\u2026", icon: I.trash, tone: "critical" }
+  ] },
+  { label: "Projects", items: [
+    { label: "Northwind", icon: I.folder, description: "acme.dev" },
+    { label: "Beacon", icon: I.folder, description: "Internal dashboard" },
+    { label: "Cinder", icon: I.folder, description: "API gateway" }
+  ] },
+  { label: "Settings", items: [
+    { label: "Environment variables", icon: I.key, keywords: ["env", "secrets", "dependencies"] },
+    { label: "Billing", icon: I.key, disabled: true }
+  ] }
+];
+function App() {
+  const [open, setOpen] = React.useState(true);
+  const [last, setLast] = React.useState(null);
+  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("b", null, "Northwind"), /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Operational"), /* @__PURE__ */ React.createElement(A.Button, { className: "find", onClick: () => setOpen(true), trailing: /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(A.Kbd, null, "\u2318"), /* @__PURE__ */ React.createElement(A.Kbd, null, "K")) }, "Search or run a command")), /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Chose \u201C${last}\u201D.` : "Type \u201Cdep\u201D: the best match moves to the top and the rows that stay travel there. Arrow keys move the highlight; Enter chooses."), /* @__PURE__ */ React.createElement(A.CommandPalette, { open, onOpenChange: setOpen, items: groups, onSelect: (item) => setLast(item.label) }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

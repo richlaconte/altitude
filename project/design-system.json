@@ -1,0 +1,33 @@
+{
+  "v": 3,
+  "assetGroups": {},
+  "blobs": {},
+  "createdOnFiles": {
+    "at": "2026-10-20T15:33:23Z",
+    "v": 1
+  },
+  "docs": {
+    "sections": []
+  },
+  "groups": [],
+  "lastChange": {
+    "by": "Richard",
+    "at": "2026-10-22T09:47:56Z",
+    "via": "Claude (chat)",
+    "note": "Works on React 19 as well as 18 (collapsed accordion panels are now inert on both) and server-renders on React 18 without layout-effect warnings."
+  },
+  "layout": "files",
+  "libraries": [
+    {
+      "name": "react",
+      "version": "18"
+    },
+    {
+      "name": "react-dom",
+      "version": "18"
+    }
+  ],
+  "namespace": "Altitude",
+  "sections": {},
+  "title": "Altitude"
+}

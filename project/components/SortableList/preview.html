@@ -1,0 +1,44 @@
+<!-- @dsCard group="Layout" height=330 subtitle="Pick up, the slot opens, it lands" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SortableList — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.wrap { max-width: 420px; }
+.it { display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [items, setItems] = React.useState([
+    { id: "a", t: "Write release notes", p: "High" },
+    { id: "b", t: "Review pricing copy", p: "Med" },
+    { id: "c", t: "Fix cold-start regression", p: "High" },
+    { id: "d", t: "Update onboarding emails", p: "Low" },
+    { id: "e", t: "Plan Q1 roadmap", p: "Med" }
+  ]);
+  return /* @__PURE__ */ React.createElement("div", { className: "col wrap" }, /* @__PURE__ */ React.createElement(
+    A.SortableList,
+    {
+      "aria-label": "Priorities",
+      items,
+      getKey: (i) => i.id,
+      getLabel: (i) => i.t,
+      onReorder: setItems,
+      renderItem: (i) => /* @__PURE__ */ React.createElement("div", { className: "it" }, i.t, /* @__PURE__ */ React.createElement(A.Badge, { tone: i.p === "High" ? "critical" : i.p === "Med" ? "caution" : "neutral" }, i.p))
+    }
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Drag, or focus a row and press Space, then the arrow keys."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

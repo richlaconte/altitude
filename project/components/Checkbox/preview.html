@@ -1,0 +1,31 @@
+<!-- @dsCard group="Inputs" height=230 subtitle="A one-position switch" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Checkbox — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.family { display: flex; gap: 22px; align-items: center; padding-top: 4px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [a, setA] = React.useState(true);
+  const [b, setB] = React.useState(false);
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Select all", checked: a && b, indeterminate: a !== b, onCheckedChange: (c) => {
+    setA(c);
+    setB(c);
+  } }), /* @__PURE__ */ React.createElement("div", { className: "col", style: { paddingLeft: 34 } }, /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Weekly digest", description: "A summary every Monday morning.", checked: a, onCheckedChange: setA }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Product updates", checked: b, onCheckedChange: setB })), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Disabled", disabled: true, defaultChecked: true }), /* @__PURE__ */ React.createElement("div", { className: "family" }, /* @__PURE__ */ React.createElement("span", { className: "cap" }, "Same build as"), /* @__PURE__ */ React.createElement(A.Switch, { defaultChecked: true, "aria-label": "Switch" }), /* @__PURE__ */ React.createElement(A.Switch, { "aria-label": "Switch off" })));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

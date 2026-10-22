@@ -1,0 +1,38 @@
+<!-- @dsCard group="Overlays" height=300 subtitle="A preview that rises after hover intent; neighbours open warm" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HoverCard — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.para { margin: 0; max-width: 620px; font: 400 15px/26px var(--font-sans); color: var(--ink); }
+.para a { color: var(--accent-ink); text-decoration: underline dotted; text-underline-offset: 3px; }
+.who { display: flex; gap: 12px; align-items: center; }
+.who b { display: block; font: 600 14px/20px var(--font-sans); }
+.who span { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.bio { margin: 10px 0 12px; font: 400 13.5px/20px var(--font-sans); }
+.stats { display: flex; gap: 14px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.stats b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const people = {
+  mara: { name: "Mara Quist", role: "Platform \xB7 Lisbon", bio: "Owns deploys and the edge runtime. Usually reviews within the hour.", s: [42, 6, 3] },
+  jon: { name: "Jon Reyes", role: "Docs \xB7 Lima", bio: "Writes the release notes and keeps the changelog honest.", s: [18, 2, 5] }
+};
+const Card = ({ p }) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: p.name, size: 40, status: "active" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, p.name), /* @__PURE__ */ React.createElement("span", null, p.role))), /* @__PURE__ */ React.createElement("p", { className: "bio" }, p.bio), /* @__PURE__ */ React.createElement("div", { className: "stats" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[0]), " merged"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[1]), " open"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[2]), " projects")));
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 18 } }, /* @__PURE__ */ React.createElement("p", { className: "para" }, "Merged by ", /* @__PURE__ */ React.createElement(A.HoverCard, { defaultOpen: true, trigger: /* @__PURE__ */ React.createElement("a", { href: "#mara" }, "Mara Quist") }, /* @__PURE__ */ React.createElement(Card, { p: people.mara })), " two hours ago, after review from ", /* @__PURE__ */ React.createElement(A.HoverCard, { trigger: /* @__PURE__ */ React.createElement("a", { href: "#jon" }, "Jon Reyes") }, /* @__PURE__ */ React.createElement(Card, { p: people.jon })), "."), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 160 } }, "Rest the pointer on a name; once one card has shown, the other opens at once. Focus a link with Tab to open it from the keyboard; Escape closes it."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

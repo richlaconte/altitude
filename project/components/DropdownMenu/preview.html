@@ -1,0 +1,43 @@
+<!-- @dsCard group="Overlays" height=340 subtitle="One gliding highlight; predicted items arrive first" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DropdownMenu — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.pair { display: flex; gap: 220px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const items = [
+  { type: "label", label: "Project" },
+  { label: "Rename", shortcut: "R" },
+  { label: "Duplicate", shortcut: "\u2318D" },
+  { label: "Move to\u2026" },
+  { label: "Archive", disabled: true },
+  { type: "separator" },
+  { label: "Delete project", tone: "critical", shortcut: "\u232B" }
+];
+const predicted = [
+  { label: "Copy link", shortcut: "\u2318L", predicted: true },
+  { label: "Share\u2026", predicted: true },
+  { label: "Rename", shortcut: "R" },
+  { label: "Duplicate", shortcut: "\u2318D" },
+  { label: "Export as PDF" },
+  { label: "Version history" }
+];
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "pair" }, /* @__PURE__ */ React.createElement(A.DropdownMenu, { defaultOpen: true, items, trigger: /* @__PURE__ */ React.createElement(A.Button, { trailing: /* @__PURE__ */ React.createElement(A.Icons.ChevronDown, null) }, "Actions") }), /* @__PURE__ */ React.createElement(A.DropdownMenu, { items: predicted, trigger: /* @__PURE__ */ React.createElement(A.Button, { trailing: /* @__PURE__ */ React.createElement(A.Icons.ChevronDown, null) }, "Predicted") }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

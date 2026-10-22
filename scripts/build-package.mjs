@@ -1,0 +1,37 @@
+// Builds the npm package into dist/ from the design system's own sources in project/.
+//   dist/index.js, dist/index.cjs   the components (ESM and CommonJS; React is a peer dependency)
+//   dist/types/                     declarations emitted from the sources
+//   dist/altitude.css               tokens and component styles in one file
+//   dist/tokens.css, tokens.json    the tokens on their own
+//   dist/altitude.iife.js           the same bundle the design system uses: a <script> that sets window.Altitude
+// --css-only writes just the stylesheets (Storybook uses it).
+import { build } from 'esbuild';
+import { execSync } from 'child_process';
+import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { tokensCss } from './tokens-css.mjs';
+
+const cssOnly = process.argv.includes('--css-only');
+const src = 'project/components/src/index.tsx';
+const tokens = tokensCss('project/tokens.json');
+const components = readFileSync('project/components/bundle.css', 'utf8');
+// An @import must come first, so the font import stays at the top, above the tokens.
+const [, fontImport = '', rest = components] = components.match(/^(@import[^\n]*\n)?([\s\S]*)$/) ?? [];
+
+if (!cssOnly) rmSync('dist', { recursive: true, force: true });
+mkdirSync('dist', { recursive: true });
+writeFileSync('dist/tokens.css', tokens);
+writeFileSync('dist/altitude.css', fontImport + '\n' + tokens + '\n' + rest);
+if (cssOnly) { console.log('css ok'); process.exit(0); }
+
+copyFileSync('project/tokens.json', 'dist/tokens.json');
+copyFileSync('project/components/bundle.js', 'dist/altitude.iife.js');
+const shared = {
+  entryPoints: [src], bundle: true, target: 'es2020', sourcemap: true, legalComments: 'none',
+  external: ['react', 'react-dom', 'react/jsx-runtime'], jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment',
+  // Every component uses hooks or the DOM, so frameworks with server components must load them on the client.
+  banner: { js: '"use client";' },
+};
+await build({ ...shared, format: 'esm', outfile: 'dist/index.js' });
+await build({ ...shared, format: 'cjs', outfile: 'dist/index.cjs' });
+execSync('npx tsc -p tsconfig.json', { stdio: 'inherit' });
+console.log('package ok');

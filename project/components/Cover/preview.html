@@ -1,0 +1,53 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Altitude</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--surface-ground); color: var(--ink); font-family: var(--font-sans); overflow: hidden; }
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; }
+  .b { position: absolute; }
+  .well   { background: var(--surface-trench); box-shadow: var(--trench); border-radius: var(--radius-md); border: 1px solid var(--line); }
+  .raised { background: var(--surface-raised); box-shadow: var(--elev-1); border-radius: var(--radius-md); }
+  .tint   { background: var(--accent-soft); box-shadow: var(--elev-2); border-radius: var(--radius-lg); }
+  .deep   { background: var(--ink); box-shadow: var(--elev-3); border-radius: var(--radius-lg); }
+  .brand  { background: var(--accent); box-shadow: var(--elev-5); border-radius: var(--radius-xl); }
+  .rung   { background: var(--surface-raised); border-radius: var(--radius-xs); width: 16px; height: 16px; }
+  .r0 { box-shadow: var(--elev-0); background: var(--surface-well); }
+  .r1 { box-shadow: var(--elev-1); } .r2 { box-shadow: var(--elev-2); } .r3 { box-shadow: var(--elev-3); } .r4 { box-shadow: var(--elev-4); } .r5 { box-shadow: var(--elev-5); }
+  .words { position: absolute; left: var(--space-8); bottom: var(--space-8); max-width: 440px; }
+  .name { margin: 0; font-size: 88px; line-height: .92; font-weight: 600; letter-spacing: -0.035em; color: var(--ink); }
+  .tag { margin: var(--space-3) 0 0 3px; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<!--
+  blocks      accent 168×184 at level 5 (elev-5, the summit, largest) · ink 128×120 at level 3 · accent-soft 112×96 at level 2 · surface-raised 80×56 at level 1 · surface-trench 120×24 sunk at -2 — together ≈ 30% of 960×288
+  arrangement a staircase climbing up and right out of a trench: each block overlaps the one below it and casts its own level's shadow onto it; the summit bleeds off the top edge
+  pattern     the ladder itself, from "Altitude is importance": six 16px rungs at a space-6 pitch along the floor, each one level higher (elev-0 → elev-5) and space-1 higher than the last
+  scales      sides and offsets in space-2 multiples; corners radius-xs (rungs), radius-md (well, raised), radius-lg (tint, ink), radius-xl (summit)
+-->
+  <div class="b well"   style="left:16px;  top:232px; width:120px; height:24px"></div>
+  <div class="b raised" style="left:40px;  top:184px; width:80px;  height:56px"></div>
+  <div class="b tint"   style="left:96px;  top:128px; width:112px; height:96px"></div>
+  <div class="b deep"   style="left:176px; top:64px;  width:128px; height:120px"></div>
+  <div class="b brand"  style="left:264px; top:-24px; width:168px; height:184px"></div>
+  <div class="b rung r0" style="left:216px; top:248px"></div>
+  <div class="b rung r1" style="left:240px; top:244px"></div>
+  <div class="b rung r2" style="left:264px; top:240px"></div>
+  <div class="b rung r3" style="left:288px; top:236px"></div>
+  <div class="b rung r4" style="left:312px; top:232px"></div>
+  <div class="b rung r5" style="left:336px; top:228px"></div>
+</div>
+<div class="words">
+  <h1 class="name">Altitude</h1>
+  <p class="tag">Elevation is the interface.</p>
+</div>
+</div>
+</body>
+</html>

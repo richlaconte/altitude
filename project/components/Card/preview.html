@@ -1,0 +1,27 @@
+<!-- @dsCard group="Display" height=250 subtitle="Only actionable cards move" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Card — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [n, setN] = React.useState(0);
+  return /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Usage this month"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Static: a grouping surface, it never lifts.")), /* @__PURE__ */ React.createElement(A.CardContent, null, "18,240 requests \xB7 62% of plan")), /* @__PURE__ */ React.createElement(A.Card, { interactive: true, onClick: () => setN(n + 1) }, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Open project"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Interactive: the whole card is the target, so it lifts and presses.")), /* @__PURE__ */ React.createElement(A.CardContent, null, n ? `Opened ${n}\xD7` : "Click or press Enter")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

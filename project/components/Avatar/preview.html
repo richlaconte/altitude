@@ -1,0 +1,27 @@
+<!-- @dsCard group="Display" height=230 subtitle="Presence is the gap between a face and its shadow" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Avatar — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.people { display: flex; gap: 30px; align-items: flex-end; }
+.who { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 22 } }, /* @__PURE__ */ React.createElement("div", { className: "people" }, /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Mara Quist", size: 44, status: "active", live: true, presence: 1 }), /* @__PURE__ */ React.createElement("span", { className: "cap" }, "live")), /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Jon Reyes", size: 44, status: "active" }), /* @__PURE__ */ React.createElement("span", { className: "cap" }, "active")), /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Lena Park", size: 44, status: "idle" }), /* @__PURE__ */ React.createElement("span", { className: "cap" }, "idle")), /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Sam Okafor", size: 44, status: "offline" }), /* @__PURE__ */ React.createElement("span", { className: "cap" }, "offline")), /* @__PURE__ */ React.createElement(A.AvatarGroup, { max: 5 }, [["Ada Obi", "active"], ["Ivy Chen", "idle"], ["Theo Marsh", "active"], ["Rui Costa", "idle"], ["Noa Levi", "offline"], ["Eli Ward", "offline"], ["Kai Ito", "offline"]].map(([n, st]) => /* @__PURE__ */ React.createElement(A.Avatar, { key: n, name: n, status: st })))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Active people hover: their shadow drops away beneath them. Idle people rest on the page; offline people lie flat and grey. Mara is speaking, so she drifts, ringed in her presence colour. Hover a face in the group to lift it out."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

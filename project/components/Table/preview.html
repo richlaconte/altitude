@@ -1,0 +1,63 @@
+<!-- @dsCard group="Display" height=470 subtitle="Rows are the record: only selected, matching and interactive rows rise" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Table — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.filter { width: 210px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const data = [
+  { id: "nw", name: "Northwind", env: "Production", owner: "Mara Quist", updated: 2, req: 1240 },
+  { id: "bc", name: "Beacon", env: "Preview", owner: "Jon Reyes", updated: 5, req: 312 },
+  { id: "ci", name: "Cinder", env: "Production", owner: "Lena Park", updated: 26, req: 5906 },
+  { id: "dl", name: "Delta", env: "Staging", owner: "Sam Okafor", updated: 49, req: 88 },
+  { id: "em", name: "Ember", env: "Production", owner: "Ivy Chen", updated: 70, req: 2410 },
+  { id: "fb", name: "Fable", env: "Preview", owner: "Ada Obi", updated: 96, req: 19 },
+  { id: "gn", name: "Garnet", env: "Staging", owner: "Theo Marsh", updated: 120, req: 640 },
+  { id: "hb", name: "Harbor", env: "Production", owner: "Noa Levi", updated: 168, req: 3120 }
+];
+const tone = { Production: "positive", Preview: "accent", Staging: "neutral" };
+function App() {
+  const [rows, setRows] = React.useState(data);
+  const [q, setQ] = React.useState("");
+  const [opened, setOpened] = React.useState(null);
+  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 8 } }, /* @__PURE__ */ React.createElement(
+    A.DataTable,
+    {
+      "aria-label": "Projects",
+      rows,
+      onReorder: setRows,
+      getRowId: (r) => r.id,
+      getRowLabel: (r) => r.name,
+      selectable: true,
+      defaultSelected: ["bc", "ci"],
+      maxHeight: 300,
+      onRowClick: (r) => setOpened(r.name),
+      relevance: (r) => q ? r.name.toLowerCase().includes(q.toLowerCase()) || r.owner.toLowerCase().includes(q.toLowerCase()) ? "match" : "miss" : void 0,
+      actions: () => /* @__PURE__ */ React.createElement(A.Button, { size: "sm" }, "Archive"),
+      toolbar: /* @__PURE__ */ React.createElement("div", { className: "filter" }, /* @__PURE__ */ React.createElement(A.Input, { size: "sm", placeholder: "Filter in place", value: q, onChange: (e) => setQ(e.target.value), "aria-label": "Filter projects" })),
+      columns: [
+        { key: "name", header: "Project", sortValue: (r) => r.name },
+        { key: "env", header: "Environment", cell: (r) => /* @__PURE__ */ React.createElement(A.Badge, { tone: tone[r.env] }, r.env), sortValue: (r) => r.env },
+        { key: "owner", header: "Owner", sortValue: (r) => r.owner },
+        { key: "updated", header: "Updated", align: "end", sortValue: (r) => r.updated, cell: (r) => r.updated < 24 ? r.updated + "h ago" : Math.round(r.updated / 24) + "d ago" },
+        { key: "req", header: "Requests", align: "end", sortValue: (r) => r.req, cell: (r) => r.req.toLocaleString("en-US") }
+      ]
+    }
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

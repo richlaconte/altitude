@@ -1,0 +1,30 @@
+<!-- @dsCard group="Overlays" height=480 subtitle="Level 4, risen at its edge; closing lifts it off" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sheet — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.page { display: flex; flex-direction: column; gap: 14px; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.grid > * { height: 92px; }
+.form { display: flex; flex-direction: column; gap: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [edit, setEdit] = React.useState(true);
+  return /* @__PURE__ */ React.createElement("div", { className: "page" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(true) }, "Edit project"), /* @__PURE__ */ React.createElement(A.Sheet, { side: "bottom", size: "sm", trigger: /* @__PURE__ */ React.createElement(A.Button, null, "Share") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Share Northwind"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Anyone with the link can view the latest deployment.")), /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "https://acme.dev/n/8dc01b2", readOnly: true }), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Copy link"))), /* @__PURE__ */ React.createElement(A.Sheet, { side: "left", size: "sm", modal: false, trigger: /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost" }, "Filters") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Filters"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "The page stays usable while this is open.")), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Production", defaultChecked: true }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Preview" }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Failed builds only" }))), /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement(A.Sheet, { open: edit, onOpenChange: setEdit }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Edit project"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Changes apply to every environment.")), /* @__PURE__ */ React.createElement("div", { className: "form" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Project name" }, /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "Northwind" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Description", hint: "Shown on the project's card." }, /* @__PURE__ */ React.createElement(A.Textarea, { placeholder: "What is this project for?" })), /* @__PURE__ */ React.createElement(A.Switch, { label: "Deploy previews for every branch", defaultChecked: true })), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => setEdit(false) }, "Cancel"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(false) }, "Save changes"))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

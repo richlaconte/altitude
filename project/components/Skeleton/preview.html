@@ -1,0 +1,33 @@
+<!-- @dsCard group="Display" height=210 subtitle="An imprint the content rises out of" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Skeleton — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.card { display: flex; gap: 14px; align-items: flex-start; padding: 16px; width: 420px; }
+.lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.txt { font: 400 13.5px/20px var(--font-sans); color: var(--ink-muted); margin: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [loaded, setLoaded] = React.useState(false);
+  React.useEffect(() => {
+    const t = setInterval(() => setLoaded((l) => !l), 2600);
+    return () => clearInterval(t);
+  }, []);
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Surface, { level: 1, className: "card" }, /* @__PURE__ */ React.createElement(A.Skeleton, { loaded, shape: "circle", width: 44 }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Mara Quist", size: 44, status: "active" })), /* @__PURE__ */ React.createElement("div", { className: "lines" }, /* @__PURE__ */ React.createElement(A.Skeleton, { loaded, width: "45%", height: 14 }, /* @__PURE__ */ React.createElement("b", { style: { font: "600 14px/20px var(--font-sans)" } }, "Mara Quist")), /* @__PURE__ */ React.createElement(A.Skeleton, { loaded, shape: "text", lines: 2 }, /* @__PURE__ */ React.createElement("p", { className: "txt" }, "Merged \u201CFaster cold starts\u201D into main. Cold starts are down 38% across all regions.")))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "While it loads, the layout is pressed into the page; when content lands it rises out of its imprint, four at a time at most."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

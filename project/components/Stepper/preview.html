@@ -1,0 +1,34 @@
+<!-- @dsCard group="Navigation" height=420 subtitle="Done steps settle into the record; the next rises out of its imprint" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stepper — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.wrap { display: flex; flex-direction: column; gap: 18px; max-width: 820px; }
+.pair { display: grid; grid-template-columns: 300px 1fr; gap: 32px; align-items: start; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const steps = [{ title: "Account" }, { title: "Workspace" }, { title: "Invite team" }, { title: "Billing" }, { title: "Launch" }];
+const setup = [
+  { title: "Connect repository", description: "github.com/acme/northwind" },
+  { title: "Configure build", description: "Framework, output directory, env" },
+  { title: "Deploy", description: "First production deployment" }
+];
+function App() {
+  const [at, setAt] = React.useState(2);
+  return /* @__PURE__ */ React.createElement("div", { className: "wrap" }, /* @__PURE__ */ React.createElement(A.Stepper, { steps, current: at, onStepChange: setAt, "aria-label": "Workspace setup" }), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", disabled: at === 0, onClick: () => setAt(at - 1) }, "Back"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", disabled: at === steps.length, onClick: () => setAt(at + 1) }, at >= steps.length - 1 ? "Finish" : "Continue"), /* @__PURE__ */ React.createElement("span", { className: "cap" }, "Continue presses the current step into the record and raises the next one; click a completed step to go back.")), /* @__PURE__ */ React.createElement("div", { className: "pair" }, /* @__PURE__ */ React.createElement(A.Stepper, { steps: setup, current: 1, orientation: "vertical", "aria-label": "Deployment setup" }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Vertical: the same plates, stacked. Completed steps are flush and checked, the current one stands on its wall, and steps to come are imprints.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

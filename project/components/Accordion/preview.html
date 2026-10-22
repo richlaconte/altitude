@@ -1,0 +1,31 @@
+<!-- @dsCard group="Navigation" height=330 subtitle="Lift the lid; the content sits in the compartment" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Accordion — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.wrap { max-width: 560px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const items = [
+  { value: "a", title: "What does elevation mean here?", content: "Height says how much something matters right now and what you can do with it: raised things are pushed, sunk things are filled." },
+  { value: "b", title: "Can I bring my own colour?", content: "Pass any hex as accent to AltitudeProvider. The accent text and soft tints are derived to stay legible on every surface." },
+  { value: "c", title: "Does it respect reduced motion?", content: "Yes. Surfaces still change level, tint and shadow, but nothing travels or scales." }
+];
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "wrap" }, /* @__PURE__ */ React.createElement(A.Accordion, { items, defaultValue: ["b"] }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

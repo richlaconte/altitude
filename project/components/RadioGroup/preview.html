@@ -1,0 +1,26 @@
+<!-- @dsCard group="Inputs" height=190 subtitle="One switch, several positions" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RadioGroup — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.pair { display: flex; gap: 64px; align-items: flex-start; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "pair" }, /* @__PURE__ */ React.createElement(A.RadioGroup, { defaultValue: "team", "aria-label": "Plan" }, /* @__PURE__ */ React.createElement(A.Radio, { value: "solo", label: "Solo", description: "One seat, unlimited projects." }), /* @__PURE__ */ React.createElement(A.Radio, { value: "team", label: "Team", description: "Up to 20 seats and shared libraries." }), /* @__PURE__ */ React.createElement(A.Radio, { value: "org", label: "Organization", disabled: true, description: "Talk to us." })), /* @__PURE__ */ React.createElement(A.RadioGroup, { defaultValue: "m", orientation: "horizontal", "aria-label": "Size" }, /* @__PURE__ */ React.createElement(A.Radio, { value: "s", label: "Small" }), /* @__PURE__ */ React.createElement(A.Radio, { value: "m", label: "Medium" }), /* @__PURE__ */ React.createElement(A.Radio, { value: "l", label: "Large" })));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

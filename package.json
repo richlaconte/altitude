@@ -1,0 +1,61 @@
+{
+  "name": "altitude-design",
+  "version": "0.1.0",
+  "description": "A React component library where height is the interface: the ground is the record.",
+  "keywords": [
+    "react",
+    "design-system",
+    "components",
+    "elevation",
+    "ui"
+  ],
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./altitude.css": "./dist/altitude.css",
+    "./tokens.css": "./dist/tokens.css",
+    "./tokens.json": "./dist/tokens.json",
+    "./altitude.iife.js": "./dist/altitude.iife.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0 || ^19.0.0",
+    "react-dom": "^18.2.0 || ^19.0.0"
+  },
+  "scripts": {
+    "build": "node scripts/build-package.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit --declaration false --emitDeclarationOnly false",
+    "storybook": "node scripts/stories.mjs && storybook dev -p 6006",
+    "build-storybook": "node scripts/stories.mjs && storybook build -o storybook-static --quiet"
+  },
+  "devDependencies": {
+    "@storybook/addon-docs": "10.6.1",
+    "@storybook/react-vite": "10.6.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "esbuild": "0.28.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "storybook": "10.6.1",
+    "typescript": "5.6.3",
+    "vite": "8.3.3"
+  }
+}

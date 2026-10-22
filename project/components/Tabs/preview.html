@@ -1,0 +1,26 @@
+<!-- @dsCard group="Navigation" height=300 subtitle="The sheet on top is the one you're reading" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tabs — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.stack { display: flex; flex-direction: column; gap: 28px; max-width: 620px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "stack" }, /* @__PURE__ */ React.createElement(A.Tabs, { defaultValue: "overview" }, /* @__PURE__ */ React.createElement(A.TabsList, { "aria-label": "Project" }, /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "overview" }, "Overview"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "activity" }, "Activity"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "settings" }, "Settings"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "members" }, "Members")), /* @__PURE__ */ React.createElement(A.TabsContent, { value: "overview" }, /* @__PURE__ */ React.createElement("p", { className: "body" }, "Three deployments this week. Everything is healthy.")), /* @__PURE__ */ React.createElement(A.TabsContent, { value: "activity" }, /* @__PURE__ */ React.createElement("p", { className: "body" }, "Mara merged \u201CFaster cold starts\u201D 2 hours ago.")), /* @__PURE__ */ React.createElement(A.TabsContent, { value: "settings" }, /* @__PURE__ */ React.createElement("p", { className: "body" }, "Region, domains and environment variables.")), /* @__PURE__ */ React.createElement(A.TabsContent, { value: "members" }, /* @__PURE__ */ React.createElement("p", { className: "body" }, "Six people have access to this project."))), /* @__PURE__ */ React.createElement(A.Tabs, { defaultValue: "week", variant: "segmented" }, /* @__PURE__ */ React.createElement(A.TabsList, { "aria-label": "Range" }, /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "day" }, "Day"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "week" }, "Week"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "month" }, "Month"))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+
+/** useLayoutEffect in the browser, useEffect on the server, where layout effects can't run (React 18 warns about them). */
+export const useIsoLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
+
+/* ───────────────────────── utilities ───────────────────────── */
+
+export const cx = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
+
+/**
+ * Mount/unmount with an exit animation. Returns `mounted` (render or not) and
+ * `state` ("open" | "closed") for the data-state attribute. The element first
+ * renders in its closed pose, then flips to open two frames later so CSS
+ * transitions run; on close it stays mounted for `exitMs`.
+ */
+export function usePresence(open: boolean, exitMs: number) {
+  const [mounted, setMounted] = React.useState(open);
+  const [state, setState] = React.useState<'open' | 'closed'>(open ? 'open' : 'closed');
+  React.useEffect(() => {
+    if (open) {
+      setMounted(true);
+      let r2 = 0;
+      const r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(() => setState('open')); });
+      return () => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); };
+    }
+    setState('closed');
+    const t = setTimeout(() => setMounted(false), exitMs);
+    return () => clearTimeout(t);
+  }, [open, exitMs]);
+  return { mounted, state };
+}
+
+export function useControllable<T>(value: T | undefined, defaultValue: T, onChange?: (v: T) => void) {
+  const [inner, setInner] = React.useState(defaultValue);
+  const controlled = value !== undefined;
+  const current = controlled ? (value as T) : inner;
+  const set = React.useCallback((v: T) => { if (!controlled) setInner(v); onChange?.(v); }, [controlled, onChange]);
+  return [current, set] as const;
+}
+
+export function useOutside(ref: React.RefObject<HTMLElement | null>, active: boolean, onOutside: () => void) {
+  React.useEffect(() => {
+    if (!active) return;
+    const down = (e: PointerEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onOutside(); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onOutside(); };
+    document.addEventListener('pointerdown', down);
+    document.addEventListener('keydown', key);
+    return () => { document.removeEventListener('pointerdown', down); document.removeEventListener('keydown', key); };
+  }, [active, onOutside, ref]);
+}
+
+/** Spread on an element to make it inert. React 18 passes unknown attributes through as strings and needs ''; React 19
+ * knows `inert` as a boolean and treats '' as false. */
+export const inert = { inert: React.version.split('.')[0] === '18' ? '' : true } as unknown as React.HTMLAttributes<HTMLElement>;
+
+/* ───────────────────────── keyboard focus ───────────────────────── */
+
+/**
+ * A field shows its held rim only when focus arrived from the keyboard; a field you clicked into shows its lit floor and
+ * the caret, which is enough when you know where you clicked. Browsers match :focus-visible on text fields after a click
+ * too, so one shared listener remembers whether the last input was a key or a pointer and, when focus enters a field
+ * (an `.alt-input`, or a whole `.alt-select` with its list), marks it `data-key-focus` until focus leaves it. It's decided
+ * as focus arrives, so typing into a field you clicked doesn't add the rim, and clicking a field removes it. Until the
+ * first pointer input, focus counts as keyboard, so an autofocused field shows its rim.
+ */
+let keyFocusStarted = false;
+export function useKeyFocus() {
+  React.useEffect(() => {
+    if (keyFocusStarted || typeof document === 'undefined') return;
+    keyFocusStarted = true;
+    let key = true;
+    const scope = (t: EventTarget | null) => (t instanceof Element ? t.closest<HTMLElement>('.alt-select') ?? t.closest<HTMLElement>('.alt-input') : null);
+    const inside = (s: HTMLElement, t: EventTarget | null) => t instanceof Node && s.contains(t);
+    document.addEventListener('keydown', (e) => { if (!e.metaKey && !e.ctrlKey && !e.altKey) key = true; }, true);
+    document.addEventListener('pointerdown', (e) => { key = false; scope(e.target)?.removeAttribute('data-key-focus'); }, true);
+    document.addEventListener('focusin', (e) => {
+      const s = scope(e.target);
+      if (!s) return;
+      if (key) s.setAttribute('data-key-focus', '');
+      else if (!inside(s, e.relatedTarget)) s.removeAttribute('data-key-focus');
+    }, true);
+    document.addEventListener('focusout', (e) => {
+      const s = scope(e.target);
+      if (s && !inside(s, e.relatedTarget)) s.removeAttribute('data-key-focus');
+    }, true);
+  }, []);
+}
+
+/* ───────────────────────── approach ───────────────────────── */
+
+/**
+ * The pointer is felt before it arrives. One shared tracker watches a fine pointer (mouse or pen, never touch) and,
+ * for every element marked `data-approach`, writes:
+ *   --near  0 when the pointer is further than the element's radius (data-approach="96" sets it; default 64px),
+ *           rising smoothly to 1 when it touches the element;
+ *   --mx --my  where the pointer is on the element (−1…1 from centre) while it's over it, else 0.
+ * Altitude's own components use it only for openings: an empty field (Input, Textarea, Select, Combobox) deepens to
+ * receive, and a bottom sheet's finger pull opens under a hand. Raised things never respond to approach and never
+ * follow the pointer: a button or a card stays exactly where it is until the pointer is on it. All of it is multiplied
+ * by --alt-travel, so reduced motion turns it off. `AltitudeProvider approach={false}` turns it off for a subtree.
+ */
+let approachUsers = 0;
+let approachStop: (() => void) | null = null;
+function startApproach() {
+  let x = 0, y = 0, live = false, raf = 0;
+  let touched = new Set<HTMLElement>();
+  const clear = (el: HTMLElement) => { el.style.removeProperty('--near'); el.style.removeProperty('--mx'); el.style.removeProperty('--my'); };
+  const frame = () => {
+    raf = 0;
+    const els = Array.from(document.querySelectorAll<HTMLElement>('[data-approach]'));
+    const rects = els.map((el) => el.getBoundingClientRect()); // read everything first, then write
+    const next = new Set<HTMLElement>();
+    els.forEach((el, i) => {
+      const r = rects[i];
+      const radius = Number(el.dataset.approach) || 64;
+      const dx = Math.max(r.left - x, 0, x - r.right), dy = Math.max(r.top - y, 0, y - r.bottom);
+      const d = Math.hypot(dx, dy);
+      if (!live || d >= radius || !r.width || el.closest('[data-approach-off]')) return;
+      const t = 1 - d / radius;
+      el.style.setProperty('--near', (t * t * (3 - 2 * t)).toFixed(3));
+      const inside = d === 0;
+      el.style.setProperty('--mx', inside ? (((x - r.left) / r.width) * 2 - 1).toFixed(3) : '0');
+      el.style.setProperty('--my', inside ? (((y - r.top) / r.height) * 2 - 1).toFixed(3) : '0');
+      next.add(el);
+    });
+    touched.forEach((el) => { if (!next.has(el)) clear(el); });
+    touched = next;
+  };
+  const schedule = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  const move = (e: PointerEvent) => { if (e.pointerType === 'touch') { live = false; } else { live = true; x = e.clientX; y = e.clientY; } schedule(); };
+  const leave = (e: PointerEvent) => { if (!e.relatedTarget) { live = false; schedule(); } };
+  const blur = () => { live = false; schedule(); };
+  window.addEventListener('pointermove', move, { passive: true });
+  window.addEventListener('pointerdown', move, { passive: true });
+  document.addEventListener('pointerout', leave, { passive: true });
+  window.addEventListener('scroll', schedule, { passive: true, capture: true });
+  window.addEventListener('blur', blur);
+  return () => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener('pointermove', move); window.removeEventListener('pointerdown', move);
+    document.removeEventListener('pointerout', leave); window.removeEventListener('scroll', schedule, { capture: true });
+    window.removeEventListener('blur', blur);
+    touched.forEach(clear);
+  };
+}
+/** Keeps the shared approach tracker running while any component that reacts to it is mounted. */
+export function useApproach(enabled = true) {
+  React.useEffect(() => {
+    if (!enabled || typeof window === 'undefined') return;
+    if (approachUsers++ === 0) approachStop = startApproach();
+    return () => { if (--approachUsers === 0) { approachStop?.(); approachStop = null; } };
+  }, [enabled]);
+}
+
+/* ───────────────────────── icons (1.75 stroke, Lucide-compatible grid) ───────────────────────── */
+
+type IconProps = React.SVGProps<SVGSVGElement> & { size?: number };
+const icon = (paths: React.ReactNode) => ({ size = 16, ...rest }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}
+    strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...rest}>{paths}</svg>
+);
+export const Icons = {
+  Check: icon(<path d="M5 12.5l4.5 4.5L19 7.5" />),
+  ChevronDown: icon(<path d="M6 9l6 6 6-6" />),
+  X: icon(<path d="M6 6l12 12M18 6L6 18" />),
+  Info: icon(<><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>),
+  CircleCheck: icon(<><circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 4.5-5" /></>),
+  AlertCircle: icon(<><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.5h.01" /></>),
+  AlertTriangle: icon(<><path d="M10.3 4.2L2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z" /><path d="M12 9.5v4M12 17h.01" /></>),
+};
+export function Spinner({ size = 16 }: { size?: number }) {
+  return (
+    <svg className="alt-spinner" width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity=".25" strokeWidth="2.25" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/* ───────────────────────── colour math for custom accents ───────────────────────── */
+
+type RGB = [number, number, number];
+const hexToRgb = (hex: string): RGB => {
+  let h = hex.trim().replace('#', '');
+  if (h.length === 3 || h.length === 4) h = h.slice(0, 3).split('').map((c) => c + c).join('');
+  const n = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  return (n.some(isNaN) ? [255, 255, 255] : n) as RGB;
+};
+const rgbToHex = (c: number[]) => '#' + c.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+const lum = (c: RGB) => {
+  const f = (v: number) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+};
+export const contrast = (a: string, b: string) => {
+  const la = lum(hexToRgb(a)), lb = lum(hexToRgb(b));
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+};
+const mix = (a: RGB, b: RGB, t: number) => a.map((v, i) => v + (b[i] - v) * t) as RGB;
+
+/**
+ * Derive the four accent tokens from one brand colour, against the surfaces of
+ * the active scheme: `accent` (as given), `on-accent` (white or ink, whichever
+ * reads at 4.5:1), `accent-ink` (nudged toward ink until it reads at 4.5:1 on
+ * every surface passed) and `accent-soft` (a tint of the ground).
+ */
+export function deriveAccent(accent: string, surfaces: string[]) {
+  const a = hexToRgb(accent);
+  const ground = surfaces[0] || '#ffffff';
+  const dark = lum(hexToRgb(ground)) < 0.2;
+  const toward: RGB = dark ? [255, 255, 255] : [0, 0, 0];
+  let ink = a, t = 0;
+  const worst = (c: RGB) => Math.min(...surfaces.filter(Boolean).map((s) => contrast(rgbToHex(c), s)));
+  while (t < 1 && worst(ink) < 4.6) { t += 0.03; ink = mix(a, toward, t); }
+  const onAccent = contrast('#ffffff', accent) >= 5 ? '#ffffff' : rgbToHex(mix(a, [0, 0, 0], 0.82));
+  return {
+    '--accent': rgbToHex(a),
+    '--on-accent': onAccent,
+    '--accent-ink': rgbToHex(ink),
+    '--accent-soft': rgbToHex(mix(hexToRgb(ground), a, dark ? 0.2 : 0.13)),
+  } as React.CSSProperties;
+}
+
+/* ───────────────────────── provider ───────────────────────── */
+
+export type Scheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
+type Ctx = { host: HTMLElement | null; pushLayer: () => () => void };
+const AltitudeContext = React.createContext<Ctx | null>(null);
+export const useAltitude = () => React.useContext(AltitudeContext);
+
+export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivElement> {
+  scheme?: Scheme;
+  accent?: string;
+  motion?: 'system' | 'full' | 'reduced';
+  /** 'more' renders elevation as hard, high-contrast slabs (offset = height). 'system' follows prefers-contrast. */
+  contrast?: 'system' | 'more';
+  recede?: boolean;
+  /** Openings deepen as the pointer approaches (empty fields, a sheet's finger pull). Default true; reduced motion turns it off regardless. */
+  approach?: boolean;
+}
+
+export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', recede = true, approach = true, className, style, children, ...rest }: AltitudeProviderProps) {
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const [host, setHost] = React.useState<HTMLElement | null>(null);
+  const [layers, setLayers] = React.useState(0);
+  const [accentVars, setAccentVars] = React.useState<React.CSSProperties | null>(null);
+
+  useIsoLayoutEffect(() => {
+    if (!accent || !rootRef.current) { setAccentVars(null); return; }
+    const el = rootRef.current;
+    const compute = () => {
+      const cs = getComputedStyle(el);
+      const read = (n: string) => cs.getPropertyValue(n).trim();
+      setAccentVars(deriveAccent(accent, ['--surface-ground', '--surface-trench', '--surface-raised', '--surface-modal'].map(read)));
+    };
+    compute();
+    const mo = new MutationObserver(compute);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => mo.disconnect();
+  }, [accent, scheme]);
+
+  const api = React.useMemo<Ctx>(() => ({
+    host,
+    pushLayer: () => { setLayers((n) => n + 1); return () => setLayers((n) => n - 1); },
+  }), [host]);
+
+  return (
+    <AltitudeContext.Provider value={api}>
+      <div ref={rootRef} className={cx('alt-root', className)} data-theme={scheme}
+        data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined}
+        data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>
+        <div className="alt-stage" data-receded={recede && layers > 0 ? '' : undefined}>{children}</div>
+        <div className="alt-layers" ref={setHost} />
+      </div>
+    </AltitudeContext.Provider>
+  );
+}
+
+/** Renders into the provider's layer host (inside the theme, outside the receding stage), else document.body. */
+export function Layer({ children }: { children: React.ReactNode }) {
+  const ctx = useAltitude();
+  const [ready, setReady] = React.useState(false);
+  React.useEffect(() => setReady(true), []);
+  if (!ready) return null;
+  const target = ctx ? ctx.host : document.body;
+  return target ? createPortal(children, target) : null;
+}
+
+/* ───────────────────────── Depth signals ───────────────────────── */
+
+/**
+ * Attention budget: abrupt onsets capture attention, and people track only about
+ * four moving things at once. Rises that start together are staggered so no more
+ * than four begin within any 250ms window.
+ */
+const riseStarts: number[] = [];
+export function riseDelay() {
+  const now = performance.now();
+  while (riseStarts.length && now - riseStarts[0] > 250) riseStarts.shift();
+  const delay = Math.max(0, riseStarts.length - 3) * 90;
+  riseStarts.push(now + delay);
+  return delay;
+}
+
+export type Presence = 1 | 2 | 3;
+export interface DepthProps {
+  /** Afterglow. Any value: when it changes the surface lifts, tints and settles back over dur-settle. `true` settles once on mount. */
+  settle?: unknown;
+  /** Commit state of an optimistic write. pending hovers above the ground (after dur-grace), committed lands, failed drops into a trench. */
+  status?: 'pending' | 'committed' | 'failed';
+  /** Someone is holding this: lifted to level 3 with their presence colour and name. */
+  heldBy?: { name: string; presence?: Presence } | null;
+  /** Focus+context. match rises one level, miss sinks into a well; nothing is removed. */
+  relevance?: 'match' | 'miss';
+}
+
+/** Turns depth signals into the data attributes bundle.css reads. Spread the result onto any surface. */
+export function useDepth({ settle, status, heldBy, relevance }: DepthProps) {
+  const [glow, setGlow] = React.useState<'a' | 'b' | undefined>(undefined);
+  const [land, setLand] = React.useState<'a' | 'b' | undefined>(undefined);
+  const [delay, setDelay] = React.useState(0);
+  const mounted = React.useRef(false);
+  const lastStatus = React.useRef(status);
+  React.useEffect(() => {
+    const first = !mounted.current;
+    mounted.current = true;
+    if (settle === undefined || settle === null || settle === false) return;
+    if (first && settle !== true) return;
+    setDelay(riseDelay());
+    setGlow((g) => (g === 'a' ? 'b' : 'a'));
+  }, [settle]);
+  React.useEffect(() => {
+    if (lastStatus.current === 'pending' && status === 'committed') setLand((l) => (l === 'a' ? 'b' : 'a'));
+    lastStatus.current = status;
+  }, [status]);
+  return {
+    'data-settle': glow,
+    'data-land': land,
+    'data-status': status,
+    'data-held': heldBy ? '' : undefined,
+    'data-held-by': heldBy?.name,
+    'data-presence': heldBy ? String(heldBy.presence ?? 1) : undefined,
+    'data-relevance': relevance,
+    'aria-busy': status === 'pending' || undefined,
+    style: delay ? ({ '--alt-rise-delay': delay + 'ms' } as React.CSSProperties) : undefined,
+  };
+}
+
+/* ───────────────────────── Surface ───────────────────────── */
+
+export type Level = -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5;
+export interface SurfaceProps extends React.HTMLAttributes<HTMLElement>, DepthProps {
+  level?: Level;
+  interactive?: boolean;
+  as?: keyof React.JSX.IntrinsicElements;
+}
+export const Surface = React.forwardRef<HTMLElement, SurfaceProps>(function Surface(
+  { level = 1, interactive = false, as = 'div', className, settle, status, heldBy, relevance, style, ...rest }, ref) {
+  const Comp = as as any;
+  const { style: depthStyle, ...depth } = useDepth({ settle, status, heldBy, relevance });
+  return <Comp ref={ref} className={cx('alt-surface', interactive && 'alt-lift', className)} data-level={String(level)}
+    tabIndex={interactive && rest.onClick && as === 'div' ? 0 : undefined} {...depth} style={{ ...depthStyle, ...style }} {...rest} />;
+});
+
+/* ───────────────────────── Kbd ───────────────────────── */
+
+export interface KbdProps extends React.HTMLAttributes<HTMLElement> {
+  /** A KeyboardEvent.key (case-insensitive) — the key presses down while it is held. */
+  listen?: string;
+}
+export function Kbd({ listen, className, children, ...rest }: KbdProps) {
+  const [down, setDown] = React.useState(false);
+  React.useEffect(() => {
+    if (!listen) return;
+    const k = listen.toLowerCase();
+    const on = (e: KeyboardEvent) => { if (e.key.toLowerCase() === k) setDown(true); };
+    const off = (e: KeyboardEvent) => { if (e.key.toLowerCase() === k || e.key === 'Meta') setDown(false); };
+    const blur = () => setDown(false);
+    window.addEventListener('keydown', on); window.addEventListener('keyup', off); window.addEventListener('blur', blur);
+    return () => { window.removeEventListener('keydown', on); window.removeEventListener('keyup', off); window.removeEventListener('blur', blur); };
+  }, [listen]);
+  return <kbd className={cx('alt-kbd', className)} data-pressed={down ? '' : undefined} {...rest}>{children}</kbd>;
+}

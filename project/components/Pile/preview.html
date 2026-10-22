@@ -1,0 +1,55 @@
+<!-- @dsCard group="Display" height=480 subtitle="Thickness says how many; click to fan it out" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pile — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.piles { display: flex; gap: 28px; align-items: flex-start; }
+.p { width: 168px; }
+.p.wide { width: 280px; }
+.face { padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+.face b { font: 600 14px/20px var(--font-sans); }
+.face span { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.doc b { display: block; font: 600 14px/20px var(--font-sans); }
+.doc span { display: block; margin-top: 4px; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+.doc small { display: block; margin-top: 10px; font: 500 12px/16px var(--font-mono); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const docs = [
+  ["Pricing page copy", "Three tiers, annual toggle, FAQ.", "Mara \xB7 2h"],
+  ["Onboarding emails", "Five-step drip for new workspaces.", "Jon \xB7 yesterday"],
+  ["Q4 launch plan", "Milestones, owners and risks.", "Lena \xB7 Mon"],
+  ["Release notes 2.4", "Faster cold starts, new regions.", "Sam \xB7 Mon"],
+  ["Support macros", "Twelve canned replies, reviewed.", "Ivy \xB7 last week"],
+  ["Brand voice", "How we sound, with examples.", "Ada \xB7 last week"],
+  ["Security review", "Findings from the October audit.", "Theo \xB7 Oct 2"]
+];
+function App() {
+  const [picked, setPicked] = React.useState(null);
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "piles" }, /* @__PURE__ */ React.createElement(A.Pile, { count: 1, className: "p" }, /* @__PURE__ */ React.createElement("div", { className: "face" }, /* @__PURE__ */ React.createElement("b", null, "Drafts"), /* @__PURE__ */ React.createElement("span", null, "1 document"))), /* @__PURE__ */ React.createElement(A.Pile, { count: 3, interactive: true, className: "p" }, /* @__PURE__ */ React.createElement("div", { className: "face" }, /* @__PURE__ */ React.createElement("b", null, "Approved"), /* @__PURE__ */ React.createElement("span", null, "3 documents"))), /* @__PURE__ */ React.createElement(
+    A.Pile,
+    {
+      items: docs,
+      className: "p wide",
+      onSelect: (d) => setPicked(d[0]),
+      defaultOpen: true,
+      maxHeight: 300,
+      renderItem: ([t, d, m]) => /* @__PURE__ */ React.createElement("div", { className: "doc" }, /* @__PURE__ */ React.createElement("b", null, t), /* @__PURE__ */ React.createElement("span", null, d), /* @__PURE__ */ React.createElement("small", null, m))
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "face" }, /* @__PURE__ */ React.createElement("b", null, "In review"), /* @__PURE__ */ React.createElement("span", null, docs.length, " documents \xB7 click to fan out"))
+  )), /* @__PURE__ */ React.createElement("p", { className: "cap" }, picked ? `Opened \u201C${picked}\u201D.` : "One sheet for 2\u20133 items, two for 4\u20139, three for 10+; the badge carries the number. Click a pile with items and they fan out over the page below it."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!-- @dsCard group="Foundations" height=300 subtitle="Schemes and a custom accent" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AltitudeProvider — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.schemes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.shell { border-radius: var(--radius-lg); border: 1px solid var(--line); overflow: hidden; }
+.scheme { padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 220px; }
+.scheme h4 { margin: 0; font: 600 14px/20px var(--font-sans); }
+.scheme small { margin-top: -8px; font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
+.scheme .alt-btn { align-self: flex-start; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const list = [["daylight"], ["nightfall"], ["mesa"], ["alpine"], ["daylight", "#0f8a6b"]];
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "schemes" }, list.map(([s, accent], i) => /* @__PURE__ */ React.createElement(A.AltitudeProvider, { key: i, scheme: s, accent, className: "shell" }, /* @__PURE__ */ React.createElement("div", { className: "scheme" }, /* @__PURE__ */ React.createElement("h4", null, s[0].toUpperCase() + s.slice(1)), /* @__PURE__ */ React.createElement("small", null, accent ? 'accent="' + accent + '"' : 'scheme="' + s + '"'), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", size: "sm" }, "Publish"), /* @__PURE__ */ React.createElement(A.Input, { size: "sm", placeholder: "Search" }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center" } }, /* @__PURE__ */ React.createElement(A.Switch, { defaultChecked: true, "aria-label": "Enabled" }), /* @__PURE__ */ React.createElement(A.Badge, { tone: "accent" }, "Beta"))))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+# One pipeline for everything.
+#   Every push and pull request: check the design system is in sync with its sources, render every preview in every
+#   scheme, run the interaction checks, and build the package and Storybook.
+#   Pushes to main then also: deploy Storybook to GitHub Pages, and publish to npm if package.json has a new version.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Cancel superseded runs on pull requests, never a deploy or publish already under way on main.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  STORYBOOK_DISABLE_TELEMETRY: 1
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            build/package-lock.json
+
+      - name: Install
+        run: |
+          npm ci
+          npm ci --prefix build
+
+      # build/ is the kit that produces the design system's bundle and previews (see build/SETUP.md). Rebuilding must
+      # change nothing: if it does, someone edited the sources without rebuilding, and project/ is out of date.
+      - name: Design system is in sync with its sources
+        working-directory: build
+        run: |
+          npx tsc -p tsconfig.json
+          node build.mjs
+          node previews.mjs
+          git diff --exit-code -- ../project || { echo "::error::project/ is out of date: run 'node build.mjs && node previews.mjs' in build/ and commit the result."; exit 1; }
+
+      - name: Render every preview in every scheme, and run the interaction checks
+        working-directory: build
+        run: |
+          npx playwright-core install --with-deps chromium
+          mkdir -p test
+          cp node_modules/react/umd/react.production.min.js node_modules/react-dom/umd/react-dom.production.min.js test/
+          python3 tokcss.py ../project/tokens.json test/tokens.css
+          node shoot.mjs "" daylight,nightfall,mesa,alpine 960
+          node checks/approach-and-lamps.mjs
+          node checks/field-focus.mjs
+
+      - name: Type-check against React 19
+        run: npm run typecheck
+
+      - name: Build the package
+        run: npm run build
+
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Keep the screenshots of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: preview-screenshots
+          path: build/test/shot-*.png
+          if-no-files-found: ignore
+
+      - name: Hand Storybook to the Pages deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: storybook-static
+
+  pages:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v5
+
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # to push the version tag
+      id-token: write   # npm trusted publishing: no npm token is stored in this repository
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Is this version new?
+        id: version
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if npm view "$name@$version" version > /dev/null 2>&1; then
+            echo "new=false" >> "$GITHUB_OUTPUT"
+            echo "$name@$version is already on npm; bump the version in package.json to publish."
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        if: steps.version.outputs.new == 'true'
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish to npm
+        if: steps.version.outputs.new == 'true'
+        run: |
+          # Trusted publishing needs npm 11.5.1 or later.
+          npm install -g npm@12.2.0
+          # Provenance checks that the package says which repository built it.
+          npm pkg set repository.type=git "repository.url=git+https://github.com/${GITHUB_REPOSITORY}.git" "homepage=https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
+          npm publish --access public
+
+      - name: Tag the release
+        if: steps.version.outputs.new == 'true'
+        run: |
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"

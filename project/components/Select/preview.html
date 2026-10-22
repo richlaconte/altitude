@@ -1,0 +1,43 @@
+<!-- @dsCard group="Inputs" height=380 subtitle="An opening you fill by choosing; the list rises at level 3" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Select — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 24px; max-width: 900px; align-items: start; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const regions = [
+  { value: "iad", label: "Virginia", description: "us-east-1" },
+  { value: "fra", label: "Frankfurt", description: "eu-central-2" },
+  { value: "sin", label: "Singapore", description: "ap-southeast-1" },
+  { value: "gru", label: "S\xE3o Paulo", description: "sa-east-1" },
+  { value: "syd", label: "Sydney", description: "Opens in March", disabled: true }
+];
+function App() {
+  const [plan, setPlan] = React.useState("team");
+  const [tz, setTz] = React.useState("");
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Region", hint: "Where your deployments run." }, /* @__PURE__ */ React.createElement(A.Select, { items: regions, placeholder: "Choose a region", name: "region" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Plan" }, /* @__PURE__ */ React.createElement(A.Select, { value: plan, onValueChange: setPlan }, /* @__PURE__ */ React.createElement(A.SelectItem, { value: "solo" }, "Solo"), /* @__PURE__ */ React.createElement(A.SelectItem, { value: "team" }, "Team"), /* @__PURE__ */ React.createElement(A.SelectItem, { value: "org" }, "Organization"))), /* @__PURE__ */ React.createElement(A.Field, { label: "Timezone", required: true, error: tz ? null : "Choose a timezone." }, /* @__PURE__ */ React.createElement(
+    A.Select,
+    {
+      value: tz,
+      onValueChange: setTz,
+      placeholder: "Choose a timezone",
+      items: [{ value: "utc", label: "UTC" }, { value: "lis", label: "Europe/Lisbon" }, { value: "nyc", label: "America/New_York" }]
+    }
+  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Runtime" }, /* @__PURE__ */ React.createElement(A.Select, { defaultValue: "node", defaultOpen: true, items: [{ value: "node", label: "Node.js 22" }, { value: "bun", label: "Bun 1.2" }, { value: "deno", label: "Deno 2" }, { value: "edge", label: "Edge (V8 isolates)" }] })), /* @__PURE__ */ React.createElement(A.Field, { label: "Owner" }, /* @__PURE__ */ React.createElement(A.Select, { disabled: true, defaultValue: "mara", items: [{ value: "mara", label: "Mara Quist" }] }))), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 150 } }, "Empty fields are holes with their back wall showing; choosing raises the floor flush. Type a letter on a focused field to jump to it."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

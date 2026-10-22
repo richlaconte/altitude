@@ -1,0 +1,30 @@
+<!-- @dsCard group="Foundations" height=220 subtitle="The primitive every component is built from" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Surface — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.s { padding: 18px; min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; }
+.s b { font: 600 15px/22px var(--font-sans); }
+.s span { font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Surface, { level: -1, className: "s" }, /* @__PURE__ */ React.createElement("b", null, "level=", "{-1}"), /* @__PURE__ */ React.createElement("span", null, "A well. Holds things; never lifts.")), /* @__PURE__ */ React.createElement(A.Surface, { level: 1, className: "s" }, /* @__PURE__ */ React.createElement("b", null, "level=", "{1}"), /* @__PURE__ */ React.createElement("span", null, "Static grouping. Doesn't react to the pointer.")), /* @__PURE__ */ React.createElement(A.Surface, { level: 1, interactive: true, className: "s", onClick: () => {
+  } }, /* @__PURE__ */ React.createElement("b", null, "level=", "{1}", " interactive"), /* @__PURE__ */ React.createElement("span", null, "Hover: climbs to 2. Press: drops to ground.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

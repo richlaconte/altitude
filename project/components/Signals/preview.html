@@ -1,0 +1,42 @@
+<!-- @dsCard group="Foundations" height=560 page subtitle="What height can tell you beyond hierarchy" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Signals — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 24px; }
+.cell { display: flex; flex-direction: column; gap: 12px; }
+.cell h4 { margin: 0; font: 600 14px/20px var(--font-sans); }
+.cell .cap { min-height: 34px; }
+.card { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card b { font: 500 14px/20px var(--font-sans); }
+.card .sub { font: 400 12.5px/17px var(--font-mono); color: var(--ink-muted); }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tile { padding: 10px; border-radius: var(--radius-md); font: 500 13px/18px var(--font-sans); text-align: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const names = ["Atlas", "Beacon", "Cinder", "Delta", "Ember", "Fable", "Garnet", "Harbor"];
+function App() {
+  const [rev, setRev] = React.useState(3);
+  const [status, setStatus] = React.useState("committed");
+  const [q, setQ] = React.useState("ar");
+  const save = (fail) => {
+    setStatus("pending");
+    setTimeout(() => setStatus(fail ? "failed" : "committed"), 1800);
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement("div", { className: "cell" }, /* @__PURE__ */ React.createElement("h4", null, "Recency \xB7 afterglow"), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Changed content arrives lifted and tinted, then settles to the ground over 8s. No badge needed to say what just changed."), /* @__PURE__ */ React.createElement(A.Surface, { level: 1, className: "card", settle: rev }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Northwind \xB7 production"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "sub" }, "build #", rev)), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setRev(rev + 1) }, "Deploy"))), /* @__PURE__ */ React.createElement("div", { className: "cell" }, /* @__PURE__ */ React.createElement("h4", null, "Commitment \xB7 pending, landed, failed"), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "An optimistic write hovers above the ground until the server confirms, then lands. A failure drops into a trench."), /* @__PURE__ */ React.createElement(A.Surface, { level: 1, className: "card", status }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Rename to \u201CNorthwind 2\u201D"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "sub" }, status)), /* @__PURE__ */ React.createElement("span", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => save(false) }, "Save"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => save(true) }, "Save (fail)")))), /* @__PURE__ */ React.createElement("div", { className: "cell" }, /* @__PURE__ */ React.createElement("h4", null, "Possession \xB7 held by someone"), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "A collaborator editing a card is holding it: it's lifted out of the page, wearing their colour and name."), /* @__PURE__ */ React.createElement(A.Surface, { level: 1, className: "card", heldBy: { name: "Mara", presence: 1 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, "Pricing page copy"), /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "sub" }, "editing now")))), /* @__PURE__ */ React.createElement("div", { className: "cell" }, /* @__PURE__ */ React.createElement("h4", null, "Relevance \xB7 focus+context"), /* @__PURE__ */ React.createElement(A.Input, { size: "sm", value: q, onChange: (e) => setQ(e.target.value), placeholder: "Filter" }), /* @__PURE__ */ React.createElement("div", { className: "tiles" }, names.map((n) => /* @__PURE__ */ React.createElement(A.Surface, { key: n, level: 1, className: "tile", relevance: !q ? void 0 : n.toLowerCase().includes(q.toLowerCase()) ? "match" : "miss" }, n)))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!-- @dsCard group="Overlays" height=280 subtitle="Rises from its trigger" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Popover — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement(A.Popover, { defaultOpen: true, "aria-label": "Share", trigger: /* @__PURE__ */ React.createElement(A.Button, null, "Share") }, /* @__PURE__ */ React.createElement("div", { className: "col", style: { width: 280, gap: 12 } }, /* @__PURE__ */ React.createElement("b", { style: { font: "600 14px/20px var(--font-sans)" } }, "Invite to project"), /* @__PURE__ */ React.createElement(A.Input, { size: "sm", placeholder: "name@company.com" }), /* @__PURE__ */ React.createElement("div", { className: "row", style: { justifyContent: "flex-end", gap: 8 } }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "primary" }, "Send invite"))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

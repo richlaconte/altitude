@@ -1,0 +1,176 @@
+# Research
+
+Altitude's elevation language is built on perception and HCI research, then checked against measurements of its own rendered output. This page records the evidence, the experiments, and the decisions each one forced. Read it before adding a new elevation behavior.
+
+## What the literature says
+
+### Depth is read fast, and shading polarity carries it
+
+- **Light comes from above.** People resolve ambiguous shading by assuming overhead light: a disc lit at the top reads as a bump, lit at the bottom as a dent (Ramachandran, 1988; see the [PeerJ review](https://peerj.com/articles/363)). This is why a raised surface carries a light top edge and a well carries a dark one, and why Altitude never moves its light.
+- **Shape-from-shading is processed before attention.** Visual search uses 3D scene properties such as lighting direction in parallel ([Enns & Rensink, 1990](https://www2.psych.ubc.ca/~rensink/publications/abs.90.1.html)). Search with shaded objects is most efficient for *vertical* shading gradients, and better when distractors are lit from the top ([visual-search replication, Southampton](https://eprints.soton.ac.uk/48718)). Raised-versus-sunk is therefore a candidate for a pre-attentive "can I press this?" signal, but only if the shading is actually there.
+- **Shadows are processed pre-attentively too, but only if they're darker than the ground.** When shadow regions were made lighter than the background, or outlined, the pre-attentive effect disappeared ([Rensink & Cavanagh, 1993](https://www2.psych.ubc.ca/~rensink/publications/abs.93.2.html)). Altitude never uses light "glows" to show height, even in dark schemes.
+- **A cast shadow's displacement is read as height.** Moving only the shadow makes a stationary object appear to rise or sink ([Kersten, Mamassian & Knill, 1997](https://kerstenlab.psych.umn.edu/demos/shadows)). Altitude's ladder increases shadow *offset and blur*, not just darkness.
+- **Depth segregates attention.** A conjunction search that includes stereoscopic depth runs in parallel ([Nakayama & Silverman, 1986](https://doi.org/10.1038/320264A0)): separate layers really are easier to search separately. That supports keeping overlays visibly off the page.
+
+### Depth is a weak channel for amounts
+
+- Depth ranks 6th of 10 magnitude channels, behind position, length, angle and area ([Munzner, *Visualization Analysis & Design*](https://www.cs.ubc.ca/~tmm/courses/436V-20/slides/marks.pdf)).
+- Blur-defined depth (Semantic Depth of Field) separates only **two to four** groups reliably; people could not judge equal blur or blur ratios, a 7px blur was too weak, and participants disliked reading blurred objects ([Kosara et al., 2002](https://www.cvast.tuwien.ac.at/sites/default/files/bibcite/168/kos_vissym2002.pdf)).
+- Real 3D layouts didn't beat 2D for retrieval: 6.77s vs 5.98s, not significant, though people preferred the 3D one ([Cockburn & McKenzie, 2001](https://www.cs.kent.edu/~jmaletic/cs63903/papers/Cockburn01.pdf)). Spatial memory itself does help ([Data Mountain, Robertson et al., 1998](https://www.microsoft.com/en-us/research/publication/data-mountain-using-spatial-memory-for-document-management/)).
+
+So elevation should encode **a few ordered categories**, never a continuous value, and should keep things where they are.
+
+### Flat interfaces cost time and errors
+
+- In an eye-tracking study, flat web pages produced more missed clickable elements (35.8% vs 26.0%) and more false alarms (28.0% vs 16.6%) than traditional designs, and flat icons took twice as long to find (15.4s vs 8.0s) ([Burmistrov et al., 2015](https://www.flatisbad.com/publications/Burmistrov-INTERACT15.pdf)).
+- Nielsen Norman Group's eye-tracking found weak signifiers attract less attention and cause uncertainty ([Flat UI elements attract less attention](https://nngroup.com/articles/flat-ui-less-attention-cause-uncertainty); summary only, the article couldn't be retrieved).
+
+### Change, time and attention
+
+- People miss changes they weren't attending to ([Rensink, O'Regan & Clark, 1997](https://www2.psych.ubc.ca/~rensink/publications/abs.96.2.html)). **Phosphor** answered with an afterglow: show the new state at once and leave a fading trace that explains what changed; two studies found significant benefits ([Baudisch et al., 2006](https://www.microsoft.com/en-us/research/?p=145436)).
+- Abrupt onsets capture attention automatically ([Yantis & Jonides, 1984](https://researchgate.net/profile/Steven-Yantis/publication/16958392_Abrupt_visual_onsets_and_selective_attention_Evidence_from_visual_search/links/0046351b7673aea58b000000/Abrupt-visual-onsets-and-selective-attention-Evidence-from-visual-search.pdf)), and people can track only about four or five moving objects at once ([Pylyshyn & Storm, 1988](https://ruccs.rutgers.edu/images/personal-zenon-pylyshyn/docs/storm88.pdf)). A rise is an attention grab; spend them deliberately.
+- **Ephemeral adaptation**: predicted menu items shown at once, the rest fading in over 500ms, made selection faster than a static menu and than highlighting. 250ms was too short to help, misses cost time, and the benefit needed ~79% prediction accuracy ([Findlater et al., 2009](https://www.cs.ubc.ca/labs/edapt/papers/findlater2009.pdf)).
+- Animation helps when it's congruent with the change it shows and easy to perceive; otherwise static is as good ([Tversky, Morrison & Bétrancourt, 2002](https://faculty.washington.edu/aragon/classes/hcde411/w13/readings/Tversky_AnimationFacilitate_IJHCS02.pdf)). Animated transitions cut spatial-reconstruction errors from 1.8 to 0.4 without slowing tasks ([Bederson & Boltman, 1999](https://www.cs.umd.edu/projects/hcil/jazz/learn/papers/CS-TR-3964.pdf)).
+- Reordering animates with **FLIP**: measure where each item was (First) and where it ends up (Last), apply the difference as a transform (Invert), then animate the transform away (Play), so moved rows travel without a layout per frame ([Paul Lewis](https://aerotwist.com/blog/flip-your-animations/)). Table re-sorts, CommandPalette results and Board moves use it.
+- Response-time limits: about 0.1s feels instant, about 1s keeps flow ([Nielsen](https://www.nngroup.com/videos/3-response-time-limits-interaction-design/)).
+
+### Physical metaphors that carry information
+
+- **Piles** let people organize casually; a pile's presence and size say something without opening it ([Mander, Salomon & Wong, 1992](https://hci.stanford.edu/seminar/abstracts/92-93/930602-salomon-mander-rose-wong.html)).
+- **Read wear and edit wear**: interaction history shown as physical wear ([Hill et al., 1992](https://acawiki.org/Edit_wear_and_read_wear)).
+- **Workspace awareness**: in shared spaces, people need to see who is working where and on what ([Gutwin & Greenberg, 2002](https://collablab.northwestern.edu/CollabolabDistro/nucmc/GutwinGreenberg_FrameworkWorkspaceAwareness.pdf)).
+- **Design frictions**: small, deliberate obstacles that prompt a moment of reflection before consequential actions ([Cox et al., 2016](https://oro.open.ac.uk/47011)).
+- **Illusion of completeness**: people stop scrolling when a page looks finished ([Nielsen Norman Group](https://www.nngroup.com/videos/illusion-completeness/)). Scroll shadows are a long-standing CSS answer ([Verou, 2012](https://lea.verou.me/2012/04/background-attachment-local/)).
+- **Cast shadows carry height.** When only a ball's shadow moves, people see the ball itself rise off the floor ([Kersten, Mamassian & Knill, 1997](https://journals.sagepub.com/doi/10.1068/p260171); [demonstrations](https://kerstenlab.psych.umn.edu/demos/shadows)). Avatars use exactly this: presence is the gap between a face and its shadow.
+- Apple's 2025 Liquid Glass puts controls on a functional layer floating above content and says to avoid glass on glass ([WWDC25](https://developer.apple.com/videos/play/wwdc2025/219)), the same rule as Altitude's "one summit".
+
+### Anticipation and feedforward
+
+- **Feedforward** tells people what an action will do before they take it, as distinct from feedback afterwards; it bridges Norman's gulf of execution ([Vermeulen et al., 2013](https://documentserver.uhasselt.be/bitstream/1942/14759/1/VermeulenLuytenVandenHovenConinx_chi2013.pdf)). Altitude's hover ghosts are feedforward: the check an unchecked box would get, the radio thumb where it would land, a tab's sheet peeking up, a closed accordion lid's ghost.
+- Targets that **expand as the pointer approaches** are acquired faster, even when the expansion starts late in the movement ([McGuffin & Balakrishnan, 2002](https://www.dgp.toronto.edu/~ravin/papers/chi2002_expandingtargets.pdf)). Altitude's approach response changes height, not size (a size change would reflow the layout), so it claims no Fitts' law gain. It's feedforward, and since E10 it's reserved for openings: an empty field opens as you reach for it, previewing what focusing it will do. Raised things no longer respond before the pointer is on them.
+
+### Accessibility
+
+- In forced-colors mode (Windows High Contrast), `box-shadow` is reverted, so anything conveyed only by a shadow is lost ([Microsoft Edge team](https://blogs.windows.com/msedgedev/2020/09/17/styling-for-windows-high-contrast-with-new-standards-for-forced-colors/)).
+- WCAG 2.2 **Focus Appearance** (2.4.13, AAA) asks for a focus indicator at least as large as a 2px perimeter of the control, whose pixels change by at least 3:1 between the unfocused and focused states ([W3C](https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance)). A focused field's neutral rim meets it in every scheme (E10).
+- Keyboard and ARIA behaviour follow the WAI-ARIA Authoring Practices ([APG patterns](https://www.w3.org/WAI/ARIA/apg/patterns/)): combobox for `Combobox` and `CommandPalette`, listbox with a button trigger for `Select`, modal dialog for `Dialog`, `Sheet` and `CommandPalette`.
+
+## Experiments
+
+All measurements were taken from Altitude's rendered output in headless Chromium, in all four schemes, using CIEDE2000 (ΔE₀₀) for color differences. ΔE₀₀ ≈ 1 is a just-noticeable difference side by side; about 2–2.5 is noticeable at a glance.
+
+### E1 · Can people tell adjacent levels apart?
+
+Eight 96px tiles, one per level, on the ground. For each step up the ladder, the larger of the face-color difference and the shadow-band difference:
+
+| Step | Daylight | Nightfall | Mesa | Alpine |
+|---|---|---|---|---|
+| −2 → −1 | 2.17 | 1.28 | 2.24 | 1.10 |
+| −1 → 0 | 1.81 | 1.92 | 2.52 | 2.02 |
+| 0 → 1 | 2.69 | 2.77 | 2.66 | 3.58 |
+| 1 → 2 | **0.83** | 2.24 | **0.81** | 2.25 |
+| 2 → 3 | 1.97 | 2.24 | 1.95 | 2.25 |
+| 3 → 4 | 1.37 | 1.79 | 1.33 | 2.09 |
+| 4 → 5 | **0.91** | 2.12 | **1.07** | 2.05 |
+
+With a simulated low-vision filter (4px blur, contrast halved), the light schemes' 1→2 step fell to 0.33–0.52.
+
+**Finding.** Adjacent levels are *not* reliably readable at rest, especially in light schemes, where every raised level is white and only the shadow differs. Tier boundaries are: sunk vs ground vs raised vs floating differ clearly in every scheme. This matches the 2–4 group limit for depth cues.
+
+**Decision.** Meaning is assigned to **four tiers** (sunk, ground, raised, floating). The eight levels are kept for *motion*: hover climbs one level, press drops to ground. People read tiers and feel levels. No component may rely on a static difference between adjacent levels in the same tier.
+
+### E2 · Does the shadow carry height?
+
+The centroid of the shadow below each raised tile (Daylight): 1.4px at level 1, 4.7px at 2, 10.1px at 3, 17.3px at 4, 21.2px at 5. Nightfall: 2.7, 8.3, 15.9, 19.9, 20.4px.
+
+**Finding.** Shadow displacement grows monotonically with level, the cue Kersten et al. showed is read as height. In dark schemes, levels 4 and 5 converge, so tonal lift (each level lighter) carries the difference there.
+
+### E3 · What survives forced colors?
+
+Rendered with `forced-colors: active`, the entire ladder disappeared: tiles, wells and shadows all became plain background.
+
+**Decision.** In forced colors, elevation falls back to borders that encode the tiers: dashed for sunk (2px for trench), none for ground, 1px for raised, 2px for floating, double for modal. Verified rendering in both light and dark schemes. Under `prefers-contrast: more` (or `AltitudeProvider contrast="more"`), shadows become hard ink slabs whose thickness is the height, a high-contrast version of the same cast-shadow cue.
+
+### E4 · Is "raised" actually shaded?
+
+Top-to-bottom lightness difference (ΔL*) across the face of each surface:
+
+| Surface | Daylight | Nightfall |
+|---|---|---|
+| Raised (before) | 0.0 | 0.0 |
+| Well | −1.2 | −0.6 |
+| Trench | −3.5 | −0.8 |
+
+**Finding.** Wells had the dark-top polarity that reads as concave, but raised surfaces had no shading at all: they were flat faces with a drop shadow. The pre-attentive shading cue was present for "fill this" but missing for "press this".
+
+**Decision.** Pressable controls (buttons, thumbs, keys, the selected tab, checked boxes) get a face gradient, `--alt-sheen`. Three strengths were rendered; the subtlest gives +1.9 to +4.8 ΔL*, mirroring the wells' polarity without looking glossy. Pressing removes the sheen, so the face flattens as it reaches the ground. Cards and other containers stay flat: they group, they aren't pressed.
+
+### E5 · Do levels interpolate?
+
+The computed `box-shadow` was sampled every frame while a surface climbed from level 1 to 5. All samples had four layers, and the ambient layer's offset, blur and spread moved continuously (4.6 → 12.2 → 19.9 → … → 48px).
+
+**Finding.** Because every token, including flush, well and trench, uses the same four-layer structure, any level animates smoothly into any other.
+
+### E6 · How long is an afterglow noticeable?
+
+A card's face color was sampled after its afterglow started. The difference from its resting color (ΔE₀₀) in Daylight was 9.0 for the first second, 7.6 at 2s, 4.8 at 3s, 2.8 at 4s, 0.6 at 6s and 0 at 8s. Nightfall tracked within 1.3.
+
+**Decision.** `dur-settle` is 8s, held at full strength for the first second, and noticeable for about four seconds: long enough to catch the eye of someone who looked away, gone before it becomes noise.
+
+### E7 · How should a button show its height?
+
+Three treatments were prototyped against the original (flat face, drop shadow) and rendered at rest, hover and press in light, dark and warm schemes: a **wall** (a solid edge under the face, darker than the face, as thick as the level), a **pill** with the same wall, and a **lit-edge slab** with no wall.
+
+**Decision.** The wall. It draws height literally as displacement, the cue measured in E2 and shown to read as height, so a primary button (4px) visibly stands taller than a secondary one (2px) and a ghost button has none. Pressing has somewhere to go: the face travels the full wall height and the wall vanishes. It survives high contrast as an ink slab and needs no new colours, since the wall is derived from the face. The pill read as playful rather than precise; the lit-edge slab didn't separate primary from secondary.
+
+### E8 · Which badge, avatar, tab and alert treatments carry their meaning?
+
+A design review, not a measurement: each candidate was rendered in Daylight and Nightfall at 2× and judged against two questions: does it say the component's meaning in Altitude's own vocabulary, and does it suggest an affordance it doesn't have?
+
+- **Badges.** Ten treatments: strong deboss, deboss with an inside wall, embossed label tape, sticker, rubber stamp, engraved type, inlay, severity steps, a trench socket with a raised mark, and an indicator plate with a lamp. The **lamp plate** won: it extends the hardware the system already has (keys with walls, switch tracks and thumbs) and keeps colour in a small lit bead, so plates stay calm in dense tables. The socket read as a toggle switch (a false affordance), severity steps read as signal strength (an inverted meaning), and the stamps and stickers looked like every other library's badge.
+- **Avatars.** Keycap tiles with walls were rejected because walls mean "press it" everywhere else. The **detached shadow** was kept: it draws presence with a cue people already read as height (above), needs no outline, and survives dark schemes once the shadow core is dense enough.
+- **Tabs.** A walled pill carried between tabs fought the smooth glide people liked. **Folder tabs** say "the sheet on top is the one you're reading" with one raised piece and no extra decoration; the glide survives as the segmented variant.
+- **Alerts.** A flush band carried no elevation at all; a plaque set into the page looked heavy. A **sheet resting on the page** (paper edge, contact shadow) keeps alerts on the ground tier while giving them the same physicality as Pile and Drilldown, and lets several of them stack.
+
+### E9 · Which treatments carry the seven newer components?
+
+A design review like E8: static renders of every state in Daylight and Nightfall at 2×, judged on whether each says its meaning in Altitude's vocabulary without suggesting an affordance it lacks.
+
+- **CommandPalette.** The query field is a real `Input` inset in the level-5 surface. Making the field the palette's top edge was rejected: with no rim it can't show empty against filled, and it read as a header bar.
+- **Sheet.** Inset 8px from its edge rather than flush, because a flush sheet shows its height along one side only. The bottom sheet's handle is a recessed finger pull (an opening) rather than a flat pill.
+- **HoverCard.** A level-3 card. A hover-intent "fuse" drawn on the trigger was rejected: it spends motion on every pointer pass over a paragraph of names.
+- **Select and Combobox.** The chosen option wears the Checkbox's tick at the row's end. A mini checked box read as multi-select; a leading tick column wasted width.
+- **Stepper.** Plates on one ground line, in the breadcrumb's vocabulary. Marker discs on a track were rejected because they read as a quantity. Completed plates had to be the ground itself: in Daylight they were nearly the same tone as the imprints of steps to come.
+- **Table.** One slab per row, drawn from the first cell at the table's measured width; per-cell shadows showed seams between cells.
+- **Board.** Columns open into wells only while a card is carried; a collapsed column as a `Pile` with its count reads as a quantity without needing the cards.
+
+### E10 · Approach, lamps and field focus, after use
+
+A review of three things that looked right in stills and didn't hold up in use. Candidates were rendered in Daylight and Nightfall at 2×, and the interactions checked in a browser.
+
+- **Approach on raised things.** Buttons, crumbs, cards, piles, steps and board cards climbed toward an approaching pointer, and buttons, crumbs and cards leaned up to 2px after it across their face. In use, a button that shifts under a moving pointer reads as a fault, not as readiness. **Decision:** nothing raised responds before the pointer is on it, and nothing follows the pointer; hover is one discrete change. Fields keep approach, because a field doesn't move: only its depth changes, and that previews what focusing it will do.
+- **Status lamps.** The glossy bead (a radial highlight, a lightened face in light schemes, a dark socket ring and a drop shadow) read as a separate object sitting on the plate, and its brightened colours didn't match the tone colours used everywhere else. Four candidates: the bead, a flat dot in the tone's own colour, a flat dot with a ring of its `-soft` tint, and a flat dot mixed 18% into the plate. **Decision:** the flat dot in the token itself. It matches the tone's text exactly; the tinted ring disappeared on neutral plates; the mixed dot looked washed out in Daylight. A neutral lamp is an empty ring, so lit and unlit differ in shape as well as colour. Daylight's `caution` dot is a deep amber that leans brown, because the token is tuned for 4.5:1 text; it's kept so the dot and the word agree.
+- **Field focus.** An accent rim with an accent halo lit up every field you clicked into, so a form in use glowed more than its primary action. Candidates: 2px of `ink`, a 1px `ink` hairline with a 3px neutral halo, 2px of `ink` mixed into `line-control`, and that rim plus holding an empty field at its approached depth. Full `ink` was harsh in the dark schemes; the hairline and halo was too faint. **Decision:** 2px of `ink` mixed 80% into `line-control` (`--alt-rim-held`), with the empty field holding its depth while focused. The rim measures at least 3:1 against the resting rim in every scheme (Daylight 3.46, Nightfall 3.33, Mesa 3.05, Alpine 3.43) and at least 11:1 against the ground, so it meets Focus Appearance. Invalid fields keep a `critical` rim. Keyboard focus on everything you press or switch is still the `accent-ink` ring.
+- **Field focus, follow-up: the rim is for the keyboard.** Even neutral, the rim appeared on every click. Focus Visible asks only that keyboard focus be visible, and names a text field's caret as one form of it ([W3C](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html)). **Decision:** a field you click into shows its lit floor and the caret; the rim appears only when focus arrived from the keyboard, decided as focus arrives so that typing doesn't add it. `:focus-visible` can't do this, because browsers match it on text fields after a click too, so a shared listener (`useKeyFocus`) marks the field. On a filled field, clicked focus changes nothing but the caret, which is enough when you've just clicked it. The CommandPalette's field never shows the rim, since focus never leaves it.
+
+## What was rejected
+
+- **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
+- **Continuous elevation.** No "priority 0–100 mapped to height". Depth is ordinal: use tiers and put the number in text.
+- **Light glows for height in dark schemes.** Light "shadows" lose their pre-attentive depth reading.
+- **Moving things to adapt.** Predicted menu items arrive sooner (ephemeral adaptation) but never change position.
+- **Pointer-driven parallax, tilt and lean.** Motion parallax is a strong depth cue, but continuous parallax is a vestibular trigger and adds motion that isn't tied to a change of state. Lean (a face following the pointer by up to 2px) and raised things climbing toward an approaching pointer were tried and removed: see E10. Approach survives only as an opening deepening, bounded, local and removed under reduced motion.
+- **Glossy lamps and accent rims on fields.** See E10.
+- **Keycap avatars, socket badges, severity bars.** See E8.
+- **Read wear as altitude.** Frequent use is a different idea from "now", and raising frequently used items would make positions drift. A worn-edge treatment may suit it better; not built.
+
+## How to validate with people
+
+Lab measurements show the cues are *present*. These studies would show they *work*:
+
+1. **Clickability (after Burmistrov et al.).** Screenshots with and without `--alt-sheen`; participants mark every pressable element. Measure misses, false alarms and time per element.
+2. **Change detection.** Update one of twelve cards while the participant does a distractor task. Compare time-to-notice and accuracy for afterglow, a "New" badge, and nothing.
+3. **Tier reading.** Flash a screen for 200ms and ask which elements are inputs, buttons or overlays, in each scheme and with the low-vision filter.
+4. **Pending trust.** With 200ms, 800ms and 3s server latency, compare optimistic writes with pending/landed altitude against a spinner. Measure duplicate submissions and confidence ratings.
+5. **Hold-to-commit.** Accidental-activation rate and completion time for destructive actions, HoldButton vs a confirmation dialog.
+6. **Form completion.** A long form with some fields left empty: compare how often people submit with a required field missed, and how fast they find it, when empty fields are sunk wells versus all fields looking alike.

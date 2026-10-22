@@ -1,0 +1,38 @@
+<!-- @dsCard group="Display" height=470 subtitle="Sheets laid on the page; a stack when there are several" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Alert — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.wrap { max-width: 580px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const queue = [
+  { id: "b", tone: "critical", title: "Build failed", body: "Missing environment variable DATABASE_URL." },
+  { id: "c", tone: "caution", title: "Certificate renews in 3 days", body: "Renewal is automatic; nothing to do." },
+  { id: "d", tone: "accent", title: "New region available", body: "Frankfurt (eu-central-2) is now open." }
+];
+function App() {
+  const [items, setItems] = React.useState(queue);
+  React.useEffect(() => {
+    if (!items.length) {
+      const t = setTimeout(() => setItems(queue), 900);
+      return () => clearTimeout(t);
+    }
+  }, [items]);
+  return /* @__PURE__ */ React.createElement("div", { className: "col wrap" }, /* @__PURE__ */ React.createElement(A.Alert, { title: "Scheduled maintenance" }, "The API will be read-only on Sunday from 02:00 to 02:30 UTC."), /* @__PURE__ */ React.createElement(A.Alert, { tone: "positive", title: "Domain verified" }, "acme.dev now points at this project."), /* @__PURE__ */ React.createElement(A.Alert, { tone: "caution", variant: "raised", title: "You're at 90% of your plan", action: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "primary" }, "Upgrade") }), /* @__PURE__ */ React.createElement(A.AlertStack, null, items.map((a) => /* @__PURE__ */ React.createElement(A.Alert, { key: a.id, tone: a.tone, title: a.title, onDismiss: () => setItems((xs) => xs.filter((x) => x.id !== a.id)) }, a.body))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

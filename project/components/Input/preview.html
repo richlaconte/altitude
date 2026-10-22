@@ -1,0 +1,28 @@
+<!-- @dsCard group="Inputs" height=320 subtitle="An opening: you see its wall until it's filled" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Input — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 640px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [note, setNote] = React.useState("Ship the cold-start fix behind a flag first.");
+  const [email, setEmail] = React.useState("");
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Input, { placeholder: "Email address", value: email, onChange: (e) => setEmail(e.target.value) }), /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "mara@northwind.dev" }), /* @__PURE__ */ React.createElement(A.Input, { placeholder: "Search projects", leading: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "11", cy: "11", r: "7" }), /* @__PURE__ */ React.createElement("path", { d: "M20 20l-3.5-3.5" })), trailing: /* @__PURE__ */ React.createElement(A.Kbd, null, "/") }), /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "not-an-email", invalid: true }), /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "1 / -1" } }, /* @__PURE__ */ React.createElement(A.Textarea, { value: note, onChange: (e) => setNote(e.target.value), maxLength: 80, placeholder: "Leave a note for your team\u2026" }))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "An empty field shows its inside wall below the top edge, and deepens as your pointer comes near. Type and the floor rises flush with the page. Invalid drops it to trench depth."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
