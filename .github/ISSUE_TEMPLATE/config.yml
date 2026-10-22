@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Design guide
+    url: https://github.com/richlaconte/altitude/blob/main/project/README.md
+    about: The laws, tokens and elevation model every component follows. Worth reading before proposing one.

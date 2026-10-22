@@ -72,6 +72,10 @@ A push to `main` then also:
 - deploys Storybook to GitHub Pages;
 - publishes to npm **if the version in `package.json` isn't published yet**, and tags the commit `v<version>`. To release, bump the version (`npm version patch`, `minor` or `major`) and push.
 
+## Issues and requests
+
+Requests for new components, new functionality and bug reports each have a template; [CONTRIBUTING.md](CONTRIBUTING.md) says how to write a useful one. Agents can file issues too: see [AGENTS.md](AGENTS.md).
+
 ## License
 
 [MIT](LICENSE)
