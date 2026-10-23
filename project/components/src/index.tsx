@@ -18,3 +18,5 @@ export { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableC
 export { Await, RevealGroup, readPromised, LoadingScope } from './suspense';
 export type { Promised, Pending, SkeletonOption, AwaitProps } from './suspense';
 export type { AvatarProps, AvatarGroupProps } from './controls';
+export { InlineEdit } from './inline-edit';
+export type { InlineEditProps, InlineEditSaveResult } from './inline-edit';

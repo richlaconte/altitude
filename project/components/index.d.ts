@@ -480,7 +480,31 @@ export interface DropdownMenuProps {
 }
 export declare function DropdownMenu(props: DropdownMenuProps): React.ReactElement;
 
+/** One controlled single-line value; onSave writes once, onValueChange synchronously publishes its canonical result. */
+export type InlineEditSaveResult = { ok: true; value: string } | { ok: false; error: string };
+export interface InlineEditProps {
+  value: string;
+  onValueChange: (canonicalValue: string) => void;
+  onSave: (draft: string, context: { previousValue: string }) => InlineEditSaveResult | Promise<InlineEditSaveResult>;
+  label: string;
+  validate?: (draft: string) => string | undefined | Promise<string | undefined>;
+  required?: boolean;
+  maxLength?: number;
+  disabled?: boolean;
+  editLabel?: string;
+  saveLabel?: string;
+  cancelLabel?: string;
+  /** Used only when completion still owns focus and the Edit button cannot receive it. */
+  focusFallback?: () => HTMLElement | null;
+  className?: string;
+}
+export declare function InlineEdit(props: InlineEditProps): React.ReactElement;
+
 export interface DialogProps {
+  /** Default recede retains the existing stage/scrim presentation. Stationary removes recession and blur, not modality. */
+  background?: 'recede' | 'stationary';
+  /** Lazy fallback when the captured invoker is unavailable. Return a connected, visible, focusable element. */
+  returnFocus?: () => HTMLElement | null;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -497,8 +521,8 @@ export interface DialogProps {
   dismissible?: boolean;
   /**
    * Where focus goes once the dialog has risen. 'first-field' (default): the first match for focusSelector, else the
-   * panel. 'title': the title, for a read surface whose first control is far down. false: nowhere; move it yourself.
-   * Focus returns to where it was on close in every case.
+   * panel. 'title': the title, for a read surface whose first control is far down. false: the panel until you move it inside.
+   * On close, restore the available invoker or fallback only while this dialog still owns focus.
    */
   initialFocus?: 'first-field' | 'title' | false;
   /** What 'first-field' looks for. Default '[data-autofocus], input, textarea, select'. */
@@ -864,7 +888,7 @@ declare global {
     Altitude: {
       AltitudeProvider: typeof AltitudeProvider; Surface: typeof Surface; Button: typeof Button;
       Card: typeof Card; CardHeader: typeof CardHeader; CardTitle: typeof CardTitle; CardDescription: typeof CardDescription; CardContent: typeof CardContent; CardFooter: typeof CardFooter;
-      Input: typeof Input; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
+      Input: typeof Input; InlineEdit: typeof InlineEdit; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;

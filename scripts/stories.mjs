@@ -1,3 +1,5 @@
+import { syncActionsGuide } from './sync-actions-guide.mjs';
+syncActionsGuide();
 // Generates Storybook's stories from the design system's own sources, so there is one source for both:
 //   build/previews.txt          → .storybook/generated/<Name>.stories.jsx (one story per preview card)
 //   project/components/*/README → each component's docs page
@@ -13,7 +15,7 @@ mkdirSync(out, { recursive: true });
 writeFileSync(`${out}/tokens.css`, tokensCss('project/tokens.json'));
 
 const rel = (p) => '../../' + p; // from .storybook/generated to the repo root
-const guides = [['Introduction', 'README.md'], ['Elevation', 'Elevation.md'], ['Motion', 'Motion.md'], ['Theming', 'Theming.md'], ['Research', 'Research.md']];
+const guides = [['Introduction', 'README.md'], ['Elevation', 'Elevation.md'], ['Motion', 'Motion.md'], ['Theming', 'Theming.md'], ['Research', 'Research.md'], ['Actions in place', 'ActionsInPlace.md']];
 for (const [title, file] of guides) {
   writeFileSync(`${out}/guide-${title}.mdx`, `import { Meta, Markdown } from '@storybook/addon-docs/blocks';
 import md from '${rel('project/' + file)}?raw';
@@ -24,7 +26,7 @@ import md from '${rel('project/' + file)}?raw';
 `);
 }
 
-const pageDocs = { Elevation: 'project/Elevation.md', Motion: 'project/Motion.md' };
+const pageDocs = { Elevation: 'project/Elevation.md', Motion: 'project/Motion.md', ActionsInPlace: 'project/ActionsInPlace.md' };
 const src = readFileSync('build/previews.txt', 'utf8');
 const names = [];
 for (const sec of src.split(/^=== /m).filter((s) => s.trim())) {

@@ -47,6 +47,7 @@ jobs:
           npx tsc -p tsconfig.json
           node build.mjs
           node previews.mjs
+          test -z "$(git ls-files --others --exclude-standard -- ../project)" || { echo "::error::Generated project files must be tracked."; exit 1; }
           git diff --exit-code -- ../project || { echo "::error::project/ is out of date: run 'node build.mjs && node previews.mjs' in build/ and commit the result."; exit 1; }
 
       - name: Render every preview in every scheme, and run the interaction checks
@@ -60,12 +61,30 @@ jobs:
           node checks/approach-and-lamps.mjs
           node checks/field-focus.mjs
           node checks/avatar.mjs
+          node ../scripts/record-check.mjs react18-modal node checks/modal-lifecycle.mjs
+          node ../scripts/record-check.mjs react18-inline node checks/inline-edit.mjs
+          node ../scripts/record-check.mjs react18-actions node checks/actions-in-place.mjs
+          DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
+          DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
+
+      - name: React 19 runtime and StrictMode regressions
+        run: |
+          node scripts/build-check-fixtures.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-modal node build/checks/modal-lifecycle.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-inline node build/checks/inline-edit.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-actions node build/checks/actions-in-place.mjs
+          ALT_CHECK_STRICT=1 node scripts/build-check-fixtures.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-modal node build/checks/modal-lifecycle.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-inline node build/checks/inline-edit.mjs
+
 
       - name: Type-check against React 19
         run: npm run typecheck
 
-      - name: Build the package
-        run: npm run build
+      - name: Build the package and verify public declarations
+        run: |
+          npm run build
+          node scripts/record-check.mjs package-api node scripts/check-actions-package.mjs
 
       - name: Build Storybook
         run: npm run build-storybook
@@ -75,6 +94,18 @@ jobs:
         run: |
           npm run build-site
           cp -r storybook-static site-dist/storybook
+
+      - name: Keep Actions in place acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: actions-in-place-evidence
+          path: |
+            build/test/alt-05/
+            build/test/shot-InlineEdit-*.png
+            build/test/shot-Dialog-*.png
+            build/test/shot-ActionsInPlace-*.png
+          if-no-files-found: warn
 
       - name: Keep the screenshots of a failed run
         if: failure()

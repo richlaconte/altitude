@@ -30,6 +30,28 @@ If Playwright's browser isn't installed, point `CHROME` at any Chromium or headl
 | Bundle | `node build.mjs` | writes `../project/components/bundle.js` (IIFE, global `Altitude`, React from `window`). Add every new top-level component name to the `names` array; sub-parts (e.g. `TabsList`) are not listed. |
 | Previews | `node previews.mjs` | turns each `=== Name \| <!-- @dsCard … -->` section of `previews.txt` (with `--- css` and `--- jsx`) into `../project/components/Name/preview.html`. `A` is `window.Altitude`; `App` is rendered inside `AltitudeProvider`. |
 | Render | `node shoot.mjs Name1,Name2 daylight,nightfall,mesa,alpine 960` | writes `test/shot-<Name>-<scheme>.png`, prints page errors and console errors/warnings, and exits non-zero if there are any. No names = every preview. Env: `DPR=2`, `WAIT=ms`, `FORCED=1` (forced colours), `ACT="(async()=>{ …page… })()"` to interact before the screenshot. |
-| Interaction checks | `node checks/approach-and-lamps.mjs && node checks/field-focus.mjs && node checks/avatar.mjs` | after a render of every preview (they open `test/p-<Name>-daylight.html`); exit non-zero on a failure |
+| Interaction checks | `node checks/approach-and-lamps.mjs && node checks/field-focus.mjs && node checks/avatar.mjs && node checks/modal-lifecycle.mjs && node checks/inline-edit.mjs && node checks/actions-in-place.mjs` | after a render of every preview (they open `test/p-<Name>-daylight.html`); exit non-zero on a failure |
 | Contact sheet | `cd test && python3 ../sheet.py out.png Name1,Name2 daylight,nightfall` | needs Pillow |
 | Tokens | `python3 tokens.py ../project/tokens.json` | only if a token genuinely has to change; it re-checks contrast and must report 0 failures |
+
+## Actions in place runtime coverage
+
+The new modal, inline-edit and actions-in-place checks resolve their default HTML fixture root relative to `checks/fixture-path.mjs`, independent of the calling directory. `ALT_FIXTURE_ROOT` selects a different fixture directory; `CHROME` selects a Chromium binary.
+
+After generating and rendering React 18 previews, run from the repository root:
+
+```sh
+node scripts/build-check-fixtures.mjs
+ALT_FIXTURE_ROOT="$PWD/build/test/react19" node build/checks/modal-lifecycle.mjs
+ALT_FIXTURE_ROOT="$PWD/build/test/react19" node build/checks/inline-edit.mjs
+ALT_FIXTURE_ROOT="$PWD/build/test/react19" node build/checks/actions-in-place.mjs
+ALT_CHECK_STRICT=1 node scripts/build-check-fixtures.mjs
+ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node build/checks/modal-lifecycle.mjs
+ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node build/checks/inline-edit.mjs
+```
+
+The builder reads the same canonical JSX and CSS in `previews.txt`, adds the normal default provider wrapper, and pins React, React DOM and JSX runtime imports to the root React 19 installation. It fails clearly for missing sections. An optional comma-separated argument selects sections, for example `node scripts/build-check-fixtures.mjs Dialog,Sheet`. The default is InlineEdit, Dialog, ActionsInPlace, Sheet, CommandPalette and Toaster. Strict fixtures use a development build and React StrictMode; generated assets stay under ignored `build/test/`.
+
+CI wraps each new check with `scripts/record-check.mjs` to retain exact command, exit status and logs in `build/test/alt-05/results.json` and `report.md`. It uploads these and screenshots even on failure. Add local command evidence with `node scripts/record-check.mjs <label> <command> <args…>`. Human evaluation is tracked separately in `project/ActionsInPlaceValidation.md`; a green runtime suite cannot close those gates.
+
+After `npm run build`, run `node scripts/check-actions-package.mjs` from the root to check ESM/CommonJS/IIFE exports and compile consumer examples against both the generated npm declarations and the hand-maintained design-system declarations. CI records this check as `package-api`.

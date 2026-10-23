@@ -562,27 +562,167 @@ function App() {
   );
 }
 
-=== Dialog | <!-- @dsCard group="Overlays" height=380 subtitle="Level 5: the page recedes beneath it" -->
+=== Dialog | <!-- @dsCard group="Overlays" height=620 subtitle="A focused decision; the background can stay in place" -->
 --- css
-.page { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.page > * { height: 80px; }
+.dialog-demo { max-width: 720px; margin: auto; display: grid; gap: 20px; }
+.dialog-demo h1 { font: 600 24px/1.2 var(--font-sans); margin: 0; }
+.dialog-demo h2 { margin: 0; font: 600 19px/1.4 var(--font-sans); }
+.dialog-file { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.dialog-file > div { min-width: 0; overflow-wrap: anywhere; }
+.dialog-file p { margin: 4px 0 0; }
+.dialog-demo details { border-top: 1px solid var(--line); padding-top: 16px; }
+.dialog-demo details .row { margin-top: 12px; }
+.dialog-demo select { padding: 8px; max-width: 100%; font: inherit; color: var(--ink); background: var(--surface-well); border: 1px solid var(--line-control); border-radius: var(--radius-md); }
+.dialog-target { overflow-wrap: anywhere; }
+@media (max-width: 420px) { .dialog-file { align-items: flex-start; flex-direction: column; } }
 --- jsx
+const dialogFiles = [
+  { id: 'file-brand', name: 'Brand guidelines.pdf', folder: 'Brand', revision: 1 },
+  { id: 'file-brand-draft', name: 'Brand guidelines draft.pdf', folder: 'Brand', revision: 1 },
+  { id: 'file-launch', name: 'Launch checklist.md', folder: 'Launch', revision: 1 },
+];
+function ModalFrameFixture() {
+  const [open, setOpen] = React.useState(false), [sheet, setSheet] = React.useState(false);
+  React.useEffect(() => { window.altitudeModalFrameFixture = { setOpen, setSheet }; return () => { delete window.altitudeModalFrameFixture; }; }, []);
+  return <A.AltitudeProvider><p>Independent document fixture</p><A.Button data-frame-trigger onClick={() => setOpen(true)}>Open frame palette</A.Button>
+    <A.CommandPalette open={open} onOpenChange={setOpen} items={[{ items: [{ label: 'Frame command' }] }]} />
+    <A.Sheet open={sheet} onOpenChange={setSheet}><A.SheetHeader><A.SheetTitle>Frame sheet</A.SheetTitle></A.SheetHeader><A.Input aria-label="Frame input" /></A.Sheet>
+  </A.AltitudeProvider>;
+}
 function App() {
-  const [open, setOpen] = React.useState(true);
-  const [note, setNote] = React.useState(false);
-  return (
-    <div className="col">
-      <div className="row"><A.Button variant="primary" onClick={() => setOpen(true)}>Delete project…</A.Button><A.Button onClick={() => setNote(true)}>View release note</A.Button></div>
-      <div className="page"><A.Card /><A.Card /><A.Card /></div>
-      <A.Dialog open={note} onOpenChange={setNote} initialFocus="title" title="Release 2.4" description="Published by Mara Quist on 12 March."
-        footer={<A.Button onClick={() => setNote(false)}>Edit note</A.Button>}>
-        <p className="body">Deployments now keep their logs for 30 days. Preview links work for anyone on the team, and rollbacks finish in under a minute.</p>
-      </A.Dialog>
-      <A.Dialog open={open} onOpenChange={setOpen} size="sm" title="Delete “Northwind”?"
-        description="This removes 14 deployments and their logs. It can't be undone."
-        footer={<><A.Button variant="ghost" onClick={() => setOpen(false)}>Cancel</A.Button><A.Button variant="danger" onClick={() => setOpen(false)} data-autofocus>Delete project</A.Button></>} />
-    </div>
-  );
+  const altitude = A.useAltitude();
+  const releaseLegacy = React.useRef(null);
+  const [rows, setRows] = React.useState(dialogFiles);
+  const server = React.useRef(dialogFiles.map(file => ({ ...file })));
+  const heading = React.useRef(null);
+  const [target, setTarget] = React.useState(null);
+  const [open, setOpen] = React.useState(false);
+  const opened = React.useRef(false); opened.current = open;
+  const [background, setBackground] = React.useState('stationary');
+  const [fixture, setFixture] = React.useState(new URLSearchParams(window.location.search).get('fixture') || 'success-100');
+  const [operation, setOperation] = React.useState(null);
+  const [outcome, setOutcome] = React.useState('');
+  const [present, setPresent] = React.useState(true);
+  const session = React.useRef(0), sequence = React.useRef(0), pending = React.useRef(new Set());
+  const failUsed = React.useRef(false), accepted = React.useRef([]);
+  const invocation = React.useRef(null), mounted = React.useRef(false), epoch = React.useRef(0);
+  const [frame, setFrame] = React.useState(false);
+  const frameRoot = React.useRef(null);
+  const [mode, setMode] = React.useState('');
+  const [sheet, setSheet] = React.useState(false), [nonmodal, setNonmodal] = React.useState(false);
+  const [palette, setPalette] = React.useState(false), [competing, setCompeting] = React.useState(false);
+  const [controls, setControls] = React.useState(true), [inserted, setInserted] = React.useState(false);
+  const [nestedPresent, setNestedPresent] = React.useState(true);
+  const [nested, setNested] = React.useState(false), [toastActions, setToastActions] = React.useState(0);
+  const latest = React.useRef({});
+  React.useEffect(() => { mounted.current = true; return () => { mounted.current = false; epoch.current++; }; }, []);
+  const begin = (file, invoker) => {
+    if (pending.current.has(file.id)) { setOutcome(`Deletion is already in progress for “${file.name}”.`); return; }
+    session.current++; invocation.current = invoker || document.activeElement;
+    setTarget({ ...file, session: session.current }); setOperation(null); setOpen(true); setPresent(true);
+  };
+  const finish = (captured, id, result, ownEpoch) => {
+    pending.current.delete(captured.id);
+    if (!mounted.current || ownEpoch !== epoch.current) return;
+    const matching = session.current === captured.session;
+    if (result === 'success') {
+      const restoreRemoved = !opened.current && document.activeElement === invocation.current && matching;
+      setRows(server.current.map(file => ({ ...file })));
+      setOutcome(`Deleted “${captured.name}”.`);
+      if (matching) { setOperation({ id, session: captured.session, state: 'done' }); setOpen(false); }
+      if (restoreRemoved) requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
+    } else {
+      const message = result === 'conflict' ? 'This file changed. Close this dialog and review the latest file before deleting.' : 'The file was not deleted. Try again.';
+      if (matching && opened.current) setOperation({ id, session: captured.session, state: result, message, current: server.current.find(file => file.id === captured.id) });
+      else setOutcome(`“${captured.name}”: ${message}`);
+    }
+  };
+  const confirm = async () => {
+    if (!target || pending.current.has(target.id)) return;
+    const captured = { ...target }, id = `delete-${++sequence.current}`, ownEpoch = epoch.current, behavior = fixture;
+    pending.current.add(captured.id); setOperation({ id, session: captured.session, state: 'pending' });
+    const request = { id: captured.id, expectedRevision: captured.revision, operationId: id, outcome: 'pending' };
+    accepted.current.push(request);
+    const reject = behavior === 'fail-once' && !failUsed.current;
+    if (reject) failUsed.current = true;
+    if (behavior === 'unmount') setTimeout(() => { if (epoch.current === ownEpoch && mounted.current) { setPresent(false); setOpen(false); } }, 50);
+    if (behavior === 'interrupted-after-save') {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      if (ownEpoch !== epoch.current) return;
+      const record = server.current.find(file => file.id === captured.id);
+      if (record?.revision === captured.revision) server.current = server.current.filter(file => file.id !== captured.id);
+      await new Promise(resolve => setTimeout(resolve, 1100));
+    } else await new Promise(resolve => setTimeout(resolve, behavior === 'success-1200' || reject || behavior === 'conflict' ? 1200 : 100));
+    if (ownEpoch !== epoch.current) return;
+    if (behavior === 'conflict') { server.current = server.current.map(file => file.id === captured.id ? { ...file, name: 'Brand guidelines revised.pdf', revision: file.revision + 1 } : file); setRows(server.current); }
+    const current = server.current.find(file => file.id === captured.id);
+    let result = !current || current.revision !== captured.revision ? 'conflict' : reject || behavior === 'interrupted-before-save' ? 'failure' : 'success';
+    if (result === 'success') server.current = server.current.filter(file => file.id !== captured.id);
+    if (behavior.startsWith('interrupted')) {
+      if (mounted.current && session.current === captured.session && opened.current) setOperation({ id, session: captured.session, state: 'checking' });
+      await new Promise(resolve => setTimeout(resolve, 200));
+      result = server.current.some(file => file.id === captured.id) ? 'failure' : 'success';
+    }
+    request.outcome = result;
+    finish(captured, id, result, ownEpoch);
+  };
+  const reset = () => {
+    epoch.current++; sequence.current = 0; failUsed.current = false; accepted.current = []; pending.current.clear(); server.current = dialogFiles.map(file => ({ ...file }));
+    setRows(server.current); setOpen(false); setOutcome(''); setOperation(null); setPresent(true); setMode(''); setSheet(false); setNonmodal(false); setPalette(false); setCompeting(false); setNested(false);
+  };
+  latest.current = { legacyVote: () => { releaseLegacy.current = altitude.pushLayer(); }, legacyRelease: () => releaseLegacy.current?.(), begin, reset, setFrame, setMode, setSheet, setNonmodal, setPalette, setCompeting, setNested, setNestedPresent, setControls, setInserted, setPresent, setBackground, setFixture,
+    close: () => setOpen(false), confirm, openFirst: () => begin(server.current[0]),
+    changeTarget: () => { server.current = server.current.map(file => file.id === target?.id ? { ...file, name: file.name.replace('.pdf', ' revised.pdf'), revision: file.revision + 1 } : file); setRows(server.current); },
+    notify: () => A.toast({ title: 'Background update', duration: 1200, action: { label: 'Undo background change', onClick: () => setToastActions(n => n + 1) } }),
+    snapshot: () => ({ rows, operation, requests: sequence.current, accepted: accepted.current, toastActions, session: session.current, open }) };
+  React.useEffect(() => {
+    window.altitudeModalFixture = new Proxy({}, { get: (_, key) => latest.current[key] });
+    return () => { delete window.altitudeModalFixture; };
+  }, []);
+  const busy = operation?.session === target?.session && ['pending', 'checking'].includes(operation?.state);
+  const failed = operation?.session === target?.session && ['failure', 'conflict'].includes(operation?.state);
+  return <div className="dialog-demo">
+    <header><p className="cap">Files / Archived</p><h1 ref={heading} tabIndex={-1}>Archived files</h1></header>
+    <p className="body">Archived files can be restored. Permanently deleted files cannot.</p>
+    <section aria-label="Archived files">{rows.map(file => <div className="dialog-file" key={file.id}>
+      <div><strong>{file.name}</strong><p className="cap">{file.folder}</p></div>
+      <A.Button data-file={file.id} onClick={event => begin(file, event.currentTarget)}>Delete permanently</A.Button>
+    </div>)}</section>
+    <p role="status" data-outcome>{outcome}</p>
+    {present && <A.Dialog open={open} onOpenChange={setOpen} background={background} size="sm" title="Delete this file permanently?"
+      description={`“${target?.name || ''}” will be removed. You won’t be able to restore it.`} focusSelector="[data-cancel]" returnFocus={() => heading.current}
+      footer={<><A.Button data-cancel variant="ghost" onClick={() => setOpen(false)}>{busy ? 'Close' : 'Cancel'}</A.Button>
+        <A.Button data-confirm variant="danger" disabled={busy || operation?.state === 'conflict'} onClick={confirm}>{busy ? operation?.state === 'checking' ? 'Checking deletion…' : 'Deleting…' : failed ? 'Try deleting again' : 'Delete permanently'}</A.Button></>}>
+      <p className="body dialog-target">{target?.name}<br /><span className="cap">{target?.folder}</span></p>
+      {busy && <p role="status">Deletion is in progress. Closing this dialog won’t cancel it.</p>}
+      {failed && <A.Alert tone="critical" title="File not deleted">{operation.message}{operation.state === 'conflict' && <p>Latest file: {operation.current?.name || 'No longer available'}</p>}</A.Alert>}
+    </A.Dialog>}
+    <details><summary>Demo controls</summary>
+      <div className="row"><label>Background <select aria-label="Dialog background" value={background} onChange={event => setBackground(event.target.value)}><option value="stationary">Stationary</option><option value="recede">Default recession</option></select></label>
+      <label>Service fixture <select aria-label="Service fixture" value={fixture} onChange={event => setFixture(event.target.value)}><option value="success-100">Success · 100 ms</option><option value="success-1200">Slow success · 1,200 ms</option><option value="fail-once">Fail once, then retry</option><option value="conflict">Record changes before save</option><option value="interrupted-after-save">Connection interrupted after save</option><option value="interrupted-before-save">Connection interrupted before save</option><option value="unmount">Unmount presentation during write</option></select></label>
+      <A.Button onClick={reset}>Reset fixtures</A.Button></div>
+      <div className="row"><A.Button onClick={() => { setControls(true); setMode('title'); }}>Read a structured dialog</A.Button><A.Button onClick={() => setMode('field')}>Edit in a dialog</A.Button><A.Button onClick={() => setMode('panel')}>Panel-only dialog</A.Button><A.Button onClick={() => setSheet(true)}>Open modal sheet</A.Button><A.Button onClick={() => setNonmodal(true)}>Open nonmodal sheet</A.Button><A.Button onClick={() => setPalette(true)}>Open command palette</A.Button><A.Button onClick={() => setNested(true)}>Open nested-provider dialog</A.Button></div>
+      <p className="cap">Requests: {sequence.current}. Accepted operation log: <output data-operation-log>{JSON.stringify(accepted.current)}</output></p>
+      <p className="cap">Deterministic fictional data. Pending close, failure, conflict, unmount and ownership cases are exercised by the canonical regression harness. <a href="https://github.com/richlaconte/altitude/blob/main/build/previews.txt">Example source</a> · <a href="../../ActionsInPlace.md">Actions in place recipe</a></p>
+    <button data-background-control onClick={() => setOutcome('Background action')}>Background control</button>
+    {inserted && <button data-late-background>New background control</button>}
+      {frame && <iframe srcDoc="<!doctype html><html><head></head><body></body></html>" title="Independent document" style={{ width: '100%', height: 360 }} onLoad={event => {
+        const doc = event.currentTarget.contentDocument;
+        for (const style of document.querySelectorAll('style')) doc.head.append(style.cloneNode(true));
+        frameRoot.current = ReactDOM.createRoot(doc.body); frameRoot.current.render(<ModalFrameFixture />);
+      }} />}
+    </details>
+    <A.Dialog open={!!mode} onOpenChange={value => { if (!value) setMode(''); }} title="Modal focus fixture" initialFocus={mode === 'title' ? 'title' : mode === 'panel' ? false : 'first-field'} dismissible={mode !== 'panel'} background={background}
+      footer={mode !== 'panel' && controls ? <><button data-first>First control</button><button data-last>Last control</button></> : null}>
+      {mode === 'field' && controls && <A.Input aria-label="Fixture field" />}<button hidden>Hidden control</button><button disabled>Disabled control</button>
+    </A.Dialog>
+    <A.Dialog open={competing} onOpenChange={setCompeting} title="Competing summit" />
+    <A.Sheet open={sheet} onOpenChange={setSheet}><A.SheetHeader><A.SheetTitle>File details</A.SheetTitle></A.SheetHeader><A.Button data-sheet-dialog onClick={() => setMode('title')}>Read details in dialog</A.Button></A.Sheet>
+    <A.Sheet open={nonmodal} onOpenChange={setNonmodal} modal={false}><A.SheetHeader><A.SheetTitle>File filters</A.SheetTitle></A.SheetHeader><A.Button data-nonmodal-close onClick={() => setNonmodal(false)}>Close filters</A.Button></A.Sheet>
+    <A.CommandPalette open={palette} onOpenChange={setPalette} items={[{ items: [{ label: 'Read file details', onSelect: () => setMode('title') }] }]} />
+    {nestedPresent && <A.AltitudeProvider scheme="nightfall" recede={false}><div data-nested-background hidden>Nested workspace</div><A.Dialog open={nested} onOpenChange={setNested} title="Nested dialog" initialFocus="title" /></A.AltitudeProvider>}
+    <A.Toaster />
+  </div>;
 }
 
 === Toaster | <!-- @dsCard group="Overlays" height=300 subtitle="A depth stack: older toasts sink behind" -->
@@ -1029,4 +1169,524 @@ const people = {
 const Card = ({ p }) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: p.name, size: 40, status: "active" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, p.name), /* @__PURE__ */ React.createElement("span", null, p.role))), /* @__PURE__ */ React.createElement("p", { className: "bio" }, p.bio), /* @__PURE__ */ React.createElement("div", { className: "stats" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[0]), " merged"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[1]), " open"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[2]), " projects")));
 function App() {
   return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 18 } }, /* @__PURE__ */ React.createElement("p", { className: "para" }, "Merged by ", /* @__PURE__ */ React.createElement(A.HoverCard, { defaultOpen: true, trigger: /* @__PURE__ */ React.createElement("a", { href: "#mara" }, "Mara Quist") }, /* @__PURE__ */ React.createElement(Card, { p: people.mara })), " two hours ago, after review from ", /* @__PURE__ */ React.createElement(A.HoverCard, { trigger: /* @__PURE__ */ React.createElement("a", { href: "#jon" }, "Jon Reyes") }, /* @__PURE__ */ React.createElement(Card, { p: people.jon })), "."), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 160 } }, "Rest the pointer on a name; once one card has shown, the other opens at once. Focus a link with Tab to open it from the keyboard; Escape closes it."));
+}
+
+=== ActionsInPlace | <!-- @dsCard group="Patterns" height=850 page subtitle="Edit here, recover reliably, confirm consequences" -->
+--- css
+.aip { max-width: 880px; margin: 0 auto; }
+.aip-product { color: var(--ink); overflow-wrap: anywhere; }
+.aip-header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); }
+.aip-header h2 { font: 600 24px/30px var(--font-sans); margin: var(--space-1) 0 0; }
+.aip-eyebrow { font: 400 12.5px/17px var(--font-sans); margin: 0; color: var(--ink-muted); }
+.aip-meta { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); margin: var(--space-1) 0 0; }
+.aip-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-3); }
+.aip-toolbar nav { display: flex; gap: var(--space-1); }
+.aip-toolbar > .alt-input { flex: 1 1 170px; max-width: 260px; }
+.aip-product h3 { font: 600 19px/26px var(--font-sans); margin: var(--space-6) 0 var(--space-2); }
+.aip-product h3:focus { outline: 2px solid var(--accent-ink); outline-offset: 4px; }
+.aip-list { list-style: none; margin: 0; padding: 0; }
+.aip-list > li { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) 0; border-bottom: 1px solid var(--line); }
+.aip-file { flex: 1; min-width: 0; }
+.aip-name { font: 400 15px/23px var(--font-sans); }
+.aip-name strong { font-weight: 500; }
+.aip-row-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.aip-file > .alt-alert { margin-top: var(--space-3); }
+.aip-recovery { margin-top: var(--space-5); }
+.aip-completion { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-5) 0 0; color: var(--ink-muted); font: 400 13.5px/20px var(--font-sans); }
+.aip-completion svg { flex: none; }
+.aip-completion:empty { margin: 0; }
+.aip-recovery .alt-alert-action { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.aip-empty { padding: var(--space-6) var(--space-3); background: var(--surface-well); border: 1px dashed var(--line-control); border-radius: var(--radius-md); }
+.aip-target { margin: 0; display: grid; gap: var(--space-2); overflow-wrap: anywhere; }
+.aip-target span { color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+.aip-documentation { margin-top: var(--space-6); border-top: 1px solid var(--line); padding-top: var(--space-4); font: 400 12.5px/17px var(--font-sans); }
+.aip a { color: var(--accent-ink); }
+.aip-harness { margin-top: var(--space-4); color: var(--ink-muted); }
+.aip-harness summary { cursor: pointer; }
+.aip-harness label { display: grid; gap: var(--space-2); }
+.aip-harness select { max-width: 100%; font: inherit; padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-sm); }
+.aip-harness-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.aip-harness pre { overflow: auto; max-height: 220px; font: 12px/1.5 var(--font-mono); }
+@media (max-width: 600px) { #root { padding: 16px; } .aip-list > li { align-items: stretch; flex-direction: column; gap: var(--space-2); } .aip-row-actions { align-self: flex-start; } .aip-toolbar > .alt-input { max-width: none; } .aip-header > .aip-meta { display: none; } .aip-recovery .alt-alert-inner, .aip-file .alt-alert-inner { flex-wrap: wrap; } .aip-recovery .alt-alert-body, .aip-file .alt-alert-body { flex-basis: calc(100% - 60px); } .aip-recovery .alt-alert-action, .aip-file .alt-alert-action { width: 100%; } }
+--- jsx
+// Application-owned fictional service. Kept here so preview and Storybook share it.
+const FILES_SEED = Object.freeze([
+  Object.freeze({ id: 'file-brand', name: 'Brand guidelines.pdf', folder: 'Brand', size: '2.4 MB', revision: 1, archived: false, deleted: false, position: 0 }),
+  Object.freeze({ id: 'file-brand-draft', name: 'Brand guidelines draft.pdf', folder: 'Brand', size: '1.8 MB', revision: 1, archived: false, deleted: false, position: 1 }),
+  Object.freeze({ id: 'file-launch', name: 'Launch checklist.md', folder: 'Launch', size: '12 KB', revision: 1, archived: false, deleted: false, position: 2 }),
+]);
+function createFilesService(fixture = 'success-100', wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))) {
+  const records = new Map(FILES_SEED.map(record => [record.id, { ...record }]));
+  const accepted = [], requests = [], receipts = new Map(), flights = new Map();
+  let failedOnce = false;
+  const read = id => records.has(id) ? { ...records.get(id) } : null;
+  const error = (code, message) => Object.assign(new Error(message), { code });
+  const change = (id, patch) => { const old = records.get(id); if (old) records.set(id, { ...old, ...patch, id, revision: old.revision + 1 }); };
+  const apply = request => {
+    const old = records.get(request.id);
+    if (!old || old.deleted) throw error('missing', 'This file was removed. It cannot be restored.');
+    if (old.revision !== request.expectedRevision) throw error('conflict', 'This file changed. Review its current version before trying again.');
+    if (request.kind === 'delete' && !old.archived) throw error('conflict', 'This file is no longer in Archived. Review its current location.');
+    const record = { ...old, revision: old.revision + 1 };
+    if (request.kind === 'rename') record.name = request.name.trim();
+    else if (request.kind === 'delete') record.deleted = true;
+    else record.archived = request.kind === 'archive';
+    records.set(record.id, record);
+    accepted.push({ ...request, revision: record.revision });
+    receipts.set(request.operationId, { ...record });
+    return { ...record };
+  };
+  const mutate = request => {
+    // Same logical request must not be submitted twice, even if the response was lost.
+    if (receipts.has(request.operationId)) return Promise.resolve({ ...receipts.get(request.operationId) });
+    if (flights.has(request.operationId)) return flights.get(request.operationId);
+    requests.push({ ...request });
+    const mode = fixture;
+    const flight = (async () => {
+      if (mode === 'interrupted-after-save') {
+        await wait(100); apply(request); await wait(1100);
+        throw error('uncertain', 'Connection interrupted after save.');
+      }
+      const reject = mode === 'fail-once' && !failedOnce;
+      if (reject) failedOnce = true;
+      await wait(mode === 'success-1200' || reject || mode === 'conflict' ? 1200 : 100);
+      if (reject) throw error('rejected', 'We could not save this change. Try again.');
+      if (mode === 'conflict') change(request.id, { name: read(request.id).name.replace(/(\.[^.]+)$/, ' updated$1') });
+      return apply(request);
+    })();
+    flights.set(request.operationId, flight);
+    flight.then(() => flights.delete(request.operationId), () => flights.delete(request.operationId));
+    return flight;
+  };
+  return { read, list: () => [...records.values()].map(record => ({ ...record })), accepted, requests, mutate,
+    reconcile: async operationId => receipts.has(operationId) ? { ...receipts.get(operationId) } : null,
+    change, setFixture: value => { fixture = value; },
+  };
+}
+// END FILES SERVICE
+// This wrapper reports mount ownership and entry; InlineEdit owns every editing interaction.
+function FileName({ onSave, onBeginEdit, ...props }) {
+  const mounted = React.useRef(false);
+  React.useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  return <div onClickCapture={event => {
+    if (event.target instanceof Element && event.target.closest('button') && !event.currentTarget.querySelector('input')) onBeginEdit?.();
+  }}><A.InlineEdit {...props} onSave={(draft, context) => onSave(draft, context, () => mounted.current)} /></div>;
+}
+function FilesExample({ service, full }) {
+  const [records, setRecords] = React.useState(() => service.list());
+  const recordsRef = React.useRef(records), alive = React.useRef(true);
+  const [location, setLocation] = React.useState('active'), [query, setQuery] = React.useState('');
+  const [busy, setBusy] = React.useState({}), flights = React.useRef(new Map());
+  const [rowErrors, setRowErrors] = React.useState({});
+  const [notice, setNotice] = React.useState(null), lastNotice = React.useRef(0), sequence = React.useRef(0);
+  const [target, setTarget] = React.useState(null), targetRef = React.useRef(null);
+  const [confirmationOpen, setConfirmationOpen] = React.useState(false), openRef = React.useRef(false);
+  const [deleteError, setDeleteError] = React.useState(null), [staleIntent, setStaleIntent] = React.useState(false);
+  const sessionSequence = React.useRef(0), heading = React.useRef(null), renameResults = React.useRef(new Map());
+  const recoveryAtCurrentRevision = (message, record) => {
+    if (!message?.undo || !record || message.record.id !== record.id || (message.record.revision === record.revision && record.archived && !record.deleted)) return message;
+    return { ...message, record, undo: false, tone: 'critical', route: !record.deleted, routeLocation: record.archived ? 'archived' : 'active',
+      title: record.deleted ? 'This file was removed.' : 'This file changed after it was archived.',
+      body: record.deleted ? 'It cannot be restored.' : `“${record.name}” is current. Review it in ${record.archived ? 'Archived' : 'Files'}.` };
+  };
+  const publishRecords = next => { recordsRef.current = next; setRecords(next); };
+  const reconcileRecord = record => {
+    if (!alive.current || !record) return;
+    publishRecords(recordsRef.current.map(old => old.id === record.id && old.revision <= record.revision ? record : old));
+    setNotice(current => recoveryAtCurrentRevision(current, recordsRef.current.find(item => item.id === record.id)));
+  };
+  const announce = message => {
+    if (!alive.current || message.sequence < lastNotice.current) return;
+    lastNotice.current = message.sequence; setNotice(recoveryAtCurrentRevision(message, recordsRef.current.find(record => record.id === message.id)));
+  };
+  const reportFailure = message => {
+    if (!alive.current) return;
+    // Preserve newer recovery without silently dropping an older record's failure.
+    if (message.sequence < lastNotice.current) setRowErrors(errors => ({ ...errors, [message.id]: message }));
+    else announce(message);
+  };
+  const clearRowError = id => setRowErrors(errors => { const next = { ...errors }; delete next[id]; return next; });
+  const setOpen = open => { openRef.current = open; setConfirmationOpen(open); };
+  const nextOperation = (kind, record, session) => {
+    const seq = ++sequence.current;
+    return { kind, id: record.id, expectedRevision: record.revision, operationId: `files-${seq}`, sequence: seq, session };
+  };
+  const setFlight = (id, operation) => {
+    if (operation) flights.current.set(id, operation); else flights.current.delete(id);
+    if (alive.current) setBusy(Object.fromEntries(flights.current));
+  };
+  // Repair only focus that belonged to the removed row. Async completion cannot reclaim it later.
+  const repairFocus = (id, kind, before = document.activeElement) => {
+    const row = before?.closest?.('[data-file-id]');
+    if (!row || row.dataset.fileId !== id) return;
+    const all = [...document.querySelectorAll(`[data-action="${kind}"]`)];
+    const index = all.findIndex(el => el.closest('[data-file-id]') === row), candidates = [...all.slice(index + 1), ...all.slice(0, index).reverse()];
+    requestAnimationFrame(() => {
+      if (!alive.current || (document.activeElement !== before && !(document.activeElement === document.body && !before.isConnected))) return;
+      const next = candidates.find(el => el.isConnected && !el.disabled && !el.closest('[inert]'));
+      (next || heading.current)?.focus({ preventScroll: true });
+    });
+  };
+  const authoritativeResult = async operation => {
+    for (;;) {
+      try { return await service.mutate(operation); }
+      catch (error) {
+        if (error.code !== 'uncertain') throw error;
+        // A timeout is not failure. Reconcile, or retry this same idempotent operation.
+        // Never return a retryable failure to InlineEdit while the outcome is unknown.
+        const result = await service.reconcile(operation.operationId);
+        if (result) return result;
+      }
+    }
+  };
+  const move = async (kind, record, undo = false) => {
+    if (flights.current.has(record.id)) return;
+    const operation = nextOperation(kind, record);
+    const current = service.read(record.id);
+    if (!current || current.deleted || current.revision !== record.revision) {
+      reconcileRecord(current);
+      announce({ ...operation, tone: 'critical', title: current?.deleted ? 'This file was removed.' : 'This file changed after it was archived.', body: current?.deleted ? 'It cannot be restored.' : 'Review it in Archived.', route: true });
+      return;
+    }
+    clearRowError(record.id); setFlight(record.id, operation);
+    repairFocus(record.id, kind === 'archive' ? 'archive' : 'restore');
+    publishRecords(recordsRef.current.map(old => old.id === record.id ? { ...old, archived: kind === 'archive' } : old));
+    announce({ ...operation, pending: true, title: `${kind === 'archive' ? 'Archiving' : 'Restoring'} “${record.name}”…` });
+    try {
+      const result = await authoritativeResult(operation);
+      if (!alive.current) return;
+      reconcileRecord(result);
+      announce({ ...operation, title: `${result.name} is ${kind === 'archive' ? 'archived' : 'restored'}.`, record: result, undo: kind === 'archive', route: kind === 'archive', quiet: kind === 'restore' });
+    } catch (error) {
+      if (!alive.current) return;
+      reconcileRecord(service.read(record.id));
+      reportFailure({ ...operation, tone: 'critical', title: kind === 'archive' ? `Could not archive ${record.name}.` : `Could not restore ${record.name}.`,
+        body: error.message, retry: error.code === 'rejected' ? { kind, record: service.read(record.id) } : null, route: true });
+    } finally { setFlight(record.id, null); }
+  };
+  const beginDelete = record => {
+    if (flights.current.has(record.id)) return;
+    const next = { ...record, session: ++sessionSequence.current, invoker: document.activeElement };
+    targetRef.current = next; setTarget(next); setDeleteError(null); setStaleIntent(false); setOpen(true);
+  };
+  const deleteFile = async () => {
+    const captured = targetRef.current;
+    if (!captured || flights.current.has(captured.id) || staleIntent) return;
+    const current = service.read(captured.id);
+    if (!current || current.deleted || current.revision !== captured.revision || !current.archived) {
+      reconcileRecord(current); setStaleIntent(true);
+      setDeleteError(current?.deleted ? 'This file was removed. Close and review Archived.' : `This file is now “${current?.name || captured.name}”. Review the current file in Archived, then confirm again.`);
+      return;
+    }
+    clearRowError(captured.id);
+    const operation = nextOperation('delete', captured, captured.session);
+    setFlight(captured.id, operation); setDeleteError(null);
+    try {
+      const result = await authoritativeResult(operation);
+      if (!alive.current) return;
+      // If Close returned focus to the soon-to-disappear Delete button, repair that focus too.
+      repairFocus(captured.id, 'delete'); reconcileRecord(result);
+      announce({ ...operation, quiet: true, title: `${captured.name} was permanently deleted.` });
+      if (openRef.current && targetRef.current?.session === operation.session) setOpen(false);
+    } catch (error) {
+      if (!alive.current) return;
+      reconcileRecord(service.read(captured.id));
+      if (openRef.current && targetRef.current?.session === operation.session) {
+        setDeleteError(error.message); setStaleIntent(error.code !== 'rejected');
+      } else reportFailure({ ...operation, tone: 'critical', title: `Could not delete ${captured.name}.`, body: error.message, route: true });
+    } finally { setFlight(captured.id, null); }
+  };
+  const rename = async (record, draft, previousValue, isEditorMounted) => {
+    const current = recordsRef.current.find(item => item.id === record.id);
+    if (!current || current.name !== previousValue || flights.current.has(record.id)) return { ok: false, error: 'This file changed. Review its current value.' };
+    const operation = { ...nextOperation('rename', current), name: draft };
+    setFlight(record.id, operation);
+    try {
+      const result = await authoritativeResult(operation);
+      // A mounted editor publishes via onValueChange. After navigation the application
+      // must still reconcile the write; InlineEdit correctly suppresses its late callback.
+      if (isEditorMounted()) renameResults.current.set(record.id, result);
+      else reconcileRecord(result);
+      return { ok: true, value: result.name };
+    } catch (error) {
+      if (error.code !== 'rejected') reconcileRecord(service.read(record.id));
+      return { ok: false, error: error.message };
+    } finally { setFlight(record.id, null); }
+  };
+  React.useEffect(() => {
+    alive.current = true;
+    const debug = { service, snapshot: () => ({ records: recordsRef.current, accepted: service.accepted, requests: service.requests }), sync: id => reconcileRecord(service.read(id)) };
+    window.__filesDemo = debug;
+    return () => { alive.current = false; if (window.__filesDemo === debug) delete window.__filesDemo; };
+  }, [service]);
+  const shown = records.filter(record => !record.deleted && record.archived === (location === 'archived') && record.name.toLowerCase().includes(query.toLowerCase()));
+  const count = archived => records.filter(record => !record.deleted && record.archived === archived).length;
+  const deleting = target && busy[target.id]?.kind === 'delete' && busy[target.id]?.session === target.session;
+  const recordError = error => error && <A.Alert key={error.operationId} tone="critical" title={error.title} data-file-error={error.id}
+    action={error.retry ? <A.Button size="sm" onClick={() => move(error.retry.kind, error.retry.record)}>Retry {error.retry.kind}</A.Button> : undefined}
+    onDismiss={() => setRowErrors(errors => errors[error.id]?.operationId === error.operationId ? Object.fromEntries(Object.entries(errors).filter(([id]) => id !== error.id)) : errors)}>{error.body}</A.Alert>;
+  return <main className="aip-product" data-product="files">
+    <header className="aip-header"><div><p className="aip-eyebrow">Northstar Studio</p><h2>Files</h2></div><span className="aip-meta">Team library</span></header>
+    <div className="aip-toolbar"><nav aria-label="File locations">
+      <A.Button variant={location === 'active' ? 'secondary' : 'ghost'} aria-pressed={location === 'active'} onClick={() => setLocation('active')}>Files ({count(false)})</A.Button>
+      <A.Button variant={location === 'archived' ? 'secondary' : 'ghost'} aria-pressed={location === 'archived'} onClick={() => setLocation('archived')}>Archived ({count(true)})</A.Button>
+    </nav><A.Input aria-label="Search files" placeholder="Search files" value={query} onChange={event => setQuery(event.target.value)} /></div>
+    <h3 ref={heading} tabIndex={-1} data-list-heading>{location === 'active' ? 'All files' : 'Archived files'}</h3>
+    <ul className="aip-list" aria-label={location === 'active' ? 'All files' : 'Archived files'}>
+      {shown.map(record => <li key={record.id} data-file-id={record.id}>
+        <div className="aip-file"><div className="aip-name">{full ? <FileName label={`File name: ${record.name}`} editLabel="Rename" value={record.name} required maxLength={160} disabled={!!busy[record.id] && busy[record.id].kind !== 'rename'}
+          validate={draft => !draft.trim() ? 'Enter a file name.' : recordsRef.current.some(other => other.id !== record.id && !other.deleted && other.name === draft.trim()) ? 'A file already has that name.' : undefined}
+          onBeginEdit={() => setNotice(current => current?.quiet ? null : current)}
+          onSave={(draft, context, isMounted) => rename(record, draft, context.previousValue, isMounted)}
+          onValueChange={name => { const result = renameResults.current.get(record.id); if (result) { reconcileRecord({ ...result, name }); renameResults.current.delete(record.id); } }}
+          focusFallback={() => heading.current} /> : <strong>{record.name}</strong>}</div>
+          <p className="aip-meta">{record.folder} · {record.size}</p>{recordError(rowErrors[record.id])}</div>
+        <div className="aip-row-actions">{record.archived ? <>
+          <A.Button size="sm" data-action="restore" data-id={record.id} aria-label={`Restore ${record.name}`} disabled={!!busy[record.id]} onClick={() => move('restore', record)}>Restore</A.Button>
+          {full && <A.Button size="sm" variant="ghost" data-action="delete" data-id={record.id} aria-label={`Delete ${record.name} permanently`} aria-disabled={!!busy[record.id]} onClick={() => beginDelete(record)}>Delete permanently</A.Button>}
+        </> : <A.Button size="sm" variant="ghost" data-action="archive" data-id={record.id} aria-label={`Archive ${record.name}`} disabled={!!busy[record.id]} onClick={() => move('archive', record)}>Archive</A.Button>}</div>
+      </li>)}
+    </ul>
+    {Object.values(rowErrors).filter(error => !shown.some(record => record.id === error.id)).map(recordError)}
+    {!shown.length && <p className="aip-empty">{query ? 'No files match your search.' : location === 'archived' ? 'No archived files.' : 'No files here. Restore a file from Archived.'}</p>}
+    <p className="aip-completion" role="status" aria-live="polite" aria-atomic="true" data-recovery={notice?.quiet ? '' : undefined}>{notice?.quiet && <><A.Icons.Check size={16} aria-hidden="true" />{notice.title}</>}</p>
+    {notice && !notice.quiet && <A.Surface className="aip-recovery" level={0} status={notice.pending ? 'pending' : undefined} data-recovery>
+      <A.Alert key={notice.operationId} variant={notice.undo || notice.retry || notice.route ? 'raised' : 'flat'} tone={notice.tone || 'neutral'} title={notice.title}
+        onDismiss={notice.pending ? undefined : () => setNotice(current => current?.operationId === notice.operationId ? null : current)}
+        action={<>{notice.undo && <A.Button size="sm" aria-label={`Undo archive of ${notice.record.name}`} onClick={() => move('restore', notice.record, true)}>Undo</A.Button>}
+          {notice.retry && <A.Button size="sm" onClick={() => move(notice.retry.kind, notice.retry.record)}>Retry {notice.retry.kind}</A.Button>}
+          {notice.route && <A.Button size="sm" variant="ghost" onClick={() => { setQuery(''); setLocation(notice.routeLocation || 'archived'); }}>View {notice.routeLocation === 'active' ? 'Files' : 'Archived'}</A.Button>}</>}>
+        {notice.body}
+      </A.Alert>
+    </A.Surface>}
+    <A.Dialog open={confirmationOpen} onOpenChange={setOpen} size="sm" background="stationary" title="Delete this file permanently?"
+      description={`“${target?.name || ''}” will be removed. You won’t be able to restore it.`} focusSelector="[data-cancel]" returnFocus={() => heading.current}
+      footer={<><A.Button variant="ghost" data-cancel onClick={() => setOpen(false)}>{deleting ? 'Close' : 'Cancel'}</A.Button><A.Button variant="danger" disabled={staleIntent} loading={!!deleting} onClick={deleteFile}>{deleting ? 'Deleting…' : deleteError && !staleIntent ? 'Retry deletion' : 'Delete permanently'}</A.Button></>}>
+      <p className="aip-target"><strong>{target?.name}</strong><span>{target?.folder} · {target?.size}</span></p>
+      {deleting && <p role="status">Deletion is in progress. Closing this dialog won’t cancel it.</p>}
+      {deleteError && <A.Alert tone="critical" title={deleteError} />}
+    </A.Dialog>
+  </main>;
+}
+function App() {
+  const initial = new URLSearchParams(window.location.search).get('fixture') || 'success-100';
+  const [fixture, setFixture] = React.useState(initial), [run, setRun] = React.useState({ fixture: initial, key: 0 });
+  const [full, setFull] = React.useState(window.location.hash === '#files');
+  const [service, setService] = React.useState(() => createFilesService(initial));
+  const [trace, setTrace] = React.useState('No requests yet.');
+  React.useEffect(() => { const update = () => setFull(window.location.hash === '#files'); window.addEventListener('hashchange', update); return () => window.removeEventListener('hashchange', update); }, []);
+  const reset = () => { setService(createFilesService(fixture)); setRun(old => ({ fixture, key: old.key + 1 })); setTrace('No requests yet.'); };
+  return <div className="aip">
+    <FilesExample key={run.key} service={service} full={full} />
+    <div className="aip-documentation"><a href={full ? '#' : '#files'}>{full ? 'Show focused recovery example' : 'Open complete Files example'}</a>
+      <details className="aip-harness"><summary>Example fixtures and source</summary>
+        <p>Fictional local records. Select a fixture, then reset to mount the same example with that service behavior.</p>
+        <label>Service fixture <select aria-label="Service fixture" value={fixture} onChange={event => setFixture(event.target.value)}>
+          <option value="success-100">Success · 100 ms</option><option value="success-1200">Slow success · 1,200 ms</option><option value="fail-once">Fail once, then retry</option><option value="conflict">Record changes before save</option><option value="interrupted-after-save">Connection interrupted after save</option>
+        </select></label>
+        <div className="aip-harness-actions"><A.Button size="sm" onClick={reset}>Reset example</A.Button>
+          <A.Button size="sm" onClick={() => { service.change('file-brand', { name: 'Brand guidelines updated.pdf' }); window.__filesDemo?.sync('file-brand'); }}>Change Brand on server</A.Button>
+          <A.Button size="sm" onClick={() => { service.change('file-brand', { deleted: true }); window.__filesDemo?.sync('file-brand'); }}>Remove Brand on server</A.Button>
+          <A.Button size="sm" onClick={() => setTrace(JSON.stringify({ requests: service.requests, accepted: service.accepted }, null, 2))}>Inspect requests</A.Button></div>
+        <pre aria-label="Request trace">{trace}</pre>
+        <p><a href="https://github.com/richlaconte/altitude/blob/main/build/previews.txt">Canonical example source</a> · <a href="https://github.com/richlaconte/altitude/blob/main/project/ActionsInPlace.md">Actions in place guide</a></p>
+      </details>
+    </div>
+  </div>;
+}
+=== InlineEdit | <!-- @dsCard group="Inputs" height=850 subtitle="Edit a single value where it already lives" -->
+--- css
+.inline-demo { max-width: 800px; margin: auto; min-width: 0; }
+.inline-demo h2 { margin: 0 0 var(--space-3); font: 600 19px/26px var(--font-sans); }
+.inline-demo h3 { margin: 0 0 var(--space-2); font: 600 15px/22px var(--font-sans); }
+.inline-demo p { overflow-wrap: anywhere; }
+.inline-demo-scene { display: grid; gap: var(--space-6); }
+.inline-demo-task { border-bottom: 1px solid var(--line); padding-bottom: var(--space-4); }
+.inline-demo .alt-table { width: 100%; table-layout: fixed; }
+.inline-demo .alt-table th, .inline-demo .alt-table td { white-space: normal; overflow-wrap: anywhere; padding-inline: var(--space-2); }
+.inline-demo .alt-table th:last-child { width: 100px; }
+.inline-demo .alt-table td { vertical-align: top; }
+.inline-demo-meta { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
+.inline-demo-harness { border-top: 1px solid var(--line); margin-top: var(--space-6); padding-top: var(--space-3); font: 400 13px/20px var(--font-sans); }
+.inline-demo-harness summary { cursor: pointer; font-weight: 500; }
+.inline-demo-harness label { display: grid; gap: var(--space-1); }
+.inline-demo-harness select { max-width: 100%; padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-md); }
+.inline-demo-controls { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: end; margin: var(--space-3) 0; }
+.inline-demo-controls .alt-btn { white-space: normal; max-width: 100%; }
+.inline-demo-log { display: block; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 11px/16px var(--font-mono); }
+@media (max-width: 480px) {
+  #root { padding: 12px; }
+  .inline-demo .alt-table th:last-child { width: 64px; }
+  .inline-demo .alt-table th, .inline-demo .alt-table td { padding-inline: 4px; }
+  .inline-demo .alt-table .alt-inline-edit:not([data-state="read"]) .alt-inline-edit-surface { padding: 8px; }
+}
+--- jsx
+const INLINE_RECORDS = Object.freeze([
+  Object.freeze({ id: 'task-launch', name: 'Prepare launch checklist', revision: 1 }),
+  Object.freeze({ id: 'file-brand', name: 'Brand guidelines.pdf', revision: 1 }),
+  Object.freeze({ id: 'file-brand-draft', name: 'Brand guidelines draft.pdf', revision: 1 }),
+  Object.freeze({ id: 'file-launch', name: 'Launch checklist.md', revision: 1 }),
+]);
+const INLINE_FIXTURES = ['success-100', 'success-1200', 'fail-once', 'conflict', 'interrupted-after-save'];
+const inlineWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function InlineExample({ fixture, slowValidation, epoch }) {
+  const server = React.useRef(null);
+  if (!server.current) server.current = new Map(INLINE_RECORDS.map(record => [record.id, { ...record }]));
+  const [records, setRecords] = React.useState(() => INLINE_RECORDS.map(record => ({ ...record })));
+  const [log, setLog] = React.useState([]);
+  const [visible, setVisible] = React.useState(true);
+  const [outsideCount, setOutsideCount] = React.useState(0);
+  const [baseline, setBaseline] = React.useState(false);
+  const sequence = React.useRef(0), failUsed = React.useRef(false), accepted = React.useRef(new Map());
+  const alive = React.useRef(true);
+  React.useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  const record = id => records.find(record => record.id === id);
+  const trace = event => { if (alive.current) setLog(log => [...log, event]); };
+  const reconcile = id => { if (alive.current) setRecords(records => records.map(record => record.id === id ? { ...server.current.get(id) } : record)); };
+  const publish = id => canonicalValue => {
+    trace({ event: 'published', id, value: canonicalValue });
+    setRecords(records => records.map(record => record.id === id ? { ...server.current.get(id), name: canonicalValue } : record));
+  };
+  const validate = id => async draft => {
+    if (slowValidation) await inlineWait(1200);
+    if (!draft.trim()) return 'Enter a name.';
+    if ([...server.current.values()].some(record => record.id !== id && record.name === draft.trim())) return 'A file already has this name. Choose another.';
+  };
+  const save = id => async (draft, { previousValue }) => {
+    const expectedRevision = record(id).revision;
+    const operationId = `rename-${epoch}-${++sequence.current}`;
+    trace({ event: 'requested', id, expectedRevision, operationId, draft });
+    const commit = () => {
+      if (accepted.current.has(operationId)) return accepted.current.get(operationId);
+      const current = server.current.get(id);
+      if (current.revision !== expectedRevision || current.name !== previousValue) {
+        reconcile(id); trace({ event: 'rejected-stale', id, operationId });
+        return { ok: false, error: 'The saved name changed. Review the current name.' };
+      }
+      const next = { ...current, name: draft.trim(), revision: current.revision + 1 };
+      server.current.set(id, next);
+      const result = { ok: true, value: next.name };
+      accepted.current.set(operationId, result);
+      trace({ event: 'committed', id, revision: next.revision, operationId, value: next.name });
+      return result;
+    };
+    if (fixture === 'interrupted-after-save') {
+      await inlineWait(100); const result = commit();
+      await inlineWait(1100);
+      // Simulate a lost acknowledgement, then query/retry the same operation ID.
+      // A known committed result is returned as success; no second mutation occurs.
+      trace({ event: 'reconciled', id, operationId, revision: server.current.get(id).revision });
+      return accepted.current.get(operationId) || result;
+    }
+    if (fixture === 'conflict') {
+      await inlineWait(100);
+      const current = server.current.get(id);
+      server.current.set(id, { ...current, name: id === 'task-launch' ? 'Prepare updated launch checklist' : 'Brand guidelines revised.pdf', revision: current.revision + 1 });
+      reconcile(id); trace({ event: 'external-update', id, revision: current.revision + 1 });
+      await inlineWait(1100); return commit();
+    }
+    if (fixture === 'fail-once' && !failUsed.current) {
+      failUsed.current = true; await inlineWait(1200);
+      trace({ event: 'rejected', id, operationId });
+      return { ok: false, error: 'We couldn’t save this name. Your text is still here. Try again.' };
+    }
+    await inlineWait(fixture === 'success-1200' ? 1200 : 100);
+    return commit();
+  };
+  const file = record('file-brand');
+  const externalUpdate = () => {
+    const current = server.current.get('file-brand');
+    server.current.set('file-brand', { ...current, name: 'Brand guidelines updated.pdf', revision: current.revision + 1 });
+    trace({ event: 'external-update', id: 'file-brand', revision: current.revision + 1 }); reconcile('file-brand');
+  };
+  return <>
+    <div className="inline-demo-scene" data-inline-scene="">
+      <section className="inline-demo-task" aria-labelledby="inline-task-title">
+        <h2 id="inline-task-title">Launch preparation</h2>
+        <A.InlineEdit label="Task title" editLabel="Edit task title" value={record('task-launch').name} onValueChange={publish('task-launch')} onSave={save('task-launch')} validate={validate('task-launch')} required maxLength={100} />
+        <p className="inline-demo-meta">Due Friday · Product team</p>
+      </section>
+      <section aria-labelledby="inline-files-title">
+        <h2 id="inline-files-title">Files</h2>
+        <A.Table>
+          <A.TableHeader><A.TableRow><A.TableHead>File name</A.TableHead><A.TableHead>Size</A.TableHead></A.TableRow></A.TableHeader>
+          <A.TableBody>
+            {visible && <A.TableRow><A.TableCell>
+              <A.InlineEdit label="File name" editLabel="Rename file" value={file.name} onValueChange={publish('file-brand')} onSave={save('file-brand')} validate={validate('file-brand')} required maxLength={100} />
+            </A.TableCell><A.TableCell>2.4 MB</A.TableCell></A.TableRow>}
+            <A.TableRow><A.TableCell>{record('file-brand-draft').name}<p className="inline-demo-meta">Draft · Updated yesterday</p></A.TableCell><A.TableCell>1.8 MB</A.TableCell></A.TableRow>
+            <A.TableRow><A.TableCell>{record('file-launch').name}</A.TableCell><A.TableCell>8 KB</A.TableCell></A.TableRow>
+          </A.TableBody>
+        </A.Table>
+        <A.Button variant="ghost" onClick={() => setOutsideCount(count => count + 1)}>Show file details</A.Button>
+        {outsideCount > 0 && <p className="inline-demo-meta">Three fictional files · Details opened {outsideCount} time{outsideCount === 1 ? '' : 's'}.</p>}
+      </section>
+    </div>
+    <details className="inline-demo-harness">
+      <summary>Comparison and fixture controls</summary>
+      <p>These controls belong to the documentation harness. The dialog comparison uses the same filename, validation and save adapter. Reset before each trial.</p>
+      <div className="inline-demo-controls">
+        <A.Button onClick={externalUpdate}>Apply external filename update</A.Button>
+        <A.Button onClick={() => { if (!visible) reconcile('file-brand'); setVisible(visible => !visible); }}>{visible ? 'Remove filename editor' : 'Show filename editor'}</A.Button>
+        <A.Button onClick={() => setBaseline(true)}>Open dialog rename baseline</A.Button>
+      </div>
+      <output className="inline-demo-log" data-inline-log="" aria-label="Fixture operation log">{JSON.stringify(log, null, 2)}</output>
+    </details>
+    <InlineDialogBaseline open={baseline} onOpenChange={setBaseline} value={file.name} validate={validate('file-brand')} onSave={save('file-brand')} onValueChange={publish('file-brand')} />
+  </>;
+}
+
+function InlineDialogBaseline({ open, onOpenChange, value, validate, onSave, onValueChange }) {
+  const [draft, setDraft] = React.useState(value), [error, setError] = React.useState(''), [busy, setBusy] = React.useState('');
+  const baseline = React.useRef(value), generation = React.useRef(0), guard = React.useRef(false), latest = React.useRef(value);
+  latest.current = value;
+  React.useEffect(() => {
+    generation.current++; guard.current = false; setBusy(''); setError('');
+    if (open) { baseline.current = value; setDraft(value); }
+    return () => { generation.current++; };
+  }, [open]);
+  const submit = async () => {
+    if (guard.current) return;
+    if (latest.current !== baseline.current) { setError('The saved value changed. Close and reopen to review it.'); return; }
+    if (draft === baseline.current) { onOpenChange(false); return; }
+    guard.current = true; const token = generation.current; setError(''); setBusy('Checking value');
+    const error = draft.length > 100 ? 'Use 100 characters or fewer.' : await validate(draft);
+    if (token !== generation.current) return;
+    if (error) { guard.current = false; setBusy(''); setError(error); return; }
+    setBusy('Saving changes');
+    const result = await onSave(draft, { previousValue: baseline.current });
+    if (token !== generation.current) return;
+    guard.current = false; setBusy('');
+    if (latest.current !== baseline.current) { setError('The value changed while saving. Your save may have completed. Check the current record.'); return; }
+    if (!result.ok) { setError(result.error); return; }
+    onValueChange(result.value); onOpenChange(false);
+  };
+  return <A.Dialog open={open} onOpenChange={onOpenChange} title="Rename file" description="Change the name of this file." dismissible={busy !== 'Saving changes'} footer={<>
+    <A.Button variant="ghost" disabled={busy === 'Saving changes'} onClick={() => onOpenChange(false)}>Cancel</A.Button>
+    <A.Button variant="primary" loading={busy === 'Saving changes'} disabled={busy === 'Checking value'} onClick={submit}>Save changes</A.Button>
+  </>}>
+    <A.Field label="File name" error={error} required><A.Input value={draft} maxLength={100} readOnly={!!busy} onChange={event => { setDraft(event.target.value); setError(''); }} onKeyDown={event => {
+      if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) return;
+      if (event.key === 'Enter') { event.preventDefault(); submit(); }
+    }} /></A.Field>
+    <p role="status">{busy}</p>
+  </A.Dialog>;
+}
+
+function App() {
+  const [fixture, setFixture] = React.useState('success-100'), [slow, setSlow] = React.useState(false);
+  const [mounted, setMounted] = React.useState({ fixture: 'success-100', slow: false, epoch: 0 });
+  return <div className="inline-demo">
+    <InlineExample key={mounted.epoch} fixture={mounted.fixture} slowValidation={mounted.slow} epoch={mounted.epoch} />
+    <details className="inline-demo-harness">
+      <summary>Choose the next fixture</summary>
+      <p>Select before mounting. Reset restores the same fictional records, revisions and request counters.</p>
+      <div className="inline-demo-controls">
+        <label>Rename fixture<select value={fixture} onChange={event => setFixture(event.target.value)}>{INLINE_FIXTURES.map(name => <option key={name}>{name}</option>)}</select></label>
+        <label><input type="checkbox" checked={slow} onChange={event => setSlow(event.target.checked)} />Delay validation by 1,200 ms</label>
+        <A.Button onClick={() => setMounted({ fixture, slow, epoch: mounted.epoch + 1 })}>Reset example</A.Button>
+      </div>
+    </details>
+  </div>;
 }

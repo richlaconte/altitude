@@ -24,3 +24,7 @@ A large panel laid over the page at level 4, anchored to an edge, for a task tha
 - Do use a sheet to edit an item without leaving the list it's in, and for filters, details and settings.
 - Don't open a sheet from a Dialog or the CommandPalette. A level-4 surface can't sit on the summit: if it's opened under one, it paints beneath it and leaves focus where it is. A Dialog may open from a sheet, to confirm something.
 - Don't stack a sheet on a sheet; replace its content instead.
+
+A modal Sheet shares document-scoped isolation, scroll ownership and eligible-focus containment with Dialog. Its locks remain through exit. Opening a Dialog from a Sheet suspends the Sheet, then resumes its focus and existing background policy after the Dialog closes. A Sheet requested beneath a summit cannot take its focus or `aria-modal` ownership. A stationary Dialog also removes the lower Sheet's scrim blur until it closes.
+
+`modal={false}` keeps the page interactive and scrollable: no scrim, recession or focus trap. Closing that Sheet does not restore focus over a newer modal.

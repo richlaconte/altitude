@@ -16,3 +16,7 @@ It runs the **approach** tracker too, which lets openings react to a pointer bef
 - Do pass your brand color as `accent`; legibility is derived for you.
 - Do reach for a custom scheme only when the brand needs its own grounds and ink, and keep `checkScheme` passing in your tests.
 - Don't render `Dialog` or `Toaster` outside a provider unless you accept them portaling to `document.body` without the receding page.
+
+Modal ownership is coordinated privately per document. A nested themed Dialog keeps the nearest provider's portal host and blocks background branches throughout the document. Ancestors containing that portal are never transformed or made inert as a whole. Each provider's own `recede` setting remains independent. A stationary Dialog suppresses recession and blur on participating lower modal layers until it finishes closing.
+
+Isolation preserves application-owned inertness and restores the original inline scroll style after the last modal exits. Reopening during exit retains the same ownership; route/provider unmount releases it immediately. Applications do not need a competing inert wrapper. The legacy `useAltitude().pushLayer()` helper remains compatible as a visual recession vote with an idempotent release. It does not acquire modal isolation or focus ownership; use Dialog and modal Sheet for those behaviors. `useAltitude()` supplies the nearest portal `host`, and the ownership registry remains private.

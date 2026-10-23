@@ -1,3 +1,5 @@
+import { syncActionsGuide } from '../scripts/sync-actions-guide.mjs';
+syncActionsGuide();
 import { transformSync } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 const src = readFileSync('previews.txt', 'utf8');
@@ -20,7 +22,8 @@ for (const sec of sections) {
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${name} — Altitude</title>
 <style>
 ${common}
