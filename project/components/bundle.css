@@ -338,12 +338,14 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-tabs-content { animation: alt-emerge var(--dur-travel-2) var(--ease-rise); border-radius: var(--radius-sm); }
 
 .alt-tabs[data-variant="folder"] { gap: 0; }
+/* The list makes no layer of its own, so each tab stacks against the panel: only the chosen tab lies over it (covering its
+   hairline); the others, and a tab dropping back, sit behind the sheet. */
 .alt-tabs[data-variant="folder"] > .alt-tabs-list {
-  --r: 10px; align-self: stretch; z-index: 2; gap: var(--space-1); margin-bottom: -1px; padding: 0 var(--space-5);
+  --r: 10px; align-self: stretch; z-index: auto; gap: var(--space-1); margin-bottom: -1px; padding: 0 var(--space-5);
   border: 0; border-radius: 0; background: none; box-shadow: none;
 }
 .alt-tabs[data-variant="folder"] .alt-tabs-indicator { display: none; }
-.alt-tabs[data-variant="folder"] .alt-tabs-trigger { isolation: isolate; height: 38px; padding: 0 var(--space-4); border-radius: var(--r) var(--r) 0 0; }
+.alt-tabs[data-variant="folder"] .alt-tabs-trigger { z-index: 0; isolation: isolate; height: 38px; padding: 0 var(--space-4); border-radius: var(--r) var(--r) 0 0; }
 .alt-tabs[data-variant="folder"] .alt-tabs-trigger:focus-visible { outline-offset: -5px; }
 /* The tab: the top edge of its sheet. It reaches 1px into the panel to cover the panel's top hairline. */
 .alt-tabs[data-variant="folder"] .alt-tabs-trigger::before {
@@ -360,6 +362,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
     radial-gradient(circle at 100% 0, transparent calc(var(--r) - 0.75px), var(--alt-ring) calc(var(--r) - 0.5px), var(--alt-ring) calc(var(--r) + 0.25px), var(--surface-raised) calc(var(--r) + 0.75px)) right / var(--r) var(--r) no-repeat;
   opacity: 0; transition: opacity var(--dur-travel-1) var(--ease-sink);
 }
+.alt-tabs[data-variant="folder"] .alt-tabs-trigger[aria-selected="true"] { z-index: 2; }
 .alt-tabs[data-variant="folder"] .alt-tabs-trigger[aria-selected="true"]::before {
   opacity: 1; transform: none; transition: opacity var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-3) var(--ease-settle);
 }
@@ -501,8 +504,8 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 @keyframes alt-drift { from { --hr: 0.14; } to { --hr: 0.22; } }
 @media (prefers-reduced-motion: reduce) { .alt-avatar[data-live] { animation: none; --hr: 0.18; } }
 [data-motion="reduced"] .alt-avatar[data-live] { animation: none; --hr: 0.18; }
-/* Presence colour, drawn as a hold is (heldBy): 2px, 2px out. */
-.alt-avatar[data-presence] .alt-avatar-face { outline: 2px solid var(--alt-presence); outline-offset: 2px; }
+/* Presence colour: a 2px ring drawn tight around the face. */
+.alt-avatar[data-presence] .alt-avatar-face { outline: 2px solid var(--alt-presence); outline-offset: 0; }
 /* The lamp is a Badge lamp, cut out of the face by a ring of ground: filled when active, an empty ring when idle. */
 .alt-avatar-lamp {
   --b-lamp: var(--positive); --lamp: clamp(8px, calc(var(--size) * 0.2), 12px);

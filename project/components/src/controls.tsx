@@ -857,16 +857,26 @@ export function SortableList<T>({ items, getKey, onReorder, renderItem, getLabel
   const [kb, setKb] = React.useState<string | null>(null);
   const [msg, setMsg] = React.useState('');
 
-  const snapshot = () => { before.current.clear(); nodes.current.forEach((el, k) => before.current.set(k, el.getBoundingClientRect().top)); };
+  // Where each item is drawn, relative to its layout box's parent. From the centre, so a held item's tilt and scale don't count.
+  const snapshot = () => {
+    before.current.clear();
+    nodes.current.forEach((el, k) => {
+      const r = el.getBoundingClientRect(), p = (el.offsetParent as HTMLElement | null)?.getBoundingClientRect().top ?? 0;
+      before.current.set(k, (r.top + r.bottom) / 2 - p - el.offsetHeight / 2);
+    });
+  };
+  // Carry each item from where it was drawn to its new place. Layout offsets don't see transforms, and every item's own
+  // transition is held off for the frame, so a drag offset coming off doesn't also play.
   useIsoLayoutEffect(() => {
+    const moved: HTMLDivElement[] = [];
     nodes.current.forEach((el, k) => {
       const prev = before.current.get(k); if (prev === undefined) return;
-      const d = prev - el.getBoundingClientRect().top;
-      if (Math.abs(d) < 0.5) return;
-      el.style.transition = 'none'; el.style.transform = `translateY(${d}px)`;
-      el.getBoundingClientRect();
-      el.style.transition = ''; el.style.transform = '';
+      const d = prev - el.offsetTop;
+      el.style.transition = 'none'; el.style.transform = Math.abs(d) < 0.5 ? '' : `translateY(${d}px)`;
+      moved.push(el);
     });
+    moved.forEach((el) => getComputedStyle(el).transform);
+    moved.forEach((el) => { el.style.transition = ''; el.style.transform = ''; });
     before.current.clear();
   }, [items]);
 

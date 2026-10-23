@@ -42,10 +42,17 @@ function useCarry(host: React.RefObject<HTMLElement | null>, selector: string, a
     const els = Array.from(root.querySelectorAll<HTMLElement>(selector));
     const now = new Map<string, { x: number; y: number }>();
     els.forEach((el) => now.set(el.getAttribute(attr)!, placeIn(el, root)));
-    const before = dropSnapshots.get(root) ?? prev.current;
+    const dropped = dropSnapshots.get(root);
+    const before = dropped ?? prev.current;
     dropSnapshots.delete(root);
     prev.current = now;
     if (!before) return;
+    // On a drop, the drag offsets just came off: without this their CSS transitions would run (and win over the
+    // animations below), sending rows that slid aside back by a whole slot before they glide in again.
+    if (dropped) {
+      els.forEach((el) => { el.style.transition = 'none'; });
+      els.forEach((el) => { getComputedStyle(el).transform; el.style.transition = ''; });
+    }
     const cs = getComputedStyle(root);
     if (parseFloat(cs.getPropertyValue('--alt-travel')) === 0) return;
     const opts = { duration: ms(cs, durToken, 220), easing: cs.getPropertyValue('--ease-glide').trim() || 'ease' };

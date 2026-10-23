@@ -32,3 +32,8 @@ Full commands, logs, screenshots, environments and limitations are in ignored `b
 Engineering work is ready for review. Human validation remains open: VoiceOver/Safari, a Windows reader/browser, physical touch keyboard, real IME and human magnification checks; six to eight counterbalanced formative sessions; and resulting accept/revise decision with affected-task retesting. Protocol and blank evidence template are prepared. No sessions, AT results, preference or speed findings were invented.
 
 EditRegion, ConfirmAction and a generic action framework remain deferred because their discovery gates are unmet. Future work should start with the human-validation protocol, not additional abstractions. No publication is authorized by this record.
+
+## PR #10 integration
+
+- Merged upstream `5818ccb` into `codex/actions-in-place` after PR creation. The only conflict was generated `project/components/bundle.js`; rebuilding from the combined sources resolved it. Upstream Table/Board/SortableList motion, folder Tabs layering, and Avatar presence-ring changes are preserved.
+- Post-merge verification: both type checks, package/API and Storybook builds passed; eight affected preview sections across four themes rendered without errors. React 18 modal/InlineEdit/recipe checks passed 123/157/106 assertions, and existing approach/Field/Avatar checks passed 37/16/24. An independent upstream-preservation smoke passed 51 assertions for pointer/keyboard reorder, full/reduced motion, tab layering/navigation and tight Avatar rings, with no browser warnings/errors. The combined generated project matches the source. Hosted CI will rerun on the updated PR; human gates above remain open.
