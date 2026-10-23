@@ -17,7 +17,7 @@ Both Files views use the same source and service in [`build/previews.txt`](../bu
 
 Archive immediately removes the selected record from Files, updates the location count, and names the pending action. Undo is offered only after the server confirms the archive and its new revision. Undo is a new restore request against that revision; it changes that record’s archive state, never a stored snapshot of the entire list.
 
-A raised neutral [Alert](components/Alert/README.md) says the file *is archived* and offers Undo. That is an ongoing recoverable condition with an action. Generic completion messages continue to use a quiet settle or [Toast](components/Toaster/README.md). The example sends no duplicate toast. Archived remains visible, and its Restore action works after the recovery Alert is dismissed or replaced.
+A raised neutral [Alert](components/Alert/README.md) says the file *is archived* and offers Undo. That is an ongoing recoverable condition with an action. Generic completion messages continue to use a quiet settle or [Toast](components/Toaster/README.md). Restore and permanent deletion update a quiet local status region that is present from the initial render; starting a later rename clears the old completion. The example sends no duplicate toast. Archived remains visible, and its Restore action works after the recovery Alert is dismissed or replaced.
 
 Every Alert is keyed by the operation ID. Its delayed dismissal clears state only if that ID is still current. Dismissing A while B completes therefore leaves B present and actionable. Only the most recently initiated feedback can replace the current region, even when independent records complete out of order. An older failure stays actionable beside its record (or below the list when that record is outside the current view), without replacing the newer recovery.
 
@@ -49,7 +49,7 @@ The copyable example below uses a fictional application service. Replace it with
 | Rename | `onSave` performs the sole write and returns the canonical string. `onValueChange` publishes that value synchronously and makes no network request. |
 | Navigation/unmount | Dispatched requests remain application-owned. Late callbacks do not announce, focus, or mutate an unmounted view; the next view loads the current authoritative records. |
 
-The local `FileName` wrapper tracks whether that editor is still mounted; InlineEdit retains all editing, keyboard, and focus behavior. A mounted editor publishes through `onValueChange`. If navigation unmounted it, the application adapter reconciles the confirmed result itself, so returning to Files does not show stale data. Known newer revisions invalidate an offered Undo immediately, including when an older receipt arrives afterward.
+The local `FileName` wrapper tracks whether that editor is still mounted and clears old quiet completion on entry; InlineEdit retains all editing, keyboard, and focus behavior. A mounted editor publishes through `onValueChange`. If navigation unmounted it, the application adapter reconciles the confirmed result itself, so returning to Files does not show stale data. Known newer revisions invalidate an offered Undo immediately, including when an older receipt arrives afterward.
 
 The fixture’s `reconcile(operationId)` stands in for an operation-status endpoint. Its response is an acknowledged operation result, not a guess based on matching visible values. For an API that cannot establish the outcome, retain an explicit unknown state and provide reconciliation; do not offer a new unsafe retry. In production, generate operation IDs with an appropriate unique scheme rather than the example’s local counter.
 
@@ -120,11 +120,13 @@ function createFilesService(fixture = 'success-100', wait = (ms) => new Promise(
   };
 }
 // END FILES SERVICE
-// This wrapper reports mount ownership only; InlineEdit owns every editing interaction.
-function FileName({ onSave, ...props }) {
+// This wrapper reports mount ownership and entry; InlineEdit owns every editing interaction.
+function FileName({ onSave, onBeginEdit, ...props }) {
   const mounted = React.useRef(false);
   React.useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  return <A.InlineEdit {...props} onSave={(draft, context) => onSave(draft, context, () => mounted.current)} />;
+  return <div onClickCapture={event => {
+    if (event.target instanceof Element && event.target.closest('button') && !event.currentTarget.querySelector('input')) onBeginEdit?.();
+  }}><A.InlineEdit {...props} onSave={(draft, context) => onSave(draft, context, () => mounted.current)} /></div>;
 }
 function FilesExample({ service, full }) {
   const [records, setRecords] = React.useState(() => service.list());
@@ -210,7 +212,7 @@ function FilesExample({ service, full }) {
       const result = await authoritativeResult(operation);
       if (!alive.current) return;
       reconcileRecord(result);
-      announce({ ...operation, title: `${result.name} is ${kind === 'archive' ? 'archived' : 'restored'}.`, record: result, undo: kind === 'archive', route: kind === 'archive' });
+      announce({ ...operation, title: `${result.name} is ${kind === 'archive' ? 'archived' : 'restored'}.`, record: result, undo: kind === 'archive', route: kind === 'archive', quiet: kind === 'restore' });
     } catch (error) {
       if (!alive.current) return;
       reconcileRecord(service.read(record.id));
@@ -240,7 +242,7 @@ function FilesExample({ service, full }) {
       if (!alive.current) return;
       // If Close returned focus to the soon-to-disappear Delete button, repair that focus too.
       repairFocus(captured.id, 'delete'); reconcileRecord(result);
-      announce({ ...operation, title: `${captured.name} was permanently deleted.` });
+      announce({ ...operation, quiet: true, title: `${captured.name} was permanently deleted.` });
       if (openRef.current && targetRef.current?.session === operation.session) setOpen(false);
     } catch (error) {
       if (!alive.current) return;
@@ -290,6 +292,7 @@ function FilesExample({ service, full }) {
       {shown.map(record => <li key={record.id} data-file-id={record.id}>
         <div className="aip-file"><div className="aip-name">{full ? <FileName label={`File name: ${record.name}`} editLabel="Rename" value={record.name} required maxLength={160} disabled={!!busy[record.id] && busy[record.id].kind !== 'rename'}
           validate={draft => !draft.trim() ? 'Enter a file name.' : recordsRef.current.some(other => other.id !== record.id && !other.deleted && other.name === draft.trim()) ? 'A file already has that name.' : undefined}
+          onBeginEdit={() => setNotice(current => current?.quiet ? null : current)}
           onSave={(draft, context, isMounted) => rename(record, draft, context.previousValue, isMounted)}
           onValueChange={name => { const result = renameResults.current.get(record.id); if (result) { reconcileRecord({ ...result, name }); renameResults.current.delete(record.id); } }}
           focusFallback={() => heading.current} /> : <strong>{record.name}</strong>}</div>
@@ -302,7 +305,8 @@ function FilesExample({ service, full }) {
     </ul>
     {Object.values(rowErrors).filter(error => !shown.some(record => record.id === error.id)).map(recordError)}
     {!shown.length && <p className="aip-empty">{query ? 'No files match your search.' : location === 'archived' ? 'No archived files.' : 'No files here. Restore a file from Archived.'}</p>}
-    {notice && <A.Surface className="aip-recovery" level={0} status={notice.pending ? 'pending' : undefined} data-recovery>
+    <p className="aip-completion" role="status" aria-live="polite" aria-atomic="true" data-recovery={notice?.quiet ? '' : undefined}>{notice?.quiet && <><A.Icons.Check size={16} aria-hidden="true" />{notice.title}</>}</p>
+    {notice && !notice.quiet && <A.Surface className="aip-recovery" level={0} status={notice.pending ? 'pending' : undefined} data-recovery>
       <A.Alert key={notice.operationId} variant={notice.undo || notice.retry || notice.route ? 'raised' : 'flat'} tone={notice.tone || 'neutral'} title={notice.title}
         onDismiss={notice.pending ? undefined : () => setNotice(current => current?.operationId === notice.operationId ? null : current)}
         action={<>{notice.undo && <A.Button size="sm" aria-label={`Undo archive of ${notice.record.name}`} onClick={() => move('restore', notice.record, true)}>Undo</A.Button>}
@@ -359,6 +363,9 @@ export default function FilesApp() {
 .aip-row-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
 .aip-file > .alt-alert { margin-top: var(--space-3); }
 .aip-recovery { margin-top: var(--space-5); }
+.aip-completion { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-5) 0 0; color: var(--ink-muted); font: 400 13.5px/20px var(--font-sans); }
+.aip-completion svg { flex: none; }
+.aip-completion:empty { margin: 0; }
 .aip-recovery .alt-alert-action { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .aip-empty { padding: var(--space-6) var(--space-3); background: var(--surface-well); border: 1px dashed var(--line-control); border-radius: var(--radius-md); }
 .aip-target { margin: 0; display: grid; gap: var(--space-2); overflow-wrap: anywhere; }

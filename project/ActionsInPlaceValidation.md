@@ -27,9 +27,9 @@ Final results are recorded in the evidence artifact. The check names below map d
 | Storybook and landing page builds | Passed; generated routes and D1/D2/D3/D4 interactions verified in-browser |
 | All 45 preview sections × four schemes at 960 CSS px | 180 renders, no browser errors/warnings |
 | Existing approach/lamps, Field, Avatar regressions | 37 / 16 / 24 assertions passed |
-| InlineEdit: React 18 / React 19 / React 19 development StrictMode | 149 / 149 / 149 assertions passed |
+| InlineEdit: React 18 / React 19 / React 19 development StrictMode | 157 / 157 / 157 assertions passed |
 | Modal lifecycle: both runtimes and StrictMode | 123 / 162 / 162 assertions passed (React 18 / React 19 / StrictMode) |
-| Recipes: React 18 / React 19 | 95 / 129 assertions passed, including final keyboard-focus and review regressions |
+| Recipes: React 18 / React 19 | 106 / 141 assertions passed, including final keyboard-focus and review regressions |
 | Generated project source sync | Final staged/committed regeneration check recorded in `source-sync.log` |
 
 Different assertion totals include extra React 19 runtime identity checks per scene; the behavior cases are shared. The D4 visual matrix passed **32/32** combinations and the D3 recovery captures **4/4** themes, with 44 screenshots and no browser warnings/errors. That independent matrix used headless Chrome **155.0.8059.86**, React **19.3.0**, DPR 2; its exact conditions and inspected images are in `D4-visual-matrix.json`. The final affected preview render covered 24 desktop scenes, 12 narrow scenes and three forced-color scenes without browser errors/warnings.
@@ -100,6 +100,8 @@ The 320 CSS pixel checks use touch emulation (`tap` for controls, simulated text
 ## Review corrections and decisions
 
 Independent review reproduced application reconciliation after editor unmount, stale Undo after a known revision, and a retained modal root left invisibly open after handoff/reopening. Each has a focused regression. Additional checks cover older failure behind newer recovery, late uncertain receipt, same pending D2 target reopening, and iframe modal ownership. Native browser review also prompted an explicit D4 keyboard rename focus regression.
+
+The pinned Playwright 1.48.2 does not forward `prefers-contrast` emulation. Increased-contrast checks therefore set the public provider mode and assert its computed style; reduced motion and forced colors use supported media emulation. Ordinary Restore/Delete completion updates a persistent quiet live status node, while the persistent Alert remains reserved for pending, failure or actionable recovery.
 
 Routine resolutions preserve the specified experience: D3/D4 use one hash-selected scene; their copyable guide is generated from canonical source. Existing `useAltitude().pushLayer()` remains a deprecated visual vote for source consumers; document ownership is private. All generated preview wrappers now include a viewport meta tag so 320 CSS pixel checks reflect actual mobile sizing, and a data favicon to avoid irrelevant local-server 404 noise. No tokens, dependencies, public action framework or version number were changed.
 

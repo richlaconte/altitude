@@ -308,7 +308,10 @@ try {
     const page = await open(); await page.setViewportSize({ width, height: 1000 });
     await page.goto(`file://${fixturePath('InlineEdit', scheme)}`);
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
-      await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none', contrast: mode === 'increased-contrast' ? 'more' : 'no-preference' });
+      await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });
+      // Pinned Playwright 1.48 does not forward prefers-contrast emulation. Exercise the public provider mode.
+      await page.locator('.alt-root').evaluate((root, more) => { root.dataset.contrast = more ? 'more' : 'system'; }, mode === 'increased-contrast');
+      if (mode === 'increased-contrast') check(await page.locator('.alt-root').evaluate(root => getComputedStyle(root).getPropertyValue('--alt-sheen').trim() === 'none'), `${scheme}/${width}: increased-contrast styles are actually active`);
       await page.getByRole('button', { name: 'Rename file', exact: true }).click(); await fileInput(page).fill('A long fictional filename that must stay editable and readable.pdf');
       const boxes = await page.locator('[data-inline-scene] .alt-inline-edit[data-state="editing"] button').evaluateAll(buttons => buttons.map(button => { const r = button.getBoundingClientRect(); return { x: r.x, right: r.right, width: r.width }; }));
       check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1) && boxes.every(box => box.x >= 0 && box.right <= width + 1 && box.width > 0), `${scheme}/${width}/${mode}: page does not scroll horizontally and actions fit`);

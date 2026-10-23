@@ -64,7 +64,7 @@ if (!process.env.ALT_MODEL_ONLY) {
   const open = async (fixture = 'success-100', options = {}) => {
     const page = await browser.newPage({ viewport: { width: 960, height: 1000 }, ...options });
     page.on('pageerror', error => expect(false, 'browser page error: ' + error.message));
-    page.on('console', message => { if (message.type() === 'error') expect(false, 'browser console: ' + message.text()); });
+    page.on('console', message => { if (message.type() === 'error' || message.type() === 'warning') expect(false, 'browser console: ' + message.text()); });
     await page.goto('file://' + fixturePath('ActionsInPlace') + '?fixture=' + fixture + '#files');
     await page.locator('[data-action="archive"][data-id="file-brand"]').waitFor();
     if (process.env.ALT_FIXTURE_ROOT?.includes('react19')) expect((await page.locator('html').getAttribute('data-react-version'))?.startsWith('19.'), 'DEM-07 actual React 19 runtime');
@@ -240,6 +240,26 @@ if (!process.env.ALT_MODEL_ONLY) {
     expect(await p.locator('[data-recovery]').count() === 0, 'DEM-04 rename has no duplicate recovery notification');
     return p;
   });
+  await run('REC-12 quiet completion feedback', async () => {
+    const p = await open();
+    expect(await p.evaluate(() => { window.__initialQuietStatus = document.querySelector('.aip-completion[role="status"]'); return !!window.__initialQuietStatus; }), 'REC-12 quiet live status exists before the action');
+    await archive(p);
+    expect(await p.locator('[data-recovery] .alt-alert').count() === 1, 'REC-12 ongoing archive recovery retains its Alert');
+    await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).click(); await p.waitForTimeout(180);
+    expect(await p.locator('[data-recovery]').innerText().then(text => text.includes('is restored.')), 'REC-12 Restore still announces completion');
+    expect(await p.evaluate(() => window.__initialQuietStatus && document.querySelector('.aip-completion[role="status"]') === window.__initialQuietStatus), 'REC-12 completion updates the existing live status node');
+    expect(await p.locator('[data-recovery] .alt-alert').count() === 0 && await p.locator('[data-recovery]').getAttribute('role') === 'status', 'REC-12 ordinary Restore uses quiet status, not Alert');
+    const row = p.locator('[data-file-id="file-brand"]');
+    await row.getByRole('button', { name: 'Rename', exact: true }).click();
+    expect(await p.locator('[data-recovery]').count() === 0, 'REC-12 beginning rename clears old quiet completion');
+    await row.getByRole('textbox', { name: /^File name:/ }).fill('Renamed brand.pdf'); await row.getByRole('button', { name: 'Save changes', exact: true }).click(); await p.waitForTimeout(180);
+    expect(await p.locator('[data-product]').innerText().then(text => !text.includes('Brand guidelines.pdf is restored.')), 'REC-12 completed rename leaves no stale completion filename');
+    await action(p, 'archive').click(); await p.waitForTimeout(180); await archived(p); await action(p, 'delete').click(); await confirm(p).click(); await p.waitForTimeout(350);
+    expect(await p.locator('[data-recovery]').innerText().then(text => text.includes('was permanently deleted.')), 'CON-10 Delete still announces completion');
+    expect(await p.locator('[data-recovery] .alt-alert').count() === 0 && await p.locator('[data-recovery]').getAttribute('role') === 'status', 'CON-10 ordinary Delete uses quiet status, not Alert');
+    expect(await p.getByRole('button', { name: /^Undo archive/ }).count() === 0, 'CON-10 permanent deletion offers no Undo');
+    return p;
+  });
   await run('D4 keyboard rename focus', async () => {
     const p = await open(), row = p.locator('[data-file-id="file-brand"]');
     await row.getByRole('button', { name: 'Rename', exact: true }).focus(); await p.keyboard.press('Enter');
@@ -294,7 +314,10 @@ if (!process.env.ALT_MODEL_ONLY) {
     return p;
   });
   for (const options of [{ reducedMotion: 'reduce' }, { contrast: 'more' }, { forcedColors: 'active' }, { viewport: { width: 320, height: 900 }, isMobile: true, hasTouch: true }]) await run('DEM-07/08 accessible mode ' + JSON.stringify(options), async () => {
-    const p = await open('success-100', options); await archive(p); await archived(p); await action(p, 'delete').click();
+    const p = await open('success-100', options);
+    if (options.contrast) await p.locator('.alt-root').first().evaluate(el => { el.dataset.contrast = 'more'; });
+    if (options.contrast) expect(await p.locator('.alt-root').first().evaluate(el => getComputedStyle(el).getPropertyValue('--alt-sheen').trim()) === 'none', 'DEM-07 provider increased contrast is actually applied');
+    await archive(p); await archived(p); await action(p, 'delete').click();
     expect(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'DEM-07 no horizontal page overflow ' + JSON.stringify(options));
     expect(await confirm(p).isVisible(), 'CON-09 consequence actions visible ' + JSON.stringify(options));
     await p.keyboard.press('Escape'); return p;
