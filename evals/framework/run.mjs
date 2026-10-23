@@ -3,8 +3,9 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, cp
 import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { makeMatrix, assessRun, summarize, protocolVersion } from './protocol.mjs';
+import { makeMatrix, assessRun, summarize, protocolVersion, claudeAllowedTools } from './protocol.mjs';
 import { runProcess, traceUsage, filesUnder, sha256 } from './support.mjs';
+import { assessorFingerprint } from './evaluator/frozen.mjs';
 const here=fileURLToPath(new URL('./',import.meta.url));
 const args=process.argv.slice(2);
 const option=(key,fallback)=>{const i=args.indexOf(key);return i<0?fallback:args[i+1];};
@@ -19,6 +20,8 @@ const matrix=makeMatrix(clients).filter(r=>!only||r.id.includes(only));
 const models={codex:option('--codex-model','gpt-5.6-sol'),claude:option('--claude-model','claude-opus-5-5')};
 const exclusionPath=option('--codex-skills','');
 const skillIsolation=exclusionPath?JSON.parse(readFileSync(resolve(exclusionPath))):null;
+// Frozen before any generation; assessing with a different fingerprint is reported as post-hoc.
+const assessor=assessorFingerprint();
 const results=[];
 if(!matrix.length) throw Error('No pilot runs matched the selection');
 for(const run of matrix){
@@ -26,7 +29,7 @@ for(const run of matrix){
  if(existsSync(join(evidence,'run.json')))throw Error(`Refusing to overwrite completed evidence ${evidence}; use a new --out directory.`);
  mkdirSync(evidence,{recursive:true});
  const workspace=mkdtempSync(join(tmpdir(),'altitude-eval-'));
- const meta={...run,protocolVersion,model:models[run.client],requestedModel:models[run.client],budget:{wallSeconds:budgetSeconds,followupWallSeconds:budgetSeconds,tokenLimit:null,reason:'Tool CLI exposes wall deadline; token usage recorded afterward, not silently treated as capped.'},workspace,primitiveHash:manifest.primitiveHash,package:manifest.packages[run.condition],primitiveArtifacts:manifest.primitiveArtifacts,isolation:{freshProcess:true,freshWorkspace:true,globalSkills:'Codex ignores user config, but host-global skill discovery may still occur; inspect traces. Claude uses project settings only. No assertion of hermetic model training or host isolation.'},startedAt:new Date().toISOString(),node:process.version};
+ const meta={...run,protocolVersion,assessor,model:models[run.client],requestedModel:models[run.client],budget:{wallSeconds:budgetSeconds,followupWallSeconds:budgetSeconds,tokenLimit:null,reason:'Tool CLI exposes wall deadline; token usage recorded afterward, not silently treated as capped.'},workspace,primitiveHash:manifest.primitiveHash,package:manifest.packages[run.condition],primitiveArtifacts:manifest.primitiveArtifacts,isolation:{freshProcess:true,freshWorkspace:true,globalSkills:'Codex ignores user config, but host-global skill discovery may still occur; inspect traces. Claude uses project settings only. No assertion of hermetic model training or host isolation.'},startedAt:new Date().toISOString(),node:process.version};
  console.log(run.id,'setup-started',new Date().toISOString());
  try{
   meta.toolVersion=execFileSync(run.client,['--version'],{encoding:'utf8',timeout:15000}).trim();
@@ -47,7 +50,7 @@ for(const run of matrix){
   meta.setupInstructions=Object.fromEntries(['AGENTS.md','CLAUDE.md','.altitude/setup.json'].filter(file=>existsSync(join(workspace,file))).map(file=>[file,readFileSync(join(workspace,file),'utf8')]));
   const prompt=readFileSync(join(here,'briefs',run.task+'.txt'),'utf8');
   // All runs start fresh. No generation process is given this repository or evaluator files.
-  const invocation=run.client==='codex'?['exec',...(skillIsolation?['-c',skillIsolation.config]:[]),'--ephemeral','--ignore-user-config','--sandbox','workspace-write','--json','--model',models.codex,'-']:['-p','--no-session-persistence','--output-format','stream-json','--verbose','--model',models.claude,'--permission-mode','acceptEdits','--allowedTools','Read,Write,Edit,Bash(npm run build),Bash(altitude *),Bash(npx altitude *),Bash(node_modules/.bin/altitude *),Bash(./node_modules/.bin/altitude *),Bash(node *),Bash(cat *),Bash(ls *),Bash(rg *),Bash(pwd),Bash(find *)','--setting-sources','project','--strict-mcp-config','--mcp-config','{"mcpServers":{}}'];
+  const invocation=run.client==='codex'?['exec',...(skillIsolation?['-c',skillIsolation.config]:[]),'--ephemeral','--ignore-user-config','--sandbox','workspace-write','--json','--model',models.codex,'-']:['-p','--no-session-persistence','--output-format','stream-json','--verbose','--model',models.claude,'--permission-mode','acceptEdits','--allowedTools',claudeAllowedTools.join(','),'--setting-sources','project','--strict-mcp-config','--mcp-config','{"mcpServers":{}}'];
   meta.invocation={command:run.client,args:invocation};
   if(run.client==='codex'&&skillIsolation)meta.isolation={...meta.isolation,skillIsolation,globalSkills:'Explicit path exclusions verified with codex debug prompt-input. Project instructions remain active.'};
   const initialSourceHash=sha256(filesUnder(join(workspace,'src')).map(file=>readFileSync(file,'utf8')).join('\n'));
@@ -82,7 +85,7 @@ for(const run of matrix){
  meta.finishedAt=new Date().toISOString();writeFileSync(join(evidence,'run.json'),JSON.stringify(meta,null,2)+'\n');results.push(meta);
  const completed=readdirSync(out,{withFileTypes:true}).filter(entry=>entry.isDirectory()&&existsSync(join(out,entry.name,'run.json'))).map(entry=>JSON.parse(readFileSync(join(out,entry.name,'run.json'))));
  const summaryPath=join(out,`summary-${run.id}.tmp`);
- writeFileSync(summaryPath,JSON.stringify({protocolVersion,runs:completed,summary:summarize(completed)},null,2)+'\n');renameSync(summaryPath,join(out,'summary.json'));
+ writeFileSync(summaryPath,JSON.stringify({protocolVersion,assessor,runs:completed,summary:summarize(completed)},null,2)+'\n');renameSync(summaryPath,join(out,'summary.json'));
  console.log(run.id,meta.generation,meta.build||'',meta.elapsedMs||'');
  if(meta.generation==='aborted'||meta.followup?.generation==='aborted')break;
 }

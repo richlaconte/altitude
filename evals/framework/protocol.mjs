@@ -1,7 +1,14 @@
 // No evaluator expectations or failure schedules are imported by consumer projects.
-export const protocolVersion = '1.0.0';
+export const protocolVersion = '1.1.0';
 export const conditions = ['primitives', 'guidance', 'framework'];
-export const metrics = ['guidanceDiscovery','patternSelection','taskOutcome','applicableStates','retainedInput','recovery','keyboardDefects','accessibilityDefects','contentAccuracy','responsive','followupRegressions','complexity','developmentCost'];
+// true always means the check passed: axeScanPassed, keyboardPassed and followupPreserved replace 1.0.0's accessibilityDefects, keyboardDefects and followupRegressions.
+export const metrics = ['guidanceDiscovery','patternSelection','taskOutcome','applicableStates','retainedInput','recovery','adverseStates','followupFeatures','keyboardPassed','axeScanPassed','contentAccuracy','responsive','followupPreserved','complexity','developmentCost'];
+// Every command the installed setup tells an agent to run must be allowed; pilot 2026-10-23 denied `npm exec -- altitude`.
+export const claudeAllowedTools=['Read','Write','Edit','Bash(npm run build)','Bash(npm exec -- altitude *)','Bash(npm exec altitude *)','Bash(altitude *)','Bash(npx altitude *)','Bash(node_modules/.bin/altitude *)','Bash(./node_modules/.bin/altitude *)','Bash(node *)','Bash(cat *)','Bash(ls *)','Bash(rg *)','Bash(pwd)','Bash(find *)'];
+/** Prefix match for Claude Code `Bash(prefix *)` rules, which is all the allowlist uses. */
+export function allowsCommand(command,rules=claudeAllowedTools) {
+ return rules.some(rule=>{const match=/^Bash\((.*)\)$/.exec(rule);if(!match)return false;const pattern=match[1];return pattern.endsWith(' *')?command===pattern.slice(0,-2)||command.startsWith(pattern.slice(0,-1)):command===pattern;});
+}
 export function makeMatrix(clients=['codex','claude']) {
  return clients.flatMap(client=>['settings','records'].flatMap(task=>conditions.map(condition=>({id:`${client}-${task}-${condition}`,client,task,condition}))));
 }

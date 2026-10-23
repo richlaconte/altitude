@@ -7,8 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { conditions } from './protocol.mjs';
-import { sha256 } from './support.mjs';
+import { sha256, guidanceMentions } from './support.mjs';
 const manifest=JSON.parse(readFileSync(resolve(process.argv[2]||'build/test/framework-eval-packages/manifest.json')));
+assert.ok(Array.isArray(manifest.omittedExports),'Manifest lacks omittedExports; rerun prepare.mjs');
 const reports=[];let primitiveExports;
 for(const condition of conditions) {
  const cwd=mkdtempSync(join(tmpdir(),'altitude-eval-preflight-'));
@@ -19,6 +20,7 @@ for(const condition of conditions) {
   const require=createRequire(join(cwd,'package.json')),lib=require('altitude-design');
   assert.ok(lib.Surface);assert.equal(typeof lib.useEditRecord,condition==='framework'?'function':'undefined');
   if(condition==='primitives')primitiveExports=Object.keys(lib).sort();
+  if(condition!=='framework')for(const name of manifest.omittedExports)assert.equal(lib[name],undefined,`${condition} exposes omitted ${name}`);
   for(const key of primitiveExports)assert.ok(key in lib,`${condition} missing primitive ${key}`);
   const folder=join(cwd,'node_modules/altitude-design'),pkg=JSON.parse(readFileSync(join(folder,'package.json')));
   for(const [file,digest] of Object.entries(manifest.primitiveArtifacts))assert.equal(sha256(readFileSync(join(folder,'dist',file))),digest);
@@ -27,6 +29,7 @@ for(const condition of conditions) {
    assert.ok(require.resolve('altitude-design/guidance'));
    assert.ok(require.resolve('altitude-design/guidance/README.md'));
    assert.equal(existsSync(join(folder,'dist/guidance/references')),condition==='framework');
+   if(condition==='guidance')assert.deepEqual(guidanceMentions(join(folder,'dist/guidance'),manifest.omittedExports),[],'guidance-only documents name omitted exports');
    const bin=join(folder,pkg.bin.altitude);
    execFileSync(process.execPath,[bin,'init','--client','all','--apply'],{cwd,stdio:'pipe',timeout:15000});
    assert.equal(JSON.parse(execFileSync(process.execPath,[bin,'doctor','--json'],{cwd,encoding:'utf8',timeout:15000})).ok,true);
@@ -43,4 +46,4 @@ for(const condition of conditions) {
   reports.push({condition,status:'passed',packageVersion:pkg.version,primitiveHash:artifact.primitiveHash,tarballSHA256:artifact.sha256});
  } finally {rmSync(cwd,{recursive:true,force:true});}
 }
-console.log(JSON.stringify({checks:'Packed installs, public runtime and ESM/CJS declaration controls, guidance export resolution, identical copied primitive assets, both installed setup adapters and guidance integrity',reports},null,2));
+console.log(JSON.stringify({checks:'Packed installs, public runtime and ESM/CJS declaration controls, guidance export resolution, no guidance-only mention of omitted exports, identical copied primitive assets, both installed setup adapters and guidance integrity',reports},null,2));

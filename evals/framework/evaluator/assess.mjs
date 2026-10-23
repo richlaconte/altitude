@@ -5,6 +5,8 @@ import { join, resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { chromium } from '../../../build/node_modules/playwright-core/index.mjs';
+import { protocolVersion } from '../protocol.mjs';
+import { assessorFingerprint } from './frozen.mjs';
 const require=createRequire(import.meta.url);
 
 /** An unknown check is never silently counted as passing. A demonstrated defect remains a defect even if other checks are unknown. */
@@ -21,10 +23,13 @@ export function metricsFromChecks(checks, task) {
  return {
   guidanceDiscovery:null,patternSelection:null,
   taskOutcome:task==='settings'?value('EVAL-SAVE','EVAL-RELOAD'):value('EVAL-QUERY','EVAL-RESET'),
-  applicableStates:null,retainedInput:task==='settings'?value('EVAL-RETAIN'):null,
+  applicableStates:null,retainedInput:task==='settings'?value('EVAL-RETAIN','EVAL-INVALID'):null,
   recovery:task==='settings'?value('EVAL-RETAIN','EVAL-SAVE'):value('EVAL-LOAD-RECOVERY'),
-  keyboardDefects:null,accessibilityDefects:aggregate(checks.filter(check=>check.ruleId==='EVAL-A11Y').map(check=>check.passed)),
-  contentAccuracy:null,responsive:value('EVAL-REFLOW'),followupRegressions:null,complexity:null,developmentCost:null,
+  adverseStates:task==='settings'?value('EVAL-INVALID','EVAL-DIRTY-LEAVE','EVAL-DIRTY-DISCARD'):value('EVAL-OUT-OF-ORDER','EVAL-FIRST-USE-EMPTY'),
+  // Only the final stage exercises follow-up features, so the initial stage leaves this null.
+  followupFeatures:task==='settings'?value('EVAL-DESCRIPTION-SAVE','EVAL-DESCRIPTION-OVERVIEW'):value('EVAL-SORT','EVAL-SELECTED-COUNT'),
+  keyboardPassed:null,axeScanPassed:aggregate(checks.filter(check=>check.ruleId==='EVAL-A11Y').map(check=>check.passed)),
+  contentAccuracy:null,responsive:value('EVAL-REFLOW'),followupPreserved:null,complexity:null,developmentCost:null,
  };
 }
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -53,14 +58,40 @@ async function preferred(locator, prefer, description) {
 }
 async function settleAnimations(page) {
  return page.evaluate(async()=>{
+  const finite=()=>document.getAnimations().filter(animation=>animation.playState==='running'&&animation.effect?.getTiming().iterations!==Infinity);
+  const frames=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   const deadline=performance.now()+3000;
   while(performance.now()<deadline){
-   const active=document.getAnimations().filter(animation=>animation.playState==='running'&&animation.effect?.getTiming().iterations!==Infinity);
-   if(!active.length){await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));return true;}
+   const active=finite();
+   if(!active.length){await frames();return {settled:true,forced:[]};}
    await Promise.race([Promise.all(active.map(animation=>animation.finished.catch(()=>{}))),new Promise(resolve=>setTimeout(resolve,100))]);
   }
-  return false;
+  // Pilot 2026-10-23: a finite animation still running after 3 s left a saved-state scan unmeasured. Jump finite
+  // animations to their end state, which is what a settled scan sees, and report them; one that restarts stays unsettled.
+  const forced=finite().map(animation=>{const target=animation.effect?.target;try{animation.finish();}catch{}return {name:animation.animationName||animation.transitionProperty||null,target:target?`${target.tagName.toLowerCase()}.${String(target.className).trim().split(/\s+/).join('.')}`:null};});
+  await frames();
+  return {settled:!finite().length,forced};
  });
+}
+/** Visible, de-duplicated record names in document order. */
+function recordOrder(page) {
+ return page.evaluate(()=>{
+  const names=['Atlas','Beacon','Cedar'],seen=[],walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  for(let node=walker.nextNode();node;node=walker.nextNode()){const value=node.nodeValue.trim(),parent=node.parentElement;if(names.includes(value)&&!seen.includes(value)&&!parent.closest('option,select,[hidden],[aria-hidden="true"]')&&parent.getClientRects().length)seen.push(value);}
+  return seen.join(',');
+ });
+}
+/** The first "N selected" style count on the page; "none selected" is 0 and no count is null. */
+export function readSelectedCount(text) {
+ if(/\b(?:no|none)\s+(?:[a-z]+\s+)?selected\b/i.test(text))return 0;
+ const match=text.match(/(\d+)\s+(?:of\s+\d+\s+)?(?:[a-z]+\s+)?selected\b/i)||text.match(/\bselected\s*:?\s*(\d+)/i);
+ return match?Number(match[1]):null;
+}
+/** Counts agree when every displayed count equals the checked rows; a hidden count is accepted only for zero. */
+export function truthfulCounts(readings) {
+ if(!readings.some(reading=>reading.count!==null))return null;
+ if(readings.some(reading=>reading.count!==null&&reading.count!==reading.expected))return false;
+ return readings.every(reading=>reading.count!==null||reading.expected===0)?true:null;
 }
 
 export async function assessArtifact(runDirectory) {
@@ -72,14 +103,14 @@ export async function assessArtifact(runDirectory) {
   if(!existsSync(join(folder,'index.html'))||invalidBuild){
    reports.push({stage,checks:[],metrics:metricsFromChecks([],metadata.task),unmeasured:stage==='final'&&!metadata.followup?'No follow-up was run (initial generation ineligible); final-dist duplicates the initial artifact and is not follow-up evidence.':'No verified successful build for this stage; an old dist directory is not evidence of a successful follow-up.'});continue;
   }
-  let record={name:'Northwind',email:'owner@example.com',description:''},rejectWrite=false,rejectLoad=false,delay=0,writeGate=null,releaseWrites=null;
+  let record={name:'Northwind',email:'owner@example.com',description:''},rejectWrite=false,rejectLoad=false,delay=0,writeGate=null,releaseWrites=null,queryDelay=null,emptyCollection=false;
   const writes=[],loads=[];
   const rows=[{id:'p1',name:'Atlas'},{id:'p2',name:'Beacon'},{id:'p3',name:'Cedar'}];
   const server=createServer(async(req,res)=>{
    try{
     const url=new URL(req.url,'http://localhost');res.setHeader('Content-Type','application/json');
     if(url.pathname.startsWith('/api/')){
-     const capturedDelay=delay,writeFailure=rejectWrite,loadFailure=rejectLoad,capturedGate=writeGate;
+     const capturedDelay=delay||(url.pathname==='/api/records'&&queryDelay?queryDelay(url.searchParams.get('q')||''):0),writeFailure=rejectWrite,loadFailure=rejectLoad,capturedGate=writeGate;
      if(url.pathname==='/api/workspace'&&req.method==='PUT'){
       let body='';for await(const chunk of req)body+=chunk;
       const next=JSON.parse(body),entry={payload:next,outcome:'pending'};writes.push(entry);
@@ -94,7 +125,7 @@ export async function assessArtifact(runDirectory) {
      if(url.pathname==='/api/workspace'){entry.outcome='accepted';res.end(JSON.stringify(record));return;}
      if(url.pathname!=='/api/records'){entry.outcome='unknown-route';res.statusCode=404;res.end(JSON.stringify({error:'Unknown endpoint'}));return;}
      if(loadFailure){entry.outcome='rejected';res.statusCode=503;res.end(JSON.stringify({error:'Could not load records. Try again.'}));return;}
-     const result=rows.filter(row=>row.name.toLowerCase().includes(entry.query.toLowerCase()));entry.outcome='accepted';entry.ids=result.map(row=>row.id);res.end(JSON.stringify(result));return;
+     const result=(emptyCollection?[]:rows).filter(row=>row.name.toLowerCase().includes(entry.query.toLowerCase()));entry.outcome='accepted';entry.ids=result.map(row=>row.id);res.end(JSON.stringify(result));return;
     }
     const path=resolve(folder,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));
     if(!path.startsWith(folder+sep)){res.statusCode=403;res.end();return;}
@@ -116,12 +147,17 @@ export async function assessArtifact(runDirectory) {
    const dispatched=[];page.on('request',request=>{if(request.method()!=='GET'&&new URL(request.url()).pathname==='/api/workspace')dispatched.push(request.method());});
    const url=`http://127.0.0.1:${server.address().port}`;
    const axe=async(state)=>{ try{
-    if(!await settleAnimations(page))throw new Unmeasured('Finite animations did not settle within 3 seconds; contrast snapshot is unstable.');
+    const settle=await settleAnimations(page);
+    if(!settle.settled)throw new Unmeasured(`Finite animations kept running after 3 seconds and after being finished (${JSON.stringify(settle.forced)}); contrast snapshot is unstable.`);
     if(!await page.evaluate(()=>!!window.axe))await page.addScriptTag({path:require.resolve('axe-core/axe.min.js')});
     const result=await page.evaluate(()=>axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa','wcag22aa']}}));
     const findings=result.violations.map(violation=>({id:violation.id,impact:violation.impact,help:violation.help,helpUrl:violation.helpUrl,nodes:violation.nodes.map(node=>({target:node.target,summary:node.failureSummary}))}));
-    check('EVAL-A11Y',state,{violations:findings,incomplete:result.incomplete.map(item=>({id:item.id,nodes:item.nodes.map(node=>node.target)}))},findings.length===0,'No violations of the executed axe rules in this state.','Inspect affected elements; incomplete rules and manual keyboard/AT review remain separate.','deterministic');
+    const incomplete=result.incomplete.map(item=>({id:item.id,impact:item.impact,help:item.help,nodes:item.nodes.map(node=>({target:node.target,summary:node.failureSummary}))}));
+    check('EVAL-A11Y',state,{violations:findings,forcedAnimations:settle.forced},findings.length===0,'No violations of the executed axe rules in this state.','Inspect affected elements; incomplete rules and manual keyboard/AT review remain separate.','deterministic');
+    check('EVAL-A11Y-INCOMPLETE',state,incomplete,incomplete.length?null:true,'axe could decide every executed rule in this state.','Review each incomplete rule by hand (often contrast over images, gradients or overlapping elements).','contextual');
    }catch(error){check('EVAL-A11Y',state,String(error.message),null,'A stable state and successful axe execution are required.','Resolve scan/animation/tooling failure and rerun; do not treat missing results as no defects.','contextual');} };
+   // Each later scenario starts from a fresh load so state left by an earlier one cannot leak into it.
+   const fresh=async()=>{const start=loads.length;await page.goto(url);await until(()=>loads.slice(start).some(entry=>entry.outcome!=='pending'));await settleAnimations(page);};
    await page.goto(url);await until(()=>loads.some(entry=>entry.outcome!=='pending'));await axe('initial');
    if(metadata.task==='settings'){
     const enterSettings=async()=>{
@@ -178,6 +214,70 @@ export async function assessArtifact(runDirectory) {
      const currentValue=await name.count()?await name.inputValue():null;
      check('EVAL-STALE','submitting',{editableDuringPending:editable,value:currentValue,record:{...record}},!editable||currentValue==='Newer unsaved edit','A delayed accepted response cannot erase edits made after dispatch.','Keep the newer draft, or explicitly prevent edits while the operation is pending.');
     });
+    await attempt('invalid-submission',async()=>{
+     await fresh();
+     const name=await enterSettings(),email=await unique(page.getByRole('textbox',{name:/email/i}),'contact email');
+     const save=await unique(page.getByRole('button',{name:/save/i}),'save action');
+     const feedback=locator=>locator.evaluate(element=>({invalid:element.getAttribute('aria-invalid')==='true',described:[element.getAttribute('aria-describedby'),element.getAttribute('aria-errormessage')].join(' ').split(/\s+/).filter(Boolean).map(id=>document.getElementById(id)?.textContent?.trim()||'').join(' ')}));
+     const before={record:{...record},name:await feedback(name),email:await feedback(email),text:await page.locator('body').innerText()};
+     await name.fill('');await email.fill('not-an-email');const start=writes.length;
+     const saveEnabled=await save.isEnabled();if(saveEnabled)await save.click();
+     await sleep(600);await until(()=>writes.slice(start).every(entry=>entry.outcome!=='pending'));
+     const draft={name:await name.inputValue(),email:await email.inputValue()},after={name:await feedback(name),email:await feedback(email),text:await page.locator('body').innerText()};
+     const mutated=writes.slice(start).some(entry=>entry.outcome==='accepted')||record.name!==before.record.name||record.email!==before.record.email;
+     check('EVAL-INVALID','invalid',{saveEnabled,writes:writes.slice(start),draft,record:{...record}},!mutated&&draft.name===''&&draft.email==='not-an-email','An invalid submission leaves the service record unchanged and keeps the entered values for correction.','Validate before saving (the service also rejects), keep the draft and show what to fix.');
+     const flagged=field=>after[field].invalid||(!!after[field].described&&after[field].described!==before[field].described);
+     const anyFeedback=after.text!==before.text||!saveEnabled;
+     check('EVAL-INVALID-ERROR','invalid',{saveEnabled,name:after.name,email:after.email},flagged('name')&&flagged('email')?true:anyFeedback?null:false,'Each invalid field is marked invalid or described by its error message.','Set aria-invalid and link each error with aria-describedby; unlinked text needs review, no feedback is a defect.');
+     await axe('invalid');
+    });
+    await attempt('dirty-leave',async()=>{
+     await fresh();
+     const name=await enterSettings(),edit='Unsaved leave edit',start=writes.length,original={...record};
+     const cancel=()=>preferred(page.getByRole('button',{name:/cancel|back|close|discard/i}).or(page.getByRole('link',{name:/cancel|back|overview/i})),/cancel/i,'cancel action');
+     await name.fill(edit);
+     let nativePrompts=0,decision='dismiss';
+     const onDialog=dialog=>{nativePrompts++;void(decision==='dismiss'?dialog.dismiss():dialog.accept());};
+     page.on('dialog',onDialog);
+     try{
+      const visibleDialog=async()=>{for(const candidate of await page.getByRole('dialog').or(page.getByRole('alertdialog')).all())if(await candidate.isVisible())return candidate;return null;};
+      const editing=async()=>await name.count()&&await name.isVisible()?await name.inputValue():null;
+      await(await cancel()).click();await sleep(400);
+      let dialog=await visibleDialog();
+      const prompted=nativePrompts>0||!!dialog;
+      if(dialog){await axe('dirty-leave');await(await preferred(dialog.getByRole('button',{name:/keep|stay|continue|cancel|back|no\b/i}),/keep|continue editing|stay/i,'keep-editing choice')).click();await sleep(300);}
+      let kept=await editing(),reentered=false;
+      if(!prompted&&kept===null){reentered=true;kept=await(await enterSettings()).inputValue();}
+      check('EVAL-DIRTY-LEAVE','dirty-leave',{prompted,nativePrompts,inAppDialog:!!dialog,draftAfterLeave:kept,reentered},prompted?kept===edit:kept===edit?(reentered?true:null):false,'Leaving with unsaved edits asks first and keeping them keeps the draft, or the draft survives leaving.','Confirm before discarding unsaved edits, or keep the draft.');
+      if(prompted&&kept===edit){
+       decision='accept';const promptsBefore=nativePrompts;
+       await(await cancel()).click();await sleep(400);
+       dialog=await visibleDialog();
+       if(dialog){await(await preferred(dialog.getByRole('button',{name:/discard|leave|yes|don.?t save|continue/i}),/discard/i,'discard choice')).click();await sleep(300);}
+       const left=await editing()===null;
+       check('EVAL-DIRTY-DISCARD','dirty-leave',{left,confirmed:nativePrompts>promptsBefore||!!dialog,writes:writes.slice(start),record:{...record}},left&&!writes.slice(start).length&&record.name===original.name,'Confirming discard leaves without saving the abandoned edit.','Discard the draft only after confirmation, and never save it on leave.');
+      }
+     }finally{page.off('dialog',onDialog);}
+    });
+    if(stage==='final')await attempt('followup-description',async()=>{
+     await fresh();await enterSettings();
+     const text='Shared planning space for evaluation';
+     const description=await unique(page.getByRole('textbox',{name:/description/i}),'workspace description');
+     await description.fill(text);const start=writes.length;
+     await(await unique(page.getByRole('button',{name:/save/i}),'save action')).click();
+     const accepted=await until(()=>writes.slice(start).some(entry=>entry.outcome==='accepted'&&entry.payload.description===text));
+     check('EVAL-DESCRIPTION-SAVE','saved',{writes:writes.slice(start),record:{...record}},accepted&&record.description===text,'The description reaches the API with the save.','Send the description field through the existing save operation.');
+     if(!accepted)return;
+     await fresh();
+     const shown=async()=>(await page.locator('body').innerText()).includes(text);
+     let visible=await until(shown,1500),via='load';
+     if(!visible){
+      const back=page.getByRole('button',{name:/cancel|back|overview|done|close/i}).or(page.getByRole('link',{name:/overview|back/i}));
+      if(!await back.count())throw new Unmeasured('The overview was not shown after reload and no way back to it was found; description display not established.');
+      await(await preferred(back,/cancel|overview/i,'return to overview')).click();visible=await until(shown,1500);via='return-to-overview';
+     }
+     check('EVAL-DESCRIPTION-OVERVIEW','saved',{via,visible},visible,'After reload the overview shows the saved description.','Render the description on the overview from loaded service data.');
+    });
    }else{
     const search=()=>unique(page.getByRole('textbox',{name:/search|find/i}).or(page.getByRole('searchbox',{name:/search|find/i})),'search field');
     // Live filtering and explicit submission are both valid; Enter is tried only when typing alone does not apply the query.
@@ -208,11 +308,61 @@ export async function assessArtifact(runDirectory) {
     await attempt('selection-identity',async()=>{
      rejectLoad=false;const input=await search();await applyQuery(input,'',showsAll);
      // Keyboard toggle: styled checkbox tracks may intercept synthetic pointer clicks while remaining operable.
-     const atlas=await unique(page.getByRole('checkbox',{name:/Atlas/i}),'Atlas selection');await atlas.focus();await page.keyboard.press('Space');
-     if(!await until(()=>atlas.isChecked(),1000))throw new Unmeasured('Space on the focused Atlas checkbox did not check it; pointer and keyboard selection require independent review.');
+     const toggle=async(name)=>{const box=await unique(page.getByRole('checkbox',{name}),`${name.source} selection`);await box.focus();await page.keyboard.press('Space');if(!await until(()=>box.isChecked(),1000))throw new Unmeasured(`Space on the focused ${name.source} checkbox did not check it; pointer and keyboard selection require independent review.`);};
+     const checkedRows=async()=>{let count=0;for(const box of await page.getByRole('checkbox',{name:/Atlas|Beacon|Cedar/}).all())if(await box.isVisible()&&await box.isChecked())count++;return count;};
+     const readings=[],reading=async state=>readings.push({state,count:readSelectedCount(await page.locator('body').innerText()),expected:await checkedRows()});
+     await toggle(/Atlas/i);await reading('one-selected');await toggle(/Cedar/i);await reading('two-selected');
      await applyQuery(input,'Beacon',async()=>await page.getByText('Atlas',{exact:true}).count()===0);
      const beacon=await unique(page.getByRole('checkbox',{name:/Beacon/i}),'Beacon selection');
      check('EVAL-SELECTION','filtered',{selectedBeacon:await beacon.isChecked()},!await beacon.isChecked(),'Filtering must not transfer Atlas selection to a different identity. Clear or preserve policies may both be valid.','Key selection by stable identity and document whether hidden selections persist.');
+     readings.push({state:'filtered',count:readSelectedCount(await page.locator('body').innerText()),expected:null});
+     // With every row visible again, the displayed count must equal the checked rows under either policy.
+     await applyQuery(input,'',showsAll);await reading('all-visible');
+     const counted=readings.filter(entry=>entry.expected!==null);
+     check('EVAL-SELECTED-COUNT','populated',readings,truthfulCounts(counted),'A displayed selection count equals the rows actually selected; none displayed is unmeasured, not a pass.','Derive the count from the same selection state as the checkboxes, keyed by stable ID.');
+    });
+    await attempt('out-of-order-query',async()=>{
+     const input=await search();await applyQuery(input,'',showsAll);
+     const issued=async(value,start)=>{const sent=()=>loads.slice(start).some(entry=>entry.path==='/api/records'&&entry.query.toLowerCase()===value.toLowerCase());if(await until(sent,700))return true;await input.press('Enter');return until(sent,700);};
+     queryDelay=query=>/^atlas$/i.test(query)?1500:0;
+     try{
+      const start=loads.length;await input.fill('Atlas');
+      if(!await issued('Atlas',start))throw new Unmeasured('The query issued no service request; the interface may filter locally, so response order does not apply.');
+      const second=loads.length;await input.fill('Cedar');
+      if(!await issued('Cedar',second))throw new Unmeasured('A second query issued no service request while the first was pending.');
+      await until(()=>loads.slice(start).every(entry=>entry.outcome!=='pending'),4000);await sleep(300);
+      const atlasShown=await page.getByText('Atlas',{exact:true}).count()>0,cedarShown=await page.getByText('Cedar',{exact:true}).count()>0;
+      check('EVAL-OUT-OF-ORDER','populated',{requests:loads.slice(start),query:await input.inputValue(),atlasShown,cedarShown},cedarShown&&!atlasShown,'A slower response for an older query never replaces the results of the current query.','Ignore or cancel responses for superseded queries.');
+     }finally{queryDelay=null;}
+    });
+    if(stage==='final')await attempt('followup-sort',async()=>{
+     const input=await search();await applyQuery(input,'',showsAll);
+     const orders=new Set([await recordOrder(page)]),observe=async()=>{await sleep(400);orders.add(await recordOrder(page));};
+     const visible=async locator=>{const found=[];for(const candidate of await locator.all())if(await candidate.isVisible())found.push(candidate);return found;};
+     const [combo]=await visible(page.getByRole('combobox',{name:/sort|order/i}));
+     if(combo){
+      if(await combo.evaluate(element=>element.tagName==='SELECT')){for(const label of await combo.evaluate(element=>[...element.options].map(option=>option.label))){await combo.selectOption({label});await observe();}}
+      else{
+       await combo.click();const labels=[];for(const option of await visible(page.getByRole('option')))labels.push((await option.textContent()).trim());await page.keyboard.press('Escape');
+       for(const label of labels){await combo.click();await page.getByRole('option',{name:label,exact:true}).first().click();await observe();}
+      }
+     }else{
+      const controls=await visible(page.getByRole('button',{name:/sort|^name\b|a\s*[–-]\s*z|z\s*[–-]\s*a|ascending|descending/i}).or(page.getByRole('radio',{name:/a\s*[–-]\s*z|z\s*[–-]\s*a|ascending|descending/i})));
+      if(!controls.length||controls.length>4)throw new Unmeasured(`Found ${controls.length} candidate sort controls; selector adaptation or independent review required.`);
+      for(const control of controls.length===1?[controls[0],controls[0],controls[0]]:[...controls,...controls]){await control.click();await observe();}
+     }
+     check('EVAL-SORT','populated',{orders:[...orders]},orders.has('Atlas,Beacon,Cedar')&&orders.has('Cedar,Beacon,Atlas'),'Sorting by name shows the actual records in both ascending and descending order.','Sort the loaded records by name in both directions.');
+    });
+    await attempt('first-use-empty',async()=>{
+     emptyCollection=true;
+     try{
+      await fresh();await sleep(300);
+      const content=await page.locator('body').innerText();
+      const failure=/error|failed|could not|couldn.t|unable/i.test(content),recognised=/no (?:records|projects|items)(?: yet)?|nothing (?:here|yet)|empty|get started|create (?:a|an|your first)/i.test(content);
+      check('EVAL-FIRST-USE-EMPTY','first-use-empty',content.slice(0,600),failure?false:recognised?true:null,'An empty collection is presented as empty (ideally with a next step), not as a failure or a filter result.','Distinguish first-use empty from failure and from no results; unmatched copy needs human review.','contextual');
+      await axe('first-use-empty');
+     }finally{emptyCollection=false;}
+     await fresh();
     });
    }
    await attempt('responsive',async()=>{
@@ -226,18 +376,21 @@ export async function assessArtifact(runDirectory) {
   finally{releaseWrites?.();await browser?.close();await new Promise(resolve=>server.close(resolve));}
   reports.push({stage,checks,metrics:metricsFromChecks(checks,metadata.task),service:{record,writes,loads},pageErrors:errors,
    manualKeyboard:'not performed',assistiveTechnology:'not performed',humanTaskStudy:'not performed',
-   unmeasuredStates:metadata.task==='settings'?['invalid','dirty-leave']:['first-use-empty','out-of-order-query'],
+   axeIncomplete:checks.filter(check=>check.ruleId==='EVAL-A11Y-INCOMPLETE'&&check.passed===null).map(check=>({state:check.state,rules:check.evidence.map(item=>item.id)})),
+   unmeasuredStates:metadata.task==='settings'?['blur-validation','browser-back-with-unsaved-edits']:['selected-row-removed','refresh-during-query'],
    metricScope:'Only executed controlled scenarios and axe rules. Unknown selectors, unperformed scenarios and human judgments remain null.'});
  }
  const initial=reports.find(report=>report.stage==='initial'),final=reports.find(report=>report.stage==='final');
- const metrics={...(final?.metrics||metricsFromChecks([],metadata.task)),followupRegressions:metadata.followup?.build==='passed'&&initial&&final?measuredRegressions(initial.checks,final.checks):null};
- const assessment={protocolVersion:'1.0.0',assessorVersion:'1.4.0',assessedAt:new Date().toISOString(),reports,metrics,
+ const metrics={...(final?.metrics||metricsFromChecks([],metadata.task)),followupPreserved:metadata.followup?.build==='passed'&&initial&&final?measuredRegressions(initial.checks,final.checks):null};
+ // Runs record the assessor they were generated under; a different fingerprint now means this assessment is post-hoc.
+ const assessor=assessorFingerprint(),frozen=metadata.assessor||null;
+ const assessment={protocolVersion,assessorVersion:assessor.version,assessor,frozenAssessor:frozen,postHoc:frozen?frozen.sha256!==assessor.sha256:null,assessedAt:new Date().toISOString(),reports,metrics,
   limitations:['This pilot assessment is partial, not an accessibility/usability conformance verdict.','Per-state evidence remains authoritative; null is unmeasured, never failure or success.','Pattern selection, copy accuracy, full keyboard/AT behavior and applicability require independent human review.']};
- if(existsSync(join(runDir,'assessment.json'))){const previous=JSON.parse(readFileSync(join(runDir,'assessment.json'),'utf8'));const stamp=previous.assessedAt.replace(/[:.]/g,'-');writeFileSync(join(runDir,`assessment-${previous.assessorVersion}-${stamp}.json`),JSON.stringify(previous,null,2)+'\n');assessment.refinement='Prior assessment preserved. Version 1.2.0 enters settings through overview, retains action handles through pending label changes, and accepts disabled/read-only fields disappearing after successful persistence. Version 1.3.0 adds a uniform pending-edit second-save probe (EVAL-PENDING-RESUBMIT) and no longer treats final-dist as follow-up evidence when no follow-up ran. Version 1.4.0 corrects instrument faults seen in 1.3.0 across all conditions: the recovery scenario restores the unfiltered query first (1.3.0 inherited a leftover no-results query), Enter submits a query when live filtering does not apply, a retry-named control is preferred after rejection, search-named reset controls resolve ambiguity, and checkboxes are toggled with Space.';}
+ if(existsSync(join(runDir,'assessment.json'))){const previous=JSON.parse(readFileSync(join(runDir,'assessment.json'),'utf8'));const stamp=previous.assessedAt.replace(/[:.]/g,'-');writeFileSync(join(runDir,`assessment-${previous.assessorVersion}-${stamp}.json`),JSON.stringify(previous,null,2)+'\n');assessment.refinement='Prior assessment preserved. Version 1.2.0 enters settings through overview, retains action handles through pending label changes, and accepts disabled/read-only fields disappearing after successful persistence. Version 1.3.0 adds a uniform pending-edit second-save probe (EVAL-PENDING-RESUBMIT) and no longer treats final-dist as follow-up evidence when no follow-up ran. Version 1.4.0 corrects instrument faults seen in 1.3.0 across all conditions: the recovery scenario restores the unfiltered query first (1.3.0 inherited a leftover no-results query), Enter submits a query when live filtering does not apply, a retry-named control is preferred after rejection, search-named reset controls resolve ambiguity, and checkboxes are toggled with Space. Version 2.0.0 (protocol 1.1.0) adds invalid submission, dirty leave, first-use empty, out-of-order query, follow-up description/sort/selected-count scenarios and axe incomplete results; finishes finite animations still running after 3 s; and renames accessibilityDefects, keyboardDefects and followupRegressions to axeScanPassed, keyboardPassed and followupPreserved.';}
  writeFileSync(join(runDir,'assessment.json'),JSON.stringify(assessment,null,2)+'\n');
  metadata.metrics={...metadata.metrics,...metrics};metadata.independentAssessment={path:'assessment.json',assessorVersion:assessment.assessorVersion,assessedAt:assessment.assessedAt,scope:assessment.limitations};
  writeFileSync(join(runDir,'run.json'),JSON.stringify(metadata,null,2)+'\n');
- console.log(metadata.id,reports.map(report=>`${report.stage}: ${report.checks.filter(check=>check.passed===true).length} pass, ${report.checks.filter(check=>check.passed===false).length} fail, ${report.checks.filter(check=>check.passed===null).length} unmeasured`).join('; '));
+ console.log(metadata.id,assessment.postHoc?'(post-hoc)':'',reports.map(report=>`${report.stage}: ${report.checks.filter(check=>check.passed===true).length} pass, ${report.checks.filter(check=>check.passed===false).length} fail, ${report.checks.filter(check=>check.passed===null).length} unmeasured`).join('; '));
  return assessment;
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){

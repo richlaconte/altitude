@@ -41,19 +41,21 @@ Ownership: semantic agent owns primitive source/regressions; knowledge agent own
 
 The work in this PR is complete; what follows comes from the [2026-10-23 pilot](../../evals/framework/results/PILOT-2026-10-23.md). PR #11 stays a draft until a maintainer decides to merge. Filing an issue or finishing an item here does not authorise merging, publishing or a version bump.
 
-1. **Fix the two protocol confounds before generating again.**
-   - Allow the documented `npm exec -- altitude *` command in the Claude invocation in `evals/framework/run.mjs`, or make the setup text and the allowlist name the same command. Check by searching a fresh trace for `permission_denied`.
-   - In `evals/framework/prepare.mjs`, rewrite the sentences in the guidance-only package's `edit-record.md` and `async-collection.md` that name runtime exports that condition omits. Add a preflight assertion that no guidance-only document names an omitted export.
-2. **Freeze the assessor before generating.** Record its version and hash in the run metadata. Any later correction must be applied uniformly and reported as post-hoc, keeping the superseded reports.
-3. **Extend the assessor.**
-   - Exercise the follow-up features (the description field, sort, selected count) and the scenarios currently listed as unmeasured: invalid submission, dirty leave, first-use empty and out-of-order responses.
-   - Report axe *incomplete* results.
-   - Make EVAL-SELECTION check that counts are truthful.
-   - Rename `accessibilityDefects` and `followupRegressions` so that `true` cannot be misread.
-   - Settle or exclude the Card animation that left codex-settings-framework's saved-state scan unmeasured.
+Steps 1–3 and 5 were done on 2026-10-23, after the pilot. Steps 4 and 6 remain.
+
+1. **Done — the two protocol confounds.**
+   - The Claude allowlist (`claudeAllowedTools` in `evals/framework/protocol.mjs`) now includes `npm exec -- altitude *`. A harness test fails if the setup text or agent docs name an altitude command the allowlist denies. In a fresh workspace, a single Claude Code probe that ran `npm exec -- altitude doctor --json` had no `permission_denied` under the new list. The old list denied the same command.
+   - `evals/framework/guidance-rewrites.json` replaces every guidance-only sentence that names an omitted runtime export or reference snapshot. That covers all four pattern documents, not just the two found in the pilot. Preparation fails if a listed sentence drifts or an omitted export is still named, and preflight asserts the same on the installed package.
+2. **Done — the assessor is frozen.** `run.mjs` records the assessor's version and SHA-256 (`evaluator/frozen.mjs`) in each `run.json` and `summary.json`. `assess.mjs` sets `postHoc: true` when it runs under a different fingerprint and still keeps superseded reports.
+3. **Done — the assessor is extended** (assessor 2.0.0, protocol 1.1.0).
+   - New scenarios: invalid submission, unsaved edits on leave (keep, then discard), out-of-order query responses and first-use empty. The final stage also checks the follow-up features: the description saved and shown on the overview, name sort in both directions, and a selection count that must equal the selected rows.
+   - axe *incomplete* results are reported per state.
+   - The metrics are renamed to `axeScanPassed`, `keyboardPassed` and `followupPreserved`. New metrics are `adverseStates` and `followupFeatures`.
+   - Finite animations still running after 3 s are finished and named, not left unmeasured.
+   - Not re-validated against real generated apps: the new selectors have been tested only on fixture apps. Expect selector adaptation on the first rerun, and report it as post-hoc.
 4. **Rerun the pilot with repeated samples per cell** to new evidence roots (never the 2026-10-23 ones). Reconsider the 180 s budget. Write reviews with `evals/framework/reviews/review-lib.cjs`.
-5. **Library defect candidates, not yet filed.** File one issue each with the bug template if the person you are working for agrees:
-   - Table: `.alt-table-tools` has no `flex-wrap`, so a full toolbar overflows at 320px (measured in claude-records-primitives).
-   - Textarea: the counter renders "160 / 0" under RTL without bidi isolation (claude-settings-framework screenshot).
-   - Checkbox: the `aria-hidden` track intercepts synthetic pointer clicks. Verify a real mouse click on the track before filing.
+5. **Done — library defect candidates**, each checked against `main` at `8a4b675` in Chromium:
+   - Table: filed as [#26](https://github.com/richlaconte/altitude/issues/26). At 320px the toolbar measures 530px and the document 546px.
+   - Textarea: not filed. The counter's text is "0 / 160". In an RTL paragraph, normal bidi layout places the count at the right ("160 / 0" read left to right), which an RTL reader reads as "0 / 160". Isolating it as LTR would reverse that for RTL readers. Revisit only if an RTL-language reviewer says otherwise.
+   - Checkbox: not filed. A real mouse click at the centre of the `aria-hidden` track toggles the checkbox, because the track is inside the `<label>`. Only Playwright's actionability check reports that the track "intercepts pointer events". Automation should click the label or use the keyboard.
 6. **Before any user-facing claim:** run the [manual validation matrix](MANUAL-VALIDATION.md) with a screen reader and keyboard, and test in non-Chromium engines. A representative participant study remains unperformed.

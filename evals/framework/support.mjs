@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { spawn } from 'node:child_process';
-import { readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import { redactGuidance } from './protocol.mjs';
@@ -15,11 +15,36 @@ export function stripPatternExports(source) {
  for(const node of removals.reverse()) source=source.slice(0,node.getStart(ast))+source.slice(node.end);
  return source;
 }
-export function sanitizeGuidance(directory) {
+/** Names (values and types) that stripPatternExports removes from the entry. */
+export function omittedExports(source) {
+ const ast=ts.createSourceFile('index.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+ return ast.statements.filter(node=>ts.isExportDeclaration(node)&&node.moduleSpecifier&&ts.isStringLiteral(node.moduleSpecifier)&&node.moduleSpecifier.text.startsWith('./pattern-')&&node.exportClause&&ts.isNamedExports(node.exportClause)).flatMap(node=>node.exportClause.elements.map(element=>element.name.text)).sort();
+}
+/** Text guidance files that still name an omitted export, as {file, names}. */
+export function guidanceMentions(directory,names) {
+ const pattern=names.length?new RegExp(`\\b(?:${names.join('|')})\\b`,'g'):null;
+ return pattern?filesUnder(directory).filter(path=>/\.(?:md|json|txt)$/.test(path)).flatMap(path=>{const found=[...new Set(readFileSync(path,'utf8').match(pattern)||[])];return found.length?[{file:relative(directory,path).replaceAll('\\','/'),names:found}]:[];}):[];
+}
+// Pilot 2026-10-23 confound: guidance-only prose named runtime exports and snapshots this condition omits.
+export function rewriteGuidance(directory,rewrites=JSON.parse(readFileSync(new URL('./guidance-rewrites.json',import.meta.url),'utf8')).files) {
+ for(const [file,pairs] of Object.entries(rewrites)){
+  const path=join(directory,file);if(!existsSync(path))continue;
+  let text=readFileSync(path,'utf8');
+  for(const [from,to] of pairs){
+   if(text.split(from).length!==2)throw Error(`Guidance rewrite for ${file} no longer matches exactly once: ${from.slice(0,60)}…`);
+   text=text.replace(from,()=>to);
+  }
+  writeFileSync(path,text);
+ }
+}
+export function sanitizeGuidance(directory,omitted=[]) {
  const original=JSON.parse(readFileSync(join(directory,'manifest.json'),'utf8'));
  // Snapshot TSX, example apps and test scripts otherwise give the guidance control the executable treatment.
  rmSync(join(directory,'references'),{recursive:true,force:true});
+ rewriteGuidance(directory);
  for(const path of filesUnder(directory)) if(path.endsWith('.md')) writeFileSync(path,redactGuidance(readFileSync(path,'utf8')));
+ const mentions=guidanceMentions(directory,omitted);
+ if(mentions.length)throw Error('Guidance-only condition still names omitted exports: '+mentions.map(entry=>`${entry.file} (${entry.names.join(', ')})`).join('; '));
  const path=join(directory,'index.json'),index=JSON.parse(readFileSync(path,'utf8'));
  index.references={};
  index.evaluationCondition={name:'guidance',excluded:'Executable implementation, examples and checks. Source references in prose/metadata identify conceptual provenance only.',originalManifestSHA256:sha256(JSON.stringify(original))};

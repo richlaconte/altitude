@@ -17,12 +17,12 @@ test('guidance control removes executable examples without discarding conceptual
 });
 test('assessment never treats an agent claim or a launch as proof of product usability',()=>{
  const r=assessRun({exitCode:0,elapsedMs:100,stdout:'All accessible and working'});
- assert.equal(r.generation,'complete'); assert.equal(r.metrics.taskOutcome,null); assert.equal(r.metrics.accessibilityDefects,null);
+ assert.equal(r.generation,'complete'); assert.equal(r.metrics.taskOutcome,null); assert.equal(r.metrics.axeScanPassed,null);
  assert.equal(assessRun({exitCode:null,timedOut:true}).generation,'budget-exhausted');
 });
 
 import { stripPatternExports, traceUsage, sanitizeGuidance, runProcess } from './support.mjs';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -82,4 +82,42 @@ test('Codex skill exclusions use exact catalog paths and safely quoted TOML valu
  const prompt=JSON.stringify([{content:[{text:'- sample (file: /tmp/one/SKILL.md)\n- other (file: /tmp/two/SKILL.md)\n- duplicate (file: /tmp/one/SKILL.md)'}]}]);
  assert.deepEqual(skillPaths(prompt),['/tmp/one/SKILL.md','/tmp/two/SKILL.md']);
  assert.equal(skillOverride(['/tmp/one/SKILL.md']),'skills.config=[{path="/tmp/one/SKILL.md",enabled=false}]');
+});
+import {claudeAllowedTools,allowsCommand} from './protocol.mjs';
+import {omittedExports,guidanceMentions,rewriteGuidance} from './support.mjs';
+test('Claude allowlist permits every altitude command the setup text and agent docs name',()=>{
+ const root=new URL('../../',import.meta.url);
+ const commands=['scripts/altitude-cli.mjs','docs/framework/AGENT-SETUP.md','project/framework/README.md'].flatMap(file=>readFileSync(new URL(file,root),'utf8').match(/npm exec -- altitude [a-z]+[^;\n`]*/g)||[]).map(command=>command.trim().replace(/\.$/,''));
+ assert.ok(commands.length>5);
+ for(const command of commands)assert.ok(allowsCommand(command),`denied: ${command}`);
+ assert.ok(!allowsCommand('npm exec -- rimraf .'));assert.ok(!allowsCommand('npm install left-pad'));
+ assert.ok(claudeAllowedTools.includes('Read'));
+});
+test('guidance-only rewrites remove omitted export names and fail loudly when a sentence drifts',()=>{
+ assert.deepEqual(omittedExports(`export { Surface } from './core';\nexport { useEditRecord, ErrorSummary } from './pattern-edit-record';\nexport type { FieldErrors } from './pattern-edit-record';`),['ErrorSummary','FieldErrors','useEditRecord']);
+ const root=mkdtempSync(join(tmpdir(),'alt-eval-rewrite-'));
+ try{
+  mkdirSync(join(root,'patterns'));
+  writeFileSync(join(root,'patterns','a.md'),'Use `useEditRecord` here. Keep this.');
+  rewriteGuidance(root,{'patterns/a.md':[['Use `useEditRecord` here.','Use primitives here.']],'patterns/missing.md':[['x','y']]});
+  assert.equal(readFileSync(join(root,'patterns','a.md'),'utf8'),'Use primitives here. Keep this.');
+  assert.deepEqual(guidanceMentions(root,['useEditRecord']),[]);
+  writeFileSync(join(root,'patterns','b.json'),'{"note":"see useEditRecord"}');
+  assert.deepEqual(guidanceMentions(root,['useEditRecord','ErrorSummary']),[{file:'patterns/b.json',names:['useEditRecord']}]);
+  assert.throws(()=>rewriteGuidance(root,{'patterns/a.md':[['Use `useEditRecord` here.','again']]}),/no longer matches/);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+test('the shipped guidance rewrites cover every omitted export in the real pattern documents',()=>{
+ const root=mkdtempSync(join(tmpdir(),'alt-eval-real-guidance-'));
+ try{
+  const source=new URL('../../project/framework/',import.meta.url);
+  mkdirSync(join(root,'patterns'));
+  for(const file of readdirSync(new URL('patterns/',source)))writeFileSync(join(root,'patterns',file),readFileSync(new URL('patterns/'+file,source)));
+  for(const file of ['README.md','principles.md','rules.json','evidence.json'])writeFileSync(join(root,file),readFileSync(new URL(file,source)));
+  rewriteGuidance(root);
+  for(const path of readdirSync(join(root,'patterns')).filter(file=>file.endsWith('.md')).map(file=>join(root,'patterns',file)))writeFileSync(path,redactGuidance(readFileSync(path,'utf8')));
+  const omitted=omittedExports(readFileSync(new URL('../../project/components/src/index.tsx',import.meta.url),'utf8'));
+  assert.ok(omitted.includes('useEditRecord')&&omitted.includes('WorkflowStatus'));
+  assert.deepEqual(guidanceMentions(root,omitted),[]);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

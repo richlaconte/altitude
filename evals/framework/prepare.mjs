@@ -6,7 +6,7 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { conditions, protocolVersion } from './protocol.mjs';
-import { stripPatternExports, sanitizeGuidance, sha256 } from './support.mjs';
+import { stripPatternExports, omittedExports, sanitizeGuidance, sha256 } from './support.mjs';
 // npm 11 and earlier print an array from `pack --json`; npm 12 keys the result by package name.
 const firstPacked=result=>Array.isArray(result)?result[0]:Object.values(result)[0];
 const root=fileURLToPath(new URL('../../',import.meta.url));
@@ -19,9 +19,9 @@ const hash=createHash('sha256');
 for(const f of primitiveFiles) hash.update(f).update(readFileSync(join(src,f)));
 const primitiveHash=hash.digest('hex');
 const fullEntry=readFileSync(join(src,'index.tsx'),'utf8');
-const entry=stripPatternExports(fullEntry);
+const entry=stripPatternExports(fullEntry),omitted=omittedExports(fullEntry);
 const primitiveArtifacts=Object.fromEntries(['altitude.css','altitude.no-fonts.css','tokens.css','tokens.json'].map(file=>[file,sha256(readFileSync(join(root,'dist',file)))]));
-const manifest={protocolVersion,primitiveHash,primitiveFiles,primitiveArtifacts,packageVersion:pkg.version,packages:{}};
+const manifest={protocolVersion,primitiveHash,primitiveFiles,primitiveArtifacts,omittedExports:omitted,packageVersion:pkg.version,packages:{}};
 for(const condition of conditions){
  const folder=join(destination,condition); rmSync(folder,{recursive:true,force:true}); mkdirSync(folder,{recursive:true});
  cpSync(join(root,'dist'),join(folder,'dist'),{recursive:true});
@@ -50,7 +50,7 @@ for(const condition of conditions){
    writeFileSync(index,readFileSync(index,'utf8').replace(/^\/\*\*[\s\S]*?\*\//,''));
   }
  }
- if(condition==='guidance') sanitizeGuidance(join(folder,'dist/guidance'));
+ if(condition==='guidance') sanitizeGuidance(join(folder,'dist/guidance'),omitted);
  writeFileSync(join(folder,'package.json'),JSON.stringify(meta,null,2));
  writeFileSync(join(folder,'README.md'),`# Altitude evaluation package\nVersion ${pkg.version}. Condition: ${condition}.\nUse the installed public exports. ${condition==='framework'?'Workflow hooks and guidance are available.':condition==='guidance'?'Design guidance is available; implement workflows using the primitive exports. Workflow hook implementations are intentionally absent.':'Primitive components are available.'}\n`);
  const packed=firstPacked(JSON.parse(execFileSync('npm',['pack','--json','--ignore-scripts'],{cwd:folder,encoding:'utf8'})));
