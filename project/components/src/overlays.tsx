@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { cx, Icons, Layer, useAltitude, useControllable, useIsoLayoutEffect, useOutside, usePresence } from './core';
+import { cx, Icons, Layer, useControllable, useIsoLayoutEffect, useOutside, usePresence } from './core';
 import { Button } from './controls';
+import { ModalOwner, modalDocument, tabbables, useAltitudeContext } from './modal-state';
 
 const EXIT_3 = 160; // ≈ dur-travel-3 × 0.7
 const EXIT_4 = 190; // ≈ dur-travel-4 × 0.7
@@ -235,79 +236,84 @@ export function HoverCard({ trigger, children, side = 'bottom', align = 'start',
 
 /* ───────────────────────── Modal layers ───────────────────────── */
 
-/**
- * One summit: Dialog and CommandPalette sit at level 5, and only one thing may sit there at a time.
- * They register here while open, so others (the palette's ⌘K, a Sheet) can tell the summit is taken.
- */
-let summits = 0;
-export const summitTaken = () => summits > 0;
+/** The summit is shared by every provider in the same document. */
+export const summitTaken = (doc: Document = document) => !!modalDocument(doc).owners.find(o => o.summit && !o.retired);
 
 export interface ModalOptions {
   open: boolean;
   onDismiss: () => void;
-  /** How long the closed pose stays mounted (the exit runs at 70% of the entry). */
   exitMs: number;
   panel: React.RefObject<HTMLElement | null>;
-  /** Blocks the page: the stage recedes, scroll locks and Tab is trapped. Default true. */
   modal?: boolean;
-  /** Escape closes. Default true. */
   dismissible?: boolean;
-  /** Takes level 5 (Dialog, CommandPalette). Default false. */
   summit?: boolean;
-  /** Move focus into the panel once it has risen. Default true. */
   autoFocus?: boolean;
   focusSelector?: string;
-  /** Put focus back where it was on close. Default: autoFocus. */
   restoreFocus?: boolean;
+  background?: 'recede' | 'stationary';
+  returnFocus?: () => HTMLElement | null;
 }
-/**
- * The machinery every layer above the page shares: presence (mount, rise, exit), the receding page,
- * scroll lock, focus in and back out, Escape and the Tab trap. Dialog, Sheet and CommandPalette use it.
- */
 export const MODAL_FOCUS = '[data-autofocus], input, textarea, select';
 export function useModal({ open, onDismiss, exitMs, panel, modal = true, dismissible = true, summit = false, autoFocus = true,
-  focusSelector = MODAL_FOCUS, restoreFocus = autoFocus }: ModalOptions) {
-  const ctx = useAltitude();
-  const restore = React.useRef<HTMLElement | null>(null);
-  const presence = usePresence(open, exitMs);
-
-  React.useEffect(() => {
-    if (!open) return;
-    restore.current = document.activeElement as HTMLElement;
-    const pop = modal ? ctx?.pushLayer() : undefined;
-    const prev = document.body.style.overflow;
-    if (modal) document.body.style.overflow = 'hidden';
-    if (summit) summits++;
-    return () => {
-      pop?.();
-      if (modal) document.body.style.overflow = prev;
-      if (summit) summits--;
-      if (restoreFocus) restore.current?.focus?.({ preventScroll: true });
-    };
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  React.useEffect(() => {
-    if (presence.state !== 'open' || !autoFocus) return;
-    let raf = 0;
-    const tryFocus = () => {
-      if (!panel.current) { raf = requestAnimationFrame(tryFocus); return; }
-      const f = panel.current.querySelector<HTMLElement>(focusSelector);
-      (f || panel.current).focus({ preventScroll: true });
-    };
-    tryFocus();
-    return () => cancelAnimationFrame(raf);
-  }, [presence.state]); // eslint-disable-line react-hooks/exhaustive-deps
-
+  focusSelector = MODAL_FOCUS, restoreFocus = autoFocus, background = 'recede', returnFocus }: ModalOptions) {
+  const ctx = useAltitudeContext();
+  const [rejected, setRejected] = React.useState(false);
+  const presence = usePresence(open && !rejected, exitMs);
+  const owner = React.useRef<ModalOwner | null>(null);
+  const invoker = React.useRef<HTMLElement | null>(null);
+  const wasOpen = React.useRef(false);
+  const explicitInvoker = React.useRef(false);
+  if (open && !wasOpen.current) {
+    if (!explicitInvoker.current && typeof document !== 'undefined') invoker.current = document.activeElement as HTMLElement;
+    explicitInvoker.current = false;
+  }
+  wasOpen.current = open;
+  const latest = React.useRef({ open, modal, summit, autoFocus, restoreFocus, focusSelector, background, returnFocus, provider: ctx?.provider ?? null });
+  latest.current = { open, modal, summit, autoFocus, restoreFocus, focusSelector, background, returnFocus, provider: ctx?.provider ?? null };
+  if (owner.current) Object.assign(owner.current, latest.current);
+  const rootRef = React.useCallback((root: HTMLDivElement | null) => {
+    if (!root) {
+      const previous = owner.current;
+      if (previous) modalDocument(previous.panel.ownerDocument).remove(previous);
+      owner.current = null;
+      return;
+    }
+    if (!panel.current || !latest.current.open) return;
+    const captured = invoker.current?.ownerDocument === root.ownerDocument ? invoker.current : root.ownerDocument.activeElement as HTMLElement;
+    const next: ModalOwner = { ...latest.current, root, panel: panel.current, invoker: captured, retired: false };
+    owner.current = next;
+    if (!modalDocument(root.ownerDocument).add(next)) setRejected(true);
+  }, [panel]);
+  useIsoLayoutEffect(() => {
+    if (!open && rejected) setRejected(false);
+    const own = owner.current;
+    if (own) {
+      const state = modalDocument(own.panel.ownerDocument);
+      // A handoff retires the root before its exit unmounts. A fresh open during
+      // that interval must reacquire ownership; no ref callback will run again.
+      if (open && own.retired && !rejected) {
+        own.retired = false; own.root.hidden = false; own.lastFocus = null;
+        own.invoker = invoker.current?.ownerDocument === own.panel.ownerDocument ? invoker.current : own.panel.ownerDocument.activeElement as HTMLElement;
+        if (!state.add(own)) setRejected(true);
+      } else state.reconcile();
+    }
+  });
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape' && dismissible) { e.stopPropagation(); onDismiss(); }
-    if (!modal || e.key !== 'Tab' || !panel.current) return;
-    const f = [...panel.current.querySelectorAll<HTMLElement>('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')].filter((el) => !el.hasAttribute('disabled'));
-    if (!f.length) return;
-    const first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    const own = owner.current;
+    if (!own || own.retired || (modal && modalDocument(own.panel.ownerDocument).active !== own)) return;
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Escape' && dismissible && !e.repeat && open) { e.preventDefault(); e.stopPropagation(); onDismiss(); }
+    if (!modal || e.key !== 'Tab') return;
+    const controls = tabbables(own.panel);
+    const focused = own.panel.ownerDocument.activeElement;
+    const i = controls.indexOf(focused as HTMLElement);
+    if (!controls.length) { e.preventDefault(); own.panel.focus({ preventScroll: true }); }
+    else if (i < 0 || (e.shiftKey ? i === 0 : i === controls.length - 1)) {
+      e.preventDefault(); controls[e.shiftKey ? controls.length - 1 : 0].focus({ preventScroll: true });
+    }
   };
-  return { ...presence, onKeyDown };
+  return { ...presence, mounted: presence.mounted && !rejected, onKeyDown, rootRef,
+    captureInvoker: (el: HTMLElement) => { explicitInvoker.current = true; invoker.current = el; if (owner.current) owner.current.invoker = el; } };
 }
 
 /* ───────────────────────── Dialog ───────────────────────── */
@@ -323,28 +329,32 @@ export interface DialogProps {
   size?: 'sm' | 'md' | 'lg';
   /** Set false for decisions that must be answered: the scrim and Escape won't close it. */
   dismissible?: boolean;
-  /** Where focus goes once it has risen: the first field (the default), the title (for a read surface), or nowhere (you move it yourself). */
+  /** Initial focus: the first field (default), the title, or false for a safe panel fallback until the application moves focus inside. */
   initialFocus?: 'first-field' | 'title' | false;
   /** What 'first-field' looks for. Default '[data-autofocus], input, textarea, select'; the panel itself if nothing matches. */
   focusSelector?: string;
+  /** Keep the background in place and remove scrim blur; default 'recede'. Modality is unchanged. */
+  background?: 'recede' | 'stationary';
+  /** Lazy fallback when the captured invoker can no longer receive focus. */
+  returnFocus?: () => HTMLElement | null;
   className?: string;
 }
 export function Dialog({ open, defaultOpen = false, onOpenChange, trigger, title, description, children, footer, size = 'md', dismissible = true,
-  initialFocus = 'first-field', focusSelector = MODAL_FOCUS, className }: DialogProps) {
+  initialFocus = 'first-field', focusSelector = MODAL_FOCUS, background = 'recede', returnFocus, className }: DialogProps) {
   const [isOpen, set] = useControllable(open, defaultOpen, onOpenChange);
   const panel = React.useRef<HTMLDivElement>(null);
   const id = React.useId();
-  const { mounted, state, onKeyDown } = useModal({ open: isOpen, onDismiss: () => set(false), exitMs: EXIT_5, panel, dismissible, summit: true,
-    autoFocus: initialFocus !== false, focusSelector: initialFocus === 'title' ? '.alt-dialog-title' : focusSelector, restoreFocus: true });
+  const { mounted, state, onKeyDown, rootRef, captureInvoker } = useModal({ open: isOpen, onDismiss: () => set(false), exitMs: EXIT_5, panel, dismissible, summit: true,
+    autoFocus: initialFocus !== false, focusSelector: initialFocus === 'title' ? '.alt-dialog-title' : focusSelector, restoreFocus: true, background, returnFocus });
 
   return (
     <>
-      {trigger && React.cloneElement(trigger, { 'aria-haspopup': 'dialog', onClick: (e: any) => { trigger.props.onClick?.(e); set(true); } })}
+      {trigger && React.cloneElement(trigger, { 'aria-haspopup': 'dialog', onClick: (e: any) => { trigger.props.onClick?.(e); captureInvoker(e.currentTarget); set(true); } })}
       {mounted && (
         <Layer>
-          <div className="alt-dialog-root" data-state={state} onKeyDown={onKeyDown}>
+          <div ref={rootRef} className="alt-dialog-root" data-state={state} data-background={background} onKeyDown={onKeyDown}>
             <div className="alt-scrim" onClick={() => dismissible && set(false)} />
-            <div ref={panel} role="dialog" aria-modal="true" aria-labelledby={`${id}-t`} aria-describedby={description ? `${id}-d` : undefined}
+            <div ref={panel} role="dialog" aria-labelledby={`${id}-t`} aria-describedby={description ? `${id}-d` : undefined}
               tabIndex={-1} className={cx('alt-dialog', className)} data-size={size}>
               <div className="alt-dialog-head">
                 <h2 className="alt-dialog-title" id={`${id}-t`} tabIndex={initialFocus === 'title' ? -1 : undefined}>{title}</h2>
@@ -395,13 +405,36 @@ export function Toaster({ className }: { className?: string }) {
   const [, force] = React.useReducer((n) => n + 1, 0);
   const [expanded, setExpanded] = React.useState(false);
   const heights = React.useRef(new Map<number, number>());
+  const remaining = React.useRef(new Map<number, number>());
+  const [element, setElement] = React.useState<HTMLElement | null>(null);
+  const documentState = element ? modalDocument(element.ownerDocument) : null;
+  const activeModal = React.useSyncExternalStore(
+    React.useCallback((fn) => documentState?.subscribe(fn) ?? (() => {}), [documentState]),
+    React.useCallback(() => documentState?.active ?? null, [documentState]), () => null);
+  const blocked = !!activeModal;
   React.useEffect(() => { subs.add(force); return () => { subs.delete(force); }; }, []);
 
-  // timers: pause while the stack is expanded (hovered or focused)
+  // Keep the remaining lifetime, including while a modal owns the document.
   React.useEffect(() => {
-    if (expanded) return;
-    const timers = toasts.filter((t) => !t.leaving && t.duration! > 0).map((t) => setTimeout(() => toast.dismiss(t.id), t.duration));
-    return () => timers.forEach(clearTimeout);
+    const liveIds = new Set(toasts.map(t => t.id));
+    for (const id of remaining.current.keys()) if (!liveIds.has(id)) remaining.current.delete(id);
+    if (expanded || blocked) return;
+    const began = performance.now();
+    const running = toasts.filter(t => !t.leaving && t.duration! > 0).map(t => {
+      const left = remaining.current.get(t.id) ?? t.duration!;
+      remaining.current.set(t.id, left);
+      return { id: t.id, timer: setTimeout(() => toast.dismiss(t.id), left) };
+    });
+    return () => running.forEach(({ id, timer }) => {
+      clearTimeout(timer); remaining.current.set(id, Math.max(0, (remaining.current.get(id) ?? 0) - (performance.now() - began)));
+    });
+  });
+  React.useEffect(() => {
+    if (!blocked || !element || !documentState) return;
+    for (const item of toasts.filter(t => !t.leaving)) {
+      const text = element.querySelector(`[data-toast-id="${item.id}"] .alt-toast-body`)?.textContent;
+      if (text) documentState.announce(item.id, text);
+    }
   });
 
   const live = toasts.filter((t) => !t.leaving);
@@ -411,7 +444,7 @@ export function Toaster({ className }: { className?: string }) {
 
   return (
     <Layer>
-      <section aria-label="Notifications" aria-live="polite" className={cx('alt-toaster', className)}
+      <section ref={setElement} aria-label="Notifications" aria-live={blocked ? "off" : "polite"} className={cx('alt-toaster', className)}
         style={{ height: expanded ? total : frontH }}
         onPointerEnter={() => setExpanded(true)} onPointerLeave={() => setExpanded(false)}
         onFocus={() => setExpanded(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setExpanded(false); }}>
@@ -426,7 +459,7 @@ export function Toaster({ className }: { className?: string }) {
           if (!t.leaving && i >= 0) offset += h + GAP;
           const I = toastIcon[t.tone || 'neutral'];
           return (
-            <div key={t.id} className="alt-toast" data-tone={t.tone} data-behind={behind ? '' : undefined} role={t.tone === 'critical' ? 'alert' : 'status'}
+            <div key={t.id} className="alt-toast" data-toast-id={t.id} data-tone={t.tone} data-behind={behind ? '' : undefined} role={blocked ? undefined : t.tone === 'critical' ? 'alert' : 'status'}
               ref={(el) => { if (el) { const nh = el.offsetHeight; if (heights.current.get(t.id) !== nh && !behind) { heights.current.set(t.id, nh); } } }}
               style={{ transform: `translateY(${y}) scale(${s})`, opacity: o, boxShadow: sh, zIndex: 100 - Math.max(i, 0), height: behind ? frontH : undefined, pointerEvents: o ? undefined : 'none' }}>
               <span className="alt-toast-icon"><I size={18} /></span>

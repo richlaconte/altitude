@@ -1499,3 +1499,23 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   .alt-avatar:is([data-status="offline"], [data-more]) .alt-avatar-face { border-color: GrayText; } .alt-avatar[data-live] .alt-avatar-face { border-width: 2px; }
   .alt-avatar[data-status="active"] .alt-avatar-lamp { forced-color-adjust: none; background: CanvasText; }
 }
+
+/* Stationary dialogs keep their context still; the dimming scrim and modal tier remain. */
+.alt-dialog-root[data-background="stationary"] > .alt-scrim,
+[data-modal-stationary] > .alt-scrim {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Single-line editing reuses Surface, Field, Input and Button state signals. */
+.alt-inline-edit { min-width: 0; }
+.alt-inline-edit-surface { min-width: 0; border-radius: var(--radius-lg); }
+.alt-inline-edit:not([data-state="read"]) .alt-inline-edit-surface { padding: var(--space-3); border: 1px solid var(--line-control); }
+.alt-inline-edit-read { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; }
+.alt-inline-edit-value { overflow-wrap: anywhere; min-width: 0; }
+.alt-inline-edit .alt-field, .alt-inline-edit .alt-input { min-width: 0; }
+.alt-inline-edit .alt-input input { width: 100%; min-width: 0; }
+.alt-inline-edit-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
+.alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
+.alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }

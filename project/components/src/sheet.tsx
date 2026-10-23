@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cx, Icons, Layer, useApproach, useControllable, useIsoLayoutEffect } from './core';
 import { Button } from './controls';
-import { summitTaken, useModal } from './overlays';
+import { useModal } from './overlays';
 
 const EXIT_4 = 190; // ≈ dur-travel-4 × 0.7
 
@@ -43,11 +43,10 @@ export function Sheet({ open, defaultOpen = false, onOpenChange, trigger, side =
   // Layer mounts its portal a render later; measuring waits for the panel to exist.
   const [panelEl, setPanelEl] = React.useState<HTMLDivElement | null>(null);
   const panelRef = React.useCallback((el: HTMLDivElement | null) => { (panel as React.MutableRefObject<HTMLDivElement | null>).current = el; setPanelEl(el); }, []);
-  // One summit: a sheet never opens above a Dialog or the CommandPalette. If it's opened under one anyway, it
-  // paints beneath it (z-overlay < z-modal) and leaves focus where it is.
-  const underSummit = React.useMemo(() => isOpen && summitTaken(), [isOpen]);
+  // The document's active owner decides whether this Sheet can take focus.
+  // A Sheet below a summit stays suspended without consulting another document.
   const close = React.useCallback(() => set(false), [set]);
-  const { mounted, state, onKeyDown } = useModal({ open: isOpen, onDismiss: close, exitMs: EXIT_4, panel, modal, dismissible, autoFocus: !underSummit });
+  const { mounted, state, onKeyDown, rootRef, captureInvoker } = useModal({ open: isOpen, onDismiss: close, exitMs: EXIT_4, panel, modal, dismissible });
   useApproach(side === 'bottom' && dismissible);
   React.useEffect(() => { if (isOpen) setDrag(null); }, [isOpen]);
 
@@ -96,14 +95,14 @@ export function Sheet({ open, defaultOpen = false, onOpenChange, trigger, side =
     <>
       {trigger && React.cloneElement(trigger, {
         'aria-haspopup': 'dialog', 'aria-expanded': isOpen,
-        onClick: (e: any) => { trigger.props.onClick?.(e); set(modal ? true : !isOpen); },
+        onClick: (e: any) => { trigger.props.onClick?.(e); captureInvoker(e.currentTarget); set(modal ? true : !isOpen); },
       })}
       {mounted && (
         <Layer>
           <SheetCtx.Provider value={ctx}>
-            <div className="alt-sheet-root" data-state={state} data-exit={!isOpen ? '' : undefined} data-modal={modal ? '' : undefined} onKeyDown={onKeyDown}>
+            <div ref={rootRef} className="alt-sheet-root" data-state={state} data-exit={!isOpen ? '' : undefined} data-modal={modal ? '' : undefined} onKeyDown={onKeyDown}>
               {modal && <div className="alt-scrim" onClick={() => dismissible && close()} />}
-              <div ref={panelRef} role="dialog" aria-modal={modal || undefined} aria-labelledby={titled ? ctx.titleId : undefined}
+              <div ref={panelRef} role="dialog" aria-labelledby={titled ? ctx.titleId : undefined}
                 aria-describedby={described ? ctx.descId : undefined} tabIndex={-1} className={cx('alt-sheet', className)}
                 data-side={side} data-size={size} data-top={edges.top ? '' : undefined} data-bottom={edges.bottom ? '' : undefined}
                 data-dragging={dragging ? '' : undefined} style={{ ...style, ...dragStyle }} {...rest}>

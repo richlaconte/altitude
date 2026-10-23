@@ -21,3 +21,5 @@ Finds and runs anything in the product from one field: the summit, at level 5, o
 - Do start actions with a verb ("Invite people") and name places plainly ("Northwind").
 - Do mark items `predicted` only when you'd be right most of the time; a wrong prediction costs a moment.
 - Don't render two palettes, and don't open a Sheet from one: one summit, and a level-4 sheet can't sit on it.
+
+The palette and Dialog share one summit per document, including across providers. Its shortcut cannot take an occupied summit. A simultaneous controlled request is rejected with a development warning; set it to `false` before trying again. Rejected requests do not queue. A selected command can close the palette and open a Dialog synchronously: callback ordering is unchanged, the exiting palette retires, and scroll/isolation ownership transfers without unlocking the page. Only the active modal has `aria-modal`; composition Enter and Escape remain with the input method.

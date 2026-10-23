@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cx, Kbd, Layer, riseDelay, useControllable, useIsoLayoutEffect } from './core';
 import { Input } from './controls';
 import { summitTaken, useModal } from './overlays';
+import { useAltitudeContext } from './modal-state';
 
 const EXIT_5 = 220; // ≈ dur-travel-5 × 0.7
 
@@ -152,19 +153,23 @@ export function CommandPalette({ items, open, defaultOpen = false, onOpenChange,
   const panelRef = React.useCallback((el: HTMLDivElement | null) => { (panel as React.MutableRefObject<HTMLDivElement | null>).current = el; setPanelEl(el); }, []);
   const id = React.useId();
   const close = React.useCallback(() => set(false), [set]);
-  const { mounted, state, onKeyDown } = useModal({ open: isOpen, onDismiss: close, exitMs: EXIT_5, panel, summit: true });
+  const { mounted, state, onKeyDown, rootRef } = useModal({ open: isOpen, onDismiss: close, exitMs: EXIT_5, panel, summit: true });
+
+  const context = useAltitudeContext();
+  const ownerDocument = context?.host?.ownerDocument ?? panelEl?.ownerDocument ?? (typeof document === 'undefined' ? null : document);
 
   // ⌘K / Ctrl+K toggles it, unless something else holds the summit.
   React.useEffect(() => {
-    if (!shortcut) return;
+    if (!shortcut || !ownerDocument) return;
     const key = shortcut.toLowerCase();
     const on = (e: KeyboardEvent) => {
+      if (e.isComposing || e.keyCode === 229) return;
       if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== key) return;
-      if (isOpen) { e.preventDefault(); set(false); } else if (!summitTaken()) { e.preventDefault(); set(true); }
+      if (isOpen) { e.preventDefault(); set(false); } else if (!summitTaken(ownerDocument)) { e.preventDefault(); set(true); }
     };
-    window.addEventListener('keydown', on);
-    return () => window.removeEventListener('keydown', on);
-  }, [shortcut, isOpen, set]);
+    ownerDocument.addEventListener('keydown', on);
+    return () => ownerDocument.removeEventListener('keydown', on);
+  }, [shortcut, isOpen, set, ownerDocument]);
   // Each opening starts from the seed (a controlled query is left as the caller has it).
   React.useEffect(() => { if (isOpen) { setInnerQuery(seed.current); setActive(0); setOnset(true); caretPlaced.current = false; } }, [isOpen]);
   // A query changed from outside (a controlled one) starts again from the best match, as typing does.
@@ -253,6 +258,7 @@ export function CommandPalette({ items, open, defaultOpen = false, onOpenChange,
     onSelect?.(r.item, r.group);
   };
   const onInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       if (!enabled.length) return;
@@ -268,9 +274,9 @@ export function CommandPalette({ items, open, defaultOpen = false, onOpenChange,
   let n = 0;
   return (
     <Layer>
-      <div className="alt-cmd-root" data-state={state} onKeyDown={onKeyDown}>
+      <div ref={rootRef} className="alt-cmd-root" data-state={state} onKeyDown={onKeyDown}>
         <div className="alt-scrim" onClick={close} />
-        <div ref={panelRef} role="dialog" aria-modal="true" aria-label={label} tabIndex={-1} className={cx('alt-cmd', className)} data-ephemeral={ephemeral ? '' : undefined}>
+        <div ref={panelRef} role="dialog" aria-label={label} tabIndex={-1} className={cx('alt-cmd', className)} data-ephemeral={ephemeral ? '' : undefined}>
           <div className="alt-cmd-head">
             <Input className="alt-cmd-field" value={query} placeholder={placeholder} autoComplete="off" spellCheck={false}
               role="combobox" aria-label={placeholder.replace(/[….]+$/, '')} aria-expanded={flat.length > 0} aria-controls={`${id}-list`}

@@ -52,6 +52,18 @@ site/      the landing page (React, built from the components' own sources into 
 
 There is one source for each thing. Components live in `project/components/src`, styles in `project/components/bundle.css`, tokens in `project/tokens.json`, and each component's preview in `build/previews.txt`. The npm package, the Storybook stories and the design system's own previews are all generated from those.
 
+## Actions in place
+
+[Actions in place](project/ActionsInPlace.md) covers single-value editing with `InlineEdit`, direct actions with real recovery, and targeted confirmation with `Dialog background="stationary"`.
+
+After `npm run storybook`, open the generated examples:
+
+- [Inline editing and its comparison baseline](http://localhost:6006/?path=/story/inputs-inlineedit--preview).
+- [Default and stationary dialog presentation](http://localhost:6006/?path=/story/overlays-dialog--preview).
+- [Act and recover](http://localhost:6006/?path=/story/patterns-actionsinplace--preview). “Open complete Files example” selects the same example's `#files` view.
+
+The [validation record](project/ActionsInPlaceValidation.md) separates engineering checks from outstanding human evaluation.
+
 ## Working on it
 
 ```sh

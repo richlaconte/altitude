@@ -16,4 +16,5 @@ Several alerts as a **stack of sheets**, the same language as `Pile`. The first 
 **You provide:** for `Alert`, `tone`, `title`, optional body as children, optional `action` (a small Button), `variant`, `onDismiss`. For `AlertStack`, keyed `Alert` children in order of importance, and optionally `expanded`/`onExpandedChange`, `moreLabel`, `lessLabel`.
 
 - Keep it to a title and one sentence.
-- Don't use an Alert for something that just happened because of the person's action; that's a Toast.
+- Generic action-completion messages belong in a Toast. A narrow exception is an **ongoing recoverable condition** that asks for action: ‘Brand guidelines.pdf is archived’ with Undo uses a raised neutral Alert. Keep a durable recovery destination such as Archived → Restore; a timed notification must not be the only recovery path. See [Actions in place](../../ActionsInPlace.md).
+- Key a replaced recovery Alert by its operation ID, and let its delayed `onDismiss` clear state only when that ID is still current. Dismissing an old Alert must not hide a newer action’s recovery.

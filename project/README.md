@@ -60,3 +60,9 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 - Wrap the app once in `AltitudeProvider`. It sets the scheme, derives a custom accent, honors reduced motion and high contrast, and hosts dialogs and toasts so the page can recede behind them. Render `Toaster` once inside it.
 - Put depth signals on any `Surface` or `Card` with props: `settle` (afterglow when a value changes), `status` (pending, committed, failed), `heldBy` (a collaborator's hold) and `relevance` (match or miss). In your own components, spread `useDepth(...)` onto the element.
 - The bundle exposes everything on `window.Altitude` and expects React 18. It is a dependency-free reference implementation; the props mirror shadcn/ui, so the same styles can wrap Radix primitives in a production package.
+
+## Actions in place
+
+Finish a small edit where its value lives with `InlineEdit`. Perform a reversible action directly when the application supplies real recovery and a durable destination. Use a focused `Dialog` when the consequence requires an explicit decision. [Actions in place](ActionsInPlace.md) contains executable recipes and the integrated Files example.
+
+Editing is temporary local input; it is not a pending write. Pending begins only when persistence is dispatched. Keep committed content on the ground, and carry every live state with text, semantics or borders as well as height. Persistence, authorization, concurrency and reversibility remain application responsibilities.

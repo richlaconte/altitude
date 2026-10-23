@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
+import { AltitudeContext, ModalProvider, modalDocument, useAltitudeContext } from './modal-state';
 
 /** useLayoutEffect in the browser, useEffect on the server, where layout effects can't run (React 18 warns about them). */
 export const useIsoLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
@@ -297,9 +298,18 @@ function schemeCss(sel: string, tokens: CustomScheme['tokens']) {
 export type BuiltInScheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
 /** A built-in scheme, the name of your own [data-theme="…"] block, or a CustomScheme. */
 export type Scheme = BuiltInScheme | (string & {});
-type Ctx = { host: HTMLElement | null; pushLayer: () => () => void };
-const AltitudeContext = React.createContext<Ctx | null>(null);
-export const useAltitude = () => React.useContext(AltitudeContext);
+type Ctx = { host: HTMLElement | null; provider: ModalProvider };
+/** The nearest theme's portal host. Modal ownership stays private. */
+export const useAltitude = () => {
+  const context = useAltitudeContext();
+  return React.useMemo(() => context ? { host: context.host,
+    /** @deprecated Internal visual-only compatibility helper; use Dialog or Sheet for modal behavior. */
+    pushLayer: () => {
+      const doc = context.provider.stage?.ownerDocument ?? context.host?.ownerDocument;
+      return doc ? modalDocument(doc).vote(context.provider) : () => {};
+    },
+  } : null, [context?.host]);
+};
 
 export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivElement> {
   scheme?: Scheme | CustomScheme;
@@ -315,7 +325,15 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
 export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', recede = true, approach = true, className, style, children, ...rest }: AltitudeProviderProps) {
   const rootRef = React.useRef<HTMLDivElement>(null);
   const [host, setHost] = React.useState<HTMLElement | null>(null);
-  const [layers, setLayers] = React.useState(0);
+  const parent = useAltitudeContext();
+  const provider = React.useRef<ModalProvider>({ stage: null, parent: parent?.provider ?? null, recede, owners: new Set(), legacy: new Set() }).current;
+  provider.recede = recede;
+  provider.parent = parent?.provider ?? null;
+  useIsoLayoutEffect(() => {
+    const doc = provider.stage?.ownerDocument;
+    return () => { if (doc) modalDocument(doc).releaseProvider(provider); };
+  }, [provider]);
+  useIsoLayoutEffect(() => { if (provider.stage && provider.owners.size) modalDocument(provider.stage.ownerDocument).reconcile(); });
   const [accentVars, setAccentVars] = React.useState<React.CSSProperties | null>(null);
   const custom = scheme && typeof scheme === 'object' ? scheme : null;
   const schemeKey = custom ? JSON.stringify(custom) : (scheme as string | undefined);
@@ -347,7 +365,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
 
   const api = React.useMemo<Ctx>(() => ({
     host,
-    pushLayer: () => { setLayers((n) => n + 1); return () => setLayers((n) => n - 1); },
+    provider,
   }), [host]);
 
   return (
@@ -357,7 +375,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
         data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined}
         data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>
         {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
-        <div className="alt-stage" data-receded={recede && layers > 0 ? '' : undefined}>{children}</div>
+        <div className="alt-stage" ref={(el) => { provider.stage = el; }}>{children}</div>
         <div className="alt-layers" ref={setHost} />
       </div>
     </AltitudeContext.Provider>
@@ -366,9 +384,9 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
 
 /** Renders into the provider's layer host (inside the theme, outside the receding stage), else document.body. */
 export function Layer({ children }: { children: React.ReactNode }) {
-  const ctx = useAltitude();
+  const ctx = useAltitudeContext();
   const [ready, setReady] = React.useState(false);
-  React.useEffect(() => setReady(true), []);
+  useIsoLayoutEffect(() => setReady(true), []);
   if (!ready) return null;
   const target = ctx ? ctx.host : document.body;
   return target ? createPortal(children, target) : null;

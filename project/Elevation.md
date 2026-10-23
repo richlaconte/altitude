@@ -96,3 +96,9 @@ Rules that follow:
 ## Paint order
 
 `z-floating`, `z-overlay`, `z-modal` and `z-toast` follow altitude, with one exception: toasts paint above a dialog so status is never hidden behind it, even though they are visually one level lower.
+
+## Small actions in their context
+
+[Actions in place](ActionsInPlace.md) applies these existing signals to everyday work. `InlineEdit` keeps a single value in its location; its static raised editor uses the existing field and button treatments. Only a dispatched save uses pending, a known failure retains input, and accepted canonical content settles back to the ground.
+
+An ongoing recoverable condition may use a raised actionable Alert with Undo, backed by the application's real inverse operation and durable recovery destination. A Dialog can keep its background stationary while retaining the level 5 panel, dimming, isolation and focus ownership. This adds no elevation tier and changes no meaning of the record.

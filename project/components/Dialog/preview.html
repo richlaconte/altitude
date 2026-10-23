@@ -1,8 +1,9 @@
-<!-- @dsCard group="Overlays" height=380 subtitle="Level 5: the page recedes beneath it" -->
+<!-- @dsCard group="Overlays" height=620 subtitle="A focused decision; the background can stay in place" -->
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dialog — Altitude</title>
 <style>
 #root { padding: 20px 24px; }
@@ -10,39 +11,239 @@
 .col { display: flex; flex-direction: column; gap: 14px; }
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
-.page { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.page > * { height: 80px; }
+.dialog-demo { max-width: 720px; margin: auto; display: grid; gap: 20px; }
+.dialog-demo h1 { font: 600 24px/1.2 var(--font-sans); margin: 0; }
+.dialog-demo h2 { margin: 0; font: 600 19px/1.4 var(--font-sans); }
+.dialog-file { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.dialog-file > div { min-width: 0; overflow-wrap: anywhere; }
+.dialog-file p { margin: 4px 0 0; }
+.dialog-demo details { border-top: 1px solid var(--line); padding-top: 16px; }
+.dialog-demo details .row { margin-top: 12px; }
+.dialog-demo select { padding: 8px; max-width: 100%; font: inherit; color: var(--ink); background: var(--surface-well); border: 1px solid var(--line-control); border-radius: var(--radius-md); }
+.dialog-target { overflow-wrap: anywhere; }
+@media (max-width: 420px) { .dialog-file { align-items: flex-start; flex-direction: column; } }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script>
 var A = window.Altitude;
+const dialogFiles = [
+  { id: "file-brand", name: "Brand guidelines.pdf", folder: "Brand", revision: 1 },
+  { id: "file-brand-draft", name: "Brand guidelines draft.pdf", folder: "Brand", revision: 1 },
+  { id: "file-launch", name: "Launch checklist.md", folder: "Launch", revision: 1 }
+];
+function ModalFrameFixture() {
+  const [open, setOpen] = React.useState(false), [sheet, setSheet] = React.useState(false);
+  React.useEffect(() => {
+    window.altitudeModalFrameFixture = { setOpen, setSheet };
+    return () => {
+      delete window.altitudeModalFrameFixture;
+    };
+  }, []);
+  return /* @__PURE__ */ React.createElement(A.AltitudeProvider, null, /* @__PURE__ */ React.createElement("p", null, "Independent document fixture"), /* @__PURE__ */ React.createElement(A.Button, { "data-frame-trigger": true, onClick: () => setOpen(true) }, "Open frame palette"), /* @__PURE__ */ React.createElement(A.CommandPalette, { open, onOpenChange: setOpen, items: [{ items: [{ label: "Frame command" }] }] }), /* @__PURE__ */ React.createElement(A.Sheet, { open: sheet, onOpenChange: setSheet }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Frame sheet")), /* @__PURE__ */ React.createElement(A.Input, { "aria-label": "Frame input" })));
+}
 function App() {
-  const [open, setOpen] = React.useState(true);
-  const [note, setNote] = React.useState(false);
-  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setOpen(true) }, "Delete project\u2026"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setNote(true) }, "View release note")), /* @__PURE__ */ React.createElement("div", { className: "page" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement(
-    A.Dialog,
-    {
-      open: note,
-      onOpenChange: setNote,
-      initialFocus: "title",
-      title: "Release 2.4",
-      description: "Published by Mara Quist on 12 March.",
-      footer: /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setNote(false) }, "Edit note")
+  const altitude = A.useAltitude();
+  const releaseLegacy = React.useRef(null);
+  const [rows, setRows] = React.useState(dialogFiles);
+  const server = React.useRef(dialogFiles.map((file) => ({ ...file })));
+  const heading = React.useRef(null);
+  const [target, setTarget] = React.useState(null);
+  const [open, setOpen] = React.useState(false);
+  const opened = React.useRef(false);
+  opened.current = open;
+  const [background, setBackground] = React.useState("stationary");
+  const [fixture, setFixture] = React.useState(new URLSearchParams(window.location.search).get("fixture") || "success-100");
+  const [operation, setOperation] = React.useState(null);
+  const [outcome, setOutcome] = React.useState("");
+  const [present, setPresent] = React.useState(true);
+  const session = React.useRef(0), sequence = React.useRef(0), pending = React.useRef(/* @__PURE__ */ new Set());
+  const failUsed = React.useRef(false), accepted = React.useRef([]);
+  const invocation = React.useRef(null), mounted = React.useRef(false), epoch = React.useRef(0);
+  const [frame, setFrame] = React.useState(false);
+  const frameRoot = React.useRef(null);
+  const [mode, setMode] = React.useState("");
+  const [sheet, setSheet] = React.useState(false), [nonmodal, setNonmodal] = React.useState(false);
+  const [palette, setPalette] = React.useState(false), [competing, setCompeting] = React.useState(false);
+  const [controls, setControls] = React.useState(true), [inserted, setInserted] = React.useState(false);
+  const [nestedPresent, setNestedPresent] = React.useState(true);
+  const [nested, setNested] = React.useState(false), [toastActions, setToastActions] = React.useState(0);
+  const latest = React.useRef({});
+  React.useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      epoch.current++;
+    };
+  }, []);
+  const begin = (file, invoker) => {
+    if (pending.current.has(file.id)) {
+      setOutcome(`Deletion is already in progress for \u201C${file.name}\u201D.`);
+      return;
+    }
+    session.current++;
+    invocation.current = invoker || document.activeElement;
+    setTarget({ ...file, session: session.current });
+    setOperation(null);
+    setOpen(true);
+    setPresent(true);
+  };
+  const finish = (captured, id, result, ownEpoch) => {
+    pending.current.delete(captured.id);
+    if (!mounted.current || ownEpoch !== epoch.current) return;
+    const matching = session.current === captured.session;
+    if (result === "success") {
+      const restoreRemoved = !opened.current && document.activeElement === invocation.current && matching;
+      setRows(server.current.map((file) => ({ ...file })));
+      setOutcome(`Deleted \u201C${captured.name}\u201D.`);
+      if (matching) {
+        setOperation({ id, session: captured.session, state: "done" });
+        setOpen(false);
+      }
+      if (restoreRemoved) requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
+    } else {
+      const message = result === "conflict" ? "This file changed. Close this dialog and review the latest file before deleting." : "The file was not deleted. Try again.";
+      if (matching && opened.current) setOperation({ id, session: captured.session, state: result, message, current: server.current.find((file) => file.id === captured.id) });
+      else setOutcome(`\u201C${captured.name}\u201D: ${message}`);
+    }
+  };
+  const confirm = async () => {
+    if (!target || pending.current.has(target.id)) return;
+    const captured = { ...target }, id = `delete-${++sequence.current}`, ownEpoch = epoch.current, behavior = fixture;
+    pending.current.add(captured.id);
+    setOperation({ id, session: captured.session, state: "pending" });
+    const request = { id: captured.id, expectedRevision: captured.revision, operationId: id, outcome: "pending" };
+    accepted.current.push(request);
+    const reject = behavior === "fail-once" && !failUsed.current;
+    if (reject) failUsed.current = true;
+    if (behavior === "unmount") setTimeout(() => {
+      if (epoch.current === ownEpoch && mounted.current) {
+        setPresent(false);
+        setOpen(false);
+      }
+    }, 50);
+    if (behavior === "interrupted-after-save") {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (ownEpoch !== epoch.current) return;
+      const record = server.current.find((file) => file.id === captured.id);
+      if (record?.revision === captured.revision) server.current = server.current.filter((file) => file.id !== captured.id);
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+    } else await new Promise((resolve) => setTimeout(resolve, behavior === "success-1200" || reject || behavior === "conflict" ? 1200 : 100));
+    if (ownEpoch !== epoch.current) return;
+    if (behavior === "conflict") {
+      server.current = server.current.map((file) => file.id === captured.id ? { ...file, name: "Brand guidelines revised.pdf", revision: file.revision + 1 } : file);
+      setRows(server.current);
+    }
+    const current = server.current.find((file) => file.id === captured.id);
+    let result = !current || current.revision !== captured.revision ? "conflict" : reject || behavior === "interrupted-before-save" ? "failure" : "success";
+    if (result === "success") server.current = server.current.filter((file) => file.id !== captured.id);
+    if (behavior.startsWith("interrupted")) {
+      if (mounted.current && session.current === captured.session && opened.current) setOperation({ id, session: captured.session, state: "checking" });
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      result = server.current.some((file) => file.id === captured.id) ? "failure" : "success";
+    }
+    request.outcome = result;
+    finish(captured, id, result, ownEpoch);
+  };
+  const reset = () => {
+    epoch.current++;
+    sequence.current = 0;
+    failUsed.current = false;
+    accepted.current = [];
+    pending.current.clear();
+    server.current = dialogFiles.map((file) => ({ ...file }));
+    setRows(server.current);
+    setOpen(false);
+    setOutcome("");
+    setOperation(null);
+    setPresent(true);
+    setMode("");
+    setSheet(false);
+    setNonmodal(false);
+    setPalette(false);
+    setCompeting(false);
+    setNested(false);
+  };
+  latest.current = {
+    legacyVote: () => {
+      releaseLegacy.current = altitude.pushLayer();
     },
-    /* @__PURE__ */ React.createElement("p", { className: "body" }, "Deployments now keep their logs for 30 days. Preview links work for anyone on the team, and rollbacks finish in under a minute.")
-  ), /* @__PURE__ */ React.createElement(
+    legacyRelease: () => releaseLegacy.current?.(),
+    begin,
+    reset,
+    setFrame,
+    setMode,
+    setSheet,
+    setNonmodal,
+    setPalette,
+    setCompeting,
+    setNested,
+    setNestedPresent,
+    setControls,
+    setInserted,
+    setPresent,
+    setBackground,
+    setFixture,
+    close: () => setOpen(false),
+    confirm,
+    openFirst: () => begin(server.current[0]),
+    changeTarget: () => {
+      server.current = server.current.map((file) => file.id === target?.id ? { ...file, name: file.name.replace(".pdf", " revised.pdf"), revision: file.revision + 1 } : file);
+      setRows(server.current);
+    },
+    notify: () => A.toast({ title: "Background update", duration: 1200, action: { label: "Undo background change", onClick: () => setToastActions((n) => n + 1) } }),
+    snapshot: () => ({ rows, operation, requests: sequence.current, accepted: accepted.current, toastActions, session: session.current, open })
+  };
+  React.useEffect(() => {
+    window.altitudeModalFixture = new Proxy({}, { get: (_, key) => latest.current[key] });
+    return () => {
+      delete window.altitudeModalFixture;
+    };
+  }, []);
+  const busy = operation?.session === target?.session && ["pending", "checking"].includes(operation?.state);
+  const failed = operation?.session === target?.session && ["failure", "conflict"].includes(operation?.state);
+  return /* @__PURE__ */ React.createElement("div", { className: "dialog-demo" }, /* @__PURE__ */ React.createElement("header", null, /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Files / Archived"), /* @__PURE__ */ React.createElement("h1", { ref: heading, tabIndex: -1 }, "Archived files")), /* @__PURE__ */ React.createElement("p", { className: "body" }, "Archived files can be restored. Permanently deleted files cannot."), /* @__PURE__ */ React.createElement("section", { "aria-label": "Archived files" }, rows.map((file) => /* @__PURE__ */ React.createElement("div", { className: "dialog-file", key: file.id }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, file.name), /* @__PURE__ */ React.createElement("p", { className: "cap" }, file.folder)), /* @__PURE__ */ React.createElement(A.Button, { "data-file": file.id, onClick: (event) => begin(file, event.currentTarget) }, "Delete permanently")))), /* @__PURE__ */ React.createElement("p", { role: "status", "data-outcome": true }, outcome), present && /* @__PURE__ */ React.createElement(
     A.Dialog,
     {
       open,
       onOpenChange: setOpen,
+      background,
       size: "sm",
-      title: "Delete \u201CNorthwind\u201D?",
-      description: "This removes 14 deployments and their logs. It can't be undone.",
-      footer: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => setOpen(false) }, "Cancel"), /* @__PURE__ */ React.createElement(A.Button, { variant: "danger", onClick: () => setOpen(false), "data-autofocus": true }, "Delete project"))
-    }
-  ));
+      title: "Delete this file permanently?",
+      description: `\u201C${target?.name || ""}\u201D will be removed. You won\u2019t be able to restore it.`,
+      focusSelector: "[data-cancel]",
+      returnFocus: () => heading.current,
+      footer: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { "data-cancel": true, variant: "ghost", onClick: () => setOpen(false) }, busy ? "Close" : "Cancel"), /* @__PURE__ */ React.createElement(A.Button, { "data-confirm": true, variant: "danger", disabled: busy || operation?.state === "conflict", onClick: confirm }, busy ? operation?.state === "checking" ? "Checking deletion\u2026" : "Deleting\u2026" : failed ? "Try deleting again" : "Delete permanently"))
+    },
+    /* @__PURE__ */ React.createElement("p", { className: "body dialog-target" }, target?.name, /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "cap" }, target?.folder)),
+    busy && /* @__PURE__ */ React.createElement("p", { role: "status" }, "Deletion is in progress. Closing this dialog won\u2019t cancel it."),
+    failed && /* @__PURE__ */ React.createElement(A.Alert, { tone: "critical", title: "File not deleted" }, operation.message, operation.state === "conflict" && /* @__PURE__ */ React.createElement("p", null, "Latest file: ", operation.current?.name || "No longer available"))
+  ), /* @__PURE__ */ React.createElement("details", null, /* @__PURE__ */ React.createElement("summary", null, "Demo controls"), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement("label", null, "Background ", /* @__PURE__ */ React.createElement("select", { "aria-label": "Dialog background", value: background, onChange: (event) => setBackground(event.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "stationary" }, "Stationary"), /* @__PURE__ */ React.createElement("option", { value: "recede" }, "Default recession"))), /* @__PURE__ */ React.createElement("label", null, "Service fixture ", /* @__PURE__ */ React.createElement("select", { "aria-label": "Service fixture", value: fixture, onChange: (event) => setFixture(event.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "success-100" }, "Success \xB7 100 ms"), /* @__PURE__ */ React.createElement("option", { value: "success-1200" }, "Slow success \xB7 1,200 ms"), /* @__PURE__ */ React.createElement("option", { value: "fail-once" }, "Fail once, then retry"), /* @__PURE__ */ React.createElement("option", { value: "conflict" }, "Record changes before save"), /* @__PURE__ */ React.createElement("option", { value: "interrupted-after-save" }, "Connection interrupted after save"), /* @__PURE__ */ React.createElement("option", { value: "interrupted-before-save" }, "Connection interrupted before save"), /* @__PURE__ */ React.createElement("option", { value: "unmount" }, "Unmount presentation during write"))), /* @__PURE__ */ React.createElement(A.Button, { onClick: reset }, "Reset fixtures")), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => {
+    setControls(true);
+    setMode("title");
+  } }, "Read a structured dialog"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setMode("field") }, "Edit in a dialog"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setMode("panel") }, "Panel-only dialog"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setSheet(true) }, "Open modal sheet"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setNonmodal(true) }, "Open nonmodal sheet"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setPalette(true) }, "Open command palette"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setNested(true) }, "Open nested-provider dialog")), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Requests: ", sequence.current, ". Accepted operation log: ", /* @__PURE__ */ React.createElement("output", { "data-operation-log": true }, JSON.stringify(accepted.current))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Deterministic fictional data. Pending close, failure, conflict, unmount and ownership cases are exercised by the canonical regression harness. ", /* @__PURE__ */ React.createElement("a", { href: "https://github.com/richlaconte/altitude/blob/main/build/previews.txt" }, "Example source"), " \xB7 ", /* @__PURE__ */ React.createElement("a", { href: "../../ActionsInPlace.md" }, "Actions in place recipe")), /* @__PURE__ */ React.createElement("button", { "data-background-control": true, onClick: () => setOutcome("Background action") }, "Background control"), inserted && /* @__PURE__ */ React.createElement("button", { "data-late-background": true }, "New background control"), frame && /* @__PURE__ */ React.createElement("iframe", { srcDoc: "<!doctype html><html><head></head><body></body></html>", title: "Independent document", style: { width: "100%", height: 360 }, onLoad: (event) => {
+    const doc = event.currentTarget.contentDocument;
+    for (const style of document.querySelectorAll("style")) doc.head.append(style.cloneNode(true));
+    frameRoot.current = ReactDOM.createRoot(doc.body);
+    frameRoot.current.render(/* @__PURE__ */ React.createElement(ModalFrameFixture, null));
+  } })), /* @__PURE__ */ React.createElement(
+    A.Dialog,
+    {
+      open: !!mode,
+      onOpenChange: (value) => {
+        if (!value) setMode("");
+      },
+      title: "Modal focus fixture",
+      initialFocus: mode === "title" ? "title" : mode === "panel" ? false : "first-field",
+      dismissible: mode !== "panel",
+      background,
+      footer: mode !== "panel" && controls ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { "data-first": true }, "First control"), /* @__PURE__ */ React.createElement("button", { "data-last": true }, "Last control")) : null
+    },
+    mode === "field" && controls && /* @__PURE__ */ React.createElement(A.Input, { "aria-label": "Fixture field" }),
+    /* @__PURE__ */ React.createElement("button", { hidden: true }, "Hidden control"),
+    /* @__PURE__ */ React.createElement("button", { disabled: true }, "Disabled control")
+  ), /* @__PURE__ */ React.createElement(A.Dialog, { open: competing, onOpenChange: setCompeting, title: "Competing summit" }), /* @__PURE__ */ React.createElement(A.Sheet, { open: sheet, onOpenChange: setSheet }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "File details")), /* @__PURE__ */ React.createElement(A.Button, { "data-sheet-dialog": true, onClick: () => setMode("title") }, "Read details in dialog")), /* @__PURE__ */ React.createElement(A.Sheet, { open: nonmodal, onOpenChange: setNonmodal, modal: false }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "File filters")), /* @__PURE__ */ React.createElement(A.Button, { "data-nonmodal-close": true, onClick: () => setNonmodal(false) }, "Close filters")), /* @__PURE__ */ React.createElement(A.CommandPalette, { open: palette, onOpenChange: setPalette, items: [{ items: [{ label: "Read file details", onSelect: () => setMode("title") }] }] }), nestedPresent && /* @__PURE__ */ React.createElement(A.AltitudeProvider, { scheme: "nightfall", recede: false }, /* @__PURE__ */ React.createElement("div", { "data-nested-background": true, hidden: true }, "Nested workspace"), /* @__PURE__ */ React.createElement(A.Dialog, { open: nested, onOpenChange: setNested, title: "Nested dialog", initialFocus: "title" })), /* @__PURE__ */ React.createElement(A.Toaster, null));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

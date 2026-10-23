@@ -29,7 +29,7 @@ const preview: Preview = {
   parameters: {
     layout: 'padded',
     backgrounds: { disable: true },
-    options: { storySort: { order: ['Guide', ['Introduction', 'Elevation', 'Motion', 'Theming', 'Research'], 'Foundations', 'Actions', 'Inputs', 'Navigation', 'Display', 'Layout', 'Overlays'] } },
+    options: { storySort: { order: ['Guide', ['Introduction', 'Elevation', 'Motion', 'Theming', 'Research', 'Actions in place'], 'Foundations', 'Actions', 'Inputs', 'Navigation', 'Display', 'Layout', 'Overlays', 'Patterns'] } },
   },
 };
 export default preview;
