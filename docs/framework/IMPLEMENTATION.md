@@ -36,3 +36,24 @@ The user approved the full research/roadmap on 2026-10-23. This execution plan r
 - [x] Commit coherent increments, push feature branch and open/attach draft PR with evidence and unperformed checks (draft PR #11).
 
 Ownership: semantic agent owns primitive source/regressions; knowledge agent owns project/framework and guidance/CLI scripts; runtime agent owns new pattern TSX/checks. Coordinator owns integration, evaluation, preview/site, CI and delivery. Shared index/package edits are coordinated. Rebuilds are serialized by coordinator.
+
+## Next steps
+
+The work in this PR is complete; what follows comes from the [2026-10-23 pilot](../../evals/framework/results/PILOT-2026-10-23.md). PR #11 stays a draft until a maintainer decides to merge. Filing an issue or finishing an item here does not authorise merging, publishing or a version bump.
+
+1. **Fix the two protocol confounds before generating again.**
+   - Allow the documented `npm exec -- altitude *` command in the Claude invocation in `evals/framework/run.mjs`, or make the setup text and the allowlist name the same command. Check by searching a fresh trace for `permission_denied`.
+   - In `evals/framework/prepare.mjs`, rewrite the sentences in the guidance-only package's `edit-record.md` and `async-collection.md` that name runtime exports that condition omits. Add a preflight assertion that no guidance-only document names an omitted export.
+2. **Freeze the assessor before generating.** Record its version and hash in the run metadata. Any later correction must be applied uniformly and reported as post-hoc, keeping the superseded reports.
+3. **Extend the assessor.**
+   - Exercise the follow-up features (the description field, sort, selected count) and the scenarios currently listed as unmeasured: invalid submission, dirty leave, first-use empty and out-of-order responses.
+   - Report axe *incomplete* results.
+   - Make EVAL-SELECTION check that counts are truthful.
+   - Rename `accessibilityDefects` and `followupRegressions` so that `true` cannot be misread.
+   - Settle or exclude the Card animation that left codex-settings-framework's saved-state scan unmeasured.
+4. **Rerun the pilot with repeated samples per cell** to new evidence roots (never the 2026-10-23 ones). Reconsider the 180 s budget. Write reviews with `evals/framework/reviews/review-lib.cjs`.
+5. **Library defect candidates, not yet filed.** File one issue each with the bug template if the person you are working for agrees:
+   - Table: `.alt-table-tools` has no `flex-wrap`, so a full toolbar overflows at 320px (measured in claude-records-primitives).
+   - Textarea: the counter renders "160 / 0" under RTL without bidi isolation (claude-settings-framework screenshot).
+   - Checkbox: the `aria-hidden` track intercepts synthetic pointer clicks. Verify a real mouse click on the track before filing.
+6. **Before any user-facing claim:** run the [manual validation matrix](MANUAL-VALIDATION.md) with a screen reader and keyboard, and test in non-Chromium engines. A representative participant study remains unperformed.
