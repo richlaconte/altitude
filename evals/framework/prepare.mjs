@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { conditions, protocolVersion } from './protocol.mjs';
 import { stripPatternExports, sanitizeGuidance, sha256 } from './support.mjs';
+// npm 11 and earlier print an array from `pack --json`; npm 12 keys the result by package name.
+const firstPacked=result=>Array.isArray(result)?result[0]:Object.values(result)[0];
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const destination=resolve(process.argv[2]||join(root,'build/test/framework-eval-packages'));
 mkdirSync(destination,{recursive:true});
@@ -51,7 +53,7 @@ for(const condition of conditions){
  if(condition==='guidance') sanitizeGuidance(join(folder,'dist/guidance'));
  writeFileSync(join(folder,'package.json'),JSON.stringify(meta,null,2));
  writeFileSync(join(folder,'README.md'),`# Altitude evaluation package\nVersion ${pkg.version}. Condition: ${condition}.\nUse the installed public exports. ${condition==='framework'?'Workflow hooks and guidance are available.':condition==='guidance'?'Design guidance is available; implement workflows using the primitive exports. Workflow hook implementations are intentionally absent.':'Primitive components are available.'}\n`);
- const packed=JSON.parse(execFileSync('npm',['pack','--json','--ignore-scripts'],{cwd:folder,encoding:'utf8'}))[0];
+ const packed=firstPacked(JSON.parse(execFileSync('npm',['pack','--json','--ignore-scripts'],{cwd:folder,encoding:'utf8'})));
  manifest.packages[condition]={tarball:join(folder,packed.filename),sha256:createHash('sha256').update(readFileSync(join(folder,packed.filename))).digest('hex'),primitiveHash};
 }
 writeFileSync(join(destination,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');

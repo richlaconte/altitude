@@ -36,15 +36,15 @@ test('controlled independent assessment observes rejected writes, real accepted 
  const directory=mkdtempSync(join(tmpdir(),'altitude-assessor-browser-'));
  try{
   writeFileSync(join(directory,'run.json'),JSON.stringify({id:'assessor-browser',task:'settings',build:'passed',followup:{build:'passed'},metrics:{taskOutcome:null}}));
-  const html=`<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Workspace settings</title><style>main{max-width:100%;}label,input,button{display:block;max-width:100%;box-sizing:border-box}body{color:#111;background:#fff}</style></head><body><main><h1>Settings</h1><label for="name">Workspace name</label><input id="name"><label for="email">Contact email</label><input id="email" type="email"><button id="save">Save changes</button><p id="status" role="status"></p></main><script>
+  const html=`<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Workspace settings</title><style>main{max-width:100%;}label,input,button{display:block;max-width:100%;box-sizing:border-box}body{color:#111;background:#fff}</style></head><body><main><h1>Settings</h1><button onclick="document.getElementById('editor').hidden=false">Edit settings</button><div id="editor"><label for="name">Workspace name</label><input id="name"><label for="email">Contact email</label><input id="email" type="email"><button id="save">Save changes</button><p id="status" role="status"></p></div></main><script>
    const nameInput=document.getElementById('name'),emailInput=document.getElementById('email'),status=document.getElementById('status');let busy=false;
    fetch('/api/workspace').then(r=>r.json()).then(value=>{nameInput.value=value.name;emailInput.value=value.email;});
-   document.getElementById('save').onclick=async()=>{if(busy)return;busy=true;nameInput.readOnly=emailInput.readOnly=true;status.textContent='Saving';document.getElementById('save').textContent='Saving settings';try{const r=await fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nameInput.value,email:emailInput.value})});const value=await r.json();status.textContent=r.ok?'Changes saved':value.error;}finally{busy=false;nameInput.readOnly=emailInput.readOnly=false;document.getElementById('save').textContent='Save changes';}};
+   document.getElementById('save').onclick=async()=>{if(busy)return;busy=true;nameInput.readOnly=emailInput.readOnly=true;status.textContent='Saving';document.getElementById('save').textContent='Saving settings';try{const r=await fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nameInput.value,email:emailInput.value})});const value=await r.json();status.textContent=r.ok?'Changes saved':value.error;if(r.ok)document.getElementById('editor').hidden=true;}finally{busy=false;nameInput.readOnly=emailInput.readOnly=false;document.getElementById('save').textContent='Save changes';}};
   </script></body></html>`;
   for(const stage of ['initial','final']){mkdirSync(join(directory,stage+'-dist'));writeFileSync(join(directory,stage+'-dist','index.html'),html);}
   const result=await assessArtifact(directory);
   assert.equal(result.metrics.taskOutcome,true,JSON.stringify(result.reports));assert.equal(result.metrics.retainedInput,true);assert.equal(result.metrics.recovery,true);assert.equal(result.metrics.followupRegressions,true);
-  for(const report of result.reports){assert.equal(report.service.writes[0].outcome,'rejected');assert.equal(report.service.writes[1].outcome,'accepted');assert.equal(report.service.record.name,'Pending workspace');assert.equal(report.checks.find(check=>check.ruleId==='EVAL-DUPLICATE').passed,true);}
+  for(const report of result.reports){assert.equal(report.service.writes[0].outcome,'rejected');assert.equal(report.service.writes[1].outcome,'accepted');assert.equal(report.service.record.name,'Pending workspace');assert.equal(report.checks.find(check=>check.ruleId==='EVAL-DUPLICATE').passed,true);assert.equal(report.checks.find(check=>check.ruleId==='EVAL-STALE')?.passed,true);assert.equal(report.checks.find(check=>check.ruleId==='EVAL-PENDING-RESUBMIT')?.passed,true);}
   assert.equal(JSON.parse(readFileSync(join(directory,'run.json'),'utf8')).metrics.taskOutcome,true);
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
@@ -58,5 +58,68 @@ test('ambiguous accessible controls are unknown and do not prevent independent g
   assert.equal(initial.service.writes.length,0);assert.ok(initial.checks.filter(check=>check.ruleId==='EVAL-HARNESS').every(check=>check.passed===null));
   assert.equal(initial.metrics.taskOutcome,null);assert.equal(initial.metrics.retainedInput,null);
   assert.equal(initial.checks.find(check=>check.ruleId==='EVAL-REFLOW').passed,true);assert.equal(initial.checks.find(check=>check.ruleId==='EVAL-RUNTIME').passed,true);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test('editing while a save is pending must not re-enable a concurrent second write',async()=>{
+ const directory=mkdtempSync(join(tmpdir(),'altitude-assessor-resubmit-'));
+ try{
+  writeFileSync(join(directory,'run.json'),JSON.stringify({id:'assessor-resubmit',task:'settings',build:'passed',followup:{build:'passed'},metrics:{taskOutcome:null}}));
+  const html=`<!doctype html><html lang="en"><head><title>Workspace settings</title></head><body><main><h1>Settings</h1><label for="name">Workspace name</label><input id="name"><label for="email">Contact email</label><input id="email" type="email"><button id="save">Save changes</button><p role="status" id="status"></p></main><script>
+   const nameInput=document.getElementById('name'),emailInput=document.getElementById('email'),save=document.getElementById('save');let busy=false;
+   fetch('/api/workspace').then(r=>r.json()).then(value=>{nameInput.value=value.name;emailInput.value=value.email;});
+   nameInput.oninput=()=>{busy=false;save.disabled=false;};
+   save.onclick=async()=>{if(busy)return;busy=true;save.disabled=true;try{await fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nameInput.value,email:emailInput.value})});}finally{busy=false;save.disabled=false;}};
+  </script></body></html>`;
+  for(const stage of ['initial','final']){mkdirSync(join(directory,stage+'-dist'));writeFileSync(join(directory,stage+'-dist','index.html'),html);}
+  const result=await assessArtifact(directory);
+  for(const report of result.reports){
+   const probe=report.checks.find(check=>check.ruleId==='EVAL-PENDING-RESUBMIT');
+   assert.equal(probe?.passed,false,JSON.stringify(report.checks));assert.equal(probe.evidence.dispatchedWhilePending,1);
+   assert.equal(report.checks.find(check=>check.ruleId==='EVAL-DUPLICATE').passed,true);
+  }
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test('without a follow-up, the copied final-dist is not assessed as follow-up evidence',async()=>{
+ const directory=mkdtempSync(join(tmpdir(),'altitude-assessor-no-followup-'));
+ try{
+  writeFileSync(join(directory,'run.json'),JSON.stringify({id:'assessor-no-followup',task:'settings',build:'passed',generation:'budget-exhausted',metrics:{taskOutcome:null}}));
+  for(const stage of ['initial','final']){mkdirSync(join(directory,stage+'-dist'));writeFileSync(join(directory,stage+'-dist','index.html'),'<html lang="en"><head><title>W</title></head><body><main><h1>Settings</h1></main></body></html>');}
+  const result=await assessArtifact(directory),final=result.reports.find(report=>report.stage==='final');
+  assert.equal(final.checks.length,0);assert.match(final.unmeasured,/No follow-up/);assert.equal(result.metrics.followupRegressions,null);assert.equal(result.metrics.taskOutcome,null);
+  assert.ok(result.reports.find(report=>report.stage==='initial').checks.length>0);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test('an unguarded save is counted as duplicate even when the browser queues the second request',async()=>{
+ const directory=mkdtempSync(join(tmpdir(),'altitude-assessor-duplicate-'));
+ try{
+  writeFileSync(join(directory,'run.json'),JSON.stringify({id:'assessor-duplicate',task:'settings',build:'passed',metrics:{taskOutcome:null}}));
+  mkdirSync(join(directory,'initial-dist'));
+  writeFileSync(join(directory,'initial-dist','index.html'),`<html lang="en"><head><title>Workspace</title></head><body><main><h1>Settings</h1><label for="name">Workspace name</label><input id="name"><label for="email">Contact email</label><input id="email"><button id="save">Save</button></main><script>
+   const n=document.getElementById('name'),e=document.getElementById('email');fetch('/api/workspace').then(r=>r.json()).then(v=>{n.value=v.name;e.value=v.email;});
+   document.getElementById('save').onclick=()=>fetch('/api/workspace',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n.value,email:e.value})});
+  </script></body></html>`);
+  const initial=(await assessArtifact(directory)).reports[0];
+  const duplicate=initial.checks.find(check=>check.ruleId==='EVAL-DUPLICATE');
+  assert.equal(duplicate?.passed,false,JSON.stringify(initial.checks));assert.ok(duplicate.evidence.dispatchedWhilePending>1);
+ }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test('records: submitted search, duplicate clear actions and recovery start from a restored query',async()=>{
+ const directory=mkdtempSync(join(tmpdir(),'altitude-assessor-records-'));
+ try{
+  writeFileSync(join(directory,'run.json'),JSON.stringify({id:'assessor-records',task:'records',build:'passed',metrics:{taskOutcome:null}}));
+  mkdirSync(join(directory,'initial-dist'));
+  writeFileSync(join(directory,'initial-dist','index.html'),`<html lang="en"><head><title>Records</title></head><body><main><h1>Records</h1><form id="f"><label for="q">Search records</label><input id="q"><button>Search</button></form><button id="clear" type="button">Clear search</button><button id="refresh" type="button">Refresh</button><div id="out"></div></main><script>
+   const q=document.getElementById('q'),out=document.getElementById('out');let selected=new Set(),query='';
+   const clear=()=>{q.value='';load('');};
+   async function load(value){query=value;const r=await fetch('/api/records?q='+encodeURIComponent(value));if(!r.ok){out.innerHTML='<p>Could not load records.</p><button type="button" id="retry">Try again</button>';document.getElementById('retry').onclick=()=>load(query);return;}
+    const rows=await r.json();selected=new Set([...selected].filter(id=>rows.some(row=>row.id===id)));
+    out.innerHTML=rows.length?rows.map(row=>'<label><input type="checkbox" data-id="'+row.id+'"'+(selected.has(row.id)?' checked':'')+'><span>'+row.name+'</span></label>').join(''):'<p>No results</p><button type="button" class="c">Clear search</button>';
+    out.querySelectorAll('input').forEach(box=>box.onchange=()=>box.checked?selected.add(box.dataset.id):selected.delete(box.dataset.id));out.querySelector('.c')?.addEventListener('click',clear);}
+   document.getElementById('f').onsubmit=event=>{event.preventDefault();load(q.value);};document.getElementById('clear').onclick=clear;document.getElementById('refresh').onclick=()=>load(query);load('');
+  </script></body></html>`);
+  const initial=(await assessArtifact(directory)).reports[0],by=id=>initial.checks.find(check=>check.ruleId===id);
+  assert.equal(by('EVAL-QUERY')?.passed,true,JSON.stringify(initial.checks));assert.equal(by('EVAL-QUERY').evidence.submittedWithEnter,true);
+  assert.equal(by('EVAL-RESET')?.passed,true);assert.equal(by('EVAL-LOAD-RECOVERY')?.passed,true);assert.equal(by('EVAL-SELECTION')?.passed,true);
+  assert.equal(initial.metrics.taskOutcome,true);assert.ok(!initial.checks.some(check=>check.ruleId==='EVAL-HARNESS'));
  }finally{rmSync(directory,{recursive:true,force:true});}
 });

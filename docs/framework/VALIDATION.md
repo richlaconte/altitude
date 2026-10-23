@@ -4,7 +4,7 @@ This unreleased change was developed against main `8a4b6752080928c50836da1e0979c
 
 ## Deterministic engineering evidence
 
-The following commands passed locally on macOS with Node 26.5.0. CI uses Node 24 on Linux; its run is reported separately in the PR.
+The following commands passed locally on macOS with Node 26.5.0. GitHub CI (Node 24, Linux) passed on the implementation commit `d2ba0a0` in run [39994727602](https://github.com/richlaconte/altitude/actions/runs/39994727602); later commits are reported in the PR. After the pilot, `npm run check:framework` also passed locally under Node 24.18/npm 12.0.2. npm 12 returns `pack --json` keyed by package name, so the pack-based checks and `evals/framework/prepare.mjs` now accept both output shapes.
 
 | Check | Observed coverage |
 | --- | --- |
@@ -29,5 +29,13 @@ The framework enforces its own interaction contracts: validation and error navig
 ## Evaluation and unperformed validation
 
 The [evaluation harness](../../evals/framework/README.md) compares identical stabilized primitives under three framework conditions, with ordinary product briefs and private evaluator failures/rubrics. Live generation is excluded from CI. Generation/build success is recorded separately from executed task outcomes and independent source review. Pilot findings refine the protocol; one run per cell cannot establish effectiveness.
+
+The corrected 12-build pilot ran on 2026-10-23 with `gpt-5.6-sol` (Codex CLI 0.149.1) and `claude-opus-5-5` (Claude Code 2.1.309), 180 s per generation and follow-up. Results, defects and limits are in the [pilot report](../../evals/framework/results/PILOT-2026-10-23.md):
+
+- Eleven runs completed with passing follow-up builds. claude-records-framework exhausted its budget; its build of the partial work passed, but it had no follow-up.
+- Executed defects appeared in four runs: contrast in two Codex settings apps, 320px overflow in two Claude primitives apps, and one concurrent second write.
+- Independent AI review found further source-only defects in every condition.
+- The pilot also found protocol confounds that must be fixed before any comparison: the Claude allowlist denied the documented `npm exec -- altitude` command, and the guidance-only docs name runtime exports that condition omits.
+- The assessor was corrected twice after outcomes were visible, uniformly across all runs, with earlier reports preserved.
 
 No representative participant study, manual screen-reader session, full cross-browser review, touch-device study or complete WCAG conformance audit was performed. RTL and long content exercise layout resilience; they do not validate translated terminology. Follow the [manual validation matrix](MANUAL-VALIDATION.md) in a consuming application's real workflows before making user-facing accessibility or usability claims.

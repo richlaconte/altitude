@@ -41,6 +41,16 @@ async function unique(locator, description) {
  if(visible.length!==1)throw new Unmeasured(`${description}: found ${visible.length} visible candidates; selector adaptation or independent review required.`);
  return visible[0];
 }
+/** Several visible candidates are accepted only when exactly one, or several identically named ones, match the preferred name. */
+async function preferred(locator, prefer, description) {
+ await until(async()=>await locator.count()>0,1800);
+ const visible=[];
+ for(const candidate of await locator.all())if(await candidate.isVisible())visible.push({candidate,name:await candidate.evaluate(element=>(element.getAttribute('aria-label')||element.textContent||'').trim())});
+ if(visible.length===1)return visible[0].candidate;
+ const matches=visible.filter(entry=>prefer.test(entry.name));
+ if(matches.length===1||(matches.length>1&&matches.every(entry=>entry.name===matches[0].name)))return matches[0].candidate;
+ throw new Unmeasured(`${description}: found ${visible.length} visible candidates (${visible.map(entry=>entry.name).join(' | ')}); selector adaptation or independent review required.`);
+}
 async function settleAnimations(page) {
  return page.evaluate(async()=>{
   const deadline=performance.now()+3000;
@@ -58,9 +68,9 @@ export async function assessArtifact(runDirectory) {
  const reports=[];
  for(const stage of ['initial','final']){
   const folder=join(runDir,stage+'-dist');
-  const invalidBuild=stage==='initial'?metadata.build!=='passed':metadata.followup?.build==='failed'||metadata.build!=='passed';
+  const invalidBuild=stage==='initial'?metadata.build!=='passed':metadata.followup?.build!=='passed'||metadata.build!=='passed';
   if(!existsSync(join(folder,'index.html'))||invalidBuild){
-   reports.push({stage,checks:[],metrics:metricsFromChecks([],metadata.task),unmeasured:'No verified successful build for this stage; an old dist directory is not evidence of a successful follow-up.'});continue;
+   reports.push({stage,checks:[],metrics:metricsFromChecks([],metadata.task),unmeasured:stage==='final'&&!metadata.followup?'No follow-up was run (initial generation ineligible); final-dist duplicates the initial artifact and is not follow-up evidence.':'No verified successful build for this stage; an old dist directory is not evidence of a successful follow-up.'});continue;
   }
   let record={name:'Northwind',email:'owner@example.com',description:''},rejectWrite=false,rejectLoad=false,delay=0,writeGate=null,releaseWrites=null;
   const writes=[],loads=[];
@@ -102,6 +112,8 @@ export async function assessArtifact(runDirectory) {
   try{
    browser=await chromium.launch(process.env.CHROME?{executablePath:process.env.CHROME}:{});
    const page=await browser.newPage();page.setDefaultTimeout(2500);page.on('pageerror',error=>errors.push(error.message));
+   // Browser-side dispatch count: Chromium can hold a second same-URL write behind a pending one, hiding it from the server.
+   const dispatched=[];page.on('request',request=>{if(request.method()!=='GET'&&new URL(request.url()).pathname==='/api/workspace')dispatched.push(request.method());});
    const url=`http://127.0.0.1:${server.address().port}`;
    const axe=async(state)=>{ try{
     if(!await settleAnimations(page))throw new Unmeasured('Finite animations did not settle within 3 seconds; contrast snapshot is unstable.');
@@ -131,7 +143,8 @@ export async function assessArtifact(runDirectory) {
      check('EVAL-RETAIN','failed-save',{rejectedOperationObserved:rejected,draft:actualDraft},rejected?actualDraft.name==='Evaluation workspace'&&actualDraft.email==='evaluation@example.com':null,'A service-rejected save retains both exact entered values.','Keep drafts separate from acknowledged service data.');
      check('EVAL-TRUE-OUTCOME','failed-save',{rejectedOperationObserved:rejected,record},rejected?record.name==='Northwind'&&record.email==='owner@example.com':null,'A known failed operation does not mutate the service record. This does not score success copy.','Only claim the result actually acknowledged by the persistence service.');
      if(rejected)await axe('failed-save');
-     rejectWrite=false;const retryStart=writes.length;await(await save()).click();
+     const retryCandidate=page.getByRole('button',{name:/retry|try.*again/i});
+     rejectWrite=false;const retryStart=writes.length;await(await(await retryCandidate.count()?unique(retryCandidate,'retry action'):save())).click();
      const accepted=await until(()=>writes.slice(retryStart).some(entry=>entry.outcome==='accepted'));
      check('EVAL-SAVE','retry',{acceptedOperationObserved:accepted,record:{...record},attempts:writes.slice(retryStart)},accepted&&record.name==='Evaluation workspace'&&record.email==='evaluation@example.com','The retry reaches the API and persists both entered values.','Wire save/retry to the documented persistence operation.');
      if(accepted){
@@ -144,29 +157,46 @@ export async function assessArtifact(runDirectory) {
     await attempt('pending-duplicate-and-stale',async()=>{
      const name=await enterSettings();
      const save=await unique(page.getByRole('button',{name:/save/i}),'save action');
-     await name.fill('Pending workspace');writeGate=new Promise(resolve=>{releaseWrites=resolve;});rejectWrite=false;const before=writes.length;const saveElement=await save.elementHandle();await save.click();
+     await name.fill('Pending workspace');writeGate=new Promise(resolve=>{releaseWrites=resolve;});rejectWrite=false;const before=writes.length,dispatchStart=dispatched.length;const saveElement=await save.elementHandle();await save.click();
      await saveElement.evaluate(button=>{button.click();button.click();});
      const pending=await until(()=>writes.slice(before).some(entry=>entry.outcome==='pending'));
      if(!pending)throw new Unmeasured('No pending operation observed; duplicate/stale scenario was not established.');
      const editable=await name.isEditable();if(editable)await name.fill('Newer unsaved edit');
-     await axe('submitting');releaseWrites();writeGate=null;releaseWrites=null;await until(()=>writes.slice(before).every(entry=>entry.outcome!=='pending'));
-     check('EVAL-DUPLICATE','submitting',{attempts:writes.slice(before)},writes.length-before===1,'Repeated activation dispatches a single mutation while pending.','Set a synchronous in-flight guard before invoking the service.');
-     check('EVAL-STALE','submitting',{editableDuringPending:editable,value:await name.inputValue(),record:{...record}},!editable||(await name.inputValue())==='Newer unsaved edit','A delayed accepted response cannot erase edits made after dispatch.','Keep the newer draft, or explicitly prevent edits while the operation is pending.');
+     await axe('submitting');
+     const duplicateAttempts=dispatched.length-dispatchStart;
+     let resubmit={editableDuringPending:editable,saveEnabledAfterEdit:null,dispatchedWhilePending:null};
+     if(editable){
+      const candidates=page.getByRole('button',{name:/save|retry|try.*again/i});let enabled=null;
+      for(const candidate of await candidates.all())if(await candidate.isVisible()&&await candidate.isEnabled()){enabled=candidate;break;}
+      resubmit.saveEnabledAfterEdit=!!enabled;
+      if(enabled){const probeStart=dispatched.length;await enabled.click();await until(()=>dispatched.length>probeStart,600);resubmit.dispatchedWhilePending=dispatched.length-probeStart;}
+      else resubmit.dispatchedWhilePending=0;
+     }
+     check('EVAL-PENDING-RESUBMIT','submitting',resubmit,!editable||resubmit.dispatchedWhilePending===0,'Editing while a save is pending does not enable a second concurrent mutation; a queued save after acknowledgement is acceptable.','Keep the in-flight guard independent of draft edits, or prevent edits while pending.');
+     releaseWrites();writeGate=null;releaseWrites=null;await until(()=>writes.slice(before).every(entry=>entry.outcome!=='pending'));
+     check('EVAL-DUPLICATE','submitting',{dispatchedWhilePending:duplicateAttempts,serverAttempts:writes.slice(before)},duplicateAttempts===1,'Repeated activation dispatches a single mutation while pending.','Set a synchronous in-flight guard before invoking the service.');
+     const currentValue=await name.count()?await name.inputValue():null;
+     check('EVAL-STALE','submitting',{editableDuringPending:editable,value:currentValue,record:{...record}},!editable||currentValue==='Newer unsaved edit','A delayed accepted response cannot erase edits made after dispatch.','Keep the newer draft, or explicitly prevent edits while the operation is pending.');
     });
    }else{
     const search=()=>unique(page.getByRole('textbox',{name:/search|find/i}).or(page.getByRole('searchbox',{name:/search|find/i})),'search field');
+    // Live filtering and explicit submission are both valid; Enter is tried only when typing alone does not apply the query.
+    const submissions=[];
+    const applyQuery=async(input,value,applied)=>{await input.fill(value);if(await until(applied))return true;submissions.push(value);await input.press('Enter');return until(applied);};
+    const showsAll=async()=>await page.getByText('Atlas',{exact:true}).count()>0&&await page.getByText('Beacon',{exact:true}).count()>0;
     await attempt('query-and-reset',async()=>{
-     const input=await search();await input.fill('Atlas');
-     const found=await until(async()=>await page.getByText('Atlas',{exact:true}).count()>0&&await page.getByText('Beacon',{exact:true}).count()===0);
-     check('EVAL-QUERY','populated',{loads:loads.filter(entry=>entry.path==='/api/records'),visible:await page.locator('body').innerText()},found&&loads.some(entry=>entry.path==='/api/records'&&entry.outcome==='accepted'),'Search displays the requested subset of actual service records.','Apply the query to loaded data and reject stale responses.');
-     await input.fill('no-such-project');await until(async()=>await page.getByText('Atlas',{exact:true}).count()===0);
+     const input=await search();
+     const found=await applyQuery(input,'Atlas',async()=>await page.getByText('Atlas',{exact:true}).count()>0&&await page.getByText('Beacon',{exact:true}).count()===0);
+     check('EVAL-QUERY','populated',{loads:loads.filter(entry=>entry.path==='/api/records'),submittedWithEnter:submissions.includes('Atlas'),visible:await page.locator('body').innerText()},found&&loads.some(entry=>entry.path==='/api/records'&&entry.outcome==='accepted'),'Search displays the requested subset of actual service records.','Apply the query to loaded data and reject stale responses.');
+     await applyQuery(input,'no-such-project',async()=>await page.getByText('Atlas',{exact:true}).count()===0);
      const content=await page.locator('body').innerText();
      check('EVAL-NO-RESULTS','no-results',content,/no (?:results|records|projects|matches)|nothing|0 (?:results|records|projects)/i.test(content)?true:null,'Recognizable no-results feedback; unmatched copy requires human review, not an automatic failure.','Inspect whether feedback distinguishes zero matches from an empty collection.','contextual');await axe('no-results');
-     const reset=await unique(page.getByRole('button',{name:/clear|reset/i}),'clear/reset search');await reset.click();
+     const reset=await preferred(page.getByRole('button',{name:/clear|reset/i}),/search|query|filter/i,'clear/reset search');await reset.click();
      const restored=await until(async()=>await input.inputValue()===''&&await page.getByText('Beacon',{exact:true}).count()>0);
      check('EVAL-RESET','populated',{query:await input.inputValue(),visible:await page.locator('body').innerText()},restored,'Reset restores the query and visible service records.','Clear the query and restore the default collection.');
     });
     await attempt('failed-refresh-and-recovery',async()=>{
+     const input=await search();if(!await applyQuery(input,'',showsAll))throw new Unmeasured('Could not restore the unfiltered collection before refresh; recovery scenario not established.');
      const refresh=await unique(page.getByRole('button',{name:/refresh/i}),'refresh action');rejectLoad=true;const start=loads.length;await refresh.click();
      const rejected=await until(()=>loads.slice(start).some(entry=>entry.outcome==='rejected'));
      if(!rejected)throw new Unmeasured('No rejected refresh request observed; recovery scenario not established.');
@@ -176,9 +206,11 @@ export async function assessArtifact(runDirectory) {
      check('EVAL-LOAD-RECOVERY','recovered',{requests:loads.slice(retryStart),visible:await page.locator('body').innerText()},recovered,'Retry/refresh reloads actual service records after rejection.','Keep a reachable recovery action wired to a fresh load.');
     });
     await attempt('selection-identity',async()=>{
-     rejectLoad=false;const input=await search();await input.fill('');await until(async()=>await page.getByText('Atlas',{exact:true}).count()>0);
-     const atlas=await unique(page.getByRole('checkbox',{name:/Atlas/i}),'Atlas selection');await atlas.check();
-     await input.fill('Beacon');await until(async()=>await page.getByText('Atlas',{exact:true}).count()===0);
+     rejectLoad=false;const input=await search();await applyQuery(input,'',showsAll);
+     // Keyboard toggle: styled checkbox tracks may intercept synthetic pointer clicks while remaining operable.
+     const atlas=await unique(page.getByRole('checkbox',{name:/Atlas/i}),'Atlas selection');await atlas.focus();await page.keyboard.press('Space');
+     if(!await until(()=>atlas.isChecked(),1000))throw new Unmeasured('Space on the focused Atlas checkbox did not check it; pointer and keyboard selection require independent review.');
+     await applyQuery(input,'Beacon',async()=>await page.getByText('Atlas',{exact:true}).count()===0);
      const beacon=await unique(page.getByRole('checkbox',{name:/Beacon/i}),'Beacon selection');
      check('EVAL-SELECTION','filtered',{selectedBeacon:await beacon.isChecked()},!await beacon.isChecked(),'Filtering must not transfer Atlas selection to a different identity. Clear or preserve policies may both be valid.','Key selection by stable identity and document whether hidden selections persist.');
     });
@@ -199,8 +231,9 @@ export async function assessArtifact(runDirectory) {
  }
  const initial=reports.find(report=>report.stage==='initial'),final=reports.find(report=>report.stage==='final');
  const metrics={...(final?.metrics||metricsFromChecks([],metadata.task)),followupRegressions:metadata.followup?.build==='passed'&&initial&&final?measuredRegressions(initial.checks,final.checks):null};
- const assessment={protocolVersion:'1.0.0',assessorVersion:'1.1.0',assessedAt:new Date().toISOString(),reports,metrics,
+ const assessment={protocolVersion:'1.0.0',assessorVersion:'1.4.0',assessedAt:new Date().toISOString(),reports,metrics,
   limitations:['This pilot assessment is partial, not an accessibility/usability conformance verdict.','Per-state evidence remains authoritative; null is unmeasured, never failure or success.','Pattern selection, copy accuracy, full keyboard/AT behavior and applicability require independent human review.']};
+ if(existsSync(join(runDir,'assessment.json'))){const previous=JSON.parse(readFileSync(join(runDir,'assessment.json'),'utf8'));const stamp=previous.assessedAt.replace(/[:.]/g,'-');writeFileSync(join(runDir,`assessment-${previous.assessorVersion}-${stamp}.json`),JSON.stringify(previous,null,2)+'\n');assessment.refinement='Prior assessment preserved. Version 1.2.0 enters settings through overview, retains action handles through pending label changes, and accepts disabled/read-only fields disappearing after successful persistence. Version 1.3.0 adds a uniform pending-edit second-save probe (EVAL-PENDING-RESUBMIT) and no longer treats final-dist as follow-up evidence when no follow-up ran. Version 1.4.0 corrects instrument faults seen in 1.3.0 across all conditions: the recovery scenario restores the unfiltered query first (1.3.0 inherited a leftover no-results query), Enter submits a query when live filtering does not apply, a retry-named control is preferred after rejection, search-named reset controls resolve ambiguity, and checkboxes are toggled with Space.';}
  writeFileSync(join(runDir,'assessment.json'),JSON.stringify(assessment,null,2)+'\n');
  metadata.metrics={...metadata.metrics,...metrics};metadata.independentAssessment={path:'assessment.json',assessorVersion:assessment.assessorVersion,assessedAt:assessment.assessedAt,scope:assessment.limitations};
  writeFileSync(join(runDir,'run.json'),JSON.stringify(metadata,null,2)+'\n');

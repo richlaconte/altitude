@@ -5,9 +5,11 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync, symlinkSy
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { root } from '../../scripts/build-guidance.mjs';
+// npm 11 and earlier print an array from `pack --json`; npm 12 keys the result by package name.
+const firstPacked=result=>Array.isArray(result)?result[0]:Object.values(result)[0];
 const dir=mkdtempSync(resolve(tmpdir(),'altitude-agent-setup-'));
 try {
-  const pack=JSON.parse(execFileSync('npm',['pack','--json','--pack-destination',dir],{cwd:root,encoding:'utf8'}))[0];
+  const pack=firstPacked(JSON.parse(execFileSync('npm',['pack','--json','--pack-destination',dir],{cwd:root,encoding:'utf8'})));
   writeFileSync(resolve(dir,'package.json'),'{"name":"altitude-setup-consumer","private":true,"version":"1.0.0"}\n');
   execFileSync('npm',['install','--ignore-scripts','--legacy-peer-deps','--no-audit','--no-fund',resolve(dir,pack.filename)],{cwd:dir,stdio:'pipe'});
   const cli=resolve(dir,'node_modules/altitude-design/dist/cli/altitude.mjs');

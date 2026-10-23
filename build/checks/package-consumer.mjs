@@ -6,9 +6,11 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+// npm 11 and earlier print an array from `pack --json`; npm 12 keys the result by package name.
+const firstPacked=result=>Array.isArray(result)?result[0]:Object.values(result)[0];
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const artifact=resolve(root,'build/test/framework-consumer');mkdirSync(artifact,{recursive:true});
-const packed=JSON.parse(execFileSync('npm',['pack','--json','--ignore-scripts','--pack-destination',artifact],{cwd:root,encoding:'utf8'}))[0];
+const packed=firstPacked(JSON.parse(execFileSync('npm',['pack','--json','--ignore-scripts','--pack-destination',artifact],{cwd:root,encoding:'utf8'})));
 const consumer=mkdtempSync(join(tmpdir(),'altitude-consumer-'));
 writeFileSync(join(consumer,'package.json'),JSON.stringify({name:'altitude-consumer',type:'module',private:true}));
 execFileSync('npm',['install','--ignore-scripts','--no-audit','--no-fund',join(artifact,packed.filename),'react@19.3.0','react-dom@19.3.0','@types/react@19.3.0','@types/react-dom@19.3.0','typescript@5.6.3'],{cwd:consumer,stdio:'pipe'});

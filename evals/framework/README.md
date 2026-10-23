@@ -14,7 +14,16 @@ node evals/framework/isolate-codex.mjs
 node evals/framework/run.mjs --codex-skills build/test/codex-skill-exclusions.json --seconds 240 --codex-model gpt-5.6-sol --claude-model claude-opus-5-5
 ```
 
-Use `--packages /absolute/manifest.json`, `--out /absolute/evidence`, `--clients codex,claude`, or `--only codex-settings-framework` to select artifacts and runs. Do not reuse an evidence destination for a different pilot: preserve original traces. Evaluation is performed separately by the evaluator scripts. Never copy `evaluator/` or its rubric/injections into a generated project or its prompt.
+Use `--packages /absolute/manifest.json`, `--out /absolute/evidence`, `--clients codex,claude`, or `--only codex-settings-framework` to select artifacts and runs. Do not reuse an evidence destination for a different pilot: preserve original traces. After a run writes `run.json`, assess its saved initial/final builds separately:
+
+```sh
+node --test evals/framework/evaluator/assess.test.mjs
+node evals/framework/evaluator/assess.mjs build/test/framework-pilot/codex-settings-framework
+```
+
+The assessor serves a controlled API, checks observed writes and reloads, captures state-specific axe results and screenshots, and saves `assessment.json` alongside the run. Inspect source/trace evidence separately for guidance discovery, pattern selection, copy accuracy and omitted states. Preserve earlier reports before a justified evaluator correction and document the reason. Its generic selectors can leave valid but differently structured interfaces unmeasured; `null` is never converted to a pass or product failure. Invalid-form/dirty-leave and first-use-empty/out-of-order-query scenarios are currently listed as unmeasured by this pilot assessor; the repository workflow suite covers controlled framework behavior separately.
+
+Pending-write checks count requests dispatched by the page, not requests received by the service: Chromium can hold a second same-URL write behind a pending one, which would hide a duplicate from the server until release. `EVAL-PENDING-RESUBMIT` edits the draft while a save is held pending and activates any enabled save/retry control; a second concurrent dispatch fails, while a save queued until acknowledgement passes. When no follow-up ran, `final-dist` is a copy of the initial artifact and the final stage is reported unmeasured. Assessor corrections made during the 2026-10-23 pilot (1.2.0 to 1.4.0) are listed in each report's `refinement` field and in [the pilot report](results/PILOT-2026-10-23.md); superseded reports are kept beside `assessment.json` as `assessment-<version>-<time>.json`. `node evals/framework/results/build-evidence-index.mjs` assembles the sanitized `results/evidence-index.json`. Never copy `evaluator/` or its rubric/injections into a generated project or its prompt.
 
 `prepare` rebuilds all three runtime conditions from the same source revision and compiler options. A TypeScript parser removes only workflow re-exports for the first two conditions, including multiline and type exports. It records the shared primitive source hash and copied CSS/token hashes. Framework workflow sources remain only in the full condition. Guidance-only packages omit executable snapshots and code fences while retaining task contracts and provenance, and regenerate their integrity manifest so normal `altitude doctor` is meaningful. This is an intentionally transformed experimental package, not a publishable release.
 

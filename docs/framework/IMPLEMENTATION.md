@@ -31,8 +31,8 @@ The user approved the full research/roadmap on 2026-10-23. This execution plan r
 
 ## Increment 5 — evaluation and delivery
 - [x] Implement fresh-context three-condition harness with identical stabilized primitives; evaluator-only rubrics and failure injections.
-- [ ] Run 12-build pilot where supported, record exact tools/model/budgets and only observed results; identify unavailable dependencies.
-- [ ] Update installation/contribution/migration/release/validation records, review changes and repair findings.
-- [ ] Commit coherent increments, push feature branch and open/attach draft PR with evidence and unperformed checks.
+- [x] Run 12-build pilot where supported, record exact tools/model/budgets and only observed results; identify unavailable dependencies. See `evals/framework/results/PILOT-2026-10-23.md`; manual AT, other engines and human studies remain unperformed.
+- [x] Update installation/contribution/migration/release/validation records, review changes and repair findings. Pilot protocol confounds are recorded for the next run, not repaired in this PR.
+- [x] Commit coherent increments, push feature branch and open/attach draft PR with evidence and unperformed checks (draft PR #11).
 
 Ownership: semantic agent owns primitive source/regressions; knowledge agent owns project/framework and guidance/CLI scripts; runtime agent owns new pattern TSX/checks. Coordinator owns integration, evaluation, preview/site, CI and delivery. Shared index/package edits are coordinated. Rebuilds are serialized by coordinator.
