@@ -86,6 +86,9 @@ jobs:
           npm run build
           node scripts/record-check.mjs package-api node scripts/check-actions-package.mjs
 
+      - name: Framework contracts and installed consumer
+        run: npm run check:framework
+
       - name: Build Storybook
         run: npm run build-storybook
 
@@ -105,6 +108,17 @@ jobs:
             build/test/shot-InlineEdit-*.png
             build/test/shot-Dialog-*.png
             build/test/shot-ActionsInPlace-*.png
+          if-no-files-found: warn
+
+      - name: Keep framework contract evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: framework-contract-evidence
+          path: |
+            build/test/framework-consumer/result.json
+            build/test/framework-accessibility/
+            build/test/framework-sizes.json
           if-no-files-found: warn
 
       - name: Keep the screenshots of a failed run

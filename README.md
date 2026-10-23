@@ -1,6 +1,6 @@
 # Altitude
 
-A React component library where **height is the interface**. Its one idea: the ground is the record. Settled content sits on the ground; anything live rises above it; anything waiting to receive sinks below it.
+A design and HCI framework for agent-built React web applications, with a component foundation where **height is the interface**. Its one idea: the ground is the record. Settled content sits on the ground; anything live rises above it; anything waiting to receive sinks below it.
 
 - **Site:** https://richlaconte.github.io/altitude/
 - **Storybook:** every component, with its guidelines and a live preview in all four schemes: https://richlaconte.github.io/altitude/storybook/
@@ -105,3 +105,26 @@ The full guidance for agents is in [AGENTS.md](https://github.com/richlaconte/al
 ## License
 
 [MIT](https://github.com/richlaconte/altitude/blob/main/LICENSE)
+
+## Design and HCI framework
+
+Altitude now joins its component library with task guidance and small workflow APIs for forms, data and processes. The four initial patterns are **edit record**, **async collection**, **consequential action**, and **review and submit**. They are experimental: engineering fixtures cover their contracts; user-effectiveness studies remain outstanding.
+
+```sh
+npm install altitude-design
+npx altitude patterns "edit settings"
+npx altitude init --client codex          # preview exact changes
+npx altitude init --client codex --apply   # apply after reviewing the preview
+# Claude Code: --client claude. Both: --client all.
+npx altitude doctor --json
+```
+
+Setup preserves existing instructions and adds a small versioned pointer to the installed guidance. It never runs on package installation. Preview removal with `npx altitude init --client codex --remove`, then add `--apply` to remove only its managed content. Edited blocks are preserved and require reconciliation. Codex uses a nonempty root `AGENTS.override.md` when present; otherwise `AGENTS.md`. Claude Code uses `CLAUDE.md`. Restart the client after setup. See [setup details](docs/framework/AGENT-SETUP.md).
+
+The compact entry is `node_modules/altitude-design/dist/guidance/README.md`; the public `altitude-design/guidance` export resolves its versioned JSON index, and `altitude-design/guidance/*` exposes focused resources. `altitude explain ALT-EDIT-001` explains a rule, its scope, evidence and verification. Guidance is local and version matched; no hosted service or MCP connection is required.
+
+Import `useEditRecord`, `ErrorSummary`, `WorkflowStatus`, `useAsyncCollection`, `useConsequentialAction` and `useReviewSubmit` from the existing `altitude-design` entry. They share the existing provider/context. [Task contracts and examples](project/framework/README.md) explain application adapters and the corresponding [interactive previews](https://richlaconte.github.io/altitude/storybook/?path=/story/patterns-editrecord--preview).
+
+Framework behavior protects drafts, coordinates applicable states, guards duplicate dispatch and stale responses, and supports accessible error navigation and status feedback. Applications still supply truthful persistence, permissions, business rules, query/history policy, durable recovery and actual undo. `doctor` diagnoses installation and setup; it does not certify accessibility or usability. [Manual review](docs/framework/MANUAL-VALIDATION.md), [migration notes](docs/framework/RELEASE-NOTES.md) and the [evaluation protocol](evals/framework/README.md) state the remaining work.
+
+Run `npm run build && npm run check:framework` for deterministic semantics, workflow, guidance and packed-package consumer checks. Run agent comparisons separately using the evaluation harness; stochastic model behavior does not gate ordinary CI.

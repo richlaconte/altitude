@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "id": "consequential-action",
+  "version": 1,
+  "title": "Consequential action",
+  "intents": [
+    "delete",
+    "remove",
+    "revoke",
+    "publish",
+    "undo",
+    "recover"
+  ],
+  "purpose": "Complete a consequential operation with appropriate review or real recovery.",
+  "useWhen": [
+    "The action has meaningful impact on data or other people."
+  ],
+  "avoidWhen": [
+    "Use direct action when application-backed recovery is appropriate; avoid ritual confirmation for trivial operations."
+  ],
+  "alternatives": [
+    "Use direct action when application-backed recovery is appropriate; avoid ritual confirmation for trivial operations."
+  ],
+  "requiredInputs": [
+    "named target and consequence",
+    "execute promise",
+    "confirmation policy",
+    "optional real undo",
+    "logical focus destination"
+  ],
+  "states": [
+    "idle",
+    "confirming",
+    "pending",
+    "failure",
+    "complete",
+    "undo-pending",
+    "undo-failure",
+    "undone"
+  ],
+  "transitions": [
+    "idle \u2192 confirming or pending",
+    "confirming \u2192 idle on cancel",
+    "confirming \u2192 pending on confirm",
+    "pending \u2192 failure or complete",
+    "complete \u2192 undo-pending only with actual undo",
+    "undo-pending \u2192 undone or undo-failure"
+  ],
+  "rules": [
+    "ALT-ACTION-001",
+    "ALT-STATUS-001",
+    "ALT-EXP-001"
+  ],
+  "sources": [
+    "hold-hypothesis",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "The action has meaningful impact on data or other people.",
+  "exceptions": [
+    "Require only states supported by the application; do not fabricate capabilities."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/consequential-action.md",
+  "implementation": "project/components/src/pattern-consequential-action.tsx",
+  "examples": [
+    "build/fixtures/pattern-workflows.tsx",
+    "scripts/build-framework-fixture.mjs"
+  ],
+  "verification": [
+    "build/checks/pattern-workflows.mjs"
+  ]
+}

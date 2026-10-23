@@ -363,6 +363,7 @@ function Page() {
             <span className="mark" aria-hidden="true"><i /><i /><i /></span>Altitude
           </a>
           <nav className="nav-links" aria-label="Site">
+            <a href="#workflows">Workflows</a>
             <a href="#loading">Loading</a>
             <a href="#theming">Theming</a>
             <a href={LINKS.storybook}>Components</a>
@@ -375,10 +376,10 @@ function Page() {
         <section className="hero">
           <div className="wrap hero-grid">
             <div className="hero-copy">
-              <p className="kicker">React components · MIT licence</p>
+              <p className="kicker">Design and HCI framework · React · MIT licence</p>
               <h1 className="display">Height is the interface.</h1>
               <p className="lead">
-                Altitude is a React component library with one idea: <strong>the ground is the record.</strong> Settled content sits on the
+                Altitude is a framework for agent-built web applications with one idea: <strong>the ground is the record.</strong> Settled content sits on the
                 ground. Anything live rises above it. Anything waiting to be filled sinks below it.
               </p>
               <div className="hero-actions">
@@ -391,6 +392,27 @@ function Page() {
               <Ladder />
               <p className="caption">People read four tiers at a glance. The eight levels exist so hover and press can be felt.</p>
             </div>
+          </div>
+        </section>
+
+        <section className="band" id="workflows" aria-labelledby="workflows-title">
+          <div className="wrap">
+            <div className="section-head">
+              <p className="kicker">From intent to interaction</p>
+              <h2 className="h2" id="workflows-title">Build the whole workflow.</h2>
+              <p className="lede">Ask for settings, search, a consequential action or a request process. Altitude supplies focused design guidance, small workflow hooks and checks for the states between the first click and the actual outcome.</p>
+            </div>
+            <div className="laws">
+              {[
+                ['Edit a record', 'Validate, preserve edits after failure, retry and report the actual save outcome.', 'EditRecord'],
+                ['Find records', 'Distinguish loading, refresh, first-use emptiness, no results and failure.', 'AsyncCollection'],
+                ['Act with consequences', 'Explain the target, confirm intent where needed and offer real recovery.', 'ConsequentialAction'],
+                ['Review and send', 'Correct earlier answers, retain applicable data and keep a confirmation receipt.', 'ReviewSubmit'],
+              ].map(([title, description, story]) => <Card key={story} className="law"><CardHeader><CardTitle>{title}</CardTitle><CardDescription>{description}</CardDescription></CardHeader><CardContent><a href={LINKS.storybook + '?path=/story/patterns-' + story.toLowerCase() + '--preview'}>Try the workflow</a></CardContent></Card>)}
+            </div>
+            <div className="code-head"><h3 className="h3">Connect your agent to the installed guidance.</h3><p className="lede small">Explicit setup previews a small project instruction block. It preserves your instructions and routes the agent to the version you installed.</p></div>
+            <Code label="Preview and apply agent setup" code={'npx altitude init --client codex\n# Review the preview, then apply:\nnpx altitude init --client codex --apply\n# Claude Code: use --client claude'} />
+            <p className="lede small">Workflow patterns are experimental. Applications supply persistence, authorization, business validation, navigation and any real undo. Automated checks cover specific contracts; contextual design decisions and assistive-technology validation still need review.</p>
           </div>
         </section>
 

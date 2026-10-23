@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "id": "ALT-SEM-001",
+      "title": "Interactive controls have keyboard semantics",
+      "authority": "normative-standard",
+      "diagnosticClass": "deterministic",
+      "applicability": "Focusable actions and navigation.",
+      "exceptions": [
+        "Use links for navigation and buttons for actions; specialized widgets follow their own keyboard model."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "wcag22"
+      ],
+      "repair": "Use native semantics; test activation, names and disabled states.",
+      "verification": [
+        "build/checks/semantics.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#keyboard",
+        "https://www.w3.org/TR/WCAG22/#name-role-value"
+      ],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-EDIT-001",
+      "title": "Retain edits and report persistence truthfully",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "application-integration",
+      "applicability": "Forms that save through an asynchronous service.",
+      "exceptions": [
+        "A queued write may say queued, never persisted; explicit discard may clear data."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "govuk-validation"
+      ],
+      "repair": "Keep draft and committed data separate; reject stale responses; retry rejected writes without clearing input.",
+      "verification": [
+        "build/checks/pattern-workflows.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-EDIT-002",
+      "title": "Errors identify and link to the relevant field",
+      "authority": "normative-standard",
+      "diagnosticClass": "deterministic",
+      "applicability": "Detected input errors.",
+      "exceptions": [
+        "A summary is a contextual implementation, not itself a WCAG requirement; sensitive error detail may be withheld."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "wcag22",
+        "govuk-validation"
+      ],
+      "repair": "Use one error model for inline messages and summary links; preserve valid description IDs and focus the linked control.",
+      "verification": [
+        "build/checks/pattern-workflows.mjs",
+        "build/checks/semantics.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#error-identification",
+        "https://www.w3.org/TR/WCAG22/#error-suggestion",
+        "https://www.w3.org/TR/WCAG22/#info-and-relationships"
+      ],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-EDIT-003",
+      "title": "Choose validation and unsaved-work policy deliberately",
+      "authority": "heuristic",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Editing and attempted cancellation or navigation.",
+      "exceptions": [
+        "Do not block navigation for pristine forms; autosave requires its own truthful operation model."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "govuk-validation",
+        "task-review"
+      ],
+      "repair": "Document submit/blur timing and connect requestLeave to cancel, router Back and navigation; explain browser unload limits.",
+      "verification": [
+        "manual: exercise cancel, Back, reload and route change with unsaved data"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-COLLECTION-001",
+      "title": "Distinguish collection states and retain identity",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "application-integration",
+      "applicability": "Asynchronously loaded collections.",
+      "exceptions": [
+        "First-use empty and no-results apply only when the application knows the distinction; offline/cache may add states."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "task-review"
+      ],
+      "repair": "Render loading, refreshing, empty, filtered empty and failure accurately; use stable keys and an explicit selection policy.",
+      "verification": [
+        "build/checks/pattern-workflows.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-ACTION-001",
+      "title": "Confirm intent separately from operation completion",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "application-integration",
+      "applicability": "Actions with significant consequences.",
+      "exceptions": [
+        "Direct actions are suitable when real recovery exists; confirmation is not universal."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "wcag22",
+        "task-review"
+      ],
+      "repair": "Name target and consequence; delay success until execute resolves; wire real undo or appropriate review, and logical focus.",
+      "verification": [
+        "build/checks/pattern-workflows.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#error-prevention-legal-financial-data"
+      ],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-REVIEW-001",
+      "title": "Allow correction and preserve a truthful receipt",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "application-integration",
+      "applicability": "Processes with a review step before final commitment.",
+      "exceptions": [
+        "Not every short form needs a separate review screen; redundant-entry and error-prevention criteria have scoped exceptions."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "wcag22"
+      ],
+      "repair": "Retain applicable answers through correction and failed submission; show a service-issued receipt and a durable destination.",
+      "verification": [
+        "build/checks/pattern-workflows.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#redundant-entry",
+        "https://www.w3.org/TR/WCAG22/#error-prevention-legal-financial-data"
+      ],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-STATUS-001",
+      "title": "Status is perceivable without moving focus unnecessarily",
+      "authority": "normative-standard",
+      "diagnosticClass": "deterministic",
+      "applicability": "Status messages that do not receive focus.",
+      "exceptions": [
+        "Urgent errors may use alerts; avoid announcing every keystroke or repeated decorative status."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "wcag22"
+      ],
+      "repair": "Use an appropriate live region and concise meaningful messages; test feedback with assistive technology.",
+      "verification": [
+        "build/checks/pattern-workflows.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#status-messages"
+      ],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-VISUAL-001",
+      "title": "Height has an equivalent non-depth signal",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "All meaning carried by elevation.",
+      "exceptions": [
+        "Decorative depth carries no required semantic meaning."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation"
+      ],
+      "repair": "Pair depth with text, state or border and inspect forced colors/reduced motion.",
+      "verification": [
+        "manual: forced colors, reduced motion, zoom and RTL review"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-EXP-001",
+      "title": "Hold-to-confirm remains a scoped hypothesis",
+      "authority": "experimental-hypothesis",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Considering hold gestures for consequential actions.",
+      "exceptions": [
+        "Never require a hold as the sole accessible way to complete a task."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "hold-hypothesis"
+      ],
+      "repair": "Choose review or real recovery from task consequences; evaluate hold benefits with representative users.",
+      "verification": [
+        "manual: task-based human evaluation"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-SETUP-001",
+      "title": "Installed guidance and setup versions agree",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Projects using the explicit CLI adapter.",
+      "exceptions": [
+        "Projects may read local guidance directly without configuring an agent."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "task-review"
+      ],
+      "repair": "Reinstall/build the matching package and rerun altitude init for configured clients.",
+      "verification": [
+        "build/checks/guidance.mjs",
+        "build/checks/agent-setup.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-23",
+      "owner": "Altitude maintainers"
+    }
+  ]
+}

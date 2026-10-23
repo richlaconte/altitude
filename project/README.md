@@ -1,4 +1,4 @@
-Altitude is a React component library where **height is the interface**. Its one idea: **the ground is the record.** Settled content sits on the ground. Anything live rises above it (something to press, something in your hand, something waiting to be confirmed, something that just changed), and the higher it goes, the more temporary it is and the more it asks of you. Anything that's waiting to receive sinks below it (a field, a slot, a track, a problem to fix). Motion only ever travels along that axis. Color schemes are swappable and the accent can be any color; the elevation language is the same in all of them.
+Altitude is a design and HCI framework with React components where **height is the interface**. Its one idea: **the ground is the record.** Settled content sits on the ground. Anything live rises above it (something to press, something in your hand, something waiting to be confirmed, something that just changed), and the higher it goes, the more temporary it is and the more it asks of you. Anything that's waiting to receive sinks below it (a field, a slot, a track, a problem to fix). Motion only ever travels along that axis. Color schemes are swappable and the accent can be any color; the elevation language is the same in all of them.
 
 Read **Elevation** for the model and every signal height carries, **Motion** before animating anything, **Research** for the evidence and measurements behind each rule, and **Theming** for schemes, custom accents and shadcn/ui.
 
@@ -66,3 +66,7 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 Finish a small edit where its value lives with `InlineEdit`. Perform a reversible action directly when the application supplies real recovery and a durable destination. Use a focused `Dialog` when the consequence requires an explicit decision. [Actions in place](ActionsInPlace.md) contains executable recipes and the integrated Files example.
 
 Editing is temporary local input; it is not a pending write. Pending begins only when persistence is dispatched. Keep committed content on the ground, and carry every live state with text, semantics or borders as well as height. Persistence, authorization, concurrency and reversibility remain application responsibilities.
+
+## Task patterns
+
+For complete product tasks, start with the [framework entry](framework/README.md). Its edit-record, async-collection, consequential-action and review-and-submit patterns combine design decisions, small workflow hooks and verification. Use only applicable states and actual application capabilities. The elevation model remains the same; a pending or successful signal must correspond to the operation's real state.
