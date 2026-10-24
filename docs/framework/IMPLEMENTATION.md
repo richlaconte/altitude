@@ -41,7 +41,7 @@ Ownership: semantic agent owns primitive source/regressions; knowledge agent own
 
 The work in this PR is complete; what follows comes from the [2026-10-23 pilot](../../evals/framework/results/PILOT-2026-10-23.md). PR #11 stays a draft until a maintainer decides to merge. Filing an issue or finishing an item here does not authorise merging, publishing or a version bump.
 
-Steps 1–3 and 5 were done on 2026-10-23, after the pilot. Steps 4 and 6 remain.
+Steps 1–5 were done on 2026-10-23, after the pilot. Step 6 remains, and step 7 lists what the rerun showed.
 
 1. **Done — the two protocol confounds.**
    - The Claude allowlist (`claudeAllowedTools` in `evals/framework/protocol.mjs`) now includes `npm exec -- altitude *`. A harness test fails if the setup text or agent docs name an altitude command the allowlist denies. In a fresh workspace, a single Claude Code probe that ran `npm exec -- altitude doctor --json` had no `permission_denied` under the new list. The old list denied the same command.
@@ -52,10 +52,18 @@ Steps 1–3 and 5 were done on 2026-10-23, after the pilot. Steps 4 and 6 remain
    - axe *incomplete* results are reported per state.
    - The metrics are renamed to `axeScanPassed`, `keyboardPassed` and `followupPreserved`. New metrics are `adverseStates` and `followupFeatures`.
    - Finite animations still running after 3 s are finished and named, not left unmeasured.
-   - Not re-validated against real generated apps: the new selectors have been tested only on fixture apps. Expect selector adaptation on the first rerun, and report it as post-hoc.
-4. **Rerun the pilot with repeated samples per cell** to new evidence roots (never the 2026-10-23 ones). Reconsider the 180 s budget. Write reviews with `evals/framework/reviews/review-lib.cjs`.
+   - Run against real generated apps in step 4: one selector fault (a listbox-button sort control) was found and corrected post-hoc in 2.0.1.
+4. **Done — pilot rerun with three samples per cell** (36 builds, 300 s budget). See [RERUN1-2026-10-23](../../evals/framework/results/RERUN1-2026-10-23.md) and its [evidence index](../../evals/framework/results/evidence-index-rerun1.json).
+   - All 36 generations and follow-ups completed.
+   - Every guidance and framework settings run asked before discarding edits; no primitives settings run did.
+   - Assessor 2.0.1 corrected a post-hoc instrument fault in sorting with a listbox-button control. It was applied to all runs, with the superseded reports kept.
 5. **Done — library defect candidates**, each checked against `main` at `8a4b675` in Chromium:
    - Table: filed as [#26](https://github.com/richlaconte/altitude/issues/26). At 320px the toolbar measures 530px and the document 546px.
    - Textarea: not filed. The counter's text is "0 / 160". In an RTL paragraph, normal bidi layout places the count at the right ("160 / 0" read left to right), which an RTL reader reads as "0 / 160". Isolating it as LTR would reverse that for RTL readers. Revisit only if an RTL-language reviewer says otherwise.
    - Checkbox: not filed. A real mouse click at the centre of the `aria-hidden` track toggles the checkbox, because the track is inside the `<label>`. Only Playwright's actionability check reports that the track "intercepts pointer events". Automation should click the label or use the keyboard.
 6. **Before any user-facing claim:** run the [manual validation matrix](MANUAL-VALIDATION.md) with a screen reader and keyboard, and test in non-Chromium engines. A representative participant study remains unperformed.
+7. **Before the next rerun** (from RERUN1):
+   - **Claude allowlist:** widen it to the read-only and build commands agents actually use, or sandbox equivalently. Denials remained and were uneven: 20 in primitives, 32 in guidance, 37 in framework.
+   - **Instrument gaps:** close them with fixture tests, then freeze assessor 2.1.0. The gaps are the column-header sort named other than "Name", two plausible "return to overview" controls, and first-use-empty phrasings.
+   - **Blind review:** review with the condition hidden.
+   - **ErrorSummary target size:** a library defect candidate, not filed. Links about 18px tall with no spacing fail WCAG 2.5.8 under the default line-height. File it if the person you are working for agrees.

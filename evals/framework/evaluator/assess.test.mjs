@@ -183,9 +183,9 @@ test('settings: leaving with unsaved edits and no confirmation loses the draft a
  assert.equal(leave?.passed,false,JSON.stringify(initial.checks));assert.equal(leave.evidence.prompted,false);
  assert.equal(initial.checks.find(check=>check.ruleId==='EVAL-DIRTY-DISCARD'),undefined);
 });
-const recordsApp=({guardStale,countBug})=>`<!doctype html><html lang="en"><head><title>Records</title></head><body><main><h1>Projects</h1>
+const recordsApp=({guardStale,countBug,sortListbox})=>`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Records</title></head><body><main><h1>Projects</h1>
  <form id="f"><label for="q">Search projects</label><input id="q"><button>Search</button></form>
- <button id="clear" type="button">Clear search</button><button id="refresh" type="button">Refresh</button><button id="sort" type="button">Sort by name</button>
+ <button id="clear" type="button">Clear search</button><button id="refresh" type="button">Refresh</button>${sortListbox?'<span id="sort-label">Sort by name</span><button id="sort" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="sort-label">A–Z</button><div id="sort-list" role="listbox" hidden><div role="option" data-dir="asc">A–Z</div><div role="option" data-dir="desc">Z–A</div></div>':'<button id="sort" type="button">Sort by name</button>'}
  <p id="count"></p><div id="out"></div></main><script>
  const $=id=>document.getElementById(id);let selected=new Set(),query='',rows=[],descending=false,latest=0,clicks=0;
  const render=()=>{const shown=[...rows].sort((a,b)=>descending?b.name.localeCompare(a.name):a.name.localeCompare(b.name));
@@ -196,7 +196,7 @@ const recordsApp=({guardStale,countBug})=>`<!doctype html><html lang="en"><head>
   if(!r.ok){$('out').innerHTML='<p>Could not load projects.</p><button type="button" id="retry">Try again</button>';$('retry').onclick=()=>load(query);return;}
   rows=await r.json();selected=new Set([...selected].filter(key=>rows.some(row=>row.id===key)));render();}
  $('f').onsubmit=event=>{event.preventDefault();load($('q').value);};$('clear').onclick=()=>{$('q').value='';load('');};$('refresh').onclick=()=>load(query);
- $('sort').onclick=()=>{descending=!descending;render();};load('');
+ ${sortListbox?"$('sort').onclick=()=>{const list=$('sort-list');list.hidden=!list.hidden;$('sort').setAttribute('aria-expanded',String(!list.hidden));};$('sort-list').querySelectorAll('[role=option]').forEach(option=>option.onclick=()=>{descending=option.dataset.dir==='desc';$('sort').textContent=option.textContent;$('sort-list').hidden=true;$('sort').setAttribute('aria-expanded','false');render();});document.addEventListener('keydown',event=>{if(event.key==='Escape'){$('sort-list').hidden=true;$('sort').setAttribute('aria-expanded','false');}});":"$('sort').onclick=()=>{descending=!descending;render();};"}load('');
  </script></body></html>`;
 test('records: guarded queries, both sort directions, truthful counts and first-use empty pass',async()=>{
  const result=await assessHtml('assessor-records-adverse','records',recordsApp({guardStale:true,countBug:false}));
@@ -221,4 +221,9 @@ test('an assessment under a different assessor than the run recorded is marked p
   const result=await assessArtifact(directory);
   assert.equal(result.postHoc,true);assert.equal(result.frozenAssessor.version,'1.9.0');
  }finally{rmSync(directory,{recursive:true,force:true});}
+});
+test('records: a listbox-popup sort control is operated by choosing each option',async()=>{
+ const final=(await assessHtml('assessor-records-listbox-sort','records',recordsApp({guardStale:true,countBug:false,sortListbox:true}))).reports[1];
+ const sort=final.checks.find(check=>check.ruleId==='EVAL-SORT');
+ assert.equal(sort?.passed,true,JSON.stringify(final.checks));assert.ok(sort.evidence.orders.includes('Cedar,Beacon,Atlas'));
 });

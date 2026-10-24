@@ -16,6 +16,9 @@ if(!Number.isFinite(budgetSeconds)||budgetSeconds<1)throw Error('Positive --seco
 const clients=option('--clients','codex,claude').split(',');
 if(clients.some(client=>!['codex','claude'].includes(client))) throw Error('Supported clients: codex,claude');
 const only=option('--only','');
+// Repeated samples of a cell go to separate --out roots; the index is recorded so results can be pooled.
+const sample=Number(option('--sample','1'));
+if(!Number.isInteger(sample)||sample<1)throw Error('--sample must be a positive integer');
 const matrix=makeMatrix(clients).filter(r=>!only||r.id.includes(only));
 const models={codex:option('--codex-model','gpt-5.6-sol'),claude:option('--claude-model','claude-opus-5-5')};
 const exclusionPath=option('--codex-skills','');
@@ -29,7 +32,7 @@ for(const run of matrix){
  if(existsSync(join(evidence,'run.json')))throw Error(`Refusing to overwrite completed evidence ${evidence}; use a new --out directory.`);
  mkdirSync(evidence,{recursive:true});
  const workspace=mkdtempSync(join(tmpdir(),'altitude-eval-'));
- const meta={...run,protocolVersion,assessor,model:models[run.client],requestedModel:models[run.client],budget:{wallSeconds:budgetSeconds,followupWallSeconds:budgetSeconds,tokenLimit:null,reason:'Tool CLI exposes wall deadline; token usage recorded afterward, not silently treated as capped.'},workspace,primitiveHash:manifest.primitiveHash,package:manifest.packages[run.condition],primitiveArtifacts:manifest.primitiveArtifacts,isolation:{freshProcess:true,freshWorkspace:true,globalSkills:'Codex ignores user config, but host-global skill discovery may still occur; inspect traces. Claude uses project settings only. No assertion of hermetic model training or host isolation.'},startedAt:new Date().toISOString(),node:process.version};
+ const meta={...run,sample,protocolVersion,assessor,model:models[run.client],requestedModel:models[run.client],budget:{wallSeconds:budgetSeconds,followupWallSeconds:budgetSeconds,tokenLimit:null,reason:'Tool CLI exposes wall deadline; token usage recorded afterward, not silently treated as capped.'},workspace,primitiveHash:manifest.primitiveHash,package:manifest.packages[run.condition],primitiveArtifacts:manifest.primitiveArtifacts,isolation:{freshProcess:true,freshWorkspace:true,globalSkills:'Codex ignores user config, but host-global skill discovery may still occur; inspect traces. Claude uses project settings only. No assertion of hermetic model training or host isolation.'},startedAt:new Date().toISOString(),node:process.version};
  console.log(run.id,'setup-started',new Date().toISOString());
  try{
   meta.toolVersion=execFileSync(run.client,['--version'],{encoding:'utf8',timeout:15000}).trim();
@@ -85,7 +88,7 @@ for(const run of matrix){
  meta.finishedAt=new Date().toISOString();writeFileSync(join(evidence,'run.json'),JSON.stringify(meta,null,2)+'\n');results.push(meta);
  const completed=readdirSync(out,{withFileTypes:true}).filter(entry=>entry.isDirectory()&&existsSync(join(out,entry.name,'run.json'))).map(entry=>JSON.parse(readFileSync(join(out,entry.name,'run.json'))));
  const summaryPath=join(out,`summary-${run.id}.tmp`);
- writeFileSync(summaryPath,JSON.stringify({protocolVersion,assessor,runs:completed,summary:summarize(completed)},null,2)+'\n');renameSync(summaryPath,join(out,'summary.json'));
+ writeFileSync(summaryPath,JSON.stringify({protocolVersion,assessor,sample,runs:completed,summary:summarize(completed)},null,2)+'\n');renameSync(summaryPath,join(out,'summary.json'));
  console.log(run.id,meta.generation,meta.build||'',meta.elapsedMs||'');
  if(meta.generation==='aborted'||meta.followup?.generation==='aborted')break;
 }
