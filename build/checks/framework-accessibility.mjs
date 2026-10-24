@@ -23,6 +23,12 @@ try{
   await page.getByRole('heading',{level:2}).first().waitFor();await scan('initial');
   if(name==='EditRecord'){
    const input=page.getByRole('textbox',{name:'Workspace name'});await input.fill('');await page.getByRole('button',{name:'Save changes'}).click();await scan('invalid');
+   // With two errors, the summary's links must stay 24px targets (SC 2.5.8) when the host page leaves line-height at the browser default.
+   const email=page.getByRole('textbox',{name:'Contact email'});await email.fill('');await page.getByRole('button',{name:'Save changes'}).click();
+   await page.locator('.alt-error-summary a').nth(1).waitFor();
+   await page.evaluate(()=>{for(const el of [document.documentElement,document.body,...document.querySelectorAll('.alt-error-summary,.alt-error-summary *')])el.style.lineHeight='normal';});await scan('invalid-two-errors-default-line-height');
+   await page.evaluate(()=>{for(const el of [document.documentElement,document.body,...document.querySelectorAll('.alt-error-summary,.alt-error-summary *')])el.style.lineHeight='';});
+   await email.fill('team@example.com');await page.getByRole('button',{name:'Save changes'}).click();
    await page.getByRole('link',{name:'Workspace name: Enter a workspace name.'}).click();assert.ok(await input.evaluate(el=>document.activeElement===el));
    await input.fill('A deliberately long workspace name for localized content wrapping and preserved edits');
    await page.getByRole('button',{name:'Demo service'}).click();await page.getByRole('option',{name:'Save fails',exact:true}).click();await page.getByRole('button',{name:'Save changes'}).click();await page.getByRole('status').filter({hasText:'could not save'}).waitFor();await scan('failed');
