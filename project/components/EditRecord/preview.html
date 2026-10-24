@@ -1,0 +1,57 @@
+group="Patterns" subtitle="Edit a record with validation, real demo persistence, failure and recovery" height=680
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EditRecord — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.framework-demo{max-width:640px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:anywhere}.framework-demo h2{font:600 var(--text-heading)/1.3 var(--font-sans);margin:0}.framework-demo p{margin:0}.framework-demo form{display:grid;gap:16px}.framework-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.framework-record{padding:16px;border:1px solid var(--line-control);border-radius:var(--radius-lg)}.framework-demo [role="status"]{min-height:1.5em}.framework-demo pre{white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [record, setRecord] = React.useState({ name: "Northwind studio", email: "team@example.com" });
+  const [mode, setMode] = React.useState("success");
+  const [overview, setOverview] = React.useState(false);
+  const [discard, setDiscard] = React.useState(null);
+  const heading = React.useRef(null);
+  const form = A.useEditRecord({ initialValue: record, validationMode: "submit", validate: (v) => ({ ...v.name.trim() ? {} : { name: "Enter a workspace name." }, .../^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email) ? {} : { email: "Enter a valid email address." } }), save: async (draft) => {
+    await new Promise((r) => setTimeout(r, mode === "slow" ? 2200 : 450));
+    if (mode === "failure") return { ok: false, error: "The demo service could not save. Choose \u201CSave succeeds\u201D and try again." };
+    const value = { ...draft, name: draft.name.trim() };
+    setRecord(value);
+    return { ok: true, value };
+  } });
+  const leave = async (reason) => {
+    if (await form.requestLeave(reason, () => new Promise((resolve) => setDiscard(() => resolve)))) setOverview(true);
+  };
+  const errors = Object.entries(form.errors).map(([key, message]) => ({ id: "workspace-" + key, label: key === "name" ? "Workspace name" : "Contact email", message }));
+  return /* @__PURE__ */ React.createElement("main", { className: "framework-demo" }, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1 }, overview ? "Workspace overview" : "Workspace settings"), /* @__PURE__ */ React.createElement("p", null, "Edits are saved to this example\u2019s in-memory record. Reloading the page resets it."), /* @__PURE__ */ React.createElement(A.Surface, { level: 0, className: "framework-record" }, /* @__PURE__ */ React.createElement("strong", null, "Saved record"), /* @__PURE__ */ React.createElement("p", { "data-saved-name": true }, record.name), /* @__PURE__ */ React.createElement("p", null, record.email)), overview ? /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setOverview(false) }, "Edit workspace") : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Field, { label: "Demo service" }, /* @__PURE__ */ React.createElement(A.Select, { value: mode, onValueChange: setMode, items: [{ value: "success", label: "Save succeeds" }, { value: "slow", label: "Save takes longer" }, { value: "failure", label: "Save fails" }] })), /* @__PURE__ */ React.createElement("form", { noValidate: true, onSubmit: (e) => {
+    e.preventDefault();
+    void form.submit();
+  } }, /* @__PURE__ */ React.createElement(A.ErrorSummary, { errors, focusKey: form.submitCount }), /* @__PURE__ */ React.createElement(A.Field, { label: "Workspace name", required: true, error: form.errors.name, hint: "Use the name your team recognizes." }, /* @__PURE__ */ React.createElement(A.Input, { id: "workspace-name", value: form.draft.name, onChange: (e) => form.setField("name", e.target.value) })), /* @__PURE__ */ React.createElement(A.Field, { label: "Contact email", required: true, error: form.errors.email }, /* @__PURE__ */ React.createElement(A.Input, { id: "workspace-email", type: "email", value: form.draft.email, onChange: (e) => form.setField("email", e.target.value) })), /* @__PURE__ */ React.createElement("div", { className: "framework-actions" }, /* @__PURE__ */ React.createElement(A.Button, { type: "submit", variant: "primary", disabled: form.phase === "submitting" }, form.phase === "submitting" ? "Saving changes" : "Save changes"), /* @__PURE__ */ React.createElement(A.Button, { type: "button", onClick: () => leave("cancel"), disabled: form.phase === "submitting" }, "Cancel"), /* @__PURE__ */ React.createElement(A.Button, { type: "button", variant: "ghost", onClick: () => leave("back"), disabled: form.phase === "submitting" }, "Back to overview"))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, null, form.status)), /* @__PURE__ */ React.createElement(A.Dialog, { returnFocus: () => heading.current, open: !!discard, onOpenChange: (open) => {
+    if (!open) {
+      discard?.(false);
+      setDiscard(null);
+    }
+  }, title: "Discard unsaved changes?", description: "Your saved workspace stays as it is.", footer: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => {
+    discard?.(false);
+    setDiscard(null);
+  } }, "Keep editing"), /* @__PURE__ */ React.createElement(A.Button, { variant: "danger", onClick: () => {
+    discard?.(true);
+    setDiscard(null);
+  } }, "Discard changes")) }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

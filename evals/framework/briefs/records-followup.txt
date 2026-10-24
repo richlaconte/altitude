@@ -1,0 +1,1 @@
+Add a sort control so people can order the records by name in either direction, and show how many records are selected.

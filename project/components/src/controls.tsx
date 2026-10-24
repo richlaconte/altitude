@@ -170,12 +170,13 @@ export interface FieldProps {
 export function Field({ label, hint, error, required, className, children }: FieldProps) {
   const id = React.useId();
   const controlId = children.props.id || id + '-control';
-  const describedBy = [hint && id + '-hint', error && id + '-error'].filter(Boolean).join(' ') || undefined;
+  const describedBy = [...new Set([children.props['aria-describedby'], hint && id + '-hint', error && id + '-error']
+    .filter(Boolean).join(' ').split(/\s+/).filter(Boolean))].join(' ') || undefined;
   return (
     <div className={cx('alt-field', className)}>
       <label className="alt-field-label" htmlFor={controlId}>{label}{required && <span className="alt-field-req" aria-hidden="true"> *</span>}</label>
-      {React.cloneElement(children, { id: controlId, 'aria-describedby': describedBy, invalid: !!error || children.props.invalid, required })}
-      {hint && !error && <p className="alt-field-hint" id={id + '-hint'}>{hint}</p>}
+      {React.cloneElement(children, { id: controlId, 'aria-describedby': describedBy, invalid: !!error || children.props.invalid, required: required ?? children.props.required })}
+      {hint && <p className="alt-field-hint" id={id + '-hint'}>{hint}</p>}
       {error && <p className="alt-field-error" id={id + '-error'} role="alert"><Icons.AlertCircle size={14} />{error}</p>}
     </div>
   );
