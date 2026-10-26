@@ -188,6 +188,16 @@ A design review, not a study: `EditRegion` was prototyped in the EditRegion prev
 
 Not yet tested with people: whether the raised editor is noticed as “still unsaved” when someone scrolls away, and whether five fields is the right ceiling before a `Sheet`.
 
+### E21 · How should a list of records be changed in place?
+
+A design review, not a study: `ItemGroup` was prototyped with webhooks and a form builder's options and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard paths checked in a browser (`checks/item-group.mjs`). It was compared with shadcn/ui's Item, GOV.UK's add-another pattern, Ant Design's `Form.List` and the Files recipe in Actions in place.
+
+- **In place, not a dialog per operation.** Shneiderman's direct manipulation asks for continuous visibility and rapid, reversible actions ([1983](https://doi.org/10.1109/MC.1983.1654471)); NN/g finds modal editors hide the neighbours people refer to, and that one or two visible actions per row beat a hidden menu.
+- **Undo over confirmation, when it's real.** Raskin's “never use a warning when you mean undo” supports immediate removal with recovery; but only the application knows whether it can reverse a removal, so `removal` has no default and confirmation remains for the irreversible case.
+- **One editor at a time.** Two open editors split attention and make “which Save?” ambiguous; opening another keeps the first and returns focus to it, rather than discarding work.
+
+Not yet tested with people: whether focus moving to the fresh add slat after adding is expected, and whether Undo without a time-out is noticed.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

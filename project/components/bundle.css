@@ -1542,3 +1542,45 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-edit-region-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .alt-edit-region-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-edit-region-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── ItemGroup: a list changed in the list itself. Slats are the record, flush on the ground with line dividers, as
+   Table rows. Editing lifts one slat at a time into its EditRegion (a static raised card) while its neighbours stay
+   flush and readable. The add slat is an opening: a dashed well that deepens to a trench under the pointer. A slat
+   picked up to reorder floats at level 3, tilted, over a slot that opens as a well. A recoverable removal leaves a
+   raised Alert with Undo; a confirmed one asks in a stationary Dialog. ── */
+.alt-item-group { position: relative; display: grid; gap: var(--space-2); min-width: 0; color: var(--ink); }
+.alt-item-list { margin: 0; padding: 0; list-style: none; outline: none; }
+.alt-item-slat { position: relative; display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); border-radius: 0; transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1); }
+.alt-item-slat[data-editing] { border-bottom-color: transparent; }
+.alt-item-body { flex: 1; min-width: 0; }
+.alt-item-slat[data-carried] { z-index: 2; padding-inline: var(--space-2); border-radius: var(--radius-md); background: var(--surface-floating); box-shadow: var(--elev-3); rotate: calc(-0.5deg * var(--alt-travel)); border-bottom-color: transparent; }
+.alt-item-slat[data-status="pending"] { animation: alt-item-pending var(--dur-travel-1) var(--ease-rise) var(--dur-grace) both; }
+@keyframes alt-item-pending { to { background: var(--surface-lifted); box-shadow: var(--elev-2); } }
+.alt-item-slot { position: absolute; left: 0; right: 0; top: -3px; height: 6px; border-radius: var(--radius-full); background: var(--surface-well); box-shadow: var(--well); }
+.alt-item-grip { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; margin-top: 2px; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: grab; }
+.alt-item-grip:hover { background: var(--surface-raised); box-shadow: var(--elev-1); }
+.alt-item-grip[aria-pressed="true"] { cursor: grabbing; color: var(--ink); }
+.alt-item-grip:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-item { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.alt-item-media { display: inline-grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: var(--radius-md); background: var(--surface-well); color: var(--ink-muted); }
+.alt-item-media[data-variant="avatar"] { background: none; }
+.alt-item-content { flex: 1; min-width: 0; }
+.alt-item-title { font: 500 14.5px/21px var(--font-sans); overflow-wrap: anywhere; }
+.alt-item-description { margin: 2px 0 0; color: var(--ink-muted); font: 400 13px/18px var(--font-sans); overflow-wrap: anywhere; }
+.alt-item-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); flex: none; }
+.alt-item-separator { margin: 0; border: 0; border-top: 1px solid var(--line); }
+.alt-item-add {
+  display: inline-flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 44px; padding: 0 var(--space-3); border: 1px dashed var(--line-control); border-radius: var(--radius-md);
+  background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); font: 500 14px/20px var(--font-sans); cursor: pointer;
+  transition: background-color var(--dur-travel-1) var(--ease-sink), box-shadow var(--dur-travel-1) var(--ease-sink), color var(--dur-travel-1);
+}
+.alt-item-add:hover, .alt-item-add:focus-visible { background: var(--surface-trench); box-shadow: var(--trench); color: var(--ink); }
+.alt-item-add:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-item-plus { font: 500 17px/1 var(--font-sans); }
+.alt-item-new { animation: alt-emerge var(--dur-travel-2) var(--ease-rise); }
+.alt-item-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-contrast="more"] .alt-item-slat[data-carried] { box-shadow: var(--elev-3), 0 3px 0 0 var(--ink); }
+@media (forced-colors: active) {
+  .alt-item-add, .alt-item-slot { border: 1px dashed CanvasText; } .alt-item-slat[data-carried] { border: 2px solid CanvasText; }
+  .alt-item-slat[data-status="pending"] { outline: 1px dotted CanvasText; }
+}

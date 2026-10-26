@@ -22,3 +22,5 @@ export { InlineEdit } from './inline-edit';
 export type { InlineEditProps, InlineEditSaveResult } from './inline-edit';
 export { EditRegion, EditRegionView, EditRegionForm, EditRegionTrigger, EditRegionActions } from './edit-region';
 export type { EditRegionProps, EditRegionSaveResult, EditRegionBinder } from './edit-region';
+export { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemSeparator } from './item-group';
+export type { ItemGroupProps, ItemGroupRemoval, ItemGroupResult, ItemGroupCreateResult, ItemActionsApi } from './item-group';
