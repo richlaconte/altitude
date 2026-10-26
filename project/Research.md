@@ -177,6 +177,17 @@ What didn't fit, each against a rule the rest of the system already keeps:
 
 **Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
 
+### E16 · How should a hierarchy be changed in place?
+
+A design review, not a study: `Tree` was prototyped as a page tree and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with the APG keys, RTL, rename, create and both carry paths checked in a browser (`checks/tree.mjs`). It was compared with the [APG tree view](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/), VS Code's explorer, Notion's sidebar, React Aria's `Tree` and outliners (Workflowy, Logseq).
+
+- **Flat rows with levels, not nested groups.** The APG allows either; a flat list with `aria-level`, `aria-setsize` and `aria-posinset` keeps one row model for rendering, focus and carrying, and supports lazy loading and later virtualisation.
+- **Carry by keyboard, shown in place.** The APG doesn't cover moving. Outliners use Alt+↑/↓ and indent/outdent; file managers use cut and paste. Picking up with Space (as `SortableList`) and showing the node where it will land, with its depth announced, keeps the result visible before the drop.
+- **Into versus between.** Pointer targets split a row into thirds: before, into, after. “Into” opens the node as a trench, a receptacle, and “between” is a thin well at the target depth, so the two read differently without colour. Spring-loaded folders (open after 600ms) follow the Finder convention.
+- **No hover-only actions.** Row buttons for “add” and “rename” would put interactive elements inside `treeitem`; instead the shortcuts are on the row and `TreeHandle` lets a toolbar offer the same actions to pointer users.
+
+Not yet tested with people: whether ↑ entering an open node above (rather than staying at the same depth) matches expectation, and whether the toolbar is found.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

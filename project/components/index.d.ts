@@ -851,6 +851,56 @@ export interface DrilldownProps extends React.HTMLAttributes<HTMLDivElement> { r
 /** Descend into children, ascend back; the breadcrumb steps down a notch per level. */
 export declare function Drilldown(props: DrilldownProps): React.ReactElement;
 
+export type TreeResult = { ok: true } | { ok: false; error: string };
+export type TreeCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
+/** Where a node goes: under `parentId` (null for the top level), at `index` among the children once it has left its old place. */
+export interface TreeTarget { parentId: string | null; index: number }
+export interface TreeMove { id: string; from: TreeTarget; to: TreeTarget }
+export interface TreeHandle {
+  /** Open a naming well for a new node under `parentId` (null: the top level) at `index` (default: the end). */
+  startCreate: (parentId: string | null, index?: number) => void;
+  /** Rename a node, as F2 does. */
+  startRename: (id: string) => void;
+}
+export interface TreeProps<T> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  items: T[];
+  getKey: (item: T) => string;
+  getLabel: (item: T) => string;
+  /** Children, or undefined when there are none or they aren't loaded yet. */
+  getChildren?: (item: T) => T[] | undefined;
+  /** Whether a node can have children (and so shows a chevron) before they're loaded. Default: it has children. */
+  hasChildren?: (item: T) => boolean;
+  /** Called the first time a node with no loaded children is expanded; an imprint shows until `items` includes them. */
+  loadChildren?: (item: T) => void | Promise<void>;
+  expanded?: string[];
+  defaultExpanded?: string[];
+  onExpandedChange?: (expanded: string[]) => void;
+  /** Default 'single'. */
+  selectionMode?: 'single' | 'none';
+  selected?: string | null;
+  defaultSelected?: string | null;
+  onSelectedChange?: (id: string | null) => void;
+  /** Enter's default action (open the page). */
+  onAction?: (item: T) => void;
+  /** Draw a node's label. Default: getLabel. */
+  renderItem?: (item: T) => React.ReactNode;
+  /** F2. Resolve after `items` carries the new name. */
+  onRename?: (item: T, draft: string) => TreeResult | Promise<TreeResult>;
+  /** Space to carry, or drag. Resolve after `items` reflects the move. */
+  onMove?: (move: TreeMove) => TreeResult | Promise<TreeResult>;
+  /** Refuse a target. A node can never go into its own subtree, whatever this says. */
+  canDrop?: (move: TreeMove) => boolean;
+  /** Ctrl/Cmd+Enter (sibling after) and Ctrl/Cmd+Shift+Enter (child). Resolve after `items` includes the new node. */
+  onCreate?: (request: TreeTarget & { name: string }) => TreeCreateResult<T> | Promise<TreeCreateResult<T>>;
+  /** Delete. Your removal policy (recovery or confirmation) applies; the tree only asks. */
+  onRemove?: (item: T) => void;
+  className?: string;
+}
+/** A hierarchy seen all at once and changed in place: rename (F2), create, carry (Space or drag) and remove. */
+export declare function Tree<T>(props: TreeProps<T> & { ref?: React.Ref<TreeHandle> }): React.ReactElement;
+
 export interface EmptyStateProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
   /** A line icon, drawn in ink-muted: 24px, or 18px at size sm. */
   icon?: React.ReactNode;
@@ -892,7 +942,7 @@ declare global {
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;
-      HoldButton: typeof HoldButton; Pile: typeof Pile; ScrollArea: typeof ScrollArea; DropZone: typeof DropZone; SortableList: typeof SortableList; Drilldown: typeof Drilldown; useDepth: typeof useDepth; useApproach: typeof useApproach;
+      HoldButton: typeof HoldButton; Pile: typeof Pile; ScrollArea: typeof ScrollArea; DropZone: typeof DropZone; SortableList: typeof SortableList; Drilldown: typeof Drilldown; Tree: typeof Tree; useDepth: typeof useDepth; useApproach: typeof useApproach;
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;

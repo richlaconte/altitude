@@ -1522,3 +1522,61 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
 .alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── Tree: a hierarchy seen all at once. Nodes are the record: flush rows on the ground, indented space-4 per level,
+   like Table rows. Only a node that acts lifts on hover; the selected node is tinted accent-soft and raised one level.
+   Expanding is disclosure of existing records, so it's a chevron turn, not a rise. Renaming sinks the label into a
+   well (InlineEdit's field); a write hovers while pending and drops to a trench when it fails. A carried node floats
+   at level 3, tilted, with a count of what it carries; the slot it would land in is a thin well at the target's
+   depth, and a node it would go into opens to a trench with an accent rim (a dashed critical one if it can't). ── */
+.alt-tree-wrap { position: relative; min-width: 0; }
+.alt-tree { margin: 0; padding: 0; list-style: none; color: var(--ink); font: 400 14px/20px var(--font-sans); }
+.alt-tree-row {
+  --indent: calc((var(--level, 1) - 1) * var(--space-4));
+  position: relative; display: flex; align-items: center; gap: 4px; min-height: 32px; padding: 2px var(--space-2) 2px 4px; border-radius: var(--radius-sm);
+  outline: none; cursor: default; user-select: none; touch-action: pan-y;
+  transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
+}
+.alt-tree-indent { flex: none; width: var(--indent); }
+.alt-tree-chevron { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--radius-sm); color: var(--ink-muted); cursor: pointer; }
+.alt-tree-chevron svg { rotate: -90deg; transition: rotate var(--dur-travel-2) var(--ease-settle); }
+.alt-tree-chevron[data-open] svg { rotate: 0deg; }
+[dir="rtl"] .alt-tree-chevron:not([data-open]) svg { rotate: 90deg; }
+.alt-tree-leaf { flex: none; width: 20px; }
+.alt-tree-label { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-tree-row:hover:not([data-carried]) { background: var(--surface-raised); box-shadow: var(--elev-1); }
+.alt-tree-row[aria-selected="true"] { background: var(--accent-soft); box-shadow: var(--elev-1); }
+.alt-tree-row:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-tree-row[data-status="pending"] { animation: alt-tree-pending var(--dur-travel-1) var(--ease-rise) var(--dur-grace) both; }
+@keyframes alt-tree-pending { to { background: var(--surface-lifted); box-shadow: var(--elev-2); transform: translateY(calc(-1px * var(--alt-travel))); } }
+.alt-tree-row[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
+.alt-tree-row[data-carried="keys"] { z-index: 2; background: var(--surface-floating); box-shadow: var(--elev-3); rotate: calc(-1.2deg * var(--alt-travel)); }
+.alt-tree-row[data-carried="pointer"] { opacity: 0.4; }
+.alt-tree-row[data-into] { background: var(--surface-trench); box-shadow: var(--trench), inset 0 0 0 2px var(--accent); }
+.alt-tree-row[data-into="blocked"] { box-shadow: var(--trench), inset 0 0 0 2px var(--critical); }
+.alt-tree-slot { height: 6px; margin: -3px 0 -3px calc((var(--level, 1) - 1) * var(--space-4) + 28px); border-radius: var(--radius-full); background: var(--surface-well); box-shadow: var(--well), inset 0 0 0 1px var(--accent); list-style: none; }
+.alt-tree-count { flex: none; margin-left: auto; padding: 1px 6px; border-radius: var(--radius-full); background: var(--surface-floating); box-shadow: var(--elev-2); font: 650 11px/16px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-tree-ghost {
+  position: fixed; z-index: var(--z-floating); display: flex; align-items: center; gap: var(--space-2); min-height: 32px; padding: 2px var(--space-3); border-radius: var(--radius-sm);
+  background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink); font: 400 14px/20px var(--font-sans); pointer-events: none;
+  rotate: calc(-1.2deg * var(--alt-travel)); scale: calc(1 + 0.015 * var(--alt-travel));
+}
+.alt-tree-wrap[data-carrying="pointer"] { cursor: grabbing; }
+.alt-tree-name { position: relative; display: inline-flex; flex-direction: column; flex: 1; min-width: 0; }
+.alt-tree-name-input {
+  width: 100%; min-width: 8ch; height: 26px; padding: 0 6px; border: 1px solid var(--line-control); border-radius: var(--radius-sm); outline: none;
+  background: var(--surface-well); box-shadow: var(--well); color: var(--ink); font: inherit; animation: alt-tree-sink var(--dur-travel-1) var(--ease-sink);
+}
+@keyframes alt-tree-sink { from { background: var(--surface-ground); box-shadow: none; } }
+.alt-tree-name-input:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-tree-name[data-invalid] .alt-tree-name-input { background: var(--critical-soft); border-color: var(--critical); box-shadow: var(--trench); }
+.alt-tree-error { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; color: var(--critical); font: 400 12px/16px var(--font-sans); white-space: normal; }
+.alt-tree-new { cursor: default; }
+.alt-tree-imprint { width: 40%; height: 12px; border-radius: var(--radius-sm); }
+.alt-tree-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-contrast="more"] .alt-tree-row[data-carried="keys"], [data-contrast="more"] .alt-tree-ghost { box-shadow: var(--elev-3), 0 3px 0 0 var(--ink); }
+@media (forced-colors: active) {
+  .alt-tree-row[aria-selected="true"] { border: 1px solid Highlight; } .alt-tree-row[data-carried="keys"], .alt-tree-ghost { border: 2px solid CanvasText; }
+  .alt-tree-slot { background: none; border-top: 2px dashed CanvasText; height: 0; } .alt-tree-row[data-into] { border: 3px dashed Highlight; }
+  .alt-tree-row[data-status="pending"] { border: 1px dotted CanvasText; } .alt-tree-row[data-status="failed"] { border: 2px dashed CanvasText; }
+}

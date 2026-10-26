@@ -20,3 +20,5 @@ export type { Promised, Pending, SkeletonOption, AwaitProps } from './suspense';
 export type { AvatarProps, AvatarGroupProps } from './controls';
 export { InlineEdit } from './inline-edit';
 export type { InlineEditProps, InlineEditSaveResult } from './inline-edit';
+export { Tree } from './tree';
+export type { TreeProps, TreeHandle, TreeMove, TreeTarget, TreeResult, TreeCreateResult } from './tree';
