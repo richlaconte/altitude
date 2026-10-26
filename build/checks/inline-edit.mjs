@@ -49,6 +49,7 @@ const mount = async (page, options = {}) => {
           const d = deferred(); api.saves.push(d); return d.promise;
         },
       };
+      if (options.multiline) Object.assign(props, { multiline: true, rows: 3, maxRows: 5 });
       if (options.editor === 'select') Object.assign(props, {
         commit: 'on-choose', renderValue: v => ({ a: 'Alpha', b: 'Bravo' })[v] ?? 'Not set',
         editor: control => h(A.Select, { ...control, items: [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }] }),
@@ -351,6 +352,28 @@ try {
     check((await estimate.getByRole('alert').textContent()).includes('Use a whole number from 0 to 40.') && await number.getAttribute('aria-invalid') === 'true', 'GEN-15 Enter in a numeric editor validates the parsed number');
     await number.fill('5'); await number.press('Enter'); await page.getByRole('button', { name: 'Edit Estimate', exact: true }).waitFor();
     check((await estimate.locator('.alt-inline-edit-value').textContent()) === '5 points', 'GEN-16 Enter saves the number and read mode renders it');
+    await page.close(); }
+
+  // Multiline (#14).
+  { const page = await open(); await mount(page, { multiline: true, save: 'sync', required: false, value: 'First line\nSecond line' });
+    check(await page.locator('#inline-contract .alt-inline-edit-value').evaluate(el => getComputedStyle(el).whiteSpace === 'pre-wrap'), 'ML-01 read mode preserves line breaks');
+    await edit(page); const area = page.getByRole('textbox', { name: 'Record name' });
+    check(await area.evaluate(el => el.tagName === 'TEXTAREA' && document.activeElement === el && el.selectionStart === el.value.length && el.selectionEnd === el.value.length), 'ML-02 opening focuses the textarea with the caret at the end');
+    check(await area.evaluate(el => (el.getAttribute('aria-describedby') || '').split(' ').map(id => document.getElementById(id)?.textContent).join(' ').includes('Enter to save')), 'ML-03 the key hint describes the textarea');
+    const before = await area.evaluate(el => el.offsetHeight);
+    await area.press('Enter'); await area.type('Third line');
+    check((await area.inputValue()) === 'First line\nSecond line\nThird line' && (await api(page, 'calls')).length === 0, 'ML-04 Enter inserts a newline and does not save');
+    await area.evaluate(el => { const ev = new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true, isComposing: true }); el.dispatchEvent(ev); });
+    check((await api(page, 'calls')).length === 0, 'ML-05 Ctrl+Enter during IME composition does not save');
+    await area.press('Escape'); await read(page);
+    check((await api(page, 'calls')).length === 0 && (await page.locator('#inline-contract .alt-inline-edit-value').textContent()) === 'First line\nSecond line', 'ML-06 Escape cancels the paragraph');
+    await edit(page); await area.press('Enter'); await area.type('3\n4\n5\n6\n7\n8');
+    const grown = await area.evaluate(el => ({ h: el.offsetHeight, scroll: getComputedStyle(el).overflowY }));
+    check(grown.h > before && grown.h <= 5 * 21 + 40 && grown.scroll === 'auto', `ML-07 the textarea grows with content up to maxRows, then scrolls (${before} → ${grown.h})`);
+    await area.press('Control+Enter'); await read(page);
+    check((await api(page, 'calls')).length === 1 && (await api(page, 'publications'))[0] === 'First line\nSecond line\n3\n4\n5\n6\n7\n8', 'ML-08 Ctrl+Enter saves the paragraph');
+    await edit(page); await area.fill(''); await area.press('Meta+Enter'); await read(page);
+    check((await api(page, 'calls')).length === 2 && (await page.locator('#inline-contract .alt-inline-edit-value').textContent()) === 'Not set', 'ML-09 Cmd+Enter saves, and an empty paragraph reads Not set');
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {

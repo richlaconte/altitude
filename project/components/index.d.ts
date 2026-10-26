@@ -521,6 +521,12 @@ export interface InlineEditProps<V = string> {
   commit?: 'explicit' | 'on-choose';
   /** An unchanged draft closes without a write, and an equal observed value isn't an external change. Default Object.is. */
   isEqual?: (a: V, b: V) => boolean;
+  /** A Textarea instead of the Input: Enter inserts a newline and Ctrl/Cmd+Enter saves. Default false. */
+  multiline?: boolean;
+  /** With multiline, the textarea's initial height in lines. Default 3. */
+  rows?: number;
+  /** With multiline, the textarea grows with its content up to this many lines, then scrolls. Default 12. */
+  maxRows?: number;
 }
 export declare function InlineEdit<V = string>(props: InlineEditProps<V>): React.ReactElement;
 
