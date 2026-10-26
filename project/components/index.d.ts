@@ -197,6 +197,65 @@ export interface ComboboxProps extends SelectFieldProps {
   /** Shown when nothing matches. Default "No matches". */
   empty?: React.ReactNode;
 }
+
+/** An ISO calendar date, 'YYYY-MM-DD': no time and no time zone. */
+export type ISODate = string;
+export interface DateRange { start: ISODate | null; end: ISODate | null }
+interface DatePickerBase {
+  /** Earliest and latest days that can be chosen or typed. */
+  min?: ISODate;
+  max?: ISODate;
+  isUnavailable?: (date: ISODate) => boolean;
+  /** Orders the segments and names the days and months. Default: the browser's. */
+  locale?: string;
+  /** 0 Sunday … 6 Saturday. Default: the locale's. */
+  weekStartsOn?: number;
+  /** Goes on the first segment; Field sets it so its label points here. */
+  id?: string;
+  /** Submits the value with a form, through a hidden input (a range submits name-start and name-end). */
+  name?: string;
+  disabled?: boolean;
+  required?: boolean;
+  /** Drops the field to trench depth. Field sets it when it has an error. */
+  invalid?: boolean;
+  /** sm 34px, md 40px, as Input. Default 'md'. */
+  size?: 'sm' | 'md';
+  className?: string;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+  /** Start with the calendar open (for documentation). */
+  defaultOpen?: boolean;
+}
+export interface DatePickerProps extends DatePickerBase {
+  value?: ISODate | null;
+  defaultValue?: ISODate | null;
+  /** Called with a complete, real, allowed date, or null when the field is cleared or holds a date that isn't allowed. */
+  onValueChange?: (value: ISODate | null) => void;
+}
+export interface DateRangePickerProps extends DatePickerBase {
+  value?: DateRange;
+  defaultValue?: DateRange;
+  onValueChange?: (value: DateRange) => void;
+}
+export interface CalendarProps {
+  value?: ISODate | null;
+  defaultValue?: ISODate | null;
+  onValueChange?: (value: ISODate) => void;
+  min?: ISODate;
+  max?: ISODate;
+  isUnavailable?: (date: ISODate) => boolean;
+  locale?: string;
+  weekStartsOn?: number;
+  'aria-label'?: string;
+  className?: string;
+}
+/** A date in a field, typed in segments or picked from a calendar floating at level 3. The chosen day carries the one raised mark. */
+export declare function DatePicker(props: DatePickerProps): React.ReactElement;
+/** Two dates as one span: a sunk track between two raised ends. */
+export declare function DateRangePicker(props: DateRangePickerProps): React.ReactElement;
+/** A month calendar laid on the page (level 0), without a field or panel. */
+export declare function Calendar(props: CalendarProps): React.ReactElement;
 /**
  * An editable Select: type to filter, choose to fill. A query keeps the field an opening until an option is chosen.
  * Leaving the field commits: an exact name chooses it, an empty field clears the value, anything else restores it.
@@ -896,7 +955,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
       Board: typeof Board; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;

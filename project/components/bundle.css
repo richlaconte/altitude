@@ -1522,3 +1522,73 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
 .alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── DatePicker, DateRangePicker, Calendar: the field is an opening built like Select. Day, month and year are typed
+   segments; a partial date isn't a value, so the floor rises flush only once a whole, allowed date is held. The
+   calendar floats at level 3 like a Popover. Days are flush (at this density a trench per day would be noise); the
+   chosen day carries the one raised accent mark, the RadioGroup thumb's rule, and the mark is carried to a new day in
+   the same month. Hovering a day shows the mark's ghost (feedforward). A range is the Slider's build: a sunk
+   accent-soft track between two raised ends. A month change is lateral, so it cross-fades. Calendar on its own lies
+   on the page at level 0. ── */
+.alt-date-picker { position: relative; display: block; min-width: 0; }
+.alt-date-picker > .alt-input { gap: 0; padding-right: 4px; cursor: text; }
+.alt-date-segs { display: inline-flex; align-items: center; min-width: 0; font: 400 14px/20px var(--font-sans); font-variant-numeric: tabular-nums; transform: translateY(calc(var(--wd) * 0.5)); transition: transform var(--dur-travel-2) var(--ease-settle); }
+.alt-date-seg { padding: 1px 2px; border-radius: 3px; outline: none; caret-color: transparent; }
+.alt-date-seg[data-placeholder] { color: var(--ink-muted); }
+.alt-date-seg:focus { background: var(--accent); color: var(--on-accent); }
+.alt-date-sep { padding: 0 1px; color: var(--ink-muted); }
+.alt-date-to { padding: 0 var(--space-2); color: var(--ink-muted); transform: translateY(calc(var(--wd) * 0.5)); }
+.alt-date-button { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-left: auto; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1), color var(--dur-travel-1); }
+.alt-date-button:hover:not(:disabled) { background: var(--surface-raised); color: var(--ink); box-shadow: var(--elev-1); }
+.alt-date-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-date-picker > .alt-input:not([data-filled]):not([data-invalid]):not([data-disabled]) { --w: 4px; --n: calc(var(--near) * var(--alt-travel)); background: var(--surface-well); }
+.alt-date-picker > .alt-input:not([data-filled]):not([data-invalid]):not([data-disabled]):focus-within { --n: var(--alt-travel); }
+.alt-date-error { margin: var(--space-1) 0 0; }
+.alt-date-panel { padding: var(--space-3); min-width: 0; }
+.alt-date-step { margin: 0 0 var(--space-2); color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+.alt-cal { width: max-content; color: var(--ink); font: 400 13.5px/1 var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-cal-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.alt-cal-title { margin: 0; font: 600 14px/20px var(--font-sans); }
+.alt-cal-nav { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1); }
+.alt-cal-nav:hover:not(:disabled) { background: var(--surface-raised); color: var(--ink); box-shadow: var(--elev-1); }
+.alt-cal-nav:disabled { opacity: 0.4; cursor: default; }
+.alt-cal-nav:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+[dir="rtl"] .alt-cal-chevron { scale: -1 1; }
+.alt-cal-body { position: relative; }
+.alt-cal-grid { border-collapse: separate; border-spacing: 0 2px; animation: alt-cal-fade var(--dur-travel-1) ease-out; }
+@keyframes alt-cal-fade { from { opacity: 0; } }
+.alt-cal-grid th { width: 36px; height: 24px; padding: 0; color: var(--ink-muted); font: 500 11.5px/1 var(--font-sans); text-align: center; }
+.alt-cal-grid td { padding: 0; text-align: center; }
+.alt-cal-day {
+  position: relative; z-index: 1; display: inline-grid; place-items: center; width: 36px; height: 34px; padding: 0; border: 0; border-radius: var(--radius-sm);
+  background: none; color: inherit; font: inherit; cursor: pointer; transition: color var(--dur-travel-2) var(--ease-settle);
+}
+.alt-cal-day::before { content: ""; position: absolute; inset: 2px; z-index: -1; border-radius: var(--radius-sm); background: var(--accent); opacity: 0; scale: 0.8; transition: opacity var(--dur-travel-1) var(--ease-sink), scale var(--dur-travel-2) var(--ease-settle); }
+.alt-cal-day:hover:not([aria-disabled]):not([data-chosen])::before { opacity: 0.16; scale: 1; }
+.alt-cal-day:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-cal-day[data-today]::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent-ink); }
+.alt-cal-day[aria-disabled] { color: var(--ink-faint); cursor: default; }
+.alt-cal-day[data-chosen] { color: var(--on-accent); font-weight: 600; }
+.alt-cal-day[data-chosen][data-today]::after { background: var(--on-accent); }
+.alt-cal-mark {
+  position: absolute; left: 0; top: 0; z-index: 0; border-radius: var(--radius-sm); pointer-events: none; opacity: 0;
+  background: var(--accent); background-image: var(--alt-sheen); box-shadow: var(--elev-1), inset 0 -2px 0 0 color-mix(in oklab, var(--accent-ink) 55%, transparent);
+  transition: transform var(--dur-travel-2) var(--ease-settle), width var(--dur-travel-2) var(--ease-settle), height var(--dur-travel-2) var(--ease-settle);
+}
+/* A range: the sunk track, then the two raised ends. */
+.alt-cal[data-range] .alt-cal-day[data-span]:not([data-chosen])::before { opacity: 1; scale: 1; inset: 2px -1px; border-radius: 0; background: var(--accent-soft); box-shadow: var(--well); }
+.alt-cal[data-range] .alt-cal-day[data-span-start]:not([data-chosen])::before { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.alt-cal[data-range] .alt-cal-day[data-span-end]:not([data-chosen])::before { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.alt-cal[data-range] .alt-cal-day[data-chosen]::before { opacity: 1; scale: 1; background: var(--accent); background-image: var(--alt-sheen); box-shadow: var(--elev-1); }
+.alt-calendar { display: inline-block; }
+[data-contrast="more"] .alt-cal-mark, [data-contrast="more"] .alt-cal[data-range] .alt-cal-day[data-chosen]::before { box-shadow: 0 2px 0 0 var(--ink); }
+@media (forced-colors: active) {
+  .alt-date-panel { border: 2px solid CanvasText; }
+  .alt-date-picker > .alt-input:not([data-filled]) { border-style: dashed; }
+  .alt-cal-mark, .alt-cal[data-range] .alt-cal-day[data-chosen]::before { forced-color-adjust: none; background: Highlight; }
+  .alt-cal-day[data-chosen] { forced-color-adjust: none; color: HighlightText; }
+  .alt-cal[data-range] .alt-cal-day[data-span]:not([data-chosen])::before { border: 1px dashed CanvasText; background: Canvas; }
+  .alt-cal-day[data-today] { text-decoration: underline; }
+  .alt-date-seg:focus { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
+@media (prefers-reduced-motion: reduce) { .alt-cal-mark { transition: none; } }

@@ -177,6 +177,17 @@ What didn't fit, each against a rule the rest of the system already keeps:
 
 **Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
 
+### E15 · How should a date be chosen?
+
+A design review, not a study: `DatePicker`, `DateRangePicker` and `Calendar` were prototyped in their preview and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with the APG grid keys, RTL and the segmented field checked in a browser (`checks/date-picker.mjs`). They were compared with the [APG date picker dialog](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/), React Aria's `DateField`/`DatePicker`, shadcn/ui's `Calendar` and native `<input type="date">`.
+
+- **Typed segments, not free text.** A free-text date field has to guess the order of “03/04/2026”; segments in the locale's order (from `Intl.DateTimeFormat.formatToParts`) make the order visible and work the same way in every locale, React Aria's reasoning. Native `type="date"` was rejected: its popup can't be styled into the elevation language and differs per browser.
+- **Days are flush; the choice is raised.** A well per day (the Checkbox build) at 42 days a month reads as texture. Keeping only the RadioGroup's one raised thumb, carried between days, says “one choice” and keeps the grid quiet.
+- **A month change cross-fades.** Sliding months sideways is common, but the Motion rules keep travel for changes of level and of hierarchy; a month is neither.
+- **ISO strings.** `Date` carries a time and a zone and shifts days across them; `Temporal.PlainDate` is right but needs a polyfill in some 2026 browsers. A `'YYYY-MM-DD'` string is exact and dependency-free.
+
+Not yet tested with people: whether the typed segments are discovered before the calendar button, and whether the range's “choose the end” prompt is enough.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
