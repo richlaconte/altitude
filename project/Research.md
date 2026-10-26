@@ -177,6 +177,17 @@ What didn't fit, each against a rule the rest of the system already keeps:
 
 **Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
 
+### E13 · How should several fields of one record be edited in place?
+
+A design review, not a study: `EditRegion` was prototyped in the EditRegion preview (three people with access, each row editable) and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard and race paths checked in a browser (`checks/edit-region.mjs`). It was compared with a Dialog per row (the existing ActionsInPlace recipe) and with one `InlineEdit` per field.
+
+- **In place, not modal.** NN/g's guidance on data tables notes that a modal editor hides the neighbouring rows people consult to choose a value ([Data tables: four major user tasks](https://www.nngroup.com/articles/data-tables/)), and Shneiderman's direct manipulation asks for a continuous view of the objects with rapid, reversible, incremental actions ([1983](https://doi.org/10.1109/MC.1983.1654471)). The region keeps the list visible and lifts only the record being worked on.
+- **One write, not several.** Independent `InlineEdit`s can leave a record half-changed when the second save fails. Saving the draft as one `onSave` with a `changed` list keeps the record consistent and still lets an application send a patch.
+- **No save on blur.** People sometimes click away from a multi-field editor expecting their work to persist. Autosave was rejected because the Actions in place guide rules it out and because a blur isn't a deliberate act; instead the draft simply stays open and nothing is lost.
+- **Whole-record conflicts.** A per-field merge (save the fields nobody else touched) was considered and rejected for now: it hides the other writer's change from the person saving, and `InlineEdit` already blocks the whole save.
+
+Not yet tested with people: whether the raised editor is noticed as “still unsaved” when someone scrolls away, and whether five fields is the right ceiling before a `Sheet`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

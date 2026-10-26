@@ -95,7 +95,7 @@ The 320 CSS pixel checks use touch emulation (`tap` for controls, simulated text
 | DEM-07 | Engineering builds, runtime regressions, layouts, modes and native browser zoom; final source-sync result recorded above. |
 | DEM-08 | Keyboard and emulated tap routes covered; real VoiceOver/Safari, Windows reader, physical touch keyboard, IME and magnification still open. |
 | DEM-09 | **Open:** six to eight counterbalanced formative sessions, observations, blocker remediation/retest and accept/revise decision. No sessions invented. |
-| DEM-10 | **Deferred:** EditRegion, ConfirmAction and generic action framework. No discovery gate has been met; no new framework exported. |
+| DEM-10 | **Deferred:** ConfirmAction and generic action framework. No discovery gate has been met; no new framework exported. EditRegion was later built for issue #12 (see `build/checks/edit-region.mjs`); its human validation is still open. |
 
 ## Review corrections and decisions
 
