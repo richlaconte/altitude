@@ -1542,3 +1542,30 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-edit-region-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .alt-edit-region-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-edit-region-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── Board, edited in place. A column's add slot is an opening: a dashed well that deepens to a trench under the
+   pointer. Activating it rises into a new card (static, level 1) holding a title field; the next slot is ready after
+   each add. Renaming turns a card's title into a well; a card being edited can't be picked up. A pending card hovers
+   after dur-grace; a failed one drops to a trench with its title kept and Retry. A fuller editor is an EditRegion in
+   the card's place. ── */
+.alt-board-add-wrap { margin-top: var(--space-2); }
+.alt-board-add {
+  display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 40px; padding: 0 var(--space-3); border: 1px dashed var(--line-control); border-radius: var(--radius-md);
+  background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); font: 500 13.5px/18px var(--font-sans); cursor: pointer;
+  transition: background-color var(--dur-travel-1) var(--ease-sink), box-shadow var(--dur-travel-1) var(--ease-sink), color var(--dur-travel-1);
+}
+.alt-board-add:hover, .alt-board-add:focus-visible { background: var(--surface-trench); box-shadow: var(--trench); color: var(--ink); }
+.alt-board-add:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-board-add > span { font: 500 16px/1 var(--font-sans); }
+.alt-board-new { display: grid; gap: var(--space-1); cursor: default; animation: alt-emerge var(--dur-travel-2) var(--ease-rise); }
+.alt-board-new[data-status="pending"], .alt-board-rename[data-status="pending"] { animation: alt-board-pending var(--dur-travel-1) var(--ease-rise) var(--dur-grace) both; }
+@keyframes alt-board-pending { to { box-shadow: var(--elev-2); transform: translateY(calc(-2px * var(--alt-travel))); } }
+.alt-board-new[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
+.alt-board-add-hint { color: var(--ink-muted); font: 400 12px/16px var(--font-sans); }
+.alt-board-add-error { display: inline-flex; align-items: center; gap: 4px; color: var(--critical); font: 400 12px/16px var(--font-sans); }
+.alt-board-rename { display: grid; gap: var(--space-1); }
+.alt-board-card[data-editing] { cursor: default; }
+.alt-board-card-tools { position: absolute; top: 4px; right: 4px; display: inline-flex; gap: 2px; opacity: 0; transition: opacity var(--dur-travel-1); }
+.alt-board-card:hover .alt-board-card-tools, .alt-board-card:focus-within .alt-board-card-tools, .alt-board-card:focus-visible .alt-board-card-tools { opacity: 1; }
+.alt-board-card-editor { min-width: 0; }
+@media (forced-colors: active) { .alt-board-add { border: 1px dashed CanvasText; } .alt-board-new[data-status="pending"] { outline: 1px dotted CanvasText; } .alt-board-new[data-status="failed"] { outline: 2px dashed CanvasText; } }
