@@ -177,6 +177,17 @@ What didn't fit, each against a rule the rest of the system already keeps:
 
 **Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
 
+### E14 · How should a set of tags be edited?
+
+A design review, not a study: `TagInput` was prototyped in its preview and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard paths checked in a browser (`checks/tag-input.mjs`). It was compared with the chip and tag models of React Aria `TagGroup`, MUI `Autocomplete multiple`, Material input chips, Fluent v9 `TagPicker` and Ant Design `Select mode="tags"`.
+
+- **Tags are labels, not controls.** They're part of the record, so they're Badge plates flush in the field's floor rather than raised chips; only the remove button reacts to a pointer. Material and Fluent raise chips; here that would say every tag is a button to press.
+- **One Tab stop for the tags.** React Aria and Fluent v9 make the tag group one stop with arrow keys; a stop per tag is slow with 20 tags. The input's description and the tags' own description state the keys.
+- **Backspace arms before it removes.** A single Backspace that deletes a tag is a common source of accidental loss, worse when removal is persisted. Arming (the tag lifts and is announced) costs one keystroke and makes the next one's effect visible first.
+- **The limit keeps focus.** Hiding or disabling the input at `max` drops keyboard focus to the body ([allxsmith/bestax#1103](https://github.com/allxsmith/bestax/issues/1103)); a read-only input with “Limit reached” keeps it.
+
+Not yet tested with people: whether arming is understood without the announcement, and whether people find Enter-to-edit on a focused tag.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

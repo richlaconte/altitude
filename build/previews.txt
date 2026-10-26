@@ -1065,6 +1065,42 @@ function App() {
   return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Assignee", hint: who ? "Assigned." : "Start typing a name." }, /* @__PURE__ */ React.createElement(A.Combobox, { items: people, value: who, onValueChange: setWho, placeholder: "Search people" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Country" }, /* @__PURE__ */ React.createElement(A.Combobox, { items: countries, defaultValue: "portugal", defaultOpen: true }))));
 }
 
+
+=== TagInput | <!-- @dsCard group="Inputs" height=560 subtitle="A set of short values in one field: tags are plates stamped into its floor" -->
+--- css
+.tags-demo { display: grid; gap: 24px; max-width: 560px; }
+.tags-demo .tags-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.tags-demo .tags-caption { margin: 0 0 6px; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+.tags-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dot); }
+--- jsx
+const TAG_LABELS = ['bug', 'design', 'docs', 'performance', 'accessibility', 'onboarding', 'billing', 'mobile'];
+const TAG_DOTS = { bug: 'var(--critical)', design: 'var(--accent)', accessibility: 'var(--positive)', performance: 'var(--caution)' };
+const tagWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+function App() {
+  const [labels, setLabels] = React.useState(['design', 'accessibility']);
+  const [recipients, setRecipients] = React.useState(['mara@northwind.example']);
+  const [skills, setSkills] = React.useState(['Figma', 'Research', 'Writing']);
+  return <div className="tags-demo">
+    <A.Field label="Labels">
+      <A.TagInput value={labels} onValueChange={setLabels} suggestions={TAG_LABELS} max={6} noun={['label', 'labels']}
+        placeholder="Add a label" normalize={tag => tag.trim().toLowerCase()} validate={tag => tag.length <= 24 ? undefined : 'Use 24 characters or fewer.'}
+        renderTag={tag => <>{TAG_DOTS[tag] && <span className="tags-dot" style={{ '--dot': TAG_DOTS[tag] }} aria-hidden="true" />}{tag}</>} />
+    </A.Field>
+    <A.Field label="Share with">
+      <A.TagInput value={recipients} onValueChange={setRecipients} noun={['person', 'people']} placeholder="name@northwind.example"
+        validate={tag => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag) ? undefined : `${tag} isn’t an email address.`}
+        onAdd={async tag => { await tagWait(500); return tag.endsWith('@northwind.example') ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at northwind.example can be invited. ${tag} wasn’t added.` }; }}
+        onRemove={async () => { await tagWait(300); return { ok: true }; }} />
+    </A.Field>
+    <A.Field label="Skills">
+      <A.TagInput value={skills} onValueChange={setSkills} noun={['skill', 'skills']} disabled />
+    </A.Field>
+    <div>
+      <p className="tags-caption">Standalone tags</p>
+      <div className="tags-row"><A.Tag>Figma</A.Tag><A.Tag>Research</A.Tag><A.Tag onRemove={() => {}}>Writing</A.Tag></div>
+    </div>
+  </div>;
+}
 === Stepper | <!-- @dsCard group="Navigation" height=420 subtitle="Done steps settle into the record; the next rises out of its imprint" -->
 --- css
 .wrap { display: flex; flex-direction: column; gap: 18px; max-width: 820px; }
