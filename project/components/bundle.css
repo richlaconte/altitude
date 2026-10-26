@@ -1522,3 +1522,53 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
 .alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── FilterBar: a query as a row of conditions. Applied filters are part of what you're looking at, so each condition
+   is a plate stamped flush into the bar like a Badge, split into segments (field · condition · value · remove). Each
+   segment opens a picker, so it lifts one level when pointed at (hover is a promise). A condition still waiting for
+   a value keeps that segment as an opening (a dashed well), and so does Add filter, deepening under the pointer.
+   Pickers float at level 3 as Select's list does. A changed condition is re-stamped (down 3px, settling). ── */
+.alt-filter-bar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; color: var(--ink); font: 400 13px/18px var(--font-sans); }
+.alt-filter-token {
+  display: inline-flex; align-items: stretch; max-width: 100%; min-height: 28px; border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%);
+  box-shadow: inset 0 1px 1.5px color-mix(in oklab, var(--ink) 16%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--ink) 9%, transparent), 0 1px 0 0 var(--alt-lip);
+}
+.alt-filter-token[data-stamp] { animation: alt-stamp-a var(--dur-travel-2) var(--ease-settle); }
+.alt-filter-anchor { position: relative; display: inline-flex; min-width: 0; }
+.alt-filter-seg {
+  display: inline-flex; align-items: center; gap: 4px; min-width: 0; min-height: 28px; margin: 0; padding: 0 8px; border: 0; border-radius: var(--radius-sm);
+  background: none; color: inherit; font: inherit; white-space: nowrap; cursor: pointer;
+  transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
+}
+.alt-filter-seg:hover, .alt-filter-seg[aria-expanded="true"] { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+.alt-filter-seg:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -1px; }
+.alt-filter-field { font-weight: 600; }
+.alt-filter-operator { color: var(--ink-muted); }
+.alt-filter-value { font-weight: 550; overflow: hidden; text-overflow: ellipsis; max-width: 24ch; }
+.alt-filter-value[data-empty] { margin: 3px; min-height: 22px; border: 1px dashed var(--line-control); background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); font-weight: 400; }
+.alt-filter-remove { width: 28px; justify-content: center; padding: 0; color: var(--ink-muted); }
+.alt-filter-add { border: 1px dashed var(--line-control); background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); }
+.alt-filter-add:hover { background: var(--surface-trench); box-shadow: var(--trench); transform: none; color: var(--ink); }
+.alt-filter-plus { font: 500 15px/1 var(--font-sans); }
+.alt-filter-match { color: var(--ink-muted); }
+.alt-filter-match strong { color: var(--ink); font-weight: 600; }
+.alt-filter-count { color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+.alt-filter-picker { min-width: 200px; max-width: min(320px, calc(100vw - 32px)); padding: var(--space-1); }
+.alt-filter-list { max-height: 260px; overflow-y: auto; outline: none; }
+.alt-filter-option { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: 32px; padding: 0 var(--space-2); border-radius: var(--radius-sm); cursor: pointer; font: 400 13.5px/18px var(--font-sans); }
+.alt-filter-option[data-active] { background: var(--accent-soft); }
+.alt-filter-empty { padding: var(--space-2); color: var(--ink-muted); }
+.alt-filter-search, .alt-filter-input {
+  width: 100%; min-width: 0; height: 32px; margin-bottom: var(--space-1); padding: 0 var(--space-2); border: 1px solid var(--line-control); border-radius: var(--radius-sm);
+  background: var(--surface-well); box-shadow: var(--well); color: var(--ink); font: 400 13.5px/18px var(--font-sans); outline: none; box-sizing: border-box;
+}
+.alt-filter-search:focus-visible, .alt-filter-input:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-filter-form { display: grid; gap: var(--space-2); padding: var(--space-2); }
+.alt-filter-form label { display: grid; gap: 2px; color: var(--ink-muted); font: 500 12px/16px var(--font-sans); }
+.alt-filter-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-contrast="more"] .alt-filter-seg:hover { box-shadow: 0 2px 0 0 var(--ink); }
+@media (forced-colors: active) {
+  .alt-filter-token { border: 1px solid CanvasText; } .alt-filter-value[data-empty], .alt-filter-add { border: 1px dashed CanvasText; }
+  .alt-filter-picker { border: 2px solid CanvasText; } .alt-filter-option[data-active] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}

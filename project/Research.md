@@ -177,6 +177,17 @@ What didn't fit, each against a rule the rest of the system already keeps:
 
 **Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
 
+### E18 · How should a query be built in place?
+
+A design review, not a study: `FilterBar` was prototyped over an issue table and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keys checked in a browser (`checks/filter-bar.mjs`). It was compared with Linear's filters, Notion database filters, GitHub's search tokens, Jira's basic search and Airtable.
+
+- **Conditions as sentences.** “Status is In review” reads the same to everyone and is the accessible name of each condition; segment buttons say which part they change.
+- **One Tab stop.** The [APG toolbar](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/) roving model keeps a row of five conditions (twenty segments) from adding twenty Tab stops.
+- **Filter in place.** Removing non-matching rows reflows the table and loses people's place; with `relevance`, matches rise and misses sink, so positions survive (the existing **Relevance** signal).
+- **Free text as a token, not a search box.** A “Title contains” condition sits beside the others, so the whole query is visible and editable in one place.
+
+Not yet tested with people: whether the field-then-value sequence for a new condition is faster than a single combined picker.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
