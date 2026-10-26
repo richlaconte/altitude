@@ -113,7 +113,10 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
 
   useIsoLayoutEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; generation.current++; current.current = null; returnFocus.current = false; focusField.current = null; };
+    // A remount (StrictMode's simulated one, or a real one) keeps an open session but starts a new generation, so
+    // work dispatched before it can't publish, and work after it isn't mistaken for stale.
+    if (current.current) current.current.generation = ++generation.current;
+    return () => { mounted.current = false; generation.current++; returnFocus.current = false; focusField.current = null; };
   }, []);
 
   // An observed change while editing is someone else's write: keep the draft, block Save, offer the current values.

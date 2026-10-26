@@ -108,6 +108,27 @@ try {
     check(!(await page.locator('.er-list').textContent()).includes('Mara Racing'), 'ER-24 the racing result is never published');
     await page.close(); }
 
+  // A region rendered already open, under StrictMode (its simulated unmount and remount), still saves.
+  { const page = await open();
+    await page.evaluate(() => {
+      const R = window.React, A = window.Altitude, h = R.createElement;
+      const host = document.createElement('div'); host.id = 'er-strict'; document.body.prepend(host);
+      window.erSaves = [];
+      function Fixture() {
+        const [value, setValue] = R.useState({ name: 'Ada' });
+        return h(A.AltitudeProvider, null, h(A.EditRegion, { label: 'Person', value, defaultOpen: true, onValueChange: setValue,
+          onSave: draft => { window.erSaves.push(draft.name); return { ok: true, value: draft }; } },
+          h(A.EditRegionView, null, h('span', { id: 'er-strict-name' }, value.name)),
+          h(A.EditRegionForm, null, field => h(A.Field, { label: 'Strict name' }, h(A.Input, field('name'))))));
+      }
+      window.ReactDOM.createRoot(host).render(h(R.StrictMode, null, h(Fixture)));
+    });
+    const input = page.getByRole('textbox', { name: 'Strict name' });
+    await input.fill('Ada Lovelace'); await input.press('Enter');
+    await page.locator('#er-strict-name').waitFor();
+    check(await page.locator('#er-strict-name').textContent() === 'Ada Lovelace' && JSON.stringify(await page.evaluate(() => window.erSaves)) === '["Ada Lovelace"]', 'ER-25 a defaultOpen region saves once under StrictMode');
+    await page.close(); }
+
   for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
     const page = await open(undefined, { scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
