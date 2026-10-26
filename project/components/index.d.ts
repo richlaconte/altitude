@@ -823,6 +823,41 @@ export interface SortableListProps<T> {
 }
 export declare function SortableList<T>(props: SortableListProps<T>): React.ReactElement;
 
+export interface ChecklistPlace { parentId: string | null; index: number }
+/** One change per action. Apply it to `items` (synchronously, or before resolving). */
+export type ChecklistOp =
+  | { type: 'add'; id: string; text: string; done: boolean; parentId: string | null; index: number }
+  | { type: 'edit'; id: string; text: string; previous: string }
+  | { type: 'toggle'; id: string; done: boolean }
+  | { type: 'remove'; id: string; text: string; done: boolean; parentId: string | null; index: number }
+  | { type: 'move' | 'indent' | 'outdent'; id: string; parentId: string | null; index: number; from: ChecklistPlace };
+export type ChecklistResult = { ok: true } | { ok: false; error: string };
+export interface ChecklistProps<T> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  items: T[];
+  getKey: (item: T) => string;
+  getText: (item: T) => string;
+  isDone: (item: T) => boolean;
+  getChildren?: (item: T) => T[] | undefined;
+  /** Allow Tab and Shift+Tab to nest items. Default false: a flat list. */
+  nested?: boolean;
+  /** Show done items after the rest in each list. Default false. */
+  sortDone?: boolean;
+  /** Each action, as one op. Return a failure to mark the item and offer Retry. */
+  onChange: (op: ChecklistOp) => ChecklistResult | void | Promise<ChecklistResult | void>;
+  /** Ctrl/Cmd+Z, and the Undo after a removal: reverse the last structural op (add, remove, move, indent, outdent). */
+  onUndo?: (op: ChecklistOp) => void;
+  /** Ids for new items. Default: a random id. */
+  createId?: () => string;
+  /** The last, empty line's placeholder. Default “Add an item”. */
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+}
+/** A list you write into, one line per item. Each line is its own editor and commits when you leave it. */
+export declare function Checklist<T>(props: ChecklistProps<T>): React.ReactElement;
+
 export interface StepperStep {
   /** Stable key. Default: its position. */
   id?: string;
@@ -892,7 +927,7 @@ declare global {
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;
-      HoldButton: typeof HoldButton; Pile: typeof Pile; ScrollArea: typeof ScrollArea; DropZone: typeof DropZone; SortableList: typeof SortableList; Drilldown: typeof Drilldown; useDepth: typeof useDepth; useApproach: typeof useApproach;
+      HoldButton: typeof HoldButton; Pile: typeof Pile; ScrollArea: typeof ScrollArea; DropZone: typeof DropZone; SortableList: typeof SortableList; Checklist: typeof Checklist; Drilldown: typeof Drilldown; useDepth: typeof useDepth; useApproach: typeof useApproach;
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;

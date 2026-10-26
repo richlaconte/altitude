@@ -11,7 +11,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const requireRoot = createRequire(new URL('../package.json', import.meta.url));
 const strict = process.env.ALT_CHECK_STRICT === '1';
 const out = join(root, 'build/test', strict ? 'react19-strict' : 'react19');
-const names = (process.argv[2] || 'InlineEdit,Dialog,ActionsInPlace,Sheet,CommandPalette,Toaster').split(',').map(s => s.trim()).filter(Boolean);
+const names = (process.argv[2] || 'InlineEdit,Dialog,ActionsInPlace,Sheet,CommandPalette,Toaster,Checklist').split(',').map(s => s.trim()).filter(Boolean);
 const sections = new Map(readFileSync(join(root, 'build/previews.txt'), 'utf8').split(/^=== /m).filter(s => s.trim()).map(s => [s.split(' | ')[0], s]));
 const missing = names.filter(name => !sections.has(name));
 if (missing.length) throw new Error('Missing canonical preview sections: ' + missing.join(', '));

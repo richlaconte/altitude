@@ -901,6 +901,59 @@ function App() {
   );
 }
 
+
+=== Checklist | <!-- @dsCard group="Inputs" height=560 subtitle="A list you write into: Enter for the next item, Tab to nest, check it off" -->
+--- css
+.cl-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; max-width: 760px; }
+.cl-demo h3 { margin: 0 0 8px; font: 600 15px/22px var(--font-sans); color: var(--ink); }
+.cl-demo p { margin: 0 0 8px; color: var(--ink-muted); font: 400 12.5px/18px var(--font-sans); }
+--- jsx
+// A tiny store that applies the Checklist's ops to nested items, and reverses them for Undo.
+const clStrip = (list, id) => { let found = null; const out = list.filter(x => { if (x.id === id) { found = x; return false; } return true; }).map(x => { if (found || !x.children) return x; const [kids, hit] = clStrip(x.children, id); if (hit) found = hit; return hit ? { ...x, children: kids } : x; }); return [out, found]; };
+const clInsert = (list, parentId, index, node) => parentId === null ? [...list.slice(0, index), node, ...list.slice(index)]
+  : list.map(x => x.id === parentId ? { ...x, children: [...(x.children || []).slice(0, index), node, ...(x.children || []).slice(index)] } : x.children ? { ...x, children: clInsert(x.children, parentId, index, node) } : x);
+const clUpdate = (list, id, patch) => list.map(x => x.id === id ? { ...x, ...patch } : x.children ? { ...x, children: clUpdate(x.children, id, patch) } : x);
+const clApply = (list, op) => {
+  if (op.type === 'add') return clInsert(list, op.parentId, op.index, { id: op.id, text: op.text, done: op.done });
+  if (op.type === 'edit') return clUpdate(list, op.id, { text: op.text });
+  if (op.type === 'toggle') return clUpdate(list, op.id, { done: op.done });
+  const [rest, node] = clStrip(list, op.id);
+  if (op.type === 'remove') return rest;
+  return clInsert(rest, op.parentId, op.index, node);
+};
+function useChecklist(seed, refuse) {
+  const [items, setItems] = React.useState(seed);
+  const removedNodes = React.useRef(new Map());
+  const onChange = op => {
+    if (refuse && refuse(op)) return { ok: false, error: refuse(op) };
+    if (op.type === 'remove') removedNodes.current.set(op.id, clStrip(items, op.id)[1]);
+    setItems(list => clApply(list, op));
+  };
+  const onUndo = op => setItems(list => {
+    if (op.type === 'add') return clStrip(list, op.id)[0];
+    if (op.type === 'remove') return clInsert(list, op.parentId, op.index, removedNodes.current.get(op.id));
+    const [rest, node] = clStrip(list, op.id); return clInsert(rest, op.from.parentId, op.from.index, node);
+  });
+  return { items, onChange, onUndo };
+}
+const CL_LAUNCH = [
+  { id: 'venue', text: 'Book the venue', done: true },
+  { id: 'invites', text: 'Send invitations', done: false, children: [
+    { id: 'list', text: 'Confirm the guest list', done: true }, { id: 'design', text: 'Design the card', done: false } ] },
+  { id: 'catering', text: 'Choose catering', done: false },
+];
+const CL_PACK = [{ id: 'p1', text: 'Passport', done: false }, { id: 'p2', text: 'Charger', done: true }, { id: 'p3', text: 'Rain jacket', done: false }];
+function App() {
+  const launch = useChecklist(CL_LAUNCH, op => op.type === 'edit' && /tbd/i.test(op.text) ? 'Write the task, not “TBD”.' : undefined);
+  const pack = useChecklist(CL_PACK);
+  const props = { getKey: t => t.id, getText: t => t.text, isDone: t => t.done, getChildren: t => t.children };
+  return <div className="cl-demo">
+    <section><h3 id="cl-launch">Launch tasks</h3><p>Nested: Tab and Shift+Tab indent and outdent. Writing “TBD” is refused.</p>
+      <A.Checklist aria-labelledby="cl-launch" nested {...props} {...launch} /></section>
+    <section><h3 id="cl-pack">Packing</h3><p>Flat, done items last.</p>
+      <A.Checklist aria-labelledby="cl-pack" sortDone {...props} {...pack} placeholder="Add something to pack" /></section>
+  </div>;
+}
 === DropZone | <!-- @dsCard group="Inputs" height=230 subtitle="Receptacles open when they're needed" -->
 --- css
 .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
