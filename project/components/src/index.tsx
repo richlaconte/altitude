@@ -20,3 +20,5 @@ export type { Promised, Pending, SkeletonOption, AwaitProps } from './suspense';
 export type { AvatarProps, AvatarGroupProps } from './controls';
 export { InlineEdit } from './inline-edit';
 export type { InlineEditProps, InlineEditSaveResult } from './inline-edit';
+export { DataGrid } from './data-grid';
+export type { DataGridProps, DataGridColumn, DataGridChange, DataGridResult, DataGridEditorControl } from './data-grid';

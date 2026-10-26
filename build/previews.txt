@@ -1126,6 +1126,49 @@ function App() {
   ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys."));
 }
 
+
+=== DataGrid | <!-- @dsCard group="Display" height=520 subtitle="A table edited cell by cell with spreadsheet keys: type, Enter, Tab, paste a block" -->
+--- css
+.dg-demo { max-width: 820px; }
+.dg-demo p { margin: 8px 0 0; color: var(--ink-muted); font: 400 12.5px/18px var(--font-sans); }
+--- jsx
+const DG_STATUS = [{ value: 'active', label: 'Active' }, { value: 'paused', label: 'Paused' }, { value: 'retired', label: 'Retired' }];
+const DG_SEED = [
+  { id: 'p1', name: 'Desk lamp', sku: 'LMP-204', price: 49, stock: 120, status: 'active' },
+  { id: 'p2', name: 'Monitor arm', sku: 'ARM-310', price: 89, stock: 34, status: 'active' },
+  { id: 'p3', name: 'Cable tray', sku: 'TRY-118', price: 24, stock: 0, status: 'paused' },
+  { id: 'p4', name: 'Footrest', sku: 'FTR-052', price: 39, stock: 58, status: 'active' },
+  { id: 'p5', name: 'Laptop stand', sku: 'STD-077', price: 59, stock: 12, status: 'retired' },
+];
+const dgWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const dgMoney = v => v === '' || v === null || v === undefined ? '' : String(v);
+function App() {
+  const [rows, setRows] = React.useState(DG_SEED);
+  const apply = changes => setRows(list => list.map(row => changes.reduce((r, c) => c.rowId === r.id ? { ...r, [c.key]: c.draft } : r, row)));
+  return <div className="dg-demo">
+    <A.DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name}
+      columns={[
+        { key: 'name', header: 'Name', editable: true, validate: v => String(v).trim() ? undefined : 'Enter a name.' },
+        { key: 'sku', header: 'SKU' },
+        { key: 'price', header: 'Price', align: 'end', editable: true, parse: t => t.trim() === '' ? '' : Number(t), format: dgMoney,
+          validate: v => v === '' || !Number.isFinite(v) || v < 0 ? 'Use a price of 0 or more.' : undefined, cell: r => `$${r.price}` },
+        { key: 'stock', header: 'Stock', align: 'end', editable: true, parse: t => t.trim() === '' ? 0 : Number(t), format: dgMoney,
+          validate: v => Number.isInteger(v) && v >= 0 ? undefined : 'Use a whole number, 0 or more.' },
+        { key: 'status', header: 'Status', editable: true, format: v => DG_STATUS.find(s => s.value === v)?.label ?? '',
+          cell: r => <A.Badge tone={r.status === 'active' ? 'positive' : r.status === 'paused' ? 'caution' : 'neutral'}>{DG_STATUS.find(s => s.value === r.status).label}</A.Badge>,
+          editor: control => <A.Select {...control} items={DG_STATUS} size="sm" defaultOpen /> },
+      ]}
+      onCellSave={async change => {
+        await dgWait(250);
+        // The demo service locks the lamp's price during a sale.
+        if (change.rowId === 'p1' && change.key === 'price') return { ok: false, error: 'The Desk lamp price is locked during the sale.' };
+        apply([change]); return { ok: true };
+      }}
+      onCellsSave={async changes => { await dgWait(300); apply(changes); return { ok: true }; }}
+      onUndo={last => apply(last.map(c => ({ ...c, draft: c.previousValue })))} />
+    <p>Arrows move, type to replace, Enter or F2 to edit, Tab and Enter save and move. Shift+arrows select; copy and paste a block from a spreadsheet. Ctrl+Z undoes.</p>
+  </div>;
+}
 === Board | <!-- @dsCard group="Layout" height=430 subtitle="Columns open to receive; a carried card floats at level 3" -->
 --- css
 .alt-board-col { width: 214px; }

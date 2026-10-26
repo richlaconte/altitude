@@ -177,6 +177,17 @@ What didn't fit, each against a rule the rest of the system already keeps:
 
 **Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
 
+### E20 · How should a table be edited cell by cell?
+
+A design review, not a study: `DataGrid` was prototyped as an inventory grid and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keys checked in a browser (`checks/data-grid.mjs`). It was compared with the [APG data grid](https://www.w3.org/WAI/ARIA/apg/patterns/grid/), MUI X Data Grid, AG Grid, Glide Data Grid, Airtable and Excel.
+
+- **A sibling, not a DataTable mode.** DataTable's README says it's “a table, not a grid”; adding cell focus and editing would change its semantics for everyone.
+- **Enter, Tab and a click commit.** InlineEdit keeps a session open across blur, but every spreadsheet commits on Enter, Tab and clicking another cell, and fighting that makes entry unusable. Focus leaving the grid is the one case that keeps the draft open, marked unsaved, so nothing is lost or written silently.
+- **No hover lift.** A click selects, so a lift would promise an action that doesn't happen; the header's pencil and `aria-readonly` carry editability.
+- **Ranges are a tint.** Height is reserved for live content and writes; a selection is only a target.
+
+Not yet tested with people: whether “Not saved yet” is noticed when someone tabs out of the grid mid-edit.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

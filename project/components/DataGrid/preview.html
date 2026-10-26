@@ -1,0 +1,91 @@
+<!-- @dsCard group="Display" height=520 subtitle="A table edited cell by cell with spreadsheet keys: type, Enter, Tab, paste a block" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataGrid — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.dg-demo { max-width: 820px; }
+.dg-demo p { margin: 8px 0 0; color: var(--ink-muted); font: 400 12.5px/18px var(--font-sans); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const DG_STATUS = [{ value: "active", label: "Active" }, { value: "paused", label: "Paused" }, { value: "retired", label: "Retired" }];
+const DG_SEED = [
+  { id: "p1", name: "Desk lamp", sku: "LMP-204", price: 49, stock: 120, status: "active" },
+  { id: "p2", name: "Monitor arm", sku: "ARM-310", price: 89, stock: 34, status: "active" },
+  { id: "p3", name: "Cable tray", sku: "TRY-118", price: 24, stock: 0, status: "paused" },
+  { id: "p4", name: "Footrest", sku: "FTR-052", price: 39, stock: 58, status: "active" },
+  { id: "p5", name: "Laptop stand", sku: "STD-077", price: 59, stock: 12, status: "retired" }
+];
+const dgWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const dgMoney = (v) => v === "" || v === null || v === void 0 ? "" : String(v);
+function App() {
+  const [rows, setRows] = React.useState(DG_SEED);
+  const apply = (changes) => setRows((list) => list.map((row) => changes.reduce((r, c) => c.rowId === r.id ? { ...r, [c.key]: c.draft } : r, row)));
+  return /* @__PURE__ */ React.createElement("div", { className: "dg-demo" }, /* @__PURE__ */ React.createElement(
+    A.DataGrid,
+    {
+      "aria-label": "Inventory",
+      rows,
+      getRowId: (r) => r.id,
+      getRowLabel: (r) => r.name,
+      columns: [
+        { key: "name", header: "Name", editable: true, validate: (v) => String(v).trim() ? void 0 : "Enter a name." },
+        { key: "sku", header: "SKU" },
+        {
+          key: "price",
+          header: "Price",
+          align: "end",
+          editable: true,
+          parse: (t) => t.trim() === "" ? "" : Number(t),
+          format: dgMoney,
+          validate: (v) => v === "" || !Number.isFinite(v) || v < 0 ? "Use a price of 0 or more." : void 0,
+          cell: (r) => `$${r.price}`
+        },
+        {
+          key: "stock",
+          header: "Stock",
+          align: "end",
+          editable: true,
+          parse: (t) => t.trim() === "" ? 0 : Number(t),
+          format: dgMoney,
+          validate: (v) => Number.isInteger(v) && v >= 0 ? void 0 : "Use a whole number, 0 or more."
+        },
+        {
+          key: "status",
+          header: "Status",
+          editable: true,
+          format: (v) => DG_STATUS.find((s) => s.value === v)?.label ?? "",
+          cell: (r) => /* @__PURE__ */ React.createElement(A.Badge, { tone: r.status === "active" ? "positive" : r.status === "paused" ? "caution" : "neutral" }, DG_STATUS.find((s) => s.value === r.status).label),
+          editor: (control) => /* @__PURE__ */ React.createElement(A.Select, { ...control, items: DG_STATUS, size: "sm", defaultOpen: true })
+        }
+      ],
+      onCellSave: async (change) => {
+        await dgWait(250);
+        if (change.rowId === "p1" && change.key === "price") return { ok: false, error: "The Desk lamp price is locked during the sale." };
+        apply([change]);
+        return { ok: true };
+      },
+      onCellsSave: async (changes) => {
+        await dgWait(300);
+        apply(changes);
+        return { ok: true };
+      },
+      onUndo: (last) => apply(last.map((c) => ({ ...c, draft: c.previousValue })))
+    }
+  ), /* @__PURE__ */ React.createElement("p", null, "Arrows move, type to replace, Enter or F2 to edit, Tab and Enter save and move. Shift+arrows select; copy and paste a block from a spreadsheet. Ctrl+Z undoes."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
