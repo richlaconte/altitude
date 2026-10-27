@@ -403,7 +403,6 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
           <li ref={(el) => { if (el) rowRefs.current.set(row.key, el); else rowRefs.current.delete(row.key); }} role="treeitem" className="alt-tree-row"
             aria-level={row.level} aria-setsize={row.setsize} aria-posinset={row.index + 1} aria-expanded={row.branch ? row.expanded : undefined}
             aria-selected={selectionMode === 'none' ? undefined : selected === row.key} aria-busy={pending || row.loading || undefined}
-            aria-pressed={carry?.mode === 'keys' && carry.key === row.key ? true : undefined}
             tabIndex={row.key === current && !isRenaming ? 0 : -1} style={{ ['--level' as any]: row.level }}
             data-carried={carry?.key === row.key ? carry.mode : undefined} data-into={into ? (carry?.blocked ? 'blocked' : '') : undefined}
             data-status={pending ? 'pending' : failed === row.key ? 'failed' : undefined} data-settle={settled === row.key ? '' : undefined}
