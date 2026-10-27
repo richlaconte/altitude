@@ -1,6 +1,6 @@
 Altitude is a React component library where **height is the interface**. Its one idea: **the ground is the record.** Settled content sits on the ground. Anything live rises above it (something to press, something in your hand, something waiting to be confirmed, something that just changed), and the higher it goes, the more temporary it is and the more it asks of you. Anything that's waiting to receive sinks below it (a field, a slot, a track, a problem to fix). Motion only ever travels along that axis. Color schemes are swappable and the accent can be any color; the elevation language is the same in all of them.
 
-Read **Elevation** for the model and every signal height carries, **Motion** before animating anything, **Research** for the evidence and measurements behind each rule, and **Theming** for schemes, custom accents and shadcn/ui.
+Read **Elevation** for the model and every signal height carries, **Motion** before animating anything, **Charts** before drawing data, **Research** for the evidence and measurements behind each rule, and **Theming** for schemes, custom accents and shadcn/ui.
 
 ## The laws
 
@@ -60,6 +60,10 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 - Wrap the app once in `AltitudeProvider`. It sets the scheme, derives a custom accent, honors reduced motion and high contrast, and hosts dialogs and toasts so the page can recede behind them. Render `Toaster` once inside it.
 - Put depth signals on any `Surface` or `Card` with props: `settle` (afterglow when a value changes), `status` (pending, committed, failed), `heldBy` (a collaborator's hold) and `relevance` (match or miss). In your own components, spread `useDepth(...)` onto the element.
 - The bundle exposes everything on `window.Altitude` and expects React 18. It is a dependency-free reference implementation; the props mirror shadcn/ui, so the same styles can wrap Radix primitives in a production package.
+
+## Charts
+
+In a chart, the data is the record: marks are flat ink standing on a ground line, never raised, shadowed or lifted on hover, because a bar's length is already its height. Only the chart's chrome (the readout, a toggleable legend, a brush, a drill-down) uses height, and each is built like a component you already have. Colour does one job per chart, and every chart has a summary, a keyboard path and a table view. [Charts](Charts.md) has the rules, the form chooser and the build of every part.
 
 ## Actions in place
 
