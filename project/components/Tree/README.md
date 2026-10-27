@@ -37,7 +37,7 @@ The tree is controlled by `items`. Each write follows the `InlineEdit` contract:
 - **Carried** (keyboard): the node floats at level 3, tilted, and is shown where it will land. **Carried** (pointer): a floating copy follows the pointer with the count of what it carries; the top or bottom quarter of a row shows a **slot**, a thin well at the target's depth; the middle of a row opens that node into a **trench with an accent rim** (a critical rim when `canDrop` refuses it). Hovering a closed node for 600ms opens it (spring-loaded).
 - **A new node** is named in a well at its insertion point; once added it settles with an afterglow.
 
-Without height: `aria-level`, `aria-setsize`, `aria-posinset`, `aria-expanded`, `aria-selected`, `aria-busy` and `aria-pressed` (carried) on every node; moves are announced with their depth (“Moved Logo into Brand, position 1 of 3”). Forced colours: selected 1px Highlight, carried 2px, slots dashed, drop-into 3px dashed, pending dotted, failed thick dashed. `contrast="more"`: the carried node gets a 3px slab.
+Without height: `aria-level`, `aria-setsize`, `aria-posinset`, `aria-expanded`, `aria-selected` and `aria-busy` on every node (a carried node is announced through the live region, since `aria-pressed` isn't allowed on a tree item); moves are announced with their depth (“Moved Logo into Brand, position 1 of 3”). Forced colours: selected 1px Highlight, carried 2px, slots dashed, drop-into 3px dashed, pending dotted, failed thick dashed. `contrast="more"`: the carried node gets a 3px slab.
 
 ## Keyboard
 
@@ -53,7 +53,7 @@ The APG tree view, plus editing:
 | Enter | `onAction`, or select |
 | F2 | rename (Enter saves, Escape cancels; IME composition is left alone) |
 | Ctrl/Cmd+Enter, Ctrl/Cmd+Shift+Enter | add a sibling after / a child inside |
-| Space | pick up (`aria-pressed`): ↑/↓ move between slots, → into the node above, ← out of the parent, Space or Enter drop, Escape cancel. Without `onMove`, Space selects |
+| Space | pick up (announced): ↑/↓ move between slots, → into the node above, ← out of the parent, Space or Enter drop, Escape cancel. Without `onMove`, Space selects |
 | Alt+↑ / Alt+↓ | move one step without picking up |
 | Delete | `onRemove`; focus moves to the next node, else the previous |
 

@@ -72,7 +72,14 @@ try {
     check(await level(page, 'Old launch') === '2' && await item(page, 'Archive').getAttribute('aria-expanded') === 'true', 'TR-22 Ctrl+Shift+Enter adds a child inside');
     // Keyboard carry.
     await item(page, 'Team handbook').focus(); await page.keyboard.press('Space');
-    await page.waitForTimeout(50); check(await item(page, 'Team handbook').getAttribute('aria-pressed') === 'true' && (await status(page)).includes('Picked up Team handbook'), 'TR-23 Space picks a node up and says how to move it');
+    await page.waitForTimeout(50); check(await item(page, 'Team handbook').getAttribute('data-carried') === 'keys' && (await status(page)).includes('Picked up Team handbook'), 'TR-23 Space picks a node up and says how to move it');
+    // ARIA 1.2: treeitem supports these states and properties (plus the global ones); aria-pressed isn't among them.
+    const misused = await page.evaluate(() => {
+      const allowed = new Set(['aria-level', 'aria-setsize', 'aria-posinset', 'aria-expanded', 'aria-selected', 'aria-checked', 'aria-busy',
+        'aria-disabled', 'aria-label', 'aria-labelledby', 'aria-describedby', 'aria-controls', 'aria-owns', 'aria-current', 'aria-hidden', 'aria-invalid', 'aria-keyshortcuts', 'aria-roledescription']);
+      return [...document.querySelectorAll('[role="treeitem"]')].flatMap(el => [...el.attributes].map(a => a.name).filter(n => n.startsWith('aria-') && !allowed.has(n)));
+    });
+    check(misused.length === 0, `TR-23b a carried node uses only ARIA a treeitem allows (${misused.join(', ')})`);
     await page.keyboard.press('ArrowUp');
     check(await level(page, 'Team handbook') === '2' && (await order(page)).includes('Archive\n  Team handbook\n  Old launch'), 'TR-24 ↑ carries it into the open node above, at its depth');
     await page.keyboard.press('Escape');
@@ -84,7 +91,7 @@ try {
     await page.keyboard.press('ArrowLeft'); check(await level(page, 'Roadmap') === '2', 'TR-27b ← carries it back out (outdent)');
     await page.keyboard.press('ArrowRight'); await page.keyboard.press('Space');
     await page.waitForFunction(() => document.querySelector('.alt-tree-status[aria-live="assertive"]').textContent.startsWith('Moved Roadmap into Specs'));
-    check(await level(page, 'Roadmap') === '3' && await item(page, 'Roadmap').getAttribute('aria-pressed') === null, 'TR-28 Space drops it and the move is announced with its depth');
+    check(await level(page, 'Roadmap') === '3' && await item(page, 'Roadmap').getAttribute('data-carried') === null, 'TR-28 Space drops it and the move is announced with its depth');
     await item(page, 'Old launch').focus(); await page.keyboard.press('Space'); await page.keyboard.press('ArrowLeft'); await page.keyboard.press('Space');
     await page.waitForFunction(() => document.querySelector('.alt-tree-status[aria-live="assertive"]').textContent.includes('back in its place'));
     check(await level(page, 'Old launch') === '2' && await page.locator('[data-status="failed"]').count() === 1, 'TR-29 a rejected move puts the node back and says why');
