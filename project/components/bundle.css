@@ -1542,3 +1542,25 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-edit-region-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .alt-edit-region-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-edit-region-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── DataTable, expanded and edited in its row. Read-only detail is a reveal of the record, so it stays on the ground:
+   a full-width region under the row, inset by space-4, with a line rule, and the disclosure chevron turns. Editing is
+   live, so it rises: the row and its region become one raised slab (elev-1, drawn by the first cell as for selected
+   rows), holding a static EditRegion; the cells above keep the record identified. Sorting and reordering wait. ── */
+.alt-td-expand, .alt-th-expand { width: 40px; padding-inline: 6px; }
+.alt-td-edit, .alt-th-edit { width: 1%; white-space: nowrap; }
+.alt-table-disclose { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1); }
+.alt-table-disclose:hover { background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink); }
+.alt-table-disclose:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-table-disclose svg { rotate: -90deg; transition: rotate var(--dur-travel-2) var(--ease-settle); }
+.alt-table-disclose[aria-expanded="true"] svg { rotate: 0deg; }
+[dir="rtl"] .alt-table-disclose:not([aria-expanded="true"]) svg { rotate: 90deg; }
+.alt-table-detail > .alt-td { padding: var(--space-3) var(--space-4) var(--space-4); white-space: normal; animation: alt-emerge var(--dur-travel-2) var(--ease-glide); --alt-from-y: -4px; }
+.alt-tr[data-expanded]:not([data-editing]) > .alt-td { border-bottom-color: transparent; }
+.alt-tr[data-editing] { --row-bg: var(--surface-raised); --row-sh: var(--elev-1); }
+.alt-tr[data-editing]:not(.alt-table-editrow) > .alt-td { border-bottom-color: transparent; }
+.alt-tr[data-editing]:not(.alt-table-editrow) > .alt-td:first-child::before { bottom: -2px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; clip-path: inset(-12px -12px 0 -12px); }
+.alt-table-editrow > .alt-td:first-child::before { border-top-left-radius: 0; border-top-right-radius: 0; clip-path: inset(0 -12px -12px -12px); }
+.alt-table-editrow > .alt-td { padding: var(--space-2) var(--space-4) var(--space-4); white-space: normal; }
+.alt-table-editrow .alt-edit-region:not([data-state="read"]) .alt-edit-region-surface { border: 0; padding: 0; background: none; box-shadow: none; }
+@media (forced-colors: active) { .alt-tr[data-editing] > .alt-td { border-block: 1px solid CanvasText; } }

@@ -789,6 +789,19 @@ export interface DataTableProps<T> {
   empty?: React.ReactNode;
   className?: string;
   'aria-label'?: string;
+  /** Read-only detail: a disclosure button in the first column opens a full-width region under the row, on the ground. */
+  renderExpanded?: (row: T) => React.ReactNode;
+  /** With onSave, an Edit button opens the row's region as an EditRegion holding these fields; row and region rise together, and sorting and reordering wait. */
+  renderEditor?: (field: EditRegionBinder<T & Record<string, unknown>>, row: T) => React.ReactNode;
+  onSave?: (draft: T, context: { previousValue: T; changed: (keyof T)[] }) => EditRegionSaveResult<T & Record<string, unknown>> | Promise<EditRegionSaveResult<T & Record<string, unknown>>>;
+  /** Publishes a saved row's canonical record (a synchronous setter). */
+  onRowChange?: (canonical: T) => void;
+  /** Rows whose detail is open, by id. */
+  expanded?: string[];
+  defaultExpanded?: string[];
+  onExpandedChange?: (ids: string[]) => void;
+  /** 'single' (default): opening one closes the others. */
+  expandMode?: 'single' | 'multiple';
 }
 /** A Table from data: sorting that carries rows, selection with a counted toolbar, filtering in place, interactive rows and reordering. */
 export declare function DataTable<T>(props: DataTableProps<T>): React.ReactElement;
