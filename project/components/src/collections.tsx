@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEffect } from './core';
-import { Badge, Button, Checkbox } from './controls';
+import { Badge, Button, Checkbox, Input } from './controls';
 import { EditRegion, EditRegionBinder, EditRegionForm, EditRegionSaveResult } from './edit-region';
 import { Pile } from './pile';
 import { Arrive, Await, hint, isPromise, Promised, readPromised, SkeletonOption, useArrival, useHasWaited, useReportWaiting } from './suspense';
@@ -692,8 +692,60 @@ export interface BoardColumnProps extends Omit<React.HTMLAttributes<HTMLElement>
   onCollapsedChange?: (collapsed: boolean) => void;
   /** Show the collapse button. */
   collapsible?: boolean;
+  /** Adds an add slot at the foot of the column. Resolve after the new card is among the children. */
+  onCreate?: (title: string) => BoardCreateResult | Promise<BoardCreateResult>;
+  /** Default “Add a card”. */
+  addLabel?: string;
 }
-export function BoardColumn({ id, title, collapsed, defaultCollapsed = false, onCollapsedChange, collapsible, className, children, ...rest }: BoardColumnProps) {
+export type BoardCreateResult = { ok: true; value: { id: string } } | { ok: false; error: string };
+export type BoardRenameResult = { ok: true; value: string } | { ok: false; error: string };
+const CARD_ERROR = 'That change couldn’t be saved. Try again.';
+
+/** The add slot: an opening that rises into a new card's title field. Enter adds and opens the next; Escape closes. */
+function BoardAdd({ column, label, addLabel, onCreate, count }: { column: string; label: string; addLabel: string; count: number; onCreate: (title: string) => BoardCreateResult | Promise<BoardCreateResult> }) {
+  const [open, setOpen] = React.useState(false);
+  const [text, setText] = React.useState('');
+  const [phase, setPhase] = React.useState<'idle' | 'pending' | 'failed'>('idle');
+  const [error, setError] = React.useState('');
+  const [said, setSaid] = React.useState('');
+  const field = React.useRef<HTMLInputElement>(null);
+  const button = React.useRef<HTMLButtonElement>(null);
+  const mounted = React.useRef(true);
+  React.useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useIsoLayoutEffect(() => { if (open) field.current?.focus(); }, [open]);
+  const close = () => { setOpen(false); setText(''); setPhase('idle'); setError(''); requestAnimationFrame(() => button.current?.focus()); };
+  const add = async () => {
+    const title = text.trim();
+    if (!title) { close(); return; }
+    if (phase === 'pending') return;
+    setPhase('pending'); setError(''); setSaid('Adding card');
+    let r: BoardCreateResult;
+    try { r = await onCreate(title); } catch { r = { ok: false, error: CARD_ERROR }; }
+    if (!mounted.current) return;
+    if (!r || r.ok !== true) { const message = (r as any)?.error || CARD_ERROR; setPhase('failed'); setError(message); setSaid(message); field.current?.focus(); return; }
+    setPhase('idle'); setText(''); setSaid(`Added ${title} to ${label}, position ${count + 1} of ${count + 1}.`);
+    field.current?.focus();
+  };
+  return <div className="alt-board-add-wrap">
+    {open ? <div className="alt-board-card alt-board-new" data-status={phase === 'pending' ? 'pending' : phase === 'failed' ? 'failed' : undefined} aria-busy={phase === 'pending' || undefined}>
+      <Input ref={field} size="sm" aria-label="Card title" placeholder="Card title" value={text} readOnly={phase === 'pending'} invalid={phase === 'failed'}
+        aria-describedby={`${column}-add-hint`}
+        onChange={(e) => { setText(e.target.value); if (phase === 'failed') { setPhase('idle'); setError(''); } }}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return;
+          if (e.key === 'Enter') { e.preventDefault(); void add(); }
+          else if (e.key === 'Escape') { e.preventDefault(); if (phase !== 'pending') close(); }
+        }} />
+      <span id={`${column}-add-hint`} className="alt-board-add-hint">{error ? <span className="alt-board-add-error"><Icons.AlertCircle size={13} />{error}</span> : 'Enter to add, Escape to close'}</span>
+      {phase === 'failed' && <Button size="sm" variant="ghost" onClick={() => { void add(); }}>Retry</Button>}
+    </div>
+      : <button ref={button} type="button" className="alt-board-add" aria-label={`${addLabel} to ${label}`} onClick={() => setOpen(true)}><span aria-hidden="true">+</span>{addLabel}</button>}
+    <span className="alt-sr" role="status" aria-live="polite">{said}</span>
+  </div>;
+}
+
+export function BoardColumn({ id, title, collapsed, defaultCollapsed = false, onCollapsedChange, collapsible, onCreate, addLabel = 'Add a card', className, children, ...rest }: BoardColumnProps) {
   const ctx = React.useContext(BoardCtx);
   const [isCollapsed, setCollapsed] = useControllable(collapsed, defaultCollapsed, onCollapsedChange);
   const count = React.Children.toArray(children).filter(React.isValidElement).length;
@@ -723,6 +775,7 @@ export function BoardColumn({ id, title, collapsed, defaultCollapsed = false, on
           {!count && !carry && <div className="alt-board-empty">No cards</div>}
         </div>
       )}
+      {onCreate && !isCollapsed && <BoardAdd column={id} label={label} addLabel={addLabel} onCreate={onCreate} count={count} />}
     </section>
   );
 }
@@ -735,24 +788,93 @@ export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   heldBy?: { name: string; presence?: 1 | 2 | 3 };
   /** Afterglow: when this value changes the card arrives tinted and lifted, then settles. */
   settle?: unknown;
+  /** Rename in place (F2, or the visible Rename button): InlineEdit's contract. Use with `label`. */
+  onRename?: (draft: string) => BoardRenameResult | Promise<BoardRenameResult>;
+  /** The card's record, for a fuller editor in its place (EditRegion). */
+  value?: Record<string, unknown>;
+  renderEditor?: (field: EditRegionBinder<Record<string, unknown>>) => React.ReactNode;
+  onSave?: (draft: Record<string, unknown>, context: { previousValue: Record<string, unknown>; changed: string[] }) => EditRegionSaveResult<Record<string, unknown>> | Promise<EditRegionSaveResult<Record<string, unknown>>>;
+  onValueChange?: (canonical: Record<string, unknown>) => void;
 }
-export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(function BoardCard({ id, label, heldBy, settle, className, style, onClickCapture, children, ...rest }, ref) {
+
+/** Renaming a card's title in place, with InlineEdit's session rules (retained input on failure, no save on blur). */
+function CardRename({ label, onRename, onDone }: { label: string; onRename: (draft: string) => BoardRenameResult | Promise<BoardRenameResult>; onDone: () => void }) {
+  const [draft, setDraft] = React.useState(label);
+  const [phase, setPhase] = React.useState<'editing' | 'saving' | 'failed'>('editing');
+  const [error, setError] = React.useState('');
+  const field = React.useRef<HTMLInputElement>(null);
+  const mounted = React.useRef(true);
+  React.useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useIsoLayoutEffect(() => { field.current?.focus(); field.current?.select(); }, []);
+  const save = async () => {
+    if (phase === 'saving') return;
+    if (draft === label) { onDone(); return; }
+    if (!draft.trim()) { setPhase('failed'); setError('Enter a title.'); return; }
+    setPhase('saving');
+    let r: BoardRenameResult;
+    try { r = await onRename(draft); } catch { r = { ok: false, error: CARD_ERROR }; }
+    if (!mounted.current) return;
+    if (!r || r.ok !== true) { setPhase('failed'); setError((r as any)?.error || CARD_ERROR); field.current?.focus(); return; }
+    onDone();
+  };
+  return <div className="alt-board-rename" data-status={phase === 'saving' ? 'pending' : phase === 'failed' ? 'failed' : undefined}>
+    <Input ref={field} size="sm" aria-label={`Rename ${label}`} value={draft} readOnly={phase === 'saving'} invalid={phase === 'failed'}
+      aria-describedby={error ? `${label}-rename-error`.replace(/\s+/g, '-') : undefined}
+      onChange={(e) => { setDraft(e.target.value); if (phase === 'failed') { setPhase('editing'); setError(''); } }}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return;
+        if (e.key === 'Enter') { e.preventDefault(); void save(); }
+        else if (e.key === 'Escape') { e.preventDefault(); if (phase !== 'saving') onDone(); }
+      }} />
+    {error && <span id={`${label}-rename-error`.replace(/\s+/g, '-')} className="alt-board-add-error" role="alert"><Icons.AlertCircle size={13} />{error}</span>}
+  </div>;
+}
+
+export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(function BoardCard({ id, label, heldBy, settle, onRename, value, renderEditor, onSave, onValueChange,
+  className, style, onClickCapture, onKeyDown, children, ...rest }, ref) {
   const ctx = React.useContext(BoardCtx);
+  const [mode, setMode] = React.useState<'rename' | 'edit' | null>(null);
+  const self = React.useRef<HTMLDivElement | null>(null);
+  const name = label ?? id;
   const depth = useDepth({ heldBy, settle });
+  // Back from editing: focus returns to the card.
+  const refocus = React.useRef(false);
+  const done = () => { refocus.current = true; setMode(null); };
+  useIsoLayoutEffect(() => { if (!mode && refocus.current) { refocus.current = false; self.current?.focus(); } }, [mode]);
+  if (mode === 'edit' && value && renderEditor) {
+    return <div ref={(el) => { self.current = el; }} className="alt-board-card-editor" data-board-card={id} data-label={label} data-editing="">
+      <EditRegion label={name} value={value} defaultOpen onOpenChange={(open) => { if (!open) done(); }}
+        onValueChange={(v) => onValueChange?.(v)} onSave={(draft, ctx2) => (onSave ? onSave(draft, { previousValue: ctx2.previousValue, changed: ctx2.changed.map(String) }) : { ok: true, value: draft })}>
+        <EditRegionForm>{(field) => renderEditor(field)}</EditRegionForm>
+      </EditRegion>
+    </div>;
+  }
   const carry = ctx?.carry;
   const following = carry?.id === id;
   const carried = following || ctx?.kb?.id === id;
   const shift = carry?.shifts[id];
   const transform = following ? `translate(${carry!.dx}px, ${carry!.dy}px)` : shift ? `translateY(${shift}px)` : undefined;
+  const editable = !!onRename || !!(value && renderEditor);
   return (
-    <div ref={ref} className={cx('alt-board-card', className)} data-board-card={id} data-label={label} tabIndex={0} role="button"
+    <div ref={(el) => { self.current = el; if (typeof ref === 'function') ref(el); else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = el; }}
+      className={cx('alt-board-card', className)} data-board-card={id} data-label={label} tabIndex={0} role="button" data-editing={mode ? '' : undefined}
       aria-roledescription="draggable card" aria-describedby={ctx?.hintId} aria-pressed={ctx?.kb?.id === id ? true : undefined}
       data-carried={carried ? '' : undefined} data-following={following ? '' : undefined} data-landing={ctx?.landing === id ? '' : undefined}
       {...depth} style={{ ...depth.style, ...style, ...(transform ? { transform } : null) }}
       onPointerDown={(e) => ctx?.onPointerDown(e, id)} onPointerMove={ctx?.onPointerMove} onPointerUp={ctx?.onPointerUp} onPointerCancel={ctx?.onPointerUp}
-      onKeyDown={(e) => ctx?.onKeyDown(e, id)} onBlur={() => ctx?.onBlur(id)}
+      onKeyDown={(e) => {
+        // F2 edits; Space and Enter keep picking the card up (Board's model), so they can't also start an edit.
+        if (e.key === 'F2' && e.target === e.currentTarget && editable && !ctx?.kb) { e.preventDefault(); setMode(onRename ? 'rename' : 'edit'); return; }
+        onKeyDown?.(e);
+        if (!mode) ctx?.onKeyDown(e, id);
+      }} onBlur={() => ctx?.onBlur(id)}
       onClickCapture={(e) => { if (ctx?.swallowClick()) { e.preventDefault(); e.stopPropagation(); } else onClickCapture?.(e); }} {...rest}>
-      {children}
+      {mode === 'rename' && onRename ? <CardRename label={name} onRename={onRename} onDone={done} /> : children}
+      {editable && !mode && <span className="alt-board-card-tools">
+        {onRename && <Button size="sm" variant="ghost" aria-label={`Rename ${name}`} onClick={() => setMode('rename')}>Rename</Button>}
+        {value && renderEditor && <Button size="sm" variant="ghost" aria-label={`Edit ${name}`} onClick={() => setMode('edit')}>Edit</Button>}
+      </span>}
     </div>
   );
 });

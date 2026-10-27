@@ -26,7 +26,7 @@ The header stays flush until rows scroll under it, then rises to `elev-2` (as in
 | `onReorder` | move handles; hidden while a sort is active |
 | `renderExpanded`, `expanded`/`defaultExpanded`/`onExpandedChange`, `expandMode` | a disclosure button per row opening a full-width detail row (`'single'` by default: one open at a time) |
 | `renderEditor`, `onSave`, `onRowChange` | an Edit button per row that opens the row's fields as an `EditRegion` in a full-width row beneath it (EditRegion's save contract; `onRowChange` publishes the canonical row) |
-| `toolbar`, `maxHeight`, `empty` | a filter field or button at the toolbar's end; scroll height; text for no rows |
+| `toolbar`, `maxHeight`, `empty` | a filter field or button at the toolbar's end (at narrow widths the toolbar wraps onto more lines and a field in it shrinks, so nothing scrolls sideways); scroll height; text for no rows |
 
 **Loading.** While `DataTable`'s `rows` is undefined (your query hasn't returned) or a promise, the table keeps its real header over `skeleton.lines` rows of imprinted cells (default 5), so columns don't jump (see `Await`). An empty array is an empty table.
 

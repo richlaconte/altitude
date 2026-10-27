@@ -1,0 +1,78 @@
+<!-- @dsCard group="Display" height=760 subtitle="A week you handle directly: draw to book, carry to move, pull the edge to resize" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schedule — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.sch-demo { max-width: 860px; }
+.sch-demo .alt-schedule-event small.sch-room { color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const SCH_SEED = [
+  { id: "e1", title: "Standup", start: "2026-10-26T09:00", end: "2026-10-26T09:30", room: "Room A" },
+  { id: "e2", title: "Design review", start: "2026-10-27T10:00", end: "2026-10-27T11:00", room: "Room B" },
+  { id: "e3", title: "Customer call", start: "2026-10-27T10:30", end: "2026-10-27T11:15", room: "Room A" },
+  { id: "e4", title: "Planning", start: "2026-10-28T13:00", end: "2026-10-28T14:30", room: "Room B" },
+  { id: "e5", title: "Interview", start: "2026-10-29T15:00", end: "2026-10-29T16:00", room: "Room A" },
+  { id: "e6", title: "Retro", start: "2026-10-30T11:00", end: "2026-10-30T12:00", room: "Room B" }
+];
+const schWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+function App() {
+  const [date, setDate] = React.useState("2026-10-26");
+  const [events, setEvents] = React.useState(SCH_SEED);
+  const seq = React.useRef(0);
+  return /* @__PURE__ */ React.createElement("div", { className: "sch-demo" }, /* @__PURE__ */ React.createElement(
+    A.Schedule,
+    {
+      "aria-label": "Room bookings",
+      view: "workweek",
+      date,
+      onDateChange: setDate,
+      now: "2026-10-27T10:20",
+      events,
+      getKey: (e) => e.id,
+      getStart: (e) => e.start,
+      getEnd: (e) => e.end,
+      getLabel: (e) => e.title,
+      dayStart: "08:00",
+      dayEnd: "18:00",
+      hourHeight: 44,
+      renderEvent: (e) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, e.title), /* @__PURE__ */ React.createElement("small", { className: "sch-room" }, e.start.slice(11), "\u2013", e.end.slice(11), " \xB7 ", e.room)),
+      heldBy: (e) => e.id === "e6" ? { name: "Ana", presence: 2 } : null,
+      isUnavailable: ({ start, end }) => start.slice(0, 10) === "2026-10-30" && end.slice(11) > "17:00",
+      onChange: async ({ id, start, end }) => {
+        await schWait(300);
+        if (start.slice(0, 10) === "2026-10-28" && start.slice(11) < "12:00") return { ok: false, error: "Both rooms are being cleaned on Wednesday morning." };
+        setEvents((list) => list.map((e) => e.id === id ? { ...e, start, end } : e));
+        return { ok: true };
+      },
+      onCreate: async ({ start, end, title }) => {
+        await schWait(300);
+        const event = { id: "n" + ++seq.current, title, start, end, room: "Room A" };
+        setEvents((list) => [...list, event]);
+        return { ok: true, value: event };
+      },
+      onRename: async (e, title) => {
+        await schWait(200);
+        setEvents((list) => list.map((x) => x.id === e.id ? { ...x, title } : x));
+        return { ok: true };
+      },
+      onRemove: (e) => setEvents((list) => list.filter((x) => x.id !== e.id))
+    }
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
