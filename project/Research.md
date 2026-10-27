@@ -177,6 +177,68 @@ What didn't fit, each against a rule the rest of the system already keeps:
 
 **Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
 
+### E13 · How should several fields of one record be edited in place?
+
+A design review, not a study: `EditRegion` was prototyped in the EditRegion preview (three people with access, each row editable) and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard and race paths checked in a browser (`checks/edit-region.mjs`). It was compared with a Dialog per row (the existing ActionsInPlace recipe) and with one `InlineEdit` per field.
+
+- **In place, not modal.** NN/g's guidance on data tables notes that a modal editor hides the neighbouring rows people consult to choose a value ([Data tables: four major user tasks](https://www.nngroup.com/articles/data-tables/)), and Shneiderman's direct manipulation asks for a continuous view of the objects with rapid, reversible, incremental actions ([1983](https://doi.org/10.1109/MC.1983.1654471)). The region keeps the list visible and lifts only the record being worked on.
+- **One write, not several.** Independent `InlineEdit`s can leave a record half-changed when the second save fails. Saving the draft as one `onSave` with a `changed` list keeps the record consistent and still lets an application send a patch.
+- **No save on blur.** People sometimes click away from a multi-field editor expecting their work to persist. Autosave was rejected because the Actions in place guide rules it out and because a blur isn't a deliberate act; instead the draft simply stays open and nothing is lost.
+- **Whole-record conflicts.** A per-field merge (save the fields nobody else touched) was considered and rejected for now: it hides the other writer's change from the person saving, and `InlineEdit` already blocks the whole save.
+
+Not yet tested with people: whether the raised editor is noticed as “still unsaved” when someone scrolls away, and whether five fields is the right ceiling before a `Sheet`.
+
+### E14 · How should a set of tags be edited?
+A design review, not a study: `TagInput` was prototyped in its preview and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard paths checked in a browser (`checks/tag-input.mjs`). It was compared with the chip and tag models of React Aria `TagGroup`, MUI `Autocomplete multiple`, Material input chips, Fluent v9 `TagPicker` and Ant Design `Select mode="tags"`.
+- **Tags are labels, not controls.** They're part of the record, so they're Badge plates flush in the field's floor rather than raised chips; only the remove button reacts to a pointer. Material and Fluent raise chips; here that would say every tag is a button to press.
+- **One Tab stop for the tags.** React Aria and Fluent v9 make the tag group one stop with arrow keys; a stop per tag is slow with 20 tags. The input's description and the tags' own description state the keys.
+- **Backspace arms before it removes.** A single Backspace that deletes a tag is a common source of accidental loss, worse when removal is persisted. Arming (the tag lifts and is announced) costs one keystroke and makes the next one's effect visible first.
+- **The limit keeps focus.** Hiding or disabling the input at `max` drops keyboard focus to the body ([allxsmith/bestax#1103](https://github.com/allxsmith/bestax/issues/1103)); a read-only input with “Limit reached” keeps it.
+Not yet tested with people: whether arming is understood without the announcement, and whether people find Enter-to-edit on a focused tag.
+### E15 · How should a date be chosen?
+
+A design review, not a study: `DatePicker`, `DateRangePicker` and `Calendar` were prototyped in their preview and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with the APG grid keys, RTL and the segmented field checked in a browser (`checks/date-picker.mjs`). They were compared with the [APG date picker dialog](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/), React Aria's `DateField`/`DatePicker`, shadcn/ui's `Calendar` and native `<input type="date">`.
+
+- **Typed segments, not free text.** A free-text date field has to guess the order of “03/04/2026”; segments in the locale's order (from `Intl.DateTimeFormat.formatToParts`) make the order visible and work the same way in every locale, React Aria's reasoning. Native `type="date"` was rejected: its popup can't be styled into the elevation language and differs per browser.
+- **Days are flush; the choice is raised.** A well per day (the Checkbox build) at 42 days a month reads as texture. Keeping only the RadioGroup's one raised thumb, carried between days, says “one choice” and keeps the grid quiet.
+- **A month change cross-fades.** Sliding months sideways is common, but the Motion rules keep travel for changes of level and of hierarchy; a month is neither.
+- **ISO strings.** `Date` carries a time and a zone and shifts days across them; `Temporal.PlainDate` is right but needs a polyfill in some 2026 browsers. A `'YYYY-MM-DD'` string is exact and dependency-free.
+
+Not yet tested with people: whether the typed segments are discovered before the calendar button, and whether the range's “choose the end” prompt is enough.
+
+### E16 · How should a hierarchy be changed in place?
+
+A design review, not a study: `Tree` was prototyped as a page tree and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with the APG keys, RTL, rename, create and both carry paths checked in a browser (`checks/tree.mjs`). It was compared with the [APG tree view](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/), VS Code's explorer, Notion's sidebar, React Aria's `Tree` and outliners (Workflowy, Logseq).
+
+- **Flat rows with levels, not nested groups.** The APG allows either; a flat list with `aria-level`, `aria-setsize` and `aria-posinset` keeps one row model for rendering, focus and carrying, and supports lazy loading and later virtualisation.
+- **Carry by keyboard, shown in place.** The APG doesn't cover moving. Outliners use Alt+↑/↓ and indent/outdent; file managers use cut and paste. Picking up with Space (as `SortableList`) and showing the node where it will land, with its depth announced, keeps the result visible before the drop.
+- **Into versus between.** Pointer targets split a row into thirds: before, into, after. “Into” opens the node as a trench, a receptacle, and “between” is a thin well at the target depth, so the two read differently without colour. Spring-loaded folders (open after 600ms) follow the Finder convention.
+- **No hover-only actions.** Row buttons for “add” and “rename” would put interactive elements inside `treeitem`; instead the shortcuts are on the row and `TreeHandle` lets a toolbar offer the same actions to pointer users.
+
+Not yet tested with people: whether ↑ entering an open node above (rather than staying at the same depth) matches expectation, and whether the toolbar is found.
+
+### E17 · How should a list be written into?
+
+A design review, not a study: `Checklist` was prototyped with a nested and a flat list and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keys checked in a browser (`checks/checklist.mjs`). It was compared with Workflowy, Logseq, Things, Notion to-do blocks and GitHub task lists, which agree on Enter for a sibling, Tab/Shift+Tab to indent, and Backspace to merge.
+
+- **Commit on leaving the line.** Every outliner saves a line when you leave it; an explicit Save per line would make the list unwritable. It departs from `InlineEdit`'s rule, so it's scoped to this component, and a refused change keeps the text with Retry.
+- **Text inputs in a list, not a tree.** The tree pattern's arrow keys would fight the caret; nested `ul`s with ordinary inputs keep text editing native and the structure readable.
+- **No focus trap.** Tab indents, so Escape leaves the line first; then Tab moves on, as it does from the last, empty line.
+- **Ops, not arrays.** Reporting one op per action lets an application persist and merge per item instead of replacing the whole list.
+
+Not yet tested with people: whether Escape-then-Tab is discovered, and whether Backspace-to-merge surprises people who expect it to do nothing at the start of a line.
+
+### E18 · How should a query be built in place?
+
+A design review, not a study: `FilterBar` was prototyped over an issue table and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keys checked in a browser (`checks/filter-bar.mjs`). It was compared with Linear's filters, Notion database filters, GitHub's search tokens, Jira's basic search and Airtable.
+
+- **Conditions as sentences.** “Status is In review” reads the same to everyone and is the accessible name of each condition; segment buttons say which part they change.
+- **One Tab stop.** The [APG toolbar](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/) roving model keeps a row of five conditions (twenty segments) from adding twenty Tab stops.
+- **Filter in place.** Removing non-matching rows reflows the table and loses people's place; with `relevance`, matches rise and misses sink, so positions survive (the existing **Relevance** signal).
+- **Free text as a token, not a search box.** A “Title contains” condition sits beside the others, so the whole query is visible and editable in one place.
+
+Not yet tested with people: whether the field-then-value sequence for a new condition is faster than a single combined picker.
+
 ### E19 · How should time be handled directly?
 
 A design review, not a study: `Schedule` was prototyped as a room-booking week and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with every operation checked by keyboard and by pointer in a browser (`checks/schedule.mjs`). It was compared with Google Calendar, Outlook, Notion Calendar, FullCalendar and Bryntum.

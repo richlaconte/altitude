@@ -1,6 +1,6 @@
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync } from 'fs';
-const names = ['AltitudeProvider','Surface','Button','HoldButton','Card','Table','Pile','Input','InlineEdit','Field','Select','Combobox','Checkbox','RadioGroup','Switch','Tabs','Slider','Progress','Badge','Avatar','Skeleton','Await','Alert','Accordion','Kbd','ScrollArea','SortableList','Board','Schedule','DropZone','EmptyState','Drilldown','Stepper','Tooltip','HoverCard','Popover','DropdownMenu','Dialog','Sheet','CommandPalette','Toaster'];
+const names = ['AltitudeProvider','Surface','Button','HoldButton','Card','Table','FilterBar','Pile','Input','InlineEdit','EditRegion','Field','Select','Combobox','TagInput','DatePicker','Checkbox','RadioGroup','Switch','Tabs','Slider','Progress','Badge','Avatar','Skeleton','Await','Alert','Accordion','Kbd','ScrollArea','SortableList','Checklist','Board','Schedule','DropZone','EmptyState','Drilldown','Tree','Stepper','Tooltip','HoverCard','Popover','DropdownMenu','Dialog','Sheet','CommandPalette','Toaster'];
 const header = `/* @ds-bundle: ${JSON.stringify({ format: 4, namespace: 'Altitude', components: names.map((name) => ({ name })) })} */`;
 const globals = { name: 'globals', setup(b) {
   b.onResolve({ filter: /^react(-dom)?$/ }, (a) => ({ path: a.path, namespace: 'g' }));

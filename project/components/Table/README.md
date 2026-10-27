@@ -24,7 +24,7 @@ The header stays flush until rows scroll under it, then rises to `elev-2` (as in
 | `onRowClick` | interactive rows |
 | `relevance` | `(row) => 'match' \| 'miss' \| undefined` for filtering in place |
 | `onReorder` | move handles; hidden while a sort is active |
-| `toolbar`, `maxHeight`, `empty` | a filter field or button at the toolbar's end; scroll height; text for no rows |
+| `toolbar`, `maxHeight`, `empty` | a filter field or button at the toolbar's end (at narrow widths the toolbar wraps onto more lines and a field in it shrinks, so nothing scrolls sideways); scroll height; text for no rows |
 
 **Loading.** While `DataTable`'s `rows` is undefined (your query hasn't returned) or a promise, the table keeps its real header over `skeleton.lines` rows of imprinted cells (default 5), so columns don't jump (see `Await`). An empty array is an empty table.
 

@@ -1,0 +1,67 @@
+<!-- @dsCard group="Inputs" height=560 subtitle="A set of short values in one field: tags are plates stamped into its floor" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TagInput — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.tags-demo { display: grid; gap: 24px; max-width: 560px; }
+.tags-demo .tags-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.tags-demo .tags-caption { margin: 0 0 6px; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+.tags-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dot); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const TAG_LABELS = ["bug", "design", "docs", "performance", "accessibility", "onboarding", "billing", "mobile"];
+const TAG_DOTS = { bug: "var(--critical)", design: "var(--accent)", accessibility: "var(--positive)", performance: "var(--caution)" };
+const tagWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+function App() {
+  const [labels, setLabels] = React.useState(["design", "accessibility"]);
+  const [recipients, setRecipients] = React.useState(["mara@northwind.example"]);
+  const [skills, setSkills] = React.useState(["Figma", "Research", "Writing"]);
+  return /* @__PURE__ */ React.createElement("div", { className: "tags-demo" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Labels" }, /* @__PURE__ */ React.createElement(
+    A.TagInput,
+    {
+      value: labels,
+      onValueChange: setLabels,
+      suggestions: TAG_LABELS,
+      max: 6,
+      noun: ["label", "labels"],
+      placeholder: "Add a label",
+      normalize: (tag) => tag.trim().toLowerCase(),
+      validate: (tag) => tag.length <= 24 ? void 0 : "Use 24 characters or fewer.",
+      renderTag: (tag) => /* @__PURE__ */ React.createElement(React.Fragment, null, TAG_DOTS[tag] && /* @__PURE__ */ React.createElement("span", { className: "tags-dot", style: { "--dot": TAG_DOTS[tag] }, "aria-hidden": "true" }), tag)
+    }
+  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Share with" }, /* @__PURE__ */ React.createElement(
+    A.TagInput,
+    {
+      value: recipients,
+      onValueChange: setRecipients,
+      noun: ["person", "people"],
+      placeholder: "name@northwind.example",
+      validate: (tag) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag) ? void 0 : `${tag} isn\u2019t an email address.`,
+      onAdd: async (tag) => {
+        await tagWait(500);
+        return tag.endsWith("@northwind.example") ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at northwind.example can be invited. ${tag} wasn\u2019t added.` };
+      },
+      onRemove: async () => {
+        await tagWait(300);
+        return { ok: true };
+      }
+    }
+  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Skills" }, /* @__PURE__ */ React.createElement(A.TagInput, { value: skills, onValueChange: setSkills, noun: ["skill", "skills"], disabled: true })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "tags-caption" }, "Standalone tags"), /* @__PURE__ */ React.createElement("div", { className: "tags-row" }, /* @__PURE__ */ React.createElement(A.Tag, null, "Figma"), /* @__PURE__ */ React.createElement(A.Tag, null, "Research"), /* @__PURE__ */ React.createElement(A.Tag, { onRemove: () => {
+  } }, "Writing"))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

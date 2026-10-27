@@ -1,0 +1,106 @@
+<!-- @dsCard group="Inputs" height=900 subtitle="Edit several fields of one record in place, saved together as one write" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EditRegion — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.er-demo { max-width: 720px; margin: auto; min-width: 0; color: var(--ink); }
+.er-demo h2 { margin: 0 0 var(--space-3); font: 600 19px/26px var(--font-sans); }
+.er-list { list-style: none; margin: 0; padding: 0; }
+.er-list > li { padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+.er-name { display: block; font: 500 15px/22px var(--font-sans); }
+.er-meta { display: block; color: var(--ink-muted); font: 400 13px/19px var(--font-sans); }
+.er-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); }
+.er-harness { border-top: 1px solid var(--line); margin-top: var(--space-6); padding-top: var(--space-3); font: 400 13px/20px var(--font-sans); }
+.er-harness summary { cursor: pointer; font-weight: 500; }
+.er-harness-controls { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: end; margin: var(--space-3) 0; }
+.er-harness label { display: grid; gap: var(--space-1); }
+.er-harness select { padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-md); }
+.er-log { display: block; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 11px/16px var(--font-mono); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const ER_ROLES = [{ value: "owner", label: "Owner" }, { value: "editor", label: "Editor" }, { value: "viewer", label: "Viewer" }];
+const ER_PEOPLE = Object.freeze([
+  Object.freeze({ id: "p-mara", name: "Mara Quist", email: "mara@northwind.example", role: "owner", notify: true, revision: 1 }),
+  Object.freeze({ id: "p-ines", name: "In\xE9s Ortega", email: "ines@northwind.example", role: "editor", notify: false, revision: 1 }),
+  Object.freeze({ id: "p-tobi", name: "Tobi Adeyemi", email: "tobi@northwind.example", role: "viewer", notify: true, revision: 1 })
+]);
+const ER_FIXTURES = ["success", "slow", "fail-once", "conflict-during-save"];
+const erWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const erFields = ({ revision, id, ...fields }) => fields;
+function EditRegionExample({ fixture }) {
+  const server = React.useRef(new Map(ER_PEOPLE.map((p) => [p.id, { ...p }])));
+  const [people, setPeople] = React.useState(() => ER_PEOPLE.map((p) => ({ ...p })));
+  const [log, setLog] = React.useState([]);
+  const failed = React.useRef(false);
+  const trace = (event) => setLog((log2) => [...log2, event]);
+  const reconcile = (id) => setPeople((people2) => people2.map((p) => p.id === id ? { ...server.current.get(id) } : p));
+  const externalUpdate = () => {
+    const current = server.current.get("p-mara");
+    server.current.set("p-mara", { ...current, email: "m.quist@northwind.example", revision: current.revision + 1 });
+    trace({ event: "external-update", id: "p-mara", revision: current.revision + 1 });
+    reconcile("p-mara");
+  };
+  const save = (person) => async (draft, { changed }) => {
+    trace({ event: "requested", id: person.id, expectedRevision: person.revision, changed });
+    await erWait(fixture === "slow" ? 1400 : 250);
+    if (fixture === "fail-once" && !failed.current) {
+      failed.current = true;
+      trace({ event: "rejected", id: person.id });
+      return { ok: false, error: "We couldn\u2019t reach the people service. Your changes are still here. Try again." };
+    }
+    if (fixture === "conflict-during-save") {
+      externalUpdate();
+      await erWait(300);
+    }
+    const current = server.current.get(person.id);
+    if (current.revision !== person.revision) {
+      trace({ event: "rejected-stale", id: person.id });
+      return { ok: false, error: "Someone else changed this person. Review the current details." };
+    }
+    if ([...server.current.values()].some((p) => p.id !== person.id && p.email === draft.email.trim())) return { ok: false, error: "Check the highlighted field.", fieldErrors: { email: "Someone else already uses this email." } };
+    const next = { ...current, ...draft, name: draft.name.trim(), email: draft.email.trim(), revision: current.revision + 1 };
+    server.current.set(person.id, next);
+    trace({ event: "committed", id: person.id, revision: next.revision, changed });
+    return { ok: true, value: erFields(next) };
+  };
+  const validate = (draft) => {
+    const errors = {};
+    if (!draft.name.trim()) errors.name = "Enter a name.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())) errors.email = "Enter an email address, like name@example.com.";
+    return Object.keys(errors).length ? errors : void 0;
+  };
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("section", { "aria-labelledby": "er-title" }, /* @__PURE__ */ React.createElement("h2", { id: "er-title" }, "People with access"), /* @__PURE__ */ React.createElement("ul", { className: "er-list" }, people.map((person) => /* @__PURE__ */ React.createElement("li", { key: person.id }, /* @__PURE__ */ React.createElement(
+    A.EditRegion,
+    {
+      label: person.name,
+      editLabel: `Edit ${person.name}`,
+      value: erFields(person),
+      validate,
+      onValueChange: (canonical) => setPeople((people2) => people2.map((p) => p.id === person.id ? { ...server.current.get(person.id), ...canonical } : p)),
+      onSave: save(person)
+    },
+    /* @__PURE__ */ React.createElement(A.EditRegionView, null, /* @__PURE__ */ React.createElement("span", { className: "er-name" }, person.name), /* @__PURE__ */ React.createElement("span", { className: "er-meta" }, person.email, " \xB7 ", ER_ROLES.find((r) => r.value === person.role).label, person.notify ? " \xB7 Gets updates" : "")),
+    /* @__PURE__ */ React.createElement(A.EditRegionForm, null, (field) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "er-pair" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Name", required: true, error: field.error("name") }, /* @__PURE__ */ React.createElement(A.Input, { ...field("name"), autoComplete: "off" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Email", required: true, error: field.error("email") }, /* @__PURE__ */ React.createElement(A.Input, { ...field("email"), type: "email", autoComplete: "off" }))), /* @__PURE__ */ React.createElement(A.Field, { label: "Role" }, /* @__PURE__ */ React.createElement(A.Select, { ...field.value("role"), items: ER_ROLES })), /* @__PURE__ */ React.createElement(A.Switch, { ...field.checked("notify"), label: "Email them when this project changes" })))
+  ))))), /* @__PURE__ */ React.createElement("details", { className: "er-harness" }, /* @__PURE__ */ React.createElement("summary", null, "Fixture controls"), /* @__PURE__ */ React.createElement("p", null, "Documentation harness only: change Mara's record on the \u201Cserver\u201D while it's being edited."), /* @__PURE__ */ React.createElement("div", { className: "er-harness-controls" }, /* @__PURE__ */ React.createElement(A.Button, { onClick: externalUpdate }, "Apply external update to Mara")), /* @__PURE__ */ React.createElement("output", { className: "er-log", "data-er-log": "", "aria-label": "Fixture operation log" }, JSON.stringify(log, null, 2))));
+}
+function App() {
+  const [fixture, setFixture] = React.useState("success");
+  const [mounted, setMounted] = React.useState({ fixture: "success", epoch: 0 });
+  return /* @__PURE__ */ React.createElement("div", { className: "er-demo" }, /* @__PURE__ */ React.createElement(EditRegionExample, { key: mounted.epoch, fixture: mounted.fixture }), /* @__PURE__ */ React.createElement("details", { className: "er-harness" }, /* @__PURE__ */ React.createElement("summary", null, "Choose the next fixture"), /* @__PURE__ */ React.createElement("div", { className: "er-harness-controls" }, /* @__PURE__ */ React.createElement("label", null, "Save fixture", /* @__PURE__ */ React.createElement("select", { value: fixture, onChange: (event) => setFixture(event.target.value) }, ER_FIXTURES.map((name) => /* @__PURE__ */ React.createElement("option", { key: name }, name)))), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setMounted({ fixture, epoch: mounted.epoch + 1 }) }, "Reset example"))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
