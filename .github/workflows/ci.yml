@@ -64,6 +64,11 @@ jobs:
           node ../scripts/record-check.mjs react18-modal node checks/modal-lifecycle.mjs
           node ../scripts/record-check.mjs react18-inline node checks/inline-edit.mjs
           node ../scripts/record-check.mjs react18-actions node checks/actions-in-place.mjs
+          node ../scripts/record-check.mjs react18-edit-region node checks/edit-region.mjs
+          node ../scripts/record-check.mjs react18-tag-input node checks/tag-input.mjs
+          node ../scripts/record-check.mjs react18-date-picker node checks/date-picker.mjs
+          node ../scripts/record-check.mjs react18-tree node checks/tree.mjs
+          node ../scripts/record-check.mjs react18-checklist node checks/checklist.mjs
           node ../scripts/record-check.mjs react18-filter-bar node checks/filter-bar.mjs
           DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
           DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
@@ -74,10 +79,20 @@ jobs:
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-modal node build/checks/modal-lifecycle.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-inline node build/checks/inline-edit.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-actions node build/checks/actions-in-place.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-edit-region node build/checks/edit-region.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-tag-input node build/checks/tag-input.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-date-picker node build/checks/date-picker.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-tree node build/checks/tree.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-checklist node build/checks/checklist.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-filter-bar node build/checks/filter-bar.mjs
           ALT_CHECK_STRICT=1 node scripts/build-check-fixtures.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-modal node build/checks/modal-lifecycle.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-inline node build/checks/inline-edit.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-edit-region node build/checks/edit-region.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-tag-input node build/checks/tag-input.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-date-picker node build/checks/date-picker.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-tree node build/checks/tree.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-checklist node build/checks/checklist.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-filter-bar node build/checks/filter-bar.mjs
 
 
