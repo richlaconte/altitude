@@ -32,3 +32,5 @@ export { Checklist } from './checklist';
 export type { ChecklistProps, ChecklistOp, ChecklistPlace, ChecklistResult } from './checklist';
 export { FilterBar, filterValueText } from './filter-bar';
 export type { FilterBarProps, FilterField, FilterOption, Filter, FilterValue } from './filter-bar';
+export { Schedule } from './schedule';
+export type { ScheduleProps, ScheduleSpan, ScheduleResult, ScheduleCreateResult, LocalDateTime } from './schedule';

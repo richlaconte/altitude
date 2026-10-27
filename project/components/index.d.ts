@@ -986,6 +986,56 @@ export interface BoardColumnProps extends Omit<React.HTMLAttributes<HTMLElement>
   collapsible?: boolean;
 }
 export declare function BoardColumn(props: BoardColumnProps): React.ReactElement;
+
+/** A local date-time, 'YYYY-MM-DDTHH:mm': no time zone. Convert at your edges. */
+export type LocalDateTime = string;
+export type ScheduleResult = { ok: true } | { ok: false; error: string };
+export type ScheduleCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
+export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
+export interface ScheduleProps<T> {
+  /** Default 'week'. */
+  view?: 'day' | 'week' | 'workweek';
+  /** Any day in the period shown, 'YYYY-MM-DD'. */
+  date: string;
+  onDateChange?: (date: string) => void;
+  events: T[];
+  getKey: (event: T) => string;
+  getStart: (event: T) => LocalDateTime;
+  getEnd: (event: T) => LocalDateTime;
+  getLabel: (event: T) => string;
+  /** Minutes per slot, and the snap for moves and resizes. Default 15. */
+  step?: number;
+  /** Default '08:00' and '19:00'. */
+  dayStart?: string;
+  dayEnd?: string;
+  /** Pixels per hour. Default 48. */
+  hourHeight?: number;
+  /** 0 Sunday … 6 Saturday. Default 1. */
+  weekStartsOn?: number;
+  /** A new event's length when made with Enter on an empty slot. Default 60 minutes. */
+  defaultDuration?: number;
+  renderEvent?: (event: T) => React.ReactNode;
+  /** Resolve after `events` includes the new event. */
+  onCreate?: (request: ScheduleSpan & { title: string }) => ScheduleCreateResult<T> | Promise<ScheduleCreateResult<T>>;
+  /** A move or a resize. Resolve after `events` reflects it. */
+  onChange?: (next: ScheduleSpan & { id: string }, previous: T) => ScheduleResult | Promise<ScheduleResult>;
+  onRename?: (event: T, title: string) => ScheduleResult | Promise<ScheduleResult>;
+  /** Enter on an event: show its details (in a Sheet, not a Dialog). */
+  onOpen?: (event: T) => void;
+  /** Delete. Your removal policy applies. */
+  onRemove?: (event: T) => void;
+  /** Someone else is moving this event: it can't be picked up. */
+  heldBy?: (event: T) => { name: string; presence?: 1 | 2 | 3 } | null | undefined;
+  /** Refuse a span (outside hours, a closed room). */
+  isUnavailable?: (span: ScheduleSpan) => boolean;
+  /** The now line's time. Default: the clock. */
+  now?: LocalDateTime;
+  locale?: string;
+  'aria-label'?: string;
+  className?: string;
+}
+/** A day or week of time whose events you handle directly: draw to create, carry to move, pull the edge to resize, all with keyboard equivalents. */
+export declare function Schedule<T>(props: ScheduleProps<T>): React.ReactElement;
 export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   id: string;
   /** How announcements name the card. Default: its first line of text. */
@@ -1210,7 +1260,7 @@ declare global {
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
       Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
-      Board: typeof Board; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
+      Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;

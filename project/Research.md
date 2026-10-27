@@ -239,6 +239,17 @@ A design review, not a study: `FilterBar` was prototyped over an issue table and
 
 Not yet tested with people: whether the field-then-value sequence for a new condition is faster than a single combined picker.
 
+### E19 · How should time be handled directly?
+
+A design review, not a study: `Schedule` was prototyped as a room-booking week and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with every operation checked by keyboard and by pointer in a browser (`checks/schedule.mjs`). It was compared with Google Calendar, Outlook, Notion Calendar, FullCalendar and Bryntum.
+
+- **Direct manipulation, with a keyboard twin for each drag.** Shneiderman's direct manipulation asks for visible objects and rapid, reversible actions ([1983](https://doi.org/10.1109/MC.1983.1654471)); WCAG 2.2 SC 2.5.7 asks that anything done by dragging can be done without it. Space-to-carry (as `Board` and `SortableList`), Shift+arrows to resize and Enter on empty time to create give each drag a keyboard path.
+- **A grid of slots.** Rows of time slots by day columns make arrow navigation predictable and give every empty slot a name (“Tuesday 27 October, 10:15”) to create into; events are buttons inside their start slot.
+- **Time opens only while something could land.** As Board's columns, days stay flat at rest and open into wells while carrying or drawing, so the grid isn't a field of holes.
+- **Naive local times.** A zoned type would need a library or `Temporal`; local `YYYY-MM-DDTHH:mm` strings are exact and leave the zone to the application, which already knows it.
+
+Not yet tested with people: whether Enter-to-create on empty time is found, and whether the side-by-side overlap layout stays readable past three events.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

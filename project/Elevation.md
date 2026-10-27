@@ -60,6 +60,7 @@ Rules that follow:
 | **Progress** | the steps of a process are plates on one ground line: done steps are flush in the record with a stamped check, the current one stands raised on its wall, steps to come are imprints; advancing presses one down and raises the next out of its imprint | `Stepper` |
 | **Done is pressed into the record** | checking an item stamps it like a completed step: muted, struck through, and kept in place in the record rather than removed | `Checklist` |
 | **A condition** | a filter is a segmented plate stamped into the bar; each segment lifts when pointed at because it opens a picker, and a condition still waiting for its value keeps that segment as an opening | `FilterBar` |
+| **A span being drawn** | dragging across empty time draws a well the length of the new event, which rises into an event to be named when released; while an event is carried, time opens and the slot under it deepens to a trench as long as the event | `Schedule` |
 | **Recency** | new or changed content arrives tinted and lifted, then settles to rest over `dur-settle` (afterglow) | `settle` on `Surface`, `Card` |
 | **Commitment** | a pending write hovers (after `dur-grace`), a confirmed one lands, a failed one drops into a trench | `status` on `Surface`, `Card` |
 | **Possession** | whatever is in a hand floats at level 3, tilted; a collaborator's hold wears their `presence-*` colour and name | `heldBy`, `SortableList`, `BoardCard heldBy` |
