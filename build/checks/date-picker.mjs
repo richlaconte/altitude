@@ -40,7 +40,9 @@ try {
     await page.keyboard.press('ArrowDown'); check(await focusedDate(page) === shift(due, 8), 'DP-06 ↓ moves one week');
     await page.keyboard.press('ArrowUp'); await page.keyboard.press('ArrowLeft'); check(await focusedDate(page) === due, 'DP-07 ↑ and ← move back');
     await page.keyboard.press('Home'); const home = await focusedDate(page);
-    check(new Date(home + 'T00:00:00Z').getUTCDay() === 1, 'DP-08 Home goes to the week start (Monday, en-GB)');
+    // The preview's min is today, so a week start before today clamps to today.
+    const monday = shift(due, -((new Date(due + 'T00:00:00Z').getUTCDay() + 6) % 7));
+    check(home === (monday < today ? today : monday), `DP-08 Home goes to the week start (Monday, en-GB), or to min (${home})`);
     await page.keyboard.press('End'); check(new Date((await focusedDate(page)) + 'T00:00:00Z').getUTCDay() === 0, 'DP-09 End goes to the week end');
     await page.keyboard.press('PageDown'); const next = await focusedDate(page);
     check(next.slice(5, 7) !== home.slice(5, 7) || next.slice(0, 4) !== home.slice(0, 4), 'DP-10 PageDown moves a month');
