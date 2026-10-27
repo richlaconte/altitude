@@ -1,0 +1,117 @@
+<!-- @dsCard group="Display" height=700 subtitle="A record's properties, each edited where it sits; unset values are openings" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PropertyList — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.pl-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 40px; max-width: 860px; }
+.pl-demo h3 { margin: 0 0 12px; font: 600 15px/22px var(--font-sans); color: var(--ink); }
+.pl-demo .pl-side { max-width: 280px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const PL_STATUS = [{ value: "todo", label: "To do" }, { value: "progress", label: "In progress" }, { value: "review", label: "In review" }, { value: "done", label: "Done" }];
+const PL_TONE = { todo: "neutral", progress: "accent", review: "caution", done: "positive" };
+const PL_PEOPLE = [{ value: "mara", label: "Mara Quist" }, { value: "ines", label: "In\xE9s Ortega" }, { value: "tobi", label: "Tobi Adeyemi" }];
+const PL_PRIORITY = [{ value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }];
+const plWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const plLabel = (list, v) => list.find((o) => o.value === v)?.label;
+function App() {
+  const [issue, setIssue] = React.useState({ status: "review", assignee: "mara", priority: "", estimate: 3, created: "21 Oct 2026" });
+  const [trip, setTrip] = React.useState({ name: "Mara Quist", email: "mara@northwind.example", start: "2026-11-02", end: "2026-11-06", phone: "" });
+  const set = (key) => (v) => setIssue((i) => ({ ...i, [key]: v }));
+  const save = (key) => async (draft) => {
+    await plWait(250);
+    if (key === "status" && draft === "done" && !issue.assignee) return { ok: false, error: "Assign someone before marking it done." };
+    return { ok: true, value: draft };
+  };
+  const tripSet = (key) => (v) => setTrip((t) => ({ ...t, [key]: v }));
+  const tripSave = async (draft) => {
+    await plWait(200);
+    return { ok: true, value: draft };
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "pl-demo" }, /* @__PURE__ */ React.createElement("section", { className: "pl-side" }, /* @__PURE__ */ React.createElement("h3", { id: "pl-issue" }, "Issue details"), /* @__PURE__ */ React.createElement(A.PropertyList, { "aria-labelledby": "pl-issue", shortcuts: true }, /* @__PURE__ */ React.createElement(
+    A.PropertyListItem,
+    {
+      label: "Status",
+      value: issue.status,
+      shortcut: "s",
+      commit: "on-choose",
+      onSave: save("status"),
+      onValueChange: set("status"),
+      renderValue: (s) => /* @__PURE__ */ React.createElement(A.Badge, { tone: PL_TONE[s] }, plLabel(PL_STATUS, s)),
+      editor: (c) => /* @__PURE__ */ React.createElement(A.Select, { ...c, items: PL_STATUS, size: "sm" })
+    }
+  ), /* @__PURE__ */ React.createElement(
+    A.PropertyListItem,
+    {
+      label: "Assignee",
+      value: issue.assignee,
+      shortcut: "a",
+      commit: "on-choose",
+      onSave: save("assignee"),
+      onValueChange: set("assignee"),
+      renderValue: (p) => plLabel(PL_PEOPLE, p),
+      editor: (c) => /* @__PURE__ */ React.createElement(A.Combobox, { ...c, items: PL_PEOPLE, size: "sm" })
+    }
+  ), /* @__PURE__ */ React.createElement(
+    A.PropertyListItem,
+    {
+      label: "Priority",
+      value: issue.priority,
+      emptyLabel: "Add priority",
+      commit: "on-choose",
+      onSave: save("priority"),
+      onValueChange: set("priority"),
+      renderValue: (p) => plLabel(PL_PRIORITY, p),
+      editor: (c) => /* @__PURE__ */ React.createElement(A.Select, { ...c, items: PL_PRIORITY, size: "sm" })
+    }
+  ), /* @__PURE__ */ React.createElement(
+    A.PropertyListItem,
+    {
+      label: "Estimate",
+      value: issue.estimate,
+      onSave: save("estimate"),
+      onValueChange: set("estimate"),
+      required: true,
+      validate: (n) => Number.isInteger(n) && n >= 0 ? void 0 : "Use a whole number, 0 or more.",
+      renderValue: (n) => `${n} points`,
+      editor: ({ value, onValueChange, ...c }) => /* @__PURE__ */ React.createElement(A.Input, { ...c, type: "number", size: "sm", value: value ?? "", onChange: (e) => onValueChange(e.target.value === "" ? null : Number(e.target.value)) })
+    }
+  ), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Created", value: issue.created }))), /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("h3", { id: "pl-trip" }, "Check your answers"), /* @__PURE__ */ React.createElement(
+    A.PropertyList,
+    {
+      "aria-labelledby": "pl-trip",
+      layout: "inline",
+      editAll: {
+        label: "trip details",
+        value: trip,
+        onValueChange: setTrip,
+        validate: (d) => d.end < d.start ? { end: "The last day must be on or after the first." } : void 0,
+        onSave: async (d) => {
+          await plWait(250);
+          return { ok: true, value: d };
+        },
+        renderEditor: (field) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Field, { label: "Name", error: field.error("name") }, /* @__PURE__ */ React.createElement(A.Input, { ...field("name") })), /* @__PURE__ */ React.createElement(A.Field, { label: "Email", error: field.error("email") }, /* @__PURE__ */ React.createElement(A.Input, { ...field("email"), type: "email" })), /* @__PURE__ */ React.createElement(A.Field, { label: "First day", error: field.error("start") }, /* @__PURE__ */ React.createElement(A.Input, { ...field("start"), type: "date" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Last day", error: field.error("end") }, /* @__PURE__ */ React.createElement(A.Input, { ...field("end"), type: "date" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Phone" }, /* @__PURE__ */ React.createElement(A.Input, { ...field("phone"), type: "tel" })))
+      }
+    },
+    /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Name", value: trip.name, onSave: tripSave, onValueChange: tripSet("name"), required: true }),
+    /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Email", value: trip.email, onSave: tripSave, onValueChange: tripSet("email"), required: true }),
+    /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Dates", value: `${trip.start} to ${trip.end}` }),
+    /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Phone", value: trip.phone, emptyLabel: "Add phone number", onSave: tripSave, onValueChange: tripSet("phone") })
+  )));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

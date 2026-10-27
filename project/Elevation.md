@@ -63,6 +63,7 @@ Rules that follow:
 | **Done is pressed into the record** | checking an item stamps it like a completed step: muted, struck through, and kept in place in the record rather than removed | `Checklist` |
 | **A condition** | a filter is a segmented plate stamped into the bar; each segment lifts when pointed at because it opens a picker, and a condition still waiting for its value keeps that segment as an opening | `FilterBar` |
 | **A span being drawn** | dragging across empty time draws a well the length of the new event, which rises into an event to be named when released; while an event is carried, time opens and the slot under it deepens to a trench as long as the event | `Schedule` |
+| **Properties of a record** | a record's properties lie on the ground; an editable value is one plate that lifts when pointed at, a read-only one never does, and an unset value is a small opening naming what to add | `PropertyList` |
 | **Recency** | new or changed content arrives tinted and lifted, then settles to rest over `dur-settle` (afterglow) | `settle` on `Surface`, `Card` |
 | **Commitment** | a pending write hovers (after `dur-grace`), a confirmed one lands, a failed one drops into a trench | `status` on `Surface`, `Card` |
 | **Possession** | whatever is in a hand floats at level 3, tilted; a collaborator's hold wears their `presence-*` colour and name | `heldBy`, `SortableList`, `BoardCard heldBy` |

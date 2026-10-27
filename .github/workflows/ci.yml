@@ -67,6 +67,7 @@ jobs:
           node ../scripts/record-check.mjs react18-item-group node checks/item-group.mjs
           node ../scripts/record-check.mjs react18-board-edit node checks/board-edit.mjs
           node ../scripts/record-check.mjs react18-table-editing node checks/table-editing.mjs
+          node ../scripts/record-check.mjs react18-property-list node checks/property-list.mjs
           node ../scripts/record-check.mjs react18-edit-region node checks/edit-region.mjs
           node ../scripts/record-check.mjs react18-tag-input node checks/tag-input.mjs
           node ../scripts/record-check.mjs react18-date-picker node checks/date-picker.mjs
@@ -87,6 +88,7 @@ jobs:
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-item-group node build/checks/item-group.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-board-edit node build/checks/board-edit.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-table-editing node build/checks/table-editing.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-property-list node build/checks/property-list.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-edit-region node build/checks/edit-region.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-tag-input node build/checks/tag-input.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-date-picker node build/checks/date-picker.mjs
@@ -101,6 +103,7 @@ jobs:
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-item-group node build/checks/item-group.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-board-edit node build/checks/board-edit.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-table-editing node build/checks/table-editing.mjs
+          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-property-list node build/checks/property-list.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-edit-region node build/checks/edit-region.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-tag-input node build/checks/tag-input.mjs
           ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-date-picker node build/checks/date-picker.mjs

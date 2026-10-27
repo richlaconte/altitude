@@ -271,6 +271,17 @@ A design review, not a study: `ItemGroup` was prototyped with webhooks and a for
 
 Not yet tested with people: whether focus moving to the fresh add slat after adding is expected, and whether Undo without a time-out is noticed.
 
+### E22 · How should a record's properties be edited?
+
+A design review, not a study: `PropertyList` was prototyped as an issue sidebar and a “Check your answers” summary and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard paths checked in a browser (`checks/property-list.mjs`). It was compared with GOV.UK's [summary list](https://design-system.service.gov.uk/components/summary-list/), Ant Design's Descriptions and ProDescriptions, and Linear's and Jira's issue sidebars.
+
+- **The value is the button.** A separate “Change” link per row (GOV.UK) is clear but heavy in a sidebar; making the value plate itself the button, lifting on hover and named “Status: In review. Change status”, keeps the row quiet and the name meaningful out of context.
+- **Read-only values don't lift.** Hover is a promise: only what opens an editor reacts, so editability is visible without a pencil per row.
+- **Unset is an opening.** A dashed well that names what to add shows at a glance which properties are missing, as an empty field does.
+- **Shortcuts off by default.** Linear's single-key shortcuts are fast, but WCAG 2.1.4 requires that they can be turned off or remapped.
+
+Not yet tested with people: whether the hover-lifting plate is enough of an affordance on touch, where there's no hover (the open question in the issue).
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -39,3 +39,5 @@ export type { DataGridProps, DataGridColumn, DataGridChange, DataGridResult, Dat
 export { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemSeparator } from './item-group';
 export type { ItemGroupProps, ItemGroupRemoval, ItemGroupResult, ItemGroupCreateResult, ItemActionsApi } from './item-group';
 export type { BoardCreateResult, BoardRenameResult } from './collections';
+export { PropertyList, PropertyListItem } from './property-list';
+export type { PropertyListProps, PropertyListItemProps, PropertyListEditAll } from './property-list';

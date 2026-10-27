@@ -99,6 +99,10 @@ Enter inserts a newline; Ctrl+Enter (⌘+Enter on Apple platforms) saves; Escape
 
 Escape inside an open popup closes the popup only; the next Escape cancels the session. `isEqual(a, b)` (default `Object.is`) decides both whether a draft is unchanged and whether an observed `value` is an external change, so pass one for object values (a date range) whose identity changes on every render. `required` rejects an empty value of any type; `maxLength` applies to strings only. A canonical `onSave` result for a custom editor may be any value except `undefined`; for the default Input it must still be a string.
 
+## A value as its own button: `trigger="value"`
+
+With `trigger="value"`, read mode is one button holding the value (a plate that lifts on hover), named “<label>: <value>. <editLabel>”, instead of the value followed by an Edit button. `emptyLabel` names an empty value (default “Not set”), shown as a small dashed well; `shortcut` puts a key in the button's `aria-keyshortcuts` for a surrounding list to handle. `PropertyList` uses all three.
+
 ## Focus and accessible equivalents
 
 Opening focuses and selects the input (with a custom `editor`, it focuses the editor's first focusable control). Save or Cancel restores focus to Edit only when focus was still in the editor at completion. Completion never steals focus from another part of the page. If Edit is unavailable while the component remains mounted, `focusFallback` may return a connected, enabled, focusable element; otherwise it leaves focus where it is. When a parent removes a row, the parent owns next-row or heading focus.
