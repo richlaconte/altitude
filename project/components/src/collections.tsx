@@ -222,6 +222,19 @@ export interface DataTableProps<T> {
   empty?: React.ReactNode;
   className?: string;
   'aria-label'?: string;
+  /** Read-only detail: a disclosure button in the first column opens a full-width region under the row, on the ground. */
+  renderExpanded?: (row: T) => React.ReactNode;
+  /** With onSave, an Edit button opens the row's region as an EditRegion holding these fields; row and region rise together. */
+  renderEditor?: (field: EditRegionBinder<T & Record<string, unknown>>, row: T) => React.ReactNode;
+  onSave?: (draft: T, context: { previousValue: T; changed: (keyof T)[] }) => EditRegionSaveResult<T & Record<string, unknown>> | Promise<EditRegionSaveResult<T & Record<string, unknown>>>;
+  /** Publishes a saved row's canonical record (a synchronous setter). */
+  onRowChange?: (canonical: T) => void;
+  /** Rows whose detail is open, by id. */
+  expanded?: string[];
+  defaultExpanded?: string[];
+  onExpandedChange?: (ids: string[]) => void;
+  /** 'single' (default): opening one closes the others. */
+  expandMode?: 'single' | 'multiple';
 }
 
 const GripIcon = () => (
@@ -276,26 +289,51 @@ function DataTableLanded<T>(props: Omit<DataTableProps<T>, 'skeleton'>) {
   return <DataTableFace {...props} rows={readPromised(props.rows) ?? []} />;
 }
 function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, selected, defaultSelected = [], onSelectedChange, actions, toolbar,
-  sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className, ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
+  sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className,
+  renderExpanded, renderEditor, onSave, onRowChange, expanded, defaultExpanded = [], onExpandedChange, expandMode = 'single', ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
   const [sel, setSel] = useControllable(selected, defaultSelected, onSelectedChange);
   const [srt, setSrt] = useControllable<TableSort>(sort, defaultSort, onSortChange);
+  const [open, setOpen] = useControllable(expanded, defaultExpanded, onExpandedChange);
+  const [editing, setEditing] = React.useState<string | null>(null);
+  const [landed, setLanded] = React.useState<{ id: string; n: number } | null>(null);
+  const frozen = React.useRef<string[] | null>(null);
+  const refocus = React.useRef<string | null>(null);
+  const regionId = React.useId();
+  const editable = !!renderEditor && !!onSave;
   const [said, setSaid] = React.useState('');
   const table = React.useRef<HTMLTableElement>(null);
   const body = React.useRef<HTMLTableSectionElement>(null);
   const name = (r: T) => getRowLabel?.(r) ?? getRowId(r);
   const view = React.useMemo(() => {
+    // While a row is in edit the order holds still: it mustn't be carried away mid-edit.
+    if (editing && frozen.current) { const at = new Map(frozen.current.map((id, i) => [id, i])); return [...rows].sort((a, b) => (at.get(getRowId(a)) ?? 1e9) - (at.get(getRowId(b)) ?? 1e9)); }
     const col = srt && columns.find((c) => c.key === srt.key);
     if (!srt || !col?.sortValue) return rows;
     const d = srt.direction === 'descending' ? -1 : 1;
     return rows.map((r, i) => ({ r, i, v: col.sortValue!(r) }))
       .sort((a, b) => (typeof a.v === 'string' || typeof b.v === 'string' ? String(a.v).localeCompare(String(b.v), undefined, { numeric: true }) : (a.v as number) - (b.v as number)) * d || a.i - b.i)
       .map((x) => x.r);
-  }, [rows, srt, columns]);
+  }, [rows, srt, columns, editing]); // eslint-disable-line react-hooks/exhaustive-deps
   const ids = view.map(getRowId);
+  const openSet = new Set(open);
+  const toggleOpen = (id: string) => setOpen(openSet.has(id) ? open.filter((x) => x !== id) : expandMode === 'single' ? [id] : [...open, id]);
+  const focusField = React.useRef(false);
+  const startEdit = (id: string) => { if (editing) return; frozen.current = ids; focusField.current = true; setEditing(id); };
+  const endEdit = (id: string) => { setEditing(null); frozen.current = null; refocus.current = id; };
+  useIsoLayoutEffect(() => {
+    if (editing && focusField.current) {
+      focusField.current = false;
+      body.current?.querySelector<HTMLElement>('.alt-table-editrow .alt-edit-region-form input:not([type="hidden"]), .alt-table-editrow .alt-edit-region-form textarea, .alt-table-editrow .alt-edit-region-form button')?.focus();
+    }
+    const id = refocus.current;
+    if (!id || editing) return;
+    refocus.current = null;
+    body.current?.querySelector<HTMLElement>(`tr[data-row="${CSS.escape(id)}"] [data-edit-row]`)?.focus();
+  });
   const chosen = new Set(sel);
   const all = ids.length > 0 && ids.every((id) => chosen.has(id));
   const some = !all && ids.some((id) => chosen.has(id));
-  const movable = !!onReorder && !srt;
+  const movable = !!onReorder && !srt && !editing;
 
   const cycle = (c: DataTableColumn<T>) => {
     const next: TableSort = srt?.key !== c.key ? { key: c.key, direction: 'ascending' } : srt.direction === 'ascending' ? { key: c.key, direction: 'descending' } : null;
@@ -362,7 +400,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
   const s = start.current;
   const h = drag && s ? s.hs[drag.from] : 0;
   const slotTop = drag && s ? (drag.to <= drag.from ? s.tops[drag.to] : s.tops[drag.to] + s.hs[drag.to] - s.hs[drag.from]) : 0;
-  const span = columns.length + (selectable ? 1 : 0) + (movable ? 1 : 0);
+  const span = columns.length + (selectable ? 1 : 0) + (movable ? 1 : 0) + (renderExpanded ? 1 : 0) + (editable ? 1 : 0);
   return (
     <div className={cx('alt-data-table', className)}>
       {(selectable || toolbar) && (
@@ -382,6 +420,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
         underlay={drag && s ? <span className="alt-table-slot" aria-hidden="true" style={{ top: slotTop + (table.current?.offsetTop ?? 0), height: h }} /> : null}>
         <TableHeader>
           <TableRow>
+            {renderExpanded && <TableHead className="alt-th-expand"><span className="alt-sr">Details</span></TableHead>}
             {movable && <TableHead className="alt-th-grip"><span className="alt-sr">Move</span></TableHead>}
             {selectable && (
               <TableHead className="alt-th-check">
@@ -389,8 +428,9 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
               </TableHead>
             )}
             {columns.map((c) => (
-              <TableHead key={c.key} align={c.align} style={{ width: c.width }} sort={srt?.key === c.key ? srt.direction : 'none'} onSort={c.sortValue ? () => cycle(c) : undefined}>{c.header}</TableHead>
+              <TableHead key={c.key} align={c.align} style={{ width: c.width }} sort={srt?.key === c.key ? srt.direction : 'none'} onSort={c.sortValue && !editing ? () => cycle(c) : undefined}>{c.header}</TableHead>
             ))}
+            {editable && <TableHead className="alt-th-edit"><span className="alt-sr">Edit</span></TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody ref={body}>
@@ -403,11 +443,21 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
               if (drag.to < drag.from && i >= drag.to && i < drag.from) shift = h;
             }
             const following = drag?.id === id;
+            const isOpen = !!renderExpanded && openSet.has(id);
+            const isEditing = editing === id;
             return (
-              <TableRow key={id} rowId={id} selected={selectable && chosen.has(id)} interactive={!!onRowClick} relevance={relevance?.(r)}
+              <React.Fragment key={id}>
+              <TableRow rowId={id} selected={selectable && chosen.has(id)} interactive={!!onRowClick} relevance={relevance?.(r)}
+                settle={landed?.id === id ? landed.n : undefined} data-editing={isEditing ? '' : undefined} data-expanded={isOpen ? '' : undefined}
                 held={following || held?.id === id} data-following={following ? '' : undefined}
                 style={following ? { transform: `translateY(${drag!.dy}px)` } : shift ? { transform: `translateY(${shift}px)` } : undefined}
                 onClick={onRowClick ? (e) => { if (!(e.target as HTMLElement).closest('button, a, input, label, select, textarea')) onRowClick(r); } : undefined}>
+                {renderExpanded && (
+                  <TableCell className="alt-td-expand">
+                    <button type="button" className="alt-table-disclose" aria-expanded={isOpen} aria-controls={isOpen ? `${regionId}-${id}` : undefined}
+                      aria-label={`Details for ${name(r)}`} onClick={() => toggleOpen(id)}><Icons.ChevronDown size={16} /></button>
+                  </TableCell>
+                )}
                 {movable && (
                   <TableCell className="alt-td-grip">
                     <button type="button" className="alt-table-grip" aria-label={`Move ${name(r)}`} aria-pressed={held?.id === id}
@@ -428,7 +478,23 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
                     </TableCell>
                   );
                 })}
+                {editable && (
+                  <TableCell className="alt-td-edit" align="end">
+                    <Button size="sm" variant="ghost" data-edit-row="" aria-label={`Edit ${name(r)}`} aria-expanded={isEditing}
+                      aria-controls={isEditing ? `${regionId}-${id}-edit` : undefined} disabled={!!editing && !isEditing} onClick={() => startEdit(id)}>Edit</Button>
+                  </TableCell>
+                )}
               </TableRow>
+              {isOpen && !isEditing && <tr className="alt-tr alt-table-detail" id={`${regionId}-${id}`}><td className="alt-td" colSpan={span}>{renderExpanded!(r)}</td></tr>}
+              {isEditing && <tr className="alt-tr alt-table-editrow" data-editing="" id={`${regionId}-${id}-edit`}><td className="alt-td" colSpan={span}>
+                <EditRegion<T & Record<string, unknown>> label={name(r)} value={r as T & Record<string, unknown>} defaultOpen
+                  onOpenChange={(o) => { if (!o) endEdit(id); }}
+                  onValueChange={(v) => { onRowChange?.(v as T); setLanded((x) => ({ id, n: (x?.n ?? 0) + 1 })); }}
+                  onSave={(draft, ctx) => onSave!(draft as T, ctx as { previousValue: T; changed: (keyof T)[] })}>
+                  <EditRegionForm<T & Record<string, unknown>>>{(field) => renderEditor!(field, r)}</EditRegionForm>
+                </EditRegion>
+              </td></tr>}
+              </React.Fragment>
             );
           })}
         </TableBody>
