@@ -1833,3 +1833,60 @@ function App() {
     </details>
   </div>;
 }
+
+=== PropertyList | <!-- @dsCard group="Display" height=700 subtitle="A record's properties, each edited where it sits; unset values are openings" -->
+--- css
+.pl-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 40px; max-width: 860px; }
+.pl-demo h3 { margin: 0 0 12px; font: 600 15px/22px var(--font-sans); color: var(--ink); }
+.pl-demo .pl-side { max-width: 280px; }
+--- jsx
+const PL_STATUS = [{ value: 'todo', label: 'To do' }, { value: 'progress', label: 'In progress' }, { value: 'review', label: 'In review' }, { value: 'done', label: 'Done' }];
+const PL_TONE = { todo: 'neutral', progress: 'accent', review: 'caution', done: 'positive' };
+const PL_PEOPLE = [{ value: 'mara', label: 'Mara Quist' }, { value: 'ines', label: 'Inés Ortega' }, { value: 'tobi', label: 'Tobi Adeyemi' }];
+const PL_PRIORITY = [{ value: 'low', label: 'Low' }, { value: 'medium', label: 'Medium' }, { value: 'high', label: 'High' }];
+const plWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const plLabel = (list, v) => list.find(o => o.value === v)?.label;
+function App() {
+  const [issue, setIssue] = React.useState({ status: 'review', assignee: 'mara', priority: '', estimate: 3, created: '21 Oct 2026' });
+  const [trip, setTrip] = React.useState({ name: 'Mara Quist', email: 'mara@northwind.example', start: '2026-11-02', end: '2026-11-06', phone: '' });
+  const set = key => v => setIssue(i => ({ ...i, [key]: v }));
+  const save = key => async draft => { await plWait(250); if (key === 'status' && draft === 'done' && !issue.assignee) return { ok: false, error: 'Assign someone before marking it done.' }; return { ok: true, value: draft }; };
+  const tripSet = key => v => setTrip(t => ({ ...t, [key]: v }));
+  const tripSave = async draft => { await plWait(200); return { ok: true, value: draft }; };
+  return <div className="pl-demo">
+    <section className="pl-side">
+      <h3 id="pl-issue">Issue details</h3>
+      <A.PropertyList aria-labelledby="pl-issue" shortcuts>
+        <A.PropertyListItem label="Status" value={issue.status} shortcut="s" commit="on-choose" onSave={save('status')} onValueChange={set('status')}
+          renderValue={s => <A.Badge tone={PL_TONE[s]}>{plLabel(PL_STATUS, s)}</A.Badge>} editor={c => <A.Select {...c} items={PL_STATUS} size="sm" />} />
+        <A.PropertyListItem label="Assignee" value={issue.assignee} shortcut="a" commit="on-choose" onSave={save('assignee')} onValueChange={set('assignee')}
+          renderValue={p => plLabel(PL_PEOPLE, p)} editor={c => <A.Combobox {...c} items={PL_PEOPLE} size="sm" />} />
+        <A.PropertyListItem label="Priority" value={issue.priority} emptyLabel="Add priority" commit="on-choose" onSave={save('priority')} onValueChange={set('priority')}
+          renderValue={p => plLabel(PL_PRIORITY, p)} editor={c => <A.Select {...c} items={PL_PRIORITY} size="sm" />} />
+        <A.PropertyListItem label="Estimate" value={issue.estimate} onSave={save('estimate')} onValueChange={set('estimate')} required
+          validate={n => Number.isInteger(n) && n >= 0 ? undefined : 'Use a whole number, 0 or more.'} renderValue={n => `${n} points`}
+          editor={({ value, onValueChange, ...c }) => <A.Input {...c} type="number" size="sm" value={value ?? ''} onChange={e => onValueChange(e.target.value === '' ? null : Number(e.target.value))} />} />
+        <A.PropertyListItem label="Created" value={issue.created} />
+      </A.PropertyList>
+    </section>
+    <section>
+      <h3 id="pl-trip">Check your answers</h3>
+      <A.PropertyList aria-labelledby="pl-trip" layout="inline"
+        editAll={{ label: 'trip details', value: trip, onValueChange: setTrip,
+          validate: d => d.end < d.start ? { end: 'The last day must be on or after the first.' } : undefined,
+          onSave: async d => { await plWait(250); return { ok: true, value: d }; },
+          renderEditor: field => <>
+            <A.Field label="Name" error={field.error('name')}><A.Input {...field('name')} /></A.Field>
+            <A.Field label="Email" error={field.error('email')}><A.Input {...field('email')} type="email" /></A.Field>
+            <A.Field label="First day" error={field.error('start')}><A.Input {...field('start')} type="date" /></A.Field>
+            <A.Field label="Last day" error={field.error('end')}><A.Input {...field('end')} type="date" /></A.Field>
+            <A.Field label="Phone"><A.Input {...field('phone')} type="tel" /></A.Field>
+          </> }}>
+        <A.PropertyListItem label="Name" value={trip.name} onSave={tripSave} onValueChange={tripSet('name')} required />
+        <A.PropertyListItem label="Email" value={trip.email} onSave={tripSave} onValueChange={tripSet('email')} required />
+        <A.PropertyListItem label="Dates" value={`${trip.start} to ${trip.end}`} />
+        <A.PropertyListItem label="Phone" value={trip.phone} emptyLabel="Add phone number" onSave={tripSave} onValueChange={tripSet('phone')} />
+      </A.PropertyList>
+    </section>
+  </div>;
+}

@@ -521,6 +521,12 @@ export interface InlineEditProps<V = string> {
   commit?: 'explicit' | 'on-choose';
   /** An unchanged draft closes without a write, and an equal observed value isn't an external change. Default Object.is. */
   isEqual?: (a: V, b: V) => boolean;
+  /** 'value': read mode is one button holding the value, named “<label>: <value>. <editLabel>”. Default 'button' (value, then an Edit button). */
+  trigger?: 'button' | 'value';
+  /** Shown for an empty value. Default “Not set”. */
+  emptyLabel?: string;
+  /** Single-key shortcut announced on the trigger (aria-keyshortcuts); the surrounding list handles the key. */
+  shortcut?: string;
 }
 export declare function InlineEdit<V = string>(props: InlineEditProps<V>): React.ReactElement;
 
@@ -583,6 +589,52 @@ export declare function EditRegionForm<T extends Record<string, unknown> = Recor
 }): React.ReactElement | null;
 /** The error, the conflict notice and Save/Cancel, for a form with `actions={false}`. */
 export declare function EditRegionActions(): React.ReactNode;
+
+export interface PropertyListEditAll<T extends Record<string, unknown>> {
+  /** The whole record, edited together (for cross-field rules such as start before end). */
+  value: T;
+  onValueChange: (canonical: T) => void;
+  onSave: (draft: T, context: { previousValue: T; changed: (keyof T)[] }) => EditRegionSaveResult<T> | Promise<EditRegionSaveResult<T>>;
+  validate?: (draft: T) => Partial<Record<keyof T, string>> | undefined | Promise<Partial<Record<keyof T, string>> | undefined>;
+  renderEditor: (field: EditRegionBinder<T>) => React.ReactNode;
+  /** Names the region and its button: “Edit all <label>”. Default “details”. */
+  label?: string;
+}
+export interface PropertyListProps<T extends Record<string, unknown> = Record<string, unknown>> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  /** stacked: label above value (a sidebar). inline: label beside value (a summary). Default 'stacked'. */
+  layout?: 'stacked' | 'inline';
+  /** Single-key shortcuts (an item's `shortcut`) while focus is in the list. Off by default (WCAG 2.1.4): offer a way to turn them on. */
+  shortcuts?: boolean;
+  /** An “Edit all” button that lifts the whole list into one EditRegion. */
+  editAll?: PropertyListEditAll<T>;
+  className?: string;
+  children: React.ReactNode;
+}
+export interface PropertyListItemProps<V> {
+  label: string;
+  value: V;
+  /** Read mode. Default: the value as text. */
+  renderValue?: (value: V) => React.ReactNode;
+  /** An empty value's words, shown in a small well. Default “Not set”. */
+  emptyLabel?: string;
+  /** Makes the item editable (InlineEdit's contract). Without it, the value is read-only text. */
+  onSave?: (draft: V, context: { previousValue: V }) => InlineEditSaveResult<V> | Promise<InlineEditSaveResult<V>>;
+  onValueChange?: (canonical: V) => void;
+  editor?: (control: InlineEditControl<V>) => React.ReactNode;
+  commit?: 'explicit' | 'on-choose';
+  validate?: (draft: V) => string | undefined | Promise<string | undefined>;
+  required?: boolean;
+  isEqual?: (a: V, b: V) => boolean;
+  /** A single key that opens this item while focus is in the list (with `shortcuts` on the list). */
+  shortcut?: string;
+  className?: string;
+}
+/** One record's properties as label–value pairs (a dl), each editable where it sits; unset values are openings. */
+export declare function PropertyList<T extends Record<string, unknown> = Record<string, unknown>>(props: PropertyListProps<T>): React.ReactElement;
+/** One property: with onSave an editable value plate (InlineEdit), without it read-only text. */
+export declare function PropertyListItem<V>(props: PropertyListItemProps<V>): React.ReactElement;
 
 export interface DialogProps {
   /** Default recede retains the existing stage/scrim presentation. Stationary removes recession and blur, not modality. */
@@ -972,7 +1024,7 @@ declare global {
     Altitude: {
       AltitudeProvider: typeof AltitudeProvider; Surface: typeof Surface; Button: typeof Button;
       Card: typeof Card; CardHeader: typeof CardHeader; CardTitle: typeof CardTitle; CardDescription: typeof CardDescription; CardContent: typeof CardContent; CardFooter: typeof CardFooter;
-      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
+      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; PropertyList: typeof PropertyList; PropertyListItem: typeof PropertyListItem; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;

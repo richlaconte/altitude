@@ -36,6 +36,12 @@ export interface InlineEditProps<V = string> {
   commit?: 'explicit' | 'on-choose';
   /** An unchanged draft closes without a write, and an equal observed value isn't an external change. Default Object.is. */
   isEqual?: (a: V, b: V) => boolean;
+  /** 'value': read mode is one button holding the value, named “<label>: <value>. <editLabel>”. Default 'button' (value, then an Edit button). */
+  trigger?: 'button' | 'value';
+  /** Shown for an empty value. Default “Not set”. */
+  emptyLabel?: string;
+  /** Single-key shortcut announced on the trigger (aria-keyshortcuts); the surrounding list handles the key. */
+  shortcut?: string;
 }
 type Session<V> = {
   generation: number;
@@ -51,7 +57,7 @@ const CHANGED = 'The saved value changed. Review the current value before saving
 const CHANGED_DURING_SAVE = 'The value changed while saving. Your save may have completed. Check the current record.';
 const FOCUSABLE = 'button, input:not([type="hidden"]), select, textarea, a[href], [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
 const isEmpty = (value: unknown) => value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0);
-const showValue = (value: unknown) => isEmpty(value) ? 'Not set' : String(value);
+const showValue = (value: unknown, empty = 'Not set') => isEmpty(value) ? empty : String(value);
 // Let a closing popup (a Select's list sinking) finish before the editor itself settles: the two never move at once.
 const afterMotion = (element: HTMLElement | null) => !element?.getAnimations ? Promise.resolve() : Promise.race([
   Promise.all(element.getAnimations({ subtree: true }).filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined))),
@@ -67,7 +73,7 @@ function canFocus(element: HTMLElement | null | undefined): element is HTMLEleme
 /** One local editing session. The application remains the sole owner of the committed value and write. */
 export function InlineEdit<V = string>({ value, onValueChange, onSave, label, validate, required = false, maxLength,
   disabled = false, editLabel = `Edit ${label}`, saveLabel = 'Save changes', cancelLabel = 'Cancel',
-  focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is }: InlineEditProps<V>): React.ReactElement {
+  focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is, trigger: triggerMode = 'button', emptyLabel = 'Not set', shortcut }: InlineEditProps<V>): React.ReactElement {
   const [session, setSession] = React.useState<Session<V> | null>(null);
   const [announcement, setAnnouncement] = React.useState('');
   const [settled, setSettled] = React.useState(0);
@@ -225,7 +231,10 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   };
   const saving = session?.phase === 'saving';
   const validating = session?.phase === 'validating';
-  const display = (shown: V) => renderValue ? renderValue(shown) : showValue(shown);
+  const display = (shown: V) => isEmpty(shown) && (renderValue === undefined || triggerMode === 'value') ? emptyLabel : renderValue ? renderValue(shown) : showValue(shown, emptyLabel);
+  const valueRef = React.useRef<HTMLSpanElement>(null);
+  const [valueText, setValueText] = React.useState('');
+  useIsoLayoutEffect(() => { if (triggerMode === 'value' && !session) setValueText(valueRef.current?.textContent?.trim() ?? ''); });
   const controlId = fieldId + '-control';
   const describedBy = session?.error ? fieldId + '-error' : onChoose ? fieldId + '-hint' : undefined;
   return <div ref={root} className={cx('alt-inline-edit', className)} role="group" aria-label={label}
@@ -258,7 +267,12 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
             onClick={() => { void submit(); }}>{onChoose ? 'Try again' : saveLabel}</Button>}
           <Button type="button" variant="ghost" disabled={saving} onClick={cancel}>{cancelLabel}</Button>
         </div>
-      </> : <div className="alt-inline-edit-read">
+      </> : triggerMode === 'value' ? <div className="alt-inline-edit-read">
+        <button ref={trigger} type="button" className="alt-inline-edit-plate" data-empty={isEmpty(value) ? '' : undefined} disabled={disabled}
+          aria-label={`${label}: ${valueText || showValue(value, emptyLabel)}. ${editLabel}`} aria-keyshortcuts={shortcut} onClick={begin}>
+          <span ref={valueRef} className="alt-inline-edit-value">{display(value)}</span>
+        </button>
+      </div> : <div className="alt-inline-edit-read">
         <span className="alt-inline-edit-value">{display(value)}</span>
         <Button ref={trigger} type="button" variant="ghost" disabled={disabled} onClick={begin}>{editLabel}</Button>
       </div>}

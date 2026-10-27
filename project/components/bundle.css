@@ -1542,3 +1542,34 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-edit-region-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .alt-edit-region-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-edit-region-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── PropertyList: one record's properties. They're the record, on the ground. An editable value is one plate (the
+   InlineEdit trigger) that lifts one level when pointed at, because clicking it opens its editor; read-only values
+   never lift, so editability shows without a pencil per row. An unset value is a small opening: a dashed well, the
+   empty field's treatment at plate size, so a half-filled record reads at a glance. Edit all lifts the list into one
+   raised EditRegion. ── */
+.alt-property-list { position: relative; min-width: 0; color: var(--ink); }
+.alt-property-tools { display: flex; justify-content: flex-end; margin-bottom: var(--space-1); }
+.alt-property-dl { display: grid; gap: var(--space-3); margin: 0; }
+.alt-property { display: grid; gap: 2px; min-width: 0; }
+.alt-property-list[data-layout="inline"] .alt-property-dl { gap: 0; }
+.alt-property-list[data-layout="inline"] .alt-property { grid-template-columns: minmax(8rem, 30%) 1fr; align-items: center; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
+.alt-property-label { color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+.alt-property-value { min-width: 0; margin: 0; font: 400 14px/20px var(--font-sans); overflow-wrap: anywhere; }
+.alt-property-empty { color: var(--ink-muted); }
+.alt-property .alt-inline-edit-read { display: block; }
+.alt-inline-edit-plate {
+  display: inline-flex; align-items: center; min-height: 30px; max-width: 100%; margin-left: -8px; padding: 2px 8px; border: 0; border-radius: var(--radius-sm);
+  background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
+}
+.alt-inline-edit-plate:hover:not(:disabled) { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+.alt-inline-edit-plate:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-inline-edit-plate:disabled { cursor: default; }
+.alt-inline-edit-plate[data-empty] { margin-left: 0; border: 1px dashed var(--line-control); background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); font-size: 13px; }
+.alt-inline-edit-plate[data-empty]:hover:not(:disabled) { background: var(--surface-trench); box-shadow: var(--trench); transform: none; color: var(--ink); }
+[data-contrast="more"] .alt-inline-edit-plate:hover:not(:disabled) { box-shadow: 0 2px 0 0 var(--ink); }
+@media (forced-colors: active) { .alt-inline-edit-plate[data-empty] { border: 1px dashed CanvasText; } .alt-inline-edit-plate:hover { outline: 1px solid CanvasText; } }
+/* In a list of properties each value's status line is announced but not shown: it would open a gap under every row. */
+.alt-property .alt-inline-edit-status { position: absolute; width: 1px; height: 1px; min-height: 0; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.alt-property .alt-inline-edit .alt-field-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
