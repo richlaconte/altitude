@@ -63,6 +63,6 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 
 ## Actions in place
 
-Finish a small edit where its value lives with `InlineEdit`. Perform a reversible action directly when the application supplies real recovery and a durable destination. Use a focused `Dialog` when the consequence requires an explicit decision. [Actions in place](ActionsInPlace.md) contains executable recipes and the integrated Files example.
+Finish a small edit where its value lives with `InlineEdit`, and several fields of one record saved together with `EditRegion`. Perform a reversible action directly when the application supplies real recovery and a durable destination. Use a focused `Dialog` when the consequence requires an explicit decision. [Actions in place](ActionsInPlace.md) contains executable recipes and the integrated Files example.
 
 Editing is temporary local input; it is not a pending write. Pending begins only when persistence is dispatched. Keep committed content on the ground, and carry every live state with text, semantics or borders as well as height. Persistence, authorization, concurrency and reversibility remain application responsibilities.

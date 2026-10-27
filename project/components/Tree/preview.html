@@ -1,0 +1,105 @@
+<!-- @dsCard group="Navigation" height=620 subtitle="A hierarchy seen at once and changed in place: rename, add, carry into a folder" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tree — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.tree-demo { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 24px; max-width: 760px; }
+.tree-demo-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.tree-demo-panel { padding: 16px; border-radius: var(--radius-lg); background: var(--surface-well); color: var(--ink); font: 400 13px/20px var(--font-sans); }
+.tree-demo-panel h3 { margin: 0 0 6px; font: 600 15px/22px var(--font-sans); }
+.tree-demo-panel p { margin: 0 0 8px; color: var(--ink-muted); }
+.tree-demo-icon { display: inline-grid; place-items: center; width: 16px; height: 16px; color: var(--ink-muted); }
+@media (max-width: 560px) { .tree-demo { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const TREE_SEED = [
+  { id: "brand", title: "Brand", children: [
+    { id: "logo", title: "Logo usage" },
+    { id: "colour", title: "Colour" },
+    { id: "type", title: "Typography" }
+  ] },
+  { id: "product", title: "Product", children: [
+    { id: "roadmap", title: "Roadmap" },
+    { id: "specs", title: "Specs", children: [{ id: "search", title: "Search" }, { id: "billing", title: "Billing" }] }
+  ] },
+  { id: "archive", title: "Archive", children: [] },
+  { id: "handbook", title: "Team handbook" }
+];
+const treeWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const treeFind = (list, id, parent = null) => {
+  for (const [i, p] of list.entries()) {
+    if (p.id === id) return { page: p, parent, index: i };
+    const hit = p.children && treeFind(p.children, id, p.id);
+    if (hit) return hit;
+  }
+  return null;
+};
+const treeRemove = (list, id) => list.filter((p) => p.id !== id).map((p) => p.children ? { ...p, children: treeRemove(p.children, id) } : p);
+const treeInsert = (list, parentId, index, page) => parentId === null ? [...list.slice(0, index), page, ...list.slice(index)] : list.map((p) => p.id === parentId ? { ...p, children: [...(p.children || []).slice(0, index), page, ...(p.children || []).slice(index)] } : p.children ? { ...p, children: treeInsert(p.children, parentId, index, page) } : p);
+const treeRename = (list, id, title) => list.map((p) => p.id === id ? { ...p, title } : p.children ? { ...p, children: treeRename(p.children, id, title) } : p);
+const FolderIcon = () => /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "1.4" }, /* @__PURE__ */ React.createElement("path", { d: "M2 4.5h4l1.5 1.5H14v6.5H2z" }));
+const PageIcon = () => /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "1.4" }, /* @__PURE__ */ React.createElement("path", { d: "M4 2h5l3 3v9H4z" }), /* @__PURE__ */ React.createElement("path", { d: "M9 2v3h3" }));
+function App() {
+  const [pages, setPages] = React.useState(TREE_SEED);
+  const [expanded, setExpanded] = React.useState(["brand", "product"]);
+  const [selected, setSelected] = React.useState("roadmap");
+  const tree = React.useRef(null);
+  const seq = React.useRef(0);
+  const current = selected && treeFind(pages, selected);
+  return /* @__PURE__ */ React.createElement("div", { className: "tree-demo" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "tree-demo-tools" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => tree.current.startCreate(current && current.page.children ? current.page.id : current ? current.parent : null) }, "New page"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", disabled: !current, onClick: () => tree.current.startRename(selected) }, "Rename")), /* @__PURE__ */ React.createElement(
+    A.Tree,
+    {
+      ref: tree,
+      "aria-label": "Pages",
+      items: pages,
+      getKey: (p) => p.id,
+      getLabel: (p) => p.title,
+      getChildren: (p) => p.children,
+      hasChildren: (p) => !!p.children,
+      expanded,
+      onExpandedChange: setExpanded,
+      selected,
+      onSelectedChange: setSelected,
+      renderItem: (p) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("span", { className: "tree-demo-icon", "aria-hidden": "true" }, p.children ? /* @__PURE__ */ React.createElement(FolderIcon, null) : /* @__PURE__ */ React.createElement(PageIcon, null)), p.title),
+      onRename: async (page, title) => {
+        await treeWait(250);
+        if (title.length > 40) return { ok: false, error: "Use 40 characters or fewer." };
+        setPages((list) => treeRename(list, page.id, title.trim()));
+        return { ok: true };
+      },
+      canDrop: ({ to }) => to.parentId === null || !!treeFind(pages, to.parentId).page.children,
+      onMove: async ({ id, to }) => {
+        await treeWait(250);
+        if (treeFind(pages, id).parent === "archive" && to.parentId !== "archive") return { ok: false, error: "Archived pages can\u2019t be moved out of Archive." };
+        setPages((list) => {
+          const page = treeFind(list, id).page;
+          return treeInsert(treeRemove(list, id), to.parentId, to.index, page);
+        });
+        return { ok: true };
+      },
+      onCreate: async ({ parentId, index, name }) => {
+        await treeWait(250);
+        const page = { id: "new-" + ++seq.current, title: name };
+        setPages((list) => treeInsert(list, parentId, index, page));
+        return { ok: true, value: page };
+      },
+      onRemove: (page) => setPages((list) => treeRemove(list, page.id))
+    }
+  )), /* @__PURE__ */ React.createElement("div", { className: "tree-demo-panel", "aria-live": "polite" }, /* @__PURE__ */ React.createElement("h3", null, current ? current.page.title : "No page selected"), /* @__PURE__ */ React.createElement("p", null, "F2 renames. Ctrl+Enter adds a page after, Ctrl+Shift+Enter one inside. Space picks a page up: arrows move it, \u2192 puts it inside the page above, Space drops. Or drag it onto a folder.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

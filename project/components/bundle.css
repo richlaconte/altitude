@@ -1313,10 +1313,13 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    level 3, tilted, over a slot that opens as a well. Cells can't share one shadow, so each row's height is drawn as a
    single slab by its first cell, as wide as the table (--alt-row-w, measured). ── */
 .alt-data-table { min-width: 0; }
-.alt-table-tools { display: flex; align-items: center; gap: var(--space-3); min-height: 36px; margin-bottom: var(--space-2); font: 500 14px/20px var(--font-sans); color: var(--ink); }
-.alt-table-selection { display: inline-flex; align-items: center; gap: var(--space-2); --alt-from-y: 4px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
+.alt-table-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: 36px; margin-bottom: var(--space-2); font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.alt-table-selection { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); --alt-from-y: 4px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
 .alt-table-selection .alt-badge[data-variant="count"] { position: static; }
-.alt-table-tools-end { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+.alt-table-tools-end { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); min-width: 0; max-width: 100%; margin-left: auto; }
+/* At narrow widths the toolbar wraps (WCAG 1.4.10 Reflow): a field in it may shrink rather than push the row off the page. */
+.alt-table-tools-end > .alt-input { flex: 0 1 auto; min-width: 0; }
+.alt-table-tools-end > .alt-input input { min-width: 0; }
 .alt-table-wrap { position: relative; isolation: isolate; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; outline: none; }
 .alt-table-wrap:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-md); }
 .alt-table-wrap::after { content: ""; position: sticky; z-index: 4; bottom: 0; display: block; height: 24px; margin-top: -24px; pointer-events: none; box-shadow: var(--lip-bottom); opacity: 0; transition: opacity var(--dur-travel-2) var(--ease-rise); }
@@ -1522,6 +1525,198 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
 .alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── EditRegion: several fields of one record, saved together. Read mode is the record on the ground (level 0) with a
+   visible Edit button. Editing lifts the region into a static raised card (level 1, no hover lift: it's being worked
+   in, not offered), as an Accordion lid lifts over its compartment; the fields inside are openings (Input, Select…),
+   and Surface's own signals carry the write: pending hovers after dur-grace, a known failure drops to a trench, an
+   accepted save settles back to the ground with one afterglow for the whole region. The height glides open; the
+   fields fade in together, never staggered. Forced colours and contrast="more" come from Surface and the controls. ── */
+.alt-edit-region { min-width: 0; }
+.alt-edit-region-surface { min-width: 0; border-radius: var(--radius-lg); }
+.alt-edit-region:not([data-state="read"]) .alt-edit-region-surface { padding: var(--space-4); border: 1px solid var(--line-control); }
+.alt-edit-region-view { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
+.alt-edit-region-values { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.alt-edit-region-form { display: grid; gap: var(--space-4); min-width: 0; --alt-from-y: 0px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
+.alt-edit-region-fields { display: grid; gap: var(--space-3); min-width: 0; }
+.alt-edit-region-fields .alt-field, .alt-edit-region-fields .alt-input, .alt-edit-region-fields .alt-select { min-width: 0; }
+.alt-edit-region-fields .alt-input input { width: 100%; min-width: 0; }
+.alt-edit-region-chrome { display: grid; gap: var(--space-3); }
+.alt-edit-region-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.alt-edit-region-actions .alt-btn { max-width: 100%; white-space: normal; }
+.alt-edit-region-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+/* ── TagInput: a set of short values in one field. The field is an opening, built like Input; once it holds a tag its
+   floor rises flush (filled). Each tag is a label, part of the record, so it's a Badge plate stamped flush into the
+   floor, and stamped again (down 3px, settling) when it arrives. A first Backspace arms the last tag: it lifts one
+   level on a critical tint; a second lifts it off (up 8px, fading) and the gap closes. A tag waiting on onAdd or
+   onRemove hovers at level 2 after dur-grace; a rejected one drops to a trench with a critical rim. Suggestions are the
+   Combobox's list at level 3. ── */
+.alt-tag-input { position: relative; display: block; min-width: 0; }
+.alt-tag-input > .alt-input { height: auto; min-height: 40px; flex-wrap: wrap; align-items: center; row-gap: 4px; padding-block: 5px; }
+.alt-tag-input > .alt-input[data-size="sm"] { min-height: 34px; padding-block: 3px; }
+.alt-tag-input > .alt-input > input { flex: 1 1 6ch; min-width: 6ch; height: 28px; }
+.alt-tag-input > .alt-input:not([data-filled]):not([data-invalid]):not([data-disabled]) { --w: 4px; --n: calc(var(--near) * var(--alt-travel)); background: var(--surface-well); }
+.alt-tag-list { display: contents; list-style: none; margin: 0; padding: 0; }
+.alt-tag {
+  --t-bg: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%);
+  position: relative; display: inline-flex; align-items: center; max-width: 100%; height: 24px; border-radius: var(--radius-sm);
+  background: var(--t-bg); color: var(--ink); font: 550 12.5px/1 var(--font-sans); vertical-align: middle;
+  box-shadow: inset 0 1px 1.5px color-mix(in oklab, var(--ink) 16%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--ink) 9%, transparent), 0 1px 0 0 var(--alt-lip);
+  transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise);
+}
+.alt-tag-face { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 24ch; height: 100%; margin: 0; padding: 0 8px; border: 0; border-radius: inherit; background: none; color: inherit; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
+.alt-tag-face:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-tag:has(.alt-tag-remove) .alt-tag-face { padding-right: 2px; }
+.alt-tag-remove { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 2px; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1); }
+.alt-tag-remove:hover { background: var(--surface-raised); color: var(--ink); box-shadow: var(--elev-1); }
+.alt-tag[data-stamp] { animation: alt-stamp-a var(--dur-travel-2) var(--ease-settle); }
+.alt-tag[data-armed] { --t-bg: var(--critical-soft); background: var(--critical-soft); transform: translateY(calc(-1px * var(--alt-travel))); box-shadow: var(--elev-1), inset 0 0 0 1px color-mix(in oklab, var(--critical) 40%, transparent); }
+.alt-tag[data-status="pending"] { animation: alt-tag-pending var(--dur-travel-1) var(--ease-rise) var(--dur-grace) both; }
+@keyframes alt-tag-pending { to { background: var(--surface-lifted); box-shadow: var(--elev-2); transform: translateY(calc(-2px * var(--alt-travel))); } }
+.alt-tag[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
+.alt-tag[data-leaving] { animation: alt-lifted-off 140ms var(--ease-rise) forwards; }
+.alt-tag-edit { display: inline-flex; }
+.alt-tag-edit-input { height: 24px; padding: 0 6px; border: 1px solid var(--line-control); border-radius: var(--radius-sm); background: var(--surface-well); color: var(--ink); font: 500 12.5px/1 var(--font-sans); box-shadow: var(--well); outline: none; }
+.alt-tag-edit-input:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-tag-edit-input[aria-invalid] { background: var(--critical-soft); border-color: var(--critical); }
+.alt-tag-hint { display: block; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+.alt-tag-error { margin: var(--space-1) 0 0; }
+.alt-tag-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.alt-tag-standalone { margin: 2px; }
+[data-contrast="more"] .alt-tag[data-armed] { box-shadow: 0 2px 0 0 var(--ink), inset 0 0 0 1px var(--critical); }
+@media (forced-colors: active) {
+  .alt-tag { border: 1px solid CanvasText; } .alt-tag[data-armed] { border: 1px solid Highlight; outline: 1px solid Highlight; }
+  .alt-tag[data-status="pending"] { border-style: dotted; } .alt-tag[data-status="failed"] { border: 2px dashed CanvasText; }
+  .alt-tag-input > .alt-input:not([data-filled]) { border-style: dashed; }
+}
+
+/* ── DatePicker, DateRangePicker, Calendar: the field is an opening built like Select. Day, month and year are typed
+   segments; a partial date isn't a value, so the floor rises flush only once a whole, allowed date is held. The
+   calendar floats at level 3 like a Popover. Days are flush (at this density a trench per day would be noise); the
+   chosen day carries the one raised accent mark, the RadioGroup thumb's rule, and the mark is carried to a new day in
+   the same month. Hovering a day shows the mark's ghost (feedforward). A range is the Slider's build: a sunk
+   accent-soft track between two raised ends. A month change is lateral, so it cross-fades. Calendar on its own lies
+   on the page at level 0. ── */
+.alt-date-picker { position: relative; display: block; min-width: 0; }
+.alt-date-picker > .alt-input { gap: 0; padding-right: 4px; cursor: text; }
+.alt-date-segs { display: inline-flex; align-items: center; min-width: 0; font: 400 14px/20px var(--font-sans); font-variant-numeric: tabular-nums; transform: translateY(calc(var(--wd) * 0.5)); transition: transform var(--dur-travel-2) var(--ease-settle); }
+.alt-date-seg { padding: 1px 2px; border-radius: 3px; outline: none; caret-color: transparent; }
+.alt-date-seg[data-placeholder] { color: var(--ink-muted); }
+.alt-date-seg:focus { background: var(--accent); color: var(--on-accent); }
+.alt-date-sep { padding: 0 1px; color: var(--ink-muted); }
+.alt-date-to { padding: 0 var(--space-2); color: var(--ink-muted); transform: translateY(calc(var(--wd) * 0.5)); }
+.alt-date-button { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-left: auto; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1), color var(--dur-travel-1); }
+.alt-date-button:hover:not(:disabled) { background: var(--surface-raised); color: var(--ink); box-shadow: var(--elev-1); }
+.alt-date-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-date-picker > .alt-input:not([data-filled]):not([data-invalid]):not([data-disabled]) { --w: 4px; --n: calc(var(--near) * var(--alt-travel)); background: var(--surface-well); }
+.alt-date-picker > .alt-input:not([data-filled]):not([data-invalid]):not([data-disabled]):focus-within { --n: var(--alt-travel); }
+.alt-date-error { margin: var(--space-1) 0 0; }
+.alt-date-panel { padding: var(--space-3); min-width: 0; }
+.alt-date-step { margin: 0 0 var(--space-2); color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+.alt-cal { width: max-content; color: var(--ink); font: 400 13.5px/1 var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-cal-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.alt-cal-title { margin: 0; font: 600 14px/20px var(--font-sans); }
+.alt-cal-nav { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1); }
+.alt-cal-nav:hover:not(:disabled) { background: var(--surface-raised); color: var(--ink); box-shadow: var(--elev-1); }
+.alt-cal-nav:disabled { opacity: 0.4; cursor: default; }
+.alt-cal-nav:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+[dir="rtl"] .alt-cal-chevron { scale: -1 1; }
+.alt-cal-body { position: relative; }
+.alt-cal-grid { border-collapse: separate; border-spacing: 0 2px; animation: alt-cal-fade var(--dur-travel-1) ease-out; }
+@keyframes alt-cal-fade { from { opacity: 0; } }
+.alt-cal-grid th { width: 36px; height: 24px; padding: 0; color: var(--ink-muted); font: 500 11.5px/1 var(--font-sans); text-align: center; }
+.alt-cal-grid td { padding: 0; text-align: center; }
+.alt-cal-day {
+  position: relative; z-index: 1; display: inline-grid; place-items: center; width: 36px; height: 34px; padding: 0; border: 0; border-radius: var(--radius-sm);
+  background: none; color: inherit; font: inherit; cursor: pointer; transition: color var(--dur-travel-2) var(--ease-settle);
+}
+.alt-cal-day::before { content: ""; position: absolute; inset: 2px; z-index: -1; border-radius: var(--radius-sm); background: var(--accent); opacity: 0; scale: 0.8; transition: opacity var(--dur-travel-1) var(--ease-sink), scale var(--dur-travel-2) var(--ease-settle); }
+.alt-cal-day:hover:not([aria-disabled]):not([data-chosen])::before { opacity: 0.16; scale: 1; }
+.alt-cal-day:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-cal-day[data-today]::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--accent-ink); }
+.alt-cal-day[aria-disabled] { color: var(--ink-faint); cursor: default; }
+.alt-cal-day[data-chosen] { color: var(--on-accent); font-weight: 600; }
+.alt-cal-day[data-chosen][data-today]::after { background: var(--on-accent); }
+.alt-cal-mark {
+  position: absolute; left: 0; top: 0; z-index: 0; border-radius: var(--radius-sm); pointer-events: none; opacity: 0;
+  background: var(--accent); background-image: var(--alt-sheen); box-shadow: var(--elev-1), inset 0 -2px 0 0 color-mix(in oklab, var(--accent-ink) 55%, transparent);
+  transition: transform var(--dur-travel-2) var(--ease-settle), width var(--dur-travel-2) var(--ease-settle), height var(--dur-travel-2) var(--ease-settle);
+}
+/* A range: the sunk track, then the two raised ends. */
+.alt-cal[data-range] .alt-cal-day[data-span]:not([data-chosen])::before { opacity: 1; scale: 1; inset: 2px -1px; border-radius: 0; background: var(--accent-soft); box-shadow: var(--well); }
+.alt-cal[data-range] .alt-cal-day[data-span-start]:not([data-chosen])::before { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.alt-cal[data-range] .alt-cal-day[data-span-end]:not([data-chosen])::before { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.alt-cal[data-range] .alt-cal-day[data-chosen]::before { opacity: 1; scale: 1; background: var(--accent); background-image: var(--alt-sheen); box-shadow: var(--elev-1); }
+.alt-calendar { display: inline-block; }
+[data-contrast="more"] .alt-cal-mark, [data-contrast="more"] .alt-cal[data-range] .alt-cal-day[data-chosen]::before { box-shadow: 0 2px 0 0 var(--ink); }
+@media (forced-colors: active) {
+  .alt-date-panel { border: 2px solid CanvasText; }
+  .alt-date-picker > .alt-input:not([data-filled]) { border-style: dashed; }
+  .alt-cal-mark, .alt-cal[data-range] .alt-cal-day[data-chosen]::before { forced-color-adjust: none; background: Highlight; }
+  .alt-cal-day[data-chosen] { forced-color-adjust: none; color: HighlightText; }
+  .alt-cal[data-range] .alt-cal-day[data-span]:not([data-chosen])::before { border: 1px dashed CanvasText; background: Canvas; }
+  .alt-cal-day[data-today] { text-decoration: underline; }
+  .alt-date-seg:focus { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+}
+@media (prefers-reduced-motion: reduce) { .alt-cal-mark { transition: none; } }
+
+/* ── Tree: a hierarchy seen all at once. Nodes are the record: flush rows on the ground, indented space-4 per level,
+   like Table rows. Only a node that acts lifts on hover; the selected node is tinted accent-soft and raised one level.
+   Expanding is disclosure of existing records, so it's a chevron turn, not a rise. Renaming sinks the label into a
+   well (InlineEdit's field); a write hovers while pending and drops to a trench when it fails. A carried node floats
+   at level 3, tilted, with a count of what it carries; the slot it would land in is a thin well at the target's
+   depth, and a node it would go into opens to a trench with an accent rim (a dashed critical one if it can't). ── */
+.alt-tree-wrap { position: relative; min-width: 0; }
+.alt-tree { margin: 0; padding: 0; list-style: none; color: var(--ink); font: 400 14px/20px var(--font-sans); }
+.alt-tree-row {
+  --indent: calc((var(--level, 1) - 1) * var(--space-4));
+  position: relative; display: flex; align-items: center; gap: 4px; min-height: 32px; padding: 2px var(--space-2) 2px 4px; border-radius: var(--radius-sm);
+  outline: none; cursor: default; user-select: none; touch-action: pan-y;
+  transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
+}
+.alt-tree-indent { flex: none; width: var(--indent); }
+.alt-tree-chevron { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--radius-sm); color: var(--ink-muted); cursor: pointer; }
+.alt-tree-chevron svg { rotate: -90deg; transition: rotate var(--dur-travel-2) var(--ease-settle); }
+.alt-tree-chevron[data-open] svg { rotate: 0deg; }
+[dir="rtl"] .alt-tree-chevron:not([data-open]) svg { rotate: 90deg; }
+.alt-tree-leaf { flex: none; width: 20px; }
+.alt-tree-label { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-tree-row:hover:not([data-carried]) { background: var(--surface-raised); box-shadow: var(--elev-1); }
+.alt-tree-row[aria-selected="true"] { background: var(--accent-soft); box-shadow: var(--elev-1); }
+.alt-tree-row:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-tree-row[data-status="pending"] { animation: alt-tree-pending var(--dur-travel-1) var(--ease-rise) var(--dur-grace) both; }
+@keyframes alt-tree-pending { to { background: var(--surface-lifted); box-shadow: var(--elev-2); transform: translateY(calc(-1px * var(--alt-travel))); } }
+.alt-tree-row[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
+.alt-tree-row[data-carried="keys"] { z-index: 2; background: var(--surface-floating); box-shadow: var(--elev-3); rotate: calc(-1.2deg * var(--alt-travel)); }
+.alt-tree-row[data-carried="pointer"] { opacity: 0.4; }
+.alt-tree-row[data-into] { background: var(--surface-trench); box-shadow: var(--trench), inset 0 0 0 2px var(--accent); }
+.alt-tree-row[data-into="blocked"] { box-shadow: var(--trench), inset 0 0 0 2px var(--critical); }
+.alt-tree-slot { height: 6px; margin: -3px 0 -3px calc((var(--level, 1) - 1) * var(--space-4) + 28px); border-radius: var(--radius-full); background: var(--surface-well); box-shadow: var(--well), inset 0 0 0 1px var(--accent); list-style: none; }
+.alt-tree-count { flex: none; margin-left: auto; padding: 1px 6px; border-radius: var(--radius-full); background: var(--surface-floating); box-shadow: var(--elev-2); font: 650 11px/16px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-tree-ghost {
+  position: fixed; z-index: var(--z-floating); display: flex; align-items: center; gap: var(--space-2); min-height: 32px; padding: 2px var(--space-3); border-radius: var(--radius-sm);
+  background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink); font: 400 14px/20px var(--font-sans); pointer-events: none;
+  rotate: calc(-1.2deg * var(--alt-travel)); scale: calc(1 + 0.015 * var(--alt-travel));
+}
+.alt-tree-wrap[data-carrying="pointer"] { cursor: grabbing; }
+.alt-tree-name { position: relative; display: inline-flex; flex-direction: column; flex: 1; min-width: 0; }
+.alt-tree-name-input {
+  width: 100%; min-width: 8ch; height: 26px; padding: 0 6px; border: 1px solid var(--line-control); border-radius: var(--radius-sm); outline: none;
+  background: var(--surface-well); box-shadow: var(--well); color: var(--ink); font: inherit; animation: alt-tree-sink var(--dur-travel-1) var(--ease-sink);
+}
+@keyframes alt-tree-sink { from { background: var(--surface-ground); box-shadow: none; } }
+.alt-tree-name-input:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-tree-name[data-invalid] .alt-tree-name-input { background: var(--critical-soft); border-color: var(--critical); box-shadow: var(--trench); }
+.alt-tree-error { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; color: var(--critical); font: 400 12px/16px var(--font-sans); white-space: normal; }
+.alt-tree-new { cursor: default; }
+.alt-tree-imprint { width: 40%; height: 12px; border-radius: var(--radius-sm); }
+.alt-tree-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-contrast="more"] .alt-tree-row[data-carried="keys"], [data-contrast="more"] .alt-tree-ghost { box-shadow: var(--elev-3), 0 3px 0 0 var(--ink); }
+@media (forced-colors: active) {
+  .alt-tree-row[aria-selected="true"] { border: 1px solid Highlight; } .alt-tree-row[data-carried="keys"], .alt-tree-ghost { border: 2px solid CanvasText; }
+  .alt-tree-slot { background: none; border-top: 2px dashed CanvasText; height: 0; } .alt-tree-row[data-into] { border: 3px dashed Highlight; }
+  .alt-tree-row[data-status="pending"] { border: 1px dotted CanvasText; } .alt-tree-row[data-status="failed"] { border: 2px dashed CanvasText; }
+}
 
 /* ── Checklist: a list you write into. Each item is the record, flush on the ground, and its line is the editor: no
    raised editor and no Save, the line commits when you leave it. The empty line at the end is an opening (a well
