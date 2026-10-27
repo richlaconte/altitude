@@ -90,6 +90,37 @@ try {
     }
     await page.close();
   }
+  // newItem() that returns a fresh id each call, with the parent re-rendering while the add editor is open: the draft
+  // must be made once, not read as an outside change.
+  { const page = await open();
+    await page.evaluate(() => {
+      const R = window.React, A = window.Altitude, h = R.createElement;
+      const host = document.createElement('div'); host.id = 'fresh-item'; document.body.prepend(host);
+      function Fixture() {
+        const [items, setItems] = R.useState([{ id: 'one', name: 'One' }]);
+        const [tick, setTick] = R.useState(0);
+        window.freshTick = () => setTick(t => t + 1);
+        return h(A.AltitudeProvider, null, h('div', { 'data-tick': tick }, h(A.ItemGroup, {
+          'aria-label': 'Fresh items', items, getKey: x => x.id, getLabel: x => x.name || 'Untitled',
+          renderItem: x => h('span', { className: 'alt-item-title' }, x.name),
+          renderEditor: field => h(A.Field, { label: 'Item name' }, h(A.Input, field('name'))),
+          newItem: () => ({ id: 'new-' + Math.random().toString(36).slice(2), name: '' }),
+          onCreate: draft => { const value = { ...draft, id: 'saved-' + draft.id }; setItems(list => [...list, value]); return { ok: true, value }; },
+        })));
+      }
+      window.ReactDOM.createRoot(host).render(h(Fixture));
+    });
+    const scope = page.locator('#fresh-item');
+    await scope.getByRole('button', { name: 'Add item' }).click();
+    const name = scope.getByRole('textbox', { name: 'Item name' });
+    await name.fill('Two');
+    await page.evaluate(() => { window.freshTick(); window.freshTick(); });
+    await page.waitForTimeout(100);
+    check(await scope.getByText('This record changed').count() === 0 && await name.inputValue() === 'Two', 'IG-NEW-01 a newItem() with a fresh id each call survives parent re-renders: no false conflict');
+    await name.press('Enter');
+    await scope.locator('.alt-item-title', { hasText: 'Two' }).waitFor();
+    check(true, 'IG-NEW-02 the new item still saves');
+    await page.close(); }
   check(errors.length === 0, `no page or console errors: ${errors.join('\n')}`);
   console.log(`ItemGroup: ${passed} passed, 0 failed`);
 } finally { await browser.close(); }
