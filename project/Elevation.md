@@ -56,6 +56,7 @@ Rules that follow:
 | **A span** | a chosen range is a sunk track between two raised ends, the Slider's build laid across the weeks; while the end is being chosen the track previews to the day under the pointer | `DateRangePicker` |
 | **Validity** | an invalid field sinks to trench depth on `critical-soft` | `Input`, `Select`, `Combobox`, `Field` |
 | **The record, in rows** | a table's rows lie flush; selected rows are tinted and raised one level, interactive rows lift on hover, matches rise and misses sink when filtering in place, and a row in hand floats at level 3 over the slot it will land in | `Table`, `Tree` |
+| **The record, in cells** | in a grid, a cell being edited opens into a well in its flush row; when the value lands the floor rises flush and settles; the active cell is a ring and a range a tint, never a height | `DataGrid` |
 | **Receptacles** | a board's columns are flush at rest and open into wells only while a card is carried; the one under the card deepens to a trench; a collapsed column is a pile that still takes drops | `Board` |
 | **Progress** | the steps of a process are plates on one ground line: done steps are flush in the record with a stamped check, the current one stands raised on its wall, steps to come are imprints; advancing presses one down and raises the next out of its imprint | `Stepper` |
 | **Done is pressed into the record** | checking an item stamps it like a completed step: muted, struck through, and kept in place in the record rather than removed | `Checklist` |

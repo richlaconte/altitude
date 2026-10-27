@@ -924,6 +924,56 @@ export declare function FilterBar(props: FilterBarProps): React.ReactElement;
 /** A filter's value as words (“Oct 1, 2026”, “In review”), or undefined while it has none. */
 export declare function filterValueText(field: FilterField, value: FilterValue): string | undefined;
 
+export type DataGridResult = { ok: true } | { ok: false; error: string };
+export interface DataGridChange<T> { rowId: string; key: string; draft: unknown; previousValue: unknown; row: T }
+/** What a column's custom editor receives. Spread it onto a Select or Combobox. */
+export interface DataGridEditorControl {
+  value: any;
+  onValueChange: (value: any) => void;
+  id: string;
+  'aria-label': string;
+  invalid: boolean;
+  autoFocus: true;
+}
+export interface DataGridColumn<T> {
+  key: string;
+  header: React.ReactNode;
+  /** The header as words, for cell names. Default: the header when it's a string, else the key. */
+  label?: string;
+  align?: 'start' | 'end';
+  editable?: boolean;
+  /** Text typed into the cell → the value. Default: the text. */
+  parse?: (text: string) => unknown;
+  /** The value → text in the editing field and in copies. Default: String(value ?? ''). */
+  format?: (value: unknown) => string;
+  /** Return an error to refuse a value. */
+  validate?: (value: any, row: T) => string | undefined;
+  /** Draw the cell at rest. Default: format(value). */
+  cell?: (row: T) => React.ReactNode;
+  /** A custom editor (a Select): it commits as soon as a value is chosen. */
+  editor?: (control: DataGridEditorControl) => React.ReactNode;
+  width?: number | string;
+}
+export interface DataGridProps<T> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  rows: T[];
+  columns: DataGridColumn<T>[];
+  getRowId: (row: T) => string;
+  /** Names a row in each cell's name (“Price, Desk lamp”). */
+  getRowLabel: (row: T) => string;
+  /** One cell. Resolve after `rows` carries the canonical value. */
+  onCellSave: (change: DataGridChange<T>) => DataGridResult | Promise<DataGridResult>;
+  /** A paste or a cleared range, as one batch. Default: each cell through onCellSave. */
+  onCellsSave?: (changes: DataGridChange<T>[]) => DataGridResult | Promise<DataGridResult>;
+  /** Ctrl/Cmd+Z: reverse the last committed change (or batch). Omit and Ctrl+Z does nothing. */
+  onUndo?: (last: DataGridChange<T>[]) => void;
+  maxHeight?: number | string;
+  className?: string;
+}
+/** A table edited cell by cell with spreadsheet keys (role="grid"). Use DataTable when cells aren't edited one by one. */
+export declare function DataGrid<T>(props: DataGridProps<T>): React.ReactElement;
+
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   /** The rows. Undefined while your data loads, or a promise: until they arrive the table is its header over skeleton.lines imprinted rows (default 5). */
@@ -1262,6 +1312,7 @@ declare global {
       Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
+      Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
     };

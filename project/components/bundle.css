@@ -1876,3 +1876,40 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   .alt-schedule-slot, .alt-schedule-drawn { border: 2px dashed CanvasText; } .alt-schedule-now { background: Highlight; }
   .alt-schedule-event[data-status="pending"] { border-style: dotted; } .alt-schedule-event[data-status="failed"] { border: 2px dashed CanvasText; }
 }
+
+/* ── DataGrid: a table edited cell by cell. Cells are the record, flush in Table's rows; the active cell is a focus
+   ring, not a height, and a range is an accent-soft tint (choosing a target isn't live content). Editable columns
+   carry a pencil in the header instead of a hover lift: a click selects rather than acts. The cell being edited opens
+   into a well clipped to the cell, with the held rim; an invalid value deepens to a trench with its message beside it.
+   A saving cell holds a small raised plate after dur-grace; a failed cell drops to a trench with a critical mark; a
+   landed value settles, and a pasted range settles as one change. ── */
+.alt-data-grid { min-width: 0; }
+.alt-data-grid .alt-table { table-layout: fixed; }
+.alt-grid-head { display: inline-flex; align-items: center; gap: 4px; }
+.alt-grid-pencil { display: inline-flex; color: var(--ink-faint); }
+.alt-grid-cell { position: relative; outline: none; cursor: cell; overflow: visible; white-space: nowrap; }
+.alt-grid-value { display: block; overflow: hidden; text-overflow: ellipsis; }
+.alt-grid-cell[data-range] { background: var(--accent-soft); }
+.alt-grid-cell[data-active] { box-shadow: inset 0 0 0 2px var(--accent-ink); }
+.alt-grid-cell:focus-visible { box-shadow: inset 0 0 0 2px var(--accent-ink); }
+.alt-grid-cell[data-editing] { padding: 0; background: var(--surface-well); box-shadow: var(--well), inset 0 0 0 2px var(--alt-rim-held, var(--accent)); animation: alt-grid-sink var(--dur-travel-1) var(--ease-sink); }
+@keyframes alt-grid-sink { from { background: transparent; box-shadow: none; } }
+.alt-grid-cell[data-editing]:has([aria-invalid="true"]) { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 2px var(--critical); }
+.alt-grid-input { display: block; width: 100%; height: 100%; min-height: 40px; padding: 10px 12px; border: 0; outline: none; background: none; color: var(--ink); font: inherit; box-sizing: border-box; }
+.alt-grid-cell[data-align="end"] .alt-grid-input { text-align: right; }
+.alt-grid-editor { display: block; padding: 3px; }
+.alt-grid-tip {
+  position: absolute; left: 0; top: calc(100% + 4px); z-index: 6; max-width: 260px; padding: 4px 8px; border-radius: var(--radius-sm);
+  background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--critical); font: 400 12px/16px var(--font-sans); white-space: normal;
+}
+.alt-grid-unsaved { color: var(--ink-muted); }
+.alt-grid-cell[data-status="pending"] .alt-grid-plate { position: absolute; right: 6px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 2px; background: var(--surface-lifted); box-shadow: var(--elev-2); animation: alt-onset var(--dur-travel-1) ease-out var(--dur-grace) backwards; }
+.alt-grid-cell[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
+.alt-grid-fail { position: absolute; right: 6px; top: 50%; translate: 0 -50%; display: inline-flex; color: var(--critical); }
+.alt-grid-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-contrast="more"] .alt-grid-cell[data-editing] { box-shadow: inset 0 2px 0 0 var(--ink), inset 0 0 0 2px var(--accent); }
+@media (forced-colors: active) {
+  .alt-grid-cell[data-active] { outline: 2px solid Highlight; outline-offset: -2px; } .alt-grid-cell[data-range] { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  .alt-grid-cell[data-editing] { outline: 2px dashed CanvasText; } .alt-grid-cell[data-editing]:has([aria-invalid="true"]) { outline: 3px dashed CanvasText; }
+  .alt-grid-cell[data-status="pending"] { outline: 1px dotted CanvasText; } .alt-grid-cell[data-status="failed"] { outline: 2px dashed CanvasText; }
+}
