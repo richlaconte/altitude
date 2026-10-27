@@ -1524,6 +1524,12 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-inline-edit-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
+/* Multiline: read mode keeps the text's line breaks with Edit below it; the textarea grows with its content (sized by
+   the component, so no resize handle) and the hint names the save keys. */
+.alt-inline-edit[data-multiline] .alt-inline-edit-read { flex-direction: column; align-items: flex-start; }
+.alt-inline-edit[data-multiline] .alt-inline-edit-value { white-space: pre-wrap; }
+.alt-inline-edit[data-multiline] textarea { flex: none; min-height: 0; resize: none; }
+.alt-inline-edit-keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
 
 /* ── EditRegion: several fields of one record, saved together. Read mode is the record on the ground (level 0) with a

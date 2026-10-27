@@ -1802,7 +1802,7 @@ function App() {
     </div>
   </div>;
 }
-=== InlineEdit | <!-- @dsCard group="Inputs" height=960 subtitle="Edit a single value where it already lives: text, a choice, a person or a number" -->
+=== InlineEdit | <!-- @dsCard group="Inputs" height=1080 subtitle="Edit a single value where it already lives: text, a paragraph, a choice, a person or a number" -->
 --- css
 .inline-demo { max-width: 800px; margin: auto; min-width: 0; }
 .inline-demo h2 { margin: 0 0 var(--space-3); font: 600 19px/26px var(--font-sans); }
@@ -1816,6 +1816,7 @@ function App() {
 .inline-demo .alt-table td { vertical-align: top; }
 .inline-demo-props { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3) var(--space-4); margin-top: var(--space-3); }
 .inline-demo-prop { min-width: 0; }
+.inline-demo-description { margin-top: var(--space-3); max-width: 60ch; }
 .inline-demo-prop-label { display: block; margin-bottom: var(--space-1); color: var(--ink-muted); font: 500 12px/16px var(--font-sans); }
 .inline-demo-meta { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
 .inline-demo-harness { border-top: 1px solid var(--line); margin-top: var(--space-6); padding-top: var(--space-3); font: 400 13px/20px var(--font-sans); }
@@ -1847,14 +1848,18 @@ const inlineLabel = (list, value) => list.find(option => option.value === value)
 
 // Task properties: the same session with a different editor. Status and assignee save on choose; the estimate waits for Save.
 function InlineTaskProperties() {
-  const [task, setTask] = React.useState({ status: 'progress', assignee: 'mara', estimate: 3 });
+  const [task, setTask] = React.useState({ status: 'progress', assignee: 'mara', estimate: 3, description: 'Collect sign-off from design, support and legal.\nShare the final list in #launch by Thursday.' });
   const publish = key => value => setTask(task => ({ ...task, [key]: value }));
   const save = key => async draft => {
     await inlineWait(300);
     if (key === 'status' && draft === 'blocked') return { ok: false, error: 'Only the project lead can block a task. Choose another status.' };
     return { ok: true, value: draft };
   };
-  return <div className="inline-demo-props">
+  return <>
+    <div className="inline-demo-description"><span className="inline-demo-prop-label" aria-hidden="true">Description</span>
+      <A.InlineEdit label="Description" value={task.description} onValueChange={publish('description')} onSave={save('description')}
+        multiline rows={3} maxRows={8} maxLength={500} /></div>
+    <div className="inline-demo-props">
     <div className="inline-demo-prop"><span className="inline-demo-prop-label" aria-hidden="true">Status</span>
       <A.InlineEdit label="Status" value={task.status} onValueChange={publish('status')} onSave={save('status')} commit="on-choose"
         renderValue={status => <A.Badge tone={INLINE_TONES[status]}>{inlineLabel(INLINE_STATUSES, status)}</A.Badge>}
@@ -1869,7 +1874,8 @@ function InlineTaskProperties() {
         renderValue={points => `${points} point${points === 1 ? '' : 's'}`}
         editor={({ value, onValueChange, ...control }) => <A.Input {...control} type="number" inputMode="numeric" min={0} max={40} size="sm"
           value={value ?? ''} onChange={event => onValueChange(event.target.value === '' ? null : Number(event.target.value))} />} /></div>
-  </div>;
+    </div>
+  </>;
 }
 
 function InlineExample({ fixture, slowValidation, epoch }) {

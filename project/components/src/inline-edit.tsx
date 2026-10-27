@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { cx, Icons, Surface, useIsoLayoutEffect } from './core';
-import { Button, Field, Input } from './controls';
+import { cx, Icons, Kbd, Surface, useIsoLayoutEffect } from './core';
+import { Button, Field, Input, Textarea } from './controls';
 export type InlineEditSaveResult<V = string> = { ok: true; value: V } | { ok: false; error: string };
 /** Spread onto any Altitude control (Select, Combobox, Switch through a small adapter, a numeric Input). */
 export interface InlineEditControl<V> {
@@ -36,6 +36,12 @@ export interface InlineEditProps<V = string> {
   commit?: 'explicit' | 'on-choose';
   /** An unchanged draft closes without a write, and an equal observed value isn't an external change. Default Object.is. */
   isEqual?: (a: V, b: V) => boolean;
+  /** A Textarea instead of the Input: Enter inserts a newline and Ctrl/Cmd+Enter saves. Default false. */
+  multiline?: boolean;
+  /** With multiline, the textarea's initial height in lines. Default 3. */
+  rows?: number;
+  /** With multiline, the textarea grows with its content up to this many lines, then scrolls. Default 12. */
+  maxRows?: number;
 }
 type Session<V> = {
   generation: number;
@@ -50,6 +56,8 @@ const SAVE_ERROR = 'We couldn’t save this change. Try again.';
 const CHANGED = 'The saved value changed. Review the current value before saving.';
 const CHANGED_DURING_SAVE = 'The value changed while saving. Your save may have completed. Check the current record.';
 const FOCUSABLE = 'button, input:not([type="hidden"]), select, textarea, a[href], [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+const LINE = 21; // .alt-input textarea line-height
+const ms = (cs: CSSStyleDeclaration, name: string, fallback: number) => parseFloat(cs.getPropertyValue(name)) || fallback;
 const isEmpty = (value: unknown) => value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0);
 const showValue = (value: unknown) => isEmpty(value) ? 'Not set' : String(value);
 // Let a closing popup (a Select's list sinking) finish before the editor itself settles: the two never move at once.
@@ -67,7 +75,7 @@ function canFocus(element: HTMLElement | null | undefined): element is HTMLEleme
 /** One local editing session. The application remains the sole owner of the committed value and write. */
 export function InlineEdit<V = string>({ value, onValueChange, onSave, label, validate, required = false, maxLength,
   disabled = false, editLabel = `Edit ${label}`, saveLabel = 'Save changes', cancelLabel = 'Cancel',
-  focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is }: InlineEditProps<V>): React.ReactElement {
+  focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is, multiline = false, rows = 3, maxRows = 12 }: InlineEditProps<V>): React.ReactElement {
   const [session, setSession] = React.useState<Session<V> | null>(null);
   const [announcement, setAnnouncement] = React.useState('');
   const [settled, setSettled] = React.useState(0);
@@ -78,6 +86,11 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const disabledNow = React.useRef(disabled);
   const root = React.useRef<HTMLDivElement>(null);
   const input = React.useRef<HTMLInputElement>(null);
+  const area = React.useRef<HTMLTextAreaElement>(null);
+  const surface = React.useRef<HTMLDivElement>(null);
+  const openedFrom = React.useRef<number | null>(null);
+  const [apple, setApple] = React.useState(false);
+  const textarea = multiline && !editor;
   const trigger = React.useRef<HTMLButtonElement>(null);
   const returnFocus = React.useRef(false);
   const selectInput = React.useRef(false);
@@ -92,6 +105,31 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
     setSession(next ? { ...next } : null);
   };
   const valid = (candidate: Session<V>) => mounted.current && current.current === candidate && candidate.generation === generation.current;
+
+  React.useEffect(() => {
+    if (typeof navigator !== 'undefined') setApple(/Mac|iPhone|iPad|iPod/.test((navigator as any).userAgentData?.platform || navigator.platform || navigator.userAgent));
+  }, []);
+  // The textarea grows with its content up to maxRows, without animating each line.
+  useIsoLayoutEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    const edges = el.offsetHeight - el.clientHeight + parseFloat(getComputedStyle(el).paddingTop) + parseFloat(getComputedStyle(el).paddingBottom);
+    el.style.height = Math.min(Math.max(el.scrollHeight, rows * LINE + edges), maxRows * LINE + edges) + 'px';
+    el.style.overflowY = el.scrollHeight > maxRows * LINE + edges ? 'auto' : 'hidden';
+  }, [session?.draft, session !== null, rows, maxRows]);
+  // Opening a multiline editor glides the region's height from the read text to the textarea's.
+  useIsoLayoutEffect(() => {
+    const from = openedFrom.current, el = surface.current;
+    openedFrom.current = null;
+    if (from === null || !el || !session || typeof el.animate !== 'function') return;
+    const cs = getComputedStyle(el);
+    if (parseFloat(cs.getPropertyValue('--alt-travel')) === 0) return;
+    const to = el.offsetHeight;
+    if (Math.abs(to - from) < 2) return;
+    el.animate([{ height: from + 'px', overflow: 'hidden' }, { height: to + 'px', overflow: 'hidden' }],
+      { duration: ms(cs, '--dur-travel-3', 280), easing: cs.getPropertyValue('--ease-glide').trim() || 'ease' });
+  }, [session !== null]);
 
   useIsoLayoutEffect(() => {
     mounted.current = true;
@@ -120,6 +158,9 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
       if (editor) {
         const first = [...editorBox.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []].find(canFocus);
         if (first && !editorBox.current?.contains(document.activeElement)) first.focus();
+      } else if (textarea) {
+        // Caret at the end: selecting a whole paragraph invites replacing it by accident.
+        if (canFocus(area.current)) { const end = area.current.value.length; area.current.focus(); area.current.setSelectionRange(end, end); }
       } else if (canFocus(input.current)) { input.current.focus(); input.current.select(); }
     }
     if (!session && returnFocus.current) {
@@ -142,6 +183,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const begin = () => {
     if (disabled || current.current) return;
     setAnnouncement(''); selectInput.current = true;
+    if (textarea) openedFrom.current = surface.current?.offsetHeight ?? null;
     publishSession({ generation: ++generation.current, phase: 'editing', baseline: value, draft: value });
   };
   const cancel = () => {
@@ -208,6 +250,9 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
       event.preventDefault(); event.stopPropagation();
       if (current.current?.phase === 'saving') setAnnouncement('Saving changes. Wait for the result.');
       else cancel();
+    } else if (event.key === 'Enter' && textarea) {
+      // Enter writes a newline; Ctrl/Cmd+Enter saves.
+      if (event.target === area.current && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.stopPropagation(); void submit(); }
     } else if (event.key === 'Enter' && !event.defaultPrevented && (editor ? submitsOnEnter(event.target) : event.target === input.current)) {
       event.preventDefault(); event.stopPropagation(); void submit();
     }
@@ -229,8 +274,8 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const controlId = fieldId + '-control';
   const describedBy = session?.error ? fieldId + '-error' : onChoose ? fieldId + '-hint' : undefined;
   return <div ref={root} className={cx('alt-inline-edit', className)} role="group" aria-label={label}
-    data-state={session?.phase ?? 'read'} onKeyDown={session ? onKeyDown : undefined}>
-    <Surface className="alt-inline-edit-surface" level={session ? 1 : 0} settle={settled || undefined}
+    data-state={session?.phase ?? 'read'} data-multiline={textarea ? '' : undefined} onKeyDown={session ? onKeyDown : undefined}>
+    <Surface ref={surface} className="alt-inline-edit-surface" level={session ? 1 : 0} settle={settled || undefined}
       status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
       {session ? <>
         {editor ? <div className="alt-field">
@@ -241,7 +286,12 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
           })}</div>
           {session.error ? <p className="alt-field-error" id={fieldId + '-error'} role="alert"><Icons.AlertCircle size={14} />{session.error}</p>
             : onChoose && <p className="alt-field-hint" id={fieldId + '-hint'}>Choose to save</p>}
-        </div> : <Field label={label} required={required} error={session.error}>
+        </div> : textarea ? <Field label={label} required={required} error={session.error}
+          hint={<span className="alt-inline-edit-keys">{apple ? <Kbd aria-label="Command">⌘</Kbd> : <Kbd>Ctrl</Kbd>}+<Kbd>Enter</Kbd> to save</span>}>
+          <Textarea ref={area} value={session.draft as unknown as string} maxLength={maxLength} disabled={disabled} rows={rows}
+            readOnly={saving || validating || session.conflicted}
+            onChange={event => change(event.target.value as unknown as V)} />
+        </Field> : <Field label={label} required={required} error={session.error}>
           <Input ref={input} value={session.draft as unknown as string} maxLength={maxLength} disabled={disabled}
             readOnly={saving || validating || session.conflicted}
             onChange={event => change(event.target.value as unknown as V)} />
