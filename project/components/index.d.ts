@@ -801,7 +801,7 @@ export interface PropertyListItemProps<V> {
   validate?: (draft: V) => string | undefined | Promise<string | undefined>;
   required?: boolean;
   isEqual?: (a: V, b: V) => boolean;
-  /** A single key that opens this item while focus is in the list (with `shortcuts` on the list). */
+  /** A single key that opens this item while focus is in the list (with `shortcuts` on the list). Case doesn't matter. */
   shortcut?: string;
   className?: string;
 }
