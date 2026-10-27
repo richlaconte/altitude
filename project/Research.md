@@ -217,6 +217,17 @@ A design review, not a study: `Tree` was prototyped as a page tree and rendered 
 
 Not yet tested with people: whether ↑ entering an open node above (rather than staying at the same depth) matches expectation, and whether the toolbar is found.
 
+### E17 · How should a list be written into?
+
+A design review, not a study: `Checklist` was prototyped with a nested and a flat list and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keys checked in a browser (`checks/checklist.mjs`). It was compared with Workflowy, Logseq, Things, Notion to-do blocks and GitHub task lists, which agree on Enter for a sibling, Tab/Shift+Tab to indent, and Backspace to merge.
+
+- **Commit on leaving the line.** Every outliner saves a line when you leave it; an explicit Save per line would make the list unwritable. It departs from `InlineEdit`'s rule, so it's scoped to this component, and a refused change keeps the text with Retry.
+- **Text inputs in a list, not a tree.** The tree pattern's arrow keys would fight the caret; nested `ul`s with ordinary inputs keep text editing native and the structure readable.
+- **No focus trap.** Tab indents, so Escape leaves the line first; then Tab moves on, as it does from the last, empty line.
+- **Ops, not arrays.** Reporting one op per action lets an application persist and merge per item instead of replacing the whole list.
+
+Not yet tested with people: whether Escape-then-Tab is discovered, and whether Backspace-to-merge surprises people who expect it to do nothing at the start of a line.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

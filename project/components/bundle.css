@@ -1717,3 +1717,42 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   .alt-tree-slot { background: none; border-top: 2px dashed CanvasText; height: 0; } .alt-tree-row[data-into] { border: 3px dashed Highlight; }
   .alt-tree-row[data-status="pending"] { border: 1px dotted CanvasText; } .alt-tree-row[data-status="failed"] { border: 2px dashed CanvasText; }
 }
+
+/* ── Checklist: a list you write into. Each item is the record, flush on the ground, and its line is the editor: no
+   raised editor and no Save, the line commits when you leave it. The empty line at the end is an opening (a well
+   while it's focused or holds text). The checkbox is the Checkbox's choice; a done item is pressed into the record,
+   muted with a strike drawn left to right, and stays in place. A write hovers after dur-grace and a failure drops to
+   a trench with Retry on the line. Nesting indents by space-6 and glides sideways, a change of hierarchy. ── */
+.alt-checklist { position: relative; min-width: 0; color: var(--ink); font: 400 14px/20px var(--font-sans); }
+.alt-checklist-list { margin: 0; padding: 0; list-style: none; }
+.alt-checklist-list .alt-checklist-list { padding-left: var(--space-6); }
+.alt-checklist-item { min-width: 0; border-radius: var(--radius-sm); outline: none; }
+.alt-checklist-item:focus-visible > .alt-checklist-line { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-checklist-line { position: relative; display: flex; align-items: center; gap: var(--space-2); min-height: 34px; padding: 0 var(--space-1); border-radius: var(--radius-sm); transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
+.alt-checklist-line > .alt-check { flex: none; }
+.alt-checklist-text { flex: 1; min-width: 0; height: 28px; margin: 0; padding: 0 var(--space-1); border: 0; border-radius: var(--radius-sm); outline: none; background: none; color: inherit; font: inherit; }
+.alt-checklist-text:focus-visible { box-shadow: inset 0 0 0 2px var(--accent-ink); }
+.alt-checklist-item[data-done] > .alt-checklist-line .alt-checklist-text {
+  color: var(--ink-muted); text-decoration: line-through; text-decoration-color: var(--ink-muted);
+  animation: alt-checklist-strike var(--dur-travel-2) var(--ease-rise);
+}
+@keyframes alt-checklist-strike { from { text-decoration-color: transparent; color: var(--ink); } }
+.alt-checklist-item[data-arrived] > .alt-checklist-line { animation: alt-checklist-open var(--dur-travel-1) var(--ease-sink); }
+@keyframes alt-checklist-open { from { background: var(--surface-well); box-shadow: var(--well); transform: translateY(calc(-4px * var(--alt-travel))); } }
+.alt-checklist-item[data-status="pending"] > .alt-checklist-line { animation: alt-checklist-pending var(--dur-travel-1) var(--ease-rise) var(--dur-grace) both; }
+@keyframes alt-checklist-pending { to { background: var(--surface-lifted); box-shadow: var(--elev-2); } }
+.alt-checklist-item[data-status="failed"] > .alt-checklist-line { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
+.alt-checklist-failed { display: inline-flex; flex: none; align-items: center; gap: 4px; color: var(--critical); font: 400 12.5px/17px var(--font-sans); }
+.alt-checklist-new .alt-checklist-line { color: var(--ink-muted); }
+.alt-checklist-plus { display: inline-grid; place-items: center; flex: none; width: 20px; font: 500 16px/1 var(--font-sans); }
+.alt-checklist-new .alt-checklist-text::placeholder { color: var(--ink-muted); opacity: 1; }
+.alt-checklist-new .alt-checklist-line:focus-within, .alt-checklist-new .alt-checklist-line:has(input:not(:placeholder-shown)) { background: var(--surface-well); box-shadow: var(--well); color: var(--ink); }
+.alt-checklist-undo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-2); padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3); border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1); font: 400 13px/18px var(--font-sans); }
+.alt-checklist-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-contrast="more"] .alt-checklist-new .alt-checklist-line:focus-within { box-shadow: inset 0 2px 0 0 var(--ink); }
+@media (forced-colors: active) {
+  .alt-checklist-new .alt-checklist-line { border: 1px dashed CanvasText; }
+  .alt-checklist-item[data-status="pending"] > .alt-checklist-line { border: 1px dotted CanvasText; }
+  .alt-checklist-item[data-status="failed"] > .alt-checklist-line { border: 2px dashed CanvasText; }
+  .alt-checklist-undo { border: 1px solid CanvasText; }
+}
