@@ -44,7 +44,7 @@ export interface PropertyListItemProps<V> {
   validate?: (draft: V) => string | undefined | Promise<string | undefined>;
   required?: boolean;
   isEqual?: (a: V, b: V) => boolean;
-  /** A single key that opens this item while focus is in the list (with `shortcuts` on the list). */
+  /** A single key that opens this item while focus is in the list (with `shortcuts` on the list). Case doesn't matter. */
   shortcut?: string;
   className?: string;
 }
@@ -97,7 +97,7 @@ export function PropertyListItem<V>({ label, value, renderValue, emptyLabel = 'N
     <dt className="alt-property-label">{label}</dt>
     <dd className="alt-property-value">
       {onSave ? <InlineEdit<V> label={label} value={value} trigger="value" emptyLabel={emptyLabel} editLabel={`Change ${label.toLowerCase()}`}
-        renderValue={renderValue} editor={editor} commit={commit} validate={validate} required={required} isEqual={isEqual} shortcut={shortcut}
+        renderValue={renderValue} editor={editor} commit={commit} validate={validate} required={required} isEqual={isEqual} shortcut={shortcut?.toLowerCase()}
         disabled={locked} onSave={onSave} onValueChange={(v) => onValueChange?.(v)} /> : read}
     </dd>
   </div>;

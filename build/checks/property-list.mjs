@@ -45,6 +45,19 @@ try {
     await issue.getByRole('button', { name: /^Assignee/ }).focus(); await page.keyboard.press('s');
     check(await issue.locator('.alt-inline-edit[aria-label="Status"]').getAttribute('data-state') === 'editing', 'PL-11 the shortcut opened Status');
     await page.keyboard.press('Escape');
+    // A shortcut given in capitals still opens on its key.
+    await page.evaluate(() => {
+      const R = window.React, A = window.Altitude, h = R.createElement;
+      const host = document.createElement('div'); host.id = 'upper-shortcut'; document.body.prepend(host);
+      window.ReactDOM.createRoot(host).render(h(A.AltitudeProvider, null, h(A.PropertyList, { 'aria-label': 'Upper', shortcuts: true },
+        h(A.PropertyListItem, { label: 'Priority', value: 'Low', shortcut: 'P', onSave: v => ({ ok: true, value: v }) }))));
+    });
+    const upper = page.locator('#upper-shortcut');
+    await upper.getByRole('button', { name: /^Priority/ }).waitFor();
+    check(await upper.getByRole('button', { name: /^Priority/ }).getAttribute('aria-keyshortcuts') === 'p', 'PL-12 a capital shortcut is announced in lower case');
+    await upper.locator('.alt-property-list').evaluate(el => el.setAttribute('tabindex', '-1'));
+    await upper.locator('.alt-property-list').focus(); await page.keyboard.press('p');
+    check(await upper.locator('.alt-inline-edit[aria-label="Priority"]').getAttribute('data-state') === 'editing', 'PL-13 shortcut="P" opens on the P key');
     await page.close(); }
 
   { const page = await open();
