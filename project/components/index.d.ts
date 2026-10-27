@@ -524,6 +524,66 @@ export interface InlineEditProps<V = string> {
 }
 export declare function InlineEdit<V = string>(props: InlineEditProps<V>): React.ReactElement;
 
+type EditRegionFieldErrors<T> = Partial<Record<keyof T, string>>;
+export type EditRegionSaveResult<T> = { ok: true; value: T } | { ok: false; error: string; fieldErrors?: EditRegionFieldErrors<T> };
+export interface EditRegionProps<T extends Record<string, unknown>> {
+  /** Names the region: “Edit <label>”. */
+  label: string;
+  /** The committed record. */
+  value: T;
+  /** Publishes the accepted canonical record, synchronously and without a network write. */
+  onValueChange: (canonical: T) => void;
+  /** The sole write. `changed` lists only the fields that differ, so you can send a patch. */
+  onSave: (draft: T, context: { previousValue: T; changed: (keyof T)[] }) => EditRegionSaveResult<T> | Promise<EditRegionSaveResult<T>>;
+  /** Runs on Save. Return an error per field, or undefined. */
+  validate?: (draft: T) => EditRegionFieldErrors<T> | undefined | Promise<EditRegionFieldErrors<T> | undefined>;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  disabled?: boolean;
+  /** The field focused on opening. Default: the first control in the form. */
+  initialFocus?: keyof T;
+  /** Used only when completion still owns focus and the Edit button cannot receive it. */
+  focusFallback?: () => HTMLElement | null;
+  /** Compares one field's values. Default Object.is. */
+  isEqual?: (a: unknown, b: unknown) => boolean;
+  /** Default `Edit ${label.toLowerCase()}`. */
+  editLabel?: string;
+  saveLabel?: string;
+  cancelLabel?: string;
+  className?: string;
+  /** EditRegionView and EditRegionForm. */
+  children: React.ReactNode;
+}
+/** Binds one field of the draft to a control. Spread the result onto it. */
+export interface EditRegionBinder<T> {
+  /** Text controls (Input, Textarea): value + onChange. */
+  <K extends keyof T>(key: K): { name: string; value: T[K]; onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; readOnly: boolean; disabled?: boolean; 'data-field': string };
+  /** Value controls (Select, Combobox, Slider): value + onValueChange. */
+  value<K extends keyof T>(key: K): { name: string; value: T[K]; onValueChange: (value: T[K]) => void; disabled?: boolean; 'data-field': string };
+  /** Toggles (Switch, Checkbox): checked + onCheckedChange. */
+  checked<K extends keyof T>(key: K): { checked: boolean; onCheckedChange: (checked: boolean) => void; disabled?: boolean; 'data-field': string };
+  /** The field's error, for its Field. */
+  error(key: keyof T): string | undefined;
+  /** The current draft. */
+  draft: T;
+}
+/** Several fields of one record, edited where it's shown and saved together. Read mode on the ground; editing lifts it into a static raised card. */
+export declare function EditRegion<T extends Record<string, unknown>>(props: EditRegionProps<T>): React.ReactElement;
+/** Read mode. Shows an Edit button after the values unless `trigger={false}`. */
+export declare function EditRegionView(props: { children?: React.ReactNode; trigger?: boolean; className?: string }): React.ReactElement | null;
+/** The visible Edit button, for when EditRegionView's `trigger` is false. */
+export declare function EditRegionTrigger(props: { children?: React.ReactNode; className?: string }): React.ReactElement | null;
+/** Edit mode: a form (a group inside another form) named “Edit <label>”. Children may be a function of the draft binder. */
+export declare function EditRegionForm<T extends Record<string, unknown> = Record<string, unknown>>(props: {
+  children: React.ReactNode | ((field: EditRegionBinder<T>) => React.ReactNode);
+  /** Render the error, conflict notice and Save/Cancel after the fields. Default true. */
+  actions?: boolean;
+  className?: string;
+}): React.ReactElement | null;
+/** The error, the conflict notice and Save/Cancel, for a form with `actions={false}`. */
+export declare function EditRegionActions(): React.ReactNode;
+
 export interface DialogProps {
   /** Default recede retains the existing stage/scrim presentation. Stationary removes recession and blur, not modality. */
   background?: 'recede' | 'stationary';
@@ -912,7 +972,7 @@ declare global {
     Altitude: {
       AltitudeProvider: typeof AltitudeProvider; Surface: typeof Surface; Button: typeof Button;
       Card: typeof Card; CardHeader: typeof CardHeader; CardTitle: typeof CardTitle; CardDescription: typeof CardDescription; CardContent: typeof CardContent; CardFooter: typeof CardFooter;
-      Input: typeof Input; InlineEdit: typeof InlineEdit; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
+      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;

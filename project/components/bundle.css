@@ -1525,3 +1525,23 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
 .alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* ── EditRegion: several fields of one record, saved together. Read mode is the record on the ground (level 0) with a
+   visible Edit button. Editing lifts the region into a static raised card (level 1, no hover lift: it's being worked
+   in, not offered), as an Accordion lid lifts over its compartment; the fields inside are openings (Input, Select…),
+   and Surface's own signals carry the write: pending hovers after dur-grace, a known failure drops to a trench, an
+   accepted save settles back to the ground with one afterglow for the whole region. The height glides open; the
+   fields fade in together, never staggered. Forced colours and contrast="more" come from Surface and the controls. ── */
+.alt-edit-region { min-width: 0; }
+.alt-edit-region-surface { min-width: 0; border-radius: var(--radius-lg); }
+.alt-edit-region:not([data-state="read"]) .alt-edit-region-surface { padding: var(--space-4); border: 1px solid var(--line-control); }
+.alt-edit-region-view { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
+.alt-edit-region-values { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.alt-edit-region-form { display: grid; gap: var(--space-4); min-width: 0; --alt-from-y: 0px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
+.alt-edit-region-fields { display: grid; gap: var(--space-3); min-width: 0; }
+.alt-edit-region-fields .alt-field, .alt-edit-region-fields .alt-input, .alt-edit-region-fields .alt-select { min-width: 0; }
+.alt-edit-region-fields .alt-input input { width: 100%; min-width: 0; }
+.alt-edit-region-chrome { display: grid; gap: var(--space-3); }
+.alt-edit-region-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.alt-edit-region-actions .alt-btn { max-width: 100%; white-space: normal; }
+.alt-edit-region-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }

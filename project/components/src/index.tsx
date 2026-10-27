@@ -20,3 +20,5 @@ export type { Promised, Pending, SkeletonOption, AwaitProps } from './suspense';
 export type { AvatarProps, AvatarGroupProps } from './controls';
 export { InlineEdit } from './inline-edit';
 export type { InlineEditControl, InlineEditProps, InlineEditSaveResult } from './inline-edit';
+export { EditRegion, EditRegionView, EditRegionForm, EditRegionTrigger, EditRegionActions } from './edit-region';
+export type { EditRegionProps, EditRegionSaveResult, EditRegionBinder } from './edit-region';
