@@ -24,3 +24,5 @@ export { EditRegion, EditRegionView, EditRegionForm, EditRegionTrigger, EditRegi
 export type { EditRegionProps, EditRegionSaveResult, EditRegionBinder } from './edit-region';
 export { TagInput, Tag } from './tag-input';
 export type { TagInputProps, TagProps, TagResult } from './tag-input';
+export { DatePicker, DateRangePicker, Calendar } from './date-picker';
+export type { DatePickerProps, DateRangePickerProps, CalendarProps, DateRange, ISODate } from './date-picker';

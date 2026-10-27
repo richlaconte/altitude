@@ -1101,6 +1101,31 @@ function App() {
     </div>
   </div>;
 }
+
+=== DatePicker | <!-- @dsCard group="Inputs" height=640 subtitle="Type a date or pick it: the chosen day carries the one raised mark" -->
+--- css
+.dp-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px 32px; max-width: 760px; align-items: start; }
+.dp-demo .dp-wide { grid-column: 1 / -1; }
+.dp-cap { margin: 0 0 8px; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+--- jsx
+const DP_TODAY = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })();
+const dpShift = (iso, days) => { const [y, m, d] = iso.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1, d + days)); return t.toISOString().slice(0, 10); };
+function App() {
+  const [due, setDue] = React.useState(dpShift(DP_TODAY, 3));
+  const [trip, setTrip] = React.useState({ start: dpShift(DP_TODAY, 9), end: dpShift(DP_TODAY, 13) });
+  const [start, setStart] = React.useState(null);
+  const weekend = iso => { const [y, m, d] = iso.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w === 0 || w === 6; };
+  return <div className="dp-demo">
+    <A.Field label="Due date" hint="Weekends aren’t available.">
+      <A.DatePicker value={due} onValueChange={setDue} min={DP_TODAY} isUnavailable={weekend} locale="en-GB" defaultOpen />
+    </A.Field>
+    <div>
+      <A.Field label="Trip"><A.DateRangePicker value={trip} onValueChange={setTrip} min={DP_TODAY} locale="en-GB" /></A.Field>
+      <div style={{ height: 24 }} />
+      <A.Field label="Start date (US format)"><A.DatePicker value={start} onValueChange={setStart} locale="en-US" /></A.Field>
+    </div>
+  </div>;
+}
 === Stepper | <!-- @dsCard group="Navigation" height=420 subtitle="Done steps settle into the record; the next rises out of its imprint" -->
 --- css
 .wrap { display: flex; flex-direction: column; gap: 18px; max-width: 820px; }
