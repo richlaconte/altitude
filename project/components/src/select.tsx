@@ -2,7 +2,7 @@ import * as React from 'react';
 import { cx, Icons, useApproach, useControllable, useIsoLayoutEffect, useKeyFocus, useOutside, usePresence } from './core';
 import { commandScore } from './command';
 
-const EXIT_3 = 160; // ≈ dur-travel-3 × 0.7
+export const EXIT_3 = 160; // ≈ dur-travel-3 × 0.7
 
 export interface SelectOption {
   value: string;
@@ -24,7 +24,7 @@ export interface SelectItemProps {
 /** Declares one option of a Select. It renders nothing itself; Select reads its props. */
 export function SelectItem(_: SelectItemProps): React.ReactElement | null { return null; }
 
-const textOf = (o: SelectOption) => o.textValue ?? (typeof o.label === 'string' || typeof o.label === 'number' ? String(o.label) : o.value);
+export const textOf = (o: SelectOption) => o.textValue ?? (typeof o.label === 'string' || typeof o.label === 'number' ? String(o.label) : o.value);
 function collect(items: SelectOption[] | undefined, children: React.ReactNode): SelectOption[] {
   if (items) return items;
   const out: SelectOption[] = [];
@@ -45,7 +45,7 @@ const Tick = () => (
 const Chevron = () => <Icons.ChevronDown className="alt-select-chevron" size={16} />;
 
 /** Opens downward unless there's more room above the field than below it (within whatever clips it). */
-function useSide(open: boolean, anchor: React.RefObject<HTMLElement | null>, list: React.RefObject<HTMLElement | null>) {
+export function useSide(open: boolean, anchor: React.RefObject<HTMLElement | null>, list: React.RefObject<HTMLElement | null>) {
   const [side, setSide] = React.useState<'bottom' | 'top'>('bottom');
   useIsoLayoutEffect(() => {
     if (!open || !anchor.current || !list.current) return;
@@ -69,7 +69,7 @@ function useGlow(value: string) {
 }
 
 /** Finds the label element that names a control by id, so the list can carry the same name. */
-function useLabelId(controlId: string, fallback: string) {
+export function useLabelId(controlId: string, fallback: string) {
   const [labelId, setLabelId] = React.useState<string | undefined>(undefined);
   React.useEffect(() => {
     const label = document.querySelector<HTMLLabelElement>(`label[for="${CSS.escape(controlId)}"]`);
@@ -85,7 +85,7 @@ type ListProps = {
   query?: string; empty?: React.ReactNode; listRef: React.RefObject<HTMLDivElement | null>; labelledBy?: string; label?: string;
   focusable: boolean; onActive: (i: number) => void; onChoose: (i: number) => void; onKeyDown?: (e: React.KeyboardEvent) => void;
 };
-function OptionList({ id, options, active, value, state, side, query, empty, listRef, labelledBy, label, focusable, onActive, onChoose, onKeyDown }: ListProps) {
+export function OptionList({ id, options, active, value, state, side, query, empty, listRef, labelledBy, label, focusable, onActive, onChoose, onKeyDown }: ListProps) {
   const rows = React.useRef<(HTMLDivElement | null)[]>([]);
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   useIsoLayoutEffect(() => {
