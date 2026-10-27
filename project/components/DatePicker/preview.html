@@ -1,0 +1,46 @@
+<!-- @dsCard group="Inputs" height=640 subtitle="Type a date or pick it: the chosen day carries the one raised mark" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DatePicker — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.dp-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px 32px; max-width: 760px; align-items: start; }
+.dp-demo .dp-wide { grid-column: 1 / -1; }
+.dp-cap { margin: 0 0 8px; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const DP_TODAY = (() => {
+  const t = /* @__PURE__ */ new Date();
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+})();
+const dpShift = (iso, days) => {
+  const [y, m, d] = iso.split("-").map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d + days));
+  return t.toISOString().slice(0, 10);
+};
+function App() {
+  const [due, setDue] = React.useState(dpShift(DP_TODAY, 3));
+  const [trip, setTrip] = React.useState({ start: dpShift(DP_TODAY, 9), end: dpShift(DP_TODAY, 13) });
+  const [start, setStart] = React.useState(null);
+  const weekend = (iso) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+    return w === 0 || w === 6;
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "dp-demo" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Due date", hint: "Weekends aren\u2019t available." }, /* @__PURE__ */ React.createElement(A.DatePicker, { value: due, onValueChange: setDue, min: DP_TODAY, isUnavailable: weekend, locale: "en-GB", defaultOpen: true })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(A.Field, { label: "Trip" }, /* @__PURE__ */ React.createElement(A.DateRangePicker, { value: trip, onValueChange: setTrip, min: DP_TODAY, locale: "en-GB" })), /* @__PURE__ */ React.createElement("div", { style: { height: 24 } }), /* @__PURE__ */ React.createElement(A.Field, { label: "Start date (US format)" }, /* @__PURE__ */ React.createElement(A.DatePicker, { value: start, onValueChange: setStart, locale: "en-US" }))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # InlineEdit
 
-Edit one value where its committed value already appears: by default a single-line string, or any value with a custom `editor`. Read mode shows the saved text (or “Not set”) and a visible Edit button. Editing uses Field, Input and Save/Cancel in the same local region; it is a group, with normal page Tab order and no focus trap.
+Edit one value where its committed value already appears: by default a single-line string, a paragraph with `multiline`, or any value with a custom `editor`. Read mode shows the saved text (or “Not set”) and a visible Edit button. Editing uses Field, Input and Save/Cancel in the same local region; it is a group, with normal page Tab order and no focus trap.
 
 ```tsx
 const [name, setName] = React.useState('Brand guidelines.pdf');
@@ -30,7 +30,7 @@ A transport timeout does not prove a write failed. Before throwing or returning 
 
 ## Editing and validation
 
-Typing changes local text without trimming. Cancel and Escape discard that text; blur, outside clicks and Tab do nothing to the session. Enter saves, except while IME composition is active (including legacy key code 229). Composition Escape also remains with the IME. Input Enter prevents a surrounding form from submitting.
+Typing changes local text without trimming. Cancel and Escape discard that text; blur, outside clicks and Tab do nothing to the session. Enter saves (Ctrl/Cmd+Enter with `multiline`), except while IME composition is active (including legacy key code 229). Composition Escape also remains with the IME. Input Enter prevents a surrounding form from submitting.
 
 Saving an exact unchanged value closes without validation, persistence, publication or afterglow. `required` defaults to false; when true it rejects the empty string using HTML required semantics. Spaces stay legal unless application validation rejects them. `maxLength` uses JavaScript/HTML UTF-16 string length and the native input limit. Optional `validate(draft)` runs only on Save and returns a user-facing error string or `undefined`, synchronously or as a promise. Use validation to reject whitespace-only or duplicate names when your application requires it.
 
@@ -43,6 +43,27 @@ An observed `value` change during editing, validation or error retains the draft
 An update during a write latches a conflict even if a later observed update restores the earlier string. The request may finish, but its result is never published through `onValueChange`. The recovery message says the save may have completed and asks the person to check the current record. The application must reconcile its server state; the component cannot roll back a dispatched write or assert authoritative freshness.
 
 Unmount invalidates pending work and suppresses subsequent publication, announcements, state and focus work. It does not abort persistence. Applications must still reconcile writes after navigation. Becoming `disabled` prevents new edits and Save while keeping an existing session cancellable and allowing a dispatched write to settle.
+
+## Paragraphs: `multiline`
+
+`multiline` swaps the Input for a Textarea, for a description, note or comment edited where it's shown.
+
+```tsx
+<InlineEdit
+  label="Description"
+  multiline
+  rows={4}          // initial height in lines (default 3)
+  maxRows={16}      // grows with its content up to here, then scrolls (default 12)
+  maxLength={2000}  // the Textarea's fill from the floor and live count near the limit
+  value={task.description}
+  onValueChange={setDescription}
+  onSave={(draft) => api.setDescription(task.id, draft, task.revision)}
+/>
+```
+
+Enter inserts a newline; Ctrl+Enter (⌘+Enter on Apple platforms) saves; Escape cancels. During IME composition none of these act. The hint under the field names the keys with `Kbd` and describes the textarea. Opening puts the caret at the end instead of selecting everything, because selecting a paragraph invites replacing it by accident. Read mode keeps line breaks (`white-space: pre-wrap`) with Edit below the text, and shows “Not set” when empty. Opening glides the region's height from the read text to the editor's (`ease-glide`, `dur-travel-3`); after that the textarea grows line by line without animating, and under reduced motion the height changes at once. A chat-style “Enter sends” composer is a different component.
+
+`multiline` applies to the default editor; with a custom `editor` it's ignored. `renderValue` still draws read mode if you pass it.
 
 ## Other values: `editor`, `renderValue` and `commit`
 
@@ -88,10 +109,10 @@ Opening focuses and selects the input (with a custom `editor`, it focuses the ed
 
 The Field label and single alert wire the input's name, description and invalid state. A polite status announces checking, saving and accepted success outside the saving region's `aria-busy` subtree. The editor is a static raised Surface, persistence uses its existing pending signal, failed writes use its failed treatment, and accepted canonical text settles locally. Text, controls, error icons and borders preserve every state without motion or shadows. Actions wrap below the field at narrow widths.
 
-Optional labels are `editLabel` (default `Edit ${label}`), `saveLabel` (“Save changes”) and `cancelLabel` (“Cancel”). `className` applies to the local group. There is no autosave, multiline mode, history, portal or form abstraction.
+Optional labels are `editLabel` (default `Edit ${label}`), `saveLabel` (“Save changes”) and `cancelLabel` (“Cancel”). `className` applies to the local group. There is no autosave, history, portal or form abstraction.
 
 ## Demo and verification
 
-The canonical `InlineEdit` section in `build/previews.txt` renders a task title, the task's status (Select, on choose, with a rejected “Blocked”), assignee (Combobox, on choose) and estimate (a numeric Input), and an independent filename table cell with this component. A collapsed documentation harness selects deterministic fixtures before mounting, resets records and counters, delays validation, applies external updates, removes the filename consumer during work and opens a dialog comparison using the same validation and persistence adapter. Fixture controls and operation logs stay outside the product scene.
+The canonical `InlineEdit` section in `build/previews.txt` renders a task title, a multiline description, the task's status (Select, on choose, with a rejected “Blocked”), assignee (Combobox, on choose) and estimate (a numeric Input), and an independent filename table cell with this component. A collapsed documentation harness selects deterministic fixtures before mounting, resets records and counters, delays validation, applies external updates, removes the filename consumer during work and opens a dialog comparison using the same validation and persistence adapter. Fixture controls and operation logs stay outside the product scene.
 
-Run `node checks/inline-edit.mjs` from `build/` after generating preview fixtures. `ALT_FIXTURE_ROOT=test/react19` selects the React 19 source fixtures. The checks cover custom editors (focus, Escape layering, on-choose saves and rejections, unchanged choices, numeric validation), lifecycle races, retained input, uncertainty reconciliation, conflict latching, keyboard/IME, focus, disabled behavior and the four-scheme responsive/accessibility matrix. Automated checks do not replace the human screen-reader, touch, magnification or formative comparisons recorded in [Actions in place validation](../../ActionsInPlaceValidation.md).
+Run `node checks/inline-edit.mjs` from `build/` after generating preview fixtures. `ALT_FIXTURE_ROOT=test/react19` selects the React 19 source fixtures. The checks cover multiline (newline on Enter, Ctrl/Cmd+Enter, IME, Escape, caret at the end, growth to `maxRows`, line breaks in read mode), custom editors (focus, Escape layering, on-choose saves and rejections, unchanged choices, numeric validation), lifecycle races, retained input, uncertainty reconciliation, conflict latching, keyboard/IME, focus, disabled behavior and the four-scheme responsive/accessibility matrix. Automated checks do not replace the human screen-reader, touch, magnification or formative comparisons recorded in [Actions in place validation](../../ActionsInPlaceValidation.md).
