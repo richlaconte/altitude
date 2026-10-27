@@ -1097,7 +1097,13 @@ export interface BoardColumnProps extends Omit<React.HTMLAttributes<HTMLElement>
   onCollapsedChange?: (collapsed: boolean) => void;
   /** Show the collapse button in its header. */
   collapsible?: boolean;
+  /** Adds an add slot at the column's foot: Enter adds a card and opens the next. Resolve after the card is among the children. */
+  onCreate?: (title: string) => BoardCreateResult | Promise<BoardCreateResult>;
+  /** Default “Add a card”. */
+  addLabel?: string;
 }
+export type BoardCreateResult = { ok: true; value: { id: string } } | { ok: false; error: string };
+export type BoardRenameResult = { ok: true; value: string } | { ok: false; error: string };
 export declare function BoardColumn(props: BoardColumnProps): React.ReactElement;
 
 /** A local date-time, 'YYYY-MM-DDTHH:mm': no time zone. Convert at your edges. */
@@ -1157,6 +1163,14 @@ export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   heldBy?: { name: string; presence?: 1 | 2 | 3 };
   /** Afterglow: when this value changes the card arrives tinted and lifted, then settles. */
   settle?: unknown;
+  /** Rename in place (F2, or the visible Rename button), with InlineEdit's contract. Pair with `label`. */
+  onRename?: (draft: string) => BoardRenameResult | Promise<BoardRenameResult>;
+  /** The card's record, for a fuller editor (EditRegion) in its place, opened by its Edit button. */
+  value?: Record<string, unknown>;
+  renderEditor?: (field: EditRegionBinder<Record<string, unknown>>) => React.ReactNode;
+  onSave?: (draft: Record<string, unknown>, context: { previousValue: Record<string, unknown>; changed: string[] }) => EditRegionSaveResult<Record<string, unknown>> | Promise<EditRegionSaveResult<Record<string, unknown>>>;
+  /** Publishes the saved record (a synchronous setter). */
+  onValueChange?: (canonical: Record<string, unknown>) => void;
 }
 export declare const BoardCard: React.ForwardRefExoticComponent<BoardCardProps & React.RefAttributes<HTMLDivElement>>;
 
