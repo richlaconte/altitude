@@ -30,3 +30,5 @@ export { Tree } from './tree';
 export type { TreeProps, TreeHandle, TreeMove, TreeTarget, TreeResult, TreeCreateResult } from './tree';
 export { Checklist } from './checklist';
 export type { ChecklistProps, ChecklistOp, ChecklistPlace, ChecklistResult } from './checklist';
+export { FilterBar, filterValueText } from './filter-bar';
+export type { FilterBarProps, FilterField, FilterOption, Filter, FilterValue } from './filter-bar';

@@ -891,6 +891,39 @@ export interface DataTableColumn<T> {
   width?: number | string;
 }
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
+export interface FilterOption { value: string; label: string }
+export interface FilterField {
+  key: string;
+  label: string;
+  /** enum: choose from options. text: a phrase. number. date: an ISO 'YYYY-MM-DD' date ('between' takes two). */
+  type: 'enum' | 'text' | 'number' | 'date';
+  options?: FilterOption[];
+  /** Enum lists get a search field. Default: when there are more than 8 options. */
+  searchable?: boolean;
+  /** Default by type: enum ['is', 'is not'], text ['contains', 'does not contain'], number ['=', '>', '<'], date ['before', 'after', 'between']. */
+  operators?: string[];
+}
+export type FilterValue = string | number | { start: string; end: string } | undefined;
+export interface Filter { id: string; field: string; operator: string; value: FilterValue }
+export interface FilterBarProps {
+  fields: FilterField[];
+  value: Filter[];
+  onValueChange: (filters: Filter[]) => void;
+  /** Shown as a segment when there's more than one filter. Omit to hide it. */
+  match?: 'all' | 'any';
+  onMatchChange?: (match: 'all' | 'any') => void;
+  /** Announced after each change: “Status is Done. 12 results”. */
+  resultCount?: number;
+  /** Ids for new filters. Default: a counter. */
+  createId?: () => string;
+  'aria-label'?: string;
+  className?: string;
+}
+/** A query as a row of conditions, each part edited in its own picker. Pair it with DataTable's relevance to filter in place. */
+export declare function FilterBar(props: FilterBarProps): React.ReactElement;
+/** A filter's value as words (“Oct 1, 2026”, “In review”), or undefined while it has none. */
+export declare function filterValueText(field: FilterField, value: FilterValue): string | undefined;
+
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   /** The rows. Undefined while your data loads, or a promise: until they arrive the table is its header over skeleton.lines imprinted rows (default 5). */
@@ -1178,7 +1211,7 @@ declare global {
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
       Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
       Board: typeof Board; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
-      Table: typeof Table; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
+      Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
     };

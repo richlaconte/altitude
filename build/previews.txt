@@ -1304,6 +1304,55 @@ function App() {
   ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys."));
 }
 
+
+=== FilterBar | <!-- @dsCard group="Display" height=620 subtitle="A query as conditions edited in place; the table filters in place: matches rise, misses sink" -->
+--- css
+.fb-demo { display: grid; gap: 16px; max-width: 820px; }
+--- jsx
+const FB_STATUSES = [{ value: 'todo', label: 'To do' }, { value: 'progress', label: 'In progress' }, { value: 'review', label: 'In review' }, { value: 'done', label: 'Done' }];
+const FB_PEOPLE = [{ value: 'mara', label: 'Mara Quist' }, { value: 'ines', label: 'Inés Ortega' }, { value: 'tobi', label: 'Tobi Adeyemi' }, { value: 'wen', label: 'Li Wen' }];
+const FB_FIELDS = [
+  { key: 'status', label: 'Status', type: 'enum', options: FB_STATUSES },
+  { key: 'assignee', label: 'Assignee', type: 'enum', options: FB_PEOPLE, searchable: true },
+  { key: 'updated', label: 'Updated', type: 'date' },
+  { key: 'title', label: 'Title', type: 'text' },
+  { key: 'points', label: 'Points', type: 'number' },
+];
+const FB_ROWS = [
+  { id: 'a', title: 'Search results page', status: 'review', assignee: 'mara', updated: '2026-10-21', points: 5 },
+  { id: 'b', title: 'Billing address form', status: 'progress', assignee: 'ines', updated: '2026-10-12', points: 3 },
+  { id: 'c', title: 'Search filters', status: 'todo', assignee: 'tobi', updated: '2026-09-30', points: 8 },
+  { id: 'd', title: 'Invoice emails', status: 'done', assignee: 'wen', updated: '2026-10-02', points: 2 },
+  { id: 'e', title: 'Onboarding checklist', status: 'review', assignee: 'ines', updated: '2026-10-19', points: 3 },
+];
+const fbTest = (row, f) => {
+  if (f.value === undefined || f.value === '') return true;
+  const v = row[f.field];
+  switch (f.operator) {
+    case 'is': return v === f.value; case 'is not': return v !== f.value;
+    case 'contains': return v.toLowerCase().includes(String(f.value).toLowerCase()); case 'does not contain': return !v.toLowerCase().includes(String(f.value).toLowerCase());
+    case '=': return v === f.value; case '>': return v > f.value; case '<': return v < f.value;
+    case 'before': return v < f.value; case 'after': return v > f.value; case 'between': return v >= f.value.start && v <= f.value.end;
+  }
+  return true;
+};
+function App() {
+  const [filters, setFilters] = React.useState([{ id: 'f1', field: 'status', operator: 'is', value: 'review' }]);
+  const [match, setMatch] = React.useState('all');
+  const matches = row => match === 'all' ? filters.every(f => fbTest(row, f)) : filters.some(f => fbTest(row, f));
+  const count = FB_ROWS.filter(matches).length;
+  return <div className="fb-demo">
+    <A.FilterBar aria-label="Filter issues" fields={FB_FIELDS} value={filters} onValueChange={setFilters} match={match} onMatchChange={setMatch} resultCount={count} />
+    <A.DataTable aria-label="Issues" rows={FB_ROWS} getRowId={r => r.id} relevance={r => filters.length ? (matches(r) ? 'match' : 'miss') : undefined}
+      columns={[
+        { key: 'title', header: 'Title' },
+        { key: 'status', header: 'Status', cell: r => FB_STATUSES.find(s => s.value === r.status).label },
+        { key: 'assignee', header: 'Assignee', cell: r => FB_PEOPLE.find(p => p.value === r.assignee).label },
+        { key: 'updated', header: 'Updated' },
+        { key: 'points', header: 'Points', align: 'end' },
+      ]} />
+  </div>;
+}
 === Board | <!-- @dsCard group="Layout" height=430 subtitle="Columns open to receive; a carried card floats at level 3" -->
 --- css
 .alt-board-col { width: 214px; }

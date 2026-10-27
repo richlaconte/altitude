@@ -59,12 +59,13 @@ Rules that follow:
 | **Receptacles** | a board's columns are flush at rest and open into wells only while a card is carried; the one under the card deepens to a trench; a collapsed column is a pile that still takes drops | `Board` |
 | **Progress** | the steps of a process are plates on one ground line: done steps are flush in the record with a stamped check, the current one stands raised on its wall, steps to come are imprints; advancing presses one down and raises the next out of its imprint | `Stepper` |
 | **Done is pressed into the record** | checking an item stamps it like a completed step: muted, struck through, and kept in place in the record rather than removed | `Checklist` |
+| **A condition** | a filter is a segmented plate stamped into the bar; each segment lifts when pointed at because it opens a picker, and a condition still waiting for its value keeps that segment as an opening | `FilterBar` |
 | **Recency** | new or changed content arrives tinted and lifted, then settles to rest over `dur-settle` (afterglow) | `settle` on `Surface`, `Card` |
 | **Commitment** | a pending write hovers (after `dur-grace`), a confirmed one lands, a failed one drops into a trench | `status` on `Surface`, `Card` |
 | **Possession** | whatever is in a hand floats at level 3, tilted; a collaborator's hold wears their `presence-*` colour and name | `heldBy`, `SortableList`, `BoardCard heldBy` |
 | **Readiness to receive** | receptacles open (sink) only while something could be dropped into them, and deepen under the pointer | `DropZone`, the slot in `SortableList`, a slot or a node to drop into in `Tree` |
 | **Emptiness** | a region with nothing in it yet is an opening, a well with a dashed rim that the first record will fill; pointing at its action deepens it to a trench | `EmptyState` |
-| **Relevance** | filtering lifts matches and sinks misses instead of removing them, so positions survive | `relevance` on `Surface`, `Card`, `TableRow` |
+| **Relevance** | filtering lifts matches and sinks misses instead of removing them, so positions survive | `relevance` on `Surface`, `Card`, `TableRow`, driven by `FilterBar` |
 | **Overflow** | edges curve away where content continues; a header rises when content passes under it | `ScrollArea` |
 | **Quantity** | a group shows 0–3 sheets beneath it (2–3, 4–9, 10+ items), with the exact number in a badge; hovering it fans the sheets a little; click it and its items fan out from under the top card, each its own card, floating over the page below without moving anything | `Pile` |
 | **Hierarchy** | a stack: going deeper lays a sheet on top, going back lifts it off; the breadcrumb is a staircase: every step stands on the same ground line, outlined face and wall together, and each deeper place is a taller step; the view sits on a pile as thick as you are deep | `Drilldown` |
