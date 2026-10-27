@@ -36,3 +36,5 @@ export { Schedule } from './schedule';
 export type { ScheduleProps, ScheduleSpan, ScheduleResult, ScheduleCreateResult, LocalDateTime } from './schedule';
 export { DataGrid } from './data-grid';
 export type { DataGridProps, DataGridColumn, DataGridChange, DataGridResult, DataGridEditorControl } from './data-grid';
+export { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions, ItemSeparator } from './item-group';
+export type { ItemGroupProps, ItemGroupRemoval, ItemGroupResult, ItemGroupCreateResult, ItemActionsApi } from './item-group';

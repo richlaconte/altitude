@@ -701,6 +701,63 @@ export declare function EditRegionForm<T extends Record<string, unknown> = Recor
 /** The error, the conflict notice and Save/Cancel, for a form with `actions={false}`. */
 export declare function EditRegionActions(): React.ReactNode;
 
+export type ItemGroupResult = { ok: true } | { ok: false; error: string };
+export type ItemGroupCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
+/**
+ * How removal is recovered. There's no default: say whether the application can reverse it (immediate, with Undo)
+ * or needs confirmation first. A danger button doesn't imply irreversibility.
+ */
+export type ItemGroupRemoval<T> =
+  | { kind: 'recoverable'; undo: (item: T) => void | Promise<unknown> }
+  | { kind: 'confirm'; title: (item: T) => string; description?: (item: T) => React.ReactNode; confirmLabel?: string };
+/** What renderItem gets. Spread editProps and removeProps onto visible Buttons: they carry the name, the handler and focus repair. */
+export interface ItemActionsApi {
+  edit: () => void;
+  remove: () => void;
+  editProps: { onClick: () => void; 'aria-label': string; 'data-action': 'edit' };
+  removeProps: { onClick: () => void; 'aria-label': string; 'data-action': 'remove' };
+}
+export interface ItemGroupProps<T extends Record<string, unknown>> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  items: T[];
+  getKey: (item: T) => string;
+  /** Names actions (“Edit Production webhook”) and announcements. */
+  getLabel: (item: T) => string;
+  /** One slat. `edit` and `remove` open the editor and remove the item, with focus and recovery handled. */
+  renderItem: (item: T, actions: ItemActionsApi) => React.ReactNode;
+  /** The in-place editor's fields (EditRegion's draft binder). */
+  renderEditor?: (field: EditRegionBinder<T>, item: T | null) => React.ReactNode;
+  /** Save an edited item: the EditRegion contract. */
+  onSave?: (draft: T, context: { previousValue: T; changed: (keyof T)[] }) => EditRegionSaveResult<T> | Promise<EditRegionSaveResult<T>>;
+  /** Publish a saved item's canonical record (a synchronous setter, no network). */
+  onItemChange?: (canonical: T) => void;
+  /** The draft for a new item. With onCreate, shows the add slat. */
+  newItem?: () => T;
+  /** Resolve after `items` includes the new item. */
+  onCreate?: (draft: T) => ItemGroupCreateResult<T> | Promise<ItemGroupCreateResult<T>>;
+  /** Default “Add item”. */
+  addLabel?: string;
+  /** Shows grips: Space to pick up, arrows to move, Space to drop. Resolve after `items` is in the new order. */
+  onReorder?: (next: T[]) => void | ItemGroupResult | Promise<void | ItemGroupResult>;
+  /** Resolve after `items` no longer includes it. */
+  onRemove?: (item: T) => void | ItemGroupResult | Promise<void | ItemGroupResult>;
+  removal?: ItemGroupRemoval<T>;
+  /** Shown when there are no items (an EmptyState). */
+  empty?: React.ReactNode;
+  className?: string;
+}
+/** A list of slats changed in the list itself: edit one in place (EditRegion), add, reorder, remove with the application's recovery policy. */
+export declare function ItemGroup<T extends Record<string, unknown>>(props: ItemGroupProps<T>): React.ReactElement;
+export declare function Item(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export declare function ItemMedia(props: React.HTMLAttributes<HTMLDivElement> & { variant?: 'icon' | 'image' | 'avatar' }): React.ReactElement;
+export declare function ItemContent(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export declare function ItemTitle(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export declare function ItemDescription(props: React.HTMLAttributes<HTMLParagraphElement>): React.ReactElement;
+/** Visible actions, not hover-only. */
+export declare function ItemActions(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export declare function ItemSeparator(props: React.HTMLAttributes<HTMLHRElement>): React.ReactElement;
+
 export interface DialogProps {
   /** Default recede retains the existing stage/scrim presentation. Stationary removes recession and blur, not modality. */
   background?: 'recede' | 'stationary';
@@ -1307,7 +1364,7 @@ declare global {
     Altitude: {
       AltitudeProvider: typeof AltitudeProvider; Surface: typeof Surface; Button: typeof Button;
       Card: typeof Card; CardHeader: typeof CardHeader; CardTitle: typeof CardTitle; CardDescription: typeof CardDescription; CardContent: typeof CardContent; CardFooter: typeof CardFooter;
-      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
+      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; ItemGroup: typeof ItemGroup; Item: typeof Item; ItemMedia: typeof ItemMedia; ItemContent: typeof ItemContent; ItemTitle: typeof ItemTitle; ItemDescription: typeof ItemDescription; ItemActions: typeof ItemActions; ItemSeparator: typeof ItemSeparator; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;
