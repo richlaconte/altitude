@@ -1,6 +1,6 @@
 # InlineEdit
 
-Edit one single-line string where its committed value already appears. Read mode shows the saved text (or “Not set”) and a visible Edit button. Editing uses Field, Input and Save/Cancel in the same local region; it is a group, with normal page Tab order and no focus trap.
+Edit one value where its committed value already appears: by default a single-line string, a paragraph with `multiline`, or any value with a custom `editor`. Read mode shows the saved text (or “Not set”) and a visible Edit button. Editing uses Field, Input and Save/Cancel in the same local region; it is a group, with normal page Tab order and no focus trap.
 
 ```tsx
 const [name, setName] = React.useState('Brand guidelines.pdf');
@@ -30,7 +30,7 @@ A transport timeout does not prove a write failed. Before throwing or returning 
 
 ## Editing and validation
 
-Typing changes local text without trimming. Cancel and Escape discard that text; blur, outside clicks and Tab do nothing to the session. Enter saves, except while IME composition is active (including legacy key code 229). Composition Escape also remains with the IME. Input Enter prevents a surrounding form from submitting.
+Typing changes local text without trimming. Cancel and Escape discard that text; blur, outside clicks and Tab do nothing to the session. Enter saves (Ctrl/Cmd+Enter with `multiline`), except while IME composition is active (including legacy key code 229). Composition Escape also remains with the IME. Input Enter prevents a surrounding form from submitting.
 
 Saving an exact unchanged value closes without validation, persistence, publication or afterglow. `required` defaults to false; when true it rejects the empty string using HTML required semantics. Spaces stay legal unless application validation rejects them. `maxLength` uses JavaScript/HTML UTF-16 string length and the native input limit. Optional `validate(draft)` runs only on Save and returns a user-facing error string or `undefined`, synchronously or as a promise. Use validation to reject whitespace-only or duplicate names when your application requires it.
 
@@ -44,16 +44,71 @@ An update during a write latches a conflict even if a later observed update rest
 
 Unmount invalidates pending work and suppresses subsequent publication, announcements, state and focus work. It does not abort persistence. Applications must still reconcile writes after navigation. Becoming `disabled` prevents new edits and Save while keeping an existing session cancellable and allowing a dispatched write to settle.
 
+## Paragraphs: `multiline`
+
+`multiline` swaps the Input for a Textarea, for a description, note or comment edited where it's shown.
+
+```tsx
+<InlineEdit
+  label="Description"
+  multiline
+  rows={4}          // initial height in lines (default 3)
+  maxRows={16}      // grows with its content up to here, then scrolls (default 12)
+  maxLength={2000}  // the Textarea's fill from the floor and live count near the limit
+  value={task.description}
+  onValueChange={setDescription}
+  onSave={(draft) => api.setDescription(task.id, draft, task.revision)}
+/>
+```
+
+Enter inserts a newline; Ctrl+Enter (⌘+Enter on Apple platforms) saves; Escape cancels. During IME composition none of these act. The hint under the field names the keys with `Kbd` and describes the textarea. Opening puts the caret at the end instead of selecting everything, because selecting a paragraph invites replacing it by accident. Read mode keeps line breaks (`white-space: pre-wrap`) with Edit below the text, and shows “Not set” when empty. Opening glides the region's height from the read text to the editor's (`ease-glide`, `dur-travel-3`); after that the textarea grows line by line without animating, and under reduced motion the height changes at once. A chat-style “Enter sends” composer is a different component.
+
+`multiline` applies to the default editor; with a custom `editor` it's ignored. `renderValue` still draws read mode if you pass it.
+
+## Other values: `editor`, `renderValue` and `commit`
+
+`InlineEdit<V>` takes any value type. `renderValue(value)` draws read mode (default: the value as text, or “Not set” when it's `''`, `null`, `undefined` or an empty array). `editor(control)` draws edit mode; spread `control` onto an Altitude control. It carries `value`, `onValueChange`, the `id` the label points at, `aria-describedby` for the error or hint, `invalid`, `readOnly` (checking, saving or blocked by a conflict; changes are ignored then), `disabled` and `autoFocus`. The session is unchanged: baseline, draft, `validate`, the `onSave` contract, conflict latching, unmount safety and focus return all work the same way. Without `editor`, the existing Input is used and nothing about the string case changes.
+
+```tsx
+<InlineEdit<Status>
+  label="Status"
+  value={issue.status}
+  onValueChange={setStatus}
+  renderValue={(s) => <Badge tone={toneFor(s)}>{labelFor(s)}</Badge>}
+  editor={(control) => <Select {...control} items={statuses} />}
+  commit="on-choose"
+  onSave={(draft) => api.setStatus(issue.id, draft, issue.revision)}
+/>
+
+<InlineEdit<number | null>
+  label="Estimate"
+  value={task.estimate}
+  onValueChange={setEstimate}
+  required
+  validate={(n) => Number.isInteger(n) && n >= 0 ? undefined : 'Use a whole number, 0 or more.'}
+  renderValue={(n) => `${n} points`}
+  editor={({ value, onValueChange, ...control }) => (
+    <Input {...control} type="number" value={value ?? ''}
+      onChange={(e) => onValueChange(e.target.value === '' ? null : Number(e.target.value))} />
+  )}
+  onSave={(draft) => api.setEstimate(task.id, draft, task.revision)}
+/>
+```
+
+`commit="on-choose"` is for single-choice editors (Select, Combobox, a date picker): choosing a value is the deliberate act, so it dispatches the save. Save is hidden and the hint under the control reads “Choose to save”; Cancel stays, so a pointer user can leave without choosing. Choosing the current value closes without a write. A rejected save keeps the editor open on the chosen value with the error, and adds “Try again”; choosing another value saves that instead. On success the list closes first, then the editor settles, and the status region names the value (“Status set to In review”, from the rendered read value). With the default `commit="explicit"`, Enter in a custom editor's single-line text input saves, as it does in the default Input; a choice control's own Enter (opening or choosing) is left to it.
+
+Escape inside an open popup closes the popup only; the next Escape cancels the session. `isEqual(a, b)` (default `Object.is`) decides both whether a draft is unchanged and whether an observed `value` is an external change, so pass one for object values (a date range) whose identity changes on every render. `required` rejects an empty value of any type; `maxLength` applies to strings only. A canonical `onSave` result for a custom editor may be any value except `undefined`; for the default Input it must still be a string.
+
 ## Focus and accessible equivalents
 
-Opening focuses and selects the input. Save or Cancel restores focus to Edit only when focus was still in the editor at completion. Completion never steals focus from another part of the page. If Edit is unavailable while the component remains mounted, `focusFallback` may return a connected, enabled, focusable element; otherwise it leaves focus where it is. When a parent removes a row, the parent owns next-row or heading focus.
+Opening focuses and selects the input (with a custom `editor`, it focuses the editor's first focusable control). Save or Cancel restores focus to Edit only when focus was still in the editor at completion. Completion never steals focus from another part of the page. If Edit is unavailable while the component remains mounted, `focusFallback` may return a connected, enabled, focusable element; otherwise it leaves focus where it is. When a parent removes a row, the parent owns next-row or heading focus.
 
 The Field label and single alert wire the input's name, description and invalid state. A polite status announces checking, saving and accepted success outside the saving region's `aria-busy` subtree. The editor is a static raised Surface, persistence uses its existing pending signal, failed writes use its failed treatment, and accepted canonical text settles locally. Text, controls, error icons and borders preserve every state without motion or shadows. Actions wrap below the field at narrow widths.
 
-Optional labels are `editLabel` (default `Edit ${label}`), `saveLabel` (“Save changes”) and `cancelLabel` (“Cancel”). `className` applies to the local group. There is no autosave, multiline mode, history, portal or form abstraction.
+Optional labels are `editLabel` (default `Edit ${label}`), `saveLabel` (“Save changes”) and `cancelLabel` (“Cancel”). `className` applies to the local group. There is no autosave, history, portal or form abstraction.
 
 ## Demo and verification
 
-The canonical `InlineEdit` section in `build/previews.txt` renders a task title and an independent filename table cell with this component. A collapsed documentation harness selects deterministic fixtures before mounting, resets records and counters, delays validation, applies external updates, removes the filename consumer during work and opens a dialog comparison using the same validation and persistence adapter. Fixture controls and operation logs stay outside the product scene.
+The canonical `InlineEdit` section in `build/previews.txt` renders a task title, a multiline description, the task's status (Select, on choose, with a rejected “Blocked”), assignee (Combobox, on choose) and estimate (a numeric Input), and an independent filename table cell with this component. A collapsed documentation harness selects deterministic fixtures before mounting, resets records and counters, delays validation, applies external updates, removes the filename consumer during work and opens a dialog comparison using the same validation and persistence adapter. Fixture controls and operation logs stay outside the product scene.
 
-Run `node checks/inline-edit.mjs` from `build/` after generating preview fixtures. `ALT_FIXTURE_ROOT=test/react19` selects the React 19 source fixtures. The checks cover lifecycle races, retained input, uncertainty reconciliation, conflict latching, keyboard/IME, focus, disabled behavior and the four-scheme responsive/accessibility matrix. Automated checks do not replace the human screen-reader, touch, magnification or formative comparisons recorded in [Actions in place validation](../../ActionsInPlaceValidation.md).
+Run `node checks/inline-edit.mjs` from `build/` after generating preview fixtures. `ALT_FIXTURE_ROOT=test/react19` selects the React 19 source fixtures. The checks cover multiline (newline on Enter, Ctrl/Cmd+Enter, IME, Escape, caret at the end, growth to `maxRows`, line breaks in read mode), custom editors (focus, Escape layering, on-choose saves and rejections, unchanged choices, numeric validation), lifecycle races, retained input, uncertainty reconciliation, conflict latching, keyboard/IME, focus, disabled behavior and the four-scheme responsive/accessibility matrix. Automated checks do not replace the human screen-reader, touch, magnification or formative comparisons recorded in [Actions in place validation](../../ActionsInPlaceValidation.md).
