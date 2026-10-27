@@ -197,6 +197,58 @@ export interface ComboboxProps extends SelectFieldProps {
   /** Shown when nothing matches. Default "No matches". */
   empty?: React.ReactNode;
 }
+
+export type TagResult = { ok: true; value: string } | { ok: false; error: string };
+export interface TagInputProps {
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+  /** Offered as you type, ranked as the Combobox ranks. Free entry is still allowed unless `restrict`. */
+  suggestions?: (string | SelectOption)[];
+  /** Only suggestions can be added. Default false. */
+  restrict?: boolean;
+  /** Keys that add what's typed: Enter and any single characters (also used to split a paste). Default [',', 'Enter']. */
+  separators?: string[];
+  /** The most tags allowed; then the field is read-only with “Limit reached”. */
+  max?: number;
+  /** Return an error to refuse a tag. Runs after `normalize`. */
+  validate?: (tag: string) => string | undefined;
+  /** Applied before validating and before comparing for duplicates. Default: trim. */
+  normalize?: (tag: string) => string;
+  /** Persist one added tag. Return its canonical text, or an error; the tag waits, pending, until then. */
+  onAdd?: (tag: string) => TagResult | Promise<TagResult>;
+  /** Persist one removal. The tag stays, pending, until the result. */
+  onRemove?: (tag: string) => TagResult | Promise<TagResult> | { ok: true } | Promise<{ ok: true } | TagResult>;
+  /** Draw a tag's contents. Default: its text. */
+  renderTag?: (tag: string) => React.ReactNode;
+  /** Words for the count and the messages. Default ['tag', 'tags']. */
+  noun?: [singular: string, plural: string];
+  placeholder?: string;
+  /** Goes on the text input; Field sets it so its label points here. */
+  id?: string;
+  /** Submits each tag with a form, through hidden inputs. */
+  name?: string;
+  disabled?: boolean;
+  required?: boolean;
+  /** Field sets it for you when it has an error. */
+  invalid?: boolean;
+  size?: 'sm' | 'md';
+  className?: string;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+}
+/** A set of short values in one field. Tags are Badge plates stamped into the field's floor; Backspace arms the last one, a second removes it. */
+export declare function TagInput(props: TagInputProps): React.ReactElement;
+export interface TagProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
+  children: React.ReactNode;
+  /** Adds a remove button named “Remove <label>”. */
+  onRemove?: () => void;
+  /** Names the remove button when the children aren't plain text. */
+  label?: string;
+}
+/** A tag on its own, outside a field. */
+export declare function Tag(props: TagProps): React.ReactElement;
 /**
  * An editable Select: type to filter, choose to fill. A query keeps the field an opening until an option is chosen.
  * Leaving the field commits: an exact name chooses it, an empty field clears the value, anything else restores it.
@@ -980,7 +1032,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
       Board: typeof Board; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
