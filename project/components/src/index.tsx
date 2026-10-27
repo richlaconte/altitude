@@ -26,3 +26,5 @@ export { TagInput, Tag } from './tag-input';
 export type { TagInputProps, TagProps, TagResult } from './tag-input';
 export { DatePicker, DateRangePicker, Calendar } from './date-picker';
 export type { DatePickerProps, DateRangePickerProps, CalendarProps, DateRange, ISODate } from './date-picker';
+export { Tree } from './tree';
+export type { TreeProps, TreeHandle, TreeMove, TreeTarget, TreeResult, TreeCreateResult } from './tree';
