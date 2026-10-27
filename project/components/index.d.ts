@@ -481,14 +481,30 @@ export interface DropdownMenuProps {
 export declare function DropdownMenu(props: DropdownMenuProps): React.ReactElement;
 
 /** One controlled single-line value; onSave writes once, onValueChange synchronously publishes its canonical result. */
-export type InlineEditSaveResult = { ok: true; value: string } | { ok: false; error: string };
-export interface InlineEditProps {
-  value: string;
-  onValueChange: (canonicalValue: string) => void;
-  onSave: (draft: string, context: { previousValue: string }) => InlineEditSaveResult | Promise<InlineEditSaveResult>;
+export type InlineEditSaveResult<V = string> = { ok: true; value: V } | { ok: false; error: string };
+/** What `editor` receives. Spread it onto Select or Combobox, or adapt it for a Switch or numeric Input. */
+export interface InlineEditControl<V> {
+  value: V;
+  onValueChange: (value: V) => void;
+  /** The label points here. */
+  id: string;
+  /** The error, or the “Choose to save” hint with commit="on-choose". */
+  'aria-describedby'?: string;
+  invalid: boolean;
+  /** True while checking, saving or blocked by a conflict. Changes are ignored until it clears. */
+  readOnly: boolean;
+  disabled: boolean;
+  autoFocus: true;
+}
+export interface InlineEditProps<V = string> {
+  value: V;
+  onValueChange: (canonicalValue: V) => void;
+  onSave: (draft: V, context: { previousValue: V }) => InlineEditSaveResult<V> | Promise<InlineEditSaveResult<V>>;
   label: string;
-  validate?: (draft: string) => string | undefined | Promise<string | undefined>;
+  validate?: (draft: V) => string | undefined | Promise<string | undefined>;
+  /** Rejects an empty value: '', null, undefined or an empty array. */
   required?: boolean;
+  /** Strings only. */
   maxLength?: number;
   disabled?: boolean;
   editLabel?: string;
@@ -497,8 +513,16 @@ export interface InlineEditProps {
   /** Used only when completion still owns focus and the Edit button cannot receive it. */
   focusFallback?: () => HTMLElement | null;
   className?: string;
+  /** Read mode. Default: the value as text, or “Not set” when empty. */
+  renderValue?: (value: V) => React.ReactNode;
+  /** Edit mode. Default: the existing Input for a string. */
+  editor?: (control: InlineEditControl<V>) => React.ReactNode;
+  /** 'on-choose': a single-choice editor saves as soon as a value is chosen, and Save is hidden. Default 'explicit'. */
+  commit?: 'explicit' | 'on-choose';
+  /** An unchanged draft closes without a write, and an equal observed value isn't an external change. Default Object.is. */
+  isEqual?: (a: V, b: V) => boolean;
 }
-export declare function InlineEdit(props: InlineEditProps): React.ReactElement;
+export declare function InlineEdit<V = string>(props: InlineEditProps<V>): React.ReactElement;
 
 type EditRegionFieldErrors<T> = Partial<Record<keyof T, string>>;
 export type EditRegionSaveResult<T> = { ok: true; value: T } | { ok: false; error: string; fieldErrors?: EditRegionFieldErrors<T> };

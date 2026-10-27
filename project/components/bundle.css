@@ -1313,10 +1313,13 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    level 3, tilted, over a slot that opens as a well. Cells can't share one shadow, so each row's height is drawn as a
    single slab by its first cell, as wide as the table (--alt-row-w, measured). ── */
 .alt-data-table { min-width: 0; }
-.alt-table-tools { display: flex; align-items: center; gap: var(--space-3); min-height: 36px; margin-bottom: var(--space-2); font: 500 14px/20px var(--font-sans); color: var(--ink); }
-.alt-table-selection { display: inline-flex; align-items: center; gap: var(--space-2); --alt-from-y: 4px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
+.alt-table-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: 36px; margin-bottom: var(--space-2); font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.alt-table-selection { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); --alt-from-y: 4px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
 .alt-table-selection .alt-badge[data-variant="count"] { position: static; }
-.alt-table-tools-end { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+.alt-table-tools-end { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); min-width: 0; max-width: 100%; margin-left: auto; }
+/* At narrow widths the toolbar wraps (WCAG 1.4.10 Reflow): a field in it may shrink rather than push the row off the page. */
+.alt-table-tools-end > .alt-input { flex: 0 1 auto; min-width: 0; }
+.alt-table-tools-end > .alt-input input { min-width: 0; }
 .alt-table-wrap { position: relative; isolation: isolate; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; outline: none; }
 .alt-table-wrap:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-md); }
 .alt-table-wrap::after { content: ""; position: sticky; z-index: 4; bottom: 0; display: block; height: 24px; margin-top: -24px; pointer-events: none; box-shadow: var(--lip-bottom); opacity: 0; transition: opacity var(--dur-travel-2) var(--ease-rise); }
