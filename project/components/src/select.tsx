@@ -178,11 +178,15 @@ export function Select({ value, defaultValue = '', onValueChange, items, childre
   useKeyFocus();
   const chosen = options.find((o) => o.value === v);
   const enabled = options.map((o, i) => (o.disabled ? -1 : i)).filter((i) => i >= 0);
-  const close = React.useCallback((refocus = true) => { setOpen(false); if (refocus) trigger.current?.focus({ preventScroll: true }); }, []);
+  // Whether the list is open right now. Set by close() itself, before React re-renders: an Escape that lands as the list
+  // finishes opening runs the stale "focus the list" effect first, which would put focus in a list that's closing and
+  // drop it to the body when the list unmounts.
+  const openNow = React.useRef(open);
+  const close = React.useCallback((refocus = true) => { openNow.current = false; setOpen(false); if (refocus) trigger.current?.focus({ preventScroll: true }); }, []);
   useOutside(root, open, () => close(false));
-  React.useEffect(() => { if (state === 'open') list.current?.focus({ preventScroll: true }); }, [state]);
+  React.useEffect(() => { if (state === 'open' && openNow.current) list.current?.focus({ preventScroll: true }); }, [state]);
 
-  const openAt = (i: number) => { setActive(i); setOpen(true); };
+  const openAt = (i: number) => { openNow.current = true; setActive(i); setOpen(true); };
   const current = () => { const i = options.findIndex((o) => o.value === v && !o.disabled); return i >= 0 ? i : enabled[0] ?? -1; };
   const step = (d: number) => { const p = enabled.indexOf(active); setActive(enabled[Math.max(0, Math.min(enabled.length - 1, (p < 0 ? (d > 0 ? -1 : enabled.length) : p) + d))]); };
   // Typeahead: letters typed within half a second find the next option that starts with them.

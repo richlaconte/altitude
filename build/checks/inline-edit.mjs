@@ -354,6 +354,26 @@ try {
     check((await estimate.locator('.alt-inline-edit-value').textContent()) === '5 points', 'GEN-16 Enter saves the number and read mode renders it');
     await page.close(); }
 
+  // Escape the moment the Select's list commits as open, before its "focus the list" effect runs: the list
+  // closes, focus stays on the trigger rather than falling to the body, and the next Escape still cancels the session.
+  { const page = await open(); await mount(page, { value: 'a', editor: 'select', save: 'sync' }); await edit(page);
+    const raced = await page.evaluate(() => new Promise(done => {
+      const trigger = document.querySelector('#inline-contract .alt-select-trigger');
+      const watch = new MutationObserver(() => {
+        if (!document.querySelector('#inline-contract .alt-select-list[data-state="open"]')) return;
+        watch.disconnect();
+        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        setTimeout(() => done({ list: !!document.querySelector('#inline-contract .alt-select-list'), onTrigger: document.activeElement === trigger, focus: document.activeElement.tagName }), 400);
+      });
+      watch.observe(document.getElementById('inline-contract'), { subtree: true, attributes: true, attributeFilter: ['data-state'], childList: true });
+      trigger.focus(); trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    }));
+    check(raced.onTrigger, `GEN-17 Escape as the list finishes opening keeps focus on the trigger (${JSON.stringify(raced)})`);
+    if (raced.list) { await page.keyboard.press('Escape'); await page.getByRole('listbox').waitFor({ state: 'detached' }); }
+    await page.keyboard.press('Escape'); await read(page);
+    check(true, 'GEN-18 after that race, Escape still cancels the session');
+    await page.close(); }
+
   // Multiline (#14).
   { const page = await open(); await mount(page, { multiline: true, save: 'sync', required: false, value: 'First line\nSecond line' });
     check(await page.locator('#inline-contract .alt-inline-edit-value').evaluate(el => getComputedStyle(el).whiteSpace === 'pre-wrap'), 'ML-01 read mode preserves line breaks');
