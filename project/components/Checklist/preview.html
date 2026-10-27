@@ -1,0 +1,83 @@
+<!-- @dsCard group="Inputs" height=560 subtitle="A list you write into: Enter for the next item, Tab to nest, check it off" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checklist — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cl-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; max-width: 760px; }
+.cl-demo h3 { margin: 0 0 8px; font: 600 15px/22px var(--font-sans); color: var(--ink); }
+.cl-demo p { margin: 0 0 8px; color: var(--ink-muted); font: 400 12.5px/18px var(--font-sans); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const clStrip = (list, id) => {
+  let found = null;
+  const out = list.filter((x) => {
+    if (x.id === id) {
+      found = x;
+      return false;
+    }
+    return true;
+  }).map((x) => {
+    if (found || !x.children) return x;
+    const [kids, hit] = clStrip(x.children, id);
+    if (hit) found = hit;
+    return hit ? { ...x, children: kids } : x;
+  });
+  return [out, found];
+};
+const clInsert = (list, parentId, index, node) => parentId === null ? [...list.slice(0, index), node, ...list.slice(index)] : list.map((x) => x.id === parentId ? { ...x, children: [...(x.children || []).slice(0, index), node, ...(x.children || []).slice(index)] } : x.children ? { ...x, children: clInsert(x.children, parentId, index, node) } : x);
+const clUpdate = (list, id, patch) => list.map((x) => x.id === id ? { ...x, ...patch } : x.children ? { ...x, children: clUpdate(x.children, id, patch) } : x);
+const clApply = (list, op) => {
+  if (op.type === "add") return clInsert(list, op.parentId, op.index, { id: op.id, text: op.text, done: op.done });
+  if (op.type === "edit") return clUpdate(list, op.id, { text: op.text });
+  if (op.type === "toggle") return clUpdate(list, op.id, { done: op.done });
+  const [rest, node] = clStrip(list, op.id);
+  if (op.type === "remove") return rest;
+  return clInsert(rest, op.parentId, op.index, node);
+};
+function useChecklist(seed, refuse) {
+  const [items, setItems] = React.useState(seed);
+  const removedNodes = React.useRef(/* @__PURE__ */ new Map());
+  const onChange = (op) => {
+    if (refuse && refuse(op)) return { ok: false, error: refuse(op) };
+    if (op.type === "remove") removedNodes.current.set(op.id, clStrip(items, op.id)[1]);
+    setItems((list) => clApply(list, op));
+  };
+  const onUndo = (op) => setItems((list) => {
+    if (op.type === "add") return clStrip(list, op.id)[0];
+    if (op.type === "remove") return clInsert(list, op.parentId, op.index, removedNodes.current.get(op.id));
+    const [rest, node] = clStrip(list, op.id);
+    return clInsert(rest, op.from.parentId, op.from.index, node);
+  });
+  return { items, onChange, onUndo };
+}
+const CL_LAUNCH = [
+  { id: "venue", text: "Book the venue", done: true },
+  { id: "invites", text: "Send invitations", done: false, children: [
+    { id: "list", text: "Confirm the guest list", done: true },
+    { id: "design", text: "Design the card", done: false }
+  ] },
+  { id: "catering", text: "Choose catering", done: false }
+];
+const CL_PACK = [{ id: "p1", text: "Passport", done: false }, { id: "p2", text: "Charger", done: true }, { id: "p3", text: "Rain jacket", done: false }];
+function App() {
+  const launch = useChecklist(CL_LAUNCH, (op) => op.type === "edit" && /tbd/i.test(op.text) ? "Write the task, not \u201CTBD\u201D." : void 0);
+  const pack = useChecklist(CL_PACK);
+  const props = { getKey: (t) => t.id, getText: (t) => t.text, isDone: (t) => t.done, getChildren: (t) => t.children };
+  return /* @__PURE__ */ React.createElement("div", { className: "cl-demo" }, /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("h3", { id: "cl-launch" }, "Launch tasks"), /* @__PURE__ */ React.createElement("p", null, "Nested: Tab and Shift+Tab indent and outdent. Writing \u201CTBD\u201D is refused."), /* @__PURE__ */ React.createElement(A.Checklist, { "aria-labelledby": "cl-launch", nested: true, ...props, ...launch })), /* @__PURE__ */ React.createElement("section", null, /* @__PURE__ */ React.createElement("h3", { id: "cl-pack" }, "Packing"), /* @__PURE__ */ React.createElement("p", null, "Flat, done items last."), /* @__PURE__ */ React.createElement(A.Checklist, { "aria-labelledby": "cl-pack", sortDone: true, ...props, ...pack, placeholder: "Add something to pack" })));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

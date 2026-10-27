@@ -197,6 +197,117 @@ export interface ComboboxProps extends SelectFieldProps {
   /** Shown when nothing matches. Default "No matches". */
   empty?: React.ReactNode;
 }
+
+export type TagResult = { ok: true; value: string } | { ok: false; error: string };
+export interface TagInputProps {
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+  /** Offered as you type, ranked as the Combobox ranks. Free entry is still allowed unless `restrict`. */
+  suggestions?: (string | SelectOption)[];
+  /** Only suggestions can be added. Default false. */
+  restrict?: boolean;
+  /** Keys that add what's typed: Enter and any single characters (also used to split a paste). Default [',', 'Enter']. */
+  separators?: string[];
+  /** The most tags allowed; then the field is read-only with “Limit reached”. */
+  max?: number;
+  /** Return an error to refuse a tag. Runs after `normalize`. */
+  validate?: (tag: string) => string | undefined;
+  /** Applied before validating and before comparing for duplicates. Default: trim. */
+  normalize?: (tag: string) => string;
+  /** Persist one added tag. Return its canonical text, or an error; the tag waits, pending, until then. */
+  onAdd?: (tag: string) => TagResult | Promise<TagResult>;
+  /** Persist one removal. The tag stays, pending, until the result. */
+  onRemove?: (tag: string) => TagResult | Promise<TagResult> | { ok: true } | Promise<{ ok: true } | TagResult>;
+  /** Draw a tag's contents. Default: its text. */
+  renderTag?: (tag: string) => React.ReactNode;
+  /** Words for the count and the messages. Default ['tag', 'tags']. */
+  noun?: [singular: string, plural: string];
+  placeholder?: string;
+  /** Goes on the text input; Field sets it so its label points here. */
+  id?: string;
+  /** Submits each tag with a form, through hidden inputs. */
+  name?: string;
+  disabled?: boolean;
+  required?: boolean;
+  /** Field sets it for you when it has an error. */
+  invalid?: boolean;
+  size?: 'sm' | 'md';
+  className?: string;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+}
+/** A set of short values in one field. Tags are Badge plates stamped into the field's floor; Backspace arms the last one, a second removes it. */
+export declare function TagInput(props: TagInputProps): React.ReactElement;
+export interface TagProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
+  children: React.ReactNode;
+  /** Adds a remove button named “Remove <label>”. */
+  onRemove?: () => void;
+  /** Names the remove button when the children aren't plain text. */
+  label?: string;
+}
+/** A tag on its own, outside a field. */
+export declare function Tag(props: TagProps): React.ReactElement;
+
+/** An ISO calendar date, 'YYYY-MM-DD': no time and no time zone. */
+export type ISODate = string;
+export interface DateRange { start: ISODate | null; end: ISODate | null }
+interface DatePickerBase {
+  /** Earliest and latest days that can be chosen or typed. */
+  min?: ISODate;
+  max?: ISODate;
+  isUnavailable?: (date: ISODate) => boolean;
+  /** Orders the segments and names the days and months. Default: the browser's. */
+  locale?: string;
+  /** 0 Sunday … 6 Saturday. Default: the locale's. */
+  weekStartsOn?: number;
+  /** Goes on the first segment; Field sets it so its label points here. */
+  id?: string;
+  /** Submits the value with a form, through a hidden input (a range submits name-start and name-end). */
+  name?: string;
+  disabled?: boolean;
+  required?: boolean;
+  /** Drops the field to trench depth. Field sets it when it has an error. */
+  invalid?: boolean;
+  /** sm 34px, md 40px, as Input. Default 'md'. */
+  size?: 'sm' | 'md';
+  className?: string;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+  /** Start with the calendar open (for documentation). */
+  defaultOpen?: boolean;
+}
+export interface DatePickerProps extends DatePickerBase {
+  value?: ISODate | null;
+  defaultValue?: ISODate | null;
+  /** Called with a complete, real, allowed date, or null when the field is cleared or holds a date that isn't allowed. */
+  onValueChange?: (value: ISODate | null) => void;
+}
+export interface DateRangePickerProps extends DatePickerBase {
+  value?: DateRange;
+  defaultValue?: DateRange;
+  onValueChange?: (value: DateRange) => void;
+}
+export interface CalendarProps {
+  value?: ISODate | null;
+  defaultValue?: ISODate | null;
+  onValueChange?: (value: ISODate) => void;
+  min?: ISODate;
+  max?: ISODate;
+  isUnavailable?: (date: ISODate) => boolean;
+  locale?: string;
+  weekStartsOn?: number;
+  'aria-label'?: string;
+  className?: string;
+}
+/** A date in a field, typed in segments or picked from a calendar floating at level 3. The chosen day carries the one raised mark. */
+export declare function DatePicker(props: DatePickerProps): React.ReactElement;
+/** Two dates as one span: a sunk track between two raised ends. */
+export declare function DateRangePicker(props: DateRangePickerProps): React.ReactElement;
+/** A month calendar laid on the page (level 0), without a field or panel. */
+export declare function Calendar(props: CalendarProps): React.ReactElement;
 /**
  * An editable Select: type to filter, choose to fill. A query keeps the field an opening until an option is chosen.
  * Leaving the field commits: an exact name chooses it, an empty field clears the value, anything else restores it.
@@ -530,6 +641,66 @@ export interface InlineEditProps<V = string> {
 }
 export declare function InlineEdit<V = string>(props: InlineEditProps<V>): React.ReactElement;
 
+type EditRegionFieldErrors<T> = Partial<Record<keyof T, string>>;
+export type EditRegionSaveResult<T> = { ok: true; value: T } | { ok: false; error: string; fieldErrors?: EditRegionFieldErrors<T> };
+export interface EditRegionProps<T extends Record<string, unknown>> {
+  /** Names the region: “Edit <label>”. */
+  label: string;
+  /** The committed record. */
+  value: T;
+  /** Publishes the accepted canonical record, synchronously and without a network write. */
+  onValueChange: (canonical: T) => void;
+  /** The sole write. `changed` lists only the fields that differ, so you can send a patch. */
+  onSave: (draft: T, context: { previousValue: T; changed: (keyof T)[] }) => EditRegionSaveResult<T> | Promise<EditRegionSaveResult<T>>;
+  /** Runs on Save. Return an error per field, or undefined. */
+  validate?: (draft: T) => EditRegionFieldErrors<T> | undefined | Promise<EditRegionFieldErrors<T> | undefined>;
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  disabled?: boolean;
+  /** The field focused on opening. Default: the first control in the form. */
+  initialFocus?: keyof T;
+  /** Used only when completion still owns focus and the Edit button cannot receive it. */
+  focusFallback?: () => HTMLElement | null;
+  /** Compares one field's values. Default Object.is. */
+  isEqual?: (a: unknown, b: unknown) => boolean;
+  /** Default `Edit ${label.toLowerCase()}`. */
+  editLabel?: string;
+  saveLabel?: string;
+  cancelLabel?: string;
+  className?: string;
+  /** EditRegionView and EditRegionForm. */
+  children: React.ReactNode;
+}
+/** Binds one field of the draft to a control. Spread the result onto it. */
+export interface EditRegionBinder<T> {
+  /** Text controls (Input, Textarea): value + onChange. */
+  <K extends keyof T>(key: K): { name: string; value: T[K]; onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; readOnly: boolean; disabled?: boolean; 'data-field': string };
+  /** Value controls (Select, Combobox, Slider): value + onValueChange. */
+  value<K extends keyof T>(key: K): { name: string; value: T[K]; onValueChange: (value: T[K]) => void; disabled?: boolean; 'data-field': string };
+  /** Toggles (Switch, Checkbox): checked + onCheckedChange. */
+  checked<K extends keyof T>(key: K): { checked: boolean; onCheckedChange: (checked: boolean) => void; disabled?: boolean; 'data-field': string };
+  /** The field's error, for its Field. */
+  error(key: keyof T): string | undefined;
+  /** The current draft. */
+  draft: T;
+}
+/** Several fields of one record, edited where it's shown and saved together. Read mode on the ground; editing lifts it into a static raised card. */
+export declare function EditRegion<T extends Record<string, unknown>>(props: EditRegionProps<T>): React.ReactElement;
+/** Read mode. Shows an Edit button after the values unless `trigger={false}`. */
+export declare function EditRegionView(props: { children?: React.ReactNode; trigger?: boolean; className?: string }): React.ReactElement | null;
+/** The visible Edit button, for when EditRegionView's `trigger` is false. */
+export declare function EditRegionTrigger(props: { children?: React.ReactNode; className?: string }): React.ReactElement | null;
+/** Edit mode: a form (a group inside another form) named “Edit <label>”. Children may be a function of the draft binder. */
+export declare function EditRegionForm<T extends Record<string, unknown> = Record<string, unknown>>(props: {
+  children: React.ReactNode | ((field: EditRegionBinder<T>) => React.ReactNode);
+  /** Render the error, conflict notice and Save/Cancel after the fields. Default true. */
+  actions?: boolean;
+  className?: string;
+}): React.ReactElement | null;
+/** The error, the conflict notice and Save/Cancel, for a form with `actions={false}`. */
+export declare function EditRegionActions(): React.ReactNode;
+
 export interface DialogProps {
   /** Default recede retains the existing stage/scrim presentation. Stationary removes recession and blur, not modality. */
   background?: 'recede' | 'stationary';
@@ -726,6 +897,89 @@ export interface DataTableColumn<T> {
   width?: number | string;
 }
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
+export interface FilterOption { value: string; label: string }
+export interface FilterField {
+  key: string;
+  label: string;
+  /** enum: choose from options. text: a phrase. number. date: an ISO 'YYYY-MM-DD' date ('between' takes two). */
+  type: 'enum' | 'text' | 'number' | 'date';
+  options?: FilterOption[];
+  /** Enum lists get a search field. Default: when there are more than 8 options. */
+  searchable?: boolean;
+  /** Default by type: enum ['is', 'is not'], text ['contains', 'does not contain'], number ['=', '>', '<'], date ['before', 'after', 'between']. */
+  operators?: string[];
+}
+export type FilterValue = string | number | { start: string; end: string } | undefined;
+export interface Filter { id: string; field: string; operator: string; value: FilterValue }
+export interface FilterBarProps {
+  fields: FilterField[];
+  value: Filter[];
+  onValueChange: (filters: Filter[]) => void;
+  /** Shown as a segment when there's more than one filter. Omit to hide it. */
+  match?: 'all' | 'any';
+  onMatchChange?: (match: 'all' | 'any') => void;
+  /** Announced after each change: “Status is Done. 12 results”. */
+  resultCount?: number;
+  /** Ids for new filters. Default: a counter. */
+  createId?: () => string;
+  'aria-label'?: string;
+  className?: string;
+}
+/** A query as a row of conditions, each part edited in its own picker. Pair it with DataTable's relevance to filter in place. */
+export declare function FilterBar(props: FilterBarProps): React.ReactElement;
+/** A filter's value as words (“Oct 1, 2026”, “In review”), or undefined while it has none. */
+export declare function filterValueText(field: FilterField, value: FilterValue): string | undefined;
+
+export type DataGridResult = { ok: true } | { ok: false; error: string };
+export interface DataGridChange<T> { rowId: string; key: string; draft: unknown; previousValue: unknown; row: T }
+/** What a column's custom editor receives. Spread it onto a Select or Combobox. */
+export interface DataGridEditorControl {
+  value: any;
+  onValueChange: (value: any) => void;
+  id: string;
+  'aria-label': string;
+  invalid: boolean;
+  autoFocus: true;
+}
+export interface DataGridColumn<T> {
+  key: string;
+  header: React.ReactNode;
+  /** The header as words, for cell names. Default: the header when it's a string, else the key. */
+  label?: string;
+  align?: 'start' | 'end';
+  editable?: boolean;
+  /** Text typed into the cell → the value. Default: the text. */
+  parse?: (text: string) => unknown;
+  /** The value → text in the editing field and in copies. Default: String(value ?? ''). */
+  format?: (value: unknown) => string;
+  /** Return an error to refuse a value. */
+  validate?: (value: any, row: T) => string | undefined;
+  /** Draw the cell at rest. Default: format(value). */
+  cell?: (row: T) => React.ReactNode;
+  /** A custom editor (a Select): it commits as soon as a value is chosen. */
+  editor?: (control: DataGridEditorControl) => React.ReactNode;
+  width?: number | string;
+}
+export interface DataGridProps<T> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  rows: T[];
+  columns: DataGridColumn<T>[];
+  getRowId: (row: T) => string;
+  /** Names a row in each cell's name (“Price, Desk lamp”). */
+  getRowLabel: (row: T) => string;
+  /** One cell. Resolve after `rows` carries the canonical value. */
+  onCellSave: (change: DataGridChange<T>) => DataGridResult | Promise<DataGridResult>;
+  /** A paste or a cleared range, as one batch. Default: each cell through onCellSave. */
+  onCellsSave?: (changes: DataGridChange<T>[]) => DataGridResult | Promise<DataGridResult>;
+  /** Ctrl/Cmd+Z: reverse the last committed change (or batch). Omit and Ctrl+Z does nothing. */
+  onUndo?: (last: DataGridChange<T>[]) => void;
+  maxHeight?: number | string;
+  className?: string;
+}
+/** A table edited cell by cell with spreadsheet keys (role="grid"). Use DataTable when cells aren't edited one by one. */
+export declare function DataGrid<T>(props: DataGridProps<T>): React.ReactElement;
+
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   /** The rows. Undefined while your data loads, or a promise: until they arrive the table is its header over skeleton.lines imprinted rows (default 5). */
@@ -788,6 +1042,56 @@ export interface BoardColumnProps extends Omit<React.HTMLAttributes<HTMLElement>
   collapsible?: boolean;
 }
 export declare function BoardColumn(props: BoardColumnProps): React.ReactElement;
+
+/** A local date-time, 'YYYY-MM-DDTHH:mm': no time zone. Convert at your edges. */
+export type LocalDateTime = string;
+export type ScheduleResult = { ok: true } | { ok: false; error: string };
+export type ScheduleCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
+export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
+export interface ScheduleProps<T> {
+  /** Default 'week'. */
+  view?: 'day' | 'week' | 'workweek';
+  /** Any day in the period shown, 'YYYY-MM-DD'. */
+  date: string;
+  onDateChange?: (date: string) => void;
+  events: T[];
+  getKey: (event: T) => string;
+  getStart: (event: T) => LocalDateTime;
+  getEnd: (event: T) => LocalDateTime;
+  getLabel: (event: T) => string;
+  /** Minutes per slot, and the snap for moves and resizes. Default 15. */
+  step?: number;
+  /** Default '08:00' and '19:00'. */
+  dayStart?: string;
+  dayEnd?: string;
+  /** Pixels per hour. Default 48. */
+  hourHeight?: number;
+  /** 0 Sunday … 6 Saturday. Default 1. */
+  weekStartsOn?: number;
+  /** A new event's length when made with Enter on an empty slot. Default 60 minutes. */
+  defaultDuration?: number;
+  renderEvent?: (event: T) => React.ReactNode;
+  /** Resolve after `events` includes the new event. */
+  onCreate?: (request: ScheduleSpan & { title: string }) => ScheduleCreateResult<T> | Promise<ScheduleCreateResult<T>>;
+  /** A move or a resize. Resolve after `events` reflects it. */
+  onChange?: (next: ScheduleSpan & { id: string }, previous: T) => ScheduleResult | Promise<ScheduleResult>;
+  onRename?: (event: T, title: string) => ScheduleResult | Promise<ScheduleResult>;
+  /** Enter on an event: show its details (in a Sheet, not a Dialog). */
+  onOpen?: (event: T) => void;
+  /** Delete. Your removal policy applies. */
+  onRemove?: (event: T) => void;
+  /** Someone else is moving this event: it can't be picked up. */
+  heldBy?: (event: T) => { name: string; presence?: 1 | 2 | 3 } | null | undefined;
+  /** Refuse a span (outside hours, a closed room). */
+  isUnavailable?: (span: ScheduleSpan) => boolean;
+  /** The now line's time. Default: the clock. */
+  now?: LocalDateTime;
+  locale?: string;
+  'aria-label'?: string;
+  className?: string;
+}
+/** A day or week of time whose events you handle directly: draw to create, carry to move, pull the edge to resize, all with keyboard equivalents. */
+export declare function Schedule<T>(props: ScheduleProps<T>): React.ReactElement;
 export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   id: string;
   /** How announcements name the card. Default: its first line of text. */
@@ -853,6 +1157,41 @@ export interface SortableListProps<T> {
 }
 export declare function SortableList<T>(props: SortableListProps<T>): React.ReactElement;
 
+export interface ChecklistPlace { parentId: string | null; index: number }
+/** One change per action. Apply it to `items` (synchronously, or before resolving). */
+export type ChecklistOp =
+  | { type: 'add'; id: string; text: string; done: boolean; parentId: string | null; index: number }
+  | { type: 'edit'; id: string; text: string; previous: string }
+  | { type: 'toggle'; id: string; done: boolean }
+  | { type: 'remove'; id: string; text: string; done: boolean; parentId: string | null; index: number }
+  | { type: 'move' | 'indent' | 'outdent'; id: string; parentId: string | null; index: number; from: ChecklistPlace };
+export type ChecklistResult = { ok: true } | { ok: false; error: string };
+export interface ChecklistProps<T> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  items: T[];
+  getKey: (item: T) => string;
+  getText: (item: T) => string;
+  isDone: (item: T) => boolean;
+  getChildren?: (item: T) => T[] | undefined;
+  /** Allow Tab and Shift+Tab to nest items. Default false: a flat list. */
+  nested?: boolean;
+  /** Show done items after the rest in each list. Default false. */
+  sortDone?: boolean;
+  /** Each action, as one op. Return a failure to mark the item and offer Retry. */
+  onChange: (op: ChecklistOp) => ChecklistResult | void | Promise<ChecklistResult | void>;
+  /** Ctrl/Cmd+Z, and the Undo after a removal: reverse the last structural op (add, remove, move, indent, outdent). */
+  onUndo?: (op: ChecklistOp) => void;
+  /** Ids for new items. Default: a random id. */
+  createId?: () => string;
+  /** The last, empty line's placeholder. Default “Add an item”. */
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+}
+/** A list you write into, one line per item. Each line is its own editor and commits when you leave it. */
+export declare function Checklist<T>(props: ChecklistProps<T>): React.ReactElement;
+
 export interface StepperStep {
   /** Stable key. Default: its position. */
   id?: string;
@@ -880,6 +1219,56 @@ export interface DrillNode { id: string; title: React.ReactNode; description?: R
 export interface DrilldownProps extends React.HTMLAttributes<HTMLDivElement> { root: DrillNode }
 /** Descend into children, ascend back; the breadcrumb steps down a notch per level. */
 export declare function Drilldown(props: DrilldownProps): React.ReactElement;
+
+export type TreeResult = { ok: true } | { ok: false; error: string };
+export type TreeCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
+/** Where a node goes: under `parentId` (null for the top level), at `index` among the children once it has left its old place. */
+export interface TreeTarget { parentId: string | null; index: number }
+export interface TreeMove { id: string; from: TreeTarget; to: TreeTarget }
+export interface TreeHandle {
+  /** Open a naming well for a new node under `parentId` (null: the top level) at `index` (default: the end). */
+  startCreate: (parentId: string | null, index?: number) => void;
+  /** Rename a node, as F2 does. */
+  startRename: (id: string) => void;
+}
+export interface TreeProps<T> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  items: T[];
+  getKey: (item: T) => string;
+  getLabel: (item: T) => string;
+  /** Children, or undefined when there are none or they aren't loaded yet. */
+  getChildren?: (item: T) => T[] | undefined;
+  /** Whether a node can have children (and so shows a chevron) before they're loaded. Default: it has children. */
+  hasChildren?: (item: T) => boolean;
+  /** Called the first time a node with no loaded children is expanded; an imprint shows until `items` includes them. */
+  loadChildren?: (item: T) => void | Promise<void>;
+  expanded?: string[];
+  defaultExpanded?: string[];
+  onExpandedChange?: (expanded: string[]) => void;
+  /** Default 'single'. */
+  selectionMode?: 'single' | 'none';
+  selected?: string | null;
+  defaultSelected?: string | null;
+  onSelectedChange?: (id: string | null) => void;
+  /** Enter's default action (open the page). */
+  onAction?: (item: T) => void;
+  /** Draw a node's label. Default: getLabel. */
+  renderItem?: (item: T) => React.ReactNode;
+  /** F2. Resolve after `items` carries the new name. */
+  onRename?: (item: T, draft: string) => TreeResult | Promise<TreeResult>;
+  /** Space to carry, or drag. Resolve after `items` reflects the move. */
+  onMove?: (move: TreeMove) => TreeResult | Promise<TreeResult>;
+  /** Refuse a target. A node can never go into its own subtree, whatever this says. */
+  canDrop?: (move: TreeMove) => boolean;
+  /** Ctrl/Cmd+Enter (sibling after) and Ctrl/Cmd+Shift+Enter (child). Resolve after `items` includes the new node. */
+  onCreate?: (request: TreeTarget & { name: string }) => TreeCreateResult<T> | Promise<TreeCreateResult<T>>;
+  /** Delete. Your removal policy (recovery or confirmation) applies; the tree only asks. */
+  onRemove?: (item: T) => void;
+  className?: string;
+}
+/** A hierarchy seen all at once and changed in place: rename (F2), create, carry (Space or drag) and remove. */
+export declare function Tree<T>(props: TreeProps<T> & { ref?: React.Ref<TreeHandle> }): React.ReactElement;
 
 export interface EmptyStateProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
   /** A line icon, drawn in ink-muted: 24px, or 18px at size sm. */
@@ -918,17 +1307,18 @@ declare global {
     Altitude: {
       AltitudeProvider: typeof AltitudeProvider; Surface: typeof Surface; Button: typeof Button;
       Card: typeof Card; CardHeader: typeof CardHeader; CardTitle: typeof CardTitle; CardDescription: typeof CardDescription; CardContent: typeof CardContent; CardFooter: typeof CardFooter;
-      Input: typeof Input; InlineEdit: typeof InlineEdit; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
+      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;
-      HoldButton: typeof HoldButton; Pile: typeof Pile; ScrollArea: typeof ScrollArea; DropZone: typeof DropZone; SortableList: typeof SortableList; Drilldown: typeof Drilldown; useDepth: typeof useDepth; useApproach: typeof useApproach;
+      HoldButton: typeof HoldButton; Pile: typeof Pile; ScrollArea: typeof ScrollArea; DropZone: typeof DropZone; SortableList: typeof SortableList; Checklist: typeof Checklist; Drilldown: typeof Drilldown; Tree: typeof Tree; useDepth: typeof useDepth; useApproach: typeof useApproach;
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
-      Board: typeof Board; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
-      Table: typeof Table; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
+      Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
+      Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
+      Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
     };
