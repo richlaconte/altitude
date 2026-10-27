@@ -1313,10 +1313,13 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    level 3, tilted, over a slot that opens as a well. Cells can't share one shadow, so each row's height is drawn as a
    single slab by its first cell, as wide as the table (--alt-row-w, measured). ── */
 .alt-data-table { min-width: 0; }
-.alt-table-tools { display: flex; align-items: center; gap: var(--space-3); min-height: 36px; margin-bottom: var(--space-2); font: 500 14px/20px var(--font-sans); color: var(--ink); }
-.alt-table-selection { display: inline-flex; align-items: center; gap: var(--space-2); --alt-from-y: 4px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
+.alt-table-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: 36px; margin-bottom: var(--space-2); font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.alt-table-selection { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); --alt-from-y: 4px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
 .alt-table-selection .alt-badge[data-variant="count"] { position: static; }
-.alt-table-tools-end { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+.alt-table-tools-end { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); min-width: 0; max-width: 100%; margin-left: auto; }
+/* At narrow widths the toolbar wraps (WCAG 1.4.10 Reflow): a field in it may shrink rather than push the row off the page. */
+.alt-table-tools-end > .alt-input { flex: 0 1 auto; min-width: 0; }
+.alt-table-tools-end > .alt-input input { min-width: 0; }
 .alt-table-wrap { position: relative; isolation: isolate; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; outline: none; }
 .alt-table-wrap:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-md); }
 .alt-table-wrap::after { content: ""; position: sticky; z-index: 4; bottom: 0; display: block; height: 24px; margin-top: -24px; pointer-events: none; box-shadow: var(--lip-bottom); opacity: 0; transition: opacity var(--dur-travel-2) var(--ease-rise); }
@@ -1523,6 +1526,25 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
 .alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
 
+/* ── EditRegion: several fields of one record, saved together. Read mode is the record on the ground (level 0) with a
+   visible Edit button. Editing lifts the region into a static raised card (level 1, no hover lift: it's being worked
+   in, not offered), as an Accordion lid lifts over its compartment; the fields inside are openings (Input, Select…),
+   and Surface's own signals carry the write: pending hovers after dur-grace, a known failure drops to a trench, an
+   accepted save settles back to the ground with one afterglow for the whole region. The height glides open; the
+   fields fade in together, never staggered. Forced colours and contrast="more" come from Surface and the controls. ── */
+.alt-edit-region { min-width: 0; }
+.alt-edit-region-surface { min-width: 0; border-radius: var(--radius-lg); }
+.alt-edit-region:not([data-state="read"]) .alt-edit-region-surface { padding: var(--space-4); border: 1px solid var(--line-control); }
+.alt-edit-region-view { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
+.alt-edit-region-values { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.alt-edit-region-form { display: grid; gap: var(--space-4); min-width: 0; --alt-from-y: 0px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
+.alt-edit-region-fields { display: grid; gap: var(--space-3); min-width: 0; }
+.alt-edit-region-fields .alt-field, .alt-edit-region-fields .alt-input, .alt-edit-region-fields .alt-select { min-width: 0; }
+.alt-edit-region-fields .alt-input input { width: 100%; min-width: 0; }
+.alt-edit-region-chrome { display: grid; gap: var(--space-3); }
+.alt-edit-region-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.alt-edit-region-actions .alt-btn { max-width: 100%; white-space: normal; }
+.alt-edit-region-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
 /* ── TagInput: a set of short values in one field. The field is an opening, built like Input; once it holds a tag its
    floor rises flush (filled). Each tag is a label, part of the record, so it's a Badge plate stamped flush into the
    floor, and stamped again (down 3px, settling) when it arrives. A first Backspace arms the last tag: it lifts one
