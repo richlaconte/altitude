@@ -76,6 +76,10 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
   const addRef = React.useRef<HTMLButtonElement>(null);
   const wantFocus = React.useRef<string | null>(null);
   const mounted = React.useRef(true);
+  // The new item's draft, made once per add: newItem() may return a fresh id or timestamp on every call, and a new
+  // record on each render would read to EditRegion as someone else's change.
+  const fresh = React.useRef<T | null>(null);
+  if (!adding) fresh.current = null;
   React.useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const say = (text: string) => { setAssertive(''); requestAnimationFrame(() => mounted.current && setAssertive(text)); };
   const settle = (key: string) => { setSettled(key); setTimeout(() => mounted.current && setSettled((s) => (s === key ? null : s)), 1200); };
@@ -168,7 +172,7 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
 
   const editor = (item: T | null) => {
     const isNew = !item;
-    const value = (item ?? newItem!()) as T;
+    const value = (item ?? (fresh.current ??= newItem!())) as T;
     const label = isNew ? addLabel.replace(/^Add /, 'New ') : getLabel(value);
     return <EditRegion<T> label={label} editLabel={`Edit ${label}`} value={value} defaultOpen
       saveLabel={isNew ? addLabel : 'Save changes'}
