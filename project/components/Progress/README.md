@@ -7,3 +7,4 @@ Determinate progress glides between values on `ease-glide` (`dur-travel-3`). Wit
 **You provide:** `value` (0–`max`) or nothing, and an `aria-label` or a visible label nearby.
 
 - Do switch from indeterminate to determinate as soon as you know the total.
+- Don't use it for a reading such as storage used of a quota: that's the record, not a task, so it's a [`Meter`](../Meter/README.md).

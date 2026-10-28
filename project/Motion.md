@@ -102,6 +102,8 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 **Numbers change, they don't count.** A `Stat`'s changed value cross-fades over `dur-travel-2` (the old figure fading out over the new) and the stat takes the afterglow within the attention budget. Counting up is never offered: it delays the number for decoration. A stat whose value loads lands out of its imprint like `Await` content; in a `StatGroup` they land together.
 
+**A reading glides.** A `Meter`'s fill glides to a new reading on `ease-glide` over `dur-travel-3`, as `Progress` does, but at no level: it's ink moving across a flush track. Crossing a threshold cross-fades the fill's colour and relights the state's lamp. Under reduced motion the fill changes in place.
+
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
 ## Approach

@@ -1,0 +1,54 @@
+<!-- @dsCard group="Charts" height=520 subtitle="A reading in a known range: flat ink across a flush track, thresholds said in words" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meter — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.mt { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 900px; }
+@media (max-width: 720px) { .mt { grid-template-columns: minmax(0, 1fr); } }
+.mt .stack { display: grid; gap: 22px; }
+.mt .row { display: flex; gap: 8px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const gb = (n) => `${n} GB`;
+function App() {
+  const [used, setUsed] = React.useState(62);
+  const [cpu, setCpu] = React.useState(void 0);
+  React.useEffect(() => {
+    const t = setTimeout(() => setCpu(37), 2400);
+    return () => clearTimeout(t);
+  }, []);
+  return /* @__PURE__ */ React.createElement("div", { className: "mt" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Plan usage"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Thresholds at 80% and the limit")), /* @__PURE__ */ React.createElement(A.CardContent, { className: "stack" }, /* @__PURE__ */ React.createElement(A.Meter, { label: "Storage", value: used, max: 100, high: 80, format: gb }), /* @__PURE__ */ React.createElement(A.Meter, { label: "Seats", value: 24, max: 25, high: 20, format: (n) => `${n}` }), /* @__PURE__ */ React.createElement(A.Meter, { label: "API calls today", value: 11800, max: 1e4, high: 8e3, format: (n) => n.toLocaleString("en") }), /* @__PURE__ */ React.createElement(A.Meter, { label: "CPU", value: cpu, format: (n) => `${n}%` }), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: () => setUsed((u) => Math.max(0, u - 15)) }, "Free 15 GB"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: () => setUsed((u) => u + 15) }, "Use 15 GB")))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Storage by type"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Parts of a whole, instead of a donut")), /* @__PURE__ */ React.createElement(A.CardContent, { className: "stack" }, /* @__PURE__ */ React.createElement(
+    A.Meter,
+    {
+      label: "Storage",
+      max: 100,
+      format: gb,
+      segments: [{ key: "media", label: "Media", value: 38 }, { key: "docs", label: "Documents", value: 14 }, { key: "mail", label: "Mail", value: 6 }, { key: "other", label: "Other", value: 4 }]
+    }
+  ), /* @__PURE__ */ React.createElement(
+    A.Meter,
+    {
+      label: "Team seats",
+      max: 50,
+      high: 45,
+      format: (n) => `${n}`,
+      segments: [{ key: "admin", label: "Admins", value: 4 }, { key: "members", label: "Members", value: 31 }, { key: "guests", label: "Guests", value: 12 }]
+    }
+  ))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

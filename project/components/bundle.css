@@ -1559,6 +1559,44 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-stat-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: var(--space-5) var(--space-6); }
 @media (forced-colors: active) { .alt-stat-change.alt-badge { border: 1px solid CanvasText; } }
 
+/* ── Meter: where a reading sits in a known range. A reading is the record, so unlike Progress (a task under way, live,
+   a raised fill rising out of a trench) a meter lies on the ground: a flush track of line with the reading drawn
+   across it as flat ink, data-1 by default, no shadow, wall or sheen. Thresholds are 1px ink-muted notches standing
+   at the track's rim. Past `high` the fill turns caution and past the limit critical, cross-fading, and the state is
+   said in a Badge whose lamp relights. Segments are flat data-* fills parted by 2px, with a legend of their values.
+   The fill glides on ease-glide (dur-travel-3); under reduced motion it changes in place. ── */
+.alt-meter { --meter-fill: var(--data-1); --meter-bg: var(--surface-ground); display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.alt-card .alt-meter { --meter-bg: var(--surface-raised); }
+.alt-meter[data-state="high"] { --meter-fill: var(--caution); }
+.alt-meter[data-state="critical"] { --meter-fill: var(--critical); }
+.alt-meter-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.alt-meter-value { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink-muted); }
+.alt-meter-state { order: 3; }
+.alt-meter-track { position: relative; height: 8px; border-radius: var(--radius-full); background: var(--line); }
+.alt-meter-fill {
+  position: absolute; top: 0; bottom: 0; border-radius: inherit; background: var(--meter-fill);
+  transition: width calc(var(--dur-travel-3) * var(--alt-travel)) var(--ease-glide), left calc(var(--dur-travel-3) * var(--alt-travel)) var(--ease-glide), background-color var(--dur-travel-3) var(--ease-glide);
+}
+/* A segment after the first is parted from the one before by a 2px cut in the surface's own colour, and only the ends are rounded. */
+.alt-meter-fill[data-slot] { border-radius: 0; }
+.alt-meter-fill[data-slot] + .alt-meter-fill[data-slot] { border-left: 2px solid var(--meter-bg); background-clip: padding-box; }
+.alt-meter-fill[data-slot]:first-child { border-radius: var(--radius-full) 0 0 var(--radius-full); }
+.alt-meter-notch { position: absolute; top: -3px; bottom: -3px; width: 1px; margin-left: -0.5px; background: var(--ink-muted); }
+.alt-meter-legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin: 0; padding: 0; list-style: none; font: 500 13px/18px var(--font-sans); color: var(--ink); }
+.alt-meter-legend-value { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-meter-imprint { height: 8px; border-radius: var(--radius-full); }
+@media (prefers-contrast: more) { .alt-meter-track { box-shadow: inset 0 0 0 1px var(--ink); } .alt-meter-notch { background: var(--ink); } }
+[data-contrast="more"] .alt-meter-track { box-shadow: inset 0 0 0 1px var(--ink); }
+[data-contrast="more"] .alt-meter-notch { background: var(--ink); }
+@media (forced-colors: active) {
+  .alt-meter-track { background: Canvas; border: 1px solid CanvasText; }
+  .alt-meter-fill { background: Highlight; forced-color-adjust: none; }
+  .alt-meter-fill[data-slot] { background: Highlight !important; }
+  .alt-meter-fill[data-slot] + .alt-meter-fill[data-slot] { border-left-color: Canvas; background-clip: border-box; }
+  .alt-meter-notch { background: CanvasText; }
+  .alt-meter-legend rect { fill: CanvasText; }
+}
+
 /* ── ChartTooltip: reading exact values. The crosshair is a mark on the ground (1px line-control, snapped to the nearest
    x); the readout is live, a level-3 floating surface like Tooltip. It rises 4px once as its shadow grows from elev-1
    to elev-3, then steps between x positions with no easing (it follows the data, not each pixel of the pointer), flips
