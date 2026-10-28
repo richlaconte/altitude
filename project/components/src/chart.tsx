@@ -264,6 +264,12 @@ export interface ChartInfo {
   right?: number;
   /** How the legend draws this chart's series: a block (bars, areas) or a short line (lines). */
   swatch?: 'rect' | 'line';
+  /** The imprint's shape while data loads. Default: a line for line swatches, bars otherwise. */
+  imprint?: 'bars' | 'line' | 'area';
+  /** Series are drawn bottom to top (a stack of areas): ↑ moves to the series above, ↓ to the one below. */
+  seriesUp?: boolean;
+  /** A stacked point names its share of the total ("31% of 3.9K") rather than only the total. */
+  share?: boolean;
 }
 type ChartChild = {
   chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean; chartLegend?: boolean;
@@ -981,7 +987,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           : ` ${diff > 0 ? 'Up' : 'Down'} ${s.format(Math.abs(diff))} from ${formatX(prev[xKey])}.`;
       }
     }
-    if (stacked) out += ` Total ${s.format(series.reduce((t, x) => t + (num(d[x.key]) ? (d[x.key] as number) : 0), 0))}.`;
+    if (stacked) {
+      const sum = series.reduce((t, x) => t + (num(d[x.key]) ? (d[x.key] as number) : 0), 0);
+      out += info.share && num(v) && sum > 0 ? ` ${Math.round((v / sum) * 100)}% of ${s.format(sum)}.` : ` Total ${s.format(sum)}.`;
+    }
     return `${out} ${pi + 1} of ${data.length}.`;
   };
   const onNavKey = (e: React.KeyboardEvent) => {
@@ -1002,7 +1011,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       if (e.key in moveP) next = { ...at, p: Math.max(0, Math.min(m - 1, at.p + moveP[e.key])) };
       else if (e.key === 'Home') next = { ...at, p: 0 };
       else if (e.key === 'End') next = { ...at, p: m - 1 };
-      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') next = { ...at, s: (at.s + (e.key === 'ArrowDown' ? 1 : -1) + n) % n };
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') next = { ...at, s: (at.s + ((e.key === 'ArrowDown') !== !!info.seriesUp ? 1 : -1) + n) % n };
       else if (e.key === 'Escape') next = single ? { ...at, level: 'summary' } : { ...at, level: 'series' };
     }
     if (next) { e.preventDefault(); e.stopPropagation(); go(next); }
@@ -1218,8 +1227,10 @@ export function ChartContainer(props: ChartContainerProps) {
   };
   if (!useHasWaited(waiting)) return withData(refetch ? last.current : now);
   return (
-    <Await shape="none" className="alt-chart-await" imprint={<ChartImprint {...props} legend={hasLegend}
-      swatch={chartChild ? (chartChild.type as ChartChild).chartInfo!({ ...chartChild.props, data: [] }, props.config).swatch : undefined} />}>
+    <Await shape="none" className="alt-chart-await" imprint={(() => {
+      const ci = chartChild ? (chartChild.type as ChartChild).chartInfo!({ ...chartChild.props, data: [] }, props.config) : undefined;
+      return <ChartImprint {...props} legend={hasLegend} swatch={ci?.swatch} shape={ci?.imprint ?? (ci?.swatch === 'line' ? 'line' : 'bars')} />;
+    })()}>
       <Arrive when={arrival}><ChartLanded raw={raw} render={withData} refetch={refetch} last={last.current} /></Arrive>
     </Await>
   );
@@ -1239,7 +1250,7 @@ const IMPRINT_BARS = [0.55, 0.8, 0.62, 0.9, 0.7, 0.48, 0.75];
  * The chart's imprint: the frame (title, description, legend keys from config) with the plot pressed into the page in
  * the chart's shape, `surface-well` with no labels, so it can't be taken for data.
  */
-function ChartImprint({ config, title, description, aspect, height, swatch, legend }: ChartContainerProps & { swatch?: 'rect' | 'line'; legend?: boolean }) {
+function ChartImprint({ config, title, description, aspect, height, shape = 'bars', legend }: ChartContainerProps & { swatch?: 'rect' | 'line'; shape?: 'bars' | 'line' | 'area'; legend?: boolean }) {
   if (aspect == null && height == null) aspect = 2;
   return (
     <figure className="alt-chart" aria-label={typeof title === 'string' ? title : undefined}>
@@ -1249,10 +1260,12 @@ function ChartImprint({ config, title, description, aspect, height, swatch, lege
           {description && <p className="alt-chart-desc">{description}</p>}
         </div>
       )}
-      <div className="alt-chart-plot alt-chart-imprint" data-shape={swatch === 'line' ? 'line' : 'bars'} aria-hidden="true" style={height != null ? { height } : { aspectRatio: String(aspect) }}>
-        {swatch === 'line'
+      <div className="alt-chart-plot alt-chart-imprint" data-shape={shape} aria-hidden="true" style={height != null ? { height } : { aspectRatio: String(aspect) }}>
+        {shape === 'line'
           ? <svg className="alt-chart-svg" viewBox="0 0 100 50" preserveAspectRatio="none"><path className="alt-chart-imprint-line" d="M2,38 C18,30 26,34 38,26 S58,18 70,22 S88,10 98,12" /></svg>
-          : IMPRINT_BARS.map((h, i) => <span key={i} className="alt-skeleton" style={{ height: `${h * 100}%` }} />)}
+          : shape === 'area'
+            ? <svg className="alt-chart-svg" viewBox="0 0 100 50" preserveAspectRatio="none"><path className="alt-chart-imprint-area" d="M0,36 C16,30 26,33 38,24 S58,17 70,20 S88,9 100,11 V50 H0 Z" /></svg>
+            : IMPRINT_BARS.map((h, i) => <span key={i} className="alt-skeleton" style={{ height: `${h * 100}%` }} />)}
       </div>
       {legend && (
         <div className="alt-chart-legend" aria-hidden="true">

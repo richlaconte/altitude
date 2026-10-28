@@ -37,11 +37,11 @@ With `contrast="more"`, lines are 3px, adjacent marks are 3px apart, fills get a
 | Enter | into the series | into its points | — |
 | Escape | — | back to the summary | back to its series |
 
-A chart with one series skips the series level. The nodes are named:
+A chart with one series skips the series level. In a stacked `AreaChart`, whose bands are drawn from the bottom up, ↑ moves to the band above and ↓ to the one below. The nodes are named:
 
 - **the summary:** the written `summary`, or the generated one, then "Press Enter to explore the series";
 - **a series:** "Revenue, 12 points, $61K to $104K, rising. 1 of 2.";
-- **a point:** "Mar 1, 2026, Revenue, $83K. Down 2% from Feb 1, 2026. 9 of 12." Stacks add "Total …".
+- **a point:** "Mar 1, 2026, Revenue, $83K. Down 2% from Feb 1, 2026. 9 of 12." Stacks add "Total …"; a stacked `AreaChart` says the band's share instead ("34% of 3.2K").
 
 A focused point gets a 2px `accent-ink` ring on its mark (`Highlight` under forced colours) and opens the readout, so keyboard and pointer get the same feedback. A focused series draws the others receded. Chart types say where each of their marks sits (`chartPoint`); hand-drawn marks get a ring at `(xOf, y(value))`. The table view is #64.
 
@@ -62,7 +62,7 @@ x is inferred from the first value of `x`; set `xScale` to override it. Numbers 
 
 | `data` | What shows |
 |---|---|
-| `undefined`, or a pending promise | an imprint after `dur-grace`: the title, description and legend in place, the plot pressed into the page in the chart's shape (`surface-well` bars or a band), no labels, `aria-busy` and "Loading" |
+| `undefined`, or a pending promise | an imprint after `dur-grace`: the title, description and legend in place, the plot pressed into the page in the chart's shape (`surface-well` bars, a band, or an area), no labels, `aria-busy` and "Loading" |
 | arrives | the marks fade in place. Unlike `Await`'s content they never rise out of the imprint, because a rising bar would leave the ground line and misstate its value |
 | `null` or `[]` | an `EmptyState` at widget size in the plot's own box, with no axes; set its words and action with `empty={{ title, description, action }}` (on the container or the chart type). All-zero data is real data, and is drawn |
 | a new promise while data shows, or `refreshing` | the old chart stays; after `dur-grace` its marks drop to half strength, with `aria-busy` and "Updating". Nothing is imprinted over what someone is reading |

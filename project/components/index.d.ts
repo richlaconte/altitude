@@ -1662,6 +1662,26 @@ export interface LineChartProps {
 }
 /** Change over time for one to four series: 2px lines named at their ends, gaps left as gaps. Renders inside a ChartContainer. */
 export declare function LineChart(props: LineChartProps): React.ReactElement;
+export interface AreaChartProps {
+  /** The records, in x order. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** The key of each record's x: an ISO date, a timestamp or a number. */
+  x: string;
+  /** Stack the series into bands that add up to the total, bottom to top in config order; 'expand' as shares of 100%. */
+  stack?: boolean | 'expand';
+  /** 'linear' (default) or 'monotone', which never overshoots. */
+  curve?: 'linear' | 'monotone';
+  /** Formats values of series that have no format of their own. */
+  y?: { format?: (value: number) => string };
+  /** Name each band inside itself where it fits. Default: on when stacked. */
+  labels?: boolean;
+  /** The crosshair and readout. Default true. */
+  tooltip?: boolean;
+  children?: React.ReactNode;
+  empty?: ChartEmpty;
+}
+/** A total over time and its parts: flat bands on the ground line, parted by 2px, never a gradient. Renders inside a ChartContainer. */
+export declare function AreaChart(props: AreaChartProps): React.ReactElement;
 /** An SVG path through points; a null breaks it. 'monotone' never overshoots the points. */
 export declare function linePath(points: Array<[number, number] | null>, curve?: 'linear' | 'monotone'): string;
 export interface SparklineProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
@@ -1801,7 +1821,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
