@@ -1,0 +1,44 @@
+<!-- @dsCard group="Charts" height=820 subtitle="Two measures per record: flat dots ringed apart, a shape per group, outliers named" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScatterChart — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.sc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 720px) { .sc { grid-template-columns: minmax(0, 1fr); } }
+.sc-foot { display: flex; align-items: center; gap: 12px; margin-top: 12px; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const svc = ["Checkout", "Search", "Media"];
+const endpoints = Array.from({ length: 30 }, (_, i) => {
+  const service = svc[i % 3], kb2 = Math.round(8 + i * 53 % 97 * (service === "Media" ? 4.1 : 2.2));
+  const ms2 = Math.round(70 + kb2 * (service === "Media" ? 0.62 : 0.48) + i * 37 % 41 - 20 + (i === 13 ? 190 : 0));
+  return { name: `${service} ${["list", "get", "create", "update", "search", "export", "upload", "sync", "batch", "stream"][Math.floor(i / 3)]}`, service, kb: kb2, ms: ms2 };
+});
+const kb = (v) => `${Math.round(v)} KB`, ms = (v) => `${Math.round(v)} ms`;
+const usd = new Intl.NumberFormat("en", { style: "currency", currency: "USD", notation: "compact" });
+const month = (m) => Array.from({ length: 16 }, (_, i) => {
+  const seats = 20 + i * 29 % 140 + m * (i % 4) * 6;
+  return { id: "c" + i, name: ["Acme", "Globex", "Initech", "Umbrella", "Hooli", "Vandelay", "Stark", "Wayne", "Wonka", "Tyrell", "Cyberdyne", "Soylent", "Aperture", "Massive", "Oscorp", "Gringotts"][i], seats, spend: Math.round(seats * (38 + i * 17 % 23) + m * 300) };
+});
+function App() {
+  const [m, setM] = React.useState(0);
+  const [picked, setPicked] = React.useState(null);
+  const customers = React.useMemo(() => month(m), [m]);
+  return /* @__PURE__ */ React.createElement("div", { className: "sc" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "sc1" }, "Latency against payload"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "p95 per endpoint, by service, with the trend")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "sc1", aspect: 1.5, config: { kb: { label: "Payload", format: kb }, ms: { label: "p95", format: ms } } }, /* @__PURE__ */ React.createElement(A.ScatterChart, { data: endpoints, x: "kb", y: "ms", group: "service", id: "name", name: "name", label: (d) => d.ms > 250 && d.kb < 300 ? d.name : null, trend: true }, /* @__PURE__ */ React.createElement(A.ChartLegend, { content: /* @__PURE__ */ React.createElement(A.ChartLegendContent, { toggle: true, label: "Services" }) }))))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "sc2" }, "Spend against seats"), /* @__PURE__ */ React.createElement(A.CardDescription, null, picked ? `${picked.name} selected: the rest recede` : "Per customer. Select one; dots glide by id when the month changes")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "sc2", aspect: 1.5, views: true, config: { seats: { label: "Seats" }, spend: { label: "Spend", format: usd.format } } }, /* @__PURE__ */ React.createElement(A.ScatterChart, { data: customers, x: "seats", y: "spend", id: "id", name: "name", selected: picked ? picked.id : null, onSelect: setPicked })), /* @__PURE__ */ React.createElement("div", { className: "sc-foot" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: () => setM((n) => (n + 1) % 3) }, "Next month"), /* @__PURE__ */ React.createElement("span", null, "Month ", m + 1, " of 3")))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
