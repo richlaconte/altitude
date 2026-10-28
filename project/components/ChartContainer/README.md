@@ -19,7 +19,18 @@ x is inferred from the first value of `x`; set `xScale` to override it. Numbers 
 
 **Colour.** Series take slots in config order: the first is `data-1`, the seventh and later are `data-other`. Set `color: 'data-3'` to pin one. The order is fixed for the chart's life, so hiding or filtering a series never repaints the others. The figure also sets `--color-<key>` for each series, for your own CSS.
 
-**Your own marks.** `useChart()` gives you the plot's `width` and `height`, the `x` and `y` scales, `xOf(datum)` (a band's centre, or a time or value), `ground` (the y of the ground line), the `data`, the `series` with their colours and formats, and `format`. Children are drawn inside the plot, in its coordinates, under the ground line's rule.
+**Motion.** When the data changes, the frame moves its marks by the one engine every chart shares ([Motion](../../Motion.md), "Charts"). Values glide at one level on `ease-glide`, after the axis has rescaled if its domain changed, never at the same time. Re-sorted bands are carried, and records and series entering or leaving cross-fade. First render, a change of x under a line, more than 500 marks and reduced motion all cross-fade instead. Resizing never animates. The plot's `data-stage` says where a change is (`rescale`, `values` or `fade`).
+
+**Your own marks.** `useChart()` gives you the following, and children are drawn inside the plot, in its coordinates, under the ground line's rule:
+
+- `width` and `height`: the plot's size;
+- the `x` and `y` scales, and `xOf(datum)` (a band's centre, or a time or value);
+- `ground`: the y of the ground line;
+- `data`: the records as they're shown right now (gliding values, lingering leavers);
+- `alpha(datum, seriesKey)`: how present a mark is while it enters or leaves, to multiply into its opacity;
+- `series`, with their colours and formats, and `format`.
+
+Draw from these and your marks move like every other chart's.
 
 ```tsx
 function Target({ value }) {

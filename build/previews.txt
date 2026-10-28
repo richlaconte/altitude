@@ -893,11 +893,11 @@ function Lines() {
   ));
 }
 function Bars() {
-  const { series, data, x, y, xKey, ground } = A.useChart();
+  const { series, data, x, y, xKey, ground, alpha } = A.useChart();
   const w = (x.bandwidth - 2 * (series.length - 1)) / series.length;
   return data.map((d) => series.map((s, i) => {
     const v = d[s.key], top = Math.min(y(v), ground);
-    return <rect key={d[xKey] + s.key} x={x(d[xKey]) + i * (w + 2)} y={top} width={w} height={Math.abs(y(v) - ground)} fill={s.color} />;
+    return <rect key={d[xKey] + s.key} x={x(d[xKey]) + i * (w + 2)} y={top} width={w} height={Math.abs(y(v) - ground)} fill={s.color} opacity={alpha(d, s.key)} />;
   }));
 }
 function App() {
@@ -921,6 +921,44 @@ function App() {
           </A.ChartContainer>
         </A.CardContent>
       </A.Card>
+    </div>
+  );
+}
+
+=== ChartMotion | <!-- @dsCard group="Charts" height=430 subtitle="Data that changes glides at one level; a rescale comes first" -->
+--- css
+.cm { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 16px; align-items: start; }
+.cm ol { margin: 0; padding-left: 18px; font: 400 13px/20px var(--font-sans); color: var(--ink-muted); }
+.cm li[data-on] { color: var(--ink); font-weight: 500; }
+@media (max-width: 720px) { .cm { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+// Every chart moves by ChartContainer's one engine. These hand-drawn bars cycle through the changes it handles.
+const steps = [
+  ['Q2', [['North', 42], ['South', 35], ['East', 28], ['West', 19]]],
+  ['Q3: values change', [['North', 51], ['South', 31], ['East', 37], ['West', 24]]],
+  ['Q4: the axis rescales first', [['North', 88], ['South', 64], ['East', 71], ['West', 40]]],
+  ['Q4, by value: bars are carried', [['North', 88], ['East', 71], ['South', 64], ['West', 40]]],
+  ['A region enters', [['North', 88], ['East', 71], ['South', 64], ['West', 40], ['Central', 22]]],
+  ['…and leaves', [['North', 88], ['East', 71], ['South', 64], ['West', 40]]],
+];
+function Bars() {
+  const { data, x, y, xKey, ground, alpha, series } = A.useChart();
+  return data.map((d) => <rect key={d[xKey]} x={x(d[xKey])} y={Math.min(y(d.deals), ground)} width={x.bandwidth}
+    height={Math.abs(y(d.deals) - ground)} fill={series[0].color} opacity={alpha(d)} />);
+}
+function App() {
+  const [i, setI] = React.useState(0);
+  React.useEffect(() => { const t = setInterval(() => setI((n) => (n + 1) % steps.length), 2400); return () => clearInterval(t); }, []);
+  const data = React.useMemo(() => steps[i][1].map(([region, deals]) => ({ region, deals })), [i]);
+  return (
+    <div className="cm">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="cm-t">Deals closed by region</A.CardTitle><A.CardDescription>{steps[i][0]}</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="cm-t" data={data} x="region" aspect={2} config={{ deals: { label: 'Deals' } }}><Bars /></A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <ol>{steps.map(([label], n) => <li key={n} data-on={n === i ? '' : undefined}>{label}</li>)}</ol>
     </div>
   );
 }

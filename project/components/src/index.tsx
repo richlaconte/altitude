@@ -42,4 +42,4 @@ export type { BoardCreateResult, BoardRenameResult } from './collections';
 export { PropertyList, PropertyListItem } from './property-list';
 export type { PropertyListProps, PropertyListItemProps, PropertyListEditAll } from './property-list';
 export { ChartContainer, useChart } from './chart';
-export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale } from './chart';
+export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage } from './chart';

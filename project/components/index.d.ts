@@ -1469,6 +1469,8 @@ export interface LinearScale { (value: number): number; kind: 'linear'; domain: 
 export interface TimeScale { (value: string | number): number; kind: 'time'; domain: [number, number]; range: [number, number]; ticks: number[]; }
 export interface BandScale { (value: string): number; kind: 'band'; domain: string[]; range: [number, number]; ticks: string[]; bandwidth: number; step: number; }
 export type ChartXScale = LinearScale | TimeScale | BandScale;
+/** Where a change is, as the plot's data-stage: the axis rescaling, the marks gliding to their values, or a cross-fade. */
+export type ChartStage = 'rescale' | 'values' | 'fade';
 export interface ChartContextValue {
   /** The plot's size in px, inside the axes. Marks draw from (0, 0) at its top left. */
   width: number;
@@ -1479,10 +1481,13 @@ export interface ChartContextValue {
   xOf: (d: ChartDatum) => number;
   /** The y of the ground line: y(0) when zero is in the domain, otherwise the plot's foot. */
   ground: number;
+  /** The records as they're shown right now: while the data changes, values glide and leaving records linger. */
   data: ChartDatum[];
   xKey: string;
   config: ChartConfig;
   series: ChartSeries[];
+  /** How present a mark is, 0–1, while records or series enter and leave: multiply it into the mark's opacity. */
+  alpha: (d?: ChartDatum | null, seriesKey?: string) => number;
   /** Formats a value of a series (by its key), or an x value. */
   format: (key: string, value: number) => string;
   formatX: (value: unknown) => string;

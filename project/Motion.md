@@ -78,8 +78,24 @@ Exits run at 70% of their entry: attention has already moved on.
 - **Hover intent.** A HoverCard waits 400ms before rising and 250ms before going; neighbours open at once while warm (Tooltip's warm-up, shared), and one hands over to the next.
 - **Rows are carried.** When a table's order changes (a sort, a move), each row travels from where it was to where it now belongs (FLIP, `dur-travel-3`, `ease-glide`), all at once and at one level: a re-sort is one change, not many arrivals, so it doesn't spend the rise budget. Reduced motion re-sorts in place.
 - **Results are carried.** When a list changes under a query (the command palette), rows that stay travel to their new places (FLIP: measured before and after, then animated from the old place, `dur-travel-2`, `ease-glide`) and the list's height glides to fit. New rows near the top rise 4px within the attention budget; the rest cross-fade. Under reduced motion they all cross-fade.
-- **Charts glide, they don't grow.** When a chart's data changes, each mark glides from its old value to its new one at one level (`ease-glide`, `dur-travel-3`), all at once: like a re-sort, it's one change and doesn't spend the rise budget. A point or bar that's new gets an afterglow within the attention budget; it never lifts. The readout rises like a `Tooltip` and shares its warm-up. Nothing grows from the baseline on first render: the chart is simply there. A series hidden from the legend fades out (`dur-travel-1`) and the others keep their colours. Under reduced motion values change in place, the afterglow still tints and nothing travels. The frame itself (`ChartContainer`) never moves: on resize it lays out again at once, because a resize isn't a change to the record. See [Charts](Charts.md).
+- **Charts glide, they don't grow.** A chart's data changes at one level, staged, by one engine every chart shares: see **Charts** below.
 - **Repeat the warm state.** After one tooltip has shown, its neighbours open instantly for 400ms. Moving along a toolbar shouldn't make you wait at every button.
+
+## Charts
+
+Every chart moves by one engine, built into `ChartContainer`, so no chart type has its own easing. Marks have no level, so none of this is height: it's position, length and presence changing on the ground.
+
+1. **A data change happens at one level.** Marks glide to their new values on `ease-glide` over `dur-travel-3`, all at once. It's one change, not many arrivals, so it doesn't spend the attention budget.
+2. **A rescale comes first.** If y's domain changes, the axis and gridlines glide to it first (`dur-travel-2`), with the marks keeping their old values so they move only with the scale; then the marks glide to their new values on a still axis (`dur-travel-3`). The two never happen at once, as a `Stepper` presses before it rises. Ticks that leave fade out as the new ones fade in.
+3. **Re-sorted bars are carried** to their new places, as table rows are.
+4. **No decorative entrances.** On first render the plot fades in place (`dur-travel-1`). A bar grows from the ground line only when its value really goes from zero to something.
+5. **Lines morph only when x is the same.** If the x values change under a line (a new range, a new interval), the old plot and the new one cross-fade instead.
+6. **Records and series that enter or leave cross-fade.** Exits take 70% of the entry's time, so what's leaving is gone before what's arriving has settled.
+7. **An interruption retargets** from where the marks are, so nothing jumps back to the old destination first.
+8. **Past 500 marks** changing at once, the plot cross-fades instead of gliding.
+9. **Reduced motion:** values change in place, as a cross-fade between the old chart and the new one, and nothing travels. Resizing never animates, with or without it.
+
+`checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
 ## Approach
 

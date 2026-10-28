@@ -50,11 +50,11 @@ function Lines() {
   ));
 }
 function Bars() {
-  const { series, data, x, y, xKey, ground } = A.useChart();
+  const { series, data, x, y, xKey, ground, alpha } = A.useChart();
   const w = (x.bandwidth - 2 * (series.length - 1)) / series.length;
   return data.map((d) => series.map((s, i) => {
     const v = d[s.key], top = Math.min(y(v), ground);
-    return /* @__PURE__ */ React.createElement("rect", { key: d[xKey] + s.key, x: x(d[xKey]) + i * (w + 2), y: top, width: w, height: Math.abs(y(v) - ground), fill: s.color });
+    return /* @__PURE__ */ React.createElement("rect", { key: d[xKey] + s.key, x: x(d[xKey]) + i * (w + 2), y: top, width: w, height: Math.abs(y(v) - ground), fill: s.color, opacity: alpha(d, s.key) });
   }));
 }
 function App() {
