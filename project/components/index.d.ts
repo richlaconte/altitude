@@ -1501,6 +1501,10 @@ export interface ChartContextValue {
   formatX: (value: unknown) => string;
   /** Categories run down the side and values along the bottom: x(cat) is a distance from the top, y(v) from the left. */
   horizontal: boolean;
+  /** The record the readout is on (pointed at, touched, or focused from the keyboard), or null. */
+  active: ChartDatum | null;
+  /** Put the readout on a record by its index in `data`, or take it away with null: for keyboard paths. */
+  setActive: (index: number | null) => void;
   /** How to draw a series so it's told apart without colour: fill (a hatch while patterns are on), stroke, dash, marker, edge. */
   encode: (seriesKey: string) => ChartEncoding;
   /** Patterns are on: the `patterns` prop, forced colours or print. */
@@ -1559,7 +1563,26 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   locale?: string;
   /** Tell series apart by a hatch, dash and marker per slot as well as colour. Always on under forced colours and in print. */
   patterns?: boolean;
+  /** The crosshair and readout. Default true; a chart type's tooltip={false} turns it off too. */
+  tooltip?: boolean;
 }
+export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; }
+export interface ChartTooltipContentProps {
+  /** How each row is keyed: a short stroke of the series colour (default), a dot, or a dashed stroke. */
+  indicator?: 'line' | 'dot' | 'dashed';
+  /** Formats the readout's heading, the x value. */
+  labelFormat?: (x: unknown) => React.ReactNode;
+  hideLabel?: boolean;
+  hideIndicator?: boolean;
+  /** Filled in by the container. */
+  label?: unknown;
+  payload?: ChartTooltipItem[];
+  formatX?: (x: unknown) => string;
+}
+/** The readout's rows: value first, series name second, keyed by the series colour. */
+export declare function ChartTooltipContent(props: ChartTooltipContentProps): React.ReactElement;
+/** Changes what a chart's readout shows; the readout is on for every chart. Place it inside the chart type or the container. */
+export declare function ChartTooltip(props: { content?: React.ReactElement<ChartTooltipContentProps> }): null;
 /** The frame every chart shares: scales, axes, gridlines, the ground line, colour slots, a name and a summary. Flush, no level. */
 export declare function ChartContainer(props: ChartContainerProps): React.ReactElement;
 export interface BarChartProps {
@@ -1575,6 +1598,10 @@ export interface BarChartProps {
   layout?: 'vertical' | 'horizontal';
   /** Label the largest bar, or the last category's. Never every bar. Default 'none'. */
   labels?: 'max' | 'last' | 'none';
+  /** The crosshair and readout. Default true. */
+  tooltip?: boolean;
+  /** A ChartTooltip, to change what the readout shows. */
+  children?: React.ReactNode;
 }
 /** Amounts compared across categories, as flat lengths standing on the ground line. Renders inside a ChartContainer. */
 export declare function BarChart(props: BarChartProps): React.ReactElement | null;
@@ -1589,6 +1616,10 @@ export interface LineChartProps {
   y?: { format?: (value: number) => string };
   /** Name each line at its end. Default: on for up to four series, and always under forced colours and in print. */
   endLabels?: boolean;
+  /** The crosshair and readout. Default true. */
+  tooltip?: boolean;
+  /** A ChartTooltip, to change what the readout shows. */
+  children?: React.ReactNode;
 }
 /** Change over time for one to four series: 2px lines named at their ends, gaps left as gaps. Renders inside a ChartContainer. */
 export declare function LineChart(props: LineChartProps): React.ReactElement;
@@ -1610,7 +1641,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; linePath: typeof linePath; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; linePath: typeof linePath; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

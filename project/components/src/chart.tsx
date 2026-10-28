@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { cx, useIsoLayoutEffect } from './core';
+import { cx, useIsoLayoutEffect, usePresence } from './core';
+import { markTipClosed, tipIsWarm } from './overlays';
 
 /* ───────────────────────── config ───────────────────────── */
 
@@ -159,6 +160,10 @@ export interface ChartContextValue {
    * directions change: x(cat) is a distance from the top, y(v) from the left, and `ground` is y(0) across.
    */
   horizontal: boolean;
+  /** The record the readout is on (pointed at, touched, or focused from the keyboard), or null. */
+  active: ChartDatum | null;
+  /** Put the readout on a record by its index in `data`, or take it away with null: for keyboard paths. */
+  setActive: (index: number | null) => void;
   /**
    * How to draw a series so it's told apart without colour: its fill (a hatch when patterns are on), stroke, dash and
    * marker, fixed by its slot like its colour. Use these instead of `series.color` and every mode is handled.
@@ -250,7 +255,62 @@ export interface ChartInfo {
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
   right?: number;
 }
-type ChartChild = { chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean };
+type ChartChild = { chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean };
+
+/* ───────────────────────── readout ───────────────────────── */
+
+export interface ChartTooltipItem {
+  key: string;
+  label: string;
+  value: number;
+  /** The value as its series formats it. */
+  text: string;
+  color: string;
+  dash?: string;
+}
+export interface ChartTooltipContentProps {
+  /** How each row is keyed: a short stroke of the series colour (default), a dot, or a dashed stroke. */
+  indicator?: 'line' | 'dot' | 'dashed';
+  /** Formats the readout's heading, the x value. Default: the container's. */
+  labelFormat?: (x: unknown) => React.ReactNode;
+  hideLabel?: boolean;
+  hideIndicator?: boolean;
+  /** Filled in by the container: the x being read, and one item per shown series with a value there. */
+  label?: unknown;
+  payload?: ChartTooltipItem[];
+  /** Filled in by the container: formats x. */
+  formatX?: (x: unknown) => string;
+}
+/**
+ * The readout's rows: value first (ink, tabular), series name second (ink-muted), keyed by a short stroke of the
+ * series colour, which takes the series' dash when patterns are on. Labels are text, never HTML.
+ */
+export function ChartTooltipContent({ indicator = 'line', labelFormat, hideLabel, hideIndicator, label, payload = [], formatX }: ChartTooltipContentProps) {
+  return (
+    <>
+      {!hideLabel && <div className="alt-chart-readout-label">{labelFormat ? labelFormat(label) : formatX ? formatX(label) : String(label)}</div>}
+      {payload.map((p) => (
+        <div key={p.key} className="alt-chart-readout-row">
+          {!hideIndicator && (
+            <svg className="alt-chart-readout-key" width="14" height="10" aria-hidden="true">
+              {indicator === 'dot' ? <circle cx="7" cy="5" r="4" fill={p.color} />
+                : <line x1="1" y1="5" x2="13" y2="5" stroke={p.color} strokeWidth="2.5" strokeLinecap="round" strokeDasharray={indicator === 'dashed' ? '3 2' : p.dash} />}
+            </svg>
+          )}
+          <span className="alt-chart-readout-value">{p.text}</span>
+          <span className="alt-chart-readout-name">{p.label}</span>
+        </div>
+      ))}
+    </>
+  );
+}
+/**
+ * Puts your own content in a chart's readout. The readout is on for every chart by default; this only changes what it
+ * shows. Place it inside the chart type or the container: `<ChartTooltip content={<ChartTooltipContent indicator="dot" />} />`.
+ */
+export function ChartTooltip(_: { content?: React.ReactElement<ChartTooltipContentProps> }) { return null; }
+ChartTooltip.chartHtml = true;
+ChartTooltip.chartTooltip = true;
 
 /* ───────────────────────── frames and motion ───────────────────────── */
 
@@ -436,6 +496,8 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   axes?: boolean;
   /** The locale for numbers and dates. Default: the reader's. */
   locale?: string;
+  /** The crosshair and readout. Default true; a chart type's `tooltip={false}` turns it off too. */
+  tooltip?: boolean;
   /**
    * Tell series apart by pattern as well as colour: a hatch per slot on fills, a dash on lines, a marker on points.
    * Always on under forced colours and in print; turn it on anywhere else for readers who want it.
@@ -457,7 +519,7 @@ const TOP = 8;
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
 export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, description, summary,
-  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, className, style, children, ...rest }: ChartContainerProps) {
+  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, className, style, children, ...rest }: ChartContainerProps) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -526,6 +588,21 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal]); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef);
 
+  // The readout: on by default, off when the container or the chart type says tooltip={false}.
+  const findTip = (list: React.ReactNode): React.ReactElement<{ content?: React.ReactElement<ChartTooltipContentProps> }> | undefined =>
+    (React.Children.toArray(list).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[])
+      .find((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartTooltip) as never;
+  const tipEl = findTip(children) ?? findTip(childProps.children as React.ReactNode);
+  const tooltipOn = tooltipProp && childProps.tooltip !== false;
+  const [activeIdx, setActiveIdx] = React.useState<number | null>(null);
+  const sticky = React.useRef(false);
+  const [warmTip, setWarmTip] = React.useState(false);
+  const show = (i: number | null) => setActiveIdx((prev) => {
+    if (prev === null && i !== null) setWarmTip(tipIsWarm());
+    if (prev !== null && i === null) markTipClosed();
+    return i;
+  });
+
   // Forced colours, print and contrast="more" change how marks are drawn, not just their colours.
   const [env, setEnv] = React.useState({ forced: false, print: false, more: false });
   const readEnv = React.useRef(() => {});
@@ -564,7 +641,11 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   // Within a few days, a time's x is read to the minute; otherwise to the day.
   const ts = kind === 'time' ? data.map((d) => toTime(d[xKey])).filter((t) => isFinite(t)) : [];
   const intraday = ts.length > 1 && Math.max(...ts) - Math.min(...ts) < 3 * DAY;
-  const formatX = xFormat ?? (kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
+  // Categories that are dates (a bar per week) read as dates, not as ISO strings.
+  const datedBands = kind === 'band' && isTimeLike(sample);
+  const shortDate = React.useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }), [locale]);
+  const bandLabel = (v: unknown) => (xFormat ? xFormat(v) : datedBands ? shortDate.format(new Date(toTime(v))) : String(v));
+  const formatX = xFormat ?? (datedBands ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
 
   /** A layer's scales, ticks and context, at the plot's size now. */
   const draw = (frame: Frame) => {
@@ -584,14 +665,14 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
       const bw = (band.get(domain[0])?.[1] ?? 0) * along;
       x = Object.assign((v: string) => (band.get(String(v))?.[0] ?? 0) * along, { kind: 'band' as const, domain, range: [0, along] as [number, number], ticks: domain, bandwidth: bw, step: bw / (1 - bandPadding) }) as BandScale;
       if (axes && horizontal) {
-        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: fit(xFormat ? xFormat(d) : d, left - 12), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 }));
+        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: fit(bandLabel(d), left - 12), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 }));
       } else if (axes) {
         // Show every k-th label, k as small as lets each shown label clear its shown neighbours by 4px.
-        const ws = domain.map((d) => textWidth(String(xFormat ? xFormat(d) : d)));
+        const ws = domain.map((d) => textWidth(bandLabel(d)));
         const step = Math.max(1, (x as BandScale).step);
         let every = 1;
         while (every < domain.length && ws.some((w, i) => i % every === 0 && i + every < ws.length && (w + ws[i + every]) / 2 + 4 > every * step)) every++;
-        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: xFormat ? xFormat(d) : d, a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 })).filter((_, i) => i % every === 0);
+        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: bandLabel(d), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 })).filter((_, i) => i % every === 0);
       }
     } else if (frame.kind === 'time') {
       const ts = frame.rows.map((r) => toTime(r.d[xKey])).filter((t) => isFinite(t));
@@ -627,6 +708,8 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
       alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? frame.seriesAlpha.get(key) ?? 1 : 1),
       format: (key, v) => (frame.series.find((s) => s.key === key)?.format ?? fmtY)(v),
       formatX, horizontal, encode, patterns, directLabels: env.forced || env.print,
+      active: activeIdx !== null ? frame.rows[activeIdx]?.d ?? null : null,
+      setActive: (i) => show(i),
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
     };
     return { ctx, left, pw, ph, xTicks };
@@ -643,6 +726,65 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const htmlKids = kids.filter((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartHtml);
   const top = draw(layers[layers.length - 1].frame);
 
+  // Which record a point on the plot is nearest along x (down the side, when horizontal).
+  const nearest = (clientX: number, clientY: number) => {
+    const r = plotRef.current?.getBoundingClientRect();
+    if (!r || !top.ctx.data.length) return null;
+    const along = horizontal ? clientY - r.top - TOP : clientX - r.left - top.left;
+    let best = -1, bd = Infinity;
+    top.ctx.data.forEach((d, i) => { const dd = Math.abs(top.ctx.xOf(d) - along); if (dd < bd) { bd = dd; best = i; } });
+    return best < 0 ? null : best;
+  };
+  const hold = React.useRef<{ timer: number; x: number; y: number; id: number } | null>(null);
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!tooltipOn) return;
+    if (e.pointerType !== 'touch') { show(nearest(e.clientX, e.clientY)); return; }
+    const h = hold.current;
+    if (h && !sticky.current && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 8) { window.clearTimeout(h.timer); hold.current = null; }
+    if (sticky.current && h) show(nearest(e.clientX, e.clientY));
+  };
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (!tooltipOn || e.pointerType !== 'touch') return;
+    const el = e.currentTarget as HTMLElement, id = e.pointerId, x = e.clientX, y = e.clientY;
+    hold.current = { x, y, id, timer: window.setTimeout(() => {
+      // Press and hold shows the readout; dragging then scrubs along x; lifting leaves it until a tap elsewhere.
+      sticky.current = true;
+      try { el.setPointerCapture(id); } catch { /* the pointer may be gone */ }
+      show(nearest(x, y));
+    }, 250) };
+  };
+  const onPointerUp = () => { if (hold.current) { window.clearTimeout(hold.current.timer); if (!sticky.current) hold.current = null; } };
+  const onPointerLeave = (e: React.PointerEvent) => { if (e.pointerType !== 'touch' && !sticky.current) show(null); };
+  React.useEffect(() => {
+    if (activeIdx === null || !sticky.current) return;
+    const away = (e: PointerEvent) => { if (!plotRef.current?.contains(e.target as Node)) { sticky.current = false; hold.current = null; show(null); } };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [activeIdx]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The readout keeps its last record while it leaves, so its exit shows what it said.
+  const lastActive = React.useRef<ChartDatum | null>(null);
+  if (top.ctx.active) lastActive.current = top.ctx.active;
+  const { mounted: tipMounted, state: tipState } = usePresence(tooltipOn && activeIdx !== null && !!top.ctx.active, 160);
+  const readout = (() => {
+    const d = top.ctx.active ?? lastActive.current;
+    if (!tipMounted || !d) return null;
+    const payload: ChartTooltipItem[] = top.ctx.series
+      .filter((s) => typeof d[s.key] === 'number' && isFinite(d[s.key] as number) && top.ctx.alpha(null, s.key) > 0.5)
+      .map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, value: d[s.key] as number, text: top.ctx.format(s.key, d[s.key] as number), color: e.stroke, dash: e.dash }; });
+    const at = top.ctx.xOf(d);
+    const style: React.CSSProperties = {};
+    let side: string;
+    if (horizontal) { side = at > (H - TOP - bottom) / 2 ? 'above' : 'below'; style.right = 4; style.top = TOP + at; }
+    else { side = top.left + at > W / 2 ? 'left' : 'right'; style.left = top.left + at; style.top = TOP; }
+    const content = tipEl?.props.content ?? <ChartTooltipContent />;
+    return (
+      <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
+        {React.cloneElement(content, { label: d[xKey], payload, formatX })}
+      </div>
+    );
+  })();
+
   return (
     <ChartContext.Provider value={top.ctx}>
       <figure className={cx('alt-chart', className)} style={{ ...vars, ...style }} aria-labelledby={labelledBy}
@@ -654,7 +796,8 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
           </div>
         )}
         <div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
-          data-stage={stage} data-patterns={patterns ? '' : undefined} style={height != null ? { height } : { aspectRatio: String(aspect) }}>
+          data-stage={stage} data-patterns={patterns ? '' : undefined} style={height != null ? { height } : { aspectRatio: String(aspect) }}
+          onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={onPointerLeave}>
           {W > 0 && (
             <svg className="alt-chart-svg" width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
               {patterns && (
@@ -677,6 +820,10 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
                           : <line key={t.v} x1={0} x2={pw} y1={at} y2={at} opacity={t.a < 1 ? t.a : undefined} />;
                       })}
                     </g>
+                    {i === layers.length - 1 && tooltipOn && ctx.active && (() => {
+                      const at = Math.round(ctx.xOf(ctx.active)) + 0.5;
+                      return horizontal ? <line className="alt-chart-crosshair" x1={0} x2={pw} y1={at} y2={at} /> : <line className="alt-chart-crosshair" x1={at} x2={at} y1={0} y2={ph} />;
+                    })()}
                     <g className="alt-chart-marks"><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
                     {/* The ground line is zero. When zero isn't on the axis, the plot's foot is an ordinary gridline, not ground. */}
                     {horizontal
@@ -716,6 +863,7 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
               })}
             </svg>
           )}
+          {readout}
         </div>
         {htmlKids}
         <figcaption id={sumId} className={summary ? 'alt-chart-summary' : 'alt-sr'}>{summary ?? generated}</figcaption>

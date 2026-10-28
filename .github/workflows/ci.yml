@@ -82,7 +82,8 @@ jobs:
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
-          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart daylight 960
+          node ../scripts/record-check.mjs react18-chart-tooltip node checks/chart-tooltip.mjs
+          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,ChartTooltip daylight 960
           DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
           DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
 

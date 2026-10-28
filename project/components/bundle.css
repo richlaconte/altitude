@@ -1469,6 +1469,42 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    lines are their own legend. ── */
 .alt-line-label { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); }
 @media (forced-colors: active) { .alt-line-label { fill: CanvasText; } }
+.alt-line-active { stroke: var(--alt-chart-bg); stroke-width: 2; paint-order: stroke; }
+
+/* ── ChartTooltip: reading exact values. The crosshair is a mark on the ground (1px line-control, snapped to the nearest
+   x); the readout is live, a level-3 floating surface like Tooltip. It rises 4px once as its shadow grows from elev-1
+   to elev-3, then steps between x positions with no easing (it follows the data, not each pixel of the pointer), flips
+   sides so it never covers the point, and leaves in 70% of the time. It shares Tooltip's 400ms warm-up. It's
+   aria-hidden: the same values are in each datum's name, the keyboard path and the table view. ── */
+.alt-chart { --alt-chart-bg: var(--surface-ground); }
+.alt-card .alt-chart { --alt-chart-bg: var(--surface-raised); }
+.alt-chart-plot { touch-action: pan-y; }
+.alt-chart-crosshair { stroke: var(--line-control); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-readout {
+  position: absolute; z-index: var(--z-floating); pointer-events: none; display: grid; gap: 3px; min-width: 112px;
+  padding: 8px 10px; border-radius: var(--radius-lg); background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink);
+  font: 400 12.5px/17px var(--font-sans); white-space: nowrap;
+  transition: opacity var(--dur-travel-3) var(--ease-rise), transform var(--dur-travel-3) var(--ease-rise), box-shadow var(--dur-travel-3) var(--ease-rise);
+}
+.alt-chart-readout[data-state="closed"] {
+  opacity: 0; box-shadow: var(--elev-1); transform: translateY(calc(4px * var(--alt-travel)));
+  transition-timing-function: var(--ease-sink); transition-duration: calc(var(--dur-travel-3) * 0.7);
+}
+.alt-chart-readout[data-warm] { transition-duration: var(--dur-travel-1); }
+.alt-chart-readout[data-side="right"] { translate: 14px 0; }
+.alt-chart-readout[data-side="left"] { translate: calc(-100% - 14px) 0; }
+.alt-chart-readout[data-side="below"] { translate: 0 14px; }
+.alt-chart-readout[data-side="above"] { translate: 0 calc(-100% - 14px); }
+.alt-chart-readout-label { font-weight: 500; color: var(--ink-muted); margin-bottom: 1px; }
+.alt-chart-readout-row { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 6px; }
+.alt-chart-readout-key { display: block; }
+.alt-chart-readout-value { font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink); }
+.alt-chart-readout-name { color: var(--ink-muted); }
+@media (forced-colors: active) {
+  .alt-chart-readout { border: 2px solid CanvasText; }
+  .alt-chart-crosshair { stroke: CanvasText; }
+  .alt-line-active { stroke: Canvas; }
+}
 @media (prefers-contrast: more) {
   .alt-chart-grid line, .alt-chart-floor { stroke: var(--line-control); }
   .alt-chart-ground { stroke: var(--ink); }

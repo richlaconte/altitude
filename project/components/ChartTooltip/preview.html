@@ -1,0 +1,37 @@
+<!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartTooltip — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .ct { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const weeks = ["2026-03-02", "2026-03-09", "2026-03-16", "2026-03-23", "2026-03-30", "2026-04-06", "2026-04-13"].map((week, i) => ({ week, opened: [31, 38, 35, 44, 41, 47, 52][i], closed: [28, 30, 36, 39, 43, 45, 49][i] }));
+const long = new Intl.DateTimeFormat("en", { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" });
+function Open({ at }) {
+  const { setActive } = A.useChart();
+  React.useEffect(() => {
+    setActive(at);
+  }, []);
+  return null;
+}
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "ct" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "t1" }, "Issues opened and closed"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "The default readout, open on 23 Mar")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "t1", aspect: 1.8, config: { opened: { label: "Opened" }, closed: { label: "Closed" } } }, /* @__PURE__ */ React.createElement(A.LineChart, { data: weeks, x: "week" }), /* @__PURE__ */ React.createElement(Open, { at: 3 })))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "t2" }, "Same data, your own content"), /* @__PURE__ */ React.createElement(A.CardDescription, null, 'indicator="dot" and a long date')), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "t2", aspect: 1.8, config: { opened: { label: "Opened" }, closed: { label: "Closed" } } }, /* @__PURE__ */ React.createElement(A.BarChart, { data: weeks, x: "week" }, /* @__PURE__ */ React.createElement(A.ChartTooltip, { content: /* @__PURE__ */ React.createElement(A.ChartTooltipContent, { indicator: "dot", labelFormat: (w) => "Week of " + long.format(/* @__PURE__ */ new Date(w + "T00:00:00Z")) }) })), /* @__PURE__ */ React.createElement(Open, { at: 5 })))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

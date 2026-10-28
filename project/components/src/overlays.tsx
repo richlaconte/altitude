@@ -10,6 +10,9 @@ const EXIT_5 = 220; // ≈ dur-travel-5 × 0.7
 /* ───────────────────────── Tooltip ───────────────────────── */
 
 let lastTipClose = 0; // shared warm-up: once one tooltip has shown, neighbours open instantly
+/** The shared warm-up, for floating readouts outside this module (a chart's readout): warm if one closed within 400ms. */
+export const tipIsWarm = () => Date.now() - lastTipClose < 400;
+export const markTipClosed = () => { lastTipClose = Date.now(); };
 let openCard: (() => void) | null = null; // the HoverCard currently open, if any
 
 export interface TooltipProps {

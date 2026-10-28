@@ -1091,6 +1091,46 @@ function App() {
   );
 }
 
+=== ChartTooltip | <!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
+--- css
+.ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .ct { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+// The readout is on for every chart; point at one (or press and hold on touch). Here it's opened with setActive,
+// the same call the keyboard path uses, so the preview shows it without a pointer.
+const weeks = ['2026-03-02', '2026-03-09', '2026-03-16', '2026-03-23', '2026-03-30', '2026-04-06', '2026-04-13'].map((week, i) => ({ week, opened: [31, 38, 35, 44, 41, 47, 52][i], closed: [28, 30, 36, 39, 43, 45, 49][i] }));
+const long = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric', month: 'long', timeZone: 'UTC' });
+function Open({ at }) {
+  const { setActive } = A.useChart();
+  React.useEffect(() => { setActive(at); }, []);
+  return null;
+}
+function App() {
+  return (
+    <div className="ct">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="t1">Issues opened and closed</A.CardTitle><A.CardDescription>The default readout, open on 23 Mar</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="t1" aspect={1.8} config={{ opened: { label: 'Opened' }, closed: { label: 'Closed' } }}>
+            <A.LineChart data={weeks} x="week" /><Open at={3} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="t2">Same data, your own content</A.CardTitle><A.CardDescription>indicator="dot" and a long date</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="t2" aspect={1.8} config={{ opened: { label: 'Opened' }, closed: { label: 'Closed' } }}>
+            <A.BarChart data={weeks} x="week">
+              <A.ChartTooltip content={<A.ChartTooltipContent indicator="dot" labelFormat={(w) => 'Week of ' + long.format(new Date(w + 'T00:00:00Z'))} />} />
+            </A.BarChart>
+            <Open at={5} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

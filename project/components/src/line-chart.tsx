@@ -12,6 +12,10 @@ export interface LineChartProps {
   y?: { format?: (value: number) => string };
   /** Name each line at its end. Default: on for up to four series, and always under forced colours and in print. */
   endLabels?: boolean;
+  /** The crosshair and readout. Default true. */
+  tooltip?: boolean;
+  /** A ChartTooltip, to change what the readout shows. */
+  children?: React.ReactNode;
 }
 
 const END_FONT = '500 12.5px "Instrument Sans", ui-sans-serif, system-ui, sans-serif';
@@ -65,7 +69,7 @@ export function linePath(points: Array<[number, number] | null>, curve: 'linear'
  * end, so the legend is the lines themselves.
  */
 export function LineChart({ curve = 'linear', endLabels }: LineChartProps) {
-  const { data, series, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height } = useChart();
+  const { data, series, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active } = useChart();
   const labelled = endLabels ?? (series.length <= 4 || directLabels);
   const lines: React.ReactNode[] = [];
   const ends: Array<{ key: string; label: string; x: number; y: number; a: number }> = [];
@@ -95,9 +99,15 @@ export function LineChart({ curve = 'linear', endLabels }: LineChartProps) {
     if (over > 0) for (const p of sorted) p.y -= over;
     for (let i = sorted.length - 2; i >= 0; i--) sorted[i].y = Math.min(sorted[i].y, sorted[i + 1].y - 16);
   }
+  // The record under the readout: each line's point there, ringed in the plot's own colour (an outline, not height).
+  const hovered = active ? series.filter((s) => isNum(active[s.key])).map((s) => {
+    const e = encode(s.key);
+    return <ChartMarker key={s.key + '-active'} className="alt-line-active" shape={patterns ? e.marker : 'circle'} x={xOf(active)} y={y(active[s.key] as number)} size={8} color={e.stroke} />;
+  }) : null;
   return (
     <g className="alt-lines">
       {lines}
+      {hovered}
       {labelled && ends.map((p) => <text key={p.key} className="alt-line-label" x={p.x + 10} y={p.y} dy="0.32em" opacity={p.a < 1 ? p.a : undefined}>{p.label}</text>)}
     </g>
   );
