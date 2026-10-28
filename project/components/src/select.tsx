@@ -143,6 +143,8 @@ interface FieldLike {
 }
 
 export interface SelectProps extends FieldLike {
+  /** Visible required-field feedback after native validation. Localize this for the application. */
+  requiredMessage?: string;
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
@@ -157,7 +159,7 @@ export interface SelectProps extends FieldLike {
  * the field's edge at level 3 with one gliding highlight; the chosen option wears the Checkbox family's tick.
  */
 export function Select({ value, defaultValue = '', onValueChange, items, children, id, name, required, disabled, invalid, size = 'md',
-  placeholder = 'Choose…', defaultOpen = false, className, ...aria }: SelectProps) {
+  placeholder = 'Choose…', requiredMessage = 'Choose an option.', defaultOpen = false, className, ...aria }: SelectProps) {
   const options = collect(items, children);
   const [v, set] = useControllable(value, defaultValue, onValueChange);
   const [open, setOpen] = React.useState(defaultOpen);
@@ -169,6 +171,10 @@ export function Select({ value, defaultValue = '', onValueChange, items, childre
   const field = React.useRef<HTMLDivElement>(null);
   const trigger = React.useRef<HTMLButtonElement>(null);
   const list = React.useRef<HTMLDivElement>(null);
+  const native = React.useRef<HTMLSelectElement>(null);
+  const [nativeInvalid, setNativeInvalid] = React.useState(false);
+  const requiredError = nativeInvalid && required && !disabled && !invalid;
+  const describedBy = [aria['aria-describedby'], requiredError ? auto + '-required-error' : undefined].filter(Boolean).join(' ') || undefined;
   const typed = React.useRef({ text: '', at: 0 });
   const { mounted, state } = usePresence(open, EXIT_3);
   const side = useSide(mounted, field, list);
@@ -186,6 +192,26 @@ export function Select({ value, defaultValue = '', onValueChange, items, childre
   useOutside(root, open, () => close(false));
   React.useEffect(() => { if (state === 'open' && openNow.current) list.current?.focus({ preventScroll: true }); }, [state]);
 
+  // The native select participates in constraint validation and form data, while the visible trigger owns focus.
+  // Reset runs after the browser's default action; cancelled resets and controlled values stay with their owner.
+  React.useEffect(() => {
+    const element = native.current, form = element?.form;
+    if (!element || !form) return;
+    let resetTimer: ReturnType<typeof setTimeout>;
+    const reset = (event: Event) => { clearTimeout(resetTimer); resetTimer = setTimeout(() => {
+      if (event.defaultPrevented || !element.isConnected) return;
+      if (value === undefined) set(defaultValue);
+      element.value = value ?? defaultValue;
+      setNativeInvalid(false);
+      openNow.current = false;
+      setOpen(false);
+    }, 0); };
+    form.addEventListener('reset', reset);
+    return () => { clearTimeout(resetTimer); form.removeEventListener('reset', reset); };
+  }, [value, defaultValue, set]);
+  React.useEffect(() => { if (disabled) { openNow.current = false; setOpen(false); } }, [disabled]);
+  useIsoLayoutEffect(() => { if (!required || disabled || native.current?.validity.valid) setNativeInvalid(false); }, [v, required, disabled]);
+
   const openAt = (i: number) => { openNow.current = true; setActive(i); setOpen(true); };
   const current = () => { const i = options.findIndex((o) => o.value === v && !o.disabled); return i >= 0 ? i : enabled[0] ?? -1; };
   const step = (d: number) => { const p = enabled.indexOf(active); setActive(enabled[Math.max(0, Math.min(enabled.length - 1, (p < 0 ? (d > 0 ? -1 : enabled.length) : p) + d))]); };
@@ -202,7 +228,7 @@ export function Select({ value, defaultValue = '', onValueChange, items, childre
   };
   const choose = (i: number) => {
     const o = options[i];
-    if (!o || o.disabled) return;
+    if (disabled || !o || o.disabled) return;
     set(o.value);
     close();
   };
@@ -225,17 +251,22 @@ export function Select({ value, defaultValue = '', onValueChange, items, childre
   return (
     <div ref={root} className={cx('alt-select', className)} data-open={open ? '' : undefined}>
       <div ref={field} className="alt-input" data-size={size} data-approach="56" data-filled={chosen ? '' : undefined}
-        data-invalid={invalid ? '' : undefined} data-disabled={disabled ? '' : undefined}>
+        data-invalid={invalid || requiredError ? '' : undefined} data-disabled={disabled ? '' : undefined}>
         <button ref={trigger} id={triggerId} type="button" className="alt-select-trigger" disabled={disabled}
-          aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined} aria-invalid={invalid || undefined} aria-required={required || undefined}
-          {...aria} onClick={() => (open ? close() : openAt(current()))} onKeyDown={onTriggerKey}>
+          aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listId : undefined} aria-invalid={invalid || requiredError || undefined} aria-required={required || undefined}
+          {...aria} aria-describedby={describedBy} onClick={() => (open ? close() : openAt(current()))} onKeyDown={onTriggerKey}>
           <span className="alt-select-value" data-placeholder={chosen ? undefined : ''} data-glow={glow}>
             {chosen ? <>{chosen.icon && <span className="alt-select-icon">{chosen.icon}</span>}{chosen.label}</> : placeholder}
           </span>
           <Chevron />
         </button>
       </div>
-      {name && <input type="hidden" name={name} value={v} />}
+      <select ref={native} hidden aria-hidden="true" tabIndex={-1} name={name} required={required} disabled={disabled} value={v}
+        onChange={(event) => set(event.target.value)} onInvalid={(event) => { event.preventDefault(); setNativeInvalid(event.currentTarget.validity.valueMissing); trigger.current?.focus(); }}>
+        <option value="" />
+        {options.filter(option => option.value !== '').map(option => <option key={option.value} value={option.value} disabled={option.disabled}>{textOf(option)}</option>)}
+      </select>
+      {requiredError && <p className="alt-field-error" id={auto + '-required-error'} role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
       {mounted && (
         <OptionList id={listId} options={options} active={active} value={v} state={state} side={side} listRef={list} labelledBy={labelId}
           label={aria['aria-label']} focusable onActive={setActive} onChoose={choose} onKeyDown={onListKey} />

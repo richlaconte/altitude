@@ -1,6 +1,6 @@
 # Notes for agents
 
-Altitude is a React component library where height is the interface: the ground is the record. Before you change or propose anything, read the [README](README.md) (how the repository is laid out, and its one-source-per-thing rule), then [`project/README.md`](project/README.md) and [Elevation](project/Elevation.md). Before proposing or building a chart, graph, stat or meter, also read [Charts](project/Charts.md): in a chart, height is never allowed to carry the data.
+Altitude is a design and HCI framework for React applications where height is the interface: the ground is the record. Before you change or propose anything, read the [README](README.md) (how the repository is laid out, and its one-source-per-thing rule), then [`project/README.md`](project/README.md) and [Elevation](project/Elevation.md). Before proposing or building a chart, graph, stat or meter, also read [Charts](project/Charts.md): in a chart, height is never allowed to carry the data.
 
 ## You can file issues
 
@@ -41,3 +41,11 @@ You won't have `build/`, the checks or these docs in `node_modules`, and you don
 ## What an issue doesn't authorise
 
 Filing an issue is not permission to implement it. Don't open a pull request for a new component or an API change until it's been agreed in the issue, unless the person you're working for asked you to. Don't add or edit labels beyond the one the template sets, assign people, or close other people's issues.
+
+## Building product workflows with Altitude
+
+For consumer design work, start with the installed `altitude-design/guidance` index and focused pattern document. Explicit `altitude init --client codex|claude` setup connects project-level client instructions; an `AGENTS.md` buried in node_modules is not assumed discoverable. In this repository, the canonical entry is [project/framework/README.md](project/framework/README.md).
+
+Infer an appropriate pattern from product intent. Record material assumptions, applicable states and application responsibilities; ask only for missing facts that materially change the task or consequences. Follow-up edits must preserve the relevant contracts and adverse-state checks. Distinguish deterministic failures, integration obligations and contextual review findings. Never claim a timer proves server persistence or an automated scan proves complete accessibility.
+
+Maintainers: author prose/metadata in `project/framework`, behavior in `project/components/src`, and previews in `build/previews.txt`. Generate distributed guidance after package cleanup; do not edit copies in `dist`. Add schema/reference/freshness and installed-consumer checks for new guidance. Keep the Node CLI and documentation out of the browser graph. Preserve a single provider instance and the elevation rules above.

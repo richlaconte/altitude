@@ -33,3 +33,11 @@ An issue is a proposal, not a go-ahead. New components and API changes are agree
 ## Pull requests
 
 Follow "Working on it" in the [README](README.md): change the sources, then run `node build.mjs && node previews.mjs` in `build/` and commit what they produce. CI fails if `project/` doesn't match its sources. Link the issue the pull request resolves (`Fixes #12`).
+
+## Framework knowledge and workflow contributions
+
+The canonical design knowledge lives in `project/framework`: JSON owns applicability, rule/evidence metadata and references; Markdown explains choices and examples; TypeScript owns executable behavior; tests own observed engineering evidence. Generate indexes and package copies with the package build. Do not create divergent agent/human manuals.
+
+A pattern contribution needs a user problem, alternatives, required inputs, applicable states/transitions, content/keyboard/focus/announcement/responsive/recovery requirements, stable rule IDs and sources, explicit application responsibilities, implementation and adverse-state fixtures. Record authority (`standard`, contextual pattern, heuristic, local visual policy or experimental hypothesis), applicability, exceptions, maturity, maintenance owner and review date. Human effectiveness remains unmeasured until supported by actual evidence.
+
+Run existing CI plus `npm run check:framework`. Keep browser tests against an actual packed installation, including failed and delayed service operations and actual data outcomes. Update `build/previews.txt` and regenerate outputs. Do not promote contextual heuristics into unconditional CI failures; every diagnostic needs observed evidence, expected behavior and actionable repair. Version policy and implementation together, document migrations, and record scoped suppressions with a reason and review date.

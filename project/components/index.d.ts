@@ -66,6 +66,12 @@ export interface SurfaceProps extends React.HTMLAttributes<HTMLElement>, DepthPr
   level?: Level;
   /** Climbs one level on hover and focus, drops to ground while pressed. Only for surfaces that do something. */
   interactive?: boolean;
+  /** Prevent activation and remove interactive elevation. */
+  disabled?: boolean;
+  /** Native button type; defaults to button for as="button". */
+  type?: 'button' | 'submit' | 'reset';
+  /** Native link destination for as="a". */
+  href?: string;
   /** Element to render. Default 'div'. */
   as?: keyof React.JSX.IntrinsicElements;
 }
@@ -174,6 +180,8 @@ interface SelectFieldProps {
   'aria-describedby'?: string;
 }
 export interface SelectProps extends SelectFieldProps {
+  /** Visible required feedback after native validation. Localize for the application. Default "Choose an option." */
+  requiredMessage?: string;
   value?: string;
   /** Default '' (nothing chosen). */
   defaultValue?: string;
@@ -1551,3 +1559,13 @@ declare global {
     };
   }
 }
+
+// Workflow declarations come from the runtime source; keep one authoritative contract.
+export { useEditRecord, ErrorSummary, WorkflowStatus } from './src/pattern-edit-record';
+export type { FieldErrors, EditRecordResult, EditRecordPhase, EditRecordOptions, LeaveReason, ErrorSummaryProps } from './src/pattern-edit-record';
+export { useAsyncCollection } from './src/pattern-async-collection';
+export type { AsyncCollectionOptions, CollectionPhase } from './src/pattern-async-collection';
+export { useConsequentialAction } from './src/pattern-consequential-action';
+export type { ConsequentialActionOptions, ConsequentialPhase, ActionResult, UndoResult } from './src/pattern-consequential-action';
+export { useReviewSubmit } from './src/pattern-review-submit';
+export type { ReviewSubmitOptions, ReviewSubmitResult } from './src/pattern-review-submit';
