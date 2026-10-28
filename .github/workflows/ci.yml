@@ -72,6 +72,7 @@ jobs:
           node ../scripts/record-check.mjs react18-edit-region node checks/edit-region.mjs
           node ../scripts/record-check.mjs react18-tag-input node checks/tag-input.mjs
           node ../scripts/record-check.mjs react18-date-picker node checks/date-picker.mjs
+          node ../scripts/record-check.mjs react18-date-presets node checks/date-presets.mjs
           node ../scripts/record-check.mjs react18-tree node checks/tree.mjs
           node ../scripts/record-check.mjs react18-checklist node checks/checklist.mjs
           node ../scripts/record-check.mjs react18-filter-bar node checks/filter-bar.mjs

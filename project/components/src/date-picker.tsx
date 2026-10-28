@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cx, Icons, useApproach, useIsoLayoutEffect, useKeyFocus, useOutside, usePresence } from './core';
+import { Tick } from './select';
 
 /* Dates are ISO calendar dates, 'YYYY-MM-DD': no time, no time zone, serialisable, and comparable as strings. */
 export type ISODate = string;
@@ -32,6 +33,72 @@ const firstDay = (locale?: string): number => {
   } catch { /* older engines: Sunday */ }
   return 0;
 };
+
+/* ───────────────────────── Presets ───────────────────────── */
+
+/**
+ * A named span for DateRangePicker: a fixed range, or a function of today, so "Last 7 days" stays relative and
+ * re-resolves when today changes. `key` defaults to the label.
+ */
+export interface DatePreset { key?: string; label: string; range: DateRange | ((today: ISODate) => DateRange) }
+const quarterStart = (date: ISODate) => { const { y, m } = parts(date); return iso(y, Math.floor((m - 1) / 3) * 3 + 1, 1); };
+/** Ready-made relative presets. Each is a function, so labels and spans can be adjusted: `datePresets.lastDays(14)`. */
+export const datePresets = {
+  today: (): DatePreset => ({ key: 'today', label: 'Today', range: (t) => ({ start: t, end: t }) }),
+  yesterday: (): DatePreset => ({ key: 'yesterday', label: 'Yesterday', range: (t) => ({ start: addDays(t, -1), end: addDays(t, -1) }) }),
+  /** The last n days, today included: lastDays(7) on 27 Oct is 21–27 Oct. */
+  lastDays: (n: number): DatePreset => ({ key: `last-${n}-days`, label: `Last ${n} days`, range: (t) => ({ start: addDays(t, -(n - 1)), end: t }) }),
+  thisMonth: (): DatePreset => ({ key: 'this-month', label: 'This month', range: (t) => ({ start: t.slice(0, 8) + '01', end: t }) }),
+  lastMonth: (): DatePreset => ({ key: 'last-month', label: 'Last month', range: (t) => { const s = addMonths(t.slice(0, 8) + '01', -1); return { start: s, end: addDays(t.slice(0, 8) + '01', -1) }; } }),
+  thisQuarter: (): DatePreset => ({ key: 'this-quarter', label: 'This quarter', range: (t) => ({ start: quarterStart(t), end: t }) }),
+  lastQuarter: (): DatePreset => ({ key: 'last-quarter', label: 'Last quarter', range: (t) => { const s = quarterStart(t); return { start: addMonths(s, -3), end: addDays(s, -1) }; } }),
+  thisYear: (): DatePreset => ({ key: 'this-year', label: 'This year', range: (t) => ({ start: t.slice(0, 5) + '01-01', end: t }) }),
+};
+const presetKey = (p: DatePreset) => p.key ?? p.label;
+const resolve = (p: DatePreset, today: ISODate): DateRange => (typeof p.range === 'function' ? p.range(today) : p.range);
+
+/**
+ * The preset rows: a listbox built like Select's options, one gliding highlight, the chosen row wearing the tick at its
+ * end. It's its own Tab stop; ↑/↓ move, Enter or Space chooses.
+ */
+function PresetList({ presets, today, chosen, onChoose, min, max, listRef }: {
+  presets: DatePreset[]; today: ISODate; chosen: string | null; onChoose: (p: DatePreset) => void; min?: ISODate; max?: ISODate;
+  listRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const id = React.useId();
+  const off = (p: DatePreset) => { const r = resolve(p, today); return (!!min && !!r.start && r.start < min) || (!!max && !!r.end && r.end > max); };
+  const first = presets.findIndex((p) => presetKey(p) === chosen);
+  const [active, setActive] = React.useState(first >= 0 ? first : Math.max(0, presets.findIndex((p) => !off(p))));
+  const rows = React.useRef<(HTMLDivElement | null)[]>([]);
+  const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
+  useIsoLayoutEffect(() => { const el = rows.current[active]; setHl(el ? { y: el.offsetTop, h: el.offsetHeight } : null); }, [active, presets.length]);
+  const step = (d: number) => {
+    for (let i = active + d; i >= 0 && i < presets.length; i += d) if (!off(presets[i])) { setActive(i); return; }
+  };
+  return (
+    <div ref={listRef as React.Ref<HTMLDivElement>} role="listbox" tabIndex={0} aria-label="Presets" aria-activedescendant={`${id}-${active}`} className="alt-menu alt-date-presets" data-state="open"
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); step(1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); step(-1); }
+        else if (e.key === 'Home') { e.preventDefault(); setActive(presets.findIndex((p) => !off(p))); }
+        else if (e.key === 'End') { e.preventDefault(); for (let i = presets.length - 1; i >= 0; i--) if (!off(presets[i])) { setActive(i); break; } }
+        else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!off(presets[active])) onChoose(presets[active]); }
+      }}>
+      <span className="alt-menu-hl" aria-hidden="true" style={hl ? { transform: `translateY(${hl.y}px)`, height: hl.h, opacity: 1 } : { opacity: 0 }} />
+      {presets.map((p, i) => {
+        const k = presetKey(p), disabled = off(p);
+        return (
+          <div key={k} id={`${id}-${i}`} ref={(el) => { rows.current[i] = el; }} role="option" aria-selected={k === chosen} aria-disabled={disabled || undefined}
+            data-active={i === active ? '' : undefined} className="alt-menu-item alt-select-option" style={{ ['--i' as string]: Math.min(i, 10) }}
+            onPointerMove={() => { if (!disabled && i !== active) setActive(i); }} onClick={() => { if (!disabled) onChoose(p); }}>
+            <span className="alt-menu-text">{p.label}</span>
+            {k === chosen && <Tick />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /* ───────────────────────── Calendar ───────────────────────── */
 
@@ -288,6 +355,18 @@ export interface DateRangePickerProps extends PickerBase {
   value?: DateRange;
   defaultValue?: DateRange;
   onValueChange?: (value: DateRange) => void;
+  /**
+   * Named spans offered beside the calendar ("Last 7 days", "This quarter"): build them with `datePresets`, or pass
+   * `{ label, range }`. Choosing one fills the field with its name and dates; typing or picking days clears it.
+   */
+  presets?: DatePreset[];
+  /** The chosen preset's key, controlled; null when the range is custom. */
+  preset?: string | null;
+  /** The preset to start with, uncontrolled. Without a `defaultValue`, the range starts as this preset's. */
+  defaultPreset?: string | null;
+  onPresetChange?: (preset: string | null) => void;
+  /** Today, as an ISO date: relative presets resolve against it, and re-resolve when it changes. Default: the local date. */
+  today?: ISODate;
 }
 
 function usePicker(defaultOpen: boolean) {
@@ -352,10 +431,23 @@ export function DatePicker({ value, defaultValue = null, onValueChange, min, max
 }
 
 /** Two dates as one span. In the calendar the span is a sunk track between two raised ends, the Slider's build. */
-export function DateRangePicker({ value, defaultValue = { start: null, end: null }, onValueChange, min, max, isUnavailable, locale, weekStartsOn, id, name,
-  disabled, required, invalid, size = 'md', className, defaultOpen = false, ...aria }: DateRangePickerProps) {
-  const [inner, setInner] = React.useState<DateRange>(defaultValue);
+export function DateRangePicker({ value, defaultValue, onValueChange, min, max, isUnavailable, locale, weekStartsOn, id, name,
+  disabled, required, invalid, size = 'md', className, defaultOpen = false, presets, preset: presetProp, defaultPreset = null, onPresetChange, today: todayProp, ...aria }: DateRangePickerProps) {
+  const today = todayProp ?? todayISO();
+  const startPreset = presets?.find((p) => presetKey(p) === defaultPreset);
+  const [inner, setInner] = React.useState<DateRange>(() => defaultValue ?? (startPreset ? resolve(startPreset, today) : { start: null, end: null }));
   const current = value !== undefined ? value : inner;
+  const [presetOwn, setPresetOwn] = React.useState<string | null>(defaultPreset);
+  const presetKeyNow = presetProp !== undefined ? presetProp : presetOwn;
+  const setPreset = (k: string | null) => { if (k !== presetKeyNow) onPresetChange?.(k); if (presetProp === undefined) setPresetOwn(k); };
+  const activePreset = presets?.find((p) => presetKey(p) === presetKeyNow) ?? null;
+  // The preset shows in the field only while the range is still the preset's: a value set from outside to something else is custom.
+  const presetRange = activePreset ? resolve(activePreset, today) : null;
+  const showPreset = !!presetRange && presetRange.start === current.start && presetRange.end === current.end;
+  const [editing, setEditing] = React.useState(false);
+  const [glow, setGlow] = React.useState<'a' | 'b' | undefined>(undefined);
+  const presetsRef = React.useRef<HTMLDivElement>(null);
+  const firstSeg = React.useRef<HTMLSpanElement>(null);
   const [picking, setPicking] = React.useState<DateRange | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const { open, setOpen, root, button, mounted, state, close } = usePicker(defaultOpen);
@@ -364,31 +456,65 @@ export function DateRangePicker({ value, defaultValue = { start: null, end: null
   const panelId = auto + '-panel', formatId = auto + '-format', errorId = auto + '-error';
   const { segs, sep } = React.useMemo(() => order(locale), [locale]);
   const set = (v: DateRange) => { if (value === undefined) setInner(v); onValueChange?.(v); };
+  // Relative presets stay relative: when today changes, a chosen preset re-resolves.
+  const lastToday = React.useRef(today);
+  React.useEffect(() => {
+    if (lastToday.current === today) return;
+    lastToday.current = today;
+    if (!activePreset) return;
+    const r = resolve(activePreset, today);
+    if (r.start !== current.start || r.end !== current.end) set(r);
+  }, [today]); // eslint-disable-line react-hooks/exhaustive-deps
   const commit = (which: 'start' | 'end') => (v: ISODate | null, draft: Draft) => {
     let issue = problem(v, draft, { min, max, isUnavailable, locale });
     const next = { ...current, [which]: issue ? null : v };
     if (!issue && next.start && next.end && next.end < next.start) { issue = 'The end date must be on or after the start date.'; next[which] = null; }
     setError(issue);
-    if (next.start !== current.start || next.end !== current.end) set(next);
+    if (next.start !== current.start || next.end !== current.end) { set(next); setPreset(null); }
   };
+  const choosePreset = (p: DatePreset) => {
+    setError(null); setEditing(false); set(resolve(p, today)); setPreset(presetKey(p)); setGlow((g) => (g === 'a' ? 'b' : 'a')); close();
+  };
+  // Focus goes to the presets when the panel opens, so the common choice is one keypress away.
+  React.useEffect(() => { if (state === 'open' && presets?.length) presetsRef.current?.focus({ preventScroll: true }); }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+  useIsoLayoutEffect(() => { if (editing) firstSeg.current?.focus(); }, [editing]);
+  React.useEffect(() => { if (!showPreset) setEditing(false); }, [showPreset]);
   React.useEffect(() => { if (!open) setPicking(null); }, [open]);
   const choose = (d: ISODate) => {
     if (!picking || !picking.start || picking.end) { setPicking({ start: d, end: null }); return; }
     const [s, e] = d < picking.start ? [d, picking.start] : [picking.start, d];
     // A span can't cross a day that isn't available.
     for (let x = s; x <= e; x = addDays(x, 1)) if (isUnavailable?.(x)) { setError('Choose a span without unavailable days.'); setPicking({ start: d, end: null }); return; }
-    setError(null); set({ start: s, end: e }); close();
+    setError(null); set({ start: s, end: e }); setPreset(null); close();
   };
   const describedBy = [aria['aria-describedby'], formatId, error ? errorId : undefined].filter(Boolean).join(' ');
   const shown = picking ?? current;
-  return <div ref={root} className={cx('alt-date-picker alt-date-range', className)} data-open={open ? '' : undefined}>
+  const short = fmt(locale, { day: 'numeric', month: 'short' }), full = fmt(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+  const sameYear = current.start?.slice(0, 4) === current.end?.slice(0, 4) && current.start?.slice(0, 4) === today.slice(0, 4);
+  const shortOf = (d: ISODate) => (sameYear ? short : fmt(locale, { day: 'numeric', month: 'short', year: 'numeric' })).format(utc(d));
+  const presetFace = showPreset && !editing && current.start && current.end;
+  return <div ref={root} className={cx('alt-date-picker alt-date-range', className)} data-open={open ? '' : undefined} data-presets={presets?.length ? '' : undefined}>
     <div className="alt-input" data-size={size} data-approach="56" data-filled={current.start && current.end ? '' : undefined} data-invalid={invalid || error ? '' : undefined}
       data-disabled={disabled ? '' : undefined} role="group" aria-label={aria['aria-label']} aria-labelledby={aria['aria-labelledby']} aria-describedby={describedBy}
       aria-invalid={invalid || error ? true : undefined}>
-      <Segments value={current.start} onCommit={commit('start')} locale={locale} disabled={disabled} id={id} name="Start " describedBy={describedBy}
-        onOpen={() => setOpen(true)} onPastEnd={() => endFirst.current?.focus()} />
-      <span className="alt-date-to" aria-hidden="true">–</span>
-      <Segments value={current.end} onCommit={commit('end')} locale={locale} disabled={disabled} name="End " describedBy={describedBy} onOpen={() => setOpen(true)} firstRef={endFirst} />
+      {presetFace
+        ? <button type="button" id={id} className="alt-date-preset" data-glow={glow} disabled={disabled} aria-describedby={describedBy}
+          aria-label={`${activePreset!.label}, ${full.format(utc(current.start!))} to ${full.format(utc(current.end!))}. Type to enter dates.`}
+          onClick={() => setOpen(!open)}
+          onKeyDown={(e) => {
+            // Typing a digit, or Backspace, turns the name back into the date segments to edit.
+            if (/^\d$/.test(e.key) || e.key === 'Backspace' || e.key === 'F2') { e.preventDefault(); setEditing(true); }
+            else if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); setOpen(true); }
+          }}>
+          <span className="alt-date-preset-name">{activePreset!.label}</span>
+          <span className="alt-date-preset-dates" aria-hidden="true">· {shortOf(current.start!)} – {shortOf(current.end!)}</span>
+        </button>
+        : <>
+          <Segments value={current.start} onCommit={commit('start')} locale={locale} disabled={disabled} id={id} name="Start " describedBy={describedBy}
+            onOpen={() => setOpen(true)} onPastEnd={() => endFirst.current?.focus()} firstRef={firstSeg} />
+          <span className="alt-date-to" aria-hidden="true">–</span>
+          <Segments value={current.end} onCommit={commit('end')} locale={locale} disabled={disabled} name="End " describedBy={describedBy} onOpen={() => setOpen(true)} firstRef={endFirst} />
+        </>}
       <button ref={button} type="button" className="alt-date-button" aria-label="Choose dates" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? panelId : undefined}
         disabled={disabled} onClick={() => setOpen(!open)}><CalendarIcon /></button>
     </div>
@@ -397,8 +523,18 @@ export function DateRangePicker({ value, defaultValue = { start: null, end: null
     {error && <p id={errorId} className="alt-field-error alt-date-error"><Icons.AlertCircle size={14} />{error}</p>}
     {mounted && <div id={panelId} role="dialog" aria-label="Choose dates" className="alt-pop alt-date-panel" data-state={state} data-side="bottom" data-align="start"
       onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }}>
-      <p className="alt-date-step" aria-live="polite">{picking?.start && !picking.end ? 'Choose the end date' : 'Choose the start date'}</p>
-      <MonthGrid value={null} range={shown} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} autoFocus={state === 'open'} />
+      {presets?.length
+        ? <div className="alt-date-panes">
+          <PresetList presets={presets} today={today} chosen={showPreset ? presetKeyNow : null} onChoose={choosePreset} min={min} max={max} listRef={presetsRef} />
+          <div className="alt-date-custom">
+            <p className="alt-date-step" aria-live="polite">{picking?.start && !picking.end ? 'Choose the end date' : 'Or choose the start date'}</p>
+            <MonthGrid value={null} range={shown} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} />
+          </div>
+        </div>
+        : <>
+          <p className="alt-date-step" aria-live="polite">{picking?.start && !picking.end ? 'Choose the end date' : 'Choose the start date'}</p>
+          <MonthGrid value={null} range={shown} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} autoFocus={state === 'open'} />
+        </>}
     </div>}
   </div>;
 }

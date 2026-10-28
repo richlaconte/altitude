@@ -1848,7 +1848,7 @@ function App() {
   </div>;
 }
 
-=== DatePicker | <!-- @dsCard group="Inputs" height=640 subtitle="Type a date or pick it: the chosen day carries the one raised mark" -->
+=== DatePicker | <!-- @dsCard group="Inputs" height=760 subtitle="Type a date or pick it: the chosen day carries the one raised mark; presets for a dashboard's range" -->
 --- css
 .dp-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px 32px; max-width: 760px; align-items: start; }
 .dp-demo .dp-wide { grid-column: 1 / -1; }
@@ -1860,6 +1860,9 @@ function App() {
   const [due, setDue] = React.useState(dpShift(DP_TODAY, 3));
   const [trip, setTrip] = React.useState({ start: dpShift(DP_TODAY, 9), end: dpShift(DP_TODAY, 13) });
   const [start, setStart] = React.useState(null);
+  const [dpToday, setDpToday] = React.useState('2026-10-27');
+  const [period, setPeriod] = React.useState({ start: '2026-09-28', end: '2026-10-27' });
+  const [preset, setPreset] = React.useState('last-30-days');
   const weekend = iso => { const [y, m, d] = iso.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w === 0 || w === 6; };
   return <div className="dp-demo">
     <A.Field label="Due date" hint="Weekends aren’t available.">
@@ -1869,6 +1872,14 @@ function App() {
       <A.Field label="Trip"><A.DateRangePicker value={trip} onValueChange={setTrip} min={DP_TODAY} locale="en-GB" /></A.Field>
       <div style={{ height: 24 }} />
       <A.Field label="Start date (US format)"><A.DatePicker value={start} onValueChange={setStart} locale="en-US" /></A.Field>
+    </div>
+    <div className="dp-wide">
+      <A.Field label="Reporting period" hint={`Presets resolve against today (${dpToday}); they stay relative when it changes.`}>
+        <A.DateRangePicker value={period} onValueChange={setPeriod} preset={preset} onPresetChange={setPreset} today={dpToday} locale="en-GB"
+          presets={[A.datePresets.today(), A.datePresets.lastDays(7), A.datePresets.lastDays(30), A.datePresets.thisMonth(), A.datePresets.thisQuarter(), A.datePresets.lastQuarter(),
+            { key: 'launch', label: 'Since launch', range: { start: '2026-03-04', end: dpToday } }]} />
+      </A.Field>
+      <div style={{ marginTop: 8 }}><A.Button size="sm" variant="ghost" onClick={() => setDpToday((t) => dpShift(t, 1))}>Next day</A.Button></div>
     </div>
   </div>;
 }

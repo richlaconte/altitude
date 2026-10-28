@@ -90,7 +90,7 @@ try {
     await page.close(); }
 
   { const page = await open(); await inGrid(page); await page.keyboard.press('Escape'); await page.getByRole('dialog').waitFor({ state: 'detached' });
-    await page.getByRole('button', { name: 'Choose dates' }).click();
+    await field(page, 'Trip').getByRole('button', { name: 'Choose dates' }).click();
     const dialog = page.getByRole('dialog', { name: 'Choose dates' }); await dialog.waitFor(); await inGrid(page);
     check(await dialog.locator('[aria-selected="true"]').count() >= 2, 'DP-28 the range is selected across its days');
     const start = await focusedDate(page);
