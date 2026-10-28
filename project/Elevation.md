@@ -24,7 +24,7 @@ People reliably tell apart only a few depth categories at a glance; measured in 
 Rules that follow:
 
 - Never give two things different meanings by putting them one level apart within a tier. If they must read differently, put them in different tiers, or add a word.
-- Never encode an amount in height. A pile's thickness is three bins; the number goes in its badge.
+- Never encode an amount in height. A pile's thickness is three bins; the number goes in its badge. In a chart, amounts are length and position on a flat plot (see [Charts](Charts.md)).
 - Use `Surface level={n}` to place anything. Never pair one level's surface with another level's shadow.
 
 ## How a level is drawn
@@ -80,6 +80,9 @@ Rules that follow:
 | **Recency of messages** | toasts sink one level per newer toast behind them | `Toaster` |
 | **Focus of the moment** | the page recedes while a dialog or the command palette is at the summit; only one of them at a time | `Dialog`, `CommandPalette` with `AltitudeProvider` |
 | **Ranking** | the best match is on top; when results change, the rows that stay are carried to their new places, and only the top few new ones rise | `CommandPalette` |
+| **Amounts** | never height: length and position on a flat plot standing on the ground line; marks have no shadow, wall, sheen or lift, and only the chart's chrome (readout, legend toggles, brush, drill-down) uses height | every chart (see [Charts](Charts.md)) |
+| **Not yet the record** | projected and incomplete data is dashed or hatched and says so | `projected` on charts |
+| **A window on the record** | an overview in a trench, the chosen window a raised thumb | `ChartBrush` |
 | **A task beside the page** | a sheet is laid over the page at level 4, anchored to an edge: above menus, below the summit; it rises at its edge and is lifted off when you're done | `Sheet` |
 
 ## Rules

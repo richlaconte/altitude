@@ -49,6 +49,18 @@ So elevation should encode **a few ordered categories**, never a continuous valu
 - **Feedforward** tells people what an action will do before they take it, as distinct from feedback afterwards; it bridges Norman's gulf of execution ([Vermeulen et al., 2013](https://documentserver.uhasselt.be/bitstream/1942/14759/1/VermeulenLuytenVandenHovenConinx_chi2013.pdf)). Altitude's hover ghosts are feedforward: the check an unchecked box would get, the radio thumb where it would land, a tab's sheet peeking up, a closed accordion lid's ghost.
 - Targets that **expand as the pointer approaches** are acquired faster, even when the expansion starts late in the movement ([McGuffin & Balakrishnan, 2002](https://www.dgp.toronto.edu/~ravin/papers/chi2002_expandingtargets.pdf)). Altitude's approach response changes height, not size (a size change would reflow the layout), so it claims no Fitts' law gain. It's feedforward, and since E10 it's reserved for openings: an empty field opens as you reach for it, previewing what focusing it will do. Raised things no longer respond before the pointer is on them.
 
+### Charts
+
+These are the sources behind [Charts](Charts.md).
+
+- **Position and length are read best; depth, angle and area worse.** Cleveland and McGill ranked elementary perceptual tasks by accuracy, with position on a common scale and length ahead of angle, area and volume ([Cleveland & McGill, 1984](https://doi.org/10.1080/01621459.1984.10478080)); Heer and Bostock replicated the ranking with crowdsourced participants ([Heer & Bostock, 2010](https://doi.org/10.1145/1753326.1753357)). Munzner's ranking puts depth 6th of 10 magnitude channels (see "Depth is a weak channel for amounts"). So a mark's amount is its length or position, never its height, and Altitude has no pie or donut chart.
+- **Depth cues on bars cost accuracy.** Extraneous depth on bar graphs made people's estimates of bar heights less accurate ([Zacks, Levy, Tversky & Schiano, 1998](https://doi.org/10.1037/1076-898X.4.2.119)); Hughes (2001) reports a cost of about 10% for 3D bars. Microsoft's Office data-visualization guidance says chart elements should avoid drop shadows ([learn.microsoft.com](https://learn.microsoft.com/en-us/office/dev/add-ins/design/data-visualization-guidelines)). This is why marks are flat ink, and why a hovered bar never lifts.
+- **Dual axes mislead.** Charts with two scales on one plot are read less accurately and invite comparisons the data doesn't support ([Isenberg, Bezerianos, Dragicevic & Fekete, 2011](https://doi.org/10.1109/TVCG.2011.160)). Altitude allows one axis per plot.
+- **Decorative animation doesn't help.** Animation helps only when its motion is the change (Tversky, Morrison & Bétrancourt, above), so charts glide between values and never grow from the baseline on first render.
+- **Accessibility is checked, not assumed.** Chartability groups chart accessibility into heuristics a reviewer can audit quickly ([Elavsky, Bennett & Moritz, 2022](https://doi.org/10.1111/cgf.14522)); Charts' five-point check (visual, keyboard, screen reader, reduced motion, forced colours) follows it.
+
+Not yet checked against Altitude's rendering: the first charts will get an E-numbered prototype review (static renders of every part and state in all four schemes at 2×) once they exist.
+
 ### Accessibility
 
 - In forced-colors mode (Windows High Contrast), `box-shadow` is reverted, so anything conveyed only by a shadow is lost ([Microsoft Edge team](https://blogs.windows.com/msedgedev/2020/09/17/styling-for-windows-high-contrast-with-new-standards-for-forced-colors/)).
@@ -292,6 +304,8 @@ Not yet tested with people: whether the hover-lifting plate is enough of an affo
 - **Glossy lamps and accent rims on fields.** See E10.
 - **Keycap avatars, socket badges, severity bars.** See E8.
 - **Hashed identity tints and presence as three heights on avatars.** See E12.
+- **Shadowed, walled or sheened chart marks**, "because Altitude is about height". A bar's length is already its height on screen; adding Altitude's height to it costs accuracy and says "press it". See [Charts](Charts.md).
+- **Hovered chart marks lifting a level**, as other interactive surfaces do. A lifted bar either leaves the ground line or casts a shadow below its top edge, and both misstate its value. Clickable marks get an outline instead.
 - **Read wear as altitude.** Frequent use is a different idea from "now", and raising frequently used items would make positions drift. A worn-edge treatment may suit it better; not built.
 
 ## How to validate with people

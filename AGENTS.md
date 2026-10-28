@@ -1,6 +1,6 @@
 # Notes for agents
 
-Altitude is a React component library where height is the interface: the ground is the record. Before you change or propose anything, read the [README](README.md) (how the repository is laid out, and its one-source-per-thing rule), then [`project/README.md`](project/README.md) and [Elevation](project/Elevation.md).
+Altitude is a React component library where height is the interface: the ground is the record. Before you change or propose anything, read the [README](README.md) (how the repository is laid out, and its one-source-per-thing rule), then [`project/README.md`](project/README.md) and [Elevation](project/Elevation.md). Before proposing or building a chart, graph, stat or meter, also read [Charts](project/Charts.md): in a chart, height is never allowed to carry the data.
 
 ## You can file issues
 
