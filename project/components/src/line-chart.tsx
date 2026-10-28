@@ -118,7 +118,7 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const labels = Object.values(config).map((c) => c.label);
   const labelled = p.endLabels ?? labels.length <= 4;
   return {
-    kind: 'Line chart', zero: false, yFormat: p.y?.format,
+    kind: 'Line chart', zero: false, swatch: 'line', yFormat: p.y?.format,
     right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
   };
 };

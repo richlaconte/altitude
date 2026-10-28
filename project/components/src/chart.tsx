@@ -254,8 +254,10 @@ export interface ChartInfo {
   yFormat?: (value: number) => string;
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
   right?: number;
+  /** How the legend draws this chart's series: a block (bars, areas) or a short line (lines). */
+  swatch?: 'rect' | 'line';
 }
-type ChartChild = { chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean };
+type ChartChild = { chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean; chartLegend?: boolean };
 
 /* ───────────────────────── readout ───────────────────────── */
 
@@ -311,6 +313,89 @@ export function ChartTooltipContent({ indicator = 'line', labelFormat, hideLabel
 export function ChartTooltip(_: { content?: React.ReactElement<ChartTooltipContentProps> }) { return null; }
 ChartTooltip.chartHtml = true;
 ChartTooltip.chartTooltip = true;
+
+/* ───────────────────────── legend ───────────────────────── */
+
+export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; }
+export interface ChartLegendContentProps {
+  /** Let people hide and show series. Each key becomes a switch-like button in a toolbar. Default false: keys only name. */
+  toggle?: boolean;
+  /** The hidden series' keys, controlled. */
+  hidden?: string[];
+  /** The hidden series' keys to start with, uncontrolled. */
+  defaultHidden?: string[];
+  onHiddenChange?: (hidden: string[]) => void;
+  /** The toolbar's name. Default "Series". */
+  label?: string;
+  /** Filled in by the container. */
+  items?: ChartLegendItem[];
+  swatch?: 'rect' | 'line';
+  onToggle?: (key: string) => void;
+}
+
+function Swatch({ item, swatch }: { item: ChartLegendItem; swatch: 'rect' | 'line' }) {
+  return (
+    <svg className="alt-legend-mark" width="14" height="10" aria-hidden="true">
+      {swatch === 'line'
+        ? <line x1="1" y1="5" x2="13" y2="5" stroke={item.stroke} strokeWidth="2.5" strokeLinecap="round" strokeDasharray={item.dash} />
+        : <rect width="100%" height="100%" rx="2" fill={item.fill} />}
+    </svg>
+  );
+}
+
+/**
+ * The legend's keys. Without `toggle` they're labels, flush on the ground: a swatch in the series colour and its name
+ * in ink. With `toggle` each key is a choice, so it's built like a Checkbox: a trench the series colour pours into
+ * while the series is shown, inside a ghost button that lifts when pointed at. The keys form one toolbar (one Tab
+ * stop; ←/→ between keys), each an aria-pressed button; the last shown series can't be hidden.
+ */
+export function ChartLegendContent({ toggle = false, label = 'Series', items = [], swatch = 'rect', onToggle }: ChartLegendContentProps) {
+  const id = React.useId();
+  const [focus, setFocus] = React.useState(0);
+  const [said, setSaid] = React.useState('');
+  const refs = React.useRef<Array<HTMLButtonElement | null>>([]);
+  const shown = items.filter((i) => !i.hidden).length;
+  if (!toggle) {
+    return (
+      <div className="alt-chart-legend" role="list" aria-label={label}>
+        {items.map((i) => <span key={i.key} role="listitem" className="alt-legend-key"><Swatch item={i} swatch={swatch} /><span>{i.label}</span></span>)}
+      </div>
+    );
+  }
+  const move = (to: number) => { const n = (to + items.length) % items.length; setFocus(n); refs.current[n]?.focus(); };
+  return (
+    <div className="alt-chart-legend" role="toolbar" aria-label={label} data-toggle=""
+      onKeyDown={(e) => {
+        const map: Record<string, number> = { ArrowRight: focus + 1, ArrowDown: focus + 1, ArrowLeft: focus - 1, ArrowUp: focus - 1, Home: 0, End: items.length - 1 };
+        if (e.key in map) { e.preventDefault(); move(map[e.key]); }
+      }}>
+      {items.map((i, n) => {
+        const last = !i.hidden && shown === 1;
+        return (
+          <button key={i.key} ref={(el) => { refs.current[n] = el; }} type="button" className="alt-legend-key" tabIndex={n === focus ? 0 : -1}
+            aria-pressed={!i.hidden} aria-disabled={last || undefined} aria-describedby={last ? `${id}-last` : undefined}
+            onFocus={() => setFocus(n)}
+            onClick={() => {
+              if (last) return;
+              onToggle?.(i.key);
+              const nowShown = i.hidden ? shown + 1 : shown - 1;
+              setSaid(`${i.label} ${i.hidden ? 'shown' : 'hidden'}. ${nowShown} of ${items.length} series shown.`);
+            }}>
+            {/* A switch's swatch is always a block: the series fill pours into the whole trench, as a Checkbox's accent does. */}
+            <span className="alt-legend-swatch" data-shown={i.hidden ? undefined : ''}><Swatch item={i} swatch="rect" /></span>
+            <span>{i.label}</span>
+          </button>
+        );
+      })}
+      <span id={`${id}-last`} hidden>At least one series stays shown.</span>
+      <span className="alt-sr" aria-live="polite">{said}</span>
+    </div>
+  );
+}
+/** A legend for the chart: place it inside the chart type or the container, with its content. */
+export function ChartLegend(_: { content?: React.ReactElement<ChartLegendContentProps> }) { return null; }
+ChartLegend.chartHtml = true;
+ChartLegend.chartLegend = true;
 
 /* ───────────────────────── frames and motion ───────────────────────── */
 
@@ -538,14 +623,25 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const kids = React.Children.toArray(children).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[];
   const chartChild = kids.find((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartInfo);
   const childProps = chartChild?.props ?? {};
-  const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(childProps, config) : {};
+
+  // The legend, and which series it has hidden. Hidden series keep their slots; the chart is drawn without them.
+  const findPart = <P,>(flag: 'chartTooltip' | 'chartLegend', list: React.ReactNode) =>
+    (React.Children.toArray(list).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[])
+      .find((k) => typeof k.type !== 'string' && (k.type as ChartChild)[flag]) as React.ReactElement<P> | undefined;
+  const legendEl = findPart<{ content?: React.ReactElement<ChartLegendContentProps> }>('chartLegend', children) ?? findPart('chartLegend', childProps.children as React.ReactNode);
+  const legendOpts = legendEl?.props.content?.props ?? {};
+  const [hiddenOwn, setHiddenOwn] = React.useState<string[]>(legendOpts.defaultHidden ?? []);
+  const hidden = legendOpts.hidden ?? hiddenOwn;
+  const setHidden = (next: string[]) => { legendOpts.onHiddenChange?.(next); if (legendOpts.hidden === undefined) setHiddenOwn(next); };
+  const shownConfig = hidden.length ? Object.fromEntries(Object.entries(config).filter(([k]) => !hidden.includes(k))) : config;
+  const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(childProps, shownConfig) : {};
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   const xKey = xProp ?? (childProps.x as string | undefined) ?? '';
   // A chart type that needs zero (bars) gets it whatever the prop says: a bar that starts above zero misstates its length.
   const zero = info.zero === true ? true : zeroProp ?? info.zero ?? true;
 
   const configKey = Object.entries(config).map(([k, c]) => `${k}:${c.label}:${c.color ?? ''}`).join('|');
-  const series: ChartSeries[] = React.useMemo(() => {
+  const allSeries: ChartSeries[] = React.useMemo(() => {
     const nf = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
     return Object.keys(config).map((key, i) => {
       const c = config[key];
@@ -553,6 +649,8 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
       return { key, label: c.label, slot, color: `var(--${slot})`, format: c.format ?? ((v: number) => nf.format(v)) };
     });
   }, [configKey, locale]); // eslint-disable-line react-hooks/exhaustive-deps
+  const hiddenKey = hidden.join('|');
+  const series = React.useMemo(() => allSeries.filter((s) => !hidden.includes(s.key)), [allSeries, hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sample = data.find((d) => d[xKey] != null)?.[xKey];
   const kind = xScaleProp ?? info.xScale ?? (isTimeLike(sample) ? 'time' : typeof sample === 'number' ? 'linear' : 'band');
@@ -585,14 +683,12 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
     left: !axes ? 0 : horizontal ? catWidth
       : Math.ceil(Math.max(...ny.ticks.map((t) => textWidth(fmtY(t))), 0)) + 10,
   };
-  const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal]); // eslint-disable-line react-hooks/exhaustive-deps
+  const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef);
 
   // The readout: on by default, off when the container or the chart type says tooltip={false}.
-  const findTip = (list: React.ReactNode): React.ReactElement<{ content?: React.ReactElement<ChartTooltipContentProps> }> | undefined =>
-    (React.Children.toArray(list).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[])
-      .find((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartTooltip) as never;
-  const tipEl = findTip(children) ?? findTip(childProps.children as React.ReactNode);
+  type TipProps = { content?: React.ReactElement<ChartTooltipContentProps> };
+  const tipEl = findPart<TipProps>('chartTooltip', children) ?? findPart<TipProps>('chartTooltip', childProps.children as React.ReactNode);
   const tooltipOn = tooltipProp && childProps.tooltip !== false;
   const [activeIdx, setActiveIdx] = React.useState<number | null>(null);
   const sticky = React.useRef(false);
@@ -623,7 +719,7 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const patterns = patternsProp || env.forced || env.print;
   const pid = id.replace(/[^\w-]/g, '');
   const encode = (key: string): ChartEncoding => {
-    const s = series.find((x) => x.key === key);
+    const s = allSeries.find((x) => x.key === key);
     const slot = s?.slot ?? 'data-other';
     const e = ENCODINGS[slot];
     const color = env.forced ? 'CanvasText' : s?.color ?? 'var(--data-other)';
@@ -802,7 +898,7 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
             <svg className="alt-chart-svg" width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
               {patterns && (
                 <defs>
-                  {[...new Set(series.map((s) => s.slot))].map((slot) => {
+                  {[...new Set(allSeries.map((s) => s.slot))].map((slot) => {
                     const hatch = ENCODINGS[slot].hatch;
                     return hatch ? <Hatch key={slot} id={`${pid}-${slot}`} kind={hatch} bg={env.forced ? 'Canvas' : `var(--${slot})`} fg={env.forced ? 'CanvasText' : 'var(--surface-raised)'} /> : null;
                   })}
@@ -865,7 +961,12 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
           )}
           {readout}
         </div>
-        {htmlKids}
+        {legendEl && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
+          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, hidden: hidden.includes(s.key) }; }),
+          swatch: info.swatch ?? 'rect',
+          onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
+        })}
+        {htmlKids.filter((k) => !(k.type as ChartChild).chartLegend)}
         <figcaption id={sumId} className={summary ? 'alt-chart-summary' : 'alt-sr'}>{summary ?? generated}</figcaption>
       </figure>
     </ChartContext.Provider>
