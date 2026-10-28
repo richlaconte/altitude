@@ -74,6 +74,8 @@ A `RevealGroup` around a row of charts and stats lands them together.
 
 **Not yet the record.** `BarChart`, `LineChart` and `AreaChart` take `status={(d) => 'partial' | 'projected' | undefined}`. The ground is the record, and a projection or an unfinished period isn't yet, so it's drawn hatched or dashed, never raised, and said in words: "So far" or "Projected" in point names ("Oct 1, 2026, Revenue, $61K, so far."), after the readout's heading, in a Status column in the table, and at the end of the generated summary, whose trend and extremes are read from the settled records. A 1px `line-control` rule named "Today" marks where the record ends. For your own marks, `useChart()` gives `status(d)`, `statusRanges` (the stretches of x that are pending, for `ChartStatusClip`) and `encode(key).pending`, `pendingOpacity` and `pendingDash`.
 
+**References and annotations.** [`ChartReference`](../ChartReference/README.md) draws a target, a limit, a normal range or the mean as a flush 1px line or a flat band, and `ChartAnnotation` marks an event on x with a `Badge` plate and a leader. Place them inside the chart type or the container. The frame draws them, so their labels are laid out together and kept clear of each other, and they're read after the summary.
+
 **Readout and legend.** Every chart has a readout ([`ChartTooltip`](../ChartTooltip/README.md)); add a [`ChartLegend`](../ChartLegend/README.md) to name series, or to let people hide and show them. Hidden series keep their slots and leave the scales.
 
 **Your own marks.** `useChart()` gives you the following, and children are drawn inside the plot, in its coordinates, under the ground line's rule:

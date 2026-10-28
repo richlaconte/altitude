@@ -41,7 +41,7 @@ export type { ItemGroupProps, ItemGroupRemoval, ItemGroupResult, ItemGroupCreate
 export type { BoardCreateResult, BoardRenameResult } from './collections';
 export { PropertyList, PropertyListItem } from './property-list';
 export type { PropertyListProps, PropertyListItemProps, PropertyListEditAll } from './property-list';
-export { ChartContainer, ChartMarker, ChartStatusClip, CHART_STATUS_WORDS, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, useChart } from './chart';
+export { ChartContainer, ChartMarker, ChartReference, ChartAnnotation, ChartStatusClip, CHART_STATUS_WORDS, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, useChart } from './chart';
 export { BarChart } from './bar-chart';
 export { LineChart, linePath } from './line-chart';
 export type { LineChartProps } from './line-chart';
@@ -56,7 +56,7 @@ export type { MeterProps, MeterSegment } from './meter';
 export { BarList } from './bar-list';
 export type { BarListProps, BarListItem } from './bar-list';
 export type { BarChartProps } from './bar-chart';
-export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage, ChartEncoding, ChartMarkerShape, ChartTooltipItem, ChartTooltipContentProps, ChartLegendItem, ChartLegendContentProps, ChartEmpty, ChartStatus } from './chart';
+export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage, ChartEncoding, ChartMarkerShape, ChartTooltipItem, ChartTooltipContentProps, ChartLegendItem, ChartLegendContentProps, ChartEmpty, ChartStatus, ChartReferenceProps, ChartAnnotationProps } from './chart';
 export { useEditRecord, ErrorSummary, WorkflowStatus } from './pattern-edit-record';
 export type { FieldErrors, EditRecordResult, EditRecordPhase, EditRecordOptions, LeaveReason, ErrorSummaryProps } from './pattern-edit-record';
 export { useAsyncCollection } from './pattern-async-collection';

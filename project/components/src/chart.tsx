@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, useIsoLayoutEffect, usePresence } from './core';
+import { cx, Icons, useIsoLayoutEffect, usePresence } from './core';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
 import { DataTable } from './collections';
 import { EmptyState } from './empty';
@@ -310,6 +310,7 @@ export interface ChartInfo {
 }
 type ChartChild = {
   chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean; chartLegend?: boolean;
+  chartReference?: boolean; chartAnnotation?: boolean;
   /** Where the mark for one record and series sits, in plot coordinates, for the keyboard's focus ring. Default: (xOf, y(value)). */
   chartPoint?: (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string) => [number, number];
 };
@@ -462,6 +463,43 @@ export function ChartLegend(_: { content?: React.ReactElement<ChartLegendContent
 ChartLegend.chartHtml = true;
 ChartLegend.chartLegend = true;
 
+/* ───────────────────────── references and annotations ───────────────────────── */
+
+export interface ChartReferenceProps {
+  /** Where on the value axis: a value (a line), a range [low, high] (a band), or the 'mean' or 'median' of a series. */
+  y: number | [number, number] | 'mean' | 'median';
+  /** What it is, in words: "Target 99.9%", "Normal range", "Average". A mean or median adds its value. */
+  label: string;
+  /** A threshold that means good or bad: the line wears caution or critical, and its label the status icon. */
+  tone?: 'caution' | 'critical';
+  /** The series a mean or median is read from. Default: the first shown. */
+  series?: string;
+}
+/**
+ * Something to read the chart against: a target, a limit, a normal range, the average. A line is 1px ink-muted and
+ * solid (dashes mean "projected"), labelled at its right end; a band is a flat line-coloured fill, labelled inside.
+ * Place it inside the chart type or the container. The container draws it, so labels stay clear of each other.
+ */
+export function ChartReference(_: ChartReferenceProps) { return null; }
+ChartReference.chartHtml = true;
+ChartReference.chartReference = true;
+
+export interface ChartAnnotationProps {
+  /** Where on x: a date, a number or a category, as the data's x values are written. */
+  x: string | number;
+  /** The event, in a few words: "v2 launch". */
+  label: string;
+  /** Makes the plate a button, which lifts one level when pointed at. */
+  onSelect?: () => void;
+}
+/**
+ * An event on x ("the day we shipped v2"): a Badge plate flush at the top of the plot with a 1px line-control leader
+ * down to its x. Plates that would overlap stack into rows. Listed after the summary for screen readers.
+ */
+export function ChartAnnotation(_: ChartAnnotationProps) { return null; }
+ChartAnnotation.chartHtml = true;
+ChartAnnotation.chartAnnotation = true;
+
 /* ───────────────────────── frames and motion ───────────────────────── */
 
 type Row = { key: string; d: ChartDatum };
@@ -482,6 +520,10 @@ interface Frame {
   extra: string[];
 }
 type Layer = { frame: Frame; opacity: number };
+/** A reference laid out in a frame: its span on the value axis (from = to for a line) and where its label sits. */
+type RefGeo = { i: number; band: boolean; from: number; to: number; text: string; tone?: 'caution' | 'critical'; lx: number; ly: number; anchor: 'start' | 'end' };
+/** An annotation laid out in a frame: its x, its plate's left edge and width, and the row it stacks into. */
+type NoteGeo = { i: number; at: number; left: number; w: number; row: number };
 /** Where a change is: the axis rescaling, the marks gliding to their values, or a cross-fade. */
 export type ChartStage = 'rescale' | 'values' | 'fade';
 
@@ -718,6 +760,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       .find((k) => typeof k.type !== 'string' && (k.type as ChartChild)[flag]) as React.ReactElement<P> | undefined;
   const legendEl = findPart<{ content?: React.ReactElement<ChartLegendContentProps> }>('chartLegend', children) ?? findPart('chartLegend', childProps.children as React.ReactNode);
   const legendOpts = legendEl?.props.content?.props ?? {};
+  // References and annotations, inside the container or the chart type: drawn by the frame, so their labels are laid out together.
+  const overlayKids = [...kids, ...(React.Children.toArray(childProps.children as React.ReactNode).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[])]
+    .filter((k) => typeof k.type !== 'string');
+  const refs = overlayKids.filter((k) => (k.type as ChartChild).chartReference).map((k) => k.props as unknown as ChartReferenceProps);
+  const notes = overlayKids.filter((k) => (k.type as ChartChild).chartAnnotation).map((k) => k.props as unknown as ChartAnnotationProps);
   const [hiddenOwn, setHiddenOwn] = React.useState<string[]>(legendOpts.defaultHidden ?? []);
   const hidden = legendOpts.hidden ?? hiddenOwn;
   const setHidden = (next: string[]) => { legendOpts.onHiddenChange?.(next); if (legendOpts.hidden === undefined) setHiddenOwn(next); };
@@ -763,6 +810,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const extentKeys = [...series.map((s) => s.key), ...(bandOn ? [bandInfo!.low, bandInfo!.high] : [])];
     for (const d of data) for (const k of extentKeys) { const v = d[k]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
   }
+  // A reference's own values count too, so a target above every value is still on the plot.
+  for (const r of refs) for (const v of Array.isArray(r.y) ? r.y : [r.y]) if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
   if (!isFinite(lo)) { lo = 0; hi = 1; }
   if (zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
   // All zero is real data: give it 0–1, so the ground line is the floor, not the middle of an invented range.
@@ -938,6 +987,70 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       if (x.kind === 'band') boundaryAt = x(String(rows[turn][xKey])) - (x.step - x.bandwidth) / 2;
       else boundaryAt = xOf(rows[turn - 1]);
     }
+    // References (#68): each one's place on the value axis in this frame, so they glide with a rescale.
+    const refGeo: RefGeo[] = [];
+    refs.forEach((r, i) => {
+      let v: number | [number, number] | null = null;
+      const key = r.series ?? frame.series[0]?.key;
+      if (typeof r.y === 'string') {
+        const vs = rows.filter((d) => !statusOf(d)).map((d) => d[key ?? '']).filter((n): n is number => typeof n === 'number' && isFinite(n)).sort((a, b) => a - b);
+        if (vs.length) v = r.y === 'mean' ? vs.reduce((t, n) => t + n, 0) / vs.length : vs.length % 2 ? vs[(vs.length - 1) / 2] : (vs[vs.length / 2 - 1] + vs[vs.length / 2]) / 2;
+      } else v = r.y;
+      if (v === null) return;
+      const fmt = (n: number) => (frame.series.find((q) => q.key === key)?.format ?? fmtY)(n);
+      // A mean or median is said at the data's own precision, so a format that doesn't round still reads cleanly.
+      const places = Math.min(4, Math.max(0, ...rows.map((d) => { const n = d[key ?? '']; return typeof n === 'number' && isFinite(n) ? (String(n).split('.')[1] ?? '').length : 0; })));
+      const text = typeof r.y === 'string' && typeof v === 'number' ? `${r.label} ${fmt(Number(v.toFixed(places + 1)))}` : r.label;
+      if (Array.isArray(v)) {
+        const [p, q] = [y(Math.min(v[0], v[1])), y(Math.max(v[0], v[1]))];
+        refGeo.push({ i, band: true, from: Math.min(p, q), to: Math.max(p, q), text, tone: r.tone, lx: 0, ly: 0, anchor: 'start' });
+      } else refGeo.push({ i, band: false, from: y(v), to: y(v), text, tone: r.tone, lx: 0, ly: 0, anchor: 'end' });
+    });
+    // Annotations (#68): a plate per event at the top of the plot, centred on its x, stacked into rows where they'd overlap.
+    const noteGeo: NoteGeo[] = [];
+    if (!horizontal) {
+      const rowsEnd: number[] = [];
+      notes.map((n, i) => ({ n, i, at: xOf({ [xKey]: n.x }) })).filter((g) => isFinite(g.at)).sort((p, q) => p.at - q.at).forEach(({ n, i, at }) => {
+        const w = Math.ceil(textWidth(n.label) * 0.96) + 18;
+        const left = Math.max(0, Math.min(pw - w, at - w / 2));
+        let row = rowsEnd.findIndex((e) => e + 6 <= left);
+        if (row < 0) { row = rowsEnd.length; rowsEnd.push(0); }
+        rowsEnd[row] = left + w;
+        noteGeo.push({ i, at, left, w, row });
+      });
+    }
+    // Labels: a band's inside it when it's tall enough; a line's (and a thin band's) at the right end, above it, nudged
+    // at least 16px apart. Across a horizontal chart, labels sit at the top beside their line, stacked into rows.
+    const outside: RefGeo[] = [];
+    for (const g of refGeo) {
+      if (horizontal) { outside.push(g); continue; }
+      if (g.band && g.to - g.from >= 20) { g.lx = 8; g.ly = g.from + 14; g.anchor = 'start'; } else { g.lx = pw - 4; g.ly = g.from - 5; g.anchor = 'end'; outside.push(g); }
+    }
+    if (horizontal) {
+      const ends: number[] = [];
+      for (const g of [...outside].sort((p, q) => p.from - q.from)) {
+        const w = textWidth(g.text) + (g.tone ? 18 : 0);
+        const x0 = Math.min(g.to + 4, pw - w);
+        let row = ends.findIndex((e) => e + 6 <= x0);
+        if (row < 0) { row = ends.length; ends.push(0); }
+        ends[row] = x0 + w;
+        g.lx = x0 + (g.tone ? 18 : 0); g.ly = 12 + row * 16; g.anchor = 'start';
+      }
+    } else {
+      // One pass, top to bottom: a label that would cover a plate or a label already placed steps down below it.
+      const taken = noteGeo.map((n) => ({ x0: n.left - 4, x1: n.left + n.w + 4, y0: n.row * 26, y1: n.row * 26 + 22 }));
+      for (const g of [...refGeo].sort((p, q) => p.ly - q.ly)) {
+        const w = textWidth(g.text) + (g.tone ? 18 : 0), x0 = g.anchor === 'end' ? g.lx - w : g.lx - (g.tone ? 18 : 0);
+        g.ly = Math.max(g.ly, 12);
+        for (let moved = true, n = 0; moved && n < 20; n++) {
+          moved = false;
+          for (const t of taken) {
+            if (x0 < t.x1 && x0 + w > t.x0 && g.ly - 13 < t.y1 && g.ly + 4 > t.y0) { g.ly = t.y1 + 15; moved = true; }
+          }
+        }
+        taken.push({ x0: x0 - 4, x1: x0 + w + 4, y0: g.ly - 13, y1: g.ly + 4 });
+      }
+    }
     const ctx: ChartContextValue = {
       width: pw, height: ph, x, y, xOf, ground, data: frame.rows.map((r) => r.d), xKey, config, series: frame.series,
       alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? frame.seriesAlpha.get(key) ?? 1 : 1),
@@ -949,7 +1062,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
       status: statusOf, hasStatus: !!info.status, statusRanges: { record, pending },
     };
-    return { ctx, left, pw, ph, xTicks, boundaryAt };
+    return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo };
   };
 
   const generated = describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf);
@@ -985,6 +1098,21 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const svgKids = kids.filter((k) => typeof k.type === 'string' || !(k.type as ChartChild).chartHtml);
   const htmlKids = kids.filter((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartHtml);
   const top = draw(layers[layers.length - 1].frame);
+  // References and annotations are read after the summary, written or generated: "1 annotation: v2 launch, Mar 4, 2026."
+  const overlayWords = (() => {
+    if (!data.length) return '';
+    let out = '';
+    const shown = top.refGeo;
+    if (shown.length) {
+      const items = shown.map((g) => {
+        const r = refs[g.i], fmt = (n: number) => (allSeries.find((q) => q.key === (r.series ?? series[0]?.key))?.format ?? fmtY)(n);
+        return Array.isArray(r.y) ? `${g.text}, ${fmt(Math.min(...r.y))} to ${fmt(Math.max(...r.y))}` : typeof r.y === 'number' ? `${g.text} at ${fmt(r.y)}` : g.text;
+      });
+      out += ` ${items.length === 1 ? 'Reference' : 'References'}: ${items.join('; ')}.`;
+    }
+    if (notes.length) out += ` ${notes.length} ${notes.length === 1 ? 'annotation' : 'annotations'}: ${notes.map((n) => `${n.label}, ${formatX(n.x)}`).join('; ')}.`;
+    return out;
+  })();
 
   /** With views on: the head beside a Chart | Table control, and the two views stacked in one box, cross-fading. */
   const wrapViews = (plot: React.ReactElement) => !viewsOn ? plot : (
@@ -1052,7 +1180,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const go = (n: Nav) => { setNav(n); wantFocus.current = navKey(n); show(n.level === 'points' ? n.p : null); };
   const num = (v: unknown): v is number => typeof v === 'number' && isFinite(v);
   const stacked = /stacked/i.test(info.kind ?? '');
-  const summaryText = typeof summary === 'string' ? summary : generated;
+  const summaryText = (typeof summary === 'string' ? summary : generated) + overlayWords;
   const seriesName = (si: number) => {
     const s = series[si];
     const vals = data.filter((d) => num(d[s.key]));
@@ -1192,8 +1320,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           )}
           {W > 0 && data.length > 0 && (
             <svg className="alt-chart-svg" width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
-              {(patterns || info.status) && (
+              {(patterns || info.status || (env.forced && refs.some((r) => Array.isArray(r.y)))) && (
                 <defs>
+                  {env.forced && refs.some((r) => Array.isArray(r.y)) && <Hatch id={`${pid}-ref`} kind="fall" bg="Canvas" fg="GrayText" />}
                   {patterns && [...new Set(allSeries.map((s) => s.slot))].map((slot) => {
                     const hatch = ENCODINGS[slot].hatch;
                     return hatch ? <Hatch key={slot} id={`${pid}-${slot}`} kind={hatch} bg={env.forced ? 'Canvas' : `var(--${slot})`} fg={env.forced ? 'CanvasText' : 'var(--surface-raised)'} /> : null;
@@ -1205,7 +1334,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                 </defs>
               )}
               {layers.map(({ frame, opacity }, i) => {
-                const { ctx, left, pw, ph, xTicks, boundaryAt } = i === layers.length - 1 ? top : draw(frame);
+                const { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo } = i === layers.length - 1 ? top : draw(frame);
                 return (
                   <g key={i} transform={`translate(${left},${TOP})`} opacity={opacity < 1 ? opacity : undefined}>
                     <g className="alt-chart-grid">
@@ -1220,6 +1349,15 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                       const at = Math.round(ctx.xOf(ctx.active)) + 0.5;
                       return horizontal ? <line className="alt-chart-crosshair" x1={0} x2={pw} y1={at} y2={at} /> : <line className="alt-chart-crosshair" x1={at} x2={at} y1={0} y2={ph} />;
                     })()}
+                    {/* Reference bands and annotation leaders lie under the marks: a flat line-coloured fill, a 1px line-control rule. */}
+                    {(refGeo.some((g) => g.band) || noteGeo.length > 0) && (
+                      <g className="alt-chart-refs-under">
+                        {refGeo.filter((g) => g.band).map((g) => horizontal
+                          ? <rect key={g.i} className="alt-chart-ref-band" x={g.from} y={0} width={g.to - g.from} height={ph} fill={env.forced ? `url(#${pid}-ref)` : 'var(--line)'} />
+                          : <rect key={g.i} className="alt-chart-ref-band" x={0} y={g.from} width={pw} height={g.to - g.from} fill={env.forced ? `url(#${pid}-ref)` : 'var(--line)'} />)}
+                        {noteGeo.map((n) => <line key={n.i} className="alt-chart-note-leader" x1={Math.round(n.at) + 0.5} x2={Math.round(n.at) + 0.5} y1={n.row * 26 + 22} y2={ph} />)}
+                      </g>
+                    )}
                     {/* Where the record ends: a 1px line-control rule on the ground under the marks, named in words ("Today") over them. */}
                     {boundaryAt !== null && info.boundary !== false && (() => {
                       const at = Math.round(boundaryAt) + 0.5;
@@ -1232,6 +1370,26 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                       const flip = at + 8 + textWidth(word) > pw;
                       return <text className="alt-chart-boundary-label" x={flip ? at - 5 : at + 5} y={12} textAnchor={flip ? 'end' : 'start'}>{word}</text>;
                     })()}
+                    {/* Reference lines over the marks, solid (dashes mean projected), each labelled in caption text. */}
+                    {refGeo.length > 0 && (
+                      <g className="alt-chart-refs">
+                        {refGeo.filter((g) => !g.band).map((g) => {
+                          const at = Math.round(g.from) + 0.5;
+                          return horizontal ? <line key={g.i} className="alt-chart-ref" data-tone={g.tone} x1={at} x2={at} y1={0} y2={ph} />
+                            : <line key={g.i} className="alt-chart-ref" data-tone={g.tone} x1={0} x2={pw} y1={at} y2={at} />;
+                        })}
+                        {refGeo.map((g) => {
+                          const Icon = g.tone === 'critical' ? Icons.AlertCircle : Icons.AlertTriangle;
+                          const ix = g.anchor === 'end' ? g.lx - textWidth(g.text) - 18 : g.lx - 18;
+                          return (
+                            <g key={g.i} className="alt-chart-ref-label" data-tone={g.tone}>
+                              {g.tone && <Icon size={14} x={ix} y={g.ly - 11} className="alt-chart-ref-icon" />}
+                              <text x={g.lx} y={g.ly} textAnchor={g.anchor}>{g.text}</text>
+                            </g>
+                          );
+                        })}
+                      </g>
+                    )}
                     {/* The ground line is zero. When zero isn't on the axis, the plot's foot is an ordinary gridline, not ground. */}
                     {horizontal
                       ? <line className={frame.y[0] <= 0 && frame.y[1] >= 0 ? 'alt-chart-ground' : 'alt-chart-floor'} x1={Math.round(ctx.ground) + 0.5} x2={Math.round(ctx.ground) + 0.5} y1={0} y2={ph} />
@@ -1270,6 +1428,13 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
               })}
             </svg>
           )}
+          {W > 0 && data.length > 0 && top.noteGeo.map((g) => {
+            const n = notes[g.i];
+            const style: React.CSSProperties = { left: top.left + g.left, top: TOP + g.row * 26, minWidth: g.w };
+            return n.onSelect
+              ? <button key={g.i} type="button" className="alt-badge alt-chart-note" data-variant="plate" style={style} onClick={n.onSelect} aria-label={`${n.label}, ${formatX(n.x)}`}>{n.label}</button>
+              : <span key={g.i} className="alt-badge alt-chart-note" data-variant="plate" style={style} aria-hidden="true">{n.label}</span>;
+          })}
           <div className="alt-chart-nav" onFocus={() => setNavFocused(true)}
             onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { setNavFocused(false); if (nav.level === 'points') show(null); } }}>
             {nodes}
@@ -1282,7 +1447,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
         })}
         {htmlKids.filter((k) => !(k.type as ChartChild).chartLegend)}
-        <figcaption id={sumId} className={summary ? 'alt-chart-summary' : 'alt-sr'}>{summary ?? generated}</figcaption>
+        <figcaption id={sumId} className={summary ? 'alt-chart-summary' : 'alt-sr'}>
+          {summary ?? generated}
+          {summary && overlayWords ? <span className="alt-sr">{overlayWords}</span> : !summary && overlayWords}
+        </figcaption>
       </figure>
     </ChartContext.Provider>
   );

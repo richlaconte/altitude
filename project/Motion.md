@@ -97,7 +97,8 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 10. **The readout steps, it doesn't drift.** It rises like a `Tooltip` the first time (4px, `elev-1` to `elev-3`, `dur-travel-3`) and shares its 400ms warm-up; after that it steps between x positions with no easing and the crosshair snaps with it. It follows the data, not the pointer's every pixel, so it never reads as something drifting. It leaves in 70% of its entry.
 11. **Past 500 marks** changing at once, the plot cross-fades instead of gliding.
 12. **A period that completes is pressed into the record.** When a bar's `status` goes (this month closes), its hatching cross-fades to a solid fill over `dur-travel-3`, in place, as a `Stepper`'s done step settles. It never rises or grows. A line's or an area's boundary moves with the data, as any change does.
-13. **Reduced motion:** values change in place, as a cross-fade between the old chart and the new one, and nothing travels. Resizing never animates, with or without it.
+13. **References move with the scale.** A reference line or band is drawn in the plot's coordinates, so it glides with a rescale, and a mean or median glides to its new value with the marks. Annotation plates move with their x; they never rise or drop in.
+14. **Reduced motion:** values change in place, as a cross-fade between the old chart and the new one, and nothing travels. Resizing never animates, with or without it.
 
 **Word-sized charts don't move.** A `Sparkline` has no motion of its own: it lands out of its imprint like any inline `Await` content, and when its value changes in a live table the row gets the afterglow, not the line.
 

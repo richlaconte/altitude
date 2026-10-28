@@ -479,6 +479,18 @@ A design review: `ChartStatus` was rendered as monthly revenue with October so f
 
 Not yet tested with people: whether "Today" is the right word for the rule when the first pending record is a partial period, since today falls inside that period rather than at its start.
 
+### E38 · Can a chart carry its references without crowding its data?
+
+A design review: `ChartReference` was rendered as uptime against a normal range, a target and a critical limit, with an outage annotated; cloud spend against a caution budget and a median that moves with the week; team scores against a bar on a horizontal chart; and latency against its mean with three crowded events, two of them buttons. In all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`. `checks/chart-reference.mjs` measures it.
+
+- **Drawn by the frame, not by each child.** If each reference drew itself, no label could know where the others were. The children are declarative, like `ChartTooltip`, and the container lays out every label and plate together: labels nudged 16px apart, plates in rows, a label under a plate stepped down below the rows.
+- **Solid, never dashed.** Dashes already mean "projected" (E37), so a reference line is solid. Its colour is `ink-muted`, or the status tone when crossing it means good or bad, and then the label also carries the icon, so the tone is never colour alone.
+- **Bands under, lines over.** A band is a region the data passes through, so it lies under the marks. A line is something to read the marks against, so it's drawn over them, with its label on a halo.
+- **Computed values at the data's precision.** A mean read through a format that doesn't round printed "162.52380952380952 ms". The label rounds it to one more place than the data has.
+- **References count toward y.** A budget above every bar was off the plot. Their values now join the extent.
+
+Not yet tested with people: whether right-end labels are found as quickly as labels at the left, where reading starts.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
