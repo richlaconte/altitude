@@ -1,0 +1,43 @@
+<!-- @dsCard group="Charts" height=800 subtitle="Filter in place: matches keep their colour, misses recede, positions survive" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartFilter — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cf { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const services = [["api", "Core", 412], ["web", "Web", 388], ["search", "Core", 301], ["auth", "Core", 255], ["billing", "Payments", 198], ["email", "Web", 160], ["export", "Data", 121], ["ledger", "Payments", 96]].map(([service, team, requests]) => ({ service, team, requests }));
+const days = Array.from({ length: 21 }, (_, i) => {
+  const d = new Date(Date.UTC(2026, 9, 5 + i));
+  return { day: d.toISOString().slice(0, 10), dow: d.getUTCDay(), signups: 120 + Math.round(40 * Math.sin(i / 3)) + (d.getUTCDay() % 6 === 0 ? -55 : 0) };
+});
+const regions = Array.from({ length: 12 }, (_, i) => ({ month: `2026-${String(i + 1).padStart(2, "0")}-01`, q: Math.floor(i / 3) + 1, us: 800 + i * 40, eu: 600 + i * 30 }));
+const pages = [["/pricing", 4200, "Marketing"], ["/docs/start", 3800, "Docs"], ["/blog/launch", 2100, "Marketing"], ["/docs/api", 1900, "Docs"], ["/careers", 900, "Marketing"]].map(([name, value, kind]) => ({ name, value, kind }));
+function Pick({ value, options, onChange, label }) {
+  return /* @__PURE__ */ React.createElement("div", { className: "row", role: "group", "aria-label": label, style: { marginTop: 12, flexWrap: "wrap" } }, options.map((o) => /* @__PURE__ */ React.createElement(A.Button, { key: o, size: "sm", variant: value === o ? "primary" : "secondary", "aria-pressed": value === o, onClick: () => onChange(o) }, o)));
+}
+function App() {
+  const [team, setTeam] = React.useState("Core");
+  const [rescale, setRescale] = React.useState(false);
+  const [weekdays, setWeekdays] = React.useState(true);
+  const [q, setQ] = React.useState("Q2");
+  const [kind, setKind] = React.useState("Docs");
+  return /* @__PURE__ */ React.createElement("div", { className: "cf" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "f1" }, "Requests by service"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Filtered by team; the axis holds unless you rescale")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "f1", aspect: 1.9, config: { requests: { label: "Requests" } }, countLabel: (m, n) => `${m} of ${n} services match` }, /* @__PURE__ */ React.createElement(A.BarChart, { data: services, x: "service", labels: "max", rescale, relevance: (d) => team === "All" ? void 0 : d.team === team ? "match" : "miss" })), /* @__PURE__ */ React.createElement(Pick, { label: "Team", value: team, options: ["All", "Core", "Web", "Payments", "Data"], onChange: setTeam }), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(A.Switch, { label: "Fit the axis to the matches", checked: rescale, onCheckedChange: setRescale })))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "f2" }, "Daily signups"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Weekends recede; the line keeps its shape")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "f2", aspect: 1.9, config: { signups: { label: "Signups" } } }, /* @__PURE__ */ React.createElement(A.LineChart, { data: days, x: "day", relevance: (d) => !weekdays ? void 0 : d.dow % 6 === 0 ? "miss" : "match" })), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(A.Switch, { label: "Weekdays only", checked: weekdays, onCheckedChange: setWeekdays })))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "f3" }, "Requests by region"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "One quarter at a time, against the year")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "f3", aspect: 1.9, config: { us: { label: "US" }, eu: { label: "EU" } } }, /* @__PURE__ */ React.createElement(A.AreaChart, { data: regions, x: "month", stack: true, relevance: (d) => q === "Year" ? void 0 : `Q${d.q}` === q ? "match" : "miss" })), /* @__PURE__ */ React.createElement(Pick, { label: "Quarter", value: q, options: ["Year", "Q1", "Q2", "Q3", "Q4"], onChange: setQ }))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Top pages"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "A list's rows rise and sink, as table rows do")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.BarList, { data: pages, noun: "pages", relevance: (d) => kind === "All" ? void 0 : d.kind === kind ? "match" : "miss" }), /* @__PURE__ */ React.createElement(Pick, { label: "Kind", value: kind, options: ["All", "Docs", "Marketing"], onChange: setKind }))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

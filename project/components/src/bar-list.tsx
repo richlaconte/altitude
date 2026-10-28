@@ -131,6 +131,10 @@ function BarListFace({ data, format, limit, share, sort = 'desc', noun, onSelect
         {shown.map((d, i) => row(d, i + 1))}
         {other && row(other, shown.length + 1, true)}
       </ol>
+      {/* Filtered in place: the list says how many match, in words, as a chart's frame does. */}
+      {relevance && rows.some((d) => relevance(d) !== undefined) && (
+        <p className="alt-chart-count" aria-live="polite">{`${rows.filter((d) => relevance(d) !== 'miss').length} of ${rows.length}${noun ? ` ${noun}` : ''} match`}</p>
+      )}
       {limit !== undefined && rows.length > limit + 1 && (
         <Button variant="ghost" size="sm" className="alt-barlist-more" aria-expanded={all} onClick={() => setAll((a) => !a)}>
           {all ? 'Show fewer' : `Show all ${rows.length}${noun ? ` ${noun}` : ''}`}

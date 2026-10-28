@@ -1607,6 +1607,70 @@ function App() {
   );
 }
 
+=== ChartFilter | <!-- @dsCard group="Charts" height=800 subtitle="Filter in place: matches keep their colour, misses recede, positions survive" -->
+--- css
+.cf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cf { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const services = [['api', 'Core', 412], ['web', 'Web', 388], ['search', 'Core', 301], ['auth', 'Core', 255], ['billing', 'Payments', 198], ['email', 'Web', 160], ['export', 'Data', 121], ['ledger', 'Payments', 96]]
+  .map(([service, team, requests]) => ({ service, team, requests }));
+const days = Array.from({ length: 21 }, (_, i) => { const d = new Date(Date.UTC(2026, 9, 5 + i)); return { day: d.toISOString().slice(0, 10), dow: d.getUTCDay(), signups: 120 + Math.round(40 * Math.sin(i / 3)) + (d.getUTCDay() % 6 === 0 ? -55 : 0) }; });
+const regions = Array.from({ length: 12 }, (_, i) => ({ month: `2026-${String(i + 1).padStart(2, '0')}-01`, q: Math.floor(i / 3) + 1, us: 800 + i * 40, eu: 600 + i * 30 }));
+const pages = [['/pricing', 4200, 'Marketing'], ['/docs/start', 3800, 'Docs'], ['/blog/launch', 2100, 'Marketing'], ['/docs/api', 1900, 'Docs'], ['/careers', 900, 'Marketing']].map(([name, value, kind]) => ({ name, value, kind }));
+function Pick({ value, options, onChange, label }) {
+  return (
+    <div className="row" role="group" aria-label={label} style={{ marginTop: 12, flexWrap: 'wrap' }}>
+      {options.map((o) => <A.Button key={o} size="sm" variant={value === o ? 'primary' : 'secondary'} aria-pressed={value === o} onClick={() => onChange(o)}>{o}</A.Button>)}
+    </div>
+  );
+}
+function App() {
+  const [team, setTeam] = React.useState('Core');
+  const [rescale, setRescale] = React.useState(false);
+  const [weekdays, setWeekdays] = React.useState(true);
+  const [q, setQ] = React.useState('Q2');
+  const [kind, setKind] = React.useState('Docs');
+  return (
+    <div className="cf">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="f1">Requests by service</A.CardTitle><A.CardDescription>Filtered by team; the axis holds unless you rescale</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="f1" aspect={1.9} config={{ requests: { label: 'Requests' } }} countLabel={(m, n) => `${m} of ${n} services match`}>
+            <A.BarChart data={services} x="service" labels="max" rescale={rescale} relevance={(d) => (team === 'All' ? undefined : d.team === team ? 'match' : 'miss')} />
+          </A.ChartContainer>
+          <Pick label="Team" value={team} options={['All', 'Core', 'Web', 'Payments', 'Data']} onChange={setTeam} />
+          <div style={{ marginTop: 12 }}><A.Switch label="Fit the axis to the matches" checked={rescale} onCheckedChange={setRescale} /></div>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="f2">Daily signups</A.CardTitle><A.CardDescription>Weekends recede; the line keeps its shape</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="f2" aspect={1.9} config={{ signups: { label: 'Signups' } }}>
+            <A.LineChart data={days} x="day" relevance={(d) => (!weekdays ? undefined : d.dow % 6 === 0 ? 'miss' : 'match')} />
+          </A.ChartContainer>
+          <div style={{ marginTop: 12 }}><A.Switch label="Weekdays only" checked={weekdays} onCheckedChange={setWeekdays} /></div>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="f3">Requests by region</A.CardTitle><A.CardDescription>One quarter at a time, against the year</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="f3" aspect={1.9} config={{ us: { label: 'US' }, eu: { label: 'EU' } }}>
+            <A.AreaChart data={regions} x="month" stack relevance={(d) => (q === 'Year' ? undefined : `Q${d.q}` === q ? 'match' : 'miss')} />
+          </A.ChartContainer>
+          <Pick label="Quarter" value={q} options={['Year', 'Q1', 'Q2', 'Q3', 'Q4']} onChange={setQ} />
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Top pages</A.CardTitle><A.CardDescription>A list's rows rise and sink, as table rows do</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.BarList data={pages} noun="pages" relevance={(d) => (kind === 'All' ? undefined : d.kind === kind ? 'match' : 'miss')} />
+          <Pick label="Kind" value={kind} options={['All', 'Docs', 'Marketing']} onChange={setKind} />
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

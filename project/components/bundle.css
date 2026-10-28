@@ -1477,6 +1477,22 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-bar-label-status { fill: var(--ink-muted); }
 .alt-chart-readout-note { margin-left: 6px; color: var(--ink); font-weight: 600; }
 .alt-chart-readout-note::before { content: "· "; }
+/* ── Filtered in place (#70): misses recede to 35% and keep their place and their colour slot, so positions survive
+   the filter. Relevance elsewhere raises matches, but marks can't rise, so in a chart it's spent as contrast only.
+   Misses cross-fade over dur-travel-1. The frame says how many match, in words. ── */
+.alt-chart-rel { transition: opacity var(--dur-travel-1) var(--ease-glide); }
+.alt-bar-label-miss { fill: var(--ink-muted); }
+.alt-chart-count { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+@media (forced-colors: active) {
+  .alt-chart-rel[data-miss] { opacity: 1 !important; }
+  .alt-chart-rel[data-miss] .alt-bar-mark:not([fill^="url"]), .alt-chart-rel[data-miss] .alt-area-fill:not([fill^="url"]) { fill: GrayText; }
+  .alt-chart-rel[data-miss] [fill^="url"] { opacity: 0.45; }
+  .alt-chart-rel[data-miss] .alt-line-stroke, .alt-chart-rel[data-miss] .alt-area-line { stroke: GrayText; }
+  .alt-chart-rel[data-miss] circle, .alt-chart-rel[data-miss] rect, .alt-chart-rel[data-miss] path:not([class]) { fill: GrayText; stroke: GrayText; }
+  .alt-bar-label-miss { fill: GrayText; }
+  .alt-chart-count { color: CanvasText; }
+}
+
 /* ── Live charts (#66): show the new state at once and leave a fading trace (phosphor). A new or changed mark carries
    a 2px ink outline (an outline, not height or a glow) that holds for the first second and decays over dur-settle on
    ease-decay, with its value beside it for that first second. A whole refresh is one change: the "Updated" caption

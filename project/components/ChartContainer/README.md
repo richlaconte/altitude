@@ -74,6 +74,15 @@ A `RevealGroup` around a row of charts and stats lands them together.
 
 **Not yet the record.** `BarChart`, `LineChart` and `AreaChart` take `status={(d) => 'partial' | 'projected' | undefined}`. The ground is the record, and a projection or an unfinished period isn't yet, so it's drawn hatched or dashed, never raised, and said in words: "So far" or "Projected" in point names ("Oct 1, 2026, Revenue, $61K, so far."), after the readout's heading, in a Status column in the table, and at the end of the generated summary, whose trend and extremes are read from the settled records. A 1px `line-control` rule named "Today" marks where the record ends. For your own marks, `useChart()` gives `status(d)`, `statusRanges` (the stretches of x that are pending, for `ChartStatusClip`) and `encode(key).pending`, `pendingOpacity` and `pendingDash`.
 
+**Filtering in place.** `BarChart`, `LineChart` and `AreaChart` take `relevance={(d) => 'match' | 'miss' | undefined}`, to pair with a `FilterBar`, a legend or a selection in another chart. Filtered-out data stays where it was, so nothing you'd just read is reshuffled:
+
+- **Misses recede** to 35% opacity, keeping their place and their colour slot; their value labels turn `ink-muted`. A line or an area recedes around each missing record (each owns its stretch of x, to the midpoints with its neighbours), so its shape never changes. The change cross-fades over `dur-travel-1`.
+- **The axis holds** by default. `rescale` fits it to the matches, and the rescale is staged like any other.
+- **It's said in words.** The frame shows "4 of 12 match" (`countLabel` rewrites it: "4 of 12 services match"), and so does the summary. A miss says "Not matching." in its point name and readout.
+- **Contrast only.** Elsewhere relevance raises matches, but marks can't rise, so in a chart it's spent as contrast alone. Under forced colours misses are `GrayText`.
+
+`useChart()` gives `relevance(d)`, `hasRelevance` and `relevanceRegions`; wrap your own marks in `ChartRelevance`. `BarList` takes the same `relevance`, and there rows rise and sink as `TableRow`s do.
+
 **Live data.** `live` is for charts that update on their own (deploys, error rates, queue depth). People miss changes they weren't attending to, so, as elsewhere in Altitude, a change shows at once and leaves a fading trace:
 
 - **A changed mark glows.** A point or bar whose value is new or changed carries a 2px `ink` outline (an outline, not height), full for the first second and decaying over `dur-settle` on `ease-decay`, with its value beside it for that first second. Its point name says "Changed." until it fades. Afterglows share the page's attention budget (`riseDelay`), so no more than four begin in any 250ms.

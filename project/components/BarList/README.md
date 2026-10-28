@@ -8,7 +8,7 @@ Top pages, top referrers, top customers by spend: a ranked list where each row i
 
 **Other and Show all.** With `limit`, the rows past it fold into one "Other (14 pages)" row in `data-other`, and a ghost "Show all 21 pages" button lists them all (and "Show fewer" folds them back). `noun` names what the rows are.
 
-**Filter in place.** `relevance` raises matches one level and sinks misses into a well, as `TableRow relevance` does; nothing is removed, and misses say "not matching" to screen readers.
+**Filter in place.** `relevance` raises matches one level and sinks misses into a well, as `TableRow relevance` does; nothing is removed, and misses say "not matching" to screen readers. Under the list it says how many match: "2 of 5 pages match", using `noun`.
 
 **Motion.** When values change, rows are carried to their new ranks (FLIP, `dur-travel-3`, `ease-glide`), all at once, because a re-rank is one change; bars glide to their new lengths. Under reduced motion both change in place. While `data` is undefined the list is imprinted rows, which land like `Await` content.
 

@@ -202,6 +202,12 @@ export interface ChartContextValue {
    * segment is pending when either of its ends is. Empty `pending` when every record is settled.
    */
   statusRanges: { record: Array<[number, number]>; pending: Array<[number, number]> };
+  /** Filtered in place (#70): 'match', 'miss' or undefined (no filter). Misses recede; nothing is removed. */
+  relevance: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** The chart was given a relevance: chart types wrap marks in a receding group (ChartRelevance) so changes cross-fade. */
+  hasRelevance: boolean;
+  /** For lines and areas: the stretch of x each record owns (to the midpoints with its neighbours), and whether it's a miss. */
+  relevanceRegions: Array<{ key: string; x0: number; x1: number; miss: boolean }>;
 }
 
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
@@ -254,7 +260,15 @@ export function ChartMarker({ shape, x, y, size = 8, color, ...rest }: { shape: 
 
 /** A clip to stretches of x (from `statusRanges`), for drawing a line or an area's record and not-yet-record parts apart. */
 export function ChartStatusClip({ id, ranges, height }: { id: string; ranges: Array<[number, number]>; height: number }) {
-  return <clipPath id={id}>{ranges.map(([a, b], i) => <rect key={i} x={a} y={-40} width={Math.max(0, b - a)} height={height + 80} />)}</clipPath>;
+  return <clipPath id={id}>{ranges.map(([a, b], i) => <rect key={i} x={a} y={-40} width={Math.max(0, b - a)} height={Math.ceil(height) + 80} shapeRendering="crispEdges" />)}</clipPath>;
+}
+
+/**
+ * A group that recedes when what it draws doesn't match the filter (#70): 35% opacity, cross-faded over dur-travel-1,
+ * never moved or recoloured. Wrap each mark (or each record's clipped stretch of a line) in one.
+ */
+export function ChartRelevance({ miss, children, ...rest }: { miss: boolean; children?: React.ReactNode } & React.SVGProps<SVGGElement>) {
+  return <g className="alt-chart-rel" data-miss={miss ? '' : undefined} style={{ opacity: miss ? 0.35 : 1 }} {...rest}>{children}</g>;
 }
 
 /** One hatch tile, in the pattern's own colour: lines or dots over the series colour (or over Canvas, forced). */
@@ -304,6 +318,10 @@ export interface ChartInfo {
   seriesUp?: boolean;
   /** A stacked point names its share of the total ("31% of 3.9K") rather than only the total. */
   share?: boolean;
+  /** Filter in place (#70): which records match. Misses recede to 35%, keeping their place and colour. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** Fit y to the matches rather than holding the axis. The rescale is staged as any is. */
+  rescale?: boolean;
   /** Which records aren't yet the record (#67). */
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends and the rest begins: its word (default "Today"), or false for none. */
@@ -746,6 +764,8 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
    * sentence only for what matters ("Error rate crossed 2%"). It's said politely.
    */
   announce?: (data: ChartDatum[], previous: ChartDatum[] | null) => string | null | undefined;
+  /** While a chart type's `relevance` filters, how the frame says how many match. Default "4 of 12 match". */
+  countLabel?: (matches: number, total: number) => string;
 }
 /** Internal: how the loading wrapper tells the frame about held updates. */
 interface ChartFrameLive { queued?: boolean; onHold?: (held: boolean) => void; pausedNow?: boolean; setPaused?: (paused: boolean) => void; }
@@ -766,7 +786,7 @@ const TOP = 8;
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, description, summary,
   zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
-  live = false, pausable = false, paused: _paused, onPausedChange: _onPausedChange, announce, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  live = false, pausable = false, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -805,6 +825,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   // The band's series, by default the config's first: hiding it hides the band rather than moving it to another series.
   const bandInfo = info.band ? { ...info.band, series: info.band.series ?? Object.keys(config)[0] } : undefined;
+  const relevanceOf = (d: ChartDatum): 'match' | 'miss' | undefined => {
+    const v = info.relevance?.(d);
+    return v === 'match' || v === 'miss' ? v : undefined;
+  };
+  const filtered = !!info.relevance && data.some((d) => relevanceOf(d) !== undefined);
+  const matchCount = filtered ? data.filter((d) => relevanceOf(d) !== 'miss').length : 0;
   const statusOf = (d: ChartDatum): ChartStatus | undefined => {
     const v = info.status?.(d);
     return v === 'partial' || v === 'projected' ? v : undefined;
@@ -840,7 +866,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // An uncertainty band counts toward the extent, so its edges are never cut off.
     const bandOn = bandInfo && series.some((s) => s.key === bandInfo!.series);
     const extentKeys = [...series.map((s) => s.key), ...(bandOn ? [bandInfo!.low, bandInfo!.high] : [])];
-    for (const d of data) for (const k of extentKeys) { const v = d[k]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+    // With rescale, y fits the matches; otherwise the axis holds, so every position survives the filter.
+    const fit = info.rescale && filtered && matchCount ? data.filter((d) => relevanceOf(d) !== 'miss') : data;
+    for (const d of fit) for (const k of extentKeys) { const v = d[k]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
   }
   // A reference's own values count too, so a target above every value is still on the plot.
   for (const r of refs) for (const v of Array.isArray(r.y) ? r.y : [r.y]) if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
@@ -870,7 +898,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       return vs.length ? [Math.min(...vs), Math.max(...vs)] as [number, number] : null;
     })(),
   };
-  const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey, info.rescale ? `${lo}:${hi}` : '']); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef, live);
 
   // Live (#66): which marks are new or changed since the data last landed. Four or fewer each get an afterglow; more is
@@ -1072,6 +1100,18 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       if (x.kind === 'band') boundaryAt = x(String(rows[turn][xKey])) - (x.step - x.bandwidth) / 2;
       else boundaryAt = xOf(rows[turn - 1]);
     }
+    // Filter in place (#70): for lines and areas, the stretch of x each record owns, to the midpoints with its neighbours.
+    const relevanceRegions: ChartContextValue['relevanceRegions'] = [];
+    if (info.relevance && frame.kind !== 'band') {
+      const xs = rows.map((d) => xOf(d));
+      rows.forEach((d, i) => {
+        // Edges on whole pixels, so neighbouring stretches meet without an anti-aliased seam.
+        const r = { key: rowKey(d), miss: relevanceOf(d) === 'miss', x0: i ? Math.round((xs[i - 1] + xs[i]) / 2) : -40, x1: i < rows.length - 1 ? Math.round((xs[i] + xs[i + 1]) / 2) : pw + 40 + right };
+        // Past 120 records, neighbours in the same state share one stretch: each stretch redraws the line, so this caps the cost.
+        const last = relevanceRegions[relevanceRegions.length - 1];
+        if (rows.length > 120 && last && last.miss === r.miss) last.x1 = r.x1; else relevanceRegions.push(r);
+      });
+    }
     // References (#68): each one's place on the value axis in this frame, so they glide with a rescale.
     const refGeo: RefGeo[] = [];
     refs.forEach((r, i) => {
@@ -1146,6 +1186,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       setActive: (i) => show(i),
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
       status: statusOf, hasStatus: !!info.status, statusRanges: { record, pending },
+      relevance: relevanceOf, hasRelevance: !!info.relevance, relevanceRegions,
     };
     return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo };
   };
@@ -1183,6 +1224,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const svgKids = kids.filter((k) => typeof k.type === 'string' || !(k.type as ChartChild).chartHtml);
   const htmlKids = kids.filter((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartHtml);
   const top = draw(layers[layers.length - 1].frame);
+  const countText = filtered ? (countLabel ?? ((m: number, n: number) => `${m} of ${n} match`))(matchCount, data.length) : '';
   // References and annotations are read after the summary, written or generated: "1 annotation: v2 launch, Mar 4, 2026."
   const overlayWords = (() => {
     if (!data.length) return '';
@@ -1196,6 +1238,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       out += ` ${items.length === 1 ? 'Reference' : 'References'}: ${items.join('; ')}.`;
     }
     if (notes.length) out += ` ${notes.length} ${notes.length === 1 ? 'annotation' : 'annotations'}: ${notes.map((n) => `${n.label}, ${formatX(n.x)}`).join('; ')}.`;
+    if (filtered) out += ` ${countText}.`;
     return out;
   })();
 
@@ -1288,6 +1331,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const st = statusOf(d);
     let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}${st ? `, ${CHART_STATUS_WORDS[st].toLowerCase()}` : ''}.`;
     if (glowing(rowKey(d), s.key)) out += ' Changed.';
+    if (relevanceOf(d) === 'miss') out += ' Not matching.';
     if (bandInfo && bandInfo.series === s.key && num(d[bandInfo.low]) && num(d[bandInfo.high])) {
       out += ` ${bandInfo.label} ${s.format(d[bandInfo.low] as number)} to ${s.format(d[bandInfo.high] as number)}.`;
     }
@@ -1378,7 +1422,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const content = tipEl?.props.content ?? <ChartTooltipContent />;
     return (
       <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
-        {React.cloneElement(content, { label: d[xKey], payload, formatX, note: (() => { const st = statusOf(d); return st ? CHART_STATUS_WORDS[st] : undefined; })() })}
+        {React.cloneElement(content, { label: d[xKey], payload, formatX, note: (() => { const st = statusOf(d); const words = [st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })() })}
       </div>
     );
   })();
@@ -1550,6 +1594,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           </div>
           {readout}
         </div>)}
+        {/* Filtered in place: the frame says how many match, in words, so the count never depends on seeing the fade. */}
+        {filtered && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
         {live && (
           <div className="alt-chart-live">
             <span className="alt-chart-updated" {...captionDepth}>

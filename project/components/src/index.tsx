@@ -41,7 +41,7 @@ export type { ItemGroupProps, ItemGroupRemoval, ItemGroupResult, ItemGroupCreate
 export type { BoardCreateResult, BoardRenameResult } from './collections';
 export { PropertyList, PropertyListItem } from './property-list';
 export type { PropertyListProps, PropertyListItemProps, PropertyListEditAll } from './property-list';
-export { ChartContainer, ChartMarker, ChartReference, ChartAnnotation, ChartStatusClip, CHART_STATUS_WORDS, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, useChart } from './chart';
+export { ChartContainer, ChartMarker, ChartReference, ChartAnnotation, ChartRelevance, ChartStatusClip, CHART_STATUS_WORDS, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, useChart } from './chart';
 export { BarChart } from './bar-chart';
 export { LineChart, linePath, windowed } from './line-chart';
 export type { LineChartProps, ChartWindow } from './line-chart';

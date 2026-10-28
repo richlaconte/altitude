@@ -503,6 +503,17 @@ A design review: `ChartLive` was rendered as an error rate over a 15-minute wind
 
 Not yet tested with people: whether an outline that holds for one second is noticed in peripheral vision as readily as the surface afterglow's tint and lift, which is what Phosphor measured (Baudisch et al. 2006).
 
+### E40 · Can a chart filter without reshuffling what was read?
+
+A design review: `ChartFilter` was rendered as eight services filtered by team (with and without `rescale`), daily signups with weekends receding, two regions stacked over a year shown one quarter at a time, and a `BarList` of pages filtered by kind. In all four schemes at 960px, at 360px at 2×, and under forced colours. `checks/chart-filter.mjs` measures it.
+
+- **Contrast, not height.** Relevance raises matches everywhere else in Altitude. A bar can't rise without leaving the ground line, so misses recede to 35% instead. That's two groups, the reading Research.md recommends for relevance anyway.
+- **Each record owns its stretch.** Dimming a line by whole segments made a miss between two matches vanish into them. Each record now owns the stretch of x to the midpoints with its neighbours, drawn as one path clipped there, so the curve keeps its shape and the miss shows exactly where it is.
+- **Seams.** Neighbouring stretches of an area met at fractional x, and the anti-aliased clip edges left faint vertical lines. Edges on whole pixels, with crisp clip rects, remove them.
+- **The count is the answer.** "3 of 8 services match" is text in the frame and the summary, so the result never depends on seeing the fade.
+
+Not yet tested with people: whether 35% is enough for misses to recede under the chart's own contrast. It's the value DataTable's misses approach, but marks are much smaller than rows.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
