@@ -153,7 +153,7 @@ BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Char
   }
   return {
     kind: p.stack === 'expand' ? 'Stacked bar chart of shares' : p.stack ? 'Stacked bar chart' : 'Bar chart',
-    xScale: 'band', zero: true, layout: p.layout ?? 'vertical', data, yExtent,
+    xScale: 'band', zero: true, swatch: 'rect', layout: p.layout ?? 'vertical', data, yExtent,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

@@ -1,0 +1,30 @@
+<!-- @dsCard group="Charts" height=460 subtitle="Series keys that only label, or that are also switches" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartLegend — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cl { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((month, i) => ({ month, api: 20 + i * 7 % 11, web: 14 + i * 5 % 9, jobs: 6 + i * 3 % 7 }));
+const plans = ["2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01"].map((month, i) => ({ month, free: 40 + i * 2, team: 34 + i * 3, business: 30 + i * 2.6, enterprise: 12 + i }));
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "cl" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "g1" }, "Requests, all services"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "A legend that only labels")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "g1", aspect: 1.8, config: { api: { label: "API" }, web: { label: "Web" }, jobs: { label: "Jobs" } } }, /* @__PURE__ */ React.createElement(A.BarChart, { data: months, x: "month", stack: true }, /* @__PURE__ */ React.createElement(A.ChartLegend, { content: /* @__PURE__ */ React.createElement(A.ChartLegendContent, null) }))))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "g2" }, "Seats by plan"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "toggle: each key is a switch; Enterprise starts hidden")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "g2", aspect: 1.8, config: { free: { label: "Free" }, team: { label: "Team" }, business: { label: "Business" }, enterprise: { label: "Enterprise" } } }, /* @__PURE__ */ React.createElement(A.LineChart, { data: plans, x: "month" }, /* @__PURE__ */ React.createElement(A.ChartLegend, { content: /* @__PURE__ */ React.createElement(A.ChartLegendContent, { toggle: true, defaultHidden: ["enterprise"] }) }))))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

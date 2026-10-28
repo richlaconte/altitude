@@ -369,6 +369,17 @@ A design review: the readout was rendered open on line and bar charts in all fou
 
 Not yet tested with people: whether the 250ms hold is discoverable on touch without a hint.
 
+### E28 · Does a legend you can toggle look like one?
+
+A design review: `ChartLegend` was rendered static (stacked bars) and toggleable (four lines, one hidden from the start), in all four schemes, under forced colours, with `contrast="more"` and with keyboard focus. `checks/chart-legend.mjs` drove it from the keyboard and the pointer. It was compared with the legends of Recharts, ECharts and Chart.js, which all toggle on click with keys that look like plain labels: the invisible affordance Burmistrov et al. (2015) measured.
+
+- **Keys that look like choices.** Each toggle key lifts one level under the pointer, as a ghost button does, and holds a trench like a Checkbox's, so it reads as something to press before it's pressed. A static legend has none of this: its keys sit flush.
+- **The line swatch didn't fill.** For a line chart the shown key first drew a thin line inside the trench, which in the dark schemes left the trench looking empty. A toggle key's swatch is now always a block that the series colour pours into; the static legend keeps the line.
+- **Toggling is one change.** Hiding Team faded it out, showing Enterprise (12–17) rescaled y from 30–50 to 0–50 with the rescale staged first, and no other series changed colour.
+- **The last series stays.** Its key is `aria-disabled` and described "At least one series stays shown", so the chart is never empty by accident.
+
+Decided: no "show only this series" (isolate) yet. Alt-click is undiscoverable, and an "Only" button on hover adds a control per key; it can come later if people ask for it.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

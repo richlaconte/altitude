@@ -90,7 +90,7 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 3. **Re-sorted bars are carried** to their new places, as table rows are. A stack's segments glide together, so the parts stay stacked while the total changes.
 4. **No decorative entrances.** On first render the plot fades in place (`dur-travel-1`). A bar grows from the ground line only when its value really goes from zero to something.
 5. **Lines morph only when x is the same.** If the x values change under a line (a new range, a new interval), the old plot and the new one cross-fade instead. A line is never drawn on, and its end label moves with its end.
-6. **Records and series that enter or leave cross-fade.** Exits take 70% of the entry's time, so what's leaving is gone before what's arriving has settled.
+6. **Records and series that enter or leave cross-fade.** Exits take 70% of the entry's time, so what's leaving is gone before what's arriving has settled. A series toggled from the legend leaves and returns the same way, and its key's swatch drains or fills over `dur-travel-1`, like a Checkbox.
 7. **An interruption retargets** from where the marks are, so nothing jumps back to the old destination first.
 8. **The readout steps, it doesn't drift.** It rises like a `Tooltip` the first time (4px, `elev-1` to `elev-3`, `dur-travel-3`) and shares its 400ms warm-up; after that it steps between x positions with no easing and the crosshair snaps with it. It follows the data, not the pointer's every pixel, so it never reads as something drifting. It leaves in 70% of its entry.
 9. **Past 500 marks** changing at once, the plot cross-fades instead of gliding.

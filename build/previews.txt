@@ -1131,6 +1131,36 @@ function App() {
   );
 }
 
+=== ChartLegend | <!-- @dsCard group="Charts" height=460 subtitle="Series keys that only label, or that are also switches" -->
+--- css
+.cl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cl { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, api: 20 + ((i * 7) % 11), web: 14 + ((i * 5) % 9), jobs: 6 + ((i * 3) % 7) }));
+const plans = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'].map((month, i) => ({ month, free: 40 + i * 2, team: 34 + i * 3, business: 30 + i * 2.6, enterprise: 12 + i }));
+function App() {
+  return (
+    <div className="cl">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="g1">Requests, all services</A.CardTitle><A.CardDescription>A legend that only labels</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="g1" aspect={1.8} config={{ api: { label: 'API' }, web: { label: 'Web' }, jobs: { label: 'Jobs' } }}>
+            <A.BarChart data={months} x="month" stack><A.ChartLegend content={<A.ChartLegendContent />} /></A.BarChart>
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="g2">Seats by plan</A.CardTitle><A.CardDescription>toggle: each key is a switch; Enterprise starts hidden</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="g2" aspect={1.8} config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }}>
+            <A.LineChart data={plans} x="month"><A.ChartLegend content={<A.ChartLegendContent toggle defaultHidden={['enterprise']} />} /></A.LineChart>
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {
