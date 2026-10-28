@@ -1,0 +1,58 @@
+<!-- @dsCard group="Charts" height=440 subtitle="Series told apart without colour: a hatch, a dash and a marker per slot" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartPatterns — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cp { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const teams = ["Atlas", "Birch", "Cedar", "Delta", "Ember", "Flint"];
+const config = Object.fromEntries(teams.map((t) => [t.toLowerCase(), { label: t }]));
+const sprints = ["S1", "S2", "S3"].map((sprint, j) => ({ sprint, ...Object.fromEntries(teams.map((t, i) => [t.toLowerCase(), 12 + (i * 7 + j * 5) % 17])) }));
+const weeks = ["2026-03-02", "2026-03-09", "2026-03-16", "2026-03-23", "2026-03-30"].map((week, j) => ({ week, ...Object.fromEntries(teams.slice(0, 4).map((t, i) => [t.toLowerCase(), 20 + i * 9 + j * (i + 2) % 7 * 3])) }));
+function Bars() {
+  const { series, data, x, y, xKey, ground, encode, gap } = A.useChart();
+  const w = (x.bandwidth - gap * (series.length - 1)) / series.length;
+  return data.map((d) => series.map((s, i) => {
+    const e = encode(s.key);
+    return /* @__PURE__ */ React.createElement("rect", { key: d[xKey] + s.key, x: x(d[xKey]) + i * (w + gap), y: y(d[s.key]), width: w, height: ground - y(d[s.key]), fill: e.fill, stroke: e.edge });
+  }));
+}
+function Lines() {
+  const { series, data, xOf, y, encode, strokeWidth } = A.useChart();
+  return series.map((s) => {
+    const e = encode(s.key);
+    return /* @__PURE__ */ React.createElement("g", { key: s.key }, /* @__PURE__ */ React.createElement("polyline", { fill: "none", stroke: e.stroke, strokeDasharray: e.dash, strokeWidth, strokeLinejoin: "round", points: data.map((d) => `${xOf(d)},${y(d[s.key])}`).join(" ") }), data.map((d, i) => /* @__PURE__ */ React.createElement(A.ChartMarker, { key: i, shape: e.marker, x: xOf(d), y: y(d[s.key]), color: e.stroke })));
+  });
+}
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "cp" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cp-b" }, "Story points by team"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Six slots, six hatches")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { patterns: true, "aria-labelledby": "cp-b", data: sprints, x: "sprint", aspect: 1.6, config }, /* @__PURE__ */ React.createElement(Bars, null)))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cp-l" }, "Open issues"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Dashes and markers by slot")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      patterns: true,
+      "aria-labelledby": "cp-l",
+      data: weeks,
+      x: "week",
+      aspect: 1.6,
+      config: Object.fromEntries(teams.slice(0, 4).map((t) => [t.toLowerCase(), { label: t }]))
+    },
+    /* @__PURE__ */ React.createElement(Lines, null)
+  ))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

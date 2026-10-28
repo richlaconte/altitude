@@ -4,7 +4,25 @@ The frame every chart shares. It sizes the plot, turns data into positions (the 
 
 **Why it's flush.** A chart is the record drawn as a shape (see [Charts](../../Charts.md)), so everything in the frame lies on whatever it sits on, the page or a `Card`'s `surface-raised`, at no level and with no shadow. Amounts are length and position on a flat plot standing on the ground line, never height: the zero baseline is a 1px `ink-muted` rule, the same ground line `Stepper` and the `Drilldown` staircase stand on. Gridlines are `line` hairlines, horizontal only. Tick labels are caption text in `ink-muted` with tabular figures. Marks wear `data-*` colours and nothing else. On resize the frame lays out again without animating.
 
-**Without height.** Nothing here relies on height to begin with. Under forced colours the tick labels and the ground line are `CanvasText` and gridlines `GrayText`; with `contrast="more"` gridlines take `line-control` and the ground line `ink`. Telling series apart without colour (patterns, markers, direct labels) is #72.
+**Without height, and without colour.** Nothing here relies on height to begin with. Colour is never alone either: each slot carries a redundant encoding, fixed like its colour.
+
+| Slot | Line dash | Marker | Fill hatch |
+|---|---|---|---|
+| `data-1` | solid | circle | none (solid) |
+| `data-2` | 6 3 | square | 45° lines |
+| `data-3` | 2 2 | triangle | 135° lines |
+| `data-4` | 8 3 2 3 | diamond | dots |
+| `data-5` | 12 4 | ring | horizontal lines |
+| `data-6` | 4 2 1 2 | cross | crosshatch |
+| `data-other` | 1 3 | circle | dots |
+
+Patterns are on under forced colours and in print, and anywhere with `patterns` (for readers who want them, or a chart whose slots fall in the colour-blind warning band). Under forced colours:
+
+- marks are `CanvasText`, hatches are `CanvasText` on `Canvas`, and fills get a `CanvasText` edge;
+- tick labels and the ground line are `CanvasText`, and gridlines are `GrayText`;
+- `directLabels` turns on, as it does in print, so chart types label series at their marks.
+
+With `contrast="more"`, lines are 3px, adjacent marks are 3px apart, fills get a 1px `ink` edge, gridlines take `line-control` and the ground line `ink`.
 
 **Accessibility.** It's a `figure`, named by its `title` or by `aria-labelledby` (point it at the `CardTitle`), and described by its description and a summary. Pass `summary` with what the chart shows ("Revenue rose 44% while costs held flat."): it's shown under the plot. Without it a summary is generated for screen readers: the chart's kind, its series, the x range, and each series' lowest and highest values with where they fall. The plot is a `group` with `aria-roledescription="chart"`, and its SVG is hidden from assistive technology; the keyboard path through the data and the table view come with the chart types (#63, #64).
 
@@ -28,7 +46,11 @@ x is inferred from the first value of `x`; set `xScale` to override it. Numbers 
 - `ground`: the y of the ground line;
 - `data`: the records as they're shown right now (gliding values, lingering leavers);
 - `alpha(datum, seriesKey)`: how present a mark is while it enters or leaves, to multiply into its opacity;
-- `series`, with their colours and formats, and `format`.
+- `series`, with their colours and formats, and `format`;
+- `encode(key)`: the series' `fill`, `stroke`, `dash`, `marker` and `edge` for the current mode. `ChartMarker` draws the marker shape;
+- `patterns`, `directLabels`, `strokeWidth` and `gap`.
+
+Draw with `encode()` rather than `series.color`, and forced colours, print and `contrast="more"` are handled for you.
 
 Draw from these and your marks move like every other chart's.
 

@@ -30,7 +30,8 @@ const steps = [
   ["\u2026and leaves", [["North", 88], ["East", 71], ["South", 64], ["West", 40]]]
 ];
 function Bars() {
-  const { data, x, y, xKey, ground, alpha, series } = A.useChart();
+  const { data, x, y, xKey, ground, alpha, encode } = A.useChart();
+  const e = encode("deals");
   return data.map((d) => /* @__PURE__ */ React.createElement(
     "rect",
     {
@@ -39,7 +40,8 @@ function Bars() {
       y: Math.min(y(d.deals), ground),
       width: x.bandwidth,
       height: Math.abs(y(d.deals) - ground),
-      fill: series[0].color,
+      fill: e.fill,
+      stroke: e.edge,
       opacity: alpha(d)
     }
   ));

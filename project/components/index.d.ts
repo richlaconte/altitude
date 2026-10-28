@@ -1499,7 +1499,31 @@ export interface ChartContextValue {
   /** Formats a value of a series (by its key), or an x value. */
   format: (key: string, value: number) => string;
   formatX: (value: unknown) => string;
+  /** How to draw a series so it's told apart without colour: fill (a hatch while patterns are on), stroke, dash, marker, edge. */
+  encode: (seriesKey: string) => ChartEncoding;
+  /** Patterns are on: the `patterns` prop, forced colours or print. */
+  patterns: boolean;
+  /** Label series directly at their marks: on under forced colours and in print. */
+  directLabels: boolean;
+  /** Line width (2, or 3 under contrast="more"), and the gap between adjacent marks (2, or 3). */
+  strokeWidth: number;
+  gap: number;
 }
+export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
+export interface ChartEncoding {
+  slot: ChartSlot;
+  /** For bars and areas: the series colour, a hatch of it, or CanvasText under forced colours. */
+  fill: string;
+  /** For lines and outlines. */
+  stroke: string;
+  /** For a line: undefined is solid. Set only while patterns are on; slot 1 is always solid. */
+  dash?: string;
+  marker: ChartMarkerShape;
+  /** A 1px edge for a filled mark: ink under contrast="more", CanvasText under forced colours, otherwise none. */
+  edge?: string;
+}
+/** A series' marker centred on (x, y): the shape its slot gives it. */
+export declare function ChartMarker(props: { shape: ChartMarkerShape; x: number; y: number; size?: number; color: string } & React.SVGProps<SVGElement>): React.ReactElement;
 export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
   config: ChartConfig;
   /** The records. Optional when the chart inside takes `data` itself. */
@@ -1531,6 +1555,8 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   axes?: boolean;
   /** The locale for numbers and dates. Default: the reader's. */
   locale?: string;
+  /** Tell series apart by a hatch, dash and marker per slot as well as colour. Always on under forced colours and in print. */
+  patterns?: boolean;
 }
 /** The frame every chart shares: scales, axes, gridlines, the ground line, colour slots, a name and a summary. Flush, no level. */
 export declare function ChartContainer(props: ChartContainerProps): React.ReactElement;
@@ -1550,7 +1576,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

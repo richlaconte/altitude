@@ -41,8 +41,8 @@ export type { ItemGroupProps, ItemGroupRemoval, ItemGroupResult, ItemGroupCreate
 export type { BoardCreateResult, BoardRenameResult } from './collections';
 export { PropertyList, PropertyListItem } from './property-list';
 export type { PropertyListProps, PropertyListItemProps, PropertyListEditAll } from './property-list';
-export { ChartContainer, useChart } from './chart';
-export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage } from './chart';
+export { ChartContainer, ChartMarker, useChart } from './chart';
+export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage, ChartEncoding, ChartMarkerShape } from './chart';
 export { useEditRecord, ErrorSummary, WorkflowStatus } from './pattern-edit-record';
 export type { FieldErrors, EditRecordResult, EditRecordPhase, EditRecordOptions, LeaveReason, ErrorSummaryProps } from './pattern-edit-record';
 export { useAsyncCollection } from './pattern-async-collection';
