@@ -37,7 +37,7 @@ function collect(items: SelectOption[] | undefined, children: React.ReactNode): 
 }
 
 /** The Checkbox family's tick: the same path and stroke, here in accent-ink on the chosen row. */
-const Tick = () => (
+export const Tick = () => (
   <svg className="alt-select-tick" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3.5 8.5l3 3 6-6.5" pathLength={16} />
   </svg>

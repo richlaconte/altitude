@@ -1950,6 +1950,30 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
   background: var(--accent); background-image: var(--alt-sheen); box-shadow: var(--elev-1), inset 0 -2px 0 0 color-mix(in oklab, var(--accent-ink) 55%, transparent);
   transition: transform var(--dur-travel-2) var(--ease-settle), width var(--dur-travel-2) var(--ease-settle), height var(--dur-travel-2) var(--ease-settle);
 }
+/* Presets: a column of rows beside the calendar (above it when narrow), built like Select's options at level 3 inside
+   the popover: one gliding highlight, the chosen row wearing the tick. A chosen preset fills the field with its name in
+   ink and its dates in ink-muted, and settles with the value's afterglow. */
+.alt-date-panes { display: flex; align-items: flex-start; gap: var(--space-3); }
+.alt-date-presets { position: relative; flex: none; min-width: 168px; padding: 0 var(--space-3) 0 0; border-right: 1px solid var(--line); }
+.alt-date-presets .alt-menu-hl { left: 0; right: var(--space-3); }
+.alt-date-presets:focus { outline: none; }
+.alt-date-custom { min-width: 0; }
+@media (max-width: 560px) {
+  .alt-date-panes { flex-direction: column; }
+  .alt-date-presets { align-self: stretch; padding: 0 0 var(--space-2); border-right: 0; border-bottom: 1px solid var(--line); }
+  .alt-date-presets .alt-menu-hl { right: 0; }
+}
+.alt-date-preset {
+  display: flex; align-items: baseline; gap: 0.35em; flex: 1; min-width: 0; margin: 0; padding: 1px 2px; border: 0; border-radius: 3px; background: none;
+  font: 400 14px/20px var(--font-sans); color: var(--ink); text-align: start; white-space: nowrap; cursor: pointer;
+  transform: translateY(calc(var(--wd) * 0.5)); transition: transform var(--dur-travel-2) var(--ease-settle);
+}
+.alt-date-preset:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-date-preset-name { flex: none; font-weight: 500; }
+.alt-date-preset-dates { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-date-preset[data-glow="a"] { animation: alt-value-a calc(var(--dur-settle) / 5) var(--ease-decay); }
+.alt-date-preset[data-glow="b"] { animation: alt-value-b calc(var(--dur-settle) / 5) var(--ease-decay); }
+@media (forced-colors: active) { .alt-date-presets { border-color: CanvasText; } .alt-date-presets .alt-select-option[data-active] { outline: 2px solid Highlight; outline-offset: -2px; } }
 /* A range: the sunk track, then the two raised ends. */
 .alt-cal[data-range] .alt-cal-day[data-span]:not([data-chosen])::before { opacity: 1; scale: 1; inset: 2px -1px; border-radius: 0; background: var(--accent-soft); box-shadow: var(--well); }
 .alt-cal[data-range] .alt-cal-day[data-span-start]:not([data-chosen])::before { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }

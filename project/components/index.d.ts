@@ -296,10 +296,26 @@ export interface DatePickerProps extends DatePickerBase {
   /** Called with a complete, real, allowed date, or null when the field is cleared or holds a date that isn't allowed. */
   onValueChange?: (value: ISODate | null) => void;
 }
+/** A named span for DateRangePicker: a fixed range, or a function of today so it stays relative. key defaults to the label. */
+export interface DatePreset { key?: string; label: string; range: DateRange | ((today: ISODate) => DateRange) }
+/** Ready-made relative presets: today(), yesterday(), lastDays(n) (today included), thisMonth(), lastMonth(), thisQuarter(), lastQuarter(), thisYear(). */
+export declare const datePresets: {
+  today(): DatePreset; yesterday(): DatePreset; lastDays(n: number): DatePreset; thisMonth(): DatePreset; lastMonth(): DatePreset;
+  thisQuarter(): DatePreset; lastQuarter(): DatePreset; thisYear(): DatePreset;
+};
 export interface DateRangePickerProps extends DatePickerBase {
   value?: DateRange;
   defaultValue?: DateRange;
   onValueChange?: (value: DateRange) => void;
+  /** Named spans beside the calendar, built like Select options. Choosing one shows its name and dates in the field; typing or picking days clears it. */
+  presets?: DatePreset[];
+  /** The chosen preset's key, controlled; null when custom. */
+  preset?: string | null;
+  /** The preset to start with; without a defaultValue the range starts as its range. */
+  defaultPreset?: string | null;
+  onPresetChange?: (preset: string | null) => void;
+  /** Today (ISO): relative presets resolve against it and re-resolve when it changes. Default: the local date. */
+  today?: ISODate;
 }
 export interface CalendarProps {
   value?: ISODate | null;
@@ -1821,7 +1837,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
