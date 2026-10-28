@@ -42,6 +42,8 @@ export interface AreaChartProps {
   drill?: (d: ChartDatum) => string | null | undefined;
   /** Show only the latest stretch of x, as LineChart's `window`: it glides one step in a `live` container. */
   window?: ChartWindow;
+  /** Called with the new { start, end } when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** A ChartTooltip or ChartLegend. */
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */

@@ -101,7 +101,8 @@ jobs:
           node ../scripts/record-check.mjs react18-heatmap node checks/heatmap.mjs
           node ../scripts/record-check.mjs react18-scatter-chart node checks/scatter-chart.mjs
           node ../scripts/record-check.mjs react18-range-slider node checks/range-slider.mjs
-          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,AreaChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,ChartStatus,ChartReference,ChartLive,ChartFilter,ChartSelect,Sparkline,Stat,Meter,BarList daylight 960
+          node ../scripts/record-check.mjs react18-chart-brush node checks/chart-brush.mjs
+          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,AreaChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,ChartStatus,ChartReference,ChartLive,ChartFilter,ChartSelect,ChartBrush,Sparkline,Stat,Meter,BarList daylight 960
           DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
           DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
 

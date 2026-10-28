@@ -44,25 +44,36 @@ export interface LineChartProps {
    * In a `live` container, when the window moves on, x glides one step and the marks ride along with it.
    */
   window?: ChartWindow;
+  /** Called with the new { start, end } when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */
   empty?: import('./chart').ChartEmpty;
 }
-export interface ChartWindow { minutes?: number; hours?: number; days?: number; points?: number; }
+export interface ChartWindow {
+  minutes?: number; hours?: number; days?: number; points?: number;
+  /** A fixed stretch of x, both ends included (a DateRange fits): what a ChartBrush sets. null leaves that end open. */
+  start?: string | number | null; end?: string | number | null;
+}
 
 // Windowed copies are kept per input array, so the same data gives the same array and isn't mistaken for a change.
 const windowCache = new WeakMap<ChartDatum[], Map<string, { rows: ChartDatum[]; domain?: [number, number] }>>();
 /** The records inside a sliding window, and the x domain the window spans. */
 export function windowed(data: ChartDatum[], x: string, w: ChartWindow | undefined): { rows: ChartDatum[]; domain?: [number, number] } {
   if (!w) return { rows: data };
-  const id = `${x}:${w.minutes ?? ''}:${w.hours ?? ''}:${w.days ?? ''}:${w.points ?? ''}`;
+  const id = `${x}:${w.minutes ?? ''}:${w.hours ?? ''}:${w.days ?? ''}:${w.points ?? ''}:${w.start ?? ''}:${w.end ?? ''}`;
   let m = windowCache.get(data);
   if (!m) windowCache.set(data, (m = new Map()));
   let out = m.get(id);
   if (!out) {
     const at = (d: ChartDatum) => (typeof d[x] === 'number' ? (d[x] as number) : toTime(d[x]));
-    if (w.points) {
+    if (w.start != null || w.end != null) {
+      const ts = data.map(at).filter((t) => isFinite(t));
+      const t0 = w.start != null ? (typeof w.start === 'number' ? w.start : toTime(w.start)) : Math.min(...ts);
+      const t1 = w.end != null ? (typeof w.end === 'number' ? w.end : toTime(w.end)) : Math.max(...ts);
+      out = { rows: data.filter((d) => at(d) >= t0 && at(d) <= t1), domain: ts.length ? [t0, t1] : undefined };
+    } else if (w.points) {
       const rows = data.slice(-w.points);
       const ts = rows.map(at).filter((t) => isFinite(t));
       out = { rows, domain: ts.length ? [Math.min(...ts), Math.max(...ts)] : undefined };

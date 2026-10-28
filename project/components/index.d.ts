@@ -1688,6 +1688,20 @@ export interface ChartLegendContentProps {
 export declare function ChartLegendContent(props: ChartLegendContentProps): React.ReactElement;
 /** A legend for the chart. Place it inside the chart type or the container. */
 export declare function ChartLegend(props: { content?: React.ReactElement<ChartLegendContentProps> }): null;
+export interface ChartBrushProps {
+  /** The series the overview draws. Default: the chart's first shown series. */
+  series?: string;
+  /** The overview's name. Default "Overview, <its whole range>". */
+  'aria-label'?: string;
+  className?: string;
+}
+/**
+ * An overview to pick a time window on, under the plot: put it inside a LineChart, AreaChart or BarChart over time, and
+ * give the chart `window` and `onWindowChange` (or neither, and the brush keeps its own). The whole series lies flat in
+ * a 40px trench; the window is a raised lens with two grips, "Window start" and "Window end" (sliders whose
+ * aria-valuetext is the date). Drag the lens to pan, a grip to resize, or press outside it to centre the window there.
+ */
+export declare function ChartBrush(props: ChartBrushProps): React.ReactElement | null;
 /** Changes what a chart's readout shows; the readout is on for every chart. Place it inside the chart type or the container. */
 export declare function ChartTooltip(props: { content?: React.ReactElement<ChartTooltipContentProps> }): null;
 export interface ChartReferenceProps {
@@ -1745,6 +1759,10 @@ export interface BarChartProps {
   onSelect?: (d: ChartDatum | null) => void;
   /** Makes marks open a level down inside a Drilldown: the id of the current node's child this record opens. */
   drill?: (d: ChartDatum) => string | null | undefined;
+  /** Bars over time: show only a stretch of the categories, by their dates ({ start, end }) or the last { points }. A ChartBrush sets it. */
+  window?: ChartWindow;
+  /** Called with the new { start, end } (the records' own x values) when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
 }
@@ -1779,8 +1797,10 @@ export interface LineChartProps {
   onSelect?: (d: ChartDatum | null) => void;
   /** Makes marks open a level down inside a Drilldown: the id of the current node's child this record opens. */
   drill?: (d: ChartDatum) => string | null | undefined;
-  /** Show only the latest stretch of x: { minutes | hours | days } of time, or the last { points }. Glides one step in a live container. */
+  /** Show only a stretch of x: { start, end } (a DateRange fits; a ChartBrush sets it), or the latest { minutes | hours | days } of time, or the last { points }. A latest stretch glides one step in a live container. */
   window?: ChartWindow;
+  /** Called with the new { start, end } (the records' own x values) when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** An uncertainty band around a series (default the config's first), from each record's `low` to its `high`: a flat, low-opacity fill. `label` names it in the readout (default "Range"). */
   band?: { low: string; high: string; series?: string; label?: string };
   /** A ChartTooltip, to change what the readout shows. */
@@ -1801,8 +1821,10 @@ export interface AreaChartProps {
   y?: { format?: (value: number) => string };
   /** Name each band inside itself where it fits. Default: on when stacked. */
   labels?: boolean;
-  /** Show only the latest stretch of x, as LineChart's window. */
+  /** Show only a stretch of x, as LineChart's window. */
   window?: ChartWindow;
+  /** Called with the new { start, end } (the records' own x values) when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
   /** Which records aren't yet the record: 'partial' (a period still being counted) or 'projected' (a forecast). Hatched or dashed, and said in words. */
@@ -1903,7 +1925,11 @@ export interface ScatterChartProps {
 /** Two measures per record, to see how they relate: flat dots ringed apart, a shape per group, outliers named. Renders inside a ChartContainer. */
 export declare function ScatterChart(props: ScatterChartProps): React.ReactElement;
 /** A sliding window over x: a span of time, or the last N records. */
-export interface ChartWindow { minutes?: number; hours?: number; days?: number; points?: number; }
+export interface ChartWindow {
+  minutes?: number; hours?: number; days?: number; points?: number;
+  /** A fixed stretch of x, both ends included (a DateRange fits): what a ChartBrush sets. null leaves that end open. */
+  start?: string | number | null; end?: string | number | null;
+}
 /** The records inside a window, and the x domain it spans. */
 export declare function windowed(data: ChartDatum[], x: string, window: ChartWindow | undefined): { rows: ChartDatum[]; domain?: [number, number] };
 /** An SVG path through points; a null breaks it. 'monotone' never overshoots the points. */

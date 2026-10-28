@@ -102,7 +102,7 @@ A `RevealGroup` around a row of charts and stats lands them together.
 
 **Charts that draw their own plot.** A [`Heatmap`](../Heatmap/README.md) has no value axis: its cells lie on two categories it names itself. The frame leaves out the gridlines, the ground line, the axes and the crosshair, makes the plot as tall as the cells need, puts the readout beside the cell, and goes from the summary straight to the cells, which the chart type moves between by row and column. A [`ScatterChart`](../ScatterChart/README.md) keeps the axes but both are measures: the frame finds the nearest dot in two dimensions, leaves out the crosshair, puts the readout beside the dot, and lets the chart type name each axis in room above and below the plot. Its series are its groups rather than the config's keys; the config names the two measures. Records are known by their own id rather than by x, for motion, the table, selection and live changes. Records without one cross-fade rather than glide.
 
-**Readout and legend.** Every chart has a readout ([`ChartTooltip`](../ChartTooltip/README.md)); add a [`ChartLegend`](../ChartLegend/README.md) to name series, or to let people hide and show them. Hidden series keep their slots and leave the scales.
+**Readout and legend.** Every chart has a readout ([`ChartTooltip`](../ChartTooltip/README.md)); add a [`ChartLegend`](../ChartLegend/README.md) to name series, or to let people hide and show them. Hidden series keep their slots and leave the scales. A [`ChartBrush`](../ChartBrush/README.md) inside a chart over time adds an overview under the plot to pick a window on.
 
 **Your own marks.** `useChart()` gives you the following, and children are drawn inside the plot, in its coordinates, under the ground line's rule:
 

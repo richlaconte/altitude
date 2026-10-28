@@ -104,7 +104,8 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 16. **Hover outlines, selections cross-fade.** Where marks act, the outline on the record under the pointer appears over `dur-travel-1` and steps with the readout. Selecting cross-fades the rest to 35%, as a filter does. A drill follows `Drilldown`: the child is laid on as a sheet, and the breadcrumb gains a step.
 17. **Cells cross-fade in place.** A heatmap's cell whose value changes step cross-fades its fill over `dur-travel-1`; its value never glides through the steps between. A whole refresh is one change: in a live chart it lights the "Updated" caption, not every cell. Under reduced motion the fill changes at once.
 18. **Dots glide by identity.** A scatter's dots glide to their new places on both axes when records keep a stable id, after any rescale, as bars are carried. Without ids there's nothing to follow, so the plot cross-fades.
-19. **Reduced motion:** values change in place, as a cross-fade between the old chart and the new one, and nothing travels. Resizing never animates, with or without it.
+19. **A brush moves the window, the plot cross-fades.** A `ChartBrush`'s lens and grips follow the pointer with no easing and step by a record from the keyboard, as a range Slider's thumbs do; the held part floats to level 3. The chart takes each new window as new x values, so its plot cross-fades to it (rule 5) rather than sliding, and its axis spans the window exactly.
+20. **Reduced motion:** values change in place, as a cross-fade between the old chart and the new one, and nothing travels. Resizing never animates, with or without it.
 
 **Word-sized charts don't move.** A `Sparkline` has no motion of its own: it lands out of its imprint like any inline `Await` content, and when its value changes in a live table the row gets the afterglow, not the line.
 
