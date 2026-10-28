@@ -51,6 +51,8 @@ export { Stat, StatGroup } from './stat';
 export type { StatProps, StatChange, StatGroupProps } from './stat';
 export { Meter } from './meter';
 export type { MeterProps, MeterSegment } from './meter';
+export { BarList } from './bar-list';
+export type { BarListProps, BarListItem } from './bar-list';
 export type { BarChartProps } from './bar-chart';
 export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage, ChartEncoding, ChartMarkerShape, ChartTooltipItem, ChartTooltipContentProps, ChartLegendItem, ChartLegendContentProps, ChartEmpty } from './chart';
 export { useEditRecord, ErrorSummary, WorkflowStatus } from './pattern-edit-record';

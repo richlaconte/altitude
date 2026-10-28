@@ -1756,6 +1756,35 @@ export interface MeterProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
 }
 /** A reading within a known range: flat ink across a flush track, thresholds as notches, the state in words. role="meter". */
 export declare function Meter(props: MeterProps): React.ReactElement;
+export interface BarListItem {
+  /** The row's label; also its key unless key is given. */
+  name: string;
+  value: number;
+  key?: string;
+  /** Makes the row a link. */
+  href?: string;
+}
+export interface BarListProps extends Omit<React.HTMLAttributes<HTMLOListElement>, 'onSelect'> {
+  /** The rows. Undefined while your data loads: imprinted rows until they land. */
+  data: BarListItem[] | null | undefined;
+  /** Formats values. Default: Intl.NumberFormat. */
+  format?: (value: number) => string;
+  /** At most this many rows; the rest fold into "Other", with "Show all". */
+  limit?: number;
+  /** Show each value's share of the total. */
+  share?: boolean;
+  /** Rank by value, largest first (default), or keep the data's order. */
+  sort?: 'desc' | false;
+  /** What the rows are, plural: "Other (14 pages)", "Show all 52 pages". */
+  noun?: string;
+  /** Makes each row a button (rows with href are links). */
+  onSelect?: (item: BarListItem) => void;
+  /** Filter in place: matches rise, misses sink and say "not matching". */
+  relevance?: (item: BarListItem) => 'match' | 'miss' | undefined;
+  locale?: string;
+}
+/** A ranked list whose rows are their own flat bars; rows that act lift on hover, and re-ranked rows are carried. */
+export declare function BarList(props: BarListProps): React.ReactElement;
 /** The scales, plot size and config of the nearest ChartContainer, for drawing your own marks. */
 export declare function useChart(): ChartContextValue;
 
@@ -1772,7 +1801,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
