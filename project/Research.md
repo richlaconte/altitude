@@ -345,6 +345,18 @@ The prototype review moved here from the Charts chapter (#48): `BarChart` was re
 
 Not yet tested with people: whether a 2px gap is enough to separate stacked segments at a glance for colour-blind readers when patterns are off.
 
+### E26 · Does LineChart keep to its data?
+
+A design review like E25: `LineChart` was rendered with intraday latency (two series every 30 minutes), a year of monthly revenue on a monotone curve, daily signups with missing days, and four converging plans. Each was in a `Card`, in all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`. `checks/line-chart.mjs` measures it.
+
+- **Gaps stay gaps.** Missing days break the line into runs; nothing is interpolated across them.
+- **The curve doesn't invent data.** Sampled along the monotone path, the line never leaves the range of the two points it runs between.
+- **Hour labels collided.** Time ticks were spaced for a fixed 56px, and "12:00 AM" and "6:00 AM" overlapped. Ticks are now chosen as the finest interval whose labels clear each other at the chart's width, and hours read "6 AM".
+- **A foot that wasn't ground.** With zero off the axis (signups 40–80), the plot's foot still wore the ground line's `ink-muted` rule, which read as zero. It's now an ordinary gridline, and only zero is ground.
+- **End labels.** Four converging lines (Free, Team, Business) put their names on top of each other; they're nudged at least 16px apart, with each name staying beside its line's end.
+
+Not yet tested with people: whether end labels nudged away from their line's end are still read as belonging to it.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

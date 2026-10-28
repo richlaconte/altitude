@@ -65,13 +65,17 @@ export function toTime(v: unknown): number {
 }
 
 const DAY = 864e5;
-type Interval = { months?: number; days?: number };
-const INTERVALS: Interval[] = [{ days: 1 }, { days: 2 }, { days: 7 }, { days: 14 }, { months: 1 }, { months: 3 }, { months: 6 }, { months: 12 }, { months: 24 }, { months: 60 }, { months: 120 }];
+type Interval = { months?: number; days?: number; hours?: number };
+const HOUR = 36e5;
+const INTERVALS: Interval[] = [{ hours: 1 }, { hours: 3 }, { hours: 6 }, { hours: 12 }, { days: 1 }, { days: 2 }, { days: 7 }, { days: 14 }, { months: 1 }, { months: 3 }, { months: 6 }, { months: 12 }, { months: 24 }, { months: 60 }, { months: 120 }];
 
 function timeTicks(d0: number, d1: number, max: number): { ticks: number[]; interval: Interval } {
   for (const iv of INTERVALS) {
     const ticks: number[] = [];
-    if (iv.days) {
+    if (iv.hours) {
+      const step = iv.hours * HOUR;
+      for (let t = Math.ceil(d0 / step) * step; t <= d1; t += step) ticks.push(t);
+    } else if (iv.days) {
       const step = iv.days * DAY;
       for (let t = Math.ceil(d0 / DAY) * DAY; t <= d1; t += step) ticks.push(t);
     } else {
@@ -243,6 +247,8 @@ export interface ChartInfo {
   data?: ChartDatum[];
   /** Formats the value axis, when the chart's values aren't its series' (shares of a stack). */
   yFormat?: (value: number) => string;
+  /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
+  right?: number;
 }
 type ChartChild = { chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean };
 
@@ -492,7 +498,7 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const W = size?.w ?? 0, H = size?.h ?? 0;
   const horizontal = info.layout === 'horizontal' && kind === 'band';
   const bottom = axes ? 26 : 1;
-  const right = horizontal ? (axes ? 20 : 2) : kind === 'band' || !axes ? 2 : 18;
+  const right = (info.right ?? 0) + (horizontal ? (axes ? 20 : 2) : kind === 'band' || !axes ? 2 : 18);
 
   // The target frame: where the plot is going, independent of its width.
   let lo = Infinity, hi = -Infinity;
@@ -554,7 +560,11 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
 
   const nfX = React.useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const fullDate = React.useMemo(() => new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }), [locale]);
-  const formatX = xFormat ?? (kind === 'time' ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
+  const dateTime = React.useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }), [locale]);
+  // Within a few days, a time's x is read to the minute; otherwise to the day.
+  const ts = kind === 'time' ? data.map((d) => toTime(d[xKey])).filter((t) => isFinite(t)) : [];
+  const intraday = ts.length > 1 && Math.max(...ts) - Math.min(...ts) < 3 * DAY;
+  const formatX = xFormat ?? (kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
 
   /** A layer's scales, ticks and context, at the plot's size now. */
   const draw = (frame: Frame) => {
@@ -585,12 +595,25 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
       }
     } else if (frame.kind === 'time') {
       const ts = frame.rows.map((r) => toTime(r.d[xKey])).filter((t) => isFinite(t));
-      const t = timeScale([Math.min(...ts), Math.max(...ts)], [0, pw], Math.max(2, Math.floor(pw / 56)));
+      // The finest interval whose labels clear each other by 8px at this width.
+      const label = (iv: Interval) => {
+        const opts: Intl.DateTimeFormatOptions = iv.months && iv.months >= 12 ? { year: 'numeric' }
+          : iv.months ? { month: 'short', year: '2-digit' } : iv.hours ? { hour: 'numeric' } : { month: 'short', day: 'numeric' };
+        const df = new Intl.DateTimeFormat(locale, { ...opts, timeZone: 'UTC' });
+        return (v: number) => (xFormat ? xFormat(v) : df.format(new Date(v)));
+      };
+      let t = timeScale([Math.min(...ts), Math.max(...ts)], [0, pw], Math.max(2, Math.floor(pw / 40)));
+      for (let max = Math.max(2, Math.floor(pw / 40)); max >= 2; max--) {
+        t = timeScale([Math.min(...ts), Math.max(...ts)], [0, pw], max);
+        const f = label(t.interval);
+        const at = t.scale.ticks.map((v) => t.scale(v)), ws = t.scale.ticks.map((v) => textWidth(f(v)));
+        // The first label is set from its start when it sits at the edge, so it only needs to clear the next one.
+        const fits = at.every((p, i) => i === 0 || p - at[i - 1] >= (i === 1 && at[0] < 24 ? ws[0] : ws[i - 1] / 2) + ws[i] / 2 + 8);
+        if (fits) break;
+      }
       x = t.scale;
-      const opts: Intl.DateTimeFormatOptions = t.interval.months && t.interval.months >= 12 ? { year: 'numeric' }
-        : t.interval.months ? { month: 'short', year: '2-digit' } : { month: 'short', day: 'numeric' };
-      const df = new Intl.DateTimeFormat(locale, { ...opts, timeZone: 'UTC' });
-      if (axes) xTicks = t.scale.ticks.map((v) => ({ at: t.scale(v), label: xFormat ? xFormat(v) : df.format(new Date(v)), a: 1 }));
+      const f = label(t.interval);
+      if (axes) xTicks = t.scale.ticks.map((v) => ({ at: t.scale(v), label: f(v), a: 1 }));
     } else {
       const vs = frame.rows.map((r) => Number(r.d[xKey])).filter((v) => isFinite(v));
       x = linearScale([Math.min(...vs), Math.max(...vs)], [0, pw], Math.max(2, Math.floor(pw / 56)), false);
@@ -655,9 +678,10 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
                       })}
                     </g>
                     <g className="alt-chart-marks"><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
+                    {/* The ground line is zero. When zero isn't on the axis, the plot's foot is an ordinary gridline, not ground. */}
                     {horizontal
-                      ? <line className="alt-chart-ground" x1={Math.round(ctx.ground) + 0.5} x2={Math.round(ctx.ground) + 0.5} y1={0} y2={ph} />
-                      : <line className="alt-chart-ground" x1={0} x2={pw} y1={Math.round(ctx.ground) + 0.5} y2={Math.round(ctx.ground) + 0.5} />}
+                      ? <line className={frame.y[0] <= 0 && frame.y[1] >= 0 ? 'alt-chart-ground' : 'alt-chart-floor'} x1={Math.round(ctx.ground) + 0.5} x2={Math.round(ctx.ground) + 0.5} y1={0} y2={ph} />
+                      : <line className={frame.y[0] <= 0 && frame.y[1] >= 0 ? 'alt-chart-ground' : 'alt-chart-floor'} x1={0} x2={pw} y1={Math.round(ctx.ground) + 0.5} y2={Math.round(ctx.ground) + 0.5} />}
                     {axes && horizontal && (
                       <>
                         <g className="alt-chart-axis" data-axis="y">
@@ -716,6 +740,15 @@ function describe(kind: string, series: ChartSeries[], data: ChartDatum[], xKey:
       if (!hi || v > (hi[s.key] as number)) hi = d;
     }
     if (!lo || !hi) return `${s.label} has no values.`;
+    if (scale !== 'band') {
+      // Along time or a measure, say which way it went between its first and last values.
+      const vals = data.filter((d) => typeof d[s.key] === 'number' && isFinite(d[s.key] as number));
+      const a = vals[0], b = vals[vals.length - 1];
+      const v0 = a[s.key] as number, v1 = b[s.key] as number;
+      const rel = v0 !== 0 ? (v1 - v0) / Math.abs(v0) : v1 - v0;
+      const trend = Math.abs(rel) < 0.02 ? 'holds flat' : rel > 0 ? 'rises' : 'falls';
+      return `${s.label} ${trend} from ${s.format(v0)} at ${formatX(a[xKey])} to ${s.format(v1)} at ${formatX(b[xKey])}; lowest ${s.format(lo[s.key] as number)} at ${formatX(lo[xKey])}, highest ${s.format(hi[s.key] as number)} at ${formatX(hi[xKey])}.`;
+    }
     return `${s.label} is lowest at ${formatX(lo[xKey])} (${s.format(lo[s.key] as number)}) and highest at ${formatX(hi[xKey])} (${s.format(hi[s.key] as number)}).`;
   });
   return `${kind} of ${list}, ${span}. ${parts.join(' ')}`;

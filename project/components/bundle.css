@@ -1453,6 +1453,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-chart-svg { position: absolute; inset: 0; display: block; overflow: visible; }
 .alt-chart-grid line { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
 .alt-chart-ground { stroke: var(--ink-muted); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-floor { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
 .alt-chart-axis text { fill: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: 0.005em; }
 .alt-chart-summary { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); text-wrap: pretty; }
 /* ── BarChart: amounts as lengths standing on the ground line. Bars are the record, so they're flat data-* fills,
@@ -1462,15 +1463,21 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    are selective and wear ink, never a series colour. ── */
 .alt-bar-label { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
 @media (forced-colors: active) { .alt-bar-label { fill: CanvasText; } }
+
+/* ── LineChart: change over time as 2px strokes lying on the plot, round joins, no fill, no glow. A missing value is a
+   gap in the line, never bridged. The last point wears a marker and each line is named at its end in ink, so the
+   lines are their own legend. ── */
+.alt-line-label { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); }
+@media (forced-colors: active) { .alt-line-label { fill: CanvasText; } }
 @media (prefers-contrast: more) {
-  .alt-chart-grid line { stroke: var(--line-control); }
+  .alt-chart-grid line, .alt-chart-floor { stroke: var(--line-control); }
   .alt-chart-ground { stroke: var(--ink); }
 }
-[data-contrast="more"] .alt-chart-grid line { stroke: var(--line-control); }
+[data-contrast="more"] .alt-chart-grid line, [data-contrast="more"] .alt-chart-floor { stroke: var(--line-control); }
 [data-contrast="more"] .alt-chart-ground { stroke: var(--ink); }
 @media (forced-colors: active) {
   .alt-chart-axis text { fill: CanvasText; }
-  .alt-chart-grid line { stroke: GrayText; }
+  .alt-chart-grid line, .alt-chart-floor { stroke: GrayText; }
   .alt-chart-ground { stroke: CanvasText; }
 }
 
