@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { CHART_STATUS_WORDS, ChartRelevance, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { windowed, type ChartWindow } from './line-chart';
 
 export interface BarChartProps {
   /** The records: one per category. */
@@ -37,6 +38,10 @@ export interface BarChartProps {
   onSelect?: (d: ChartDatum | null) => void;
   /** Makes marks open a level down, inside a Drilldown: return the id of the current node's child this record opens. */
   drill?: (d: ChartDatum) => string | null | undefined;
+  /** Bars over time: show only a stretch of the categories, by their dates ({ start, end }) or the last { points }. A ChartBrush sets it. */
+  window?: ChartWindow;
+  /** Called with the new { start, end } when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */
@@ -224,7 +229,7 @@ BarChart.chartMark = (props: Record<string, unknown>, ctx: ChartContextValue, d:
 BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): ChartInfo => {
   const p = props as unknown as BarChartProps;
   const keys = keysOf(config);
-  const rows = Array.isArray(p.data) ? p.data : undefined;
+  const rows = Array.isArray(p.data) ? (p.window ? windowed(p.data, p.x, p.window).rows : p.data) : undefined;
   const data = p.sort && rows ? sorted(rows, keys, p.sort) : rows;
   let yExtent: [number, number] | undefined;
   if (p.stack === 'expand') yExtent = [0, 1];

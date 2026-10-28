@@ -22,9 +22,9 @@ A total over time and the parts that make it up (requests by region, storage by 
 
 **Filtering in place.** `relevance` recedes the bands to 35% around each missing record, so the stack keeps its shape; `rescale` fits the axis to the matches. See [ChartContainer](../ChartContainer/README.md), "Filtering in place".
 
-**A sliding window.** `window` works as `LineChart`'s: the latest stretch of x, gliding one step in a `live` container.
+**A sliding window.** `window` works as `LineChart`'s: the latest stretch of x, gliding one step in a `live` container, or a chosen `{ start, end }`, which a `ChartBrush` sets (`onWindowChange`).
 
-**Props:** `data` and `x`; `window`; `stack` (`true` or `'expand'`); `curve` (`'linear'` or `'monotone'`); `y={{ format }}`; `labels`; `tooltip`; `status` and `boundary`; and a `ChartTooltip` or `ChartLegend` as children.
+**Props:** `data` and `x`; `window` and `onWindowChange`; `stack` (`true` or `'expand'`); `curve` (`'linear'` or `'monotone'`); `y={{ format }}`; `labels`; `tooltip`; `status` and `boundary`; and a `ChartTooltip` or `ChartLegend` as children.
 
 **You provide:** a `ChartContainer` whose `config` names each band in stacking order (the base first), the `data` in x order, and usually a `summary`.
 

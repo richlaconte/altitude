@@ -404,7 +404,19 @@ export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
   format?: (value: number) => React.ReactNode;
   'aria-label'?: string;
 }
+/** A range: pass `value` or `defaultValue` as [low, high] and Slider draws two thumbs with the raised fill between them. */
+export interface SliderRangeProps extends Omit<SliderProps, 'value' | 'defaultValue' | 'onValueChange' | 'aria-label'> {
+  value?: [number, number];
+  /** Default [min, max] when value is omitted; pass one of value or defaultValue to get a range. */
+  defaultValue?: [number, number];
+  onValueChange?: (value: [number, number]) => void;
+  /** Steps the thumbs keep between them; a thumb pushed against the other stops. Default 0. */
+  minStepsBetween?: number;
+  /** A name per thumb, or one name for the pair (the thumbs are then "<name>, minimum" and "<name>, maximum", in a group with that name). */
+  'aria-label'?: string | [string, string];
+}
 export declare function Slider(props: SliderProps): React.ReactElement;
+export declare function Slider(props: SliderRangeProps): React.ReactElement;
 
 export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Omit or null for indeterminate. */
@@ -1686,7 +1698,7 @@ export interface ChartTooltipContentProps {
 }
 /** The readout's rows: value first, series name second, keyed by the series colour. */
 export declare function ChartTooltipContent(props: ChartTooltipContentProps): React.ReactElement;
-export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; }
+export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; }
 export interface ChartLegendContentProps {
   /** Let people hide and show series: each key becomes an aria-pressed button in a toolbar. Default false. */
   toggle?: boolean;
@@ -1699,13 +1711,27 @@ export interface ChartLegendContentProps {
   label?: string;
   /** Filled in by the container. */
   items?: ChartLegendItem[];
-  swatch?: 'rect' | 'line';
+  swatch?: 'rect' | 'line' | 'marker';
   onToggle?: (key: string) => void;
 }
 /** The legend's keys: flush labels, or with toggle, switch-like buttons whose trench the series colour pours into. */
 export declare function ChartLegendContent(props: ChartLegendContentProps): React.ReactElement;
 /** A legend for the chart. Place it inside the chart type or the container. */
 export declare function ChartLegend(props: { content?: React.ReactElement<ChartLegendContentProps> }): null;
+export interface ChartBrushProps {
+  /** The series the overview draws. Default: the chart's first shown series. */
+  series?: string;
+  /** The overview's name. Default "Overview, <its whole range>". */
+  'aria-label'?: string;
+  className?: string;
+}
+/**
+ * An overview to pick a time window on, under the plot: put it inside a LineChart, AreaChart or BarChart over time, and
+ * give the chart `window` and `onWindowChange` (or neither, and the brush keeps its own). The whole series lies flat in
+ * a 40px trench; the window is a raised lens with two grips, "Window start" and "Window end" (sliders whose
+ * aria-valuetext is the date). Drag the lens to pan, a grip to resize, or press outside it to centre the window there.
+ */
+export declare function ChartBrush(props: ChartBrushProps): React.ReactElement | null;
 /** Changes what a chart's readout shows; the readout is on for every chart. Place it inside the chart type or the container. */
 export declare function ChartTooltip(props: { content?: React.ReactElement<ChartTooltipContentProps> }): null;
 export interface ChartReferenceProps {
@@ -1763,6 +1789,10 @@ export interface BarChartProps {
   onSelect?: (d: ChartDatum | null) => void;
   /** Makes marks open a level down inside a Drilldown: the id of the current node's child this record opens. */
   drill?: (d: ChartDatum) => string | null | undefined;
+  /** Bars over time: show only a stretch of the categories, by their dates ({ start, end }) or the last { points }. A ChartBrush sets it. */
+  window?: ChartWindow;
+  /** Called with the new { start, end } (the records' own x values) when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
 }
@@ -1797,8 +1827,10 @@ export interface LineChartProps {
   onSelect?: (d: ChartDatum | null) => void;
   /** Makes marks open a level down inside a Drilldown: the id of the current node's child this record opens. */
   drill?: (d: ChartDatum) => string | null | undefined;
-  /** Show only the latest stretch of x: { minutes | hours | days } of time, or the last { points }. Glides one step in a live container. */
+  /** Show only a stretch of x: { start, end } (a DateRange fits; a ChartBrush sets it), or the latest { minutes | hours | days } of time, or the last { points }. A latest stretch glides one step in a live container. */
   window?: ChartWindow;
+  /** Called with the new { start, end } (the records' own x values) when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** An uncertainty band around a series (default the config's first), from each record's `low` to its `high`: a flat, low-opacity fill. `label` names it in the readout (default "Range"). */
   band?: { low: string; high: string; series?: string; label?: string };
   /** A ChartTooltip, to change what the readout shows. */
@@ -1819,8 +1851,10 @@ export interface AreaChartProps {
   y?: { format?: (value: number) => string };
   /** Name each band inside itself where it fits. Default: on when stacked. */
   labels?: boolean;
-  /** Show only the latest stretch of x, as LineChart's window. */
+  /** Show only a stretch of x, as LineChart's window. */
   window?: ChartWindow;
+  /** Called with the new { start, end } (the records' own x values) when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
+  onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
   /** Which records aren't yet the record: 'partial' (a period still being counted) or 'projected' (a forecast). Hatched or dashed, and said in words. */
@@ -1842,8 +1876,90 @@ export interface AreaChartProps {
 }
 /** A total over time and its parts: flat bands on the ground line, parted by 2px, never a gradient. Renders inside a ChartContainer. */
 export declare function AreaChart(props: AreaChartProps): React.ReactElement;
+export interface HeatmapProps {
+  /** The records: one per cell. Cells with no record, or a null value, are drawn as "No data". */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** 'grid' (default): x across, y down. 'calendar': a cell per day, a column per week, wrapping by week when it's narrow. */
+  variant?: 'grid' | 'calendar';
+  /** The grid's column key. */
+  x?: string;
+  /** The grid's row key. */
+  y?: string;
+  /** The calendar's day key: an ISO date, a timestamp or a Date. */
+  date?: string;
+  /** The key of each cell's value. It must also be a key of the container's config, which names and formats it. */
+  value: string;
+  /** Where each step starts, lowest first: [0, 1, 4, 10] gives "0", "1–3", "4–9" and "10+". Two to seven steps. Default: five to seven even steps, with zero its own step for counts. */
+  bins?: number[];
+  /** 'sequential' (default): how much, on data-seq. 'diverging': which side of `midpoint`, on data-div. */
+  scale?: 'sequential' | 'diverging';
+  /** The diverging scale's neutral value. Default 0. */
+  midpoint?: number;
+  /** Formats the grid's column values. */
+  xFormat?: (value: unknown) => string;
+  /** Formats the grid's row values. */
+  yFormat?: (value: unknown) => string;
+  /** The calendar's first day of the week: 0 Sunday (default) or 1 Monday. */
+  weekStart?: 0 | 1;
+  /** The steps as swatches with their ranges in words, under the cells. Default true. */
+  legend?: boolean;
+  /** The readout. Default true. */
+  tooltip?: boolean;
+  /** Filter in place: which cells match. Misses recede to 35%, keeping their place and colour. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** The selected cell: its record, or its id ("14|Tue" for a grid's x and y, "2026-03-14" for a calendar's day). */
+  selected?: ChartDatum | string | null;
+  /** Makes cells selectable: called with the chosen record, or null when the selection clears. */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes cells open a level down inside a Drilldown: the id of the current node's child this cell opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
+  empty?: ChartEmpty;
+  children?: React.ReactNode;
+}
+/** A value per cell across two dimensions, or per day in a calendar: flat steps of one ramp, each named in words. Renders inside a ChartContainer. */
+export declare function Heatmap(props: HeatmapProps): React.ReactElement;
+export interface ScatterChartProps {
+  /** The records: one dot each. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** The key of each record's first measure, along the bottom. Name and format it in the container's config. */
+  x: string;
+  /** The key of each record's second measure, up the side. Name and format it in the container's config. */
+  y: string;
+  /** The key that sorts records into groups, each a colour and a marker shape. At most three; more belong in small multiples. */
+  group?: string;
+  /** Each record's stable identity, a key or a function: dots glide to new places when it's given, and cross-fade otherwise. */
+  id?: string | ((d: ChartDatum) => string);
+  /** Each record's name, a key or a function, for the readout, the keyboard path and the table. */
+  name?: string | ((d: ChartDatum) => string);
+  /** Labels a few dots on the plot (outliers): return the words, or null for none. */
+  label?: (d: ChartDatum) => string | null | undefined;
+  /** A least-squares trend line, 1px ink-muted, named "Trend" (or the words you pass). */
+  trend?: boolean | string;
+  /** The dots' size in px. Default 8, the least. */
+  size?: number;
+  /** The readout. Default true. */
+  tooltip?: boolean;
+  /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** With relevance: fit y to the matches. Default false: the axes hold. */
+  rescale?: boolean;
+  /** The selected record, or its id. The others recede; the frame says "Filtered to …". */
+  selected?: ChartDatum | string | null;
+  /** Makes dots selectable: called with the chosen record, or null when the selection clears. */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes dots open a level down inside a Drilldown: the id of the current node's child this record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
+  empty?: ChartEmpty;
+  children?: React.ReactNode;
+}
+/** Two measures per record, to see how they relate: flat dots ringed apart, a shape per group, outliers named. Renders inside a ChartContainer. */
+export declare function ScatterChart(props: ScatterChartProps): React.ReactElement;
 /** A sliding window over x: a span of time, or the last N records. */
-export interface ChartWindow { minutes?: number; hours?: number; days?: number; points?: number; }
+export interface ChartWindow {
+  minutes?: number; hours?: number; days?: number; points?: number;
+  /** A fixed stretch of x, both ends included (a DateRange fits): what a ChartBrush sets. null leaves that end open. */
+  start?: string | number | null; end?: string | number | null;
+}
 /** The records inside a window, and the x domain it spans. */
 export declare function windowed(data: ChartDatum[], x: string, window: ChartWindow | undefined): { rows: ChartDatum[]; domain?: [number, number] };
 /** An SVG path through points; a null breaks it. 'monotone' never overshoots the points. */
@@ -1985,7 +2101,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

@@ -1,0 +1,37 @@
+<!-- @dsCard group="Charts" height=1000 subtitle="Pick a window on an overview: a raised lens slid along the series in a trench" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartBrush — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cb { display: grid; gap: 16px; }
+.cb .pick { max-width: 320px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const cbYear = Array.from({ length: 365 }, (_, i) => {
+  const day = new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10);
+  const trend = 4200 + i * 9, week = [0.82, 1, 1.04, 1.05, 1.03, 0.97, 0.78][i % 7];
+  const summer = i > 212 && i < 243 ? 0.8 : 1, launch = i > 265 ? 1.18 : 1;
+  return { day, active: Math.round((trend + 260 * Math.sin(i / 9)) * week * summer * launch) };
+});
+const cbWeeks = Array.from({ length: 52 }, (_, i) => ({ week: new Date(Date.UTC(2026, 0, 5 + i * 7)).toISOString().slice(0, 10), signups: Math.round(310 + i * 6 + 90 * Math.sin(i / 3) + (i > 37 ? 160 : 0)) }));
+const cbK = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
+function App() {
+  const [range, setRange] = React.useState({ start: "2026-03-01", end: "2026-04-30" });
+  return /* @__PURE__ */ React.createElement("div", { className: "cb" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cb1" }, "Daily active users"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Drag the lens to pan, a grip to resize, or press the overview to centre it there. The picker is the same state, typed.")), /* @__PURE__ */ React.createElement(A.CardContent, { className: "col" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Window", className: "pick" }, /* @__PURE__ */ React.createElement(A.DateRangePicker, { value: range, onValueChange: setRange, min: "2026-01-01", max: "2026-12-31", locale: "en-GB" })), /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "cb1", config: { active: { label: "Active users", format: cbK.format } }, aspect: 3.4, locale: "en-GB" }, /* @__PURE__ */ React.createElement(A.AreaChart, { data: cbYear, x: "day", window: range, onWindowChange: setRange }, /* @__PURE__ */ React.createElement(A.ChartBrush, null))))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cb2" }, "Weekly sign-ups"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Bars over time with a brush that keeps its own window")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "cb2", config: { signups: { label: "Sign-ups" } }, aspect: 4, locale: "en-GB" }, /* @__PURE__ */ React.createElement(A.BarChart, { data: cbWeeks, x: "week" }, /* @__PURE__ */ React.createElement(A.ChartBrush, null))))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

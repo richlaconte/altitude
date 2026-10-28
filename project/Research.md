@@ -59,6 +59,8 @@ These are the sources behind [Charts](Charts.md).
 - **Decorative animation doesn't help.** Animation helps only when its motion is the change (Tversky, Morrison & Bétrancourt, above), so charts glide between values and never grow from the baseline on first render.
 - **Staged transitions help people follow a change.** Animated transitions between statistical graphics significantly improved object tracking and value estimation; simple staging helped and was preferred, while rescaling axes at the same time as marks moved hurt ([Heer & Robertson, 2007](https://doi.org/10.1109/TVCG.2007.70539)). So a chart rescales first and moves its marks after, and `checks/chart-motion.mjs` holds it to that frame by frame.
 - **A chart needs a path, not just a description.** Data Navigator models a chart as a graph of nodes laid over any rendering as an accessible layer ([Elavsky, Nadolskis & Moritz, 2023](https://doi.org/10.1109/TVCG.2023.3327393)); Olli moves a screen reader from a summary, to the axes and series, to the data ([Zong et al., 2022](https://doi.org/10.1111/cgf.14519)). Blind readers valued trends and statistics over a restatement of the encoding ([Lundgard & Satyanarayan, 2021](https://doi.org/10.1109/TVCG.2021.3114770)), so a series' name says its range and which way it went, and a point's says its change from the one before. Recharts 3 makes a chart one Tab stop with arrow keys between points. `ChartContainer`'s keyboard path follows these.
+- **Classes beat a continuous ramp for naming a value.** Choropleth practice bins a sequential or diverging scheme into a few classes (ColorBrewer offers three to nine, and most maps use five to seven) so each colour can be found in the legend ([Harrower & Brewer, 2003](https://doi.org/10.1179/000870403235002042)). `Heatmap` bins into two to seven steps of `data-seq` or `data-div` and names each step's range.
+- **Small marks need bigger colour differences.** The colour difference people can see shrinks with mark size ([Szafir, 2018](https://doi.org/10.1109/TVCG.2017.2744359)), so heatmap cells are at least 10px, steps are spread across the whole ramp rather than adjacent, and the grid wraps rather than shrinking cells further.
 - **Accessibility is checked, not assumed.** Chartability groups chart accessibility into heuristics a reviewer can audit quickly ([Elavsky, Bennett & Moritz, 2022](https://doi.org/10.1111/cgf.14522)); Charts' five-point check (visual, keyboard, screen reader, reduced motion, forced colours) follows it.
 
 - **The frame follows the libraries people know.** `ChartContainer` and `ChartConfig` take shadcn/ui's chart names and its config shape (data key → label and colour), and Recharts, visx, Nivo, ECharts and Observable Plot were considered as engines. Each adds a dependency, and none exposes what Altitude needs (imprints while loading, the attention budget, hover only where a click acts, legend keys built as switches), so the scales and axes are in-house (see E24).
@@ -525,7 +527,65 @@ A design review: `ChartSelect` was rendered as revenue by region that cross-filt
 
 Not yet tested with people: whether the readout's "Select to filter" line is read before the click, or only noticed after it.
 
-### E42 · Where does the result of removing an item go?
+### E42 · Can a grid of values be read without a value axis?
+
+A design review: `Heatmap` was rendered as a year of commits in a calendar, requests by weekday and hour with the table view, and error-rate change by service and region on a diverging scale with a cell you can select. In all four schemes at 960px, at 360px at 2×, under forced colours, with reduced motion and with `contrast="more"`, by pointer and keyboard. `checks/heatmap.mjs` measures it.
+
+- **Steps you can name.** A continuous ramp makes every cell a slightly different colour that no legend can name. Binning into steps (after ColorBrewer's classes) makes "4–9" something to find in the legend, say in a cell's name ("step 3 of 4") and sort by in the table.
+- **Steps spread over the ramp.** Small cells need bigger colour differences (Szafir), so steps take ramp tokens spread from `data-seq-1` to `data-seq-7` rather than adjacent ones: four steps are 1, 3, 5 and 7.
+- **Ranges said once, signs said in words.** Formatted ranges repeated their unit and read "−3.0 pts–−1.5 pts", the en dash looking like a minus. A range now says its unit once and uses "to" between signed numbers ("−0.5 to +0.5 pts"). The open ends say "< −1.5 pts" and "≥ +1.5 pts", or "10+" for counts.
+- **Diverging steps on round numbers.** The first default put the steps at half-steps, which a one-decimal format rounded to the wrong edges ("−0.3 to +0.3" for ±0.25). The edges are now whole multiples of a 1–2–5 step, three to a side.
+- **Wrap, don't shrink.** At 360px 24 hourly columns ran out of the card, because a cell can't go below 10px. Both variants now wrap into bands (00–11 above 12–23, a year into three), each naming its rows and columns.
+- **The crosshair is an outline.** A grid has no axis for a crosshair to run along, so the cell under the readout wears a 2px `ink` outline. It's not a promise: a static grid has no pointer cursor. Charts' rule 4 says so.
+- **Cross-fade, don't glide.** The shared engine glides values, which would walk a cell's colour through every step between its old and new value. A heatmap takes new values at once and cross-fades each cell's fill.
+- **Patterns for the steps.** Under forced colours every fill becomes the same, so each step adds a density (none, sparse dots, dense dots, hatching, crosshatch); a diverging scale hatches its two sides in opposite directions.
+
+The issue asked for the WAI-ARIA grid pattern. The keyboard follows it (arrows, Home/End, Ctrl+Home/End, Page Up/Down), but the cells sit in the chart's one-Tab-stop path from the summary, as every chart's points do (E29), and say their row and column in their names rather than through `rowheader` and `columnheader` cells.
+
+Not yet tested with people: whether a calendar's Page Up and Page Down by month are found without being told, and whether a wrapped grid's second band is read as a continuation of the first.
+
+### E43 · Can two measures be read from flat dots?
+
+A design review: `ScatterChart` was rendered as p95 latency against payload for 30 endpoints in three services, with a trend, two labelled outliers and a legend that toggles; and spend against seats for 16 customers, selectable, with the table view, gliding to the next month. In all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`, by pointer and keyboard. `checks/scatter-chart.mjs` measures it.
+
+- **A ring, not a shadow.** Overlapping dots are kept apart by a 2px ring of the plot's own colour, the gap a stacked bar has, rather than by a stroke in a darker shade or a drop shadow, which would read as height.
+- **8px means every shape.** Squares and triangles drawn in a circle's 8px box measured 7.2px and 7.4px. They're now sized so their own box is at least 8px.
+- **Both axes named.** With two measures, an axis of bare numbers ("0, 50, 100") says nothing. The first build named them inside the plot, where a dot near the top sat under "p95". They're now named in room the frame leaves above and below the plot.
+- **Labels find room.** At 360px, neither upper corner of the top-left outlier was clear of the plot's edges and the label beside it, so its label was dropped. Each label now tries six spots, upper corners first, then beside, then below. The trend's word counts as taken.
+- **Nearest, with a reach.** The pointer reads the nearest dot (its Voronoi cell) within 48px. Past that, nothing is read, rather than a far dot being named.
+- **Enter starts at the left.** The keyboard path entered at the first record in the array, wherever it was on the plot. It now enters at the leftmost dot, and ← and → follow x.
+- **Identity decides the motion.** A record's place in the array isn't an identity, so data without `id` cross-fades. With ids, dots glide on both axes: x joins the values the engine interpolates.
+
+Not yet tested with people: whether ↑ and ↓ to the nearest dot above or below are predictable in a dense cloud, where "above" may land on a dot far to one side.
+
+### E44 · Can one trench hold a range?
+
+A design review: the range `Slider` was rendered as a price filter ($0–$200 in $5 steps, two steps apart) under the single-value sliders it extends. In all four schemes at 960px, at 360px at 2× and under forced colours, by pointer and keyboard. `checks/range-slider.mjs` measures it.
+
+- **One trench, one fill.** Two sliders side by side read as two settings. Two thumbs in one trench, with the raised fill between them, read as one span, the build the DateRangePicker already uses.
+- **The fill is a handle.** Dragging between the thumbs pans the window. Because it acts, it lifts to level 2 on hover and shows a grab cursor, the rule every control follows. Pressing it doesn't jump either thumb, so a pan never starts with a jump.
+- **Only the thumb in hand floats.** The single slider lifts its thumb whenever the slider is hovered and floats it whenever it's dragged. With two, that floated both, and both bubbles showed, so neither said which value was changing. Now only the thumb under the pointer lifts and only the one held floats; a pan holds both.
+- **A clash with possession.** The first build marked the held thumb with `data-held`, which is already the collaborator-hold attribute (**Possession**), and the thumb took its tilt and its position and jumped out of the trench. It's `data-grabbed` now.
+- **Focus follows the press.** Pressing the track moved the nearer thumb but left focus on the page, because the browser's mousedown focused nothing after the slider had focused the thumb. The press now prevents that default, so the thumb that moved is the one the arrow keys move.
+- **Thumbs that meet.** With `minStepsBetween={0}` the two thumbs can sit on one value, where the upper one covers the lower. The first move decides which one goes: left takes the lower thumb, right the upper.
+- **Bounds in ARIA.** Each thumb's `aria-valuemin` and `aria-valuemax` stop at the other thumb less the gap, as the APG pattern says, so Home and End go to the thumb's own bounds, not the track's ends.
+
+Not yet tested with people: whether the fill is found as something to drag without the hint text the preview gives, and whether two bubbles close together are read as a pair or as a clash.
+
+### E45 · Can a brush look like something to drag?
+
+A design review: `ChartBrush` was rendered under a year of daily active users, its window shared with a `DateRangePicker`, and under a year of weekly sign-ups as bars, keeping its own window. In all four schemes at 960px, at 360px at 2×, under forced colours and with reduced motion, by pointer and keyboard. `checks/chart-brush.mjs` measures it.
+
+- **The range Slider, laid along the overview.** The brush is #73's range Slider: the same thumbs, the same "can't cross" rule, the same keys, and the same `useRange` logic underneath. Only the press outside differs: a slider moves the nearer thumb there, a brush centres the window there, because what you want in an overview is "show me that bit".
+- **A line, not an area.** The issue asked for "a sparkline-sized area". From zero, a year of values that never come near zero was a flat ripple near the top of the trench. From its own low and high, an area would stand on nothing and misstate every value. So the overview is a line spanning its own low to high, as a `Sparkline`'s line is. It's there for the shape.
+- **Bubbles below.** The grips' date bubbles first rose above the overview, as a slider's do, and covered the plot's x axis labels. They now hang below the trench, over the brush's own caption, which says the same dates. Near an end they align to it: at the start, the first build's bubble ran 5px past the chart's frame.
+- **The records' own x values.** The window's `{ start, end }` are records' x values, not free dates, so a `DateRange` fits as it is and a brush and a picker can share one state. A date typed into the picker that isn't a record is still honoured: the chart shows the records between the two dates.
+- **Evenly spaced by record.** The overview spaces records evenly and the grips step by a record. Over daily or weekly data that's the same as time; over irregular data the overview is distorted, but the grips never land between records.
+- **The plot cross-fades.** The issue expected the main chart to glide. A new window means new x values under the marks, which Motion's rule 5 cross-fades rather than morphing, so a pan reads as the view changing rather than the data moving.
+
+Not yet tested with people: whether the lens is grabbed as a whole on first sight, without the description the preview gives, and whether pressing the overview to centre the window there is ever found.
+
+### E46 · Where does the result of removing an item go?
 
 A measurement, then a design review ([#97](https://github.com/richlaconte/altitude/issues/97)). In the Actions in place Files example, Archive was clicked while every element's position was sampled each animation frame (`shoot.mjs` with `ACT`, Daylight, 960px). Before: the row was gone in the first frame and the rows below jumped up 77px; the recovery Alert appeared 172px below the click, under the list; and about 100ms later it grew 10px when "Archiving…" became "…is archived", moving everything under it a second time. `ItemGroup` measured the same way: its slats jumped 84px and its Undo Alert appeared under the add slot.
 

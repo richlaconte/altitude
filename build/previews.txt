@@ -306,17 +306,23 @@ function App() {
   );
 }
 
-=== Slider | <!-- @dsCard group="Inputs" height=170 subtitle="Grab the thumb: it floats to level 3" -->
+=== Slider | <!-- @dsCard group="Inputs" height=290 subtitle="Grab the thumb: it floats to level 3" -->
 --- css
 .wrap { max-width: 420px; padding-top: 28px; }
+.wrap .gap { height: 20px; }
 --- jsx
 function App() {
   const [v, setV] = React.useState(64);
+  const [price, setPrice] = React.useState([20, 80]);
   return (
     <div className="col wrap">
       <A.Slider value={v} onValueChange={setV} aria-label="Volume" format={(n) => n + '%'} />
       <A.Slider defaultValue={30} disabled aria-label="Disabled" />
       <p className="cap">Volume {v}% — drag, or focus and use the arrow keys.</p>
+      <div className="gap" />
+      <A.Slider value={price} onValueChange={setPrice} min={0} max={200} step={5} minStepsBetween={2}
+        aria-label={['Minimum price', 'Maximum price']} format={(n) => '$' + n} />
+      <p className="cap">Price ${price[0]}–${price[1]} — drag either thumb, or the fill to move both.</p>
     </div>
   );
 }
@@ -1315,6 +1321,112 @@ function App() {
   );
 }
 
+=== Heatmap | <!-- @dsCard group="Charts" height=980 subtitle="A value per cell across two dimensions: flat steps of one ramp, each named in words" -->
+--- css
+.hm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.hm > .wide { grid-column: 1 / -1; }
+@media (max-width: 720px) { .hm { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+// Requests per hour: a working-day hump, quieter weekends, and a Tuesday-afternoon peak.
+const load = days.flatMap((weekday, w) => Array.from({ length: 24 }, (_, hour) => {
+  const day = Math.max(0, Math.sin(((hour - 6) / 15) * Math.PI));
+  const base = (w < 5 ? 300 : 110) * day + 20 + ((hour * 7 + w * 13) % 17);
+  return { weekday, hour, requests: Math.round(base + (w === 1 && hour >= 13 && hour <= 15 ? 160 : 0)) };
+}));
+// Commits per day for a year, with quiet weekends, a holiday gap and a few busy weeks.
+const start = Date.UTC(2025, 9, 27);
+const commits = Array.from({ length: 365 }, (_, i) => {
+  const t = start + i * 864e5, wd = new Date(t).getUTCDay(), r = (i * 37 + 11) % 23;
+  const busy = (i > 120 && i < 140) || (i > 300 && i < 312);
+  const n = wd === 0 || wd === 6 ? (r < 18 ? 0 : r - 17) : i > 56 && i < 68 ? 0 : busy ? 6 + (r % 9) : r < 5 ? 0 : Math.round(r / 3);
+  return { day: new Date(t).toISOString().slice(0, 10), count: n };
+});
+const services = ['Checkout', 'Search', 'Accounts', 'Media', 'Payments'];
+const regions = ['US', 'EU', 'APAC', 'LATAM'];
+// Error rate against last week, in points: below zero is better.
+const change = services.flatMap((service, s) => regions.map((region, r) => ({ service, region, delta: s === 3 && r === 3 ? null : Math.round((Math.sin(s * 2.1 + r * 1.3) * 1.6 + (s === 4 && r === 1 ? 1.8 : 0)) * 10) / 10 })));
+const pts = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + ' pts';
+function App() {
+  const [cell, setCell] = React.useState(null);
+  return (
+    <div className="hm">
+      <A.Card className="wide">
+        <A.CardHeader><A.CardTitle id="h1">Commits</A.CardTitle><A.CardDescription>A year, a cell per day: zero is the lightest step, and each step says its range</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="h1" config={{ count: { label: 'Commits' } }}>
+            <A.Heatmap variant="calendar" data={commits} date="day" value="count" bins={[0, 1, 4, 10]} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="h2">Requests by hour</A.CardTitle><A.CardDescription>Load by weekday and hour, with the table view</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="h2" views config={{ requests: { label: 'Requests' } }} xLabel="Weekday">
+            <A.Heatmap data={load} x="hour" y="weekday" value="requests" xFormat={(h) => String(h).padStart(2, '0')} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="h3">Error rate against last week</A.CardTitle><A.CardDescription>{cell ? `${cell.service} in ${cell.region}: select it again to clear` : 'scale="diverging": better below zero. Select a cell'}</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="h3" config={{ delta: { label: 'Change', format: pts } }}>
+            <A.Heatmap data={change} x="region" y="service" value="delta" scale="diverging" selected={cell} onSelect={setCell} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
+=== ScatterChart | <!-- @dsCard group="Charts" height=820 subtitle="Two measures per record: flat dots ringed apart, a shape per group, outliers named" -->
+--- css
+.sc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 720px) { .sc { grid-template-columns: minmax(0, 1fr); } }
+.sc-foot { display: flex; align-items: center; gap: 12px; margin-top: 12px; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+--- jsx
+const svc = ['Checkout', 'Search', 'Media'];
+// p95 latency against payload per endpoint: latency climbs with payload, Media's big payloads most of all.
+const endpoints = Array.from({ length: 30 }, (_, i) => {
+  const service = svc[i % 3], kb = Math.round(8 + ((i * 53) % 97) * (service === 'Media' ? 4.1 : 2.2));
+  const ms = Math.round(70 + kb * (service === 'Media' ? 0.62 : 0.48) + ((i * 37) % 41) - 20 + (i === 13 ? 190 : 0));
+  return { name: `${service} ${['list', 'get', 'create', 'update', 'search', 'export', 'upload', 'sync', 'batch', 'stream'][Math.floor(i / 3)]}`, service, kb, ms };
+});
+const kb = (v) => `${Math.round(v)} KB`, ms = (v) => `${Math.round(v)} ms`;
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
+const month = (m) => Array.from({ length: 16 }, (_, i) => {
+  const seats = 20 + ((i * 29) % 140) + m * (i % 4) * 6;
+  return { id: 'c' + i, name: ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli', 'Vandelay', 'Stark', 'Wayne', 'Wonka', 'Tyrell', 'Cyberdyne', 'Soylent', 'Aperture', 'Massive', 'Oscorp', 'Gringotts'][i], seats, spend: Math.round(seats * (38 + ((i * 17) % 23)) + m * 300) };
+});
+function App() {
+  const [m, setM] = React.useState(0);
+  const [picked, setPicked] = React.useState(null);
+  const customers = React.useMemo(() => month(m), [m]);
+  return (
+    <div className="sc">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="sc1">Latency against payload</A.CardTitle><A.CardDescription>p95 per endpoint, by service, with the trend</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="sc1" aspect={1.5} config={{ kb: { label: 'Payload', format: kb }, ms: { label: 'p95', format: ms } }}>
+            <A.ScatterChart data={endpoints} x="kb" y="ms" group="service" id="name" name="name" label={(d) => (d.ms > 250 && d.kb < 300 ? d.name : null)} trend>
+              <A.ChartLegend content={<A.ChartLegendContent toggle label="Services" />} />
+            </A.ScatterChart>
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="sc2">Spend against seats</A.CardTitle><A.CardDescription>{picked ? `${picked.name} selected: the rest recede` : 'Per customer. Select one; dots glide by id when the month changes'}</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="sc2" aspect={1.5} views config={{ seats: { label: 'Seats' }, spend: { label: 'Spend', format: usd.format } }}>
+            <A.ScatterChart data={customers} x="seats" y="spend" id="id" name="name" selected={picked ? picked.id : null} onSelect={setPicked} />
+          </A.ChartContainer>
+          <div className="sc-foot"><A.Button size="sm" variant="secondary" onClick={() => setM((n) => (n + 1) % 3)}>Next month</A.Button><span>Month {m + 1} of 3</span></div>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === ChartTooltip | <!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
 --- css
 .ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -1709,6 +1821,49 @@ function App() {
           <A.Drilldown root={{ id: 'year', title: '2026', content: (
             <A.ChartContainer title="Bookings by quarter, 2026" aspect={2.1} config={bookings}><A.BarChart data={qs} x="q" drill={(d) => d.q} /></A.ChartContainer>
           ), children: quarterNodes }} />
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
+=== ChartBrush | <!-- @dsCard group="Charts" height=1000 subtitle="Pick a window on an overview: a raised lens slid along the series in a trench" -->
+--- css
+.cb { display: grid; gap: 16px; }
+.cb .pick { max-width: 320px; }
+--- jsx
+// A year of daily active users, with a dip in August and a launch in late September.
+const cbYear = Array.from({ length: 365 }, (_, i) => {
+  const day = new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10);
+  const trend = 4200 + i * 9, week = [0.82, 1, 1.04, 1.05, 1.03, 0.97, 0.78][i % 7];
+  const summer = i > 212 && i < 243 ? 0.8 : 1, launch = i > 265 ? 1.18 : 1;
+  return { day, active: Math.round((trend + 260 * Math.sin(i / 9)) * week * summer * launch) };
+});
+const cbWeeks = Array.from({ length: 52 }, (_, i) => ({ week: new Date(Date.UTC(2026, 0, 5 + i * 7)).toISOString().slice(0, 10), signups: Math.round(310 + i * 6 + 90 * Math.sin(i / 3) + (i > 37 ? 160 : 0)) }));
+const cbK = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+function App() {
+  const [range, setRange] = React.useState({ start: '2026-03-01', end: '2026-04-30' });
+  return (
+    <div className="cb">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="cb1">Daily active users</A.CardTitle><A.CardDescription>Drag the lens to pan, a grip to resize, or press the overview to centre it there. The picker is the same state, typed.</A.CardDescription></A.CardHeader>
+        <A.CardContent className="col">
+          <A.Field label="Window" className="pick"><A.DateRangePicker value={range} onValueChange={setRange} min="2026-01-01" max="2026-12-31" locale="en-GB" /></A.Field>
+          <A.ChartContainer aria-labelledby="cb1" config={{ active: { label: 'Active users', format: cbK.format } }} aspect={3.4} locale="en-GB">
+            <A.AreaChart data={cbYear} x="day" window={range} onWindowChange={setRange}>
+              <A.ChartBrush />
+            </A.AreaChart>
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="cb2">Weekly sign-ups</A.CardTitle><A.CardDescription>Bars over time with a brush that keeps its own window</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="cb2" config={{ signups: { label: 'Sign-ups' } }} aspect={4} locale="en-GB">
+            <A.BarChart data={cbWeeks} x="week">
+              <A.ChartBrush />
+            </A.BarChart>
+          </A.ChartContainer>
         </A.CardContent>
       </A.Card>
     </div>

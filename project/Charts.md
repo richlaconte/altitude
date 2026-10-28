@@ -9,7 +9,7 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
 1. **The data is the record.** The plot is ground, and its marks are flat ink on it: no cast shadow, no wall, no sheen, no tonal lift and no gradient, ever. Length and position are the most accurately read magnitude channels and depth is one of the weakest; shadowed and 3D bars cost accuracy. A sheen on a bar would also say "press it" (E4), which a bar usually can't honour.
 2. **Bars stand on the ground line.** The zero baseline is the chart's ground line, a 1px `ink-muted` rule, the same line the `Stepper` and the `Drilldown` staircase stand on. Bar charts always include zero; a bar that starts above zero misstates its length.
 3. **Height belongs to the chart's chrome, not to its data.** Every live part of a chart is a component you already know (see **Every part, by its build** below). Nothing new is invented for charts.
-4. **Hover is a promise, in charts too.** On a static chart the crosshair and readout appear and the marks don't respond. Only marks that do something when clicked show a hover outline and a pointer cursor. Marks never lift: a bar lifted off the ground line, or one casting a shadow below its top edge, misstates its value.
+4. **Hover is a promise, in charts too.** On a static chart the crosshair and readout appear and the marks don't respond. A grid has no crosshair, so a `Heatmap` outlines the cell under its readout in 2px `ink` instead, with no pointer cursor: that's the crosshair, not a promise. Only marks that do something when clicked show a hover outline and a pointer cursor. Marks never lift: a bar lifted off the ground line, or one casting a shadow below its top edge, misstates its value.
 5. **Colour does one job per chart.** Pick one:
    - **identity**: the categorical palette, `data-1` to `data-6` in config order, then `data-other`;
    - **magnitude**: the sequential ramp `data-seq-1` to `data-seq-7`;
@@ -46,12 +46,14 @@ Choose by the job the data does, not by what looks rich.
 | The plot, gridlines and axes | ground | flat; gridlines are `line`, axis text `ink-muted` |
 | The zero baseline | ground | the ground line: 1px `ink-muted`, as under `Stepper` and `Drilldown` |
 | Marks (bars, lines, points, cells) | ground | flat ink in a series colour, no shadow, no wall, no sheen |
+| A scatter's dots | ground | flat `data-*` with a marker shape per group, ringed 2px in the plot's colour so overlaps stay apart; outliers named in `ink` with a 1px leader |
+| A heatmap's cells | ground | flat `data-seq` (or `data-div`) steps parted by 2px of the plot's colour; no data is a 1px `line` outline, not a well |
 | A clickable mark, hovered | ground | a 2px `ink` outline and a pointer cursor; it never lifts |
 | The readout | floating, level 3 | a `Tooltip`, rising from the side facing its mark |
 | The crosshair | ground | a 1px `ink-muted` rule; it doesn't move the marks |
 | A legend you can toggle | sunk and raised | a choice, so it's built like the Switch: a trench with a raised mark when the series is on |
 | A legend that only labels | ground | a plate set flush, like a `Badge`; better still, label the series directly |
-| An overview brush | sunk and raised | the `Slider`: an overview in a trench, the chosen window a raised thumb |
+| An overview brush | sunk and raised | the range `Slider`: the series a flat line in a trench, the chosen window a raised lens (level 1, `accent` rim, clear face) whose grips are the thumbs; outside it the overview recedes to 35% |
 | Drilling in | ground, stacked | a `Drilldown`: the detail is laid on top, the staircase shows the way back |
 | Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are dashed `ink-muted` |
 | Loading | sunk | an imprint (`Await`), at the chart's own size |
@@ -69,8 +71,9 @@ These are the elevation signals a chart adds to **Elevation**'s table:
 - **Live.** A live chart shows a change at once and leaves a fading `ink` outline on the mark; a whole refresh glows the "Updated" caption instead. Its window glides with time, and it holds still while someone reads it, with a switch to pause it (E39).
 - **Read against.** Targets, limits, normal ranges and events (`ChartReference`, `ChartAnnotation`) lie flush with the marks: a solid 1px line, a flat `line` band, a `Badge` plate with a leader. Their words are laid out together so they never overlap (E38).
 - **Not yet the record.** A projected value or an incomplete period (this month so far) is dashed or hatched and says so in its label and readout. It's the record to come, so it's drawn as an imprint of the record, not raised as live. Built as `status` on `BarChart`, `LineChart` and `AreaChart`, with a "Today" rule where the record ends and an uncertainty `band` on `LineChart` (E37).
-- **A window on the record.** An overview sits in a trench and the chosen window is a raised thumb in it, so the part you're looking at is the part you can move.
+- **A window on the record.** An overview sits in a trench and the chosen window is a raised lens in it, so the part you're looking at is the part you can move. The lens is raised because you move it, not because it's data: the series inside it stays flat.
 - **Recency.** A value that just arrived, or just changed, gets the afterglow, within the attention budget, never a lift.
+- **Steps of one ramp.** A heatmap's value is a binned step of the sequential ramp (or the diverging one around a midpoint), each step's range in words in the legend, the cell's name and the table, and a pattern density when colour is lost (E42).
 - **Selection** is a tint and an outline, never a height. Selected marks keep their place on the ground line; unselected ones mute rather than sink.
 
 ## Motion

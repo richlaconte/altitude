@@ -17,7 +17,8 @@ Amounts compared across categories or periods: deploys per team, signups per mon
 - `stack`: `true` for parts of a total, `'expand'` for shares of 100%;
 - `layout="horizontal"`: categories down the side, for long names or many of them. Names longer than 40% of the width are cut with an ellipsis; the full name stays in the summary;
 - `labels`: `'max'` labels the largest bar (or stack), `'last'` the last category's. Never every bar;
-- `status`: which categories aren't yet the record (`'partial'` or `'projected'`), and `boundary`, the rule's word. See below.
+- `status`: which categories aren't yet the record (`'partial'` or `'projected'`), and `boundary`, the rule's word. See below;
+- `window` and `onWindowChange`: for bars over time (a bar per week), a stretch of the categories by date, `{ start, end }` or the last `{ points }`. A `ChartBrush` inside the chart picks it on an overview.
 
 **Selecting and drilling.** `selected` and `onSelect` make the marks a selection that cross-filters the rest of a dashboard, and `drill` opens a level down inside a `Drilldown`. Hover only promises what a click does. See [ChartContainer](../ChartContainer/README.md), "Marks you can select or drill into".
 
