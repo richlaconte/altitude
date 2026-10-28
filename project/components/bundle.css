@@ -1464,6 +1464,20 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-bar-label { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
 @media (forced-colors: active) { .alt-bar-label { fill: CanvasText; } }
 
+/* ── The table view: the same record as a sortable DataTable, behind a segmented Chart | Table control (one raised
+   pill gliding between two views of one record). Both views sit in one box, so switching doesn't move the page: the
+   table scrolls inside the chart's size, and the two cross-fade over dur-travel-2 rather than slide. The unchosen
+   view stays mounted but inert. ── */
+.alt-chart-tabs { display: contents; }
+.alt-chart-bar { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.alt-chart-bar .alt-tabs-list { flex: none; }
+.alt-chart-views { display: grid; min-width: 0; }
+.alt-chart-view { grid-area: 1 / 1; min-width: 0; transition: opacity var(--dur-travel-2) var(--ease-glide); }
+.alt-chart-view.alt-tabs-content { animation: none; }
+.alt-chart-view[data-state="inactive"] { opacity: 0; pointer-events: none; }
+.alt-chart-view[data-view="table"] { position: relative; }
+.alt-chart-tablebox { position: absolute; inset: 0; overflow: auto; }
+
 /* ── The keyboard path: a layer of focusable nodes over the aria-hidden SVG, one level at a time (summary, series,
    points) with a roving tabindex, so the plot is one Tab stop. A node is invisible until focused; then it's the focus
    ring itself, 2px accent-ink at a 2px offset, round on a point. It moves instantly, because it's focus, and the

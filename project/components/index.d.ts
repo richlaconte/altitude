@@ -369,7 +369,8 @@ export interface TabsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'd
 export declare function Tabs(props: TabsProps): React.ReactElement;
 export declare function TabsList(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
 export declare function TabsTrigger(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { value: string }): React.ReactElement;
-export declare function TabsContent(props: React.HTMLAttributes<HTMLDivElement> & { value: string }): React.ReactElement | null;
+/** forceMount keeps the panel mounted while unchosen (inert, hidden from assistive technology, data-state="inactive"). */
+export declare function TabsContent(props: React.HTMLAttributes<HTMLDivElement> & { value: string; forceMount?: boolean }): React.ReactElement | null;
 
 export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'> {
   value?: number;
@@ -1567,6 +1568,13 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   patterns?: boolean;
   /** The crosshair and readout. Default true; a chart type's tooltip={false} turns it off too. */
   tooltip?: boolean;
+  /** Adds a Chart | Table control: the same data as a sortable table in the chart's own box. 'table' starts on the table. */
+  views?: boolean | 'chart' | 'table';
+  /** The view shown, controlled. */
+  view?: 'chart' | 'table';
+  onViewChange?: (view: 'chart' | 'table') => void;
+  /** The table's first column header. Default: the x key, capitalised. */
+  xLabel?: string;
 }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; }
 export interface ChartTooltipContentProps {

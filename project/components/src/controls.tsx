@@ -358,10 +358,13 @@ export function TabsTrigger({ value, className, children, ...rest }: React.Butto
       aria-selected={on} tabIndex={on ? 0 : -1} className={cx('alt-tabs-trigger', className)} onClick={() => t.set(value)} {...rest}>{children}</button>
   );
 }
-export function TabsContent({ value, className, ...rest }: React.HTMLAttributes<HTMLDivElement> & { value: string }) {
+export function TabsContent({ value, forceMount, className, ...rest }: React.HTMLAttributes<HTMLDivElement> & { value: string; forceMount?: boolean }) {
   const t = React.useContext(TabsCtx)!;
-  if (t.value !== value) return null;
-  return <div role="tabpanel" id={`${t.id}-p-${value}`} aria-labelledby={`${t.id}-t-${value}`} tabIndex={0} className={cx('alt-tabs-content', className)} {...rest} />;
+  const on = t.value === value;
+  if (!on && !forceMount) return null;
+  // forceMount keeps an unchosen panel mounted (it holds state, or the two cross-fade), inert and hidden from assistive technology.
+  return <div role="tabpanel" id={`${t.id}-p-${value}`} aria-labelledby={`${t.id}-t-${value}`} tabIndex={0} className={cx('alt-tabs-content', className)}
+    data-state={forceMount ? (on ? 'active' : 'inactive') : undefined} aria-hidden={on ? undefined : true} {...(on ? {} : inert)} {...rest} />;
 }
 
 /* ───────────────────────── Slider ───────────────────────── */

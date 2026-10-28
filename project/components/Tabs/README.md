@@ -12,3 +12,5 @@ Arrow keys, Home and End move between tabs in both.
 
 - Keep labels to one or two words.
 - Don't use tabs for sequential steps; they imply the views are peers.
+
+`TabsContent` takes `forceMount` to keep an unchosen panel mounted (inert, hidden from assistive technology, `data-state="inactive"`), for views that hold state or cross-fade, as a chart's Chart | Table views do.

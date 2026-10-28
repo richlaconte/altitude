@@ -1161,6 +1161,30 @@ function App() {
   );
 }
 
+=== ChartTable | <!-- @dsCard group="Charts" height=430 subtitle="The same data as a table, in the chart's own box" -->
+--- css
+.cv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cv { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, api: 20 + ((i * 7) % 11), web: 14 + ((i * 5) % 9), jobs: 6 + ((i * 3) % 7) }));
+const config = { api: { label: 'API' }, web: { label: 'Web' }, jobs: { label: 'Jobs' } };
+function App() {
+  return (
+    <div className="cv">
+      <A.Card><A.CardContent style={{ paddingTop: 20 }}>
+        <A.ChartContainer views title="Requests, all services" description="views: a Chart | Table control" aspect={1.6} config={config}>
+          <A.BarChart data={months} x="month" stack />
+        </A.ChartContainer>
+      </A.CardContent></A.Card>
+      <A.Card><A.CardContent style={{ paddingTop: 20 }}>
+        <A.ChartContainer views="table" title="Requests, all services" description='views="table": starts on the table' xLabel="Month" aspect={1.6} config={config}>
+          <A.BarChart data={months} x="month" stack />
+        </A.ChartContainer>
+      </A.CardContent></A.Card>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {
