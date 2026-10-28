@@ -514,6 +514,17 @@ A design review: `ChartFilter` was rendered as eight services filtered by team (
 
 Not yet tested with people: whether 35% is enough for misses to recede under the chart's own contrast. It's the value DataTable's misses approach, but marks are much smaller than rows.
 
+### E41 · Can a mark promise a click without lifting?
+
+A design review: `ChartSelect` was rendered as revenue by region that cross-filters a monthly chart, and bookings by quarter that drill into their months inside a `Drilldown`. In all four schemes at 960px, at 360px at 2×, under forced colours, with a mouse, the keyboard and touch. `checks/chart-select.mjs` measures it.
+
+- **The outline is the promise.** Elsewhere, hover lifts what a click acts on. A bar can't lift without leaving the ground line, so a mark that acts gets a 2px `ink` outline in its own shape, the pointer cursor and the action in the readout. A chart whose marks don't act gets none of them. That's the exception the Charts chapter states.
+- **Selection is a filter.** Selecting recedes the rest to 35%, exactly as `relevance` does (E40), so one visual language covers "filtered from elsewhere" and "chosen here". The frame says "Filtered to EU", because the receded marks alone don't say what the filter is.
+- **Escape clears before it leaves.** On a point, Escape went back up a level. With a selection, it now clears the selection first, so a keyboard user can undo without losing their place.
+- **Focus after a drill.** `Drilldown` focused its view before the new chart had measured itself, so the chart's summary didn't exist yet. It now focuses the view at once, then moves to the summary when it appears, within a few frames.
+
+Not yet tested with people: whether the readout's "Select to filter" line is read before the click, or only noticed after it.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -33,6 +33,12 @@ export interface LineChartProps {
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds, so positions survive. */
   rescale?: boolean;
+  /** The selected record's x value, for marks you can select. The others recede; the frame says "Filtered to …". */
+  selected?: unknown;
+  /** Makes marks selectable: called with the chosen record, or null when the selection clears (Escape, Clear, or choosing it again). */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes marks open a level down, inside a Drilldown: return the id of the current node's child this record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
   /**
    * Show only the latest stretch of x: `{ minutes: 15 }` (or `hours`, `days`) of time, or the last `points` records.
    * In a `live` container, when the window moves on, x glides one step and the marks ride along with it.
@@ -207,7 +213,7 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const labelled = p.endLabels ?? labels.length <= 4;
   const win = Array.isArray(p.data) && p.window ? windowed(p.data, p.x, p.window) : undefined;
   return {
-    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale,
+    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     band: p.band ? { series: p.band.series, low: p.band.low, high: p.band.high, label: p.band.label ?? 'Range' } : undefined,
     right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
   };

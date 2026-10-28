@@ -1379,10 +1379,13 @@ export interface StepperProps extends Omit<React.OlHTMLAttributes<HTMLOListEleme
  */
 export declare function Stepper(props: StepperProps): React.ReactElement;
 
+/** A place in a Drilldown. Without content, a node with children lists them; with both, the content shows and opens its children itself (a chart's `drill`). */
 export interface DrillNode { id: string; title: React.ReactNode; description?: React.ReactNode; content?: React.ReactNode; children?: DrillNode[] }
 export interface DrilldownProps extends React.HTMLAttributes<HTMLDivElement> { root: DrillNode }
 /** Descend into children, ascend back; the breadcrumb steps down a notch per level. */
 export declare function Drilldown(props: DrilldownProps): React.ReactElement;
+/** Inside a Drilldown's content: open one of the current node's children by id. Null outside a Drilldown. */
+export declare function useDrilldown(): { open: (id: string) => boolean } | null;
 
 export type TreeResult = { ok: true } | { ok: false; error: string };
 export type TreeCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -1648,6 +1651,8 @@ export interface ChartTooltipContentProps {
   formatX?: (x: unknown) => string;
   /** "So far" or "Projected", after the heading, when the record under the readout isn't yet the record. */
   note?: string;
+  /** What a click does here ("Select to filter", "Select to open"), when marks act. */
+  action?: string;
 }
 /** The readout's rows: value first, series name second, keyed by the series colour. */
 export declare function ChartTooltipContent(props: ChartTooltipContentProps): React.ReactElement;
@@ -1722,6 +1727,12 @@ export interface BarChartProps {
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
   rescale?: boolean;
+  /** The selected record's x value, for marks you can select. The others recede; the frame says "Filtered to …". */
+  selected?: unknown;
+  /** Makes marks selectable: called with the chosen record, or null when the selection clears. */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes marks open a level down inside a Drilldown: the id of the current node's child this record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
 }
@@ -1750,6 +1761,12 @@ export interface LineChartProps {
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
   rescale?: boolean;
+  /** The selected record's x value, for marks you can select. The others recede; the frame says "Filtered to …". */
+  selected?: unknown;
+  /** Makes marks selectable: called with the chosen record, or null when the selection clears. */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes marks open a level down inside a Drilldown: the id of the current node's child this record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
   /** Show only the latest stretch of x: { minutes | hours | days } of time, or the last { points }. Glides one step in a live container. */
   window?: ChartWindow;
   /** An uncertainty band around a series (default the config's first), from each record's `low` to its `high`: a flat, low-opacity fill. `label` names it in the readout (default "Range"). */
@@ -1784,6 +1801,12 @@ export interface AreaChartProps {
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
   rescale?: boolean;
+  /** The selected record's x value, for marks you can select. The others recede; the frame says "Filtered to …". */
+  selected?: unknown;
+  /** Makes marks selectable: called with the chosen record, or null when the selection clears. */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes marks open a level down inside a Drilldown: the id of the current node's child this record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
   children?: React.ReactNode;
   empty?: ChartEmpty;
 }

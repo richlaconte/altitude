@@ -10,3 +10,5 @@ Navigates a hierarchy as a **stack**. Each place you go into is laid on top of t
 
 - Use it for nested places people move through (workspace → project → environment → build).
 - Don't use it for steps in a process; a stack implies you can always lift back out.
+
+**Charts that drill.** A node with both `content` and `children` shows its content, and the content opens the children itself: a chart's `drill={(d) => childId}`, or `useDrilldown().open(id)` from your own component. After a step, focus moves to the new view's own first stop when it names one (`data-drill-focus`, as a chart's summary does), otherwise to the view.

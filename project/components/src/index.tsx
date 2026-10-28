@@ -8,7 +8,7 @@ export {
 } from './controls';
 export { Pile } from './pile';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
-export { Drilldown } from './nav';
+export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';
 export { CommandPalette, commandScore } from './command';
 export { Select, SelectItem, Combobox } from './select';
