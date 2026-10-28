@@ -45,6 +45,8 @@ export { ChartContainer, ChartMarker, ChartTooltip, ChartTooltipContent, ChartLe
 export { BarChart } from './bar-chart';
 export { LineChart, linePath } from './line-chart';
 export type { LineChartProps } from './line-chart';
+export { AreaChart } from './area-chart';
+export type { AreaChartProps } from './area-chart';
 export { Sparkline } from './sparkline';
 export type { SparklineProps } from './sparkline';
 export { Stat, StatGroup } from './stat';

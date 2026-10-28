@@ -454,6 +454,18 @@ A design review: `BarList` was rendered with 21 pages folded into seven and "Oth
 
 Not yet tested with people: whether bars sized against the largest (rather than the total) are misread as shares when `share` is on.
 
+### E36 · Can an area be flat and still read as a total?
+
+A design review: `AreaChart` was rendered as three stacked regions over two weeks (with a legend you can toggle, the table view, and a change of week), plans as shares of 100%, and a single area of storage used, in all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`. `checks/area-chart.mjs` measures it.
+
+- **No gradient.** The faded-to-transparent fill most libraries use by default would borrow the sheen's cue, "press it" (E4). A flat fill at 28% under a 2px line reads as a volume without it.
+- **Parts parted by the surface.** A 2px line in the plot's own colour separates bands as a stacked bar's gap does. Under forced colours each band also takes its slot's hatch.
+- **Labels on a halo.** Nothing gates `ink` at 4.5:1 against the `data-*` fills, so band names carry a 3px halo of the plot's colour (`paint-order: stroke`), and appear only where a band is at least 20px tall.
+- **↑ means up.** The container moved ↓ to the next series, which in a stack drawn from the bottom is the band above, so ↓ went up the screen. A stacked area turns that around, and each point says its share of the total, as the issue asked.
+- **An area-shaped imprint.** The loading imprint was bars or a band; an area chart now imprints an area.
+
+Not yet tested with people: how well the middle bands of a stack are read, since only the bottom band stands on a common baseline (Cleveland & McGill's position-on-a-common-scale advantage applies to it alone). This is why the README puts the steadiest part at the bottom.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

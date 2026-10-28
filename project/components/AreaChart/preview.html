@@ -1,0 +1,72 @@
+<!-- @dsCard group="Charts" height=860 subtitle="A total and its parts: flat bands on the ground line, parted by 2px, never a gradient" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AreaChart — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.ac { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .ac { grid-template-columns: minmax(0, 1fr); } }
+.ac .wide { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const acDays = Array.from({ length: 14 }, (_, i) => `2026-10-${String(i + 1).padStart(2, "0")}`);
+const reqA = acDays.map((day, i) => ({ day, us: 1600 + i * 40 + i % 3 * 90, eu: 1100 + Math.round(180 * Math.sin(i / 2)), apac: 520 + i * 35 }));
+const reqB = acDays.map((day, i) => ({ day, us: 1500 + i * 55 + i % 4 * 70, eu: 1250 + Math.round(140 * Math.cos(i / 2)), apac: 700 + i * 20 }));
+const plans = ["2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01", "2026-07-01", "2026-08-01"].map((month, i) => ({ month, free: 620 - i * 30, team: 210 + i * 22, business: 90 + i * 15, enterprise: 20 + i * 6 }));
+const storage = acDays.map((day, i) => ({ day, used: [41, 42, 42.5, 44, 45, 45.2, 47, 49, 50, 50.4, 53, 55, 56, 58][i] }));
+const k = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
+function Chart({ id, title, sub, children, className, ...props }) {
+  return /* @__PURE__ */ React.createElement(A.Card, { className }, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id }, title), /* @__PURE__ */ React.createElement(A.CardDescription, null, sub)), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": id, ...props }, children)));
+}
+function App() {
+  const [week, setWeek] = React.useState(0);
+  return /* @__PURE__ */ React.createElement("div", { className: "ac" }, /* @__PURE__ */ React.createElement(
+    Chart,
+    {
+      className: "wide",
+      id: "a1",
+      title: "Requests by region",
+      sub: /* @__PURE__ */ React.createElement(React.Fragment, null, "Stacked: the total and where it came from \xB7 ", /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => setWeek((w) => 1 - w) }, week ? "First week" : "Second week")),
+      config: { us: { label: "US", format: k.format }, eu: { label: "EU", format: k.format }, apac: { label: "APAC", format: k.format } },
+      aspect: 3.2,
+      views: true
+    },
+    /* @__PURE__ */ React.createElement(A.AreaChart, { data: week ? reqB : reqA, x: "day", stack: true, curve: "monotone" }, /* @__PURE__ */ React.createElement(A.ChartLegend, { content: /* @__PURE__ */ React.createElement(A.ChartLegendContent, { toggle: true }) }))
+  ), /* @__PURE__ */ React.createElement(
+    Chart,
+    {
+      id: "a2",
+      title: "Accounts by plan",
+      sub: 'stack="expand": shares of 100%',
+      config: { free: { label: "Free" }, team: { label: "Team" }, business: { label: "Business" }, enterprise: { label: "Enterprise" } },
+      aspect: 1.7
+    },
+    /* @__PURE__ */ React.createElement(A.AreaChart, { data: plans, x: "month", stack: "expand" })
+  ), /* @__PURE__ */ React.createElement(
+    Chart,
+    {
+      id: "a3",
+      title: "Storage used",
+      sub: "One area: a flat fill under its line",
+      config: { used: { label: "Used", format: (v) => `${v} GB` } },
+      aspect: 1.7,
+      summary: "Storage use rose from 41 GB to 58 GB over two weeks, fastest in the second."
+    },
+    /* @__PURE__ */ React.createElement(A.AreaChart, { data: storage, x: "day" })
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -1642,6 +1642,23 @@ button.alt-barlist-item:focus-visible, a.alt-barlist-item:focus-visible { outlin
   .alt-barlist-row[data-relevance="miss"] { border-bottom-style: dashed; }
 }
 
+/* ── AreaChart: a total over time and what it's made of. Bands are the record: flat data-* fills stacked on the ground
+   line in config order, parted by a 2px line in the plot's own colour (the gap a stacked bar has), with a 2px top line
+   on the topmost. A single area is a flat data-1 fill at reduced opacity under its 2px line. No gradient fill, ever:
+   the only face gradient in Altitude is the sheen, and it means "press it". Bands are named inside themselves in ink,
+   on a halo of the plot's colour, where they're tall enough. ── */
+.alt-area-sep { stroke: var(--alt-chart-bg); stroke-width: 2; }
+.alt-area-label { fill: var(--ink); stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; font: 500 12.5px/17px var(--font-sans); pointer-events: none; }
+.alt-chart-imprint[data-shape="area"] { padding: 0; }
+.alt-chart-imprint-area { fill: var(--surface-well); }
+@media (prefers-contrast: more) { .alt-area-sep { stroke: var(--ink); stroke-width: 3; } }
+[data-contrast="more"] .alt-area-sep { stroke: var(--ink); stroke-width: 3; }
+@media (forced-colors: active) {
+  .alt-area-sep { stroke: Canvas; }
+  .alt-area-label { fill: CanvasText; stroke: Canvas; }
+  .alt-chart-imprint-area { fill: none; stroke: GrayText; stroke-dasharray: 6 4; stroke-width: 2px; vector-effect: non-scaling-stroke; }
+}
+
 /* ── ChartTooltip: reading exact values. The crosshair is a mark on the ground (1px line-control, snapped to the nearest
    x); the readout is live, a level-3 floating surface like Tooltip. It rises 4px once as its shadow grows from elev-1
    to elev-3, then steps between x positions with no easing (it follows the data, not each pixel of the pointer), flips
