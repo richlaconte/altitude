@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "edit-record",
+  "version": 1,
+  "title": "Edit record",
+  "intents": [
+    "edit",
+    "settings",
+    "form",
+    "save",
+    "record",
+    "profile"
+  ],
+  "purpose": "Edit a durable record without losing work.",
+  "useWhen": [
+    "A record has editable fields and an explicit persistence operation."
+  ],
+  "avoidWhen": [
+    "Use InlineEdit for a contextual single value; use a route for extended work."
+  ],
+  "alternatives": [
+    "Use InlineEdit for a contextual single value; use a route for extended work."
+  ],
+  "requiredInputs": [
+    "initialValue",
+    "business validation",
+    "save promise returning canonical persisted value",
+    "unsaved-work/navigation policy"
+  ],
+  "states": [
+    "pristine",
+    "editing",
+    "invalid",
+    "pending",
+    "failure",
+    "success"
+  ],
+  "transitions": [
+    "editing \u2192 invalid on failed validation",
+    "editing \u2192 pending on valid submit",
+    "pending \u2192 failure on rejected persistence",
+    "failure \u2192 pending on retry",
+    "pending \u2192 success only after current response; newer edits remain dirty"
+  ],
+  "rules": [
+    "ALT-EDIT-001",
+    "ALT-EDIT-002",
+    "ALT-EDIT-003",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-001"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "govuk-validation",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "A record has editable fields and an explicit persistence operation.",
+  "exceptions": [
+    "Require only states supported by the application; do not fabricate capabilities."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/edit-record.md",
+  "implementation": "project/components/src/pattern-edit-record.tsx",
+  "examples": [
+    "build/fixtures/pattern-workflows.tsx",
+    "scripts/build-framework-fixture.mjs"
+  ],
+  "verification": [
+    "build/checks/pattern-workflows.mjs"
+  ]
+}

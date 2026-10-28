@@ -2107,6 +2107,102 @@ function App() {
   </div>;
 }
 
+=== EditRecord | group="Patterns" subtitle="Edit a record with validation, real demo persistence, failure and recovery" height=680
+--- css
+.framework-demo{max-width:640px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:anywhere}.framework-demo h2{font:600 var(--text-heading)/1.3 var(--font-sans);margin:0}.framework-demo p{margin:0}.framework-demo form{display:grid;gap:16px}.framework-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.framework-record{padding:16px;border:1px solid var(--line-control);border-radius:var(--radius-lg)}.framework-demo [role="status"]{min-height:1.5em}.framework-demo pre{white-space:pre-wrap;overflow-wrap:anywhere}
+--- jsx
+function App(){
+ const [record,setRecord]=React.useState({name:'Northwind studio',email:'team@example.com'});
+ const [mode,setMode]=React.useState('success');const [overview,setOverview]=React.useState(false);
+ const [discard,setDiscard]=React.useState(null);const heading=React.useRef(null);
+ const form=A.useEditRecord({initialValue:record,validationMode:'submit',validate:v=>({...(v.name.trim()?{}:{name:'Enter a workspace name.'}),...(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)?{}:{email:'Enter a valid email address.'})}),save:async draft=>{
+  await new Promise(r=>setTimeout(r,mode==='slow'?2200:450));
+  if(mode==='failure')return {ok:false,error:'The demo service could not save. Choose “Save succeeds” and try again.'};
+  const value={...draft,name:draft.name.trim()};setRecord(value);return {ok:true,value};
+ }});
+ const leave=async reason=>{if(await form.requestLeave(reason,()=>new Promise(resolve=>setDiscard(()=>resolve))))setOverview(true);};
+ const errors=Object.entries(form.errors).map(([key,message])=>({id:'workspace-'+key,label:key==='name'?'Workspace name':'Contact email',message}));
+ return <main className="framework-demo">
+  <h2 ref={heading} tabIndex={-1}>{overview?'Workspace overview':'Workspace settings'}</h2>
+  <p>Edits are saved to this example’s in-memory record. Reloading the page resets it.</p>
+  <A.Surface level={0} className="framework-record"><strong>Saved record</strong><p data-saved-name>{record.name}</p><p>{record.email}</p></A.Surface>
+  {overview?<A.Button onClick={()=>setOverview(false)}>Edit workspace</A.Button>:<>
+   <A.Field label="Demo service"><A.Select value={mode} onValueChange={setMode} items={[{value:'success',label:'Save succeeds'},{value:'slow',label:'Save takes longer'},{value:'failure',label:'Save fails'}]}/></A.Field>
+   <form noValidate onSubmit={e=>{e.preventDefault();void form.submit();}}>
+    <A.ErrorSummary errors={errors} focusKey={form.submitCount}/>
+    <A.Field label="Workspace name" required error={form.errors.name} hint="Use the name your team recognizes."><A.Input id="workspace-name" value={form.draft.name} onChange={e=>form.setField('name',e.target.value)}/></A.Field>
+    <A.Field label="Contact email" required error={form.errors.email}><A.Input id="workspace-email" type="email" value={form.draft.email} onChange={e=>form.setField('email',e.target.value)}/></A.Field>
+    <div className="framework-actions"><A.Button type="submit" variant="primary" disabled={form.phase==='submitting'}>{form.phase==='submitting'?'Saving changes':'Save changes'}</A.Button><A.Button type="button" onClick={()=>leave('cancel')} disabled={form.phase==='submitting'}>Cancel</A.Button><A.Button type="button" variant="ghost" onClick={()=>leave('back')} disabled={form.phase==='submitting'}>Back to overview</A.Button></div>
+   </form>
+   <A.WorkflowStatus>{form.status}</A.WorkflowStatus>
+  </>}
+  <A.Dialog returnFocus={()=>heading.current} open={!!discard} onOpenChange={open=>{if(!open){discard?.(false);setDiscard(null);}}} title="Discard unsaved changes?" description="Your saved workspace stays as it is." footer={<><A.Button onClick={()=>{discard?.(false);setDiscard(null);}}>Keep editing</A.Button><A.Button variant="danger" onClick={()=>{discard?.(true);setDiscard(null);}}>Discard changes</A.Button></>}/>
+ </main>;
+}
+
+=== AsyncCollection | group="Patterns" subtitle="Search, refresh and recover with an explicit selection policy" height=620
+--- css
+.framework-demo{max-width:640px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:anywhere}.framework-demo h2{font:600 var(--text-heading)/1.3 var(--font-sans);margin:0}.framework-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.framework-results{list-style:none;margin:0;padding:0;display:grid;gap:8px}.framework-results li{padding:12px;border:1px solid var(--line-control);border-radius:var(--radius-md)}.framework-demo [role="status"]{min-height:1.5em}
+--- jsx
+const initialRecords=[{id:'atlas',name:'Atlas planning'},{id:'beacon',name:'Beacon research archive — a longer project title to check wrapping'},{id:'cedar',name:'Cedar release'}];
+function App(){
+ const [mode,setMode]=React.useState('success');const service=React.useRef(mode);service.current=mode;
+ const collection=A.useAsyncCollection({initialQuery:'',isFiltered:q=>q.trim()!=='',getKey:item=>item.id,selection:'clear-on-query',load:async(query)=>{await new Promise(r=>setTimeout(r,700));if(service.current==='failure')throw Error('Demo read failed');return service.current==='empty'?[]:initialRecords.filter(r=>r.name.toLowerCase().includes(query.toLowerCase()));}});
+ return <main className="framework-demo"><h2>Project records</h2><p>This example clears selection when the query changes. Refresh preserves selected identities.</p>
+  <A.Field label="Search projects"><A.Input value={collection.query} onChange={e=>collection.setQuery(e.target.value)}/></A.Field>
+  <div className="framework-actions"><A.Button onClick={collection.refresh}>Refresh records</A.Button><A.Button onClick={collection.reset}>Clear search</A.Button></div>
+  <A.Field label="Demo service"><A.Select value={mode} onValueChange={v=>{service.current=v;setMode(v);collection.refresh();}} items={[{value:'success',label:'Records available'},{value:'failure',label:'Load fails'},{value:'empty',label:'No records created yet'}]}/></A.Field>
+  <A.WorkflowStatus>{collection.status}</A.WorkflowStatus>
+  {collection.phase==='failed'&&<A.Button onClick={collection.refresh}>Try loading again</A.Button>}
+  {collection.phase==='no-results'&&<p>Try another name or clear the search.</p>}
+  {collection.phase==='empty'&&<p>Create your first project in your application to begin.</p>}
+  <ul className="framework-results" aria-label="Projects" aria-busy={collection.phase==='loading'||collection.phase==='refreshing'}>{collection.items.map(item=><li key={item.id}><A.Checkbox label={item.name} checked={collection.selectedKeys.has(item.id)} onCheckedChange={()=>collection.toggleSelection(item.id)}/></li>)}</ul>
+  <p>{collection.selectedKeys.size} selected</p>
+ </main>;
+}
+
+=== ConsequentialAction | group="Patterns" subtitle="A clear consequence, real mutation and real undo" height=580
+--- css
+.framework-demo{max-width:640px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:anywhere}.framework-demo h2{font:600 var(--text-heading)/1.3 var(--font-sans);margin:0}.framework-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.framework-record{padding:16px;border:1px solid var(--line-control);border-radius:var(--radius-lg)}.framework-demo [role="status"]{min-height:1.5em}
+--- jsx
+function App(){
+ const [present,setPresent]=React.useState(true);const [reject,setReject]=React.useState(false);const failure=React.useRef(false);const heading=React.useRef(null);
+ const action=A.useConsequentialAction({target:'Quarterly plan',consequence:'Move Quarterly plan to trash. You can restore it in this example.',requiresConfirmation:true,focusFallback:()=>heading.current,execute:async()=>{await new Promise(r=>setTimeout(r,650));if(failure.current){failure.current=false;setReject(false);return {ok:false,error:'The demo service could not move this record. Try moving it again.'};}setPresent(false);return {ok:true,value:'quarterly-plan'};},undo:async id=>{await new Promise(r=>setTimeout(r,450));setPresent(true);return {ok:true};},messages:{pending:'Moving Quarterly plan to trash',succeeded:'Quarterly plan moved to trash',undone:'Quarterly plan restored'}});
+ const open=['confirming','pending','failed'].includes(action.phase)&&!action.canUndo;
+ return <main className="framework-demo"><h2 ref={heading} tabIndex={-1}>Project files</h2><p>The demo changes actual in-memory records; Undo restores the removed record. Production recovery belongs to your application.</p>
+  <A.Switch label="Fail the next move" checked={reject} onCheckedChange={v=>{failure.current=v;setReject(v);}}/>
+  {present?<A.Surface level={0} className="framework-record"><strong>Quarterly plan</strong><p>Owned by the planning team.</p><A.Button variant="danger" onClick={action.request}>Move to trash</A.Button></A.Surface>:<p>No files in this view.</p>}
+  <A.WorkflowStatus>{action.status}</A.WorkflowStatus>
+  {action.canUndo&&<A.Button onClick={()=>void action.undo()}>Restore Quarterly plan</A.Button>}
+  <A.Dialog open={open} onOpenChange={value=>{if(!value)action.cancel();}} title="Move Quarterly plan to trash?" description={action.consequence} dismissible={action.phase!=='pending'} returnFocus={()=>heading.current} footer={<><A.Button disabled={action.phase==='pending'} onClick={action.cancel}>Keep file</A.Button><A.Button variant="danger" disabled={action.phase==='pending'} onClick={action.phase==='failed'?action.retry:action.confirm}>{action.phase==='failed'?'Try moving again':action.phase==='pending'?'Moving file':'Move to trash'}</A.Button></>}>
+   {action.error&&<p role="alert">{action.error}</p>}
+  </A.Dialog>
+ </main>;
+}
+
+=== ReviewSubmit | group="Patterns" subtitle="Review, correct, retry and keep a truthful receipt" height=620
+--- css
+.framework-demo{max-width:640px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:anywhere}.framework-demo h2{font:600 var(--text-heading)/1.3 var(--font-sans);margin:0}.framework-demo form{display:grid;gap:16px}.framework-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.framework-record{padding:16px;border:1px solid var(--line-control);border-radius:var(--radius-lg)}.framework-demo dd{margin-inline-start:0;margin-block-end:14px}.framework-demo [role="status"]{min-height:1.5em}
+--- jsx
+function App(){
+ const [reject,setReject]=React.useState(false);const [received,setReceived]=React.useState(null);const heading=React.useRef(null);const firstField=React.useRef(null);const previousPhase=React.useRef('editing');
+ const workflow=A.useReviewSubmit({initialValue:{name:'',notes:''},validate:v=>v.name.trim()?{}:{name:'Enter a request name.'},submit:async draft=>{await new Promise(r=>setTimeout(r,700));if(reject)return {ok:false,error:'The demo service did not receive this request. Turn off failure and try again.'};const receipt={id:'REQUEST-1042',name:draft.name};setReceived({...draft});return {ok:true,receipt};}});
+ React.useEffect(()=>{if(workflow.phase!==previousPhase.current){if(workflow.phase==='editing')firstField.current?.focus();else if(workflow.phase==='review'||workflow.phase==='complete')heading.current?.focus();previousPhase.current=workflow.phase;}},[workflow.phase]);
+ return <main className="framework-demo"><h2 ref={heading} tabIndex={-1}>{workflow.phase==='complete'?'Request received':workflow.phase==='review'?'Review your request':'New project request'}</h2><ol aria-label="Request progress"><li aria-current={workflow.phase==='editing'?'step':undefined}>Enter details</li><li aria-current={workflow.phase==='review'||workflow.phase==='submitting'?'step':undefined}>Review and send</li><li aria-current={workflow.phase==='complete'?'step':undefined}>Confirmation</li></ol>
+  {workflow.phase!=='complete'&&<A.Switch label="Simulate service failure" checked={reject} onCheckedChange={setReject}/>}
+  {workflow.phase==='editing'?<form noValidate onSubmit={e=>{e.preventDefault();workflow.review();}}>
+   <A.ErrorSummary errors={Object.entries(workflow.errors).map(([key,message])=>({id:'request-'+key,label:'Request name',message}))} focusKey={workflow.submitCount}/>
+   <A.Field label="Request name" required error={workflow.errors.name}><A.Input ref={firstField} id="request-name" value={workflow.draft.name} onChange={e=>workflow.setField('name',e.target.value)}/></A.Field>
+   <A.Field label="Notes"><A.Textarea value={workflow.draft.notes} onChange={e=>workflow.setField('notes',e.target.value)}/></A.Field><A.Button variant="primary" type="submit">Review request</A.Button>
+  </form>:workflow.phase==='complete'?<A.Surface level={0} className="framework-record"><h3>Confirmation</h3><p>Reference: {workflow.receipt.id}</p><p>{workflow.receipt.name}</p><p>The in-memory demo service received your request. This receipt remains until you reload the example.</p></A.Surface>:<>
+   <dl><dt>Request name</dt><dd>{workflow.draft.name}</dd><dt>Notes</dt><dd>{workflow.draft.notes||'No notes provided'}</dd></dl>
+   <div className="framework-actions"><A.Button disabled={workflow.phase==='submitting'} onClick={workflow.correct}>Correct details</A.Button><A.Button variant="primary" disabled={workflow.phase==='submitting'} onClick={()=>void workflow.submit()}>{workflow.phase==='submitting'?'Sending request':workflow.error?'Try sending again':'Send request'}</A.Button></div>
+  </>}
+  <A.WorkflowStatus>{workflow.status}</A.WorkflowStatus>
+  <p>Requests received by the demo service: {received?1:0}</p>
+ </main>;
+}
+
 === EditRegion | <!-- @dsCard group="Inputs" height=900 subtitle="Edit several fields of one record in place, saved together as one write" -->
 --- css
 .er-demo { max-width: 720px; margin: auto; min-width: 0; color: var(--ink); }

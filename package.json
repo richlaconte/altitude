@@ -1,13 +1,16 @@
 {
   "name": "altitude-design",
   "version": "0.2.1",
-  "description": "A React component library where height is the interface: the ground is the record.",
+  "description": "A design and HCI framework for agent-built React web applications, where height is the interface.",
   "keywords": [
     "react",
     "design-system",
     "components",
     "elevation",
-    "ui"
+    "ui",
+    "hci",
+    "workflow",
+    "agents"
   ],
   "license": "MIT",
   "homepage": "https://richlaconte.github.io/altitude/",
@@ -24,9 +27,14 @@
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/types-cjs/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./altitude.css": "./dist/altitude.css",
     "./altitude.no-fonts.css": "./dist/altitude.no-fonts.css",
@@ -34,7 +42,9 @@
     "./tokens.css": "./dist/tokens.css",
     "./tokens.json": "./dist/tokens.json",
     "./altitude.iife.js": "./dist/altitude.iife.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./guidance": "./dist/guidance/index.json",
+    "./guidance/*": "./dist/guidance/*"
   },
   "files": [
     "dist"
@@ -54,7 +64,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit --declaration false --emitDeclarationOnly false",
     "storybook": "node scripts/stories.mjs && storybook dev -p 6006",
     "build-storybook": "node scripts/stories.mjs && storybook build -o storybook-static --quiet",
-    "build-site": "node scripts/build-site.mjs"
+    "build-site": "node scripts/build-site.mjs",
+    "check:guidance": "node build/checks/guidance.mjs",
+    "check:agent-setup": "node build/checks/agent-setup.mjs",
+    "check:framework": "node scripts/check-framework.mjs"
   },
   "devDependencies": {
     "@storybook/addon-docs": "10.6.1",
@@ -62,11 +75,15 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "axe-core": "4.14.0",
     "esbuild": "0.28.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "storybook": "10.6.1",
     "typescript": "5.6.3",
     "vite": "8.3.3"
+  },
+  "bin": {
+    "altitude": "./dist/cli/altitude.mjs"
   }
 }

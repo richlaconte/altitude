@@ -1,0 +1,1 @@
+Add a short workspace description to settings, and show the saved description on the overview too. Use the existing API, which accepts a description field.

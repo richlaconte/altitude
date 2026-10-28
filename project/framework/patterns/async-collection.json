@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "id": "async-collection",
+  "version": 1,
+  "title": "Async collection",
+  "intents": [
+    "search",
+    "filter",
+    "browse",
+    "list",
+    "records",
+    "collection"
+  ],
+  "purpose": "Find records while understanding loading, empty and failure states.",
+  "useWhen": [
+    "Records arrive asynchronously and can be searched or refreshed."
+  ],
+  "avoidWhen": [
+    "Use static content for a known local list; use pagination when the service requires it."
+  ],
+  "alternatives": [
+    "Use static content for a known local list; use pagination when the service requires it."
+  ],
+  "requiredInputs": [
+    "load callback",
+    "stable getKey",
+    "query semantics",
+    "selection policy",
+    "permissions and pagination"
+  ],
+  "states": [
+    "initial-loading",
+    "populated",
+    "refreshing",
+    "first-use-empty",
+    "no-results",
+    "failure"
+  ],
+  "transitions": [
+    "initial-loading \u2192 populated or empty or failure",
+    "populated \u2192 refreshing \u2192 populated or failure",
+    "query change \u2192 loading \u2192 results or no-results",
+    "failure \u2192 retry; reset clears query"
+  ],
+  "rules": [
+    "ALT-COLLECTION-001",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-001"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Records arrive asynchronously and can be searched or refreshed.",
+  "exceptions": [
+    "Require only states supported by the application; do not fabricate capabilities."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/async-collection.md",
+  "implementation": "project/components/src/pattern-async-collection.tsx",
+  "examples": [
+    "build/fixtures/pattern-workflows.tsx",
+    "scripts/build-framework-fixture.mjs"
+  ],
+  "verification": [
+    "build/checks/pattern-workflows.mjs"
+  ]
+}

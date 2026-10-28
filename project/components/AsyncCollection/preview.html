@@ -1,0 +1,40 @@
+group="Patterns" subtitle="Search, refresh and recover with an explicit selection policy" height=620
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AsyncCollection — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.framework-demo{max-width:640px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:anywhere}.framework-demo h2{font:600 var(--text-heading)/1.3 var(--font-sans);margin:0}.framework-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.framework-results{list-style:none;margin:0;padding:0;display:grid;gap:8px}.framework-results li{padding:12px;border:1px solid var(--line-control);border-radius:var(--radius-md)}.framework-demo [role="status"]{min-height:1.5em}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const initialRecords = [{ id: "atlas", name: "Atlas planning" }, { id: "beacon", name: "Beacon research archive \u2014 a longer project title to check wrapping" }, { id: "cedar", name: "Cedar release" }];
+function App() {
+  const [mode, setMode] = React.useState("success");
+  const service = React.useRef(mode);
+  service.current = mode;
+  const collection = A.useAsyncCollection({ initialQuery: "", isFiltered: (q) => q.trim() !== "", getKey: (item) => item.id, selection: "clear-on-query", load: async (query) => {
+    await new Promise((r) => setTimeout(r, 700));
+    if (service.current === "failure") throw Error("Demo read failed");
+    return service.current === "empty" ? [] : initialRecords.filter((r) => r.name.toLowerCase().includes(query.toLowerCase()));
+  } });
+  return /* @__PURE__ */ React.createElement("main", { className: "framework-demo" }, /* @__PURE__ */ React.createElement("h2", null, "Project records"), /* @__PURE__ */ React.createElement("p", null, "This example clears selection when the query changes. Refresh preserves selected identities."), /* @__PURE__ */ React.createElement(A.Field, { label: "Search projects" }, /* @__PURE__ */ React.createElement(A.Input, { value: collection.query, onChange: (e) => collection.setQuery(e.target.value) })), /* @__PURE__ */ React.createElement("div", { className: "framework-actions" }, /* @__PURE__ */ React.createElement(A.Button, { onClick: collection.refresh }, "Refresh records"), /* @__PURE__ */ React.createElement(A.Button, { onClick: collection.reset }, "Clear search")), /* @__PURE__ */ React.createElement(A.Field, { label: "Demo service" }, /* @__PURE__ */ React.createElement(A.Select, { value: mode, onValueChange: (v) => {
+    service.current = v;
+    setMode(v);
+    collection.refresh();
+  }, items: [{ value: "success", label: "Records available" }, { value: "failure", label: "Load fails" }, { value: "empty", label: "No records created yet" }] })), /* @__PURE__ */ React.createElement(A.WorkflowStatus, null, collection.status), collection.phase === "failed" && /* @__PURE__ */ React.createElement(A.Button, { onClick: collection.refresh }, "Try loading again"), collection.phase === "no-results" && /* @__PURE__ */ React.createElement("p", null, "Try another name or clear the search."), collection.phase === "empty" && /* @__PURE__ */ React.createElement("p", null, "Create your first project in your application to begin."), /* @__PURE__ */ React.createElement("ul", { className: "framework-results", "aria-label": "Projects", "aria-busy": collection.phase === "loading" || collection.phase === "refreshing" }, collection.items.map((item) => /* @__PURE__ */ React.createElement("li", { key: item.id }, /* @__PURE__ */ React.createElement(A.Checkbox, { label: item.name, checked: collection.selectedKeys.has(item.id), onCheckedChange: () => collection.toggleSelection(item.id) })))), /* @__PURE__ */ React.createElement("p", null, collection.selectedKeys.size, " selected"));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
