@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChartMarker, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo } from './chart';
+import { ChartMarker, ChartStatusClip, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 import { linePath } from './line-chart';
 
 export interface AreaChartProps {
@@ -20,6 +20,13 @@ export interface AreaChartProps {
   labels?: boolean;
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
+  /**
+   * Which records aren't yet the record: 'partial' for a period still being counted, 'projected' for a forecast. From
+   * the last settled point on, bands are hatched rather than filled and their top line is dashed.
+   */
+  status?: (d: ChartDatum) => ChartStatus | undefined;
+  /** The rule where the record ends: its word (default "Today"), or false for none. */
+  boundary?: string | false;
   /** A ChartTooltip or ChartLegend. */
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */
@@ -57,7 +64,9 @@ function bands(data: ChartDatum[], keys: string[], stack: AreaChartProps['stack'
  * line. No gradient fill: the only face gradient in Altitude is the sheen, and it means "press it".
  */
 export function AreaChart({ stack = false, curve = 'linear', labels }: AreaChartProps) {
-  const { data, series, xOf, y, alpha, encode, strokeWidth, emphasis, active, patterns, directLabels, width: W } = useChart();
+  const { data, series, xOf, y, alpha, encode, strokeWidth, emphasis, active, patterns, directLabels, width: W, height: H, statusRanges } = useChart();
+  const clip = React.useId().replace(/[^\w-]/g, '');
+  const split = statusRanges.pending.length > 0;
   const keys = series.map((s) => s.key);
   const edges = bands(data, keys, stack);
   const single = !stack;
@@ -82,16 +91,20 @@ export function AreaChart({ stack = false, curve = 'linear', labels }: AreaChart
     }).join('');
     fills.push(
       <path key={s.key} className="alt-area-fill" data-series={s.key} d={d} fill={e.fill}
-        fillOpacity={single && !patterns ? 0.28 : undefined} opacity={a < 1 ? a : undefined} />,
+        fillOpacity={single && !patterns ? 0.28 : undefined} opacity={a < 1 ? a : undefined} clipPath={split ? `url(#${clip}-r)` : undefined} />,
     );
+    // Not yet the record: the same band hatched on the plot's own colour, with no solid fill.
+    if (split) fills.push(<path key={s.key + '-pending'} className="alt-area-fill" data-series={s.key} data-pending="" d={d} fill={e.pending} fillOpacity={e.pendingOpacity < 1 ? e.pendingOpacity : undefined} opacity={a < 1 ? a : undefined} clipPath={`url(#${clip}-p)`} />);
     // The top edge: a 2px line in the series colour on a single area or the topmost band; between bands, a 2px line in
     // the plot's own colour, so the parts read as parts without a shadow.
     const top = si === series.length - 1 || single;
-    tops.push(
-      <path key={s.key + '-top'} className={top ? 'alt-area-line' : 'alt-area-sep'} data-series={s.key} d={linePath(upper, curve)} fill="none"
-        stroke={top ? e.stroke : undefined} strokeWidth={top ? strokeWidth : undefined} strokeDasharray={top ? e.dash : undefined} strokeLinejoin="round" strokeLinecap="round"
-        opacity={a < 1 ? a : undefined} />,
+    const edge = (pending: boolean) => (
+      <path key={s.key + (pending ? '-top-pending' : '-top')} className={top ? 'alt-area-line' : 'alt-area-sep'} data-series={s.key} data-pending={pending ? '' : undefined} d={linePath(upper, curve)} fill="none"
+        stroke={top ? e.stroke : undefined} strokeWidth={top ? strokeWidth : undefined} strokeDasharray={top ? (pending ? e.pendingDash : e.dash) : undefined} strokeLinejoin="round" strokeLinecap={pending ? 'butt' : 'round'}
+        opacity={a < 1 ? a : undefined} clipPath={split ? `url(#${clip}-${pending ? 'p' : 'r'})` : undefined} />
     );
+    tops.push(edge(false));
+    if (split) tops.push(edge(true));
     // A label inside the band, at its thickest point, where the band is tall and wide enough to hold it.
     if (named && !single && data.length > 1) {
       let best = -1, thick = 0;
@@ -113,7 +126,12 @@ export function AreaChart({ stack = false, curve = 'linear', labels }: AreaChart
     return <ChartMarker key={s.key + '-active'} className="alt-line-active" shape={patterns ? e.marker : 'circle'} x={xOf(active)} y={y(p[1])} size={8} color={e.stroke}
       opacity={emphasis && emphasis !== s.key ? 0.3 : undefined} />;
   }) : null;
-  return <g className="alt-area" data-stack={stack ? String(stack) : undefined}>{fills}{tops}{texts}{hovered}</g>;
+  return (
+    <g className="alt-area" data-stack={stack ? String(stack) : undefined}>
+      {split && <defs><ChartStatusClip id={`${clip}-r`} ranges={statusRanges.record} height={H} /><ChartStatusClip id={`${clip}-p`} ranges={statusRanges.pending} height={H} /></defs>}
+      {fills}{tops}{texts}{hovered}
+    </g>
+  );
 }
 
 /** Where a record's band ends for one series, for the keyboard's focus ring: the band's top edge at that x. */
@@ -133,7 +151,7 @@ AreaChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   else if (p.stack && rows) yExtent = [0, Math.max(0, ...rows.map((d) => keys.reduce((t, k) => t + Math.max(0, num(d[k])), 0)))];
   return {
     kind: p.stack === 'expand' ? 'Stacked area chart of shares' : p.stack ? 'Stacked area chart' : 'Area chart',
-    zero: true, swatch: 'rect', imprint: 'area', yExtent, format: p.y?.format, seriesUp: !!p.stack, share: !!p.stack,
+    zero: true, swatch: 'rect', imprint: 'area', yExtent, format: p.y?.format, seriesUp: !!p.stack, share: !!p.stack, status: p.status, boundary: p.boundary,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

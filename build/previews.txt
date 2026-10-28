@@ -1444,6 +1444,58 @@ function App() {
   );
 }
 
+=== ChartStatus | <!-- @dsCard group="Charts" height=760 subtitle="Not yet the record: so far and projected are hatched or dashed, and say so" -->
+--- css
+.cs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cs { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const months = ['2026-05-01', '2026-06-01', '2026-07-01', '2026-08-01', '2026-09-01', '2026-10-01'];
+const revenue = months.map((month, i) => ({ month, revenue: [72, 79, 85, 83, 92, 61][i] * 1000 }));
+const forecast = Array.from({ length: 16 }, (_, i) => {
+  const day = `2026-10-${String(i + 13).padStart(2, '0')}`;
+  const v = 420 + i * 14 + Math.round(18 * Math.sin(i / 1.6));
+  return i < 10 ? { day, signups: v } : { day, signups: v, p10: v - (i - 9) * 22, p90: v + (i - 9) * 26 };
+});
+forecast[9].p10 = forecast[9].p90 = forecast[9].signups;
+const weeks = Array.from({ length: 10 }, (_, i) => ({ week: new Date(Date.UTC(2026, 7, 3 + i * 7)).toISOString().slice(0, 10), us: 1200 + i * 60, eu: 900 + i * 45, apac: 500 + i * 40 }));
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
+function Chart({ id, title, sub, children, ...props }) {
+  return (
+    <A.Card>
+      <A.CardHeader><A.CardTitle id={id}>{title}</A.CardTitle><A.CardDescription>{sub}</A.CardDescription></A.CardHeader>
+      <A.CardContent><A.ChartContainer aria-labelledby={id} aspect={1.9} {...props}>{children}</A.ChartContainer></A.CardContent>
+    </A.Card>
+  );
+}
+function App() {
+  const [closed, setClosed] = React.useState(false);
+  return (
+    <div className="cs">
+      <Chart id="s1" title="Monthly revenue" sub="October so far: hatched, not a drop" config={{ revenue: { label: 'Revenue', format: usd.format } }} views>
+        <A.BarChart data={revenue} x="month" labels="last" status={(d) => (!closed && d.month === '2026-10-01' ? 'partial' : undefined)} />
+      </Chart>
+      <Chart id="s2" title="Daily signups" sub="Projected from today, with its 10th–90th percentile range" config={{ signups: { label: 'Signups' } }}>
+        <A.LineChart data={forecast} x="day" status={(d) => (d.day > '2026-10-22' ? 'projected' : undefined)} band={{ low: 'p10', high: 'p90', label: 'Range 10th–90th percentile' }} />
+      </Chart>
+      <Chart id="s3" title="Requests by region" sub="The last three weeks are a forecast" config={{ us: { label: 'US' }, eu: { label: 'EU' }, apac: { label: 'APAC' } }}>
+        <A.AreaChart data={weeks} x="week" stack status={(d) => (d.week > '2026-09-14' ? 'projected' : undefined)} />
+      </Chart>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="s4">Quarterly bookings</A.CardTitle><A.CardDescription>Q4 projected, Q3 so far</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="s4" aspect={2.4} config={{ bookings: { label: 'Bookings', format: usd.format } }}>
+            <A.BarChart data={[{ q: 'Q1', bookings: 310e3 }, { q: 'Q2', bookings: 342e3 }, { q: 'Q3', bookings: 228e3 }, { q: 'Q4', bookings: 380e3 }]} x="q"
+              status={(d) => (d.q === 'Q4' ? 'projected' : d.q === 'Q3' && !closed ? 'partial' : undefined)} />
+          </A.ChartContainer>
+          <div className="row" style={{ marginTop: 12 }}>
+            <A.Button size="sm" onClick={() => setClosed((c) => !c)}>{closed ? 'Reopen the period' : 'Close the period'}</A.Button>
+          </div>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

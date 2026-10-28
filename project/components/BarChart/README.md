@@ -16,7 +16,10 @@ Amounts compared across categories or periods: deploys per team, signups per mon
 - `sort`: `'desc'` or `'asc'` by total;
 - `stack`: `true` for parts of a total, `'expand'` for shares of 100%;
 - `layout="horizontal"`: categories down the side, for long names or many of them. Names longer than 40% of the width are cut with an ellipsis; the full name stays in the summary;
-- `labels`: `'max'` labels the largest bar (or stack), `'last'` the last category's. Never every bar.
+- `labels`: `'max'` labels the largest bar (or stack), `'last'` the last category's. Never every bar;
+- `status`: which categories aren't yet the record (`'partial'` or `'projected'`), and `boundary`, the rule's word. See below.
+
+**Not yet the record.** `status={(d) => d.month === thisMonth ? 'partial' : undefined}` keeps this month so far from reading as a drop. A partial bar is its series colour hatched at 45° on the plot's own colour, with no solid fill; a projected one also keeps a 1.5px outline in its colour. Neither is lifted: a pending write hovers, but a bar that hovers misstates its value, so it says "not yet" with pattern and a word instead. A 1px `line-control` rule marks where the record ends, named "Today" (`boundary="…"` renames it, `boundary={false}` drops it). The bar's value label, readout, keyboard name and table row say "So far" or "Projected". When the period completes and its status goes, the hatching cross-fades to solid over `dur-travel-3`: it's been pressed into the record. Under forced colours the pending bar takes a dotted `CanvasText` outline, the same cue as a pending write.
 
 The y axis always includes zero, whatever the container's `zero` says: a truncated bar axis isn't offered.
 

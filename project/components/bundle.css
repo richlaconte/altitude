@@ -1464,6 +1464,27 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-bar-label { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
 @media (forced-colors: active) { .alt-bar-label { fill: CanvasText; } }
 
+/* ── Not yet the record (#67): a period still being counted or a forecast. A pending write hovers, but a pending mark
+   can't, since lifting a bar misstates it; so it's drawn with pattern and a word instead. Bars are hatched at 45° in
+   their colour on the plot's own, with no solid fill (a projection also keeps its outline); lines are dashed from the
+   last settled point and their points hollow; areas are hatched. The record ends at a 1px line-control rule named in
+   words ("Today"). A partial period that completes cross-fades from hatch to solid over dur-travel-3: it's been pressed
+   into the record. An uncertainty band is a flat, low-opacity fill: no gradient, no error bars. ── */
+.alt-bar-mark, .alt-bar-pending { transition: fill-opacity var(--dur-travel-3) var(--ease-glide), stroke-opacity var(--dur-travel-3) var(--ease-glide); }
+.alt-chart-boundary line { stroke: var(--line-control); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-boundary-label { fill: var(--ink-muted); stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; font: 500 12.5px/17px var(--font-sans); }
+.alt-line-hollow { fill: var(--alt-chart-bg); stroke-width: 2; }
+.alt-bar-label-status { fill: var(--ink-muted); }
+.alt-chart-readout-note { margin-left: 6px; color: var(--ink); font-weight: 600; }
+.alt-chart-readout-note::before { content: "· "; }
+@media (forced-colors: active) {
+  .alt-bar-pending { stroke: CanvasText; stroke-dasharray: 2 2; }
+  .alt-chart-boundary line { stroke: CanvasText; }
+  .alt-chart-boundary-label { fill: CanvasText; stroke: Canvas; }
+  .alt-line-hollow { fill: Canvas; }
+  .alt-bar-label-status { fill: CanvasText; }
+}
+
 /* ── The table view: the same record as a sortable DataTable, behind a segmented Chart | Table control (one raised
    pill gliding between two views of one record). Both views sit in one box, so switching doesn't move the page: the
    table scrolls inside the chart's size, and the two cross-fade over dur-travel-2 rather than slide. The unchosen
