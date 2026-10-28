@@ -572,6 +572,19 @@ A design review: the range `Slider` was rendered as a price filter ($0–$200 in
 
 Not yet tested with people: whether the fill is found as something to drag without the hint text the preview gives, and whether two bubbles close together are read as a pair or as a clash.
 
+### E45 · Can a brush look like something to drag?
+
+A design review: `ChartBrush` was rendered under a year of daily active users, its window shared with a `DateRangePicker`, and under a year of weekly sign-ups as bars, keeping its own window. In all four schemes at 960px, at 360px at 2×, under forced colours and with reduced motion, by pointer and keyboard. `checks/chart-brush.mjs` measures it.
+
+- **The range Slider, laid along the overview.** The brush is #73's range Slider: the same thumbs, the same "can't cross" rule, the same keys, and the same `useRange` logic underneath. Only the press outside differs: a slider moves the nearer thumb there, a brush centres the window there, because what you want in an overview is "show me that bit".
+- **A line, not an area.** The issue asked for "a sparkline-sized area". From zero, a year of values that never come near zero was a flat ripple near the top of the trench. From its own low and high, an area would stand on nothing and misstate every value. So the overview is a line spanning its own low to high, as a `Sparkline`'s line is. It's there for the shape.
+- **Bubbles below.** The grips' date bubbles first rose above the overview, as a slider's do, and covered the plot's x axis labels. They now hang below the trench, over the brush's own caption, which says the same dates. Near an end they align to it: at the start, the first build's bubble ran 5px past the chart's frame.
+- **The records' own x values.** The window's `{ start, end }` are records' x values, not free dates, so a `DateRange` fits as it is and a brush and a picker can share one state. A date typed into the picker that isn't a record is still honoured: the chart shows the records between the two dates.
+- **Evenly spaced by record.** The overview spaces records evenly and the grips step by a record. Over daily or weekly data that's the same as time; over irregular data the overview is distorted, but the grips never land between records.
+- **The plot cross-fades.** The issue expected the main chart to glide. A new window means new x values under the marks, which Motion's rule 5 cross-fades rather than morphing, so a pan reads as the view changing rather than the data moving.
+
+Not yet tested with people: whether the lens is grabbed as a whole on first sight, without the description the preview gives, and whether pressing the overview to centre the window there is ever found.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

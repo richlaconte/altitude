@@ -53,7 +53,7 @@ Choose by the job the data does, not by what looks rich.
 | The crosshair | ground | a 1px `ink-muted` rule; it doesn't move the marks |
 | A legend you can toggle | sunk and raised | a choice, so it's built like the Switch: a trench with a raised mark when the series is on |
 | A legend that only labels | ground | a plate set flush, like a `Badge`; better still, label the series directly |
-| An overview brush | sunk and raised | the `Slider`: an overview in a trench, the chosen window a raised thumb |
+| An overview brush | sunk and raised | the range `Slider`: the series a flat line in a trench, the chosen window a raised lens (level 1, `accent` rim, clear face) whose grips are the thumbs; outside it the overview recedes to 35% |
 | Drilling in | ground, stacked | a `Drilldown`: the detail is laid on top, the staircase shows the way back |
 | Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are dashed `ink-muted` |
 | Loading | sunk | an imprint (`Await`), at the chart's own size |
@@ -71,7 +71,7 @@ These are the elevation signals a chart adds to **Elevation**'s table:
 - **Live.** A live chart shows a change at once and leaves a fading `ink` outline on the mark; a whole refresh glows the "Updated" caption instead. Its window glides with time, and it holds still while someone reads it, with a switch to pause it (E39).
 - **Read against.** Targets, limits, normal ranges and events (`ChartReference`, `ChartAnnotation`) lie flush with the marks: a solid 1px line, a flat `line` band, a `Badge` plate with a leader. Their words are laid out together so they never overlap (E38).
 - **Not yet the record.** A projected value or an incomplete period (this month so far) is dashed or hatched and says so in its label and readout. It's the record to come, so it's drawn as an imprint of the record, not raised as live. Built as `status` on `BarChart`, `LineChart` and `AreaChart`, with a "Today" rule where the record ends and an uncertainty `band` on `LineChart` (E37).
-- **A window on the record.** An overview sits in a trench and the chosen window is a raised thumb in it, so the part you're looking at is the part you can move.
+- **A window on the record.** An overview sits in a trench and the chosen window is a raised lens in it, so the part you're looking at is the part you can move. The lens is raised because you move it, not because it's data: the series inside it stays flat.
 - **Recency.** A value that just arrived, or just changed, gets the afterglow, within the attention budget, never a lift.
 - **Steps of one ramp.** A heatmap's value is a binned step of the sequential ramp (or the diverging one around a midpoint), each step's range in words in the legend, the cell's name and the table, and a pattern density when colour is lost (E42).
 - **Selection** is a tint and an outline, never a height. Selected marks keep their place on the ground line; unselected ones mute rather than sink.

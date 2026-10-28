@@ -50,6 +50,8 @@ export { Heatmap } from './heatmap';
 export type { HeatmapProps } from './heatmap';
 export { ScatterChart } from './scatter-chart';
 export type { ScatterChartProps } from './scatter-chart';
+export { ChartBrush } from './chart-brush';
+export type { ChartBrushProps } from './chart-brush';
 export type { AreaChartProps } from './area-chart';
 export { Sparkline } from './sparkline';
 export type { SparklineProps } from './sparkline';

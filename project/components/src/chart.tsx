@@ -380,7 +380,7 @@ export interface ChartColumn { key: string; header: string; cell: (d: ChartDatum
 export interface ChartReadout { label: string; items: ChartTooltipItem[]; indicator?: 'line' | 'dot'; }
 type ChartChild = {
   chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean; chartLegend?: boolean;
-  chartReference?: boolean; chartAnnotation?: boolean;
+  chartReference?: boolean; chartAnnotation?: boolean; chartBrush?: boolean;
   /** Where the mark for one record and series sits, in plot coordinates, for the keyboard's focus ring. Default: (xOf, y(value)). */
   chartPoint?: (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string) => [number, number];
   /** The outline of the mark for one record and series, as an SVG path, for a live chart's afterglow. Default: a ring at its point. */
@@ -868,12 +868,18 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // A chart inside may carry the data, x and how it places them.
   const kids = React.Children.toArray(children).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[];
   const chartChild = kids.find((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartInfo);
-  const childProps = chartChild?.props ?? {};
-
-  // The legend, and which series it has hidden. Hidden series keep their slots; the chart is drawn without them.
-  const findPart = <P,>(flag: 'chartTooltip' | 'chartLegend', list: React.ReactNode) =>
+  const findPart = <P,>(flag: 'chartTooltip' | 'chartLegend' | 'chartBrush', list: React.ReactNode) =>
     (React.Children.toArray(list).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[])
       .find((k) => typeof k.type !== 'string' && (k.type as ChartChild)[flag]) as React.ReactElement<P> | undefined;
+  // An overview brush (#74): the chart type windows the whole series to the brush's { start, end }, its own `window`
+  // when controlled; the brush is drawn from every record, so it gets them before the window.
+  const ownProps = chartChild?.props ?? {};
+  const brushEl = findPart<Record<string, unknown>>('chartBrush', children) ?? findPart<Record<string, unknown>>('chartBrush', ownProps.children as React.ReactNode);
+  const [brushWindow, setBrushWindow] = React.useState<{ start: string | number; end: string | number } | undefined>(undefined);
+  const fullData = (brushEl ? (Array.isArray(ownProps.data) ? ownProps.data : Array.isArray(dataProp) ? dataProp : []) : []) as ChartDatum[];
+  const childProps = brushEl && chartChild ? { ...ownProps, data: fullData, x: ownProps.x ?? xProp, window: ownProps.window ?? brushWindow } : ownProps;
+
+  // The legend, and which series it has hidden. Hidden series keep their slots; the chart is drawn without them.
   const legendEl = findPart<{ content?: React.ReactElement<ChartLegendContentProps> }>('chartLegend', children) ?? findPart('chartLegend', childProps.children as React.ReactNode);
   const legendOpts = legendEl?.props.content?.props ?? {};
   // References and annotations, inside the container or the chart type: drawn by the frame, so their labels are laid out together.
@@ -1309,6 +1315,24 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     return <DataTable columns={columns} rows={data} getRowId={rowKey} aria-label={typeof title === 'string' ? `${title}, data` : 'Chart data'} />;
   })() : null;
 
+  // The brush gets every record, where the window is in them, and how to say a date; it sets the window by its ends' x.
+  const brushWiring = brushEl && fullData.length > 1 ? (() => {
+    const index = new Map(fullData.map((d, i) => [d, i]));
+    const at = childProps.window ? data.map((d) => index.get(d)).filter((i): i is number => i !== undefined) : [];
+    const key = (brushEl.props.series as string | undefined) ?? series[0]?.key ?? allSeries[0]?.key;
+    const s = allSeries.find((c) => c.key === key);
+    return {
+      full: fullData, xKey, seriesKey: key, color: s?.color ?? 'var(--data-1)', locale,
+      value: (at.length ? [Math.min(...at), Math.max(...at)] : [0, fullData.length - 1]) as [number, number],
+      dated: kind === 'time' || datedBands, formatX,
+      onChange: ([i, j]: [number, number]) => {
+        const w = { start: fullData[i][xKey] as string | number, end: fullData[j][xKey] as string | number };
+        (ownProps.onWindowChange as ((w: { start: string | number; end: string | number }) => void) | undefined)?.(w);
+        if (ownProps.window === undefined) setBrushWindow(w);
+      },
+    };
+  })() : undefined;
+
   const svgKids = kids.filter((k) => typeof k.type === 'string' || !(k.type as ChartChild).chartHtml);
   const htmlKids = kids.filter((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartHtml);
   const top = draw(layers[layers.length - 1].frame);
@@ -1738,6 +1762,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           </div>
           {readout}
         </div>)}
+        {brushWiring && React.cloneElement(brushEl!, { __brush: brushWiring })}
         {/* Filtered in place: the frame says how many match, in words, so the count never depends on seeing the fade. */}
         {filtered && !selecting && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
         {/* Selected: the frame says what the chart (and whatever it filters) is narrowed to, with a way back. */}
@@ -1760,7 +1785,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           swatch: info.swatch ?? 'rect',
           onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
         })}
-        {htmlKids.filter((k) => !(k.type as ChartChild).chartLegend)}
+        {htmlKids.filter((k) => !(k.type as ChartChild).chartLegend && !(k.type as ChartChild).chartBrush)}
         <figcaption id={sumId} className={summary ? 'alt-chart-summary' : 'alt-sr'}>
           {summary ?? generated}
           {summary && overlayWords ? <span className="alt-sr">{overlayWords}</span> : !summary && overlayWords}

@@ -418,10 +418,11 @@ function OneSlider({ value, defaultValue = 50, onValueChange, min = 0, max = 100
 }
 
 /** Two values on one track: what the range Slider and ChartBrush share. A thumb can't cross the other or come within
- *  `minStepsBetween` of it; dragging between the thumbs pans both; pressing outside them moves the nearer one there. */
-export function useRange({ value, defaultValue, onValueChange, min, max, step, minStepsBetween = 0, disabled }: {
+ *  `minStepsBetween` of it; dragging between the thumbs pans both; pressing outside them moves the nearer one there,
+ *  or with `outside: 'centre'` centres the pair there and pans from it. */
+export function useRange({ value, defaultValue, onValueChange, min, max, step, minStepsBetween = 0, disabled, outside = 'nearer' }: {
   value?: [number, number]; defaultValue?: [number, number]; onValueChange?: (v: [number, number]) => void;
-  min: number; max: number; step: number; minStepsBetween?: number; disabled?: boolean;
+  min: number; max: number; step: number; minStepsBetween?: number; disabled?: boolean; outside?: 'nearer' | 'centre';
 }) {
   const [v, set] = useControllable(value, defaultValue ?? [min, max], onValueChange);
   const track = React.useRef<HTMLDivElement>(null);
@@ -437,11 +438,13 @@ export function useRange({ value, defaultValue, onValueChange, min, max, step, m
     const [a, b] = bounds(i), x = Math.min(b, Math.max(a, snap(n)));
     if (x !== v[i]) set(i === 0 ? [x, hi] : [lo, x]);
   };
-  const pan = (d: number) => {
-    const s = Math.min(max - grab.current.hi, Math.max(min - grab.current.lo, snap(min + d) - min));
-    const next: [number, number] = [+(grab.current.lo + s).toFixed(dp), +(grab.current.hi + s).toFixed(dp)];
+  const pan = (d: number, from = grab.current) => {
+    const s = Math.min(max - from.hi, Math.max(min - from.lo, snap(min + d) - min));
+    const next: [number, number] = [+(from.lo + s).toFixed(dp), +(from.hi + s).toFixed(dp)];
     if (next[0] !== lo || next[1] !== hi) set(next);
   };
+  /** Moves both by d, keeping the span, stopping at the ends. */
+  const shift = (d: number) => pan(d, { at: 0, lo, hi });
   const at = (x: number) => { const r = track.current!.getBoundingClientRect(); return min + ((x - r.left) / r.width) * (max - min); };
   const pct = (n: number) => ((n - min) / (max - min)) * 100;
   const press = (e: React.PointerEvent<HTMLElement>, thumb?: 0 | 1) => {
@@ -453,6 +456,12 @@ export function useRange({ value, defaultValue, onValueChange, min, max, step, m
     grab.current = { at: n, lo, hi };
     if (thumb !== undefined) { setHeld(lo === hi ? 'tie' : thumb); return thumb; }
     if (n > lo && n < hi) { setHeld('both'); return 'both' as const; }
+    if (outside === 'centre') {
+      const a = Math.min(max - (hi - lo), Math.max(min, snap(n - (hi - lo) / 2)));
+      grab.current = { at: n, lo: a, hi: +(a + hi - lo).toFixed(dp) };
+      if (a !== lo) set([grab.current.lo, grab.current.hi]);
+      setHeld('both'); return 'both' as const;
+    }
     const i: 0 | 1 = n <= lo ? 0 : 1;
     put(i, n); grab.current = { at: snap(n), lo: i === 0 ? snap(n) : lo, hi: i === 1 ? snap(n) : hi };
     setHeld(i); return i;
@@ -470,7 +479,7 @@ export function useRange({ value, defaultValue, onValueChange, min, max, step, m
     const map: Record<string, number> = { ArrowRight: x + step, ArrowUp: x + step, ArrowLeft: x - step, ArrowDown: x - step, PageUp: x + big, PageDown: x - big, Home: a, End: b };
     if (e.key in map) { e.preventDefault(); put(i, map[e.key]); }
   };
-  return { value: v, set, held, track, bounds, pct, press, drag, release, keys, grab };
+  return { value: v, set, held, track, bounds, pct, press, drag, release, keys, shift };
 }
 
 function RangeSlider({ value, defaultValue, onValueChange, min = 0, max = 100, step = 1, minStepsBetween, disabled, format = (v) => v, className, 'aria-label': label, ...rest }: SliderRangeProps) {
