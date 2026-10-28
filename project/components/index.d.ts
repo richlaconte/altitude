@@ -404,7 +404,19 @@ export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
   format?: (value: number) => React.ReactNode;
   'aria-label'?: string;
 }
+/** A range: pass `value` or `defaultValue` as [low, high] and Slider draws two thumbs with the raised fill between them. */
+export interface SliderRangeProps extends Omit<SliderProps, 'value' | 'defaultValue' | 'onValueChange' | 'aria-label'> {
+  value?: [number, number];
+  /** Default [min, max] when value is omitted; pass one of value or defaultValue to get a range. */
+  defaultValue?: [number, number];
+  onValueChange?: (value: [number, number]) => void;
+  /** Steps the thumbs keep between them; a thumb pushed against the other stops. Default 0. */
+  minStepsBetween?: number;
+  /** A name per thumb, or one name for the pair (the thumbs are then "<name>, minimum" and "<name>, maximum", in a group with that name). */
+  'aria-label'?: string | [string, string];
+}
 export declare function Slider(props: SliderProps): React.ReactElement;
+export declare function Slider(props: SliderRangeProps): React.ReactElement;
 
 export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Omit or null for indeterminate. */

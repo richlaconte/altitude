@@ -558,6 +558,20 @@ A design review: `ScatterChart` was rendered as p95 latency against payload for 
 
 Not yet tested with people: whether ↑ and ↓ to the nearest dot above or below are predictable in a dense cloud, where "above" may land on a dot far to one side.
 
+### E44 · Can one trench hold a range?
+
+A design review: the range `Slider` was rendered as a price filter ($0–$200 in $5 steps, two steps apart) under the single-value sliders it extends. In all four schemes at 960px, at 360px at 2× and under forced colours, by pointer and keyboard. `checks/range-slider.mjs` measures it.
+
+- **One trench, one fill.** Two sliders side by side read as two settings. Two thumbs in one trench, with the raised fill between them, read as one span, the build the DateRangePicker already uses.
+- **The fill is a handle.** Dragging between the thumbs pans the window. Because it acts, it lifts to level 2 on hover and shows a grab cursor, the rule every control follows. Pressing it doesn't jump either thumb, so a pan never starts with a jump.
+- **Only the thumb in hand floats.** The single slider lifts its thumb whenever the slider is hovered and floats it whenever it's dragged. With two, that floated both, and both bubbles showed, so neither said which value was changing. Now only the thumb under the pointer lifts and only the one held floats; a pan holds both.
+- **A clash with possession.** The first build marked the held thumb with `data-held`, which is already the collaborator-hold attribute (**Possession**), and the thumb took its tilt and its position and jumped out of the trench. It's `data-grabbed` now.
+- **Focus follows the press.** Pressing the track moved the nearer thumb but left focus on the page, because the browser's mousedown focused nothing after the slider had focused the thumb. The press now prevents that default, so the thumb that moved is the one the arrow keys move.
+- **Thumbs that meet.** With `minStepsBetween={0}` the two thumbs can sit on one value, where the upper one covers the lower. The first move decides which one goes: left takes the lower thumb, right the upper.
+- **Bounds in ARIA.** Each thumb's `aria-valuemin` and `aria-valuemax` stop at the other thumb less the gap, as the APG pattern says, so Home and End go to the thumb's own bounds, not the track's ends.
+
+Not yet tested with people: whether the fill is found as something to drag without the hint text the preview gives, and whether two bubbles close together are read as a pair or as a clash.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

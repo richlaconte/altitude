@@ -306,17 +306,23 @@ function App() {
   );
 }
 
-=== Slider | <!-- @dsCard group="Inputs" height=170 subtitle="Grab the thumb: it floats to level 3" -->
+=== Slider | <!-- @dsCard group="Inputs" height=290 subtitle="Grab the thumb: it floats to level 3" -->
 --- css
 .wrap { max-width: 420px; padding-top: 28px; }
+.wrap .gap { height: 20px; }
 --- jsx
 function App() {
   const [v, setV] = React.useState(64);
+  const [price, setPrice] = React.useState([20, 80]);
   return (
     <div className="col wrap">
       <A.Slider value={v} onValueChange={setV} aria-label="Volume" format={(n) => n + '%'} />
       <A.Slider defaultValue={30} disabled aria-label="Disabled" />
       <p className="cap">Volume {v}% — drag, or focus and use the arrow keys.</p>
+      <div className="gap" />
+      <A.Slider value={price} onValueChange={setPrice} min={0} max={200} step={5} minStepsBetween={2}
+        aria-label={['Minimum price', 'Maximum price']} format={(n) => '$' + n} />
+      <p className="cap">Price ${price[0]}–${price[1]} — drag either thumb, or the fill to move both.</p>
     </div>
   );
 }
