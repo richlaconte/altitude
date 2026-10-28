@@ -14,6 +14,10 @@ export interface BarChartProps {
   layout?: 'vertical' | 'horizontal';
   /** Label values at their bars, selectively: the largest, or the last category. Never every bar. Default 'none'. */
   labels?: 'max' | 'last' | 'none';
+  /** The crosshair and readout. Default true. */
+  tooltip?: boolean;
+  /** A ChartTooltip, to change what the readout shows. */
+  children?: React.ReactNode;
 }
 
 const keysOf = (config: ChartConfig) => Object.keys(config);

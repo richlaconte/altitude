@@ -357,6 +357,18 @@ A design review like E25: `LineChart` was rendered with intraday latency (two se
 
 Not yet tested with people: whether end labels nudged away from their line's end are still read as belonging to it.
 
+### E27 · Does the readout follow the data without drifting?
+
+A design review: the readout was rendered open on line and bar charts in all four schemes and under forced colours, and `checks/chart-tooltip.mjs` drove it with a mouse and with touch. The surface, rise and warm-up were compared with `Tooltip`; the behaviour with shadcn/ui's `ChartTooltip`, Recharts' cursor and ECharts' axis pointer, which all follow the pointer continuously.
+
+- **Steps, not glides.** Its position isn't transitioned: it jumps to the next x, with the crosshair, as a card in hand follows the pointer. Gliding between positions read as lag, and following every pixel (Recharts' default) would put it against E10's rule that nothing drifts across its own face.
+- **Never over the point.** It opens on whichever side of the point has room, so it never hides the value it's reading.
+- **Only what's read changes.** Lines ring their points in the plot's own colour, an outline rather than height; bars stay exactly as they were, because hovering a static bar does nothing.
+- **Touch.** Press and hold (250ms) opens it, so a quick swipe still scrolls the page; dragging scrubs; it stays after the finger lifts until a tap elsewhere.
+- **Dates as categories.** A bar per week printed raw ISO strings ("2026-03-02") on the axis; date-valued categories now read as dates ("Mar 2") on the axis and in full in the readout.
+
+Not yet tested with people: whether the 250ms hold is discoverable on touch without a hint.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
