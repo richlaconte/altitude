@@ -59,6 +59,8 @@ These are the sources behind [Charts](Charts.md).
 - **Decorative animation doesn't help.** Animation helps only when its motion is the change (Tversky, Morrison & Bétrancourt, above), so charts glide between values and never grow from the baseline on first render.
 - **Staged transitions help people follow a change.** Animated transitions between statistical graphics significantly improved object tracking and value estimation; simple staging helped and was preferred, while rescaling axes at the same time as marks moved hurt ([Heer & Robertson, 2007](https://doi.org/10.1109/TVCG.2007.70539)). So a chart rescales first and moves its marks after, and `checks/chart-motion.mjs` holds it to that frame by frame.
 - **A chart needs a path, not just a description.** Data Navigator models a chart as a graph of nodes laid over any rendering as an accessible layer ([Elavsky, Nadolskis & Moritz, 2023](https://doi.org/10.1109/TVCG.2023.3327393)); Olli moves a screen reader from a summary, to the axes and series, to the data ([Zong et al., 2022](https://doi.org/10.1111/cgf.14519)). Blind readers valued trends and statistics over a restatement of the encoding ([Lundgard & Satyanarayan, 2021](https://doi.org/10.1109/TVCG.2021.3114770)), so a series' name says its range and which way it went, and a point's says its change from the one before. Recharts 3 makes a chart one Tab stop with arrow keys between points. `ChartContainer`'s keyboard path follows these.
+- **Classes beat a continuous ramp for naming a value.** Choropleth practice bins a sequential or diverging scheme into a few classes (ColorBrewer offers three to nine, and most maps use five to seven) so each colour can be found in the legend ([Harrower & Brewer, 2003](https://doi.org/10.1179/000870403235002042)). `Heatmap` bins into two to seven steps of `data-seq` or `data-div` and names each step's range.
+- **Small marks need bigger colour differences.** The colour difference people can see shrinks with mark size ([Szafir, 2018](https://doi.org/10.1109/TVCG.2017.2744359)), so heatmap cells are at least 10px, steps are spread across the whole ramp rather than adjacent, and the grid wraps rather than shrinking cells further.
 - **Accessibility is checked, not assumed.** Chartability groups chart accessibility into heuristics a reviewer can audit quickly ([Elavsky, Bennett & Moritz, 2022](https://doi.org/10.1111/cgf.14522)); Charts' five-point check (visual, keyboard, screen reader, reduced motion, forced colours) follows it.
 
 - **The frame follows the libraries people know.** `ChartContainer` and `ChartConfig` take shadcn/ui's chart names and its config shape (data key → label and colour), and Recharts, visx, Nivo, ECharts and Observable Plot were considered as engines. Each adds a dependency, and none exposes what Altitude needs (imprints while loading, the attention budget, hover only where a click acts, legend keys built as switches), so the scales and axes are in-house (see E24).
@@ -524,6 +526,23 @@ A design review: `ChartSelect` was rendered as revenue by region that cross-filt
 - **Focus after a drill.** `Drilldown` focused its view before the new chart had measured itself, so the chart's summary didn't exist yet. It now focuses the view at once, then moves to the summary when it appears, within a few frames.
 
 Not yet tested with people: whether the readout's "Select to filter" line is read before the click, or only noticed after it.
+
+### E42 · Can a grid of values be read without a value axis?
+
+A design review: `Heatmap` was rendered as a year of commits in a calendar, requests by weekday and hour with the table view, and error-rate change by service and region on a diverging scale with a cell you can select. In all four schemes at 960px, at 360px at 2×, under forced colours, with reduced motion and with `contrast="more"`, by pointer and keyboard. `checks/heatmap.mjs` measures it.
+
+- **Steps you can name.** A continuous ramp makes every cell a slightly different colour that no legend can name. Binning into steps (after ColorBrewer's classes) makes "4–9" something to find in the legend, say in a cell's name ("step 3 of 4") and sort by in the table.
+- **Steps spread over the ramp.** Small cells need bigger colour differences (Szafir), so steps take ramp tokens spread from `data-seq-1` to `data-seq-7` rather than adjacent ones: four steps are 1, 3, 5 and 7.
+- **Ranges said once, signs said in words.** Formatted ranges repeated their unit and read "−3.0 pts–−1.5 pts", the en dash looking like a minus. A range now says its unit once and uses "to" between signed numbers ("−0.5 to +0.5 pts"). The open ends say "< −1.5 pts" and "≥ +1.5 pts", or "10+" for counts.
+- **Diverging steps on round numbers.** The first default put the steps at half-steps, which a one-decimal format rounded to the wrong edges ("−0.3 to +0.3" for ±0.25). The edges are now whole multiples of a 1–2–5 step, three to a side.
+- **Wrap, don't shrink.** At 360px 24 hourly columns ran out of the card, because a cell can't go below 10px. Both variants now wrap into bands (00–11 above 12–23, a year into three), each naming its rows and columns.
+- **The crosshair is an outline.** A grid has no axis for a crosshair to run along, so the cell under the readout wears a 2px `ink` outline. It's not a promise: a static grid has no pointer cursor. Charts' rule 4 says so.
+- **Cross-fade, don't glide.** The shared engine glides values, which would walk a cell's colour through every step between its old and new value. A heatmap takes new values at once and cross-fades each cell's fill.
+- **Patterns for the steps.** Under forced colours every fill becomes the same, so each step adds a density (none, sparse dots, dense dots, hatching, crosshatch); a diverging scale hatches its two sides in opposite directions.
+
+The issue asked for the WAI-ARIA grid pattern. The keyboard follows it (arrows, Home/End, Ctrl+Home/End, Page Up/Down), but the cells sit in the chart's one-Tab-stop path from the summary, as every chart's points do (E29), and say their row and column in their names rather than through `rowheader` and `columnheader` cells.
+
+Not yet tested with people: whether a calendar's Page Up and Page Down by month are found without being told, and whether a wrapped grid's second band is read as a continuation of the first.
 
 ## What was rejected
 

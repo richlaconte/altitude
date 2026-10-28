@@ -1812,6 +1812,48 @@ export interface AreaChartProps {
 }
 /** A total over time and its parts: flat bands on the ground line, parted by 2px, never a gradient. Renders inside a ChartContainer. */
 export declare function AreaChart(props: AreaChartProps): React.ReactElement;
+export interface HeatmapProps {
+  /** The records: one per cell. Cells with no record, or a null value, are drawn as "No data". */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** 'grid' (default): x across, y down. 'calendar': a cell per day, a column per week, wrapping by week when it's narrow. */
+  variant?: 'grid' | 'calendar';
+  /** The grid's column key. */
+  x?: string;
+  /** The grid's row key. */
+  y?: string;
+  /** The calendar's day key: an ISO date, a timestamp or a Date. */
+  date?: string;
+  /** The key of each cell's value. It must also be a key of the container's config, which names and formats it. */
+  value: string;
+  /** Where each step starts, lowest first: [0, 1, 4, 10] gives "0", "1–3", "4–9" and "10+". Two to seven steps. Default: five to seven even steps, with zero its own step for counts. */
+  bins?: number[];
+  /** 'sequential' (default): how much, on data-seq. 'diverging': which side of `midpoint`, on data-div. */
+  scale?: 'sequential' | 'diverging';
+  /** The diverging scale's neutral value. Default 0. */
+  midpoint?: number;
+  /** Formats the grid's column values. */
+  xFormat?: (value: unknown) => string;
+  /** Formats the grid's row values. */
+  yFormat?: (value: unknown) => string;
+  /** The calendar's first day of the week: 0 Sunday (default) or 1 Monday. */
+  weekStart?: 0 | 1;
+  /** The steps as swatches with their ranges in words, under the cells. Default true. */
+  legend?: boolean;
+  /** The readout. Default true. */
+  tooltip?: boolean;
+  /** Filter in place: which cells match. Misses recede to 35%, keeping their place and colour. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** The selected cell: its record, or its id ("14|Tue" for a grid's x and y, "2026-03-14" for a calendar's day). */
+  selected?: ChartDatum | string | null;
+  /** Makes cells selectable: called with the chosen record, or null when the selection clears. */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes cells open a level down inside a Drilldown: the id of the current node's child this cell opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
+  empty?: ChartEmpty;
+  children?: React.ReactNode;
+}
+/** A value per cell across two dimensions, or per day in a calendar: flat steps of one ramp, each named in words. Renders inside a ChartContainer. */
+export declare function Heatmap(props: HeatmapProps): React.ReactElement;
 /** A sliding window over x: a span of time, or the last N records. */
 export interface ChartWindow { minutes?: number; hours?: number; days?: number; points?: number; }
 /** The records inside a window, and the x domain it spans. */
@@ -1955,7 +1997,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
