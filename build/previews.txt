@@ -1185,6 +1185,41 @@ function App() {
   );
 }
 
+=== ChartLoading | <!-- @dsCard group="Charts" height=730 subtitle="Loading is an imprint, nothing is an opening, a refetch keeps the chart" -->
+--- css
+.cg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cg { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day, i) => ({ day, deploys: [12, 18, 9, 22, 15][i] }));
+const zeros = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].map((day) => ({ day, incidents: 0 }));
+const config = { deploys: { label: 'Deploys' } };
+function Chart({ id, title, sub, children, ...props }) {
+  return (
+    <A.Card>
+      <A.CardHeader><A.CardTitle id={id}>{title}</A.CardTitle><A.CardDescription>{sub}</A.CardDescription></A.CardHeader>
+      <A.CardContent><A.ChartContainer aria-labelledby={id} aspect={2} {...props}>{children}</A.ChartContainer></A.CardContent>
+    </A.Card>
+  );
+}
+function App() {
+  return (
+    <div className="cg">
+      <Chart id="d1" title="Deploys this week" sub="data={undefined}: the imprint" config={config}>
+        <A.BarChart data={undefined} x="day"><A.ChartLegend content={<A.ChartLegendContent />} /></A.BarChart>
+      </Chart>
+      <Chart id="d2" title="Deploys this week" sub="data={[]}: an opening that says why" config={config}>
+        <A.BarChart data={[]} x="day" empty={{ title: 'No deploys match these filters', action: <A.Button size="sm">Clear filters</A.Button> }} />
+      </Chart>
+      <Chart id="d3" title="Deploys this week" sub="refreshing: the old chart stays, at half strength" config={config} refreshing>
+        <A.BarChart data={days} x="day" />
+      </Chart>
+      <Chart id="d4" title="Incidents this week" sub="All zero is real data, and is drawn" config={{ incidents: { label: 'Incidents' } }} summary="No incidents all week.">
+        <A.BarChart data={zeros} x="day" />
+      </Chart>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

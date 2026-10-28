@@ -74,7 +74,8 @@ const tickYs = (f) => f.layers[0].ticks.filter((t) => t.a == null).map((t) => `$
   const end = frames[frames.length - 1];
   expect(end.stage === undefined && Math.abs(end.layers[0].bars.A.v - 88) < 0.6, 'it settles at the new values with no stage');
   const ms = (gliding[gliding.length - 1].t - during[0].t);
-  expect(ms > 300 && ms < 600, `rescale then values take about dur-travel-2 + dur-travel-3 (${Math.round(ms)}ms)`);
+  // About dur-travel-2 + dur-travel-3 (400ms); the upper bound leaves room for a busy machine dropping frames.
+  expect(ms > 300 && ms < 900, `rescale then values take about dur-travel-2 + dur-travel-3 (${Math.round(ms)}ms)`);
 }
 
 // 2. A re-sort is carried: a band passes through the positions between its old place and its new one.

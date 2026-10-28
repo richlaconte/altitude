@@ -3,7 +3,7 @@ import { useChart, type ChartConfig, type ChartContextValue, type ChartDatum, ty
 
 export interface BarChartProps {
   /** The records: one per category. */
-  data: ChartDatum[];
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
   /** The key of each record's category. */
   x: string;
   /** Order the categories by their total: 'desc' puts the largest first. Default: the data's order. */
@@ -17,7 +17,8 @@ export interface BarChartProps {
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
   /** A ChartTooltip, to change what the readout shows. */
-  children?: React.ReactNode;
+  children?: React.ReactNode;  /** What the plot says when there's no data: an EmptyState at widget size. */
+  empty?: import('./chart').ChartEmpty;
 }
 
 const keysOf = (config: ChartConfig) => Object.keys(config);
@@ -163,7 +164,8 @@ BarChart.chartPoint = (props: Record<string, unknown>, ctx: ChartContextValue, d
 BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): ChartInfo => {
   const p = props as unknown as BarChartProps;
   const keys = keysOf(config);
-  const data = p.sort && p.data ? sorted(p.data, keys, p.sort) : p.data;
+  const rows = Array.isArray(p.data) ? p.data : undefined;
+  const data = p.sort && rows ? sorted(rows, keys, p.sort) : rows;
   let yExtent: [number, number] | undefined;
   if (p.stack === 'expand') yExtent = [0, 1];
   else if (p.stack && data) {

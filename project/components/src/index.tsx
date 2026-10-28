@@ -46,7 +46,7 @@ export { BarChart } from './bar-chart';
 export { LineChart, linePath } from './line-chart';
 export type { LineChartProps } from './line-chart';
 export type { BarChartProps } from './bar-chart';
-export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage, ChartEncoding, ChartMarkerShape, ChartTooltipItem, ChartTooltipContentProps, ChartLegendItem, ChartLegendContentProps } from './chart';
+export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage, ChartEncoding, ChartMarkerShape, ChartTooltipItem, ChartTooltipContentProps, ChartLegendItem, ChartLegendContentProps, ChartEmpty } from './chart';
 export { useEditRecord, ErrorSummary, WorkflowStatus } from './pattern-edit-record';
 export type { FieldErrors, EditRecordResult, EditRecordPhase, EditRecordOptions, LeaveReason, ErrorSummaryProps } from './pattern-edit-record';
 export { useAsyncCollection } from './pattern-async-collection';

@@ -399,6 +399,17 @@ A design review: the table view was rendered on a stacked bar chart, starting on
 - **Two views of one record.** The control is the segmented `Tabs` (a pill gliding between two choices), and the views cross-fade rather than slide. Both stay mounted, so the chart keeps its size, motion and keyboard place while the table is shown; the hidden one is inert, which also takes the chart's keyboard path out of reach.
 - **Opt-in, for now.** On by default, every widget-sized chart on a dashboard grows a control; the summary and the keyboard path already reach every value. Revisit if the table proves to be what people reach for.
 
+### E31 · How should a chart wait?
+
+A design review: the imprint, an empty plot with an action, a refetch and all-zero data were rendered in all four schemes and under forced colours, and `checks/chart-loading.mjs` drove a chart through undefined, a slow and a quick promise, a refetch, null, a rejection and a `RevealGroup`.
+
+- **Shaped imprints, not a flat band.** Bars of varied height pressed into the page say "a bar chart is coming" at the chart's own size, and can't be taken for data: they're `surface-well`, carry no labels, and are announced as loading. Under forced colours they're dashed, like every sunk surface.
+- **Fade, don't rise.** `Await`'s content rises 8px out of its imprint; a chart's marks would leave the ground line doing that, so they fade in place.
+- **A refetch keeps what someone is reading.** It's never imprinted over; the old marks drop to half strength only after `dur-grace`, so a quick refetch shows nothing at all.
+- **Two bugs found.** A rejected promise passed while older data showed was treated as a refetch and never reached the error boundary; it now does. And all-zero data drew on an invented −1 to 1 axis with the bars floating mid-plot; it now draws on 0–1, standing on the ground line.
+
+Not yet compared with people: whether shaped imprints are ever read as data at a glance (the issue's open question).
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

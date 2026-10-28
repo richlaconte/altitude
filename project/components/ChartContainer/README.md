@@ -58,6 +58,18 @@ x is inferred from the first value of `x`; set `xScale` to override it. Numbers 
 
 **Motion.** When the data changes, the frame moves its marks by the one engine every chart shares ([Motion](../../Motion.md), "Charts"). Values glide at one level on `ease-glide`, after the axis has rescaled if its domain changed, never at the same time. Re-sorted bands are carried, and records and series entering or leaving cross-fade. First render, a change of x under a line, more than 500 marks and reduced motion all cross-fade instead. Resizing never animates. The plot's `data-stage` says where a change is (`rescale`, `values` or `fade`).
 
+**Loading, refetch and nothing.** Pass what you have (`data={query.data}`) and the frame does the rest, Suspense-native like `DataTable`:
+
+| `data` | What shows |
+|---|---|
+| `undefined`, or a pending promise | an imprint after `dur-grace`: the title, description and legend in place, the plot pressed into the page in the chart's shape (`surface-well` bars or a band), no labels, `aria-busy` and "Loading" |
+| arrives | the marks fade in place. Unlike `Await`'s content they never rise out of the imprint, because a rising bar would leave the ground line and misstate its value |
+| `null` or `[]` | an `EmptyState` at widget size in the plot's own box, with no axes; set its words and action with `empty={{ title, description, action }}` (on the container or the chart type). All-zero data is real data, and is drawn |
+| a new promise while data shows, or `refreshing` | the old chart stays; after `dur-grace` its marks drop to half strength, with `aria-busy` and "Updating". Nothing is imprinted over what someone is reading |
+| rejected | your error boundary (put an `Alert` there), as with `Await` |
+
+A `RevealGroup` around a row of charts and stats lands them together.
+
 **The table view.** `views` adds a segmented Chart | Table control beside the title: the same record as a sortable `DataTable`, x first (headed by `xLabel`), a column per series in its own format, and a Total for stacks. It sits in the chart's own box and scrolls there, so switching doesn't move the page; the two views cross-fade over `dur-travel-2`, and the hidden one is inert. `views="table"` starts on the table; `view` and `onViewChange` control it. It's opt-in so that small widget charts don't each grow a control; give it to any chart people may want to read, copy or check.
 
 **Readout and legend.** Every chart has a readout ([`ChartTooltip`](../ChartTooltip/README.md)); add a [`ChartLegend`](../ChartLegend/README.md) to name series, or to let people hide and show them. Hidden series keep their slots and leave the scales.

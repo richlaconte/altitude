@@ -2,6 +2,8 @@ import * as React from 'react';
 import { cx, useIsoLayoutEffect, usePresence } from './core';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
 import { DataTable } from './collections';
+import { EmptyState } from './empty';
+import { Arrive, Await, isPromise, readPromised, useArrival, useHasWaited, useReportWaiting } from './suspense';
 import { markTipClosed, tipIsWarm } from './overlays';
 
 /* ───────────────────────── config ───────────────────────── */
@@ -562,8 +564,11 @@ function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObj
 
 export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
   config: ChartConfig;
-  /** The records. Optional when the chart inside takes `data` itself. */
-  data?: ChartDatum[];
+  /**
+   * The records. Optional when the chart inside takes `data` itself. `undefined` or a promise: the chart's imprint
+   * until they land. `null` or `[]`: an EmptyState. A rejected promise goes to your error boundary.
+   */
+  data?: ChartDatum[] | null | PromiseLike<ChartDatum[] | null>;
   /** The key of x in each record. Optional when the chart inside takes `x`. */
   x?: string;
   /** How x is placed. Default: time for ISO dates, epoch numbers or Dates; linear for other numbers; band otherwise. */
@@ -608,7 +613,15 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
    * Always on under forced colours and in print; turn it on anywhere else for readers who want it.
    */
   patterns?: boolean;
+  /**
+   * Fresh data is on its way while this data stays shown: after dur-grace the marks drop to half strength and the
+   * plot says "Updating". A new promise passed while data shows does the same by itself.
+   */
+  refreshing?: boolean;
+  /** What the plot says when the data is null or empty: an EmptyState at widget size. Default title "No data to show". */
+  empty?: ChartEmpty;
 }
+export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 
 /** True between beforeprint and afterprint, for browsers whose print media query lags the dialog. */
 let printing = false;
@@ -623,8 +636,8 @@ const TOP = 8;
  * chart. It's the record drawn as a shape, so all of it lies flush on whatever it sits on: no level, no shadow. When
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
-export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, description, summary,
-  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, className, style, children, ...rest }: ChartContainerProps) {
+function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, description, summary,
+  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty, className, style, children, ...rest }: ChartContainerProps) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -686,6 +699,8 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   else for (const d of data) for (const s of series) { const v = d[s.key]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
   if (!isFinite(lo)) { lo = 0; hi = 1; }
   if (zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+  // All zero is real data: give it 0–1, so the ground line is the floor, not the middle of an invented range.
+  if (lo === 0 && hi === 0) hi = 1;
   // Horizontal: categories take at most 40% of the width (longer names are cut with an ellipsis), values the rest.
   const catWidth = horizontal && axes ? Math.min(Math.ceil(Math.max(0, ...[...new Set(data.map((d) => String(d[xKey])))].map((c) => textWidth(xFormat ? xFormat(c) : c)))) + 12, Math.round(W * 0.4)) : 0;
   const yCount = horizontal ? Math.max(2, Math.min(6, Math.round((W - catWidth - right) / 90))) : Math.max(3, Math.min(6, Math.round((H - TOP - bottom) / 56)));
@@ -1050,9 +1065,19 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
           </div>
         )}
         {wrapViews(<div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
-          data-stage={stage} data-patterns={patterns ? '' : undefined} style={height != null ? { height } : { aspectRatio: String(aspect) }}
+          data-stage={stage} data-patterns={patterns ? '' : undefined} data-refreshing={refreshing ? '' : undefined} aria-busy={refreshing || undefined} style={height != null ? { height } : { aspectRatio: String(aspect) }}
           onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={onPointerLeave}>
-          {W > 0 && (
+          {refreshing && <span className="alt-sr">Updating</span>}
+          {/* Nothing to show is an opening, not an empty plot: an EmptyState in the plot's own box, with no axes. */}
+          {!data.length && (
+            <div className="alt-chart-empty">
+              {(() => {
+                const e = empty ?? (childProps.empty as ChartEmpty | undefined);
+                return <EmptyState size="sm" title={e?.title ?? 'No data to show'} description={e?.description} action={e?.action} />;
+              })()}
+            </div>
+          )}
+          {W > 0 && data.length > 0 && (
             <svg className="alt-chart-svg" width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
               {patterns && (
                 <defs>
@@ -1132,6 +1157,111 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
         <figcaption id={sumId} className={summary ? 'alt-chart-summary' : 'alt-sr'}>{summary ?? generated}</figcaption>
       </figure>
     </ChartContext.Provider>
+  );
+}
+
+/* ───────────────────────── loading ───────────────────────── */
+
+const settledValues = new WeakMap<object, { v?: unknown; e?: unknown; failed?: boolean }>();
+/** A promise's value once it has landed, remembered so a refetch can be read without suspending. */
+function settledValue(p: PromiseLike<unknown>) { return settledValues.get(p as object); }
+
+/**
+ * The frame every chart shares (see ChartFrame), and what it shows while its data is on its way. `undefined` or a
+ * pending promise: an imprint in the chart's shape, pressed into the page, with the title, description and legend
+ * already in place. It lands by fading in place: a chart's marks never rise out of their imprint, because rising
+ * would lift bars off the ground line and misstate every value. `null` or `[]`: an EmptyState in the plot. A new
+ * promise (or `refreshing`) while data shows: the old chart stays, at half strength after dur-grace. A rejected
+ * promise goes to your error boundary.
+ */
+export function ChartContainer(props: ChartContainerProps) {
+  const kids = React.Children.toArray(props.children).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[];
+  const chartChild = kids.find((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartInfo);
+  const fromChild = !('data' in props) && !!chartChild && 'data' in chartChild.props;
+  const raw = (fromChild ? chartChild!.props.data : props.data) as ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  const hasData = 'data' in props || fromChild;
+  const [, bump] = React.useState(0);
+  const last = React.useRef<ChartDatum[] | null>(null);
+  const pending = isPromise(raw) && !settledValue(raw);
+  React.useEffect(() => {
+    if (!isPromise(raw) || settledValue(raw)) return;
+    let live = true;
+    raw.then((v) => { settledValues.set(raw as object, { v }); if (live) bump((n) => n + 1); },
+      (e) => { settledValues.set(raw as object, { e, failed: true }); if (live) bump((n) => n + 1); });
+    return () => { live = false; };
+  }, [raw]);
+  // A rejected promise goes to your error boundary, as Await's does, even while older data is shown.
+  const outcome = isPromise(raw) ? settledValue(raw) : undefined;
+  if (outcome?.failed) throw outcome.e;
+  const now = isPromise(raw) ? (outcome?.v as ChartDatum[] | null | undefined) : raw;
+  const missing = hasData && raw === undefined;
+  // A new promise while data shows is a refetch: keep the old chart rather than imprinting over it.
+  const refetch = pending && last.current !== null;
+  const waiting = missing || (pending && !refetch);
+  if (!waiting && !pending && now !== undefined) last.current = now ?? [];
+  useReportWaiting(waiting);
+  const arrival = useArrival(waiting);
+  const isLegend = (k: React.ReactNode) => React.isValidElement(k) && typeof k.type !== 'string' && !!(k.type as ChartChild).chartLegend;
+  const hasLegend = React.Children.toArray(props.children).some(isLegend) || (!!chartChild && React.Children.toArray(chartChild.props.children as React.ReactNode).some(isLegend));
+  const withData = (d: ChartDatum[] | null | undefined) => {
+    const rows = d ?? [];
+    // The chart type is the first child carrying chartInfo; it gets the landed rows (toArray re-keys, so match by type).
+    let replaced = false;
+    const children = fromChild
+      ? React.Children.map(props.children, (k) => {
+        if (replaced || !React.isValidElement(k) || typeof k.type === 'string' || !(k.type as ChartChild).chartInfo) return k;
+        replaced = true;
+        return React.cloneElement(k as React.ReactElement<Record<string, unknown>>, { data: rows });
+      })
+      : props.children;
+    return <ChartFrame {...props} {...(fromChild ? {} : { data: rows })} refreshing={props.refreshing || refetch}>{children}</ChartFrame>;
+  };
+  if (!useHasWaited(waiting)) return withData(refetch ? last.current : now);
+  return (
+    <Await shape="none" className="alt-chart-await" imprint={<ChartImprint {...props} legend={hasLegend}
+      swatch={chartChild ? (chartChild.type as ChartChild).chartInfo!({ ...chartChild.props, data: [] }, props.config).swatch : undefined} />}>
+      <Arrive when={arrival}><ChartLanded raw={raw} render={withData} refetch={refetch} last={last.current} /></Arrive>
+    </Await>
+  );
+}
+function ChartLanded({ raw, render, refetch, last }: { raw: unknown; render: (d: ChartDatum[] | null | undefined) => React.ReactElement; refetch: boolean; last: ChartDatum[] | null }) {
+  if (refetch) return render(last);
+  if (isPromise(raw)) {
+    const v = readPromised(raw as PromiseLike<ChartDatum[] | null>);
+    settledValues.set(raw as object, { v });
+    return render(v);
+  }
+  return render(raw as ChartDatum[] | null | undefined);
+}
+
+const IMPRINT_BARS = [0.55, 0.8, 0.62, 0.9, 0.7, 0.48, 0.75];
+/**
+ * The chart's imprint: the frame (title, description, legend keys from config) with the plot pressed into the page in
+ * the chart's shape, `surface-well` with no labels, so it can't be taken for data.
+ */
+function ChartImprint({ config, title, description, aspect, height, swatch, legend }: ChartContainerProps & { swatch?: 'rect' | 'line'; legend?: boolean }) {
+  if (aspect == null && height == null) aspect = 2;
+  return (
+    <figure className="alt-chart" aria-label={typeof title === 'string' ? title : undefined}>
+      {(title || description) && (
+        <div className="alt-chart-head">
+          {title && <div className="alt-chart-title">{title}</div>}
+          {description && <p className="alt-chart-desc">{description}</p>}
+        </div>
+      )}
+      <div className="alt-chart-plot alt-chart-imprint" data-shape={swatch === 'line' ? 'line' : 'bars'} aria-hidden="true" style={height != null ? { height } : { aspectRatio: String(aspect) }}>
+        {swatch === 'line'
+          ? <svg className="alt-chart-svg" viewBox="0 0 100 50" preserveAspectRatio="none"><path className="alt-chart-imprint-line" d="M2,38 C18,30 26,34 38,26 S58,18 70,22 S88,10 98,12" /></svg>
+          : IMPRINT_BARS.map((h, i) => <span key={i} className="alt-skeleton" style={{ height: `${h * 100}%` }} />)}
+      </div>
+      {legend && (
+        <div className="alt-chart-legend" aria-hidden="true">
+          {Object.entries(config).map(([k, c], i) => (
+            <span key={k} className="alt-legend-key"><svg className="alt-legend-mark" width="14" height="10"><rect width="14" height="10" rx="2" fill={`var(--${c.color ?? (i < 6 ? `data-${i + 1}` : 'data-other')})`} /></svg><span>{c.label}</span></span>
+          ))}
+        </div>
+      )}
+    </figure>
   );
 }
 
