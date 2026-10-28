@@ -432,6 +432,17 @@ A design review: `Stat` was rendered as a hero number that loads, and in a `Stat
 
 Not yet tested with people: whether a neutral, ink-muted change is noticed as readily as a coloured one on a busy dashboard.
 
+### E34 · Is a meter a reading or a task?
+
+A design review: `Meter` was rendered with storage under and past a threshold, seats near their limit, API calls over it, a reading still loading, and two segmented meters (storage by type, seats by role), in all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`, then pushed across a threshold. `checks/meter.mjs` measures it.
+
+- **Flush, not a trench.** The issue proposed `Progress`'s build, a raised fill in a trench. The Charts chapter, written after it, settles it the other way: a task under way is live, a reading is the record. A raised fill would also lift an amount off the ground, which is the one thing a chart may never do. So the meter is a flush track with flat ink across it.
+- **Over the limit stays in range.** `aria-valuenow` must lie between its min and max ([WAI-ARIA 1.2, meter](https://www.w3.org/TR/wai-aria-1.2/#meter)), so a reading over the limit reports the max and says the real reading and "over limit" in `aria-valuetext`.
+- **Segment cuts in the surface's colour.** A 2px cut showing the track was too faint to separate two segments of similar lightness; the cut is the surface's own colour (the page, or the card), as a stacked bar's gap is.
+- **The state is a word.** Caution and critical are colours only alongside "Near limit" and "Over limit" on a Badge, so they survive forced colours, where every fill is `Highlight`.
+
+Not yet tested with people: whether a notch above and below the track is found as readily as a labelled threshold.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

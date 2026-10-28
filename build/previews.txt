@@ -1187,6 +1187,46 @@ function App() {
   );
 }
 
+=== Meter | <!-- @dsCard group="Charts" height=520 subtitle="A reading in a known range: flat ink across a flush track, thresholds said in words" -->
+--- css
+.mt { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 900px; }
+@media (max-width: 720px) { .mt { grid-template-columns: minmax(0, 1fr); } }
+.mt .stack { display: grid; gap: 22px; }
+.mt .row { display: flex; gap: 8px; flex-wrap: wrap; }
+--- jsx
+const gb = (n) => `${n} GB`;
+function App() {
+  const [used, setUsed] = React.useState(62);
+  const [cpu, setCpu] = React.useState(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setCpu(37), 2400); return () => clearTimeout(t); }, []);
+  return (
+    <div className="mt">
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Plan usage</A.CardTitle><A.CardDescription>Thresholds at 80% and the limit</A.CardDescription></A.CardHeader>
+        <A.CardContent className="stack">
+          <A.Meter label="Storage" value={used} max={100} high={80} format={gb} />
+          <A.Meter label="Seats" value={24} max={25} high={20} format={(n) => `${n}`} />
+          <A.Meter label="API calls today" value={11800} max={10000} high={8000} format={(n) => n.toLocaleString('en')} />
+          <A.Meter label="CPU" value={cpu} format={(n) => `${n}%`} />
+          <div className="row">
+            <A.Button size="sm" variant="secondary" onClick={() => setUsed((u) => Math.max(0, u - 15))}>Free 15 GB</A.Button>
+            <A.Button size="sm" variant="secondary" onClick={() => setUsed((u) => u + 15)}>Use 15 GB</A.Button>
+          </div>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Storage by type</A.CardTitle><A.CardDescription>Parts of a whole, instead of a donut</A.CardDescription></A.CardHeader>
+        <A.CardContent className="stack">
+          <A.Meter label="Storage" max={100} format={gb}
+            segments={[{ key: 'media', label: 'Media', value: 38 }, { key: 'docs', label: 'Documents', value: 14 }, { key: 'mail', label: 'Mail', value: 6 }, { key: 'other', label: 'Other', value: 4 }]} />
+          <A.Meter label="Team seats" max={50} high={45} format={(n) => `${n}`}
+            segments={[{ key: 'admin', label: 'Admins', value: 4 }, { key: 'members', label: 'Members', value: 31 }, { key: 'guests', label: 'Guests', value: 12 }]} />
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === ChartTooltip | <!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
 --- css
 .ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }

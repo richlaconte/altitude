@@ -1724,6 +1724,38 @@ export declare function Stat(props: StatProps): React.ReactElement;
 export interface StatGroupProps extends React.HTMLAttributes<HTMLDivElement> { 'aria-label'?: string }
 /** A row of stats that wrap to fit and land together. */
 export declare function StatGroup(props: StatGroupProps): React.ReactElement;
+export interface MeterSegment {
+  key: string;
+  label: string;
+  value: number;
+  /** Default: its place in the list (data-1, data-2, …). */
+  color?: ChartSlot;
+}
+export interface MeterProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
+  /** What's being measured. It names the meter. */
+  label: React.ReactNode;
+  /** The reading. Undefined while your data loads: the track is an imprint. Ignored with segments (their sum is the reading). */
+  value?: number;
+  /** Default 0. */
+  min?: number;
+  /** Default 100. A reading above it is over the limit. */
+  max?: number;
+  /** From here: caution, and "Near limit". */
+  high?: number;
+  /** From here: critical, and "Over limit". Default: anything above max. */
+  critical?: number;
+  /** Parts of the whole: flat data-* fills parted by 2px, with a legend. */
+  segments?: MeterSegment[];
+  /** Formats readings ("62 GB"). */
+  format?: (value: number) => string;
+  /** The words for each state. Default "Near limit" and "Over limit". */
+  states?: { high?: string; critical?: string };
+  /** Hide the "62 GB of 100 GB" text (it's still announced). */
+  hideValue?: boolean;
+  locale?: string;
+}
+/** A reading within a known range: flat ink across a flush track, thresholds as notches, the state in words. role="meter". */
+export declare function Meter(props: MeterProps): React.ReactElement;
 /** The scales, plot size and config of the nearest ChartContainer, for drawing your own marks. */
 export declare function useChart(): ChartContextValue;
 
@@ -1740,7 +1772,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
