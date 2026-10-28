@@ -1535,8 +1535,8 @@ export interface ChartEncoding {
 export declare function ChartMarker(props: { shape: ChartMarkerShape; x: number; y: number; size?: number; color: string } & React.SVGProps<SVGElement>): React.ReactElement;
 export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
   config: ChartConfig;
-  /** The records. Optional when the chart inside takes `data` itself. */
-  data?: ChartDatum[];
+  /** The records. undefined or a promise: the chart's imprint until they land. null or []: an EmptyState. A rejection goes to your error boundary. */
+  data?: ChartDatum[] | null | PromiseLike<ChartDatum[] | null>;
   /** The key of x in each record. Optional when the chart inside takes `x`. */
   x?: string;
   /** How x is placed. Default: time for ISO dates, epoch numbers or Dates; linear for other numbers; band otherwise. */
@@ -1575,7 +1575,12 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   onViewChange?: (view: 'chart' | 'table') => void;
   /** The table's first column header. Default: the x key, capitalised. */
   xLabel?: string;
+  /** Fresh data is on its way while this data stays shown: after dur-grace the marks drop to half strength ("Updating"). */
+  refreshing?: boolean;
+  /** What the plot says when the data is null or empty: an EmptyState at widget size. */
+  empty?: ChartEmpty;
 }
+export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; }
 export interface ChartTooltipContentProps {
   /** How each row is keyed: a short stroke of the series colour (default), a dot, or a dashed stroke. */
@@ -1616,8 +1621,10 @@ export declare function ChartTooltip(props: { content?: React.ReactElement<Chart
 /** The frame every chart shares: scales, axes, gridlines, the ground line, colour slots, a name and a summary. Flush, no level. */
 export declare function ChartContainer(props: ChartContainerProps): React.ReactElement;
 export interface BarChartProps {
-  /** The records: one per category. */
-  data: ChartDatum[];
+  /** The records: one per category. undefined or a promise while they load; null or [] when there are none. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** What the plot says when there's no data. */
+  empty?: ChartEmpty;
   /** The key of each record's category. */
   x: string;
   /** Order the categories by their total. Default: the data's order. */
@@ -1636,8 +1643,10 @@ export interface BarChartProps {
 /** Amounts compared across categories, as flat lengths standing on the ground line. Renders inside a ChartContainer. */
 export declare function BarChart(props: BarChartProps): React.ReactElement | null;
 export interface LineChartProps {
-  /** The records, in x order. */
-  data: ChartDatum[];
+  /** The records, in x order. undefined or a promise while they load; null or [] when there are none. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** What the plot says when there's no data. */
+  empty?: ChartEmpty;
   /** The key of each record's x: an ISO date, a timestamp or a number. */
   x: string;
   /** 'linear' joins points with straight lines; 'monotone' curves through them without overshooting. Default 'linear'. */

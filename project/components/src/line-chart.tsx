@@ -3,7 +3,7 @@ import { ChartMarker, useChart, type ChartConfig, type ChartDatum, type ChartInf
 
 export interface LineChartProps {
   /** The records, in x order: one per time or value of x. */
-  data: ChartDatum[];
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
   /** The key of each record's x: an ISO date, a timestamp or a number. */
   x: string;
   /** 'linear' joins points with straight lines; 'monotone' curves through them without overshooting. Default 'linear'. */
@@ -15,7 +15,8 @@ export interface LineChartProps {
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
   /** A ChartTooltip, to change what the readout shows. */
-  children?: React.ReactNode;
+  children?: React.ReactNode;  /** What the plot says when there's no data: an EmptyState at widget size. */
+  empty?: import('./chart').ChartEmpty;
 }
 
 const END_FONT = '500 12.5px "Instrument Sans", ui-sans-serif, system-ui, sans-serif';

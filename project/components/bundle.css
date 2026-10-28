@@ -1478,6 +1478,21 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-chart-view[data-view="table"] { position: relative; }
 .alt-chart-tablebox { position: absolute; inset: 0; overflow: auto; }
 
+/* ── Loading, refetch and nothing: an imprint in the chart's shape while data is on its way (surface-well bars or a
+   band pressed into the page, no labels, after dur-grace like every imprint); data lands by fading in place, never
+   rising, because a rising bar would leave the ground line. A refetch keeps the chart and, after dur-grace, drops its
+   marks to half strength. Nothing to show is an opening: an EmptyState in the plot's own box, with no axes. ── */
+.alt-chart-imprint { display: flex; align-items: flex-end; gap: 8%; padding: 8px 4% 26px; box-sizing: border-box; }
+.alt-chart-imprint > .alt-skeleton { flex: 1; border-radius: var(--radius-xs) var(--radius-xs) 0 0; }
+.alt-chart-imprint[data-shape="line"] { padding: 0; }
+.alt-chart-imprint-line { fill: none; stroke: var(--surface-well); stroke-width: 10px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.alt-chart-await[data-phase="reveal"] > .alt-await-face { --alt-from-y: 0px; }
+.alt-chart-plot[data-refreshing] .alt-chart-marks { opacity: 0.5; transition: opacity var(--dur-travel-1) var(--ease-glide) var(--dur-grace); }
+.alt-chart-marks { transition: opacity var(--dur-travel-1) var(--ease-glide); }
+.alt-chart-empty { position: absolute; inset: 0; display: grid; }
+.alt-chart-empty > .alt-empty { margin: 0; justify-content: center; }
+@media (forced-colors: active) { .alt-chart-imprint-line { stroke: GrayText; stroke-dasharray: 6 4; stroke-width: 2px; } .alt-chart-imprint ~ .alt-chart-legend rect { fill: CanvasText; } }
+
 /* ── The keyboard path: a layer of focusable nodes over the aria-hidden SVG, one level at a time (summary, series,
    points) with a roving tabindex, so the plot is one Tab stop. A node is invisible until focused; then it's the focus
    ring itself, 2px accent-ink at a 2px offset, round on a point. It moves instantly, because it's focus, and the
