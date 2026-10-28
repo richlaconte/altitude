@@ -8,9 +8,10 @@ import { createRequire } from 'node:module';
 import { tokensCss } from './tokens-css.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const requireRoot = createRequire(new URL('../package.json', import.meta.url));
+const requireRoot = createRequire(process.env.ALT_PACKAGE_ROOT ? resolve(process.env.ALT_PACKAGE_ROOT, 'package.json') : new URL('../package.json', import.meta.url));
 const strict = process.env.ALT_CHECK_STRICT === '1';
-const out = join(root, 'build/test', strict ? 'react19-strict' : 'react19');
+const installedEntry = process.env.ALT_PACKAGE_ROOT ? resolve(process.env.ALT_PACKAGE_ROOT, 'dist/index.js') : './project/components/src/index.tsx';
+const out = join(root, 'build/test', process.env.ALT_PACKAGE_ROOT ? 'react19-installed' : strict ? 'react19-strict' : 'react19');
 const names = (process.argv[2] || 'InlineEdit,EditRegion,Dialog,ActionsInPlace,Sheet,CommandPalette,Toaster,TagInput,DatePicker,Tree,Checklist,FilterBar,Schedule,DataGrid,ItemGroup,Board,TableEditing,PropertyList').split(',').map(s => s.trim()).filter(Boolean);
 const sections = new Map(readFileSync(join(root, 'build/previews.txt'), 'utf8').split(/^=== /m).filter(s => s.trim()).map(s => [s.split(' | ')[0], s]));
 const missing = names.filter(name => !sections.has(name));
@@ -18,8 +19,8 @@ if (missing.length) throw new Error('Missing canonical preview sections: ' + mis
 const version = requireRoot('react/package.json').version;
 if (Number(version.split('.')[0]) !== 19) throw new Error('React 19 runtime required; root resolved ' + version);
 mkdirSync(out, { recursive: true });
-const tokens = tokensCss(join(root, 'project/tokens.json'));
-const componentCss = readFileSync(join(root, 'project/components/bundle.css'), 'utf8').replace(/^@import[^\n]*\n/, '');
+const tokens = process.env.ALT_PACKAGE_ROOT ? '' : tokensCss(join(root, 'project/tokens.json'));
+const componentCss = readFileSync(process.env.ALT_PACKAGE_ROOT ? resolve(process.env.ALT_PACKAGE_ROOT, 'dist/altitude.no-fonts.css') : join(root, 'project/components/bundle.css'), 'utf8').replace(/^@import[^\n]*\n/, '');
 const common = '#root { padding: 20px 24px; } .row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; } .col { display:flex; flex-direction:column; gap:14px; } .cap { margin:0; font:500 12.5px/17px var(--font-sans); color:var(--ink-muted); } .body { margin:0; font:400 15px/23px var(--font-sans); color:var(--ink); }';
 const aliases = Object.fromEntries(['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime'].map(name => [name, requireRoot.resolve(name)]));
 for (const name of names) {
@@ -29,7 +30,7 @@ for (const name of names) {
   const jsx = body.split('--- jsx\n')[1];
   if (!jsx) throw new Error('Missing JSX for ' + name);
   const result = await build({
-    stdin: { contents: `import * as React from 'react';\nimport * as ReactDOM from 'react-dom/client';\nimport * as A from './project/components/src/index.tsx';\nwindow.React=React; window.ReactDOM=ReactDOM; window.Altitude=A; window.__ALT_REACT_VERSION=React.version;\nif (React.version.split('.')[0] !== '19') throw new Error('Wrong fixture React runtime');\ndocument.documentElement.dataset.reactVersion=React.version;\n${jsx}\nconst scene=React.createElement(A.AltitudeProvider,null,React.createElement(App));\nReactDOM.createRoot(document.getElementById('root')).render(${strict ? 'React.createElement(React.StrictMode,null,scene)' : 'scene'});`, resolveDir: root, loader: 'jsx', sourcefile: 'canonical-' + name + '.jsx' },
+    stdin: { contents: `import * as React from 'react';\nimport * as ReactDOM from 'react-dom/client';\nimport * as A from '${installedEntry}';\nwindow.React=React; window.ReactDOM=ReactDOM; window.Altitude=A; window.__ALT_REACT_VERSION=React.version;\nif (React.version.split('.')[0] !== '19') throw new Error('Wrong fixture React runtime');\ndocument.documentElement.dataset.reactVersion=React.version;\n${jsx}\nconst scene=React.createElement(A.AltitudeProvider,null,React.createElement(App));\nReactDOM.createRoot(document.getElementById('root')).render(${strict ? 'React.createElement(React.StrictMode,null,scene)' : 'scene'});`, resolveDir: root, loader: 'jsx', sourcefile: 'canonical-' + name + '.jsx' },
     bundle: true, write: false, format: 'iife', target: 'es2020', jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment',
     alias: aliases, define: { 'process.env.NODE_ENV': JSON.stringify(strict ? 'development' : 'production') }, minify: !strict,
   });
