@@ -24,7 +24,26 @@ Patterns are on under forced colours and in print, and anywhere with `patterns` 
 
 With `contrast="more"`, lines are 3px, adjacent marks are 3px apart, fills get a 1px `ink` edge, gridlines take `line-control` and the ground line `ink`.
 
-**Accessibility.** It's a `figure`, named by its `title` or by `aria-labelledby` (point it at the `CardTitle`), and described by its description and a summary. Pass `summary` with what the chart shows ("Revenue rose 44% while costs held flat."): it's shown under the plot. Without it a summary is generated for screen readers: the chart's kind, its series, the x range, and each series' lowest and highest values with where they fall. The plot is a `group` with `aria-roledescription="chart"`, and its SVG is hidden from assistive technology; the keyboard path through the data and the table view come with the chart types (#63, #64).
+**Accessibility.** It's a `figure`, named by its `title` or by `aria-labelledby` (point it at the `CardTitle`), and described by its description and a summary. Pass `summary` with what the chart shows ("Revenue rose 44% while costs held flat."): it's shown under the plot. Without it a summary is generated for screen readers: the chart's kind, its series, the x range, and each series' lowest and highest values with where they fall. The plot is a `group` with `aria-roledescription="chart"`, and its SVG is hidden from assistive technology.
+
+**The keyboard path.** The plot is one Tab stop: a layer of focusable nodes over the SVG, one level at a time, with a roving tabindex. After Olli and Data Navigator, it goes from the summary to the series to the data:
+
+| Key | On the summary | On a series | On a point |
+|---|---|---|---|
+| ←/→ | — | previous/next series | previous/next x |
+| ↑/↓ | — | previous/next series | same x, previous/next series |
+| Home/End | — | first/last series | first/last x |
+| Page Up/Down | — | — | ±10% of the x range |
+| Enter | into the series | into its points | — |
+| Escape | — | back to the summary | back to its series |
+
+A chart with one series skips the series level. The nodes are named:
+
+- **the summary:** the written `summary`, or the generated one, then "Press Enter to explore the series";
+- **a series:** "Revenue, 12 points, $61K to $104K, rising. 1 of 2.";
+- **a point:** "Mar 1, 2026, Revenue, $83K. Down 2% from Feb 1, 2026. 9 of 12." Stacks add "Total …".
+
+A focused point gets a 2px `accent-ink` ring on its mark (`Highlight` under forced colours) and opens the readout, so keyboard and pointer get the same feedback. A focused series draws the others receded. Chart types say where each of their marks sits (`chartPoint`); hand-drawn marks get a ring at `(xOf, y(value))`. The table view is #64.
 
 **Scales.** All in-house, no dependency:
 

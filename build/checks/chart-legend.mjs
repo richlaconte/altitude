@@ -36,8 +36,12 @@ const ticks = () => chart.evaluate((p) => [...p.querySelectorAll('[data-axis="y"
 // Keyboard: one Tab stop; arrows move between keys; Space toggles.
 const before = await lines();
 const ticksBefore = await ticks();
+// Each chart is one Tab stop, then its legend: Tab, Tab (the two plots), Tab (the toggle legend).
 await page.keyboard.press('Tab');
-expect(await page.evaluate(() => document.activeElement.textContent) === 'Free', 'Tab lands on the first key');
+await page.keyboard.press('Tab');
+expect(await page.evaluate(() => document.activeElement.dataset.level) === 'summary', 'the plot comes first, as one Tab stop');
+await page.keyboard.press('Tab');
+expect(await page.evaluate(() => document.activeElement.textContent) === 'Free', 'Tab from the plot lands on the legend\'s first key');
 await page.keyboard.press('ArrowRight');
 await page.keyboard.press('ArrowRight');
 expect(await page.evaluate(() => document.activeElement.textContent) === 'Business', '→ moves between keys');

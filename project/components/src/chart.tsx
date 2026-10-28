@@ -160,6 +160,8 @@ export interface ChartContextValue {
    * directions change: x(cat) is a distance from the top, y(v) from the left, and `ground` is y(0) across.
    */
   horizontal: boolean;
+  /** The series the keyboard is on, or null: chart types draw the others receded. */
+  emphasis: string | null;
   /** The record the readout is on (pointed at, touched, or focused from the keyboard), or null. */
   active: ChartDatum | null;
   /** Put the readout on a record by its index in `data`, or take it away with null: for keyboard paths. */
@@ -250,14 +252,20 @@ export interface ChartInfo {
   layout?: 'vertical' | 'horizontal';
   /** The records as the chart wants them placed (sorted, say). Return the same array for the same input, or every render is a change. */
   data?: ChartDatum[];
-  /** Formats the value axis, when the chart's values aren't its series' (shares of a stack). */
+  /** Formats the value axis only, when the axis isn't in the series' units (shares of a stack). */
   yFormat?: (value: number) => string;
+  /** Formats every value (axis, readout, names, summary) of a series that has no format of its own. */
+  format?: (value: number) => string;
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
   right?: number;
   /** How the legend draws this chart's series: a block (bars, areas) or a short line (lines). */
   swatch?: 'rect' | 'line';
 }
-type ChartChild = { chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean; chartLegend?: boolean };
+type ChartChild = {
+  chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean; chartLegend?: boolean;
+  /** Where the mark for one record and series sits, in plot coordinates, for the keyboard's focus ring. Default: (xOf, y(value)). */
+  chartPoint?: (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string) => [number, number];
+};
 
 /* ───────────────────────── readout ───────────────────────── */
 
@@ -646,9 +654,9 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
     return Object.keys(config).map((key, i) => {
       const c = config[key];
       const slot = c.color ?? (i < 6 ? (`data-${i + 1}` as ChartSlot) : 'data-other');
-      return { key, label: c.label, slot, color: `var(--${slot})`, format: c.format ?? ((v: number) => nf.format(v)) };
+      return { key, label: c.label, slot, color: `var(--${slot})`, format: c.format ?? info.format ?? ((v: number) => nf.format(v)) };
     });
-  }, [configKey, locale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [configKey, locale, info.format]); // eslint-disable-line react-hooks/exhaustive-deps
   const hiddenKey = hidden.join('|');
   const series = React.useMemo(() => allSeries.filter((s) => !hidden.includes(s.key)), [allSeries, hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -743,6 +751,16 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const bandLabel = (v: unknown) => (xFormat ? xFormat(v) : datedBands ? shortDate.format(new Date(toTime(v))) : String(v));
   const formatX = xFormat ?? (datedBands ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
 
+  // The keyboard path (#63): the plot is one Tab stop holding three levels, summary → series → points. Enter goes
+  // deeper and Escape comes back, as in Tree and Drilldown; a roving tabindex keeps one node in the tab order.
+  type Nav = { level: 'summary' | 'series' | 'points'; s: number; p: number };
+  const [nav, setNav] = React.useState<Nav>({ level: 'summary', s: 0, p: 0 });
+  const [navFocused, setNavFocused] = React.useState(false);
+  const navRefs = React.useRef(new Map<string, HTMLElement>());
+  const wantFocus = React.useRef<string | null>(null);
+  const navS = Math.min(nav.s, Math.max(0, series.length - 1)), navP = Math.min(nav.p, Math.max(0, data.length - 1));
+  const emphasis = navFocused && nav.level !== 'summary' && series.length > 1 ? series[navS]?.key ?? null : null;
+
   /** A layer's scales, ticks and context, at the plot's size now. */
   const draw = (frame: Frame) => {
     const left = Math.round(frame.left);
@@ -804,6 +822,7 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
       alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? frame.seriesAlpha.get(key) ?? 1 : 1),
       format: (key, v) => (frame.series.find((s) => s.key === key)?.format ?? fmtY)(v),
       formatX, horizontal, encode, patterns, directLabels: env.forced || env.print,
+      emphasis,
       active: activeIdx !== null ? frame.rows[activeIdx]?.d ?? null : null,
       setActive: (i) => show(i),
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
@@ -862,6 +881,94 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const lastActive = React.useRef<ChartDatum | null>(null);
   if (top.ctx.active) lastActive.current = top.ctx.active;
   const { mounted: tipMounted, state: tipState } = usePresence(tooltipOn && activeIdx !== null && !!top.ctx.active, 160);
+  const single = series.length <= 1;
+  const navKey = (n: Nav) => (n.level === 'summary' ? 'sum' : n.level === 'series' ? `s${n.s}` : `p${n.s}-${n.p}`);
+  useIsoLayoutEffect(() => { if (wantFocus.current) { navRefs.current.get(wantFocus.current)?.focus(); wantFocus.current = null; } });
+  const go = (n: Nav) => { setNav(n); wantFocus.current = navKey(n); show(n.level === 'points' ? n.p : null); };
+  const num = (v: unknown): v is number => typeof v === 'number' && isFinite(v);
+  const stacked = /stacked/i.test(info.kind ?? '');
+  const summaryText = typeof summary === 'string' ? summary : generated;
+  const seriesName = (si: number) => {
+    const s = series[si];
+    const vals = data.filter((d) => num(d[s.key]));
+    if (!vals.length) return `${s.label}, no values.`;
+    const vs = vals.map((d) => d[s.key] as number);
+    const lo = Math.min(...vs), hi = Math.max(...vs);
+    let tail = '';
+    if (kind !== 'band') {
+      const rel = vs[0] !== 0 ? (vs[vs.length - 1] - vs[0]) / Math.abs(vs[0]) : vs[vs.length - 1] - vs[0];
+      tail = Math.abs(rel) < 0.02 ? ', flat' : rel > 0 ? ', rising' : ', falling';
+    } else tail = `, highest at ${formatX(vals[vs.indexOf(hi)][xKey])}`;
+    return `${s.label}, ${vals.length} ${vals.length === 1 ? 'point' : 'points'}, ${s.format(lo)} to ${s.format(hi)}${tail}.`;
+  };
+  const pointName = (si: number, pi: number) => {
+    const s = series[si], d = data[pi];
+    if (!s || !d) return '';
+    const v = d[s.key];
+    let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}.`;
+    if (num(v) && kind !== 'band' && pi > 0) {
+      const prev = data[pi - 1], pv = prev[s.key];
+      if (num(pv)) {
+        const diff = v - pv;
+        out += diff === 0 ? ` Same as ${formatX(prev[xKey])}.` : pv !== 0
+          ? ` ${diff > 0 ? 'Up' : 'Down'} ${Math.round(Math.abs(diff / pv) * 100)}% from ${formatX(prev[xKey])}.`
+          : ` ${diff > 0 ? 'Up' : 'Down'} ${s.format(Math.abs(diff))} from ${formatX(prev[xKey])}.`;
+      }
+    }
+    if (stacked) out += ` Total ${s.format(series.reduce((t, x) => t + (num(d[x.key]) ? (d[x.key] as number) : 0), 0))}.`;
+    return `${out} ${pi + 1} of ${data.length}.`;
+  };
+  const onNavKey = (e: React.KeyboardEvent) => {
+    const n = series.length, m = data.length, page = Math.max(1, Math.round(m * 0.1));
+    const at: Nav = { level: nav.level, s: navS, p: navP };
+    let next: Nav | null = null;
+    if (at.level === 'summary') {
+      if (e.key === 'Enter' || e.key === ' ') next = single ? { level: 'points', s: 0, p: 0 } : { level: 'series', s: 0, p: 0 };
+    } else if (at.level === 'series') {
+      const step: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+      if (e.key in step) next = { ...at, s: (at.s + step[e.key] + n) % n };
+      else if (e.key === 'Home') next = { ...at, s: 0 };
+      else if (e.key === 'End') next = { ...at, s: n - 1 };
+      else if (e.key === 'Enter' || e.key === ' ') next = { level: 'points', s: at.s, p: 0 };
+      else if (e.key === 'Escape') next = { ...at, level: 'summary' };
+    } else {
+      const moveP: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, PageDown: page, PageUp: -page };
+      if (e.key in moveP) next = { ...at, p: Math.max(0, Math.min(m - 1, at.p + moveP[e.key])) };
+      else if (e.key === 'Home') next = { ...at, p: 0 };
+      else if (e.key === 'End') next = { ...at, p: m - 1 };
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') next = { ...at, s: (at.s + (e.key === 'ArrowDown' ? 1 : -1) + n) % n };
+      else if (e.key === 'Escape') next = single ? { ...at, level: 'summary' } : { ...at, level: 'series' };
+    }
+    if (next) { e.preventDefault(); e.stopPropagation(); go(next); }
+  };
+  const ChartPointFn = (chartChild?.type as ChartChild | undefined)?.chartPoint;
+  const nodes = (() => {
+    if (!W || !data.length || !series.length) return null;
+    const pw = top.pw, ph = top.ph;
+    const plotBox: React.CSSProperties = { left: top.left, top: TOP, width: pw, height: ph };
+    const common = (key: string, current: boolean) => ({
+      key, tabIndex: current ? 0 : -1, ref: (el: HTMLElement | null) => { if (el) navRefs.current.set(key, el); else navRefs.current.delete(key); },
+      onKeyDown: onNavKey, role: 'button' as const,
+    });
+    if (nav.level === 'summary') {
+      return <div {...common('sum', true)} className="alt-chart-node" data-level="summary" aria-roledescription="chart" style={plotBox}
+        aria-label={`${summaryText} Press Enter to explore ${single ? 'the data' : 'the series'}.`} />;
+    }
+    if (nav.level === 'series') {
+      return series.map((s, i) => <div {...common(`s${i}`, i === navS)} className="alt-chart-node" data-level="series" aria-roledescription="series" style={plotBox}
+        aria-label={`${seriesName(i)} ${i + 1} of ${series.length}.`} />);
+    }
+    const s = series[navS];
+    return data.map((d, i) => {
+      const shown = top.ctx.data[i] ?? d;
+      const v = shown[s.key];
+      const [px, py] = ChartPointFn ? ChartPointFn(childProps, top.ctx, shown, s.key) : [top.ctx.xOf(shown), num(v) ? top.ctx.y(v) : top.ctx.ground];
+      const at = horizontal && !ChartPointFn ? [num(v) ? top.ctx.y(v) : top.ctx.ground, top.ctx.xOf(shown)] : [px, py];
+      return <div {...common(`p${navS}-${i}`, i === navP)} className="alt-chart-node" data-level="point" aria-roledescription="data point"
+        style={{ left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navS, i)} />;
+    });
+  })();
+
   const readout = (() => {
     const d = top.ctx.active ?? lastActive.current;
     if (!tipMounted || !d) return null;
@@ -959,6 +1066,10 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
               })}
             </svg>
           )}
+          <div className="alt-chart-nav" onFocus={() => setNavFocused(true)}
+            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { setNavFocused(false); if (nav.level === 'points') show(null); } }}>
+            {nodes}
+          </div>
           {readout}
         </div>
         {legendEl && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {

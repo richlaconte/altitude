@@ -1464,6 +1464,16 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-bar-label { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
 @media (forced-colors: active) { .alt-bar-label { fill: CanvasText; } }
 
+/* ── The keyboard path: a layer of focusable nodes over the aria-hidden SVG, one level at a time (summary, series,
+   points) with a roving tabindex, so the plot is one Tab stop. A node is invisible until focused; then it's the focus
+   ring itself, 2px accent-ink at a 2px offset, round on a point. It moves instantly, because it's focus, and the
+   readout opens on the focused point. Nodes take no pointer events, so the plot's hover still works through them. ── */
+.alt-chart-nav { position: absolute; inset: 0; pointer-events: none; }
+.alt-chart-node { position: absolute; box-sizing: border-box; border-radius: var(--radius-sm); outline: none; }
+.alt-chart-node[data-level="point"] { border-radius: var(--radius-full); }
+.alt-chart-node:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+@media (forced-colors: active) { .alt-chart-node:focus-visible { outline-color: Highlight; } }
+
 /* ── LineChart: change over time as 2px strokes lying on the plot, round joins, no fill, no glow. A missing value is a
    gap in the line, never bridged. The last point wears a marker and each line is named at its end in ink, so the
    lines are their own legend. ── */

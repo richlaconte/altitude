@@ -58,6 +58,7 @@ These are the sources behind [Charts](Charts.md).
 - **Dual axes mislead.** Charts with two scales on one plot are read less accurately and invite comparisons the data doesn't support ([Isenberg, Bezerianos, Dragicevic & Fekete, 2011](https://doi.org/10.1109/TVCG.2011.160)). Altitude allows one axis per plot.
 - **Decorative animation doesn't help.** Animation helps only when its motion is the change (Tversky, Morrison & Bétrancourt, above), so charts glide between values and never grow from the baseline on first render.
 - **Staged transitions help people follow a change.** Animated transitions between statistical graphics significantly improved object tracking and value estimation; simple staging helped and was preferred, while rescaling axes at the same time as marks moved hurt ([Heer & Robertson, 2007](https://doi.org/10.1109/TVCG.2007.70539)). So a chart rescales first and moves its marks after, and `checks/chart-motion.mjs` holds it to that frame by frame.
+- **A chart needs a path, not just a description.** Data Navigator models a chart as a graph of nodes laid over any rendering as an accessible layer ([Elavsky, Nadolskis & Moritz, 2023](https://doi.org/10.1109/TVCG.2023.3327393)); Olli moves a screen reader from a summary, to the axes and series, to the data ([Zong et al., 2022](https://doi.org/10.1111/cgf.14519)). Blind readers valued trends and statistics over a restatement of the encoding ([Lundgard & Satyanarayan, 2021](https://doi.org/10.1109/TVCG.2021.3114770)), so a series' name says its range and which way it went, and a point's says its change from the one before. Recharts 3 makes a chart one Tab stop with arrow keys between points. `ChartContainer`'s keyboard path follows these.
 - **Accessibility is checked, not assumed.** Chartability groups chart accessibility into heuristics a reviewer can audit quickly ([Elavsky, Bennett & Moritz, 2022](https://doi.org/10.1111/cgf.14522)); Charts' five-point check (visual, keyboard, screen reader, reduced motion, forced colours) follows it.
 
 - **The frame follows the libraries people know.** `ChartContainer` and `ChartConfig` take shadcn/ui's chart names and its config shape (data key → label and colour), and Recharts, visx, Nivo, ECharts and Observable Plot were considered as engines. Each adds a dependency, and none exposes what Altitude needs (imprints while loading, the attention budget, hover only where a click acts, legend keys built as switches), so the scales and axes are in-house (see E24).
@@ -379,6 +380,16 @@ A design review: `ChartLegend` was rendered static (stacked bars) and toggleable
 - **The last series stays.** Its key is `aria-disabled` and described "At least one series stays shown", so the chart is never empty by accident.
 
 Decided: no "show only this series" (isolate) yet. Alt-click is undiscoverable, and an "Only" button on hover adds a control per key; it can come later if people ask for it.
+
+### E29 · Can the data be read without a pointer?
+
+An engineering check, not a study: `checks/chart-keyboard.mjs` walks a two-series and a one-series `LineChart`, stacked and horizontal `BarChart`s, and hand-drawn marks from the keyboard, asserting every name, level change and position.
+
+- **One Tab stop.** Every chart has exactly one node in the tab order at each level, and Tab leaves the chart in one press, where a node per point would have made a 49-point chart 49 Tab stops.
+- **The units were missing.** A line chart's `y={{ format }}` formatted only its axis, so its readout and its points read "185" where the axis said "185 ms". A chart type's value format now reaches every place a value is said.
+- **Rings on the marks.** A focused point's ring lands within 1.5px of the line's marker and of a horizontal bar's end.
+
+Not yet checked by hand with a screen reader: VoiceOver and NVDA weren't available where this was built. The names are verified as accessible names, not as speech; whether `aria-roledescription` ("data point") reads well in both is the first thing to check.
 
 ## What was rejected
 
