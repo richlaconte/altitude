@@ -331,6 +331,8 @@ A design review, not a study: `ChartContainer` was rendered with hand-drawn line
 
 Not yet tested with people: whether a generated summary is as useful as a written one.
 
+**Without colour (#72).** Each slot has a fixed dash, marker and hatch, after ECharts' `aria.decal`, which it ships off by default. Altitude turns them on under forced colours and in print, and with the `patterns` prop anywhere else. Under Chromium's forced-colours emulation, `checks/chart-patterns.mjs` renders six hatched bars and four dashed, marked lines in `CanvasText`, all distinct; `GrayText` gridlines come out as the emulated system grey (a dark red, rgb 96 0 0). The print render keeps the colours and adds the patterns, so a greyscale printout still separates the series. Not yet checked on real Windows contrast themes.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

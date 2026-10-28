@@ -79,6 +79,8 @@ jobs:
           node ../scripts/record-check.mjs react18-data-grid node checks/data-grid.mjs
           node ../scripts/record-check.mjs react18-data-palette node checks/data-palette.mjs
           node ../scripts/record-check.mjs react18-chart-motion node checks/chart-motion.mjs
+          node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
+          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns daylight 960
           DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
           DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
 

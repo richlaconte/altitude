@@ -35,26 +35,42 @@ const regions = [
   { region: "West", q2: 19, q3: 24 }
 ];
 function Lines() {
-  const { series, data, xOf, y } = A.useChart();
-  return series.map((s) => /* @__PURE__ */ React.createElement(
-    "polyline",
-    {
-      key: s.key,
-      fill: "none",
-      stroke: s.color,
-      strokeWidth: "2",
-      strokeLinejoin: "round",
-      strokeLinecap: "round",
-      points: data.map((d) => `${xOf(d)},${y(d[s.key])}`).join(" ")
-    }
-  ));
+  const { series, data, xOf, y, encode, patterns, strokeWidth } = A.useChart();
+  return series.map((s) => {
+    const e = encode(s.key);
+    return /* @__PURE__ */ React.createElement("g", { key: s.key }, /* @__PURE__ */ React.createElement(
+      "polyline",
+      {
+        fill: "none",
+        stroke: e.stroke,
+        strokeDasharray: e.dash,
+        strokeWidth,
+        strokeLinejoin: "round",
+        strokeLinecap: "round",
+        points: data.map((d) => `${xOf(d)},${y(d[s.key])}`).join(" ")
+      }
+    ), patterns && data.map((d, i) => /* @__PURE__ */ React.createElement(A.ChartMarker, { key: i, shape: e.marker, x: xOf(d), y: y(d[s.key]), color: e.stroke })));
+  });
 }
 function Bars() {
-  const { series, data, x, y, xKey, ground, alpha } = A.useChart();
-  const w = (x.bandwidth - 2 * (series.length - 1)) / series.length;
+  const { series, data, x, y, xKey, ground, alpha, encode, gap } = A.useChart();
+  const w = (x.bandwidth - gap * (series.length - 1)) / series.length;
   return data.map((d) => series.map((s, i) => {
-    const v = d[s.key], top = Math.min(y(v), ground);
-    return /* @__PURE__ */ React.createElement("rect", { key: d[xKey] + s.key, x: x(d[xKey]) + i * (w + 2), y: top, width: w, height: Math.abs(y(v) - ground), fill: s.color, opacity: alpha(d, s.key) });
+    const v = d[s.key], top = Math.min(y(v), ground), e = encode(s.key);
+    return /* @__PURE__ */ React.createElement(
+      "rect",
+      {
+        key: d[xKey] + s.key,
+        x: x(d[xKey]) + i * (w + gap),
+        y: top,
+        width: w,
+        height: Math.abs(y(v) - ground),
+        fill: e.fill,
+        stroke: e.edge,
+        strokeWidth: e.edge ? 1 : void 0,
+        opacity: alpha(d, s.key)
+      }
+    );
   }));
 }
 function App() {

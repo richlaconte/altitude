@@ -142,6 +142,71 @@ export interface ChartContextValue {
   /** Formats a value of a series (by its key), or an x value. */
   format: (key: string, value: number) => string;
   formatX: (value: unknown) => string;
+  /**
+   * How to draw a series so it's told apart without colour: its fill (a hatch when patterns are on), stroke, dash and
+   * marker, fixed by its slot like its colour. Use these instead of `series.color` and every mode is handled.
+   */
+  encode: (seriesKey: string) => ChartEncoding;
+  /** Patterns are on: the `patterns` prop, forced colours or print. */
+  patterns: boolean;
+  /** Label series directly at their marks, not only in a legend: on under forced colours and in print. */
+  directLabels: boolean;
+  /** Line width (2, or 3 under contrast="more"), and the gap between adjacent marks (2, or 3). */
+  strokeWidth: number;
+  gap: number;
+}
+
+export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
+export interface ChartEncoding {
+  slot: ChartSlot;
+  /** For bars and areas: the series colour, a hatch of it, or CanvasText under forced colours. */
+  fill: string;
+  /** For lines and outlines. */
+  stroke: string;
+  /** For a line: undefined is solid. Set only while patterns are on, except slot 1, which is always solid. */
+  dash?: string;
+  marker: ChartMarkerShape;
+  /** A 1px edge for a filled mark: ink under contrast="more", CanvasText under forced colours, otherwise none. */
+  edge?: string;
+}
+
+/** Each slot's redundant encoding, fixed like its colour (#72). */
+const ENCODINGS: Record<ChartSlot, { dash?: string; marker: ChartMarkerShape; hatch?: 'rise' | 'fall' | 'dots' | 'rows' | 'cross' }> = {
+  'data-1': { marker: 'circle' },
+  'data-2': { dash: '6 3', marker: 'square', hatch: 'rise' },
+  'data-3': { dash: '2 2', marker: 'triangle', hatch: 'fall' },
+  'data-4': { dash: '8 3 2 3', marker: 'diamond', hatch: 'dots' },
+  'data-5': { dash: '12 4', marker: 'ring', hatch: 'rows' },
+  'data-6': { dash: '4 2 1 2', marker: 'cross', hatch: 'cross' },
+  'data-other': { dash: '1 3', marker: 'circle', hatch: 'dots' },
+};
+
+/** A series' marker, centred on (x, y): the shape its slot gives it, so points are told apart without colour. */
+export function ChartMarker({ shape, x, y, size = 8, color, ...rest }: { shape: ChartMarkerShape; x: number; y: number; size?: number; color: string } & React.SVGProps<SVGElement>) {
+  const r = size / 2;
+  const p = rest as React.SVGProps<SVGPathElement>;
+  switch (shape) {
+    case 'square': return <rect x={x - r * 0.9} y={y - r * 0.9} width={r * 1.8} height={r * 1.8} fill={color} {...(rest as React.SVGProps<SVGRectElement>)} />;
+    case 'triangle': return <path d={`M${x},${y - r * 1.1}L${x + r * 1.05},${y + r * 0.75}L${x - r * 1.05},${y + r * 0.75}Z`} fill={color} {...p} />;
+    case 'diamond': return <path d={`M${x},${y - r * 1.2}L${x + r * 1.2},${y}L${x},${y + r * 1.2}L${x - r * 1.2},${y}Z`} fill={color} {...p} />;
+    case 'ring': return <circle cx={x} cy={y} r={r * 0.8} fill="none" stroke={color} strokeWidth={r * 0.45} {...(rest as React.SVGProps<SVGCircleElement>)} />;
+    case 'cross': return <path d={`M${x - r},${y - r}L${x + r},${y + r}M${x + r},${y - r}L${x - r},${y + r}`} fill="none" stroke={color} strokeWidth={r * 0.5} strokeLinecap="round" {...p} />;
+    default: return <circle cx={x} cy={y} r={r} fill={color} {...(rest as React.SVGProps<SVGCircleElement>)} />;
+  }
+}
+
+/** One hatch tile, in the pattern's own colour: lines or dots over the series colour (or over Canvas, forced). */
+function Hatch({ id, kind, bg, fg }: { id: string; kind: NonNullable<(typeof ENCODINGS)[ChartSlot]['hatch']>; bg: string; fg: string }) {
+  const rot = kind === 'rise' || kind === 'cross' ? 45 : kind === 'fall' ? -45 : 0;
+  return (
+    <pattern id={id} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform={rot ? `rotate(${rot})` : undefined}>
+      <rect width="6" height="6" fill={bg} />
+      {kind === 'dots' ? <circle cx="3" cy="3" r="1.3" fill={fg} />
+        : kind === 'rows' ? <line x1="0" y1="3" x2="6" y2="3" stroke={fg} strokeWidth="1.6" />
+        : <line x1="3" y1="0" x2="3" y2="6" stroke={fg} strokeWidth="1.6" />}
+      {kind === 'cross' && <line x1="0" y1="3" x2="6" y2="3" stroke={fg} strokeWidth="1.6" />}
+    </pattern>
+  );
 }
 
 const ChartContext = React.createContext<ChartContextValue | null>(null);
@@ -344,7 +409,15 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   axes?: boolean;
   /** The locale for numbers and dates. Default: the reader's. */
   locale?: string;
+  /**
+   * Tell series apart by pattern as well as colour: a hatch per slot on fills, a dash on lines, a marker on points.
+   * Always on under forced colours and in print; turn it on anywhere else for readers who want it.
+   */
+  patterns?: boolean;
 }
+
+/** True between beforeprint and afterprint, for browsers whose print media query lags the dialog. */
+let printing = false;
 
 const isTimeLike = (v: unknown) => v instanceof Date || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)) || (typeof v === 'number' && v > 3e11);
 const cssKey = (k: string) => k.replace(/[^\w-]/g, '-');
@@ -357,7 +430,7 @@ const TOP = 8;
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
 export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, description, summary,
-  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, className, style, children, ...rest }: ChartContainerProps) {
+  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, className, style, children, ...rest }: ChartContainerProps) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -421,6 +494,38 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding]); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef);
 
+  // Forced colours, print and contrast="more" change how marks are drawn, not just their colours.
+  const [env, setEnv] = React.useState({ forced: false, print: false, more: false });
+  const readEnv = React.useRef(() => {});
+  readEnv.current = () => {
+    const mq = (q: string) => typeof window !== 'undefined' && !!window.matchMedia?.(q).matches;
+    const next = { forced: mq('(forced-colors: active)'), print: mq('print') || printing, more: mq('(prefers-contrast: more)') || !!plotRef.current?.closest('[data-contrast="more"]') };
+    setEnv((e) => (e.forced === next.forced && e.print === next.print && e.more === next.more ? e : next));
+  };
+  useIsoLayoutEffect(() => readEnv.current());
+  React.useEffect(() => {
+    const on = () => readEnv.current();
+    const lists = ['(forced-colors: active)', 'print', '(prefers-contrast: more)'].map((q) => window.matchMedia?.(q)).filter(Boolean) as MediaQueryList[];
+    lists.forEach((l) => l.addEventListener?.('change', on));
+    const before = () => { printing = true; on(); }, after = () => { printing = false; on(); };
+    window.addEventListener('beforeprint', before); window.addEventListener('afterprint', after);
+    return () => { lists.forEach((l) => l.removeEventListener?.('change', on)); window.removeEventListener('beforeprint', before); window.removeEventListener('afterprint', after); };
+  }, []);
+  const patterns = patternsProp || env.forced || env.print;
+  const pid = id.replace(/[^\w-]/g, '');
+  const encode = (key: string): ChartEncoding => {
+    const s = series.find((x) => x.key === key);
+    const slot = s?.slot ?? 'data-other';
+    const e = ENCODINGS[slot];
+    const color = env.forced ? 'CanvasText' : s?.color ?? 'var(--data-other)';
+    return {
+      slot, stroke: color, marker: e.marker,
+      fill: patterns && e.hatch ? `url(#${pid}-${slot})` : color,
+      dash: patterns ? e.dash : undefined,
+      edge: env.forced ? 'CanvasText' : env.more ? 'var(--ink)' : undefined,
+    };
+  };
+
   const nfX = React.useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const fullDate = React.useMemo(() => new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }), [locale]);
   const formatX = xFormat ?? (kind === 'time' ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
@@ -463,7 +568,8 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
       width: pw, height: ph, x, y, xOf, ground, data: frame.rows.map((r) => r.d), xKey, config, series: frame.series,
       alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? frame.seriesAlpha.get(key) ?? 1 : 1),
       format: (key, v) => (frame.series.find((s) => s.key === key)?.format ?? fmtY)(v),
-      formatX,
+      formatX, encode, patterns, directLabels: env.forced || env.print,
+      strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
     };
     return { ctx, left, pw, ph, xTicks };
   };
@@ -490,9 +596,17 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
           </div>
         )}
         <div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
-          data-stage={stage} style={height != null ? { height } : { aspectRatio: String(aspect) }}>
+          data-stage={stage} data-patterns={patterns ? '' : undefined} style={height != null ? { height } : { aspectRatio: String(aspect) }}>
           {W > 0 && (
             <svg className="alt-chart-svg" width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
+              {patterns && (
+                <defs>
+                  {[...new Set(series.map((s) => s.slot))].map((slot) => {
+                    const hatch = ENCODINGS[slot].hatch;
+                    return hatch ? <Hatch key={slot} id={`${pid}-${slot}`} kind={hatch} bg={env.forced ? 'Canvas' : `var(--${slot})`} fg={env.forced ? 'CanvasText' : 'var(--surface-raised)'} /> : null;
+                  })}
+                </defs>
+              )}
               {layers.map(({ frame, opacity }, i) => {
                 const { ctx, left, pw, ph, xTicks } = i === layers.length - 1 ? top : draw(frame);
                 return (
