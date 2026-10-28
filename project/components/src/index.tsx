@@ -48,6 +48,8 @@ export type { LineChartProps, ChartWindow } from './line-chart';
 export { AreaChart } from './area-chart';
 export { Heatmap } from './heatmap';
 export type { HeatmapProps } from './heatmap';
+export { ScatterChart } from './scatter-chart';
+export type { ScatterChartProps } from './scatter-chart';
 export type { AreaChartProps } from './area-chart';
 export { Sparkline } from './sparkline';
 export type { SparklineProps } from './sparkline';

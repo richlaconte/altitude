@@ -312,9 +312,9 @@ export interface ChartInfo {
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
   right?: number;
   /** How the legend draws this chart's series: a block (bars, areas) or a short line (lines). */
-  swatch?: 'rect' | 'line';
+  swatch?: 'rect' | 'line' | 'marker';
   /** The imprint's shape while data loads. Default: a line for line swatches, bars otherwise. */
-  imprint?: 'bars' | 'line' | 'area' | 'grid';
+  imprint?: 'bars' | 'line' | 'area' | 'grid' | 'dots';
   /** Series are drawn bottom to top (a stack of areas): ↑ moves to the series above, ↓ to the one below. */
   seriesUp?: boolean;
   /** A stacked point names its share of the total ("31% of 3.9K") rather than only the total. */
@@ -344,17 +344,31 @@ export interface ChartInfo {
   x?: string;
   /**
    * The chart draws its own plot: 'grid' is cells over two categories, labelled by the chart, with no value axis,
-   * gridlines, ground line or crosshair; the readout sits beside the cell.
+   * gridlines, ground line or crosshair; 'xy' is dots over two measures, found in two dimensions, with no crosshair.
+   * Either way the readout sits beside the mark.
    */
-  plot?: 'grid';
+  plot?: 'grid' | 'xy';
+  /** Room above the plot for labels the chart sets itself (a measure's name over its axis), in px. */
+  top?: number;
+  /** Room below the axis for labels the chart sets itself (a measure's name under its axis), in px. */
+  bottom?: number;
   /** Room at the plot's left for labels the chart sets itself (a grid's row names), in px. */
   left?: number;
   /** The plot's height for its width, when the content sets it (a calendar's weeks): replaces the aspect ratio. */
   fitHeight?: (plotWidth: number) => number;
   /** The keyboard goes from the summary straight to the records, without a series level (groups, or one value). */
   flat?: boolean;
-  /** 'none': values change in place, and the chart type cross-fades its own marks (a heatmap's cells). */
-  motion?: 'none';
+  /**
+   * 'none': values change in place, and the chart type cross-fades its own marks (a heatmap's cells). 'fade': every
+   * change cross-fades, for records with no stable identity to glide by.
+   */
+  motion?: 'none' | 'fade';
+  /** Extra keys that glide with the values (a dot's x). */
+  glide?: string[];
+  /** The series, when they aren't the config's keys (a scatter's groups). The config then names the measures. */
+  series?: Array<{ key: string; label: string; color?: ChartSlot }>;
+  /** Formats x values (ticks, the readout), when the chart knows x's format (a measure in the config). */
+  xFormat?: (value: unknown) => string;
   /** The table view's columns, when a column per series isn't the shape of the data. */
   columns?: ChartColumn[];
   /** The generated summary, when the chart type can say it better than a trend per series. */
@@ -453,7 +467,7 @@ ChartTooltip.chartTooltip = true;
 
 /* ───────────────────────── legend ───────────────────────── */
 
-export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; }
+export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; marker?: ChartMarkerShape; }
 export interface ChartLegendContentProps {
   /** Let people hide and show series. Each key becomes a switch-like button in a toolbar. Default false: keys only name. */
   toggle?: boolean;
@@ -466,14 +480,15 @@ export interface ChartLegendContentProps {
   label?: string;
   /** Filled in by the container. */
   items?: ChartLegendItem[];
-  swatch?: 'rect' | 'line';
+  swatch?: 'rect' | 'line' | 'marker';
   onToggle?: (key: string) => void;
 }
 
-function Swatch({ item, swatch }: { item: ChartLegendItem; swatch: 'rect' | 'line' }) {
+function Swatch({ item, swatch }: { item: ChartLegendItem; swatch: 'rect' | 'line' | 'marker' }) {
   return (
     <svg className="alt-legend-mark" width="14" height="10" aria-hidden="true">
-      {swatch === 'line'
+      {swatch === 'marker' ? <ChartMarker shape={item.marker ?? 'circle'} x={7} y={5} size={8} color={item.stroke} />
+        : swatch === 'line'
         ? <line x1="1" y1="5" x2="13" y2="5" stroke={item.stroke} strokeWidth="2.5" strokeLinecap="round" strokeDasharray={item.dash} />
         : <rect width="100%" height="100%" rx="2" fill={item.fill} />}
     </svg>
@@ -674,7 +689,7 @@ type Motion = { from: Frame | null; to: Frame; start: number; mode: 'glide' | 'f
  * change under a line, past 500 marks, and under reduced motion. A new change mid-way starts from where the marks are.
  * Resizing never animates.
  */
-function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObject<HTMLElement | null>, live = false, still = false) {
+function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObject<HTMLElement | null>, live = false, mode?: 'none' | 'fade') {
   const [, setTick] = React.useState(0);
   const motion = React.useRef<Motion | null>(null);
   const settled = React.useRef<Frame | null>(null);
@@ -707,7 +722,7 @@ function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObj
     const now = performance.now();
     if (first) motion.current = { from: null, to: target, start: now, mode: 'fade', d1: 0, d2: ms('--dur-travel-1', 140) };
     // A chart that cross-fades its own marks: the frame takes the new values at once.
-    else if (still) { motion.current = null; settled.current = target; }
+    else if (mode === 'none') { motion.current = null; settled.current = target; }
     else {
       const current = at(now).layers;
       const from = current[current.length - 1].frame;
@@ -717,7 +732,7 @@ function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObj
       const toKeys = new Set(target.rows.map((r) => r.key));
       const slide = !sameX && live && from.kind === target.kind && target.kind !== 'band' && !!from.xDomain && !!target.xDomain && from.rows.some((r) => toKeys.has(r.key));
       const many = target.rows.length * target.series.length > 500;
-      if (reduced || many || !(sameX || slide)) motion.current = { from, to: target, start: now, mode: 'fade', d1: 0, d2: ms('--dur-travel-1', 140) };
+      if (reduced || many || mode === 'fade' || !(sameX || slide)) motion.current = { from, to: target, start: now, mode: 'fade', d1: 0, d2: ms('--dur-travel-1', 140) };
       else {
         const rescale = Math.abs(from.y[0] - target.y[0]) > 1e-9 || Math.abs(from.y[1] - target.y[1]) > 1e-9;
         motion.current = { from, to: target, start: now, mode: 'glide', d1: rescale ? ms('--dur-travel-2', 180) : 0, d2: slide ? ms('--dur-travel-2', 180) : ms('--dur-travel-3', 220) };
@@ -824,7 +839,8 @@ let printing = false;
 
 const isTimeLike = (v: unknown) => v instanceof Date || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)) || (typeof v === 'number' && v > 3e11);
 const cssKey = (k: string) => k.replace(/[^\w-]/g, '-');
-const TOP = 8;
+/** The room above the plot, for marks and labels that reach past its top. */
+const TOP_GAP = 8;
 
 /**
  * The frame every chart shares: a figure that sizes the plot, turns data into positions, draws the axes, the
@@ -868,9 +884,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const setHidden = (next: string[]) => { legendOpts.onHiddenChange?.(next); if (legendOpts.hidden === undefined) setHiddenOwn(next); };
   const shownConfig = hidden.length ? Object.fromEntries(Object.entries(config).filter(([k]) => !hidden.includes(k))) : config;
   const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(childProps, shownConfig) : {};
+  const TOP = TOP_GAP + (info.top ?? 0);
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   // A chart that draws its own plot: a grid of cells has no value axis to read a reference or an event against.
-  const grid = info.plot === 'grid';
+  const grid = info.plot === 'grid', xy = info.plot === 'xy';
   const childType = chartChild?.type as ChartChild | undefined;
   const refs = grid ? [] : overlayKids.filter((k) => (k.type as ChartChild).chartReference).map((k) => k.props as unknown as ChartReferenceProps);
   const notes = grid ? [] : overlayKids.filter((k) => (k.type as ChartChild).chartAnnotation).map((k) => k.props as unknown as ChartAnnotationProps);
@@ -903,11 +920,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // A chart type that needs zero (bars) gets it whatever the prop says: a bar that starts above zero misstates its length.
   const zero = info.zero === true ? true : zeroProp ?? info.zero ?? true;
 
-  const configKey = Object.entries(config).map(([k, c]) => `${k}:${c.label}:${c.color ?? ''}`).join('|');
+  const defs: Array<{ key: string; label: string; color?: ChartSlot; format?: (v: number) => string }> = info.series ?? Object.keys(config).map((key) => ({ key, ...config[key] }));
+  const configKey = defs.map((c) => `${c.key}:${c.label}:${c.color ?? ''}`).join('|') + '/' + Object.entries(config).map(([k, c]) => `${k}:${c.label}`).join('|');
   const allSeries: ChartSeries[] = React.useMemo(() => {
     const nf = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
-    return Object.keys(config).map((key, i) => {
-      const c = config[key];
+    return defs.map(({ key }, i) => {
+      const c = defs[i];
       const slot = c.color ?? (i < 6 ? (`data-${i + 1}` as ChartSlot) : 'data-other');
       return { key, label: c.label, slot, color: `var(--${slot})`, format: c.format ?? info.format ?? ((v: number) => nf.format(v)) };
     });
@@ -920,7 +938,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const fmtY = yFormat ?? info.yFormat ?? series[0]?.format ?? ((v: number) => new Intl.NumberFormat(locale).format(v));
   const W = size?.w ?? 0, H = size?.h ?? 0;
   const horizontal = info.layout === 'horizontal' && kind === 'band';
-  const bottom = axes && !grid ? 26 : 1;
+  const bottom = (axes && !grid ? 26 : 1) + (info.bottom ?? 0);
   const right = (info.right ?? 0) + (horizontal ? (axes ? 20 : 2) : kind === 'band' || !axes || grid ? 2 : 18);
 
   // The target frame: where the plot is going, independent of its width.
@@ -956,14 +974,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     rowAlpha: new Map(), seriesAlpha: new Map(series.map((s) => [s.key, 1])),
     left: grid ? info.left ?? 0 : !axes ? 0 : horizontal ? catWidth
       : Math.ceil(Math.max(...ny.ticks.map((t) => textWidth(fmtY(t))), 0)) + 10,
-    extra: bandInfo ? [bandInfo.low, bandInfo.high] : [],
+    extra: [...(bandInfo ? [bandInfo.low, bandInfo.high] : []), ...(info.glide ?? [])],
     xDomain: kind === 'band' ? null : info.xDomain ?? (() => {
       const vs = data.map((d) => (kind === 'time' ? toTime(d[xKey]) : Number(d[xKey]))).filter((v) => isFinite(v));
       return vs.length ? [Math.min(...vs), Math.max(...vs)] as [number, number] : null;
     })(),
   };
   const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey, info.rescale ? `${lo}:${hi}` : '']); // eslint-disable-line react-hooks/exhaustive-deps
-  const { layers, stage } = useChartMotion(target, changeKey, plotRef, live, info.motion === 'none');
+  const { layers, stage } = useChartMotion(target, changeKey, plotRef, live, info.motion);
 
   // Live (#66): which marks are new or changed since the data last landed. Four or fewer each get an afterglow; more is
   // a whole refresh, one change, so the "Updated" caption glows instead and no mark does.
@@ -1071,7 +1089,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const datedBands = kind === 'band' && isTimeLike(sample);
   const shortDate = React.useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }), [locale]);
   const bandLabel = (v: unknown) => (xFormat ? xFormat(v) : datedBands ? shortDate.format(new Date(toTime(v))) : String(v));
-  const formatX = xFormat ?? (datedBands ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
+  const formatX = xFormat ?? info.xFormat ?? (datedBands ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
 
   // The keyboard path (#63): the plot is one Tab stop holding three levels, summary → series → points. Enter goes
   // deeper and Escape comes back, as in Tree and Drilldown; a roving tabindex keeps one node in the tab order.
@@ -1451,7 +1469,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // Escape clears a selection first, then goes back up a level.
     if (e.key === 'Escape' && selecting) { e.preventDefault(); e.stopPropagation(); info.onSelect?.(null); return; }
     if (at.level === 'summary') {
-      if (e.key === 'Enter' || e.key === ' ') next = single ? { level: 'points', s: 0, p: 0 } : { level: 'series', s: 0, p: 0 };
+      // Into the records at the chart type's first (Ctrl+Home): the leftmost dot, the grid's first cell.
+      const first = single && childType?.chartMove ? childType.chartMove(childProps, top.ctx, 0, { key: 'Home', ctrlKey: true, metaKey: false } as React.KeyboardEvent) ?? 0 : 0;
+      if (e.key === 'Enter' || e.key === ' ') next = single ? { level: 'points', s: 0, p: first } : { level: 'series', s: 0, p: 0 };
     } else if (at.level === 'series') {
       const step: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
       if (e.key in step) next = { ...at, s: (at.s + step[e.key] + n) % n };
@@ -1523,8 +1543,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const at = top.ctx.xOf(d);
     const style: React.CSSProperties = {};
     let side: string;
-    if (grid) {
-      // A cell is read where it is: the readout beside it, on the side with more room, never over it.
+    if (grid || xy) {
+      // A cell or a dot is read where it is: the readout beside it, on the side with more room, never over it.
       const [px, py] = childType?.chartPoint ? childType.chartPoint(childProps, top.ctx, d, series[0]?.key ?? '') : [at, 0];
       side = top.left + px > W / 2 ? 'left' : 'right';
       style.left = top.left + px + (side === 'left' ? -6 : 6); style.top = TOP + Math.max(0, py - 16);
@@ -1590,7 +1610,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                           : <line key={t.v} x1={0} x2={pw} y1={at} y2={at} opacity={t.a < 1 ? t.a : undefined} />;
                       })}
                     </g>
-                    {i === layers.length - 1 && tooltipOn && ctx.active && !grid && (() => {
+                    {i === layers.length - 1 && tooltipOn && ctx.active && !grid && !xy && (() => {
                       const at = Math.round(ctx.xOf(ctx.active)) + 0.5;
                       return horizontal ? <line className="alt-chart-crosshair" x1={0} x2={pw} y1={at} y2={at} /> : <line className="alt-chart-crosshair" x1={at} x2={at} y1={0} y2={ph} />;
                     })()}
@@ -1736,7 +1756,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           </div>
         )}
         {legendEl && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
-          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, hidden: hidden.includes(s.key) }; }),
+          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, marker: e.marker, hidden: hidden.includes(s.key) }; }),
           swatch: info.swatch ?? 'rect',
           onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
         })}
@@ -1821,7 +1841,7 @@ export function ChartContainer(props: ChartContainerProps) {
   return (
     <Await shape="none" className="alt-chart-await" imprint={(() => {
       const ci = chartChild ? (chartChild.type as ChartChild).chartInfo!({ ...chartChild.props, data: [] }, props.config) : undefined;
-      return <ChartImprint {...props} legend={hasLegend} swatch={ci?.swatch} shape={ci?.imprint ?? (ci?.swatch === 'line' ? 'line' : 'bars')} />;
+      return <ChartImprint {...props} legend={hasLegend} swatch={ci?.swatch} shape={ci?.imprint ?? (ci?.swatch === 'line' ? 'line' : 'bars')} keys={ci?.series} />;
     })()}>
       <Arrive when={arrival}><ChartLanded raw={raw} render={withData} refetch={refetch} last={last.current} /></Arrive>
     </Await>
@@ -1838,11 +1858,12 @@ function ChartLanded({ raw, render, refetch, last }: { raw: unknown; render: (d:
 }
 
 const IMPRINT_BARS = [0.55, 0.8, 0.62, 0.9, 0.7, 0.48, 0.75];
+const IMPRINT_DOTS = [[8, 74], [15, 62], [21, 78], [28, 55], [35, 66], [42, 48], [49, 60], [56, 40], [62, 52], [69, 34], [76, 45], [83, 26], [26, 36], [71, 70], [90, 18]];
 /**
  * The chart's imprint: the frame (title, description, legend keys from config) with the plot pressed into the page in
  * the chart's shape, `surface-well` with no labels, so it can't be taken for data.
  */
-function ChartImprint({ config, title, description, aspect, height, shape = 'bars', legend }: ChartContainerProps & { swatch?: 'rect' | 'line'; shape?: 'bars' | 'line' | 'area' | 'grid'; legend?: boolean }) {
+function ChartImprint({ config, title, description, aspect, height, shape = 'bars', legend, keys }: ChartContainerProps & { swatch?: 'rect' | 'line' | 'marker'; shape?: 'bars' | 'line' | 'area' | 'grid' | 'dots'; legend?: boolean; keys?: ChartInfo['series'] }) {
   if (aspect == null && height == null) aspect = 2;
   return (
     <figure className="alt-chart" aria-label={typeof title === 'string' ? title : undefined}>
@@ -1859,11 +1880,13 @@ function ChartImprint({ config, title, description, aspect, height, shape = 'bar
             ? <svg className="alt-chart-svg" viewBox="0 0 100 50" preserveAspectRatio="none"><path className="alt-chart-imprint-area" d="M0,36 C16,30 26,33 38,24 S58,17 70,20 S88,9 100,11 V50 H0 Z" /></svg>
             : shape === 'grid'
               ? Array.from({ length: 7 * 12 }, (_, i) => <span key={i} className="alt-skeleton" />)
-              : IMPRINT_BARS.map((h, i) => <span key={i} className="alt-skeleton" style={{ height: `${h * 100}%` }} />)}
+              : shape === 'dots'
+                ? IMPRINT_DOTS.map(([x, y], i) => <span key={i} className="alt-skeleton alt-chart-imprint-dot" style={{ left: `${x}%`, top: `${y}%` }} />)
+                : IMPRINT_BARS.map((h, i) => <span key={i} className="alt-skeleton" style={{ height: `${h * 100}%` }} />)}
       </div>
       {legend && (
         <div className="alt-chart-legend" aria-hidden="true">
-          {Object.entries(config).map(([k, c], i) => (
+          {(keys ? keys.map((k) => [k.key, k] as const) : Object.entries(config)).map(([k, c], i) => (
             <span key={k} className="alt-legend-key"><svg className="alt-legend-mark" width="14" height="10"><rect width="14" height="10" rx="2" fill={`var(--${c.color ?? (i < 6 ? `data-${i + 1}` : 'data-other')})`} /></svg><span>{c.label}</span></span>
           ))}
         </div>

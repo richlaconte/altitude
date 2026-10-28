@@ -544,6 +544,20 @@ The issue asked for the WAI-ARIA grid pattern. The keyboard follows it (arrows, 
 
 Not yet tested with people: whether a calendar's Page Up and Page Down by month are found without being told, and whether a wrapped grid's second band is read as a continuation of the first.
 
+### E43 · Can two measures be read from flat dots?
+
+A design review: `ScatterChart` was rendered as p95 latency against payload for 30 endpoints in three services, with a trend, two labelled outliers and a legend that toggles; and spend against seats for 16 customers, selectable, with the table view, gliding to the next month. In all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`, by pointer and keyboard. `checks/scatter-chart.mjs` measures it.
+
+- **A ring, not a shadow.** Overlapping dots are kept apart by a 2px ring of the plot's own colour, the gap a stacked bar has, rather than by a stroke in a darker shade or a drop shadow, which would read as height.
+- **8px means every shape.** Squares and triangles drawn in a circle's 8px box measured 7.2px and 7.4px. They're now sized so their own box is at least 8px.
+- **Both axes named.** With two measures, an axis of bare numbers ("0, 50, 100") says nothing. The first build named them inside the plot, where a dot near the top sat under "p95". They're now named in room the frame leaves above and below the plot.
+- **Labels find room.** At 360px, neither upper corner of the top-left outlier was clear of the plot's edges and the label beside it, so its label was dropped. Each label now tries six spots, upper corners first, then beside, then below. The trend's word counts as taken.
+- **Nearest, with a reach.** The pointer reads the nearest dot (its Voronoi cell) within 48px. Past that, nothing is read, rather than a far dot being named.
+- **Enter starts at the left.** The keyboard path entered at the first record in the array, wherever it was on the plot. It now enters at the leftmost dot, and ← and → follow x.
+- **Identity decides the motion.** A record's place in the array isn't an identity, so data without `id` cross-fades. With ids, dots glide on both axes: x joins the values the engine interpolates.
+
+Not yet tested with people: whether ↑ and ↓ to the nearest dot above or below are predictable in a dense cloud, where "above" may land on a dot far to one side.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

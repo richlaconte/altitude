@@ -1781,6 +1781,24 @@ button.alt-barlist-item:focus-visible, a.alt-barlist-item:focus-visible { outlin
   .alt-heat-active { stroke: Highlight; }
 }
 
+/* ── ScatterChart (#62): two measures per record. Dots are the record, so they lie on the plot: at least 8px, a data-*
+   fill and a marker shape per group (circle, square, triangle), with a 2px ring of the plot's own colour so dots that
+   overlap stay apart, and never a shadow, sheen or glow. At most three groups, the palette's first three slots, since
+   any two dots can be neighbours. The dot under the readout is drawn again on top, so an overlapped dot is seen whole;
+   it doesn't lift. Labelled outliers are ink on a halo with a 1px ink-muted leader; the trend is a 1px ink-muted
+   line, named in words. Under forced colours the shapes carry the groups; contrast="more" rings each dot in 1px ink. ── */
+.alt-scatter-label text { fill: var(--ink); stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; font: 500 12.5px/17px var(--font-sans); }
+.alt-scatter-label line { stroke: var(--ink-muted); stroke-width: 1; }
+.alt-scatter-trend line { stroke: var(--ink-muted); stroke-width: 1; }
+.alt-scatter-axis-name text { fill: var(--ink-muted); stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; font: 600 12.5px/17px var(--font-sans); }
+.alt-scatter-trend text { fill: var(--ink-muted); stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; font: 500 12.5px/17px var(--font-sans); }
+.alt-chart-imprint[data-shape="dots"] { display: block; position: relative; padding: 0; }
+.alt-chart-imprint-dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: var(--radius-full); }
+@media (forced-colors: active) {
+  .alt-scatter-label text, .alt-scatter-trend text, .alt-scatter-axis-name text { fill: CanvasText; stroke: Canvas; }
+  .alt-scatter-label line, .alt-scatter-trend line { stroke: CanvasText; }
+}
+
 /* ── ChartTooltip: reading exact values. The crosshair is a mark on the ground (1px line-control, snapped to the nearest
    x); the readout is live, a level-3 floating surface like Tooltip. It rises 4px once as its shadow grows from elev-1
    to elev-3, then steps between x positions with no easing (it follows the data, not each pixel of the pointer), flips

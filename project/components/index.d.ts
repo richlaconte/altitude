@@ -1656,7 +1656,7 @@ export interface ChartTooltipContentProps {
 }
 /** The readout's rows: value first, series name second, keyed by the series colour. */
 export declare function ChartTooltipContent(props: ChartTooltipContentProps): React.ReactElement;
-export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; }
+export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; }
 export interface ChartLegendContentProps {
   /** Let people hide and show series: each key becomes an aria-pressed button in a toolbar. Default false. */
   toggle?: boolean;
@@ -1669,7 +1669,7 @@ export interface ChartLegendContentProps {
   label?: string;
   /** Filled in by the container. */
   items?: ChartLegendItem[];
-  swatch?: 'rect' | 'line';
+  swatch?: 'rect' | 'line' | 'marker';
   onToggle?: (key: string) => void;
 }
 /** The legend's keys: flush labels, or with toggle, switch-like buttons whose trench the series colour pours into. */
@@ -1854,6 +1854,42 @@ export interface HeatmapProps {
 }
 /** A value per cell across two dimensions, or per day in a calendar: flat steps of one ramp, each named in words. Renders inside a ChartContainer. */
 export declare function Heatmap(props: HeatmapProps): React.ReactElement;
+export interface ScatterChartProps {
+  /** The records: one dot each. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** The key of each record's first measure, along the bottom. Name and format it in the container's config. */
+  x: string;
+  /** The key of each record's second measure, up the side. Name and format it in the container's config. */
+  y: string;
+  /** The key that sorts records into groups, each a colour and a marker shape. At most three; more belong in small multiples. */
+  group?: string;
+  /** Each record's stable identity, a key or a function: dots glide to new places when it's given, and cross-fade otherwise. */
+  id?: string | ((d: ChartDatum) => string);
+  /** Each record's name, a key or a function, for the readout, the keyboard path and the table. */
+  name?: string | ((d: ChartDatum) => string);
+  /** Labels a few dots on the plot (outliers): return the words, or null for none. */
+  label?: (d: ChartDatum) => string | null | undefined;
+  /** A least-squares trend line, 1px ink-muted, named "Trend" (or the words you pass). */
+  trend?: boolean | string;
+  /** The dots' size in px. Default 8, the least. */
+  size?: number;
+  /** The readout. Default true. */
+  tooltip?: boolean;
+  /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** With relevance: fit y to the matches. Default false: the axes hold. */
+  rescale?: boolean;
+  /** The selected record, or its id. The others recede; the frame says "Filtered to …". */
+  selected?: ChartDatum | string | null;
+  /** Makes dots selectable: called with the chosen record, or null when the selection clears. */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes dots open a level down inside a Drilldown: the id of the current node's child this record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
+  empty?: ChartEmpty;
+  children?: React.ReactNode;
+}
+/** Two measures per record, to see how they relate: flat dots ringed apart, a shape per group, outliers named. Renders inside a ChartContainer. */
+export declare function ScatterChart(props: ScatterChartProps): React.ReactElement;
 /** A sliding window over x: a span of time, or the last N records. */
 export interface ChartWindow { minutes?: number; hours?: number; days?: number; points?: number; }
 /** The records inside a window, and the x domain it spans. */
@@ -1997,7 +2033,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
