@@ -64,6 +64,7 @@ Choose by the job the data does, not by what looks rich.
 These are the elevation signals a chart adds to **Elevation**'s table:
 
 - **Amounts** are never height. They are length and position on a flat plot standing on the ground line.
+- **Live.** A live chart shows a change at once and leaves a fading `ink` outline on the mark; a whole refresh glows the "Updated" caption instead. Its window glides with time, and it holds still while someone reads it, with a switch to pause it (E39).
 - **Read against.** Targets, limits, normal ranges and events (`ChartReference`, `ChartAnnotation`) lie flush with the marks: a solid 1px line, a flat `line` band, a `Badge` plate with a leader. Their words are laid out together so they never overlap (E38).
 - **Not yet the record.** A projected value or an incomplete period (this month so far) is dashed or hatched and says so in its label and readout. It's the record to come, so it's drawn as an imprint of the record, not raised as live. Built as `status` on `BarChart`, `LineChart` and `AreaChart`, with a "Today" rule where the record ends and an uncertainty `band` on `LineChart` (E37).
 - **A window on the record.** An overview sits in a trench and the chosen window is a raised thumb in it, so the part you're looking at is the part you can move.

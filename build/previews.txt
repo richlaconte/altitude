@@ -1556,6 +1556,57 @@ function App() {
   );
 }
 
+=== ChartLive | <!-- @dsCard group="Charts" height=640 subtitle="Live data: changes leave a fading trace, a window glides, the plot holds still while you read" -->
+--- css
+.cl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cl { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const t0 = Date.UTC(2026, 9, 28, 12, 0);
+const wave = (i) => +(1.3 + 0.45 * Math.sin(i / 2.2) + (i % 9 === 8 ? 0.95 : 0)).toFixed(2);
+const pct = (v) => `${v.toFixed(2)}%`;
+const names = ['Ingest', 'Render', 'Email', 'Export', 'Billing'];
+const start = names.map((queue, i) => ({ queue, depth: [42, 18, 64, 27, 9][i] }));
+function App() {
+  const [rates, setRates] = React.useState(() => Array.from({ length: 16 }, (_, i) => ({ t: t0 + i * 60e3, rate: wave(i) })));
+  const [n, setN] = React.useState(16);
+  const [queues, setQueues] = React.useState(start);
+  React.useEffect(() => {
+    const id = setInterval(() => setN((k) => k + 1), 2000);
+    return () => clearInterval(id);
+  }, []);
+  React.useEffect(() => {
+    if (n === 16) return;
+    setRates((r) => [...r.slice(-40), { t: t0 + (n - 1) * 60e3, rate: wave(n - 1) }]);
+  }, [n]);
+  const bump = () => setQueues((q) => q.map((r, i) => (i === 2 ? { ...r, depth: r.depth + 11 } : r)));
+  const reload = () => setQueues((q) => q.map((r, i) => ({ ...r, depth: r.depth === [30, 25, 51, 36, 14][i] ? r.depth + 3 : [30, 25, 51, 36, 14][i] })));
+  return (
+    <div className="cl">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="lv1">Error rate</A.CardTitle><A.CardDescription>The last 15 minutes, a point a minute</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="lv1" aspect={1.9} config={{ rate: { label: 'Errors', format: pct } }} live pausable
+            announce={(d, prev) => { const a = prev?.at(-1)?.rate, b = d.at(-1)?.rate; return a !== undefined && b !== undefined && a < 2 && b >= 2 ? `Error rate crossed 2%: ${pct(b)}` : null; }}>
+            <A.LineChart data={rates} x="t" window={{ minutes: 15 }}><A.ChartReference y={2} label="Alert 2%" tone="caution" /></A.LineChart>
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="lv2">Queue depth</A.CardTitle><A.CardDescription>One change glows; a whole refresh is one change</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="lv2" aspect={1.9} config={{ depth: { label: 'Jobs waiting' } }} live>
+            <A.BarChart data={queues} x="queue" />
+          </A.ChartContainer>
+          <div className="row" style={{ marginTop: 12 }}>
+            <A.Button size="sm" onClick={bump}>Add jobs to Email</A.Button>
+            <A.Button size="sm" variant="ghost" onClick={reload}>Refresh all</A.Button>
+          </div>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

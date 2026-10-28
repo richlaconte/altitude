@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { cx, Icons, useIsoLayoutEffect, usePresence } from './core';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
+import { cx, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
+import { Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
 import { DataTable } from './collections';
 import { EmptyState } from './empty';
 import { Arrive, Await, isPromise, readPromised, useArrival, useHasWaited, useReportWaiting } from './suspense';
@@ -78,15 +78,18 @@ export function toTime(v: unknown): number {
 }
 
 const DAY = 864e5;
-type Interval = { months?: number; days?: number; hours?: number };
+type Interval = { months?: number; days?: number; hours?: number; minutes?: number };
 const HOUR = 36e5;
-const INTERVALS: Interval[] = [{ hours: 1 }, { hours: 3 }, { hours: 6 }, { hours: 12 }, { days: 1 }, { days: 2 }, { days: 7 }, { days: 14 }, { months: 1 }, { months: 3 }, { months: 6 }, { months: 12 }, { months: 24 }, { months: 60 }, { months: 120 }];
+const INTERVALS: Interval[] = [{ minutes: 1 }, { minutes: 2 }, { minutes: 5 }, { minutes: 10 }, { minutes: 15 }, { minutes: 30 }, { hours: 1 }, { hours: 3 }, { hours: 6 }, { hours: 12 }, { days: 1 }, { days: 2 }, { days: 7 }, { days: 14 }, { months: 1 }, { months: 3 }, { months: 6 }, { months: 12 }, { months: 24 }, { months: 60 }, { months: 120 }];
 
 function timeTicks(d0: number, d1: number, max: number): { ticks: number[]; interval: Interval } {
   for (const iv of INTERVALS) {
+    // Skip an interval that would give far too many ticks before building them: a minute step over months is millions.
+    const approx = iv.minutes ? iv.minutes * 6e4 : iv.hours ? iv.hours * HOUR : iv.days ? iv.days * DAY : iv.months! * 30.44 * DAY;
+    if ((d1 - d0) / approx > max + 1) continue;
     const ticks: number[] = [];
-    if (iv.hours) {
-      const step = iv.hours * HOUR;
+    if (iv.hours || iv.minutes) {
+      const step = iv.hours ? iv.hours * HOUR : iv.minutes! * 6e4;
       for (let t = Math.ceil(d0 / step) * step; t <= d1; t += step) ticks.push(t);
     } else if (iv.days) {
       const step = iv.days * DAY;
@@ -305,6 +308,8 @@ export interface ChartInfo {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends and the rest begins: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /** The x domain to show (a sliding window's span), instead of the records' extent. Time and linear x only. */
+  xDomain?: [number, number];
   /** An uncertainty band around one series: its low and high keys, which also count toward y's extent. */
   band?: { series?: string; low: string; high: string; label: string };
 }
@@ -313,6 +318,8 @@ type ChartChild = {
   chartReference?: boolean; chartAnnotation?: boolean;
   /** Where the mark for one record and series sits, in plot coordinates, for the keyboard's focus ring. Default: (xOf, y(value)). */
   chartPoint?: (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string) => [number, number];
+  /** The outline of the mark for one record and series, as an SVG path, for a live chart's afterglow. Default: a ring at its point. */
+  chartMark?: (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string) => string | null;
 };
 
 /* ───────────────────────── readout ───────────────────────── */
@@ -518,6 +525,8 @@ interface Frame {
   left: number;
   /** Keys that glide with the series' values but aren't series: an uncertainty band's low and high. */
   extra: string[];
+  /** The x extent shown, for time and linear x: it glides when a live window slides. */
+  xDomain: [number, number] | null;
 }
 type Layer = { frame: Frame; opacity: number };
 /** A reference laid out in a frame: its span on the value axis (from = to for a line) and where its label sits. */
@@ -585,6 +594,7 @@ function mix(from: Frame, to: Frame, p1: number, p2: number): Frame {
   }
   return {
     kind: to.kind, rows, series, ticks, band, rowAlpha, seriesAlpha, extra: to.extra,
+    xDomain: to.xDomain && from.xDomain ? [lerp(from.xDomain[0], to.xDomain[0], e2), lerp(from.xDomain[1], to.xDomain[1], e2)] : to.xDomain,
     y: [lerp(from.y[0], to.y[0], e1), lerp(from.y[1], to.y[1], e1)],
     left: lerp(from.left, to.left, e1),
   };
@@ -600,7 +610,7 @@ type Motion = { from: Frame | null; to: Frame; start: number; mode: 'glide' | 'f
  * change under a line, past 500 marks, and under reduced motion. A new change mid-way starts from where the marks are.
  * Resizing never animates.
  */
-function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObject<HTMLElement | null>) {
+function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObject<HTMLElement | null>, live = false) {
   const [, setTick] = React.useState(0);
   const motion = React.useRef<Motion | null>(null);
   const settled = React.useRef<Frame | null>(null);
@@ -637,11 +647,14 @@ function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObj
       const from = current[current.length - 1].frame;
       const sameX = from.kind === target.kind && (target.kind === 'band'
         || (from.rows.length === target.rows.length && from.rows.every((r, i) => r.key === target.rows[i].key)));
+      // A live window that moves on: the records overlap, so x itself glides one step and the marks ride along with it.
+      const toKeys = new Set(target.rows.map((r) => r.key));
+      const slide = !sameX && live && from.kind === target.kind && target.kind !== 'band' && !!from.xDomain && !!target.xDomain && from.rows.some((r) => toKeys.has(r.key));
       const many = target.rows.length * target.series.length > 500;
-      if (reduced || many || !sameX) motion.current = { from, to: target, start: now, mode: 'fade', d1: 0, d2: ms('--dur-travel-1', 140) };
+      if (reduced || many || !(sameX || slide)) motion.current = { from, to: target, start: now, mode: 'fade', d1: 0, d2: ms('--dur-travel-1', 140) };
       else {
         const rescale = Math.abs(from.y[0] - target.y[0]) > 1e-9 || Math.abs(from.y[1] - target.y[1]) > 1e-9;
-        motion.current = { from, to: target, start: now, mode: 'glide', d1: rescale ? ms('--dur-travel-2', 180) : 0, d2: ms('--dur-travel-3', 220) };
+        motion.current = { from, to: target, start: now, mode: 'glide', d1: rescale ? ms('--dur-travel-2', 180) : 0, d2: slide ? ms('--dur-travel-2', 180) : ms('--dur-travel-3', 220) };
       }
     }
     setTick((n) => n + 1);
@@ -717,7 +730,25 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   refreshing?: boolean;
   /** What the plot says when the data is null or empty: an EmptyState at widget size. Default title "No data to show". */
   empty?: ChartEmpty;
+  /**
+   * The data updates on its own (#66). New or changed marks get an afterglow (more than four at once, and the
+   * "Updated 12:04" caption gets it instead); a window that moves on glides one step; and while the pointer or focus is
+   * in the plot, updates wait until you leave, so nothing changes under what you're reading.
+   */
+  live?: boolean;
+  /** With `live`: a "Pause updates" switch in the frame, for WCAG 2.2.2 (Pause, Stop, Hide). */
+  pausable?: boolean;
+  /** Updates are paused, controlled. Uncontrolled with `pausable`. */
+  paused?: boolean;
+  onPausedChange?: (paused: boolean) => void;
+  /**
+   * With `live`: what to say when new data lands, or nothing. Nothing is announced per tick by default; return a
+   * sentence only for what matters ("Error rate crossed 2%"). It's said politely.
+   */
+  announce?: (data: ChartDatum[], previous: ChartDatum[] | null) => string | null | undefined;
 }
+/** Internal: how the loading wrapper tells the frame about held updates. */
+interface ChartFrameLive { queued?: boolean; onHold?: (held: boolean) => void; pausedNow?: boolean; setPaused?: (paused: boolean) => void; }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 
 /** True between beforeprint and afterprint, for browsers whose print media query lags the dialog. */
@@ -734,7 +765,8 @@ const TOP = 8;
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, description, summary,
-  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty, className, style, children, ...rest }: ChartContainerProps) {
+  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
+  live = false, pausable = false, paused: _paused, onPausedChange: _onPausedChange, announce, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -833,9 +865,60 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     left: !axes ? 0 : horizontal ? catWidth
       : Math.ceil(Math.max(...ny.ticks.map((t) => textWidth(fmtY(t))), 0)) + 10,
     extra: bandInfo ? [bandInfo.low, bandInfo.high] : [],
+    xDomain: kind === 'band' ? null : info.xDomain ?? (() => {
+      const vs = data.map((d) => (kind === 'time' ? toTime(d[xKey]) : Number(d[xKey]))).filter((v) => isFinite(v));
+      return vs.length ? [Math.min(...vs), Math.max(...vs)] as [number, number] : null;
+    })(),
   };
   const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  const { layers, stage } = useChartMotion(target, changeKey, plotRef);
+  const { layers, stage } = useChartMotion(target, changeKey, plotRef, live);
+
+  // Live (#66): which marks are new or changed since the data last landed. Four or fewer each get an afterglow; more is
+  // a whole refresh, one change, so the "Updated" caption glows instead and no mark does.
+  type Glow = { key: string; series: string; gen: number; at: number; delay: number };
+  const [glows, setGlows] = React.useState<Glow[]>([]);
+  const [captionGlow, setCaptionGlow] = React.useState(0);
+  const [updatedAt, setUpdatedAt] = React.useState<number | null>(null);
+  const [said, setSaid] = React.useState('');
+  const prevRows = React.useRef<{ map: Map<string, ChartDatum>; rows: ChartDatum[] } | null>(null);
+  const glowGen = React.useRef(0);
+  const settleMs = () => { const v = parseFloat(plotRef.current ? getComputedStyle(plotRef.current).getPropertyValue('--dur-settle') : ''); return isFinite(v) ? v : 8000; };
+  React.useEffect(() => {
+    if (!live) return;
+    const now = Date.now();
+    const prev = prevRows.current;
+    const map = new Map(data.map((d) => [rowKey(d), d]));
+    prevRows.current = { map, rows: data };
+    setUpdatedAt(now);
+    if (!prev) return;
+    const words = announce?.(data, prev.rows);
+    if (words) setSaid(words);
+    const changed: Array<{ key: string; series: string }> = [];
+    for (const [key, d] of map) {
+      const p = prev.map.get(key);
+      for (const s of series) { const v = d[s.key]; if (typeof v === 'number' && isFinite(v) && (!p || p[s.key] !== v)) changed.push({ key, series: s.key }); }
+    }
+    if (!changed.length) return;
+    if (changed.length > 4) { setCaptionGlow((g) => g + 1); return; }
+    const gen = ++glowGen.current, settle = settleMs();
+    setGlows((g) => [...g.filter((x) => now - x.at < settle), ...changed.map((c) => ({ ...c, gen, at: now, delay: riseDelay() }))]);
+  }, [data, live]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A glow that has faded is dropped, so the point's name stops saying "changed".
+  React.useEffect(() => {
+    if (!glows.length) return;
+    const settle = settleMs(), next = Math.min(...glows.map((g) => g.at + g.delay + settle)) - Date.now();
+    const t = window.setTimeout(() => setGlows((g) => g.filter((x) => Date.now() - x.at - x.delay < settle)), Math.max(0, next) + 20);
+    return () => window.clearTimeout(t);
+  }, [glows]); // eslint-disable-line react-hooks/exhaustive-deps
+  const captionDepth = useDepth({ settle: captionGlow || undefined });
+  const glowing = (key: string, series: string) => glows.some((g) => g.key === key && g.series === series);
+  // Holding still: while the pointer or focus is in the plot, updates wait (the loading wrapper keeps the shown data).
+  const holdPointer = React.useRef(false), holdFocus = React.useRef(false);
+  const hold = (by: 'pointer' | 'focus', on: boolean) => {
+    if (!live) return;
+    if (by === 'pointer') holdPointer.current = on; else holdFocus.current = on;
+    onHold?.(holdPointer.current || holdFocus.current);
+  };
 
   // The readout: on by default, off when the container or the chart type says tooltip={false}.
   type TipProps = { content?: React.ReactElement<ChartTooltipContentProps> };
@@ -886,6 +969,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   };
 
   const nfX = React.useMemo(() => new Intl.NumberFormat(locale), [locale]);
+  const clock = React.useMemo(() => new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }), [locale]);
   const fullDate = React.useMemo(() => new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }), [locale]);
   const dateTime = React.useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }), [locale]);
   // Within a few days, a time's x is read to the minute; otherwise to the day.
@@ -939,13 +1023,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       // The finest interval whose labels clear each other by 8px at this width.
       const label = (iv: Interval) => {
         const opts: Intl.DateTimeFormatOptions = iv.months && iv.months >= 12 ? { year: 'numeric' }
-          : iv.months ? { month: 'short', year: '2-digit' } : iv.hours ? { hour: 'numeric' } : { month: 'short', day: 'numeric' };
+          : iv.months ? { month: 'short', year: '2-digit' } : iv.minutes ? { hour: 'numeric', minute: '2-digit' } : iv.hours ? { hour: 'numeric' } : { month: 'short', day: 'numeric' };
         const df = new Intl.DateTimeFormat(locale, { ...opts, timeZone: 'UTC' });
         return (v: number) => (xFormat ? xFormat(v) : df.format(new Date(v)));
       };
-      let t = timeScale([Math.min(...ts), Math.max(...ts)], [0, pw], Math.max(2, Math.floor(pw / 40)));
+      const dom: [number, number] = frame.xDomain ?? [Math.min(...ts), Math.max(...ts)];
+      let t = timeScale(dom, [0, pw], Math.max(2, Math.floor(pw / 40)));
       for (let max = Math.max(2, Math.floor(pw / 40)); max >= 2; max--) {
-        t = timeScale([Math.min(...ts), Math.max(...ts)], [0, pw], max);
+        t = timeScale(dom, [0, pw], max);
         const f = label(t.interval);
         const at = t.scale.ticks.map((v) => t.scale(v)), ws = t.scale.ticks.map((v) => textWidth(f(v)));
         // The first label is set from its start when it sits at the edge, so it only needs to clear the next one.
@@ -957,7 +1042,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       if (axes) xTicks = t.scale.ticks.map((v) => ({ at: t.scale(v), label: f(v), a: 1 }));
     } else {
       const vs = frame.rows.map((r) => Number(r.d[xKey])).filter((v) => isFinite(v));
-      x = linearScale([Math.min(...vs), Math.max(...vs)], [0, pw], Math.max(2, Math.floor(pw / 56)), false);
+      x = linearScale(frame.xDomain ?? [Math.min(...vs), Math.max(...vs)], [0, pw], Math.max(2, Math.floor(pw / 56)), false);
       if (axes) xTicks = (x as LinearScale).ticks.map((v) => ({ at: (x as LinearScale)(v), label: formatX(v), a: 1 }));
     }
     const xOf = (d: ChartDatum) => (x.kind === 'band' ? x(String(d[xKey])) + x.bandwidth / 2 : (x as LinearScale | TimeScale)(d[xKey] as number));
@@ -1143,29 +1228,31 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     top.ctx.data.forEach((d, i) => { const dd = Math.abs(top.ctx.xOf(d) - along); if (dd < bd) { bd = dd; best = i; } });
     return best < 0 ? null : best;
   };
-  const hold = React.useRef<{ timer: number; x: number; y: number; id: number } | null>(null);
+  const holdTouch = React.useRef<{ timer: number; x: number; y: number; id: number } | null>(null);
   const onPointerMove = (e: React.PointerEvent) => {
     if (!tooltipOn) return;
     if (e.pointerType !== 'touch') { show(nearest(e.clientX, e.clientY)); return; }
-    const h = hold.current;
-    if (h && !sticky.current && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 8) { window.clearTimeout(h.timer); hold.current = null; }
+    const h = holdTouch.current;
+    if (h && !sticky.current && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 8) { window.clearTimeout(h.timer); holdTouch.current = null; }
     if (sticky.current && h) show(nearest(e.clientX, e.clientY));
   };
   const onPointerDown = (e: React.PointerEvent) => {
     if (!tooltipOn || e.pointerType !== 'touch') return;
     const el = e.currentTarget as HTMLElement, id = e.pointerId, x = e.clientX, y = e.clientY;
-    hold.current = { x, y, id, timer: window.setTimeout(() => {
+    holdTouch.current = { x, y, id, timer: window.setTimeout(() => {
       // Press and hold shows the readout; dragging then scrubs along x; lifting leaves it until a tap elsewhere.
       sticky.current = true;
+      hold('pointer', true);
       try { el.setPointerCapture(id); } catch { /* the pointer may be gone */ }
       show(nearest(x, y));
     }, 250) };
   };
-  const onPointerUp = () => { if (hold.current) { window.clearTimeout(hold.current.timer); if (!sticky.current) hold.current = null; } };
-  const onPointerLeave = (e: React.PointerEvent) => { if (e.pointerType !== 'touch' && !sticky.current) show(null); };
+  const onPointerUp = () => { if (holdTouch.current) { window.clearTimeout(holdTouch.current.timer); if (!sticky.current) holdTouch.current = null; } };
+  const onPointerLeave = (e: React.PointerEvent) => { if (e.pointerType !== 'touch' && !sticky.current) { show(null); hold('pointer', false); } };
+  const onPointerEnter = (e: React.PointerEvent) => { if (e.pointerType !== 'touch') hold('pointer', true); };
   React.useEffect(() => {
     if (activeIdx === null || !sticky.current) return;
-    const away = (e: PointerEvent) => { if (!plotRef.current?.contains(e.target as Node)) { sticky.current = false; hold.current = null; show(null); } };
+    const away = (e: PointerEvent) => { if (!plotRef.current?.contains(e.target as Node)) { sticky.current = false; holdTouch.current = null; show(null); hold('pointer', false); } };
     document.addEventListener('pointerdown', away);
     return () => document.removeEventListener('pointerdown', away);
   }, [activeIdx]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1200,6 +1287,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const v = d[s.key];
     const st = statusOf(d);
     let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}${st ? `, ${CHART_STATUS_WORDS[st].toLowerCase()}` : ''}.`;
+    if (glowing(rowKey(d), s.key)) out += ' Changed.';
     if (bandInfo && bandInfo.series === s.key && num(d[bandInfo.low]) && num(d[bandInfo.high])) {
       out += ` ${bandInfo.label} ${s.format(d[bandInfo.low] as number)} to ${s.format(d[bandInfo.high] as number)}.`;
     }
@@ -1307,7 +1395,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         )}
         {wrapViews(<div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
           data-stage={stage} data-patterns={patterns ? '' : undefined} data-refreshing={refreshing ? '' : undefined} aria-busy={refreshing || undefined} style={height != null ? { height } : { aspectRatio: String(aspect) }}
-          onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={onPointerLeave}>
+          onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={onPointerLeave} onPointerEnter={onPointerEnter}
+          data-live={live ? '' : undefined}>
           {refreshing && <span className="alt-sr">Updating</span>}
           {/* Nothing to show is an opening, not an empty plot: an EmptyState in the plot's own box, with no axes. */}
           {!data.length && (
@@ -1363,13 +1452,33 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                       const at = Math.round(boundaryAt) + 0.5;
                       return <g className="alt-chart-boundary">{horizontal ? <line x1={0} x2={pw} y1={at} y2={at} /> : <line x1={at} x2={at} y1={0} y2={ph} />}</g>;
                     })()}
-                    <g className="alt-chart-marks"><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
+                    {live && <defs><clipPath id={`${pid}-plot-${i}`}><rect x={-3} y={-TOP} width={pw + 9 + right} height={ph + TOP + 6} /></clipPath></defs>}
+                    <g className="alt-chart-marks" clipPath={live ? `url(#${pid}-plot-${i})` : undefined}><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
                     {boundaryAt !== null && info.boundary !== false && (() => {
                       const at = Math.round(boundaryAt) + 0.5, word = info.boundary ?? 'Today';
                       if (horizontal) return <text className="alt-chart-boundary-label" x={pw} y={at - 5} textAnchor="end">{word}</text>;
                       const flip = at + 8 + textWidth(word) > pw;
                       return <text className="alt-chart-boundary-label" x={flip ? at - 5 : at + 5} y={12} textAnchor={flip ? 'end' : 'start'}>{word}</text>;
                     })()}
+                    {/* Live: an afterglow on each new or changed mark, a 2px ink outline decaying over dur-settle, with its value for the first second. */}
+                    {i === layers.length - 1 && glows.length > 0 && (
+                      <g className="alt-chart-glows" aria-hidden="true">
+                        {glows.map((g) => {
+                          const d = ctx.data.find((r) => rowKey(r) === g.key), v = d?.[g.series];
+                          if (!d || typeof v !== 'number' || !isFinite(v)) return null;
+                          const MarkFn = (chartChild?.type as ChartChild | undefined)?.chartMark, PointFn = (chartChild?.type as ChartChild | undefined)?.chartPoint;
+                          const [px, py] = PointFn ? PointFn(childProps, ctx, d, g.series) : horizontal ? [ctx.y(v), ctx.xOf(d)] : [ctx.xOf(d), ctx.y(v)];
+                          const path = MarkFn?.(childProps, ctx, d, g.series);
+                          const style = { '--alt-rise-delay': `${g.delay}ms` } as React.CSSProperties;
+                          return (
+                            <g key={`${g.key}|${g.series}|${g.gen}`} className="alt-chart-glow" data-series={g.series} style={style}>
+                              {path ? <path d={path} /> : <circle cx={px} cy={py} r={7} />}
+                              <text x={horizontal ? px + 8 : px} y={horizontal ? py : py - 12} dy={horizontal ? '0.32em' : undefined} textAnchor={horizontal ? 'start' : 'middle'}>{ctx.format(g.series, v)}</text>
+                            </g>
+                          );
+                        })}
+                      </g>
+                    )}
                     {/* Reference lines over the marks, solid (dashes mean projected), each labelled in caption text. */}
                     {refGeo.length > 0 && (
                       <g className="alt-chart-refs">
@@ -1435,12 +1544,21 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
               ? <button key={g.i} type="button" className="alt-badge alt-chart-note" data-variant="plate" style={style} onClick={n.onSelect} aria-label={`${n.label}, ${formatX(n.x)}`}>{n.label}</button>
               : <span key={g.i} className="alt-badge alt-chart-note" data-variant="plate" style={style} aria-hidden="true">{n.label}</span>;
           })}
-          <div className="alt-chart-nav" onFocus={() => setNavFocused(true)}
-            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { setNavFocused(false); if (nav.level === 'points') show(null); } }}>
+          <div className="alt-chart-nav" onFocus={() => { setNavFocused(true); hold('focus', true); }}
+            onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { setNavFocused(false); hold('focus', false); if (nav.level === 'points') show(null); } }}>
             {nodes}
           </div>
           {readout}
         </div>)}
+        {live && (
+          <div className="alt-chart-live">
+            <span className="alt-chart-updated" {...captionDepth}>
+              {pausedNow ? 'Paused. ' : ''}{updatedAt !== null ? `Updated ${clock.format(new Date(updatedAt))}` : 'Live'}{queued && !pausedNow ? ' · new data when you move away' : queued ? ' · new data waiting' : ''}
+            </span>
+            {pausable && <Switch label="Pause updates" checked={pausedNow} onCheckedChange={(v) => setPaused?.(v)} />}
+            <span className="alt-sr" aria-live="polite">{said}</span>
+          </div>
+        )}
         {legendEl && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
           items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, hidden: hidden.includes(s.key) }; }),
           swatch: info.swatch ?? 'rect',
@@ -1497,6 +1615,17 @@ export function ChartContainer(props: ChartContainerProps) {
   if (!waiting && !pending && now !== undefined) last.current = now ?? [];
   useReportWaiting(waiting);
   const arrival = useArrival(waiting);
+  // Live (#66): while someone reads the plot, or while paused, keep showing what was there; apply what came when they leave.
+  const [held, setHeld] = React.useState(false);
+  const [pausedOwn, setPausedOwn] = React.useState(false);
+  const paused = props.paused ?? pausedOwn;
+  const setPaused = (v: boolean) => { props.onPausedChange?.(v); if (props.paused === undefined) setPausedOwn(v); };
+  const frozen = React.useRef<ChartDatum[] | null | undefined>(undefined);
+  const latest = refetch ? last.current : now;
+  const holding = !!props.live && (held || paused) && frozen.current !== undefined;
+  const shownNow = holding ? frozen.current : latest;
+  if (!holding) frozen.current = latest;
+  const liveProps: ChartFrameLive = props.live ? { queued: holding && shownNow !== latest, onHold: setHeld, pausedNow: paused, setPaused } : {};
   const isLegend = (k: React.ReactNode) => React.isValidElement(k) && typeof k.type !== 'string' && !!(k.type as ChartChild).chartLegend;
   const hasLegend = React.Children.toArray(props.children).some(isLegend) || (!!chartChild && React.Children.toArray(chartChild.props.children as React.ReactNode).some(isLegend));
   const withData = (d: ChartDatum[] | null | undefined) => {
@@ -1510,9 +1639,9 @@ export function ChartContainer(props: ChartContainerProps) {
         return React.cloneElement(k as React.ReactElement<Record<string, unknown>>, { data: rows });
       })
       : props.children;
-    return <ChartFrame {...props} {...(fromChild ? {} : { data: rows })} refreshing={props.refreshing || refetch}>{children}</ChartFrame>;
+    return <ChartFrame {...props} {...liveProps} {...(fromChild ? {} : { data: rows })} refreshing={props.refreshing || refetch}>{children}</ChartFrame>;
   };
-  if (!useHasWaited(waiting)) return withData(refetch ? last.current : now);
+  if (!useHasWaited(waiting)) return withData(shownNow);
   return (
     <Await shape="none" className="alt-chart-await" imprint={(() => {
       const ci = chartChild ? (chartChild.type as ChartChild).chartInfo!({ ...chartChild.props, data: [] }, props.config) : undefined;
