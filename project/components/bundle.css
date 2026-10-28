@@ -1754,6 +1754,33 @@ button.alt-barlist-item:focus-visible, a.alt-barlist-item:focus-visible { outlin
   .alt-chart-imprint-area { fill: none; stroke: GrayText; stroke-dasharray: 6 4; stroke-width: 2px; vector-effect: non-scaling-stroke; }
 }
 
+/* ── Heatmap (#61): a value per cell across two dimensions. Cells are the record, so they lie flat on the plot: a
+   data-seq step (data-div around a midpoint for polarity), parted by a 2px gap of the plot's own colour and rounded
+   at radius-xs (less on small cells), never raised, shaded or glowing. "No data" isn't an opening, since it isn't
+   waiting for anything: no fill and a 1px line outline. Rows and columns are named in ink-muted like an axis; the
+   legend is the steps as swatches with their ranges in ink. With no crosshair in a grid, the cell under the readout
+   wears a 2px ink outline, which never lifts it. A value change cross-fades the cell's fill; under reduced motion it's
+   instant. Under forced colours and print each step adds a pattern density (none, sparse dots, dense dots, hatching,
+   crosshatch), and contrast="more" gives every cell a 1px ink edge. ── */
+.alt-heat-labels text { fill: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-heat-legend text { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-heat-fill { transition: fill var(--dur-travel-1) var(--ease-glide); }
+.alt-heat-none { fill: none; stroke: var(--line); stroke-width: 1; }
+.alt-heat-pattern { pointer-events: none; }
+.alt-heat-active { fill: none; stroke: var(--ink); stroke-width: 2; pointer-events: none; }
+.alt-chart-node[data-shape="cell"] { border-radius: var(--radius-xs); }
+.alt-chart-imprint[data-shape="grid"] { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); grid-template-rows: repeat(7, minmax(0, 1fr)); gap: 3px; padding: 8px 0 26px; }
+.alt-chart-imprint[data-shape="grid"] > .alt-skeleton { border-radius: var(--radius-xs); }
+@media (prefers-reduced-motion: reduce) { .alt-heat-fill { transition: none; } }
+[data-motion="reduced"] .alt-heat-fill { transition: none; }
+@media (prefers-contrast: more) { .alt-heat-none { stroke: var(--line-control); } }
+[data-contrast="more"] .alt-heat-none { stroke: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-heat-labels text, .alt-heat-legend text { fill: CanvasText; }
+  .alt-heat-none { stroke: GrayText; }
+  .alt-heat-active { stroke: Highlight; }
+}
+
 /* ── ChartTooltip: reading exact values. The crosshair is a mark on the ground (1px line-control, snapped to the nearest
    x); the readout is live, a level-3 floating surface like Tooltip. It rises 4px once as its shadow grows from elev-1
    to elev-3, then steps between x positions with no easing (it follows the data, not each pixel of the pointer), flips

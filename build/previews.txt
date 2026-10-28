@@ -1315,6 +1315,64 @@ function App() {
   );
 }
 
+=== Heatmap | <!-- @dsCard group="Charts" height=980 subtitle="A value per cell across two dimensions: flat steps of one ramp, each named in words" -->
+--- css
+.hm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.hm > .wide { grid-column: 1 / -1; }
+@media (max-width: 720px) { .hm { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+// Requests per hour: a working-day hump, quieter weekends, and a Tuesday-afternoon peak.
+const load = days.flatMap((weekday, w) => Array.from({ length: 24 }, (_, hour) => {
+  const day = Math.max(0, Math.sin(((hour - 6) / 15) * Math.PI));
+  const base = (w < 5 ? 300 : 110) * day + 20 + ((hour * 7 + w * 13) % 17);
+  return { weekday, hour, requests: Math.round(base + (w === 1 && hour >= 13 && hour <= 15 ? 160 : 0)) };
+}));
+// Commits per day for a year, with quiet weekends, a holiday gap and a few busy weeks.
+const start = Date.UTC(2025, 9, 27);
+const commits = Array.from({ length: 365 }, (_, i) => {
+  const t = start + i * 864e5, wd = new Date(t).getUTCDay(), r = (i * 37 + 11) % 23;
+  const busy = (i > 120 && i < 140) || (i > 300 && i < 312);
+  const n = wd === 0 || wd === 6 ? (r < 18 ? 0 : r - 17) : i > 56 && i < 68 ? 0 : busy ? 6 + (r % 9) : r < 5 ? 0 : Math.round(r / 3);
+  return { day: new Date(t).toISOString().slice(0, 10), count: n };
+});
+const services = ['Checkout', 'Search', 'Accounts', 'Media', 'Payments'];
+const regions = ['US', 'EU', 'APAC', 'LATAM'];
+// Error rate against last week, in points: below zero is better.
+const change = services.flatMap((service, s) => regions.map((region, r) => ({ service, region, delta: s === 3 && r === 3 ? null : Math.round((Math.sin(s * 2.1 + r * 1.3) * 1.6 + (s === 4 && r === 1 ? 1.8 : 0)) * 10) / 10 })));
+const pts = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + ' pts';
+function App() {
+  const [cell, setCell] = React.useState(null);
+  return (
+    <div className="hm">
+      <A.Card className="wide">
+        <A.CardHeader><A.CardTitle id="h1">Commits</A.CardTitle><A.CardDescription>A year, a cell per day: zero is the lightest step, and each step says its range</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="h1" config={{ count: { label: 'Commits' } }}>
+            <A.Heatmap variant="calendar" data={commits} date="day" value="count" bins={[0, 1, 4, 10]} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="h2">Requests by hour</A.CardTitle><A.CardDescription>Load by weekday and hour, with the table view</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="h2" views config={{ requests: { label: 'Requests' } }} xLabel="Weekday">
+            <A.Heatmap data={load} x="hour" y="weekday" value="requests" xFormat={(h) => String(h).padStart(2, '0')} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="h3">Error rate against last week</A.CardTitle><A.CardDescription>{cell ? `${cell.service} in ${cell.region}: select it again to clear` : 'scale="diverging": better below zero. Select a cell'}</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="h3" config={{ delta: { label: 'Change', format: pts } }}>
+            <A.Heatmap data={change} x="region" y="service" value="delta" scale="diverging" selected={cell} onSelect={setCell} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === ChartTooltip | <!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
 --- css
 .ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
