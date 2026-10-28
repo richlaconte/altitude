@@ -391,7 +391,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 .alt-slider:hover .alt-slider-thumb { box-shadow: var(--elev-2); }
 .alt-slider[data-dragging] .alt-slider-fill, .alt-slider[data-dragging] .alt-slider-thumb { transition-property: box-shadow, transform; }
-.alt-slider[data-dragging] .alt-slider-thumb { box-shadow: var(--elev-3); transform: scale(calc(1 + 0.12 * var(--alt-travel))); cursor: grabbing; }
+.alt-slider[data-dragging] .alt-slider-thumb:not([data-rest]) { box-shadow: var(--elev-3); transform: scale(calc(1 + 0.12 * var(--alt-travel))); cursor: grabbing; }
 .alt-slider-bubble {
   position: absolute; left: 50%; bottom: calc(100% + 10px); translate: -50% 0; min-width: 32px; padding: 3px 8px; text-align: center;
   border-radius: var(--radius-sm); background: var(--surface-floating); box-shadow: var(--elev-1); color: var(--ink);
@@ -399,13 +399,22 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   opacity: 0; transform: translateY(calc(4px * var(--alt-travel))) scale(calc(1 - 0.1 * var(--alt-travel))); transform-origin: 50% 100%;
   transition: opacity var(--dur-travel-1) var(--ease-sink), transform var(--dur-travel-1) var(--ease-sink), box-shadow var(--dur-travel-1) var(--ease-sink);
 }
-.alt-slider[data-dragging] .alt-slider-bubble, .alt-slider-thumb:focus-visible .alt-slider-bubble {
+.alt-slider[data-dragging] .alt-slider-thumb:not([data-rest]) .alt-slider-bubble, .alt-slider-thumb:focus-visible .alt-slider-bubble {
   opacity: 1; transform: none; box-shadow: var(--elev-3);
   transition: opacity var(--dur-travel-3) var(--ease-rise), transform var(--dur-travel-3) var(--ease-rise), box-shadow var(--dur-travel-3) var(--ease-rise);
 }
 .alt-slider[data-disabled] { cursor: not-allowed; }
 .alt-slider[data-disabled] .alt-slider-fill { background: var(--line-control); box-shadow: none; }
 .alt-slider[data-disabled] .alt-slider-thumb { border-color: var(--line-control); box-shadow: var(--elev-0); }
+/* A range: two thumbs with the raised fill between them. Only the thumb under the pointer lifts, and the one held
+   floats; the other stays at rest. The fill lifts on hover too, because dragging it moves both thumbs. */
+.alt-slider[data-range] .alt-slider-fill { position: absolute; top: 0; cursor: grab; transition: left var(--dur-travel-1) var(--ease-glide), width var(--dur-travel-1) var(--ease-glide), box-shadow var(--dur-travel-1) var(--ease-rise); }
+.alt-slider[data-range]:not([data-disabled]):hover .alt-slider-thumb { box-shadow: var(--elev-1); }
+.alt-slider[data-range]:not([data-disabled]) :is(.alt-slider-thumb:hover, .alt-slider-fill:hover), .alt-slider-fill[data-grabbed] { box-shadow: var(--elev-2); }
+.alt-slider[data-range][data-dragging] .alt-slider-thumb[data-grabbed] { box-shadow: var(--elev-3); }
+.alt-slider[data-range][data-dragging] .alt-slider-fill { transition-property: box-shadow; }
+.alt-slider-fill[data-grabbed] { cursor: grabbing; }
+.alt-slider[data-range][data-disabled] .alt-slider-fill { cursor: not-allowed; box-shadow: none; }
 
 /* ── Progress ── */
 .alt-progress { position: relative; height: 8px; border-radius: var(--radius-full); background: var(--surface-trench); box-shadow: var(--trench); overflow: hidden; }

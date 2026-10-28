@@ -376,7 +376,20 @@ export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
   format?: (v: number) => React.ReactNode;
   'aria-label'?: string;
 }
-export function Slider({ value, defaultValue = 50, onValueChange, min = 0, max = 100, step = 1, disabled, format = (v) => v, className, ...rest }: SliderProps) {
+/** A range: two thumbs with the raised fill between them. */
+export interface SliderRangeProps extends Omit<SliderProps, 'value' | 'defaultValue' | 'onValueChange' | 'aria-label'> {
+  value?: [number, number]; defaultValue?: [number, number]; onValueChange?: (v: [number, number]) => void;
+  /** Steps the thumbs keep between them, so they can't meet. Default 0. */
+  minStepsBetween?: number;
+  /** A name per thumb, or one name for the pair (each thumb is then "<name>, minimum" and "<name>, maximum"). */
+  'aria-label'?: string | [string, string];
+}
+export function Slider(props: SliderProps): React.ReactElement;
+export function Slider(props: SliderRangeProps): React.ReactElement;
+export function Slider(props: SliderProps | SliderRangeProps) {
+  return Array.isArray(props.value ?? props.defaultValue) ? <RangeSlider {...(props as SliderRangeProps)} /> : <OneSlider {...(props as SliderProps)} />;
+}
+function OneSlider({ value, defaultValue = 50, onValueChange, min = 0, max = 100, step = 1, disabled, format = (v) => v, className, ...rest }: SliderProps) {
   const [v, set] = useControllable(value, defaultValue, onValueChange);
   const [drag, setDrag] = React.useState(false);
   const track = React.useRef<HTMLDivElement>(null);
@@ -400,6 +413,96 @@ export function Slider({ value, defaultValue = 50, onValueChange, min = 0, max =
         }}>
         <span className="alt-slider-bubble" aria-hidden="true">{format(v)}</span>
       </div>
+    </div>
+  );
+}
+
+/** Two values on one track: what the range Slider and ChartBrush share. A thumb can't cross the other or come within
+ *  `minStepsBetween` of it; dragging between the thumbs pans both; pressing outside them moves the nearer one there. */
+export function useRange({ value, defaultValue, onValueChange, min, max, step, minStepsBetween = 0, disabled }: {
+  value?: [number, number]; defaultValue?: [number, number]; onValueChange?: (v: [number, number]) => void;
+  min: number; max: number; step: number; minStepsBetween?: number; disabled?: boolean;
+}) {
+  const [v, set] = useControllable(value, defaultValue ?? [min, max], onValueChange);
+  const track = React.useRef<HTMLDivElement>(null);
+  // Which thumb is held: 0, 1, 'both' while panning, or 'tie' when the pressed thumbs sit together until the first move picks one.
+  const [held, setHeld] = React.useState<0 | 1 | 'both' | 'tie' | null>(null);
+  const grab = React.useRef({ at: 0, lo: 0, hi: 0 });
+  const gap = minStepsBetween * step;
+  const dp = (String(step).split('.')[1] || '').length;
+  const snap = (n: number) => +(Math.round((n - min) / step) * step + min).toFixed(dp);
+  const lo = v[0], hi = v[1];
+  const bounds = (i: 0 | 1): [number, number] => (i === 0 ? [min, hi - gap] : [lo + gap, max]);
+  const put = (i: 0 | 1, n: number) => {
+    const [a, b] = bounds(i), x = Math.min(b, Math.max(a, snap(n)));
+    if (x !== v[i]) set(i === 0 ? [x, hi] : [lo, x]);
+  };
+  const pan = (d: number) => {
+    const s = Math.min(max - grab.current.hi, Math.max(min - grab.current.lo, snap(min + d) - min));
+    const next: [number, number] = [+(grab.current.lo + s).toFixed(dp), +(grab.current.hi + s).toFixed(dp)];
+    if (next[0] !== lo || next[1] !== hi) set(next);
+  };
+  const at = (x: number) => { const r = track.current!.getBoundingClientRect(); return min + ((x - r.left) / r.width) * (max - min); };
+  const pct = (n: number) => ((n - min) / (max - min)) * 100;
+  const press = (e: React.PointerEvent<HTMLElement>, thumb?: 0 | 1) => {
+    if (disabled || e.button > 0) return;
+    // Keep the mousedown that follows from taking focus back off the thumb we focus.
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const n = at(e.clientX);
+    grab.current = { at: n, lo, hi };
+    if (thumb !== undefined) { setHeld(lo === hi ? 'tie' : thumb); return thumb; }
+    if (n > lo && n < hi) { setHeld('both'); return 'both' as const; }
+    const i: 0 | 1 = n <= lo ? 0 : 1;
+    put(i, n); grab.current = { at: snap(n), lo: i === 0 ? snap(n) : lo, hi: i === 1 ? snap(n) : hi };
+    setHeld(i); return i;
+  };
+  const drag = (e: React.PointerEvent<HTMLElement>) => {
+    if (held === null) return;
+    const n = at(e.clientX), d = n - grab.current.at;
+    if (held === 'both') pan(d);
+    else if (held === 'tie') { if (Math.abs(d) >= step / 2) { const i: 0 | 1 = d < 0 ? 0 : 1; setHeld(i); put(i, grab.current[i === 0 ? 'lo' : 'hi'] + d); } }
+    else put(held, grab.current[held === 0 ? 'lo' : 'hi'] + d);
+  };
+  const release = () => setHeld(null);
+  const keys = (i: 0 | 1) => (e: React.KeyboardEvent) => {
+    const big = (max - min) / 10, [a, b] = bounds(i), x = v[i];
+    const map: Record<string, number> = { ArrowRight: x + step, ArrowUp: x + step, ArrowLeft: x - step, ArrowDown: x - step, PageUp: x + big, PageDown: x - big, Home: a, End: b };
+    if (e.key in map) { e.preventDefault(); put(i, map[e.key]); }
+  };
+  return { value: v, set, held, track, bounds, pct, press, drag, release, keys, grab };
+}
+
+function RangeSlider({ value, defaultValue, onValueChange, min = 0, max = 100, step = 1, minStepsBetween, disabled, format = (v) => v, className, 'aria-label': label, ...rest }: SliderRangeProps) {
+  const r = useRange({ value, defaultValue, onValueChange, min, max, step, minStepsBetween, disabled });
+  const [lo, hi] = r.value;
+  const thumbs = React.useRef<(HTMLDivElement | null)[]>([]);
+  const names = Array.isArray(label) ? label : label ? [`${label}, minimum`, `${label}, maximum`] : [undefined, undefined];
+  const text = (n: number) => { const f = format(n); return typeof f === 'string' || typeof f === 'number' ? String(f) : undefined; };
+  const isHeld = (i: 0 | 1) => r.held === i || r.held === 'both' || r.held === 'tie';
+  return (
+    <div className={cx('alt-slider', className)} data-range="" data-dragging={r.held !== null ? '' : undefined} data-disabled={disabled ? '' : undefined}
+      role="group" aria-label={typeof label === 'string' ? label : undefined}
+      onPointerDown={(e) => {
+        const t = (e.target as HTMLElement).closest('.alt-slider-thumb') as HTMLElement | null;
+        const i = r.press(e, t ? (Number(t.dataset.thumb) as 0 | 1) : undefined);
+        if (i === 0 || i === 1) thumbs.current[i]?.focus();
+      }}
+      onPointerMove={r.drag} onPointerUp={r.release} onPointerCancel={r.release} {...rest}>
+      <div className="alt-slider-track" ref={r.track}>
+        <div className="alt-slider-fill" aria-hidden="true" data-grabbed={r.held === 'both' ? '' : undefined} style={{ left: r.pct(lo) + '%', width: r.pct(hi) - r.pct(lo) + '%' }} />
+      </div>
+      {([0, 1] as const).map((i) => {
+        const [a, b] = r.bounds(i), x = r.value[i];
+        return (
+          <div key={i} ref={(el) => { thumbs.current[i] = el; }} className="alt-slider-thumb" role="slider" data-thumb={i} tabIndex={disabled ? -1 : 0}
+            aria-valuemin={a} aria-valuemax={b} aria-valuenow={x} aria-valuetext={text(x)} aria-label={names[i]} aria-disabled={disabled || undefined}
+            data-grabbed={r.held !== null && isHeld(i) ? '' : undefined} data-rest={r.held !== null && !isHeld(i) ? '' : undefined}
+            style={{ left: r.pct(x) + '%' }} onKeyDown={r.keys(i)}>
+            <span className="alt-slider-bubble" aria-hidden="true">{format(x)}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
