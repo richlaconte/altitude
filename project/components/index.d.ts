@@ -1664,6 +1664,31 @@ export interface LineChartProps {
 export declare function LineChart(props: LineChartProps): React.ReactElement;
 /** An SVG path through points; a null breaks it. 'monotone' never overshoots the points. */
 export declare function linePath(points: Array<[number, number] | null>, curve?: 'linear' | 'monotone'): string;
+export interface SparklineProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
+  /** The values, oldest first: numbers (null is a gap) or records with `y` naming the value. Undefined while your data loads, or a promise: until it lands it's an imprint one line high. */
+  data: Array<number | null> | ChartDatum[] | null | undefined | PromiseLike<Array<number | null> | ChartDatum[] | null>;
+  /** The key of each record's value, when `data` holds records. */
+  y?: string;
+  /** The key of each record's date, so the label can say "over 30 days". */
+  x?: string;
+  /** A line (default), or bars standing on zero. */
+  kind?: 'line' | 'bar';
+  /** 'neutral' (default, ink-muted) is context; 'data' (data-1) when it is the series; a status hue only when the series means good or bad. */
+  tone?: 'neutral' | 'data' | 'positive' | 'caution' | 'critical';
+  /** A normal range, drawn as a flat band behind the line. */
+  band?: [number, number];
+  /** px or any CSS length. Default 5em. Its height is the line height of the text around it. */
+  width?: number | string;
+  /** Formats values in the generated label. Default: compact. */
+  format?: (value: number) => string;
+  /** Replaces the generated label ("Up 12% over 30 days, from 1.2K to 1.4K."). */
+  summary?: string;
+  /** The text beside it already says it: aria-hidden. */
+  decorative?: boolean;
+  locale?: string;
+}
+/** A word-sized trend beside the number it explains: flat ink on the ground, as tall as the text, labelled in words. */
+export declare function Sparkline(props: SparklineProps): React.ReactElement;
 /** The scales, plot size and config of the nearest ChartContainer, for drawing your own marks. */
 export declare function useChart(): ChartContextValue;
 
@@ -1680,7 +1705,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

@@ -87,7 +87,8 @@ jobs:
           node ../scripts/record-check.mjs react18-chart-keyboard node checks/chart-keyboard.mjs
           node ../scripts/record-check.mjs react18-chart-table node checks/chart-table.mjs
           node ../scripts/record-check.mjs react18-chart-loading node checks/chart-loading.mjs
-          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading daylight 960
+          node ../scripts/record-check.mjs react18-sparkline node checks/sparkline.mjs
+          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,Sparkline daylight 960
           DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
           DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
 

@@ -98,6 +98,8 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 11. **Past 500 marks** changing at once, the plot cross-fades instead of gliding.
 12. **Reduced motion:** values change in place, as a cross-fade between the old chart and the new one, and nothing travels. Resizing never animates, with or without it.
 
+**Word-sized charts don't move.** A `Sparkline` has no motion of its own: it lands out of its imprint like any inline `Await` content, and when its value changes in a live table the row gets the afterglow, not the line.
+
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
 ## Approach
