@@ -1,0 +1,49 @@
+group="Patterns" subtitle="Review, correct, retry and keep a truthful receipt" height=620
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReviewSubmit — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.framework-demo{max-width:640px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:anywhere}.framework-demo h2{font:600 var(--text-heading)/1.3 var(--font-sans);margin:0}.framework-demo form{display:grid;gap:16px}.framework-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.framework-record{padding:16px;border:1px solid var(--line-control);border-radius:var(--radius-lg)}.framework-demo dd{margin-inline-start:0;margin-block-end:14px}.framework-demo [role="status"]{min-height:1.5em}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [reject, setReject] = React.useState(false);
+  const [received, setReceived] = React.useState(null);
+  const heading = React.useRef(null);
+  const firstField = React.useRef(null);
+  const previousPhase = React.useRef("editing");
+  const workflow = A.useReviewSubmit({ initialValue: { name: "", notes: "" }, validate: (v) => v.name.trim() ? {} : { name: "Enter a request name." }, submit: async (draft) => {
+    await new Promise((r) => setTimeout(r, 700));
+    if (reject) return { ok: false, error: "The demo service did not receive this request. Turn off failure and try again." };
+    const receipt = { id: "REQUEST-1042", name: draft.name };
+    setReceived({ ...draft });
+    return { ok: true, receipt };
+  } });
+  React.useEffect(() => {
+    if (workflow.phase !== previousPhase.current) {
+      if (workflow.phase === "editing") firstField.current?.focus();
+      else if (workflow.phase === "review" || workflow.phase === "complete") heading.current?.focus();
+      previousPhase.current = workflow.phase;
+    }
+  }, [workflow.phase]);
+  return /* @__PURE__ */ React.createElement("main", { className: "framework-demo" }, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1 }, workflow.phase === "complete" ? "Request received" : workflow.phase === "review" ? "Review your request" : "New project request"), /* @__PURE__ */ React.createElement("ol", { "aria-label": "Request progress" }, /* @__PURE__ */ React.createElement("li", { "aria-current": workflow.phase === "editing" ? "step" : void 0 }, "Enter details"), /* @__PURE__ */ React.createElement("li", { "aria-current": workflow.phase === "review" || workflow.phase === "submitting" ? "step" : void 0 }, "Review and send"), /* @__PURE__ */ React.createElement("li", { "aria-current": workflow.phase === "complete" ? "step" : void 0 }, "Confirmation")), workflow.phase !== "complete" && /* @__PURE__ */ React.createElement(A.Switch, { label: "Simulate service failure", checked: reject, onCheckedChange: setReject }), workflow.phase === "editing" ? /* @__PURE__ */ React.createElement("form", { noValidate: true, onSubmit: (e) => {
+    e.preventDefault();
+    workflow.review();
+  } }, /* @__PURE__ */ React.createElement(A.ErrorSummary, { errors: Object.entries(workflow.errors).map(([key, message]) => ({ id: "request-" + key, label: "Request name", message })), focusKey: workflow.submitCount }), /* @__PURE__ */ React.createElement(A.Field, { label: "Request name", required: true, error: workflow.errors.name }, /* @__PURE__ */ React.createElement(A.Input, { ref: firstField, id: "request-name", value: workflow.draft.name, onChange: (e) => workflow.setField("name", e.target.value) })), /* @__PURE__ */ React.createElement(A.Field, { label: "Notes" }, /* @__PURE__ */ React.createElement(A.Textarea, { value: workflow.draft.notes, onChange: (e) => workflow.setField("notes", e.target.value) })), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", type: "submit" }, "Review request")) : workflow.phase === "complete" ? /* @__PURE__ */ React.createElement(A.Surface, { level: 0, className: "framework-record" }, /* @__PURE__ */ React.createElement("h3", null, "Confirmation"), /* @__PURE__ */ React.createElement("p", null, "Reference: ", workflow.receipt.id), /* @__PURE__ */ React.createElement("p", null, workflow.receipt.name), /* @__PURE__ */ React.createElement("p", null, "The in-memory demo service received your request. This receipt remains until you reload the example.")) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("dl", null, /* @__PURE__ */ React.createElement("dt", null, "Request name"), /* @__PURE__ */ React.createElement("dd", null, workflow.draft.name), /* @__PURE__ */ React.createElement("dt", null, "Notes"), /* @__PURE__ */ React.createElement("dd", null, workflow.draft.notes || "No notes provided")), /* @__PURE__ */ React.createElement("div", { className: "framework-actions" }, /* @__PURE__ */ React.createElement(A.Button, { disabled: workflow.phase === "submitting", onClick: workflow.correct }, "Correct details"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", disabled: workflow.phase === "submitting", onClick: () => void workflow.submit() }, workflow.phase === "submitting" ? "Sending request" : workflow.error ? "Try sending again" : "Send request"))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, null, workflow.status), /* @__PURE__ */ React.createElement("p", null, "Requests received by the demo service: ", received ? 1 : 0));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

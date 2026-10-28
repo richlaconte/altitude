@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Altitude task pattern",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "version",
+    "title",
+    "purpose",
+    "authority",
+    "applicability",
+    "maturity",
+    "evidenceStatus",
+    "document",
+    "implementation",
+    "intents",
+    "useWhen",
+    "avoidWhen",
+    "alternatives",
+    "requiredInputs",
+    "states",
+    "transitions",
+    "rules",
+    "sources",
+    "exceptions",
+    "examples",
+    "verification"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z]+(?:-[a-z]+)*$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority": {
+      "type": "string",
+      "minLength": 1,
+      "enum": [
+        "normative-standard",
+        "contextual-pattern",
+        "heuristic",
+        "altitude-policy",
+        "experimental-hypothesis"
+      ]
+    },
+    "applicability": {
+      "type": "string",
+      "minLength": 1
+    },
+    "maturity": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidenceStatus": {
+      "type": "string",
+      "minLength": 1
+    },
+    "document": {
+      "type": "string",
+      "minLength": 1
+    },
+    "implementation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "intents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "useWhen": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "avoidWhen": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "alternatives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "requiredInputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "exceptions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "examples": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "verification": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

@@ -510,14 +510,50 @@ export type Level = -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5;
 export interface SurfaceProps extends React.HTMLAttributes<HTMLElement>, DepthProps {
   level?: Level;
   interactive?: boolean;
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  href?: string;
   as?: keyof React.JSX.IntrinsicElements;
 }
 export const Surface = React.forwardRef<HTMLElement, SurfaceProps>(function Surface(
-  { level = 1, interactive = false, as = 'div', className, settle, status, heldBy, relevance, style, ...rest }, ref) {
+  { level = 1, interactive = false, as = 'div', disabled = false, type, className, settle, status, heldBy, relevance, style,
+    onClick, onKeyDown, onKeyUp, onBlur, ...rest }, ref) {
   const Comp = as as any;
   const { style: depthStyle, ...depth } = useDepth({ settle, status, heldBy, relevance });
-  return <Comp ref={ref} className={cx('alt-surface', interactive && 'alt-lift', className)} data-level={String(level)}
-    tabIndex={interactive && rest.onClick && as === 'div' ? 0 : undefined} {...depth} style={{ ...depthStyle, ...style }} {...rest} />;
+  const space = React.useRef(false);
+  const unavailable = disabled || rest['aria-disabled'] === true || rest['aria-disabled'] === 'true';
+  const native = as === 'button' || (as === 'a' && !!rest.href) || as === 'input' || as === 'select' || as === 'textarea';
+  const pressable = interactive && !!onClick;
+  const synthetic = pressable && !native && (!rest.role || rest.role === 'button');
+  const nestedControl = (event: React.MouseEvent<HTMLElement>) => {
+    const control = (event.target as Element).closest('button, a[href], input, select, textarea, [role="button"], [role="link"], [contenteditable="true"]');
+    return control && control !== event.currentTarget && event.currentTarget.contains(control);
+  };
+  return <Comp ref={ref} className={cx('alt-surface', interactive && !unavailable && 'alt-lift', className)} data-level={String(level)}
+    {...depth} style={{ ...depthStyle, ...style }} {...rest}
+    type={as === 'button' ? type ?? 'button' : type} disabled={native && as !== 'a' ? disabled : undefined}
+    href={as === 'a' && unavailable ? undefined : rest.href}
+    aria-disabled={unavailable || rest['aria-disabled']} role={rest.role ?? (as === 'a' && unavailable && rest.href ? 'link' : synthetic ? 'button' : undefined)}
+    tabIndex={unavailable && (pressable || native) ? -1 : rest.tabIndex ?? (synthetic ? 0 : undefined)}
+    onClick={(e: React.MouseEvent<HTMLElement>) => {
+      if (unavailable && (pressable || native)) { e.preventDefault(); return; }
+      if (pressable && nestedControl(e)) return;
+      onClick?.(e);
+    }}
+    onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
+      onKeyDown?.(e);
+      if (!synthetic || unavailable || e.defaultPrevented || e.target !== e.currentTarget || e.nativeEvent.isComposing) return;
+      if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) e.currentTarget.click(); }
+      if (e.key === ' ') { e.preventDefault(); space.current = true; }
+    }}
+    onKeyUp={(e: React.KeyboardEvent<HTMLElement>) => {
+      onKeyUp?.(e);
+      if (e.key !== ' ') return;
+      const pressed = space.current; space.current = false;
+      if (synthetic && pressed && !unavailable && !e.defaultPrevented && e.target === e.currentTarget) { e.preventDefault(); e.currentTarget.click(); }
+    }}
+    onBlur={(e: React.FocusEvent<HTMLElement>) => { space.current = false; onBlur?.(e); }} />;
+
 });
 
 /* ───────────────────────── Kbd ───────────────────────── */

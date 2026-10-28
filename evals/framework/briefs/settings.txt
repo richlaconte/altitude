@@ -1,0 +1,1 @@
+Build a workspace settings screen using the installed Altitude package. People should be able to change the workspace name and contact email and save them. Load and save the workspace through the API in src/api.ts. Include a Cancel action that returns to the workspace overview. The overview can be a small view within this app.

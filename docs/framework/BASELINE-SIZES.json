@@ -1,0 +1,9 @@
+{
+  "commit": "8a4b6752080928c50836da1e0979c28b894ed3a1",
+  "measuredOn": "2026-10-23",
+  "command": "git show 8a4b675:project/components/bundle.js; gzip via node:zlib.gzipSync",
+  "iife": {
+    "bytes": 115333,
+    "gzipBytes": 37027
+  }
+}

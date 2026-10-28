@@ -9,8 +9,9 @@
 // --css-only writes just the stylesheets (Storybook uses it).
 import { build } from 'esbuild';
 import { execSync } from 'child_process';
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { tokensCss } from './tokens-css.mjs';
+import { buildGuidance } from './build-guidance.mjs';
 
 const cssOnly = process.argv.includes('--css-only');
 const src = 'project/components/src/index.tsx';
@@ -38,13 +39,31 @@ const shared = {
 await build({ ...shared, format: 'esm', outfile: 'dist/index.js' });
 await build({ ...shared, format: 'cjs', outfile: 'dist/index.cjs' });
 execSync('npx tsc -p tsconfig.json', { stdio: 'inherit' });
+// NodeNext requires explicit relative specifiers. A CJS declaration tree matches the
+// require runtime, while ESM/Bundler keep the primary .d.ts tree. Both derive from tsc.
+mkdirSync('dist/types-cjs', { recursive: true });
+for (const file of readdirSync('dist/types').filter(file => file.endsWith('.d.ts'))) {
+  const path = 'dist/types/' + file;
+  const declaration = readFileSync(path, 'utf8');
+  const rewrite = extension => declaration.replace(/(from\s+['"]|import\(['"])(\.\.?\/[^'"\n]+)(['"])/g,
+    (_, prefix, specifier, suffix) => prefix + specifier.replace(/\.(?:js|cjs)$/, '') + extension + suffix);
+  writeFileSync(path, rewrite('.js'));
+  writeFileSync('dist/types-cjs/' + file.replace(/\.d\.ts$/, '.d.cts'), rewrite('.cjs'));
+}
 // The declarations are what editors and agents read first, so they say where to report problems.
 const types = 'dist/types/index.d.ts';
 writeFileSync(types, `/**
- * altitude-design: a React component library where height is the interface.
+ * altitude-design: a design framework where height is the interface.
+ * Task guidance: altitude-design/guidance (or dist/guidance/README.md).
+ * Discover patterns: altitude patterns "edit settings". Connect agents: altitude init --client codex.
+ * Pattern hooks are exported here, sharing the same AltitudeProvider instance.
  * Docs and live previews: https://richlaconte.github.io/altitude/storybook/
  * Bugs, feature requests and new components: https://github.com/richlaconte/altitude/issues/new/choose
  * Agents: you may file issues too; see https://github.com/richlaconte/altitude/blob/main/AGENTS.md
  */
 ` + readFileSync(types, 'utf8'));
+// Emit Node tooling and versioned guidance only after dist has been cleared.
+buildGuidance();
+await build({ entryPoints: ['scripts/altitude-cli.mjs'], outfile: 'dist/cli/altitude.mjs',
+  bundle: true, platform: 'node', format: 'esm', target: 'node20', legalComments: 'none' });
 console.log('package ok');

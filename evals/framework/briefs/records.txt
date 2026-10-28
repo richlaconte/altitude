@@ -1,0 +1,1 @@
+Build a searchable records screen using the installed Altitude package. Show the project records from the API in src/api.ts, with a search box for finding records by name and a way to select records. Include a refresh action and a way to clear the search.

@@ -1,0 +1,32 @@
+{
+  "protocolVersion": "1.1.0",
+  "visibility": "evaluator-only; never copy into generation workspaces or prompts",
+  "dimensions": {
+    "guidanceDiscovery": "Inspect tool trace for reading the installed compact entry and focused task guidance; absent trace is unknown, not a failure.",
+    "patternSelection": "Independent reviewer checks selected pattern against task and explains any inappropriate alternative.",
+    "taskOutcome": "Settings: saved API record equals entered values and reload shows them. Collection: search narrows actual service results and reset restores all.",
+    "applicableStates": "Record individual applicable states, omitted states and non-applicable states, not a universal checklist denominator.",
+    "retainedInput": "Reject a save and verify exact draft persists; successful retry stores that draft.",
+    "recovery": "Reject first save/load and allow second; useful actionable error and real recovery must occur.",
+    "adverseStates": "Settings: invalid submission, unsaved edits on leave (keep, then discard). Records: out-of-order query responses, first-use empty.",
+    "followupFeatures": "Final stage only. Settings: the description is saved and shown on the overview after reload. Records: name sort in both directions and a selection count that matches the selected rows.",
+    "keyboardPassed": "True only when tab order, activation, linked errors, reachable retry and focus on view changes all pass; record defects with severity and evidence.",
+    "axeScanPassed": "True only when axe reports no violations in every scanned state (initial, invalid, failed, saved, dirty-leave, no-results, first-use-empty, failed-refresh). Incomplete axe results are listed per state for manual review. Manual screen-reader findings are separate. No conformance claim.",
+    "contentAccuracy": "Independent reviewer checks consequence, error and success copy against actual outcome; report misleading claims.",
+    "responsive": "320px viewport, long localized strings and RTL; check clipping and operability. Test forced colors/reduced motion where applicable.",
+    "followupPreserved": "True only when every check that passed before the follow-up edit still passes after it; a fresh process reads the existing generated artifact without evaluator feedback.",
+    "complexity": "Report source lines, new dependencies, custom interaction logic and reviewer notes. Smaller is not automatically better.",
+    "developmentCost": "Report elapsed time, enforced wall-time budget, exit reason, token usage where supplied, model/tool versions and monetary cost only when reported."
+  },
+  "settings": {
+    "states": ["editing","invalid","submitting","failed","saved","dirty-leave"],
+    "injections": ["empty required name","invalid email","delay 1500ms","reject first write","two rapid activations","edit during delayed write","cancel and keep draft","cancel and discard"],
+    "severeDefects": ["lost input","false success","duplicate mutation","stale overwrite","unreachable save or recovery"]
+  },
+  "records": {
+    "states": ["loading","populated","refreshing","first-use-empty","no-results","failed"],
+    "injections": ["zero matches","empty collection","delayed response","failed refresh","out-of-order queries","selected row disappears"],
+    "severeDefects": ["wrong record selected","failed load shown as empty","stale query results","no recovery"]
+  },
+  "review": "Keep raw per-state results and evidence paths. Null means unmeasured. Independent review and representative user studies are required before human effectiveness claims. Pilot estimates refine the protocol, not release effectiveness targets."
+}

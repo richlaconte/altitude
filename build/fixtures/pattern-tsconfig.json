@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": [],
+    "lib": [
+      "es2021",
+      "dom",
+      "dom.iterable"
+    ],
+    "baseUrl": "../..",
+    "paths": {
+      "react": [
+        "node_modules/@types/react"
+      ],
+      "react-dom": [
+        "node_modules/@types/react-dom"
+      ],
+      "altitude-design": [
+        "project/components/src/index.tsx"
+      ]
+    }
+  },
+  "files": [
+    "pattern-types.tsx",
+    "pattern-workflows.tsx"
+  ]
+}
