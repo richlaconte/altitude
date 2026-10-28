@@ -1140,6 +1140,53 @@ function App() {
   );
 }
 
+=== Stat | <!-- @dsCard group="Charts" height=560 subtitle="A headline number, its change in words, and colour only when you say which way is good" -->
+--- css
+.st { display: grid; gap: 20px; max-width: 960px; }
+.st-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.st-bar h3 { margin: 0; font: 600 15px/22px var(--font-sans); color: var(--ink); }
+--- jsx
+const stDays = (vals) => vals.map((v, i) => ({ day: `2026-10-${String(i + 1).padStart(2, '0')}`, v }));
+const active = stDays([11.2, 11.4, 11.3, 11.6, 11.5, 11.8, 11.9, 12.0, 11.9, 12.1, 12.2, 12.4, 12.3, 12.48].map((k) => k * 1000));
+const errors = stDays([0.8, 0.9, 0.8, 1.0, 1.1, 1.0, 1.2, 1.3, 1.2, 1.4, 1.5, 1.4, 1.6, 1.7]);
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+function App() {
+  const [n, setN] = React.useState(0);
+  const [mrr, setMrr] = React.useState(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setMrr(184200), 2400); return () => clearTimeout(t); }, []);
+  const users = 12480 + n * 312;
+  return (
+    <div className="st">
+      <A.Card>
+        <A.CardContent>
+          <A.Stat label="Monthly recurring revenue" size="hero" value={mrr} format={usd.format} good="up"
+            change={{ value: 0.042, vs: 'September', previous: 176800 }} help="Paid plans only, before refunds." />
+        </A.CardContent>
+      </A.Card>
+      <div className="st-bar">
+        <h3>Last 30 days</h3>
+        <A.Button variant="secondary" size="sm" onClick={() => setN((k) => k + 1)}>Refresh</A.Button>
+      </div>
+      <A.StatGroup aria-label="Last 30 days">
+        <A.Card><A.CardContent>
+          <A.Stat label="Active users" value={users} live good="up" change={{ value: users / 11556 - 1, vs: 'last month', previous: 11556 }}
+            trend={<A.Sparkline data={active} x="day" y="v" decorative width={72} />} />
+        </A.CardContent></A.Card>
+        <A.Card><A.CardContent>
+          <A.Stat label="Error rate" value={1.7 + n * 0.1} format={(v) => `${v.toFixed(1)}%`} good="down" change={{ value: 0.21 + n * 0.07, vs: 'last month' }}
+            trend={<A.Sparkline data={errors} x="day" y="v" tone="critical" decorative width={72} />} />
+        </A.CardContent></A.Card>
+        <A.Card><A.CardContent>
+          <A.Stat label="Median response" value={182 - n * 4} format={(v) => `${v} ms`} change={{ value: -12 - n * 4, vs: 'last week', format: (m) => `${m} ms` }} />
+        </A.CardContent></A.Card>
+        <A.Card><A.CardContent>
+          <A.Stat label="Refunds" value={null} help="No refunds this period." />
+        </A.CardContent></A.Card>
+      </A.StatGroup>
+    </div>
+  );
+}
+
 === ChartTooltip | <!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
 --- css
 .ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }

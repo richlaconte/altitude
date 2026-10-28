@@ -421,6 +421,17 @@ A design review: `Sparkline` was rendered beside a headline number, in running t
 
 Not yet tested with people: whether `ink-muted` is enough contrast for a trend read at a glance in a dense table, or whether `data-1` should be the default.
 
+### E33 · Does a stat say which way is good?
+
+A design review: `Stat` was rendered as a hero number that loads, and in a `StatGroup` of four cards (users with `good="up"`, an error rate with `good="down"` that's rising, a neutral latency in ms, and a null), in all four schemes at 960px, at 360px at 2× and under forced colours, then refreshed. `checks/stat.mjs` drives it.
+
+- **Up isn't always good.** Tremor's `BadgeDelta` colours an increase green; for an error rate that's the wrong way round. A stat stays neutral until it's told which direction is good, and then the word, the arrow and the lamp each say it, so a reader who can't tell red from green still reads "Up 21%" and sees the arrow.
+- **No counting up.** Count-up animations delay the number they exist to show; Tversky, Morrison and Bétrancourt's finding (above) is that animation helps only when its motion is the change. The value cross-fades and the stat gets the afterglow.
+- **The number is the record.** The stat has no shadow or level of its own; the `Card` it sits in is raised because it's something you can work with, as the Charts chapter says of dashboard cards.
+- **A plate, not a pill of colour.** The change reuses `Badge` (a plate set into the page with a lamp), so a good or bad change looks like every other status in Altitude, and gets a 1px border under forced colours.
+
+Not yet tested with people: whether a neutral, ink-muted change is noticed as readily as a coloured one on a busy dashboard.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

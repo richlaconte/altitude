@@ -100,6 +100,8 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 **Word-sized charts don't move.** A `Sparkline` has no motion of its own: it lands out of its imprint like any inline `Await` content, and when its value changes in a live table the row gets the afterglow, not the line.
 
+**Numbers change, they don't count.** A `Stat`'s changed value cross-fades over `dur-travel-2` (the old figure fading out over the new) and the stat takes the afterglow within the attention budget. Counting up is never offered: it delays the number for decoration. A stat whose value loads lands out of its imprint like `Await` content; in a `StatGroup` they land together.
+
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
 ## Approach
