@@ -43,6 +43,8 @@ export { PropertyList, PropertyListItem } from './property-list';
 export type { PropertyListProps, PropertyListItemProps, PropertyListEditAll } from './property-list';
 export { ChartContainer, ChartMarker, useChart } from './chart';
 export { BarChart } from './bar-chart';
+export { LineChart, linePath } from './line-chart';
+export type { LineChartProps } from './line-chart';
 export type { BarChartProps } from './bar-chart';
 export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage, ChartEncoding, ChartMarkerShape } from './chart';
 export { useEditRecord, ErrorSummary, WorkflowStatus } from './pattern-edit-record';

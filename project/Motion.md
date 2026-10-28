@@ -89,7 +89,7 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 2. **A rescale comes first.** If y's domain changes, the axis and gridlines glide to it first (`dur-travel-2`), with the marks keeping their old values so they move only with the scale; then the marks glide to their new values on a still axis (`dur-travel-3`). The two never happen at once, as a `Stepper` presses before it rises. Ticks that leave fade out as the new ones fade in.
 3. **Re-sorted bars are carried** to their new places, as table rows are. A stack's segments glide together, so the parts stay stacked while the total changes.
 4. **No decorative entrances.** On first render the plot fades in place (`dur-travel-1`). A bar grows from the ground line only when its value really goes from zero to something.
-5. **Lines morph only when x is the same.** If the x values change under a line (a new range, a new interval), the old plot and the new one cross-fade instead.
+5. **Lines morph only when x is the same.** If the x values change under a line (a new range, a new interval), the old plot and the new one cross-fade instead. A line is never drawn on, and its end label moves with its end.
 6. **Records and series that enter or leave cross-fade.** Exits take 70% of the entry's time, so what's leaving is gone before what's arriving has settled.
 7. **An interruption retargets** from where the marks are, so nothing jumps back to the old destination first.
 8. **Past 500 marks** changing at once, the plot cross-fades instead of gliding.
