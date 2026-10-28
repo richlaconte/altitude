@@ -1533,6 +1533,32 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   .alt-sparkline-band { fill: none; stroke: GrayText; stroke-dasharray: 2 2; }
 }
 
+/* ── Stat: a headline number. A number is the record, so a stat lies flush on what it sits on (a Card's surface, or
+   the page): no level, no shadow. The label is text-label in ink-muted; the value is text-title (text-display when
+   size="hero", once per view) in ink, weight 600, tabular figures. A change with no stated good direction is
+   ink-muted text with an arrow; with one, it's a Badge plate whose lamp is positive or critical, so the word, the
+   arrow and the colour each say it. A changed value cross-fades (dur-travel-2) and the stat takes the afterglow; it
+   never counts up. While the value loads it's an imprint of a number's width under a label already in place. ── */
+.alt-stat { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; border-radius: var(--radius-md); }
+.alt-stat-label { font: 500 14px/20px var(--font-sans); color: var(--ink-muted); }
+.alt-stat-main { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.alt-stat-value { display: inline-grid; font: 600 28px/34px var(--font-sans); letter-spacing: -0.018em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.alt-stat[data-size="hero"] .alt-stat-value { font: 600 44px/48px var(--font-sans); letter-spacing: -0.025em; }
+.alt-stat-text { grid-area: 1 / 1; }
+.alt-stat-text[data-in] { animation: alt-stat-in var(--dur-travel-2) var(--ease-glide) both; }
+.alt-stat-text[data-out] { animation: alt-stat-out var(--dur-travel-2) var(--ease-glide) both; }
+@keyframes alt-stat-in { from { opacity: 0; } }
+@keyframes alt-stat-out { to { opacity: 0; } }
+.alt-stat-trend { display: inline-flex; align-items: center; min-width: 0; font: 400 15px/23px var(--font-sans); }
+.alt-stat-imprint { display: inline-block; vertical-align: middle; width: 4.5em; height: 0.6em; border-radius: var(--radius-xs); }
+.alt-stat-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); font: 500 12.5px/17px var(--font-sans); letter-spacing: 0.005em; color: var(--ink-muted); }
+.alt-stat-change { gap: 4px; font-variant-numeric: tabular-nums; }
+.alt-stat-change[data-neutral] { display: inline-flex; align-items: center; color: var(--ink-muted); }
+.alt-stat-arrow { display: block; flex: none; }
+.alt-stat-help { flex-basis: 100%; font-weight: 400; }
+.alt-stat-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: var(--space-5) var(--space-6); }
+@media (forced-colors: active) { .alt-stat-change.alt-badge { border: 1px solid CanvasText; } }
+
 /* ── ChartTooltip: reading exact values. The crosshair is a mark on the ground (1px line-control, snapped to the nearest
    x); the readout is live, a level-3 floating surface like Tooltip. It rises 4px once as its shadow grows from elev-1
    to elev-3, then steps between x positions with no easing (it follows the data, not each pixel of the pointer), flips

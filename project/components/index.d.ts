@@ -1689,6 +1689,41 @@ export interface SparklineProps extends Omit<React.HTMLAttributes<HTMLSpanElemen
 }
 /** A word-sized trend beside the number it explains: flat ink on the ground, as tall as the text, labelled in words. */
 export declare function Sparkline(props: SparklineProps): React.ReactElement;
+export interface StatChange {
+  /** The change. By default a fraction (0.08 is up 8%); with format, in your units. */
+  value: number;
+  /** What it's compared with, in words: "last month". */
+  vs?: string;
+  /** The value it's compared with, formatted like the value: "vs last month: 11,556". */
+  previous?: number;
+  /** Formats the size of the change, without its sign ("Up"/"Down" are words). Default: a percentage. */
+  format?: (magnitude: number) => string;
+}
+export interface StatProps extends Omit<React.HTMLAttributes<HTMLElement>, 'children'> {
+  /** What the number is. It names the stat. */
+  label: React.ReactNode;
+  /** The number. Undefined while your data loads, or a promise: an imprint of a number's width until it lands. null: an em dash. */
+  value: number | string | null | undefined | PromiseLike<number | string | null>;
+  /** Formats a numeric value and change.previous. Default: Intl.NumberFormat. */
+  format?: (value: number) => string;
+  change?: StatChange;
+  /** Which direction is good. Without it the change is neutral ink-muted text with an arrow; with it, a positive or critical Badge plate. */
+  good?: 'up' | 'down';
+  /** A trend beside the value, usually a decorative Sparkline. */
+  trend?: React.ReactNode;
+  /** More context, in a caption under the change. */
+  help?: React.ReactNode;
+  /** 'hero': the value in text-display. Once per view. */
+  size?: 'default' | 'hero';
+  /** Announce a changed value politely. */
+  live?: boolean;
+  locale?: string;
+}
+/** A headline number, flush on what it sits on, with its change in words and an arrow; colour only when you say which way is good. */
+export declare function Stat(props: StatProps): React.ReactElement;
+export interface StatGroupProps extends React.HTMLAttributes<HTMLDivElement> { 'aria-label'?: string }
+/** A row of stats that wrap to fit and land together. */
+export declare function StatGroup(props: StatGroupProps): React.ReactElement;
 /** The scales, plot size and config of the nearest ChartContainer, for drawing your own marks. */
 export declare function useChart(): ChartContextValue;
 
@@ -1705,7 +1740,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
