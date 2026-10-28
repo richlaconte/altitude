@@ -391,6 +391,14 @@ An engineering check, not a study: `checks/chart-keyboard.mjs` walks a two-serie
 
 Not yet checked by hand with a screen reader: VoiceOver and NVDA weren't available where this was built. The names are verified as accessible names, not as speech; whether `aria-roledescription` ("data point") reads well in both is the first thing to check.
 
+### E30 · Where does a chart's table go?
+
+A design review: the table view was rendered on a stacked bar chart, starting on the chart and on the table, in all four schemes and at 360px; `checks/chart-table.mjs` drives it. Chartability lists a data table as a core heuristic, and asks for it to be available to everyone, so it's a visible view rather than a visually hidden table.
+
+- **In the chart's own box.** The table scrolls inside the plot's size, so the card and the page don't move when the view changes.
+- **Two views of one record.** The control is the segmented `Tabs` (a pill gliding between two choices), and the views cross-fade rather than slide. Both stay mounted, so the chart keeps its size, motion and keyboard place while the table is shown; the hidden one is inert, which also takes the chart's keyboard path out of reach.
+- **Opt-in, for now.** On by default, every widget-sized chart on a dashboard grows a control; the summary and the keyboard path already reach every value. Revisit if the table proves to be what people reach for.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

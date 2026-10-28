@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { cx, useIsoLayoutEffect, usePresence } from './core';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
+import { DataTable } from './collections';
 import { markTipClosed, tipIsWarm } from './overlays';
 
 /* ───────────────────────── config ───────────────────────── */
@@ -592,6 +594,16 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   /** The crosshair and readout. Default true; a chart type's `tooltip={false}` turns it off too. */
   tooltip?: boolean;
   /**
+   * Adds a Chart | Table control: the same data as a sortable table, in the chart's own box. true starts on the chart,
+   * 'table' on the table.
+   */
+  views?: boolean | 'chart' | 'table';
+  /** The view shown, controlled. */
+  view?: 'chart' | 'table';
+  onViewChange?: (view: 'chart' | 'table') => void;
+  /** The table's first column header. Default: the x key, capitalised. */
+  xLabel?: string;
+  /**
    * Tell series apart by pattern as well as colour: a hatch per slot on fills, a dash on lines, a marker on points.
    * Always on under forced colours and in print; turn it on anywhere else for readers who want it.
    */
@@ -612,7 +624,7 @@ const TOP = 8;
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
 export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, description, summary,
-  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, className, style, children, ...rest }: ChartContainerProps) {
+  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, className, style, children, ...rest }: ChartContainerProps) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -837,9 +849,48 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   for (const s of series) vars[`--color-${cssKey(s.key)}`] = s.color;
   if (aspect == null && height == null) aspect = 2;
 
+  // The table view (#64): the same records as a DataTable, x first, a column per series, a Total for stacks.
+  const viewsOn = views !== undefined && views !== false;
+  const [viewOwn, setViewOwn] = React.useState<'chart' | 'table'>(views === 'table' ? 'table' : 'chart');
+  const view = viewProp ?? viewOwn;
+  const setView = (v: string) => { const next = v === 'table' ? 'table' : 'chart'; onViewChange?.(next); if (viewProp === undefined) setViewOwn(next); };
+  const table = viewsOn ? (() => {
+    const total = /stacked/i.test(info.kind ?? '');
+    const isNum = (v: unknown): v is number => typeof v === 'number' && isFinite(v);
+    const sum = (d: ChartDatum) => allSeries.reduce((t, s) => t + (isNum(d[s.key]) ? (d[s.key] as number) : 0), 0);
+    const columns = [
+      { key: '__x', header: xLabel ?? (xKey.charAt(0).toUpperCase() + xKey.slice(1)), cell: (d: ChartDatum) => formatX(d[xKey]),
+        sortValue: (d: ChartDatum) => (kind === 'band' ? (datedBands ? toTime(d[xKey]) : String(d[xKey])) : kind === 'time' ? toTime(d[xKey]) : Number(d[xKey])) },
+      ...allSeries.map((s) => ({ key: s.key, header: s.label, align: 'end' as const,
+        cell: (d: ChartDatum) => (isNum(d[s.key]) ? s.format(d[s.key] as number) : '—'), sortValue: (d: ChartDatum) => (isNum(d[s.key]) ? (d[s.key] as number) : -Infinity) })),
+      ...(total ? [{ key: '__total', header: 'Total', align: 'end' as const, cell: (d: ChartDatum) => allSeries[0].format(sum(d)), sortValue: sum }] : []),
+    ];
+    return <DataTable columns={columns} rows={data} getRowId={rowKey} aria-label={typeof title === 'string' ? `${title}, data` : 'Chart data'} />;
+  })() : null;
+
   const svgKids = kids.filter((k) => typeof k.type === 'string' || !(k.type as ChartChild).chartHtml);
   const htmlKids = kids.filter((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartHtml);
   const top = draw(layers[layers.length - 1].frame);
+
+  /** With views on: the head beside a Chart | Table control, and the two views stacked in one box, cross-fading. */
+  const wrapViews = (plot: React.ReactElement) => !viewsOn ? plot : (
+    <Tabs variant="segmented" value={view} onValueChange={setView} className="alt-chart-tabs">
+      <div className="alt-chart-bar">
+        <div className="alt-chart-head">
+          {title && <div id={titleId} className="alt-chart-title">{title}</div>}
+          {description && <p id={descId} className="alt-chart-desc">{description}</p>}
+        </div>
+        <TabsList aria-label="View">
+          <TabsTrigger value="chart">Chart</TabsTrigger>
+          <TabsTrigger value="table">Table</TabsTrigger>
+        </TabsList>
+      </div>
+      <div className="alt-chart-views">
+        <TabsContent value="chart" forceMount tabIndex={-1} className="alt-chart-view">{plot}</TabsContent>
+        <TabsContent value="table" forceMount tabIndex={-1} className="alt-chart-view" data-view="table"><div className="alt-chart-tablebox">{table}</div></TabsContent>
+      </div>
+    </Tabs>
+  );
 
   // Which record a point on the plot is nearest along x (down the side, when horizontal).
   const nearest = (clientX: number, clientY: number) => {
@@ -992,13 +1043,13 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
     <ChartContext.Provider value={top.ctx}>
       <figure className={cx('alt-chart', className)} style={{ ...vars, ...style }} aria-labelledby={labelledBy}
         aria-describedby={[descId, sumId].filter(Boolean).join(' ')} {...rest}>
-        {(title || description) && (
+        {!viewsOn && (title || description) && (
           <div className="alt-chart-head">
             {title && <div id={titleId} className="alt-chart-title">{title}</div>}
             {description && <p id={descId} className="alt-chart-desc">{description}</p>}
           </div>
         )}
-        <div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
+        {wrapViews(<div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
           data-stage={stage} data-patterns={patterns ? '' : undefined} style={height != null ? { height } : { aspectRatio: String(aspect) }}
           onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={onPointerLeave}>
           {W > 0 && (
@@ -1071,7 +1122,7 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
             {nodes}
           </div>
           {readout}
-        </div>
+        </div>)}
         {legendEl && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
           items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, hidden: hidden.includes(s.key) }; }),
           swatch: info.swatch ?? 'rect',
