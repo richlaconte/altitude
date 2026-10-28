@@ -18,7 +18,9 @@ A total over time and the parts that make it up (requests by region, storage by 
 
 **Not yet the record.** `status` marks partial or projected records. From the last settled point on, every band is hatched in its colour on the plot's own, with no solid fill, and the top line is dashed. A 1px `line-control` rule named "Today" (`boundary`) marks where the record ends, and the readout, point names and table say "Projected" or "So far". While patterns are on, a band with its own hatch keeps it there, faded, so bands stay told apart.
 
-**Props:** `data` and `x`; `stack` (`true` or `'expand'`); `curve` (`'linear'` or `'monotone'`); `y={{ format }}`; `labels`; `tooltip`; `status` and `boundary`; and a `ChartTooltip` or `ChartLegend` as children.
+**A sliding window.** `window` works as `LineChart`'s: the latest stretch of x, gliding one step in a `live` container.
+
+**Props:** `data` and `x`; `window`; `stack` (`true` or `'expand'`); `curve` (`'linear'` or `'monotone'`); `y={{ format }}`; `labels`; `tooltip`; `status` and `boundary`; and a `ChartTooltip` or `ChartLegend` as children.
 
 **You provide:** a `ChartContainer` whose `config` names each band in stacking order (the base first), the `data` in x order, and usually a `summary`.
 

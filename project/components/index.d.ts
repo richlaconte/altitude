@@ -1613,6 +1613,15 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   refreshing?: boolean;
   /** What the plot says when the data is null or empty: an EmptyState at widget size. */
   empty?: ChartEmpty;
+  /** The data updates on its own: changed marks get an afterglow (a whole refresh glows the "Updated" caption), a window glides, and updates wait while the plot is being read. */
+  live?: boolean;
+  /** With live: a "Pause updates" switch in the frame (WCAG 2.2.2). */
+  pausable?: boolean;
+  /** Updates are paused, controlled. */
+  paused?: boolean;
+  onPausedChange?: (paused: boolean) => void;
+  /** With live: what to announce when new data lands, or nothing. Nothing is announced per tick by default. */
+  announce?: (data: ChartDatum[], previous: ChartDatum[] | null) => string | null | undefined;
 }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; /** An uncertainty band's row, keyed by a block of its fill. */ range?: boolean; }
@@ -1723,6 +1732,8 @@ export interface LineChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /** Show only the latest stretch of x: { minutes | hours | days } of time, or the last { points }. Glides one step in a live container. */
+  window?: ChartWindow;
   /** An uncertainty band around a series (default the config's first), from each record's `low` to its `high`: a flat, low-opacity fill. `label` names it in the readout (default "Range"). */
   band?: { low: string; high: string; series?: string; label?: string };
   /** A ChartTooltip, to change what the readout shows. */
@@ -1743,6 +1754,8 @@ export interface AreaChartProps {
   y?: { format?: (value: number) => string };
   /** Name each band inside itself where it fits. Default: on when stacked. */
   labels?: boolean;
+  /** Show only the latest stretch of x, as LineChart's window. */
+  window?: ChartWindow;
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
   /** Which records aren't yet the record: 'partial' (a period still being counted) or 'projected' (a forecast). Hatched or dashed, and said in words. */
@@ -1754,6 +1767,10 @@ export interface AreaChartProps {
 }
 /** A total over time and its parts: flat bands on the ground line, parted by 2px, never a gradient. Renders inside a ChartContainer. */
 export declare function AreaChart(props: AreaChartProps): React.ReactElement;
+/** A sliding window over x: a span of time, or the last N records. */
+export interface ChartWindow { minutes?: number; hours?: number; days?: number; points?: number; }
+/** The records inside a window, and the x domain it spans. */
+export declare function windowed(data: ChartDatum[], x: string, window: ChartWindow | undefined): { rows: ChartDatum[]; domain?: [number, number] };
 /** An SVG path through points; a null breaks it. 'monotone' never overshoots the points. */
 export declare function linePath(points: Array<[number, number] | null>, curve?: 'linear' | 'monotone'): string;
 export interface SparklineProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {

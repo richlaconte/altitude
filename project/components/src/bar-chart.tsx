@@ -165,26 +165,43 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
   return <g className="alt-bar">{marks}{texts}</g>;
 }
 
-/** Where a record's bar for one series ends, for the keyboard's focus ring: the data end of that bar or segment. */
-BarChart.chartPoint = (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string): [number, number] => {
+/** One record's bar for one series: its span across the band (a to b) and from its ground side (g) to its data end (e). */
+function barSpan(props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string) {
   const p = props as unknown as BarChartProps;
-  const { x, y, series, gap, horizontal, xKey } = ctx;
-  if (x.kind !== 'band') return [0, 0];
+  const { x, y, series, gap, xKey, ground } = ctx;
+  if (x.kind !== 'band') return null;
   const keys = series.map((s) => s.key);
   const cat = String(d[xKey]);
-  let across: number, along: number;
   if (p.stack) {
     const sum = p.stack === 'expand' ? total(d, keys) || 1 : 1;
     let up = 0, down = 0;
-    for (const k of keys) { const v = num(d[k]) / sum; if (v > 0) up += v; else down += v; if (k === key) { along = y(v >= 0 ? up : down); break; } }
-    across = x(cat) + x.bandwidth / 2;
-  } else {
-    const i = Math.max(0, keys.indexOf(key)), n = keys.length;
-    const w = Math.max(1, (x.bandwidth - gap * (n - 1)) / n);
-    across = x(cat) + i * (w + gap) + w / 2;
-    along = y(num(d[key]));
+    for (const k of keys) {
+      const v = num(d[k]) / sum, base = v >= 0 ? up : down;
+      if (v > 0) up += v; else down += v;
+      if (k === key) return { a: x(cat), b: x(cat) + x.bandwidth, g: y(base), e: y(v >= 0 ? up : down) };
+    }
+    return null;
   }
-  return horizontal ? [along!, across] : [across, along!];
+  const i = Math.max(0, keys.indexOf(key)), n = keys.length;
+  const w = Math.max(1, (x.bandwidth - gap * (n - 1)) / n);
+  const a = x(cat) + i * (w + gap);
+  return { a, b: a + w, g: ground, e: y(num(d[key])) };
+}
+
+/** Where a record's bar for one series ends, for the keyboard's focus ring: the data end of that bar or segment. */
+BarChart.chartPoint = (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string): [number, number] => {
+  const sp = barSpan(props, ctx, d, key);
+  if (!sp) return [0, 0];
+  const across = (sp.a + sp.b) / 2;
+  return ctx.horizontal ? [sp.e, across] : [across, sp.e];
+};
+
+/** The outline of a record's bar for one series, for a live chart's afterglow: the bar's own shape, 2px outside it. */
+BarChart.chartMark = (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string): string | null => {
+  const sp = barSpan(props, ctx, d, key);
+  if (!sp || Math.abs(sp.e - sp.g) < 0.5) return null;
+  const s = Math.sign(sp.e - sp.g) || 1;
+  return barPath(ctx.horizontal, sp.a - 2, sp.b + 2, sp.g, sp.e + s * 2, 6);
 };
 
 BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): ChartInfo => {

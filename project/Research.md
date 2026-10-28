@@ -491,6 +491,18 @@ A design review: `ChartReference` was rendered as uptime against a normal range,
 
 Not yet tested with people: whether right-end labels are found as quickly as labels at the left, where reading starts.
 
+### E39 · Can a live chart say what changed without moving under the reader?
+
+A design review: `ChartLive` was rendered as an error rate over a 15-minute window that ticks every two seconds, crosses a 2% alert and can be paused, and a queue-depth bar chart where one queue grows or every queue refreshes. In all four schemes at 960px, at 360px at 2×, under forced colours and with reduced motion. `checks/chart-live.mjs` measures it.
+
+- **An outline, not a glow.** Altitude's afterglow lifts a surface to level 2. A mark can't lift, so the trace is a 2px `ink` outline in the mark's own shape (a bar's outline, a ring on a point), decaying on the same `dur-settle` and `ease-decay`. Its value shows for the first second, so a glance gets the number too.
+- **More than four is one change.** A full reload that glowed every bar would spend the whole attention budget at once and point at nothing. Past four marks, the caption takes the tint instead, as a table re-sort does.
+- **A window slides, it doesn't cross-fade.** The motion engine cross-faded whenever x's values changed under a line (Motion rule 5), which made a ticking chart blink every tick. A live chart whose records overlap now glides its x domain one step, and departing points ride off the left edge, clipped to the plot.
+- **Holding still beats pausing.** The readout used to change under the pointer on every tick. Updates now queue while the pointer or focus is in the plot, and the caption says so. The switch is still there for WCAG 2.2.2, and for anyone watching from a distance.
+- **Announce crossings, not ticks.** A polite announcement every two seconds would make the page unusable with a screen reader, so nothing is said unless `announce` returns a sentence.
+
+Not yet tested with people: whether an outline that holds for one second is noticed in peripheral vision as readily as the surface afterglow's tint and lift, which is what Phosphor measured (Baudisch et al. 2006).
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

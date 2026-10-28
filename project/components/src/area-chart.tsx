@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ChartMarker, ChartStatusClip, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
-import { linePath } from './line-chart';
+import { linePath, windowed, type ChartWindow } from './line-chart';
 
 export interface AreaChartProps {
   /** The records, in x order: one per time or value of x. */
@@ -27,6 +27,8 @@ export interface AreaChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /** Show only the latest stretch of x, as LineChart's `window`: it glides one step in a `live` container. */
+  window?: ChartWindow;
   /** A ChartTooltip or ChartLegend. */
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */
@@ -145,13 +147,15 @@ AreaChart.chartPoint = (props: Record<string, unknown>, ctx: ChartContextValue, 
 AreaChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): ChartInfo => {
   const p = props as unknown as AreaChartProps;
   const keys = Object.keys(config);
-  const rows = Array.isArray(p.data) ? p.data : undefined;
+  const win = Array.isArray(p.data) && p.window ? windowed(p.data, p.x, p.window) : undefined;
+  const rows = win ? win.rows : Array.isArray(p.data) ? p.data : undefined;
   let yExtent: [number, number] | undefined;
   if (p.stack === 'expand') yExtent = [0, 1];
   else if (p.stack && rows) yExtent = [0, Math.max(0, ...rows.map((d) => keys.reduce((t, k) => t + Math.max(0, num(d[k])), 0)))];
   return {
     kind: p.stack === 'expand' ? 'Stacked area chart of shares' : p.stack ? 'Stacked area chart' : 'Area chart',
     zero: true, swatch: 'rect', imprint: 'area', yExtent, format: p.y?.format, seriesUp: !!p.stack, share: !!p.stack, status: p.status, boundary: p.boundary,
+    data: win?.rows, xDomain: win?.domain,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

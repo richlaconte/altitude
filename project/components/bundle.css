@@ -1477,6 +1477,26 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-bar-label-status { fill: var(--ink-muted); }
 .alt-chart-readout-note { margin-left: 6px; color: var(--ink); font-weight: 600; }
 .alt-chart-readout-note::before { content: "· "; }
+/* ── Live charts (#66): show the new state at once and leave a fading trace (phosphor). A new or changed mark carries
+   a 2px ink outline (an outline, not height or a glow) that holds for the first second and decays over dur-settle on
+   ease-decay, with its value beside it for that first second. A whole refresh is one change: the "Updated" caption
+   takes a ground-level tint instead. Afterglows keep under reduced motion: they're tint, not travel. ── */
+.alt-chart-glow path, .alt-chart-glow circle { fill: none; stroke: var(--ink); stroke-width: 2; animation: alt-chart-glow var(--dur-settle) linear var(--alt-rise-delay, 0ms) both; }
+.alt-chart-glow text { fill: var(--ink); stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; font: 600 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; animation: alt-chart-glow-label var(--dur-settle) linear var(--alt-rise-delay, 0ms) both; }
+@keyframes alt-chart-glow { 0%, 12% { stroke-opacity: 1; animation-timing-function: var(--ease-decay); } 100% { stroke-opacity: 0; } }
+@keyframes alt-chart-glow-label { 0%, 12% { opacity: 1; } 14%, 100% { opacity: 0; } }
+.alt-chart-live { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); }
+.alt-chart-updated { padding: 1px 6px; margin-left: -6px; border-radius: var(--radius-sm); font: 400 13px/19px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-chart-updated[data-settle]::before { animation-name: alt-chart-tint-a; }
+.alt-chart-updated[data-settle="b"]::before { animation-name: alt-chart-tint-b; }
+@keyframes alt-chart-tint-a { 0%, 12% { background-color: var(--accent-soft); animation-timing-function: var(--ease-decay); } 100% { background-color: transparent; } }
+@keyframes alt-chart-tint-b { 0%, 12% { background-color: var(--accent-soft); animation-timing-function: var(--ease-decay); } 100% { background-color: transparent; } }
+@media (forced-colors: active) {
+  .alt-chart-glow path, .alt-chart-glow circle { stroke: Highlight; }
+  .alt-chart-glow text { fill: CanvasText; stroke: Canvas; }
+  .alt-chart-updated[data-settle]::before { border: 1px solid Highlight; }
+}
+
 /* ── References and annotations (#68): what a chart is read against. A reference line is 1px ink-muted and solid,
    because dashes mean projected; a status threshold wears caution or critical, with its icon in the label. A band is a
    flat line-coloured fill (a decorative token, so it isn't read as data or as an opening), under the marks. Labels are

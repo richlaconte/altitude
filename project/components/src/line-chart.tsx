@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChartMarker, ChartStatusClip, useChart, type ChartConfig, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { ChartMarker, ChartStatusClip, toTime, useChart, type ChartConfig, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 
 export interface LineChartProps {
   /** The records, in x order: one per time or value of x. */
@@ -26,10 +26,42 @@ export interface LineChartProps {
    * series colour, never error bars and never a gradient. `label` names it in the readout (default "Range").
    */
   band?: { low: string; high: string; series?: string; label?: string };
+  /**
+   * Show only the latest stretch of x: `{ minutes: 15 }` (or `hours`, `days`) of time, or the last `points` records.
+   * In a `live` container, when the window moves on, x glides one step and the marks ride along with it.
+   */
+  window?: ChartWindow;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */
   empty?: import('./chart').ChartEmpty;
+}
+export interface ChartWindow { minutes?: number; hours?: number; days?: number; points?: number; }
+
+// Windowed copies are kept per input array, so the same data gives the same array and isn't mistaken for a change.
+const windowCache = new WeakMap<ChartDatum[], Map<string, { rows: ChartDatum[]; domain?: [number, number] }>>();
+/** The records inside a sliding window, and the x domain the window spans. */
+export function windowed(data: ChartDatum[], x: string, w: ChartWindow | undefined): { rows: ChartDatum[]; domain?: [number, number] } {
+  if (!w) return { rows: data };
+  const id = `${x}:${w.minutes ?? ''}:${w.hours ?? ''}:${w.days ?? ''}:${w.points ?? ''}`;
+  let m = windowCache.get(data);
+  if (!m) windowCache.set(data, (m = new Map()));
+  let out = m.get(id);
+  if (!out) {
+    const at = (d: ChartDatum) => (typeof d[x] === 'number' ? (d[x] as number) : toTime(d[x]));
+    if (w.points) {
+      const rows = data.slice(-w.points);
+      const ts = rows.map(at).filter((t) => isFinite(t));
+      out = { rows, domain: ts.length ? [Math.min(...ts), Math.max(...ts)] : undefined };
+    } else {
+      const span = ((w.minutes ?? 0) * 60 + (w.hours ?? 0) * 3600 + (w.days ?? 0) * 86400) * 1000;
+      const ts = data.map(at).filter((t) => isFinite(t));
+      const end = ts.length ? Math.max(...ts) : 0;
+      out = { rows: span ? data.filter((d) => at(d) >= end - span) : data, domain: span && ts.length ? [end - span, end] : undefined };
+    }
+    m.set(id, out);
+  }
+  return out;
 }
 
 const END_FONT = '500 12.5px "Instrument Sans", ui-sans-serif, system-ui, sans-serif';
@@ -161,8 +193,9 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const p = props as unknown as LineChartProps;
   const labels = Object.values(config).map((c) => c.label);
   const labelled = p.endLabels ?? labels.length <= 4;
+  const win = Array.isArray(p.data) && p.window ? windowed(p.data, p.x, p.window) : undefined;
   return {
-    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary,
+    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain,
     band: p.band ? { series: p.band.series, low: p.band.low, high: p.band.high, label: p.band.label ?? 'Range' } : undefined,
     right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
   };
