@@ -1654,6 +1654,28 @@ export declare function ChartLegendContent(props: ChartLegendContentProps): Reac
 export declare function ChartLegend(props: { content?: React.ReactElement<ChartLegendContentProps> }): null;
 /** Changes what a chart's readout shows; the readout is on for every chart. Place it inside the chart type or the container. */
 export declare function ChartTooltip(props: { content?: React.ReactElement<ChartTooltipContentProps> }): null;
+export interface ChartReferenceProps {
+  /** Where on the value axis: a value (a line), a range [low, high] (a band), or the 'mean' or 'median' of a series. */
+  y: number | [number, number] | 'mean' | 'median';
+  /** What it is, in words: "Target 99.9%", "Normal range", "Average". A mean or median adds its value. */
+  label: string;
+  /** A threshold that means good or bad: the line wears caution or critical, and its label the status icon. */
+  tone?: 'caution' | 'critical';
+  /** The series a mean or median is read from. Default: the first shown. */
+  series?: string;
+}
+/** Something to read the chart against: a 1px solid line labelled at its right end, or a flat line-coloured band. Its values count toward y. */
+export declare function ChartReference(props: ChartReferenceProps): null;
+export interface ChartAnnotationProps {
+  /** Where on x: a date, a number or a category, as the data's x values are written. */
+  x: string | number;
+  /** The event, in a few words: "v2 launch". */
+  label: string;
+  /** Makes the plate a button, which lifts one level when pointed at. */
+  onSelect?: () => void;
+}
+/** An event on x: a Badge plate flush at the top of the plot with a 1px leader to its x, listed after the summary. */
+export declare function ChartAnnotation(props: ChartAnnotationProps): null;
 /** The frame every chart shares: scales, axes, gridlines, the ground line, colour slots, a name and a summary. Flush, no level. */
 export declare function ChartContainer(props: ChartContainerProps): React.ReactElement;
 export interface BarChartProps {

@@ -1,0 +1,40 @@
+<!-- @dsCard group="Charts" height=780 subtitle="What a chart is read against: targets, limits, ranges and events, flush on the ground" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartReference — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cr { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const uptime = Array.from({ length: 30 }, (_, i) => ({ day: `2026-03-${String(i + 1).padStart(2, "0")}`, uptime: [0.9995, 0.9991, 0.9998, 0.9962, 0.9971, 0.9993, 0.9997, 0.9999, 0.9994, 0.9988, 0.9996, 0.9999, 0.9997, 0.9921, 0.9984, 0.9995, 0.9998, 0.9996, 0.9999, 0.9997, 0.9993, 0.9996, 0.9998, 0.9999, 0.9995, 0.9997, 0.9999, 0.9998, 0.9996, 0.9999][i] }));
+const pct = new Intl.NumberFormat("en", { style: "percent", maximumFractionDigits: 2 });
+const usd = new Intl.NumberFormat("en", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const weekA = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => ({ day, cost: [412, 455, 498, 430, 610, 220, 190][i] }));
+const weekB = weekA.map((d, i) => ({ ...d, cost: [520, 590, 640, 575, 780, 300, 260][i] }));
+const teams = [["Search", 92], ["Checkout", 81], ["Accounts", 74], ["Messaging", 66], ["Billing", 58]].map(([team, score]) => ({ team, score }));
+const deploys = Array.from({ length: 21 }, (_, i) => ({ day: `2026-04-${String(i + 1).padStart(2, "0")}`, latency: 180 + Math.round(30 * Math.sin(i / 3)) + (i > 9 ? -40 : 0) + (i === 14 ? 60 : 0) }));
+function Chart({ id, title, sub, children, ...props }) {
+  return /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id }, title), /* @__PURE__ */ React.createElement(A.CardDescription, null, sub)), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": id, aspect: 1.9, ...props }, children)));
+}
+function App() {
+  const [later, setLater] = React.useState(false);
+  const [picked, setPicked] = React.useState(null);
+  return /* @__PURE__ */ React.createElement("div", { className: "cr" }, /* @__PURE__ */ React.createElement(Chart, { id: "r1", title: "Uptime", sub: "March, against the SLO", config: { uptime: { label: "Uptime", format: pct.format } } }, /* @__PURE__ */ React.createElement(A.LineChart, { data: uptime, x: "day" }, /* @__PURE__ */ React.createElement(A.ChartReference, { y: [0.995, 1], label: "Normal range" }), /* @__PURE__ */ React.createElement(A.ChartReference, { y: 0.999, label: "Target 99.9%" }), /* @__PURE__ */ React.createElement(A.ChartReference, { y: 0.99, label: "Limit 99%", tone: "critical" }), /* @__PURE__ */ React.createElement(A.ChartAnnotation, { x: "2026-03-14", label: "DNS outage" }))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "r2" }, "Cloud spend"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Against the daily budget; the median moves with the week")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "r2", aspect: 2.2, config: { cost: { label: "Cost", format: usd.format } } }, /* @__PURE__ */ React.createElement(A.BarChart, { data: later ? weekB : weekA, x: "day" }, /* @__PURE__ */ React.createElement(A.ChartReference, { y: 700, label: "Budget $700", tone: "caution" }), /* @__PURE__ */ React.createElement(A.ChartReference, { y: "median", label: "Median" }))), /* @__PURE__ */ React.createElement("div", { className: "row", style: { marginTop: 12 } }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setLater((v) => !v) }, later ? "Last week" : "This week")))), /* @__PURE__ */ React.createElement(Chart, { id: "r3", title: "Accessibility score", sub: "By team, against the bar of 75", config: { score: { label: "Score" } } }, /* @__PURE__ */ React.createElement(A.BarChart, { data: teams, x: "team", layout: "horizontal" }, /* @__PURE__ */ React.createElement(A.ChartReference, { y: 75, label: "Bar 75" }))), /* @__PURE__ */ React.createElement(Chart, { id: "r4", title: "p95 latency", sub: picked ? `Picked: ${picked}` : "Events stack into rows where they would overlap", config: { latency: { label: "p95", format: (v) => `${v} ms` } } }, /* @__PURE__ */ React.createElement(A.LineChart, { data: deploys, x: "day" }, /* @__PURE__ */ React.createElement(A.ChartReference, { y: "mean", label: "Average" }), /* @__PURE__ */ React.createElement(A.ChartAnnotation, { x: "2026-04-10", label: "Cache rollout", onSelect: () => setPicked("Cache rollout") }), /* @__PURE__ */ React.createElement(A.ChartAnnotation, { x: "2026-04-11", label: "v2 launch", onSelect: () => setPicked("v2 launch") }), /* @__PURE__ */ React.createElement(A.ChartAnnotation, { x: "2026-04-15", label: "Incident 412" }))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

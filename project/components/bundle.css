@@ -1477,8 +1477,31 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-bar-label-status { fill: var(--ink-muted); }
 .alt-chart-readout-note { margin-left: 6px; color: var(--ink); font-weight: 600; }
 .alt-chart-readout-note::before { content: "· "; }
+/* ── References and annotations (#68): what a chart is read against. A reference line is 1px ink-muted and solid,
+   because dashes mean projected; a status threshold wears caution or critical, with its icon in the label. A band is a
+   flat line-coloured fill (a decorative token, so it isn't read as data or as an opening), under the marks. Labels are
+   caption text on a halo of the plot's colour, kept apart in rows. An annotation is a Badge plate flush at the top of
+   the plot (a label is part of the record) with a 1px line-control leader to its x; one that acts lifts one level. ── */
+.alt-chart-ref { stroke: var(--ink-muted); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-ref[data-tone="caution"] { stroke: var(--caution); }
+.alt-chart-ref[data-tone="critical"] { stroke: var(--critical); }
+.alt-chart-ref-label text { fill: var(--ink-muted); stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-chart-ref-label[data-tone] text { fill: var(--ink); }
+.alt-chart-ref-icon { color: var(--critical); }
+.alt-chart-ref-label[data-tone="caution"] .alt-chart-ref-icon { color: var(--caution); }
+.alt-chart-note-leader { stroke: var(--line-control); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-note { position: absolute; z-index: 1; justify-content: center; box-sizing: border-box; }
+button.alt-chart-note { border: 0; cursor: pointer; box-shadow: var(--elev-0); transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise); }
+button.alt-chart-note:hover { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+button.alt-chart-note:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 @media (forced-colors: active) {
   .alt-bar-pending { stroke: CanvasText; stroke-dasharray: 2 2; }
+  .alt-chart-ref, .alt-chart-ref[data-tone] { stroke: CanvasText; }
+  .alt-chart-ref-label text, .alt-chart-ref-label[data-tone] text { fill: CanvasText; stroke: Canvas; }
+  .alt-chart-ref-icon, .alt-chart-ref-label[data-tone="caution"] .alt-chart-ref-icon { color: CanvasText; }
+  .alt-chart-note-leader { stroke: CanvasText; }
+  .alt-chart-note, button.alt-chart-note { border: 1px solid CanvasText; }
+  button.alt-chart-note:focus-visible { outline-color: Highlight; }
   .alt-chart-boundary line { stroke: CanvasText; }
   .alt-chart-boundary-label { fill: CanvasText; stroke: Canvas; }
   .alt-line-hollow { fill: Canvas; }
