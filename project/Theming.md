@@ -22,7 +22,9 @@ Set a scheme with `<AltitudeProvider scheme="mesa">`, or with `data-theme="mesa"
 - `accent-ink` is your color nudged toward ink until it reads at 4.5:1 on every surface from trench to modal, for text, links and the focus ring.
 - `accent-soft` is a 13% (light) or 20% (dark) tint of the ground.
 
-The derivation reruns when the scheme changes, so one brand color works in light and dark. Very pale accents (yellows, pastels) still need checking: a checked checkbox's fill should hold 3:1 against the ground.
+The derivation reruns when the scheme changes, so one brand color works in light and dark.
+
+The accent leads the chart palette too (see **The data palette** below). The scheme's slot nearest your colour makes way for one in your colour's hue, at the lightness nearest yours that clears every gate (3:1 marks, the lightness band, and the distance from status and presence hues). If no colour within 30° of your hue clears them, that nearest slot leads unchanged: a green brand in daylight leads with daylight's own green, because `positive` blocks the rest. The other five slots re-order behind `data-1`. Every order is tried, and the one that keeps neighbours furthest apart for colour-blind readers wins. The magnitude ramp `data-seq-*` follows `data-1`'s hue. Nothing is generated beyond the scheme's own slots, the result is the same every time for the same accent and scheme, and a slot is dropped (the palette then ends in `data-other`) only if no order keeps every neighbour 8 apart, which the provider says in a console warning. Another slot can still sit close to your accent; `checkScheme(el, { include: ['data'] })` reports it. Very pale accents (yellows, pastels) still need checking: a checked checkbox's fill should hold 3:1 against the ground.
 
 ## Your own scheme
 
@@ -53,7 +55,7 @@ const base = Object.fromEntries(tokens.color.tokens.map((t) => [t.name, typeof t
 expect(checkScheme({ ...base, ...paper.tokens })).toEqual([]);
 ```
 
-Only hex colours can be measured; `checkScheme` reports any other value it was asked to check. To ship a scheme as CSS instead, write a `[data-theme="paper"]` block that sets the tokens and pass `scheme="paper"`. Anything the block leaves out falls back to daylight, and nothing checks it for you, so run `checkScheme(element)` on it in a test.
+Only hex colours can be measured; `checkScheme` reports any other value it was asked to check. Its data-palette gates are opt-in, so existing tests keep passing: `checkScheme(tokens, { include: ['core', 'data'] })` runs both, and `include: ['data']` only the palette's. The provider runs both on a custom scheme, so a scheme that changes its grounds or status hues and leaves the `data-*` tokens to its base says which slots it broke. To ship a scheme as CSS instead, write a `[data-theme="paper"]` block that sets the tokens and pass `scheme="paper"`. Anything the block leaves out falls back to daylight, and nothing checks it for you, so run `checkScheme(element)` on it in a test.
 
 ## Making a new scheme
 
@@ -88,7 +90,7 @@ Six is a measured limit, not a choice: past it, series fold into `data-other` or
 - The diverging poles are never `positive` or `critical` (ΔE ≥ 15 from both): red–green is the worst pair for colour-blind readers, and both hues mean status.
 - When a series *means* good or bad (error rate, uptime), it wears the status tokens with an icon and a word, not a `data-*` slot, and never both in one chart.
 
-A custom scheme that sets its own surfaces or status colours should set the `data-*` tokens too and check them; checking them with `checkScheme` and deriving them from a custom accent is [#50](https://github.com/richlaconte/altitude/issues/50).
+A custom scheme that sets its own surfaces or status colours should set the `data-*` tokens too, and check them with `checkScheme(tokens, { include: ['data'] })`. A custom accent re-leads the palette (see **Custom accent**).
 
 ## Your own fonts
 

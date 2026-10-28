@@ -1437,9 +1437,12 @@ export declare function contrast(a: string, b: string): number;
 /**
  * Check a scheme's colours against the invariants every scheme keeps (the surface ladder climbs; text, control edges and
  * presence colours hold contrast on every surface). Pass the colour tokens by name, or an element to read them from.
- * Returns one sentence per problem; [] passes.
+ * Returns one sentence per problem; [] passes. `include` defaults to `['core']`; add `'data'` for the data palette's
+ * gates (separation for colour-blind readers, 3:1 marks, distance from the accent, status and presence, monotone ramps).
  */
-export declare function checkScheme(colors: Partial<Record<SchemeColorToken, string>> | Element): string[];
+export declare function checkScheme(colors: Partial<Record<SchemeColorToken, string>> | Element, options?: { include?: SchemeCheck[] }): string[];
+/** Which invariants checkScheme measures: `core` is the surface ladder and contrast, `data` the data palette. */
+export type SchemeCheck = 'core' | 'data';
 
 declare global {
   interface Window {
