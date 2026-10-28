@@ -31,6 +31,12 @@ export interface BarChartProps {
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds, so positions survive. */
   rescale?: boolean;
+  /** The selected record's x value, for marks you can select. The others recede; the frame says "Filtered to …". */
+  selected?: unknown;
+  /** Makes marks selectable: called with the chosen record, or null when the selection clears (Escape, Clear, or choosing it again). */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes marks open a level down, inside a Drilldown: return the id of the current node's child this record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */
@@ -234,7 +240,7 @@ BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Char
   }
   return {
     kind: p.stack === 'expand' ? 'Stacked bar chart of shares' : p.stack ? 'Stacked bar chart' : 'Bar chart',
-    xScale: 'band', zero: true, swatch: 'rect', layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale,
+    xScale: 'band', zero: true, swatch: 'rect', layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

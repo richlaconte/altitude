@@ -34,6 +34,12 @@ export interface AreaChartProps {
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds, so positions survive. */
   rescale?: boolean;
+  /** The selected record's x value, for marks you can select. The others recede; the frame says "Filtered to …". */
+  selected?: unknown;
+  /** Makes marks selectable: called with the chosen record, or null when the selection clears (Escape, Clear, or choosing it again). */
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Makes marks open a level down, inside a Drilldown: return the id of the current node's child this record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
   /** Show only the latest stretch of x, as LineChart's `window`: it glides one step in a `live` container. */
   window?: ChartWindow;
   /** A ChartTooltip or ChartLegend. */
@@ -168,7 +174,7 @@ AreaChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   return {
     kind: p.stack === 'expand' ? 'Stacked area chart of shares' : p.stack ? 'Stacked area chart' : 'Area chart',
     zero: true, swatch: 'rect', imprint: 'area', yExtent, format: p.y?.format, seriesUp: !!p.stack, share: !!p.stack, status: p.status, boundary: p.boundary,
-    data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale,
+    data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

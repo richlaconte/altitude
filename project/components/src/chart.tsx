@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cx, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
-import { Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
+import { Button, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
+import { useDrilldown } from './nav';
 import { DataTable } from './collections';
 import { EmptyState } from './empty';
 import { Arrive, Await, isPromise, readPromised, useArrival, useHasWaited, useReportWaiting } from './suspense';
@@ -318,6 +319,11 @@ export interface ChartInfo {
   seriesUp?: boolean;
   /** A stacked point names its share of the total ("31% of 3.9K") rather than only the total. */
   share?: boolean;
+  /** Marks you can select (#69): the selected record's x, and what to do when a record is chosen (null clears). */
+  selected?: unknown;
+  onSelect?: (d: ChartDatum | null) => void;
+  /** Marks you drill into (#69): the id of the current Drilldown node's child that a record opens. */
+  drill?: (d: ChartDatum) => string | null | undefined;
   /** Filter in place (#70): which records match. Misses recede to 35%, keeping their place and colour. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** Fit y to the matches rather than holding the axis. The rescale is staged as any is. */
@@ -367,12 +373,14 @@ export interface ChartTooltipContentProps {
   formatX?: (x: unknown) => string;
   /** Filled in by the container: "So far" or "Projected" when the record under the readout isn't yet the record. */
   note?: string;
+  /** Filled in by the container: what a click does here ("Select to filter"), when marks act. Hover is a promise. */
+  action?: string;
 }
 /**
  * The readout's rows: value first (ink, tabular), series name second (ink-muted), keyed by a short stroke of the
  * series colour, which takes the series' dash when patterns are on. Labels are text, never HTML.
  */
-export function ChartTooltipContent({ indicator = 'line', labelFormat, hideLabel, hideIndicator, label, payload = [], formatX, note }: ChartTooltipContentProps) {
+export function ChartTooltipContent({ indicator = 'line', labelFormat, hideLabel, hideIndicator, label, payload = [], formatX, note, action }: ChartTooltipContentProps) {
   return (
     <>
       {!hideLabel && (
@@ -394,6 +402,7 @@ export function ChartTooltipContent({ indicator = 'line', labelFormat, hideLabel
           <span className="alt-chart-readout-name">{p.label}</span>
         </div>
       ))}
+      {action && <div className="alt-chart-readout-action">{action}</div>}
     </>
   );
 }
@@ -825,17 +834,28 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   // The band's series, by default the config's first: hiding it hides the band rather than moving it to another series.
   const bandInfo = info.band ? { ...info.band, series: info.band.series ?? Object.keys(config)[0] } : undefined;
-  const relevanceOf = (d: ChartDatum): 'match' | 'miss' | undefined => {
-    const v = info.relevance?.(d);
-    return v === 'match' || v === 'miss' ? v : undefined;
-  };
-  const filtered = !!info.relevance && data.some((d) => relevanceOf(d) !== undefined);
-  const matchCount = filtered ? data.filter((d) => relevanceOf(d) !== 'miss').length : 0;
   const statusOf = (d: ChartDatum): ChartStatus | undefined => {
     const v = info.status?.(d);
     return v === 'partial' || v === 'projected' ? v : undefined;
   };
   const xKey = xProp ?? (childProps.x as string | undefined) ?? '';
+  // Selection (#69): the chosen record keeps its colour and the rest recede, in the same language as a filter.
+  const drillCtx = useDrilldown();
+  const interactive = !!(info.onSelect || info.drill);
+  const sameX = (a: unknown, b: unknown) => String(a) === String(b) || (isTimeLike(a) && isTimeLike(b) && toTime(a) === toTime(b));
+  const hasSelection = !!info.onSelect && info.selected !== undefined && info.selected !== null;
+  const userRelevance = (d: ChartDatum): 'match' | 'miss' | undefined => { const v = info.relevance?.(d); return v === 'match' || v === 'miss' ? v : undefined; };
+  const filtered = !!info.relevance && data.some((d) => userRelevance(d) !== undefined);
+  const matchCount = filtered ? data.filter((d) => userRelevance(d) !== 'miss').length : 0;
+  const isSelected = (d: ChartDatum) => hasSelection && sameX(d[xKey], info.selected);
+  const selecting = hasSelection && data.some(isSelected);
+  const relevanceOf = (d: ChartDatum): 'match' | 'miss' | undefined => (selecting ? (isSelected(d) && userRelevance(d) !== 'miss' ? 'match' : 'miss') : userRelevance(d));
+  /** A record chosen by click, tap, Enter or Space: drill into it, or select it (choosing the selected one clears). */
+  const activate = (d: ChartDatum) => {
+    if (info.drill) { const id = info.drill(d); if (id !== null && id !== undefined) drillCtx?.open(String(id)); return; }
+    info.onSelect?.(isSelected(d) ? null : d);
+  };
+  const actionWord = (d: ChartDatum) => (info.drill ? 'Select to open' : isSelected(d) ? 'Select to clear' : 'Select to filter');
   // A chart type that needs zero (bars) gets it whatever the prop says: a bar that starts above zero misstates its length.
   const zero = info.zero === true ? true : zeroProp ?? info.zero ?? true;
 
@@ -1102,7 +1122,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     }
     // Filter in place (#70): for lines and areas, the stretch of x each record owns, to the midpoints with its neighbours.
     const relevanceRegions: ChartContextValue['relevanceRegions'] = [];
-    if (info.relevance && frame.kind !== 'band') {
+    if ((info.relevance || info.onSelect) && frame.kind !== 'band') {
       const xs = rows.map((d) => xOf(d));
       rows.forEach((d, i) => {
         // Edges on whole pixels, so neighbouring stretches meet without an anti-aliased seam.
@@ -1186,7 +1206,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       setActive: (i) => show(i),
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
       status: statusOf, hasStatus: !!info.status, statusRanges: { record, pending },
-      relevance: relevanceOf, hasRelevance: !!info.relevance, relevanceRegions,
+      relevance: relevanceOf, hasRelevance: !!info.relevance || !!info.onSelect, relevanceRegions,
     };
     return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo };
   };
@@ -1238,7 +1258,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       out += ` ${items.length === 1 ? 'Reference' : 'References'}: ${items.join('; ')}.`;
     }
     if (notes.length) out += ` ${notes.length} ${notes.length === 1 ? 'annotation' : 'annotations'}: ${notes.map((n) => `${n.label}, ${formatX(n.x)}`).join('; ')}.`;
-    if (filtered) out += ` ${countText}.`;
+    if (selecting) out += ` Filtered to ${formatX(info.selected)}.`;
+    else if (filtered) out += ` ${countText}.`;
     return out;
   })();
 
@@ -1290,7 +1311,21 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       show(nearest(x, y));
     }, 250) };
   };
-  const onPointerUp = () => { if (holdTouch.current) { window.clearTimeout(holdTouch.current.timer); if (!sticky.current) holdTouch.current = null; } };
+  const onPointerUp = (e: React.PointerEvent) => {
+    const h = holdTouch.current;
+    if (h) { window.clearTimeout(h.timer); if (!sticky.current) holdTouch.current = null; }
+    // A tap (released before the hold that shows the readout) selects or drills, where marks act.
+    if (interactive && e.pointerType === 'touch' && h && !sticky.current) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) activate(d); }
+  };
+  /** The record a shown mark stands for, by its key: the shown rows glide, but what's chosen is the record itself. */
+  const recordAt = (i: number) => { const shown = top.ctx.data[i]; if (!shown) return null; const k = rowKey(shown); return data.find((d) => rowKey(d) === k) ?? null; };
+  const onClick = (e: React.MouseEvent) => {
+    if (!interactive || (e.target as HTMLElement).closest('button, a, .alt-chart-note')) return;
+    if ((e.nativeEvent as PointerEvent).pointerType === 'touch') return;
+    const i = nearest(e.clientX, e.clientY);
+    const d = i === null ? null : recordAt(i);
+    if (d) activate(d);
+  };
   const onPointerLeave = (e: React.PointerEvent) => { if (e.pointerType !== 'touch' && !sticky.current) { show(null); hold('pointer', false); } };
   const onPointerEnter = (e: React.PointerEvent) => { if (e.pointerType !== 'touch') hold('pointer', true); };
   React.useEffect(() => {
@@ -1331,7 +1366,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const st = statusOf(d);
     let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}${st ? `, ${CHART_STATUS_WORDS[st].toLowerCase()}` : ''}.`;
     if (glowing(rowKey(d), s.key)) out += ' Changed.';
-    if (relevanceOf(d) === 'miss') out += ' Not matching.';
+    if (relevanceOf(d) === 'miss' && !selecting) out += ' Not matching.';
     if (bandInfo && bandInfo.series === s.key && num(d[bandInfo.low]) && num(d[bandInfo.high])) {
       out += ` ${bandInfo.label} ${s.format(d[bandInfo.low] as number)} to ${s.format(d[bandInfo.high] as number)}.`;
     }
@@ -1354,6 +1389,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const n = series.length, m = data.length, page = Math.max(1, Math.round(m * 0.1));
     const at: Nav = { level: nav.level, s: navS, p: navP };
     let next: Nav | null = null;
+    // Escape clears a selection first, then goes back up a level.
+    if (e.key === 'Escape' && selecting) { e.preventDefault(); e.stopPropagation(); info.onSelect?.(null); return; }
     if (at.level === 'summary') {
       if (e.key === 'Enter' || e.key === ' ') next = single ? { level: 'points', s: 0, p: 0 } : { level: 'series', s: 0, p: 0 };
     } else if (at.level === 'series') {
@@ -1363,6 +1400,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       else if (e.key === 'End') next = { ...at, s: n - 1 };
       else if (e.key === 'Enter' || e.key === ' ') next = { level: 'points', s: at.s, p: 0 };
       else if (e.key === 'Escape') next = { ...at, level: 'summary' };
+    } else if (interactive && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault(); e.stopPropagation();
+      const d = data[at.p];
+      if (d) activate(d);
+      return;
     } else {
       const moveP: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, PageDown: page, PageUp: -page };
       if (e.key in moveP) next = { ...at, p: Math.max(0, Math.min(m - 1, at.p + moveP[e.key])) };
@@ -1383,7 +1425,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       onKeyDown: onNavKey, role: 'button' as const,
     });
     if (nav.level === 'summary') {
-      return <div {...common('sum', true)} className="alt-chart-node" data-level="summary" aria-roledescription="chart" style={plotBox}
+      return <div {...common('sum', true)} className="alt-chart-node" data-level="summary" aria-roledescription="chart" style={plotBox} data-drill-focus=""
         aria-label={`${summaryText} Press Enter to explore ${single ? 'the data' : 'the series'}.`} />;
     }
     if (nav.level === 'series') {
@@ -1397,7 +1439,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       const [px, py] = ChartPointFn ? ChartPointFn(childProps, top.ctx, shown, s.key) : [top.ctx.xOf(shown), num(v) ? top.ctx.y(v) : top.ctx.ground];
       const at = horizontal && !ChartPointFn ? [num(v) ? top.ctx.y(v) : top.ctx.ground, top.ctx.xOf(shown)] : [px, py];
       return <div {...common(`p${navS}-${i}`, i === navP)} className="alt-chart-node" data-level="point" aria-roledescription="data point"
-        style={{ left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navS, i)} />;
+        aria-pressed={info.onSelect && !info.drill ? isSelected(d) : undefined} aria-haspopup={info.drill ? 'true' : undefined}
+        style={{ left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navS, i) + (interactive ? ` Press Enter to ${info.drill ? 'open it' : isSelected(d) ? 'clear the filter' : 'filter to it'}.` : '')} />;
     });
   })();
 
@@ -1422,7 +1465,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const content = tipEl?.props.content ?? <ChartTooltipContent />;
     return (
       <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
-        {React.cloneElement(content, { label: d[xKey], payload, formatX, note: (() => { const st = statusOf(d); const words = [st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })() })}
+        {React.cloneElement(content, { label: d[xKey], payload, formatX, note: (() => { const st = statusOf(d); const words = [st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' && !selecting ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })(),
+          action: interactive ? actionWord(d) : undefined })}
       </div>
     );
   })();
@@ -1439,8 +1483,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         )}
         {wrapViews(<div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
           data-stage={stage} data-patterns={patterns ? '' : undefined} data-refreshing={refreshing ? '' : undefined} aria-busy={refreshing || undefined} style={height != null ? { height } : { aspectRatio: String(aspect) }}
-          onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onPointerLeave={onPointerLeave} onPointerEnter={onPointerEnter}
-          data-live={live ? '' : undefined}>
+          onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { if (holdTouch.current) { window.clearTimeout(holdTouch.current.timer); holdTouch.current = null; } }} onClick={onClick} onPointerLeave={onPointerLeave} onPointerEnter={onPointerEnter}
+          data-live={live ? '' : undefined} data-interactive={interactive ? '' : undefined}>
           {refreshing && <span className="alt-sr">Updating</span>}
           {/* Nothing to show is an opening, not an empty plot: an EmptyState in the plot's own box, with no axes. */}
           {!data.length && (
@@ -1523,6 +1567,18 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                         })}
                       </g>
                     )}
+                    {/* Hover is a promise: only where a click selects or drills, the record under the pointer is outlined in 2px ink. */}
+                    {i === layers.length - 1 && interactive && ctx.active && (
+                      <g className="alt-chart-hover" aria-hidden="true" key={rowKey(ctx.active)}>
+                        {ctx.series.filter((s2) => typeof ctx.active![s2.key] === 'number').map((s2) => {
+                          const MarkFn = (chartChild?.type as ChartChild | undefined)?.chartMark, PointFn = (chartChild?.type as ChartChild | undefined)?.chartPoint;
+                          const path = MarkFn?.(childProps, ctx, ctx.active!, s2.key);
+                          const v = ctx.active![s2.key] as number;
+                          const [px, py] = PointFn ? PointFn(childProps, ctx, ctx.active!, s2.key) : horizontal ? [ctx.y(v), ctx.xOf(ctx.active!)] : [ctx.xOf(ctx.active!), ctx.y(v)];
+                          return path ? <path key={s2.key} d={path} /> : <circle key={s2.key} cx={px} cy={py} r={7} />;
+                        })}
+                      </g>
+                    )}
                     {/* Reference lines over the marks, solid (dashes mean projected), each labelled in caption text. */}
                     {refGeo.length > 0 && (
                       <g className="alt-chart-refs">
@@ -1595,7 +1651,13 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           {readout}
         </div>)}
         {/* Filtered in place: the frame says how many match, in words, so the count never depends on seeing the fade. */}
-        {filtered && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
+        {filtered && !selecting && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
+        {/* Selected: the frame says what the chart (and whatever it filters) is narrowed to, with a way back. */}
+        {info.onSelect && (
+          <div className="alt-chart-selection" aria-live="polite">
+            {selecting && <><span>Filtered to {formatX(info.selected)}</span><Button variant="ghost" size="sm" onClick={() => info.onSelect?.(null)}>Clear</Button></>}
+          </div>
+        )}
         {live && (
           <div className="alt-chart-live">
             <span className="alt-chart-updated" {...captionDepth}>

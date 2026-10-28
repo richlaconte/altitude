@@ -64,6 +64,7 @@ Choose by the job the data does, not by what looks rich.
 These are the elevation signals a chart adds to **Elevation**'s table:
 
 - **Amounts** are never height. They are length and position on a flat plot standing on the ground line.
+- **Marks that act.** Only where a click selects or drills do marks respond to the pointer, with a 2px `ink` outline and the action in the readout. A selection keeps its colour and recedes the rest, and a drill opens the child chart in `Drilldown` (E41).
 - **Filtered in place.** A filter recedes misses to 35% where they stand and holds the axis, so positions survive; the frame says how many match (E40).
 - **Live.** A live chart shows a change at once and leaves a fading `ink` outline on the mark; a whole refresh glows the "Updated" caption instead. Its window glides with time, and it holds still while someone reads it, with a switch to pause it (E39).
 - **Read against.** Targets, limits, normal ranges and events (`ChartReference`, `ChartAnnotation`) lie flush with the marks: a solid 1px line, a flat `line` band, a `Badge` plate with a leader. Their words are laid out together so they never overlap (E38).

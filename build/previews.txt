@@ -1671,6 +1671,50 @@ function App() {
   );
 }
 
+=== ChartSelect | <!-- @dsCard group="Charts" height=820 subtitle="Marks you can select or drill into; hover only promises what a click does" -->
+--- css
+.cs2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 720px) { .cs2 { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const byRegion = [['US', 412], ['EU', 356], ['APAC', 248], ['LATAM', 131]].map(([region, revenue]) => ({ region, revenue }));
+const months = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'];
+const trend = (r) => months.map((month, i) => ({ month, revenue: Math.round(({ US: 64, EU: 55, APAC: 38, LATAM: 20 }[r] ?? 177) * (1 + i * 0.06)) }));
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
+const qs = [['Q1', 610], ['Q2', 702], ['Q3', 655], ['Q4', 780]].map(([q, bookings]) => ({ q, bookings: bookings * 1000 }));
+const monthsOf = (q) => ({ Q1: ['Jan', 'Feb', 'Mar'], Q2: ['Apr', 'May', 'Jun'], Q3: ['Jul', 'Aug', 'Sep'], Q4: ['Oct', 'Nov', 'Dec'] }[q]).map((m, i) => ({ m, bookings: Math.round(qs.find((x) => x.q === q).bookings / 3 * (0.9 + i * 0.1)) }));
+const bookings = { bookings: { label: 'Bookings', format: usd.format } };
+function App() {
+  const [region, setRegion] = React.useState('EU');
+  const quarterNodes = qs.map((d) => ({ id: d.q, title: d.q, content: (
+    <A.ChartContainer title={`Bookings by month, ${d.q} 2026`} aspect={2.1} config={bookings}><A.BarChart data={monthsOf(d.q)} x="m" /></A.ChartContainer>
+  ) }));
+  return (
+    <div className="cs2">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="s1">Revenue by region</A.CardTitle><A.CardDescription>Select a region to filter the chart below</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="s1" aspect={2.2} config={{ revenue: { label: 'Revenue', format: (v) => usd.format(v * 1000) } }}>
+            <A.BarChart data={byRegion} x="region" selected={region} onSelect={(d) => setRegion(d ? d.region : null)} />
+          </A.ChartContainer>
+          <div style={{ marginTop: 16 }}>
+            <A.ChartContainer title={region ? `Monthly revenue, ${region}` : 'Monthly revenue, all regions'} aspect={2.6} config={{ revenue: { label: 'Revenue', format: (v) => usd.format(v * 1000) } }}>
+              <A.LineChart data={trend(region)} x="month" />
+            </A.ChartContainer>
+          </div>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Bookings</A.CardTitle><A.CardDescription>Select a quarter to see its months</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.Drilldown root={{ id: 'year', title: '2026', content: (
+            <A.ChartContainer title="Bookings by quarter, 2026" aspect={2.1} config={bookings}><A.BarChart data={qs} x="q" drill={(d) => d.q} /></A.ChartContainer>
+          ), children: quarterNodes }} />
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

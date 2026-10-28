@@ -14,6 +14,8 @@ Change over time: latency over a day, revenue over a year, one series or a few c
 
 **Props:** `data` and `x`; `curve` (`'linear'` or `'monotone'`); `y={{ format }}` to format the axis; `endLabels` to turn end labels on or off (default on for up to four series, and always under forced colours and in print). `status` and `boundary` (below); `band={{ low, high, series?, label? }}` for an uncertainty band. `linePath(points, curve)` is exported for your own marks: it draws the same path, gaps and all.
 
+**Selecting and drilling.** `selected` and `onSelect` make the marks a selection that cross-filters the rest of a dashboard, and `drill` opens a level down inside a `Drilldown`. Hover only promises what a click does. See [ChartContainer](../ChartContainer/README.md), "Marks you can select or drill into".
+
 **Filtering in place.** `relevance={(d) => 'match' | 'miss' | undefined}` recedes misses to 35% and keeps everything in place; `rescale` fits the axis to the matches. See [ChartContainer](../ChartContainer/README.md), "Filtering in place".
 
 **Not yet the record.** `status={(d) => d.day > today ? 'projected' : undefined}` dashes the line (5 4) from the last settled point on, and draws those points hollow: ringed in the series colour on the plot's own. It's one path clipped two ways, so a curve doesn't kink where the record ends. A 1px `line-control` rule named "Today" marks the boundary. Point names, the readout's heading and the table say "Projected" or "So far", and the generated summary reads its trend from the settled points only, then says what's projected. While patterns are on, a line that has its own dash keeps it, and the hollow points carry the difference.

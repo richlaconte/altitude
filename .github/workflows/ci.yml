@@ -93,11 +93,12 @@ jobs:
           node ../scripts/record-check.mjs react18-chart-reference node checks/chart-reference.mjs
           node ../scripts/record-check.mjs react18-chart-live node checks/chart-live.mjs
           node ../scripts/record-check.mjs react18-chart-filter node checks/chart-filter.mjs
+          node ../scripts/record-check.mjs react18-chart-select node checks/chart-select.mjs
           node ../scripts/record-check.mjs react18-sparkline node checks/sparkline.mjs
           node ../scripts/record-check.mjs react18-stat node checks/stat.mjs
           node ../scripts/record-check.mjs react18-meter node checks/meter.mjs
           node ../scripts/record-check.mjs react18-bar-list node checks/bar-list.mjs
-          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,AreaChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,ChartStatus,ChartReference,ChartLive,ChartFilter,Sparkline,Stat,Meter,BarList daylight 960
+          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,AreaChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,ChartStatus,ChartReference,ChartLive,ChartFilter,ChartSelect,Sparkline,Stat,Meter,BarList daylight 960
           DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
           DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
 

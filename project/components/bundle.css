@@ -1493,6 +1493,21 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   .alt-chart-count { color: CanvasText; }
 }
 
+/* ── Marks you can select or drill into (#69). Hover is a promise: only where a click does something does the plot take
+   a pointer cursor and outline the record under it in 2px ink (appearing over dur-travel-1), and the readout names the
+   action. A mark can't lift without misstating its value, so in a chart the hover cue is the outline, the cursor and
+   the readout; height stays with the readout. The selection keeps its colour and the rest recede, as a filter's do. ── */
+.alt-chart-plot[data-interactive] { cursor: pointer; }
+.alt-chart-hover path, .alt-chart-hover circle { fill: none; stroke: var(--ink); stroke-width: 2; pointer-events: none; animation: alt-chart-hover-in var(--dur-travel-1) var(--ease-glide); }
+@keyframes alt-chart-hover-in { from { stroke-opacity: 0; } }
+.alt-chart-readout-action { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); color: var(--ink-muted); font-weight: 500; }
+.alt-chart-selection { display: flex; align-items: center; gap: var(--space-2); min-height: 0; font: 500 13px/19px var(--font-sans); color: var(--ink); }
+.alt-chart-selection:empty { display: none; }
+@media (forced-colors: active) {
+  .alt-chart-hover path, .alt-chart-hover circle { stroke: Highlight; }
+  .alt-chart-readout-action { border-top-color: CanvasText; }
+}
+
 /* ── Live charts (#66): show the new state at once and leave a fading trace (phosphor). A new or changed mark carries
    a 2px ink outline (an outline, not height or a glow) that holds for the first second and decays over dur-settle on
    ease-decay, with its value beside it for that first second. A whole refresh is one change: the "Updated" caption
