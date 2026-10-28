@@ -1,7 +1,18 @@
-import json, sys
+import json, os, sys
 THEMES = [("daylight","Daylight"),("nightfall","Nightfall"),("mesa","Mesa"),("alpine","Alpine")]
 T = ["daylight","nightfall","mesa","alpine"]
 def c(*v): return dict(zip(T, v))
+
+def data_tokens():
+    p = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "palette.json")))
+    usage = {f"data-{i}": f"Categorical series {i}: identity only, in config order. Charts only, as presence-* is only for people; never text, surfaces or status." for i in range(1, 7)}
+    usage["data-1"] = "Categorical series 1, in the accent's hue (or the nearest that clears status and presence). Charts only, as presence-* is only for people; never text, surfaces or status."
+    usage["data-other"] = "The fold for a seventh and later series: a neutral that holds 3:1 on ground and raised."
+    usage.update({f"data-seq-{i}": f"Magnitude ramp, step {i} of 7 (1 is least). One hue, monotone lightness; dark schemes climb from their ground." for i in range(1, 8)})
+    usage.update({f"data-div-neg-{i}": f"Diverging ramp, {i} step{'s' if i > 1 else ''} below the midpoint (orange). Never a status hue." for i in range(1, 4)})
+    usage["data-div-mid"] = "Diverging ramp midpoint: a neutral for the meaningful middle (zero, target, average)."
+    usage.update({f"data-div-pos-{i}": f"Diverging ramp, {i} step{'s' if i > 1 else ''} above the midpoint (blue). Never a status hue." for i in range(1, 4)})
+    return [(n, {t: p[t][n] for t in T}, usage[n]) for n in p["daylight"]]
 
 colors = [
  # surfaces by altitude
@@ -36,6 +47,8 @@ colors = [
  ("presence-2", c("#0b7285","#3fc1d0","#0b7285","#5cc8e0"), "Second collaborator's presence colour."),
  ("presence-3", c("#7046c9","#b39dff","#6e44c2","#b9a3ff"), "Third collaborator's presence colour."),
  ("on-presence", c("#ffffff","#0b0d12","#ffffff","#06100d"), "Name-tag text on any presence-* fill."),
+ # data: charts only, as presence-* is only for people. Chosen by palette.mjs, which writes palette.json (#49)
+ *data_tokens(),
  ("scrim",         c("#12161f52","#00000080","#221b144d","#00000080"), "The veil a dialog lays over everything beneath it."),
 ]
 

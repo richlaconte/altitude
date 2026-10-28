@@ -32,6 +32,7 @@ If Playwright's browser isn't installed, point `CHROME` at any Chromium or headl
 | Render | `node shoot.mjs Name1,Name2 daylight,nightfall,mesa,alpine 960` | writes `test/shot-<Name>-<scheme>.png`, prints page errors and console errors/warnings, and exits non-zero if there are any. No names = every preview. Env: `DPR=2`, `WAIT=ms`, `FORCED=1` (forced colours), `ACT="(async()=>{ …page… })()"` to interact before the screenshot. |
 | Interaction checks | `node checks/approach-and-lamps.mjs && node checks/field-focus.mjs && node checks/avatar.mjs && node checks/modal-lifecycle.mjs && node checks/inline-edit.mjs && node checks/actions-in-place.mjs` | after a render of every preview (they open `test/p-<Name>-daylight.html`); exit non-zero on a failure |
 | Contact sheet | `cd test && python3 ../sheet.py out.png Name1,Name2 daylight,nightfall` | needs Pillow |
+| Data palette | `node palette.mjs && python3 tokens.py ../project/tokens.json` | only when a scheme's colours or the gates change; chooses every `data-*` token (see Theming, "The data palette"). CI runs `node palette.mjs --check` |
 | Tokens | `python3 tokens.py ../project/tokens.json` | only if a token genuinely has to change; it re-checks contrast and must report 0 failures |
 
 ## Actions in place runtime coverage

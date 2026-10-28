@@ -11,12 +11,12 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
 3. **Height belongs to the chart's chrome, not to its data.** Every live part of a chart is a component you already know (see **Every part, by its build** below). Nothing new is invented for charts.
 4. **Hover is a promise, in charts too.** On a static chart the crosshair and readout appear and the marks don't respond. Only marks that do something when clicked show a hover outline and a pointer cursor. Marks never lift: a bar lifted off the ground line, or one casting a shadow below its top edge, misstates its value.
 5. **Colour does one job per chart.** Pick one:
-   - **identity**: the categorical `data-*` palette, one colour per series;
-   - **magnitude**: a sequential ramp, light to dark;
-   - **polarity**: a diverging ramp around a meaningful midpoint;
+   - **identity**: the categorical palette, `data-1` to `data-6` in config order, then `data-other`;
+   - **magnitude**: the sequential ramp `data-seq-1` to `data-seq-7`;
+   - **polarity**: the diverging ramp `data-div-*` around a meaningful midpoint;
    - **status**: `positive`, `caution`, `critical`, only when the series *means* good or bad, and then with an icon and a word, as status always has.
 
-   Colour follows the entity: hiding or filtering a series never repaints the others. Text wears `ink` and `ink-muted`, never a series colour. `accent` and the `presence-*` hues stay reserved for what they already mean.
+   Colour follows the entity: hiding or filtering a series never repaints the others. Text wears `ink` and `ink-muted`, never a series colour. `accent` and the `presence-*` hues stay reserved for what they already mean. `data-1` shares the accent's hue so a chart's first series looks like the product, but it's a different colour from `accent` and isn't a control. The values and their gates are in **Theming** ("The data palette").
 6. **One axis.** No dual-axis charts: two scales on one plot invite a correlation the data never made. Two measures of different scale are two charts, small multiples, or indexed to a common base.
 7. **Spend changes carefully.** Data that changes glides to its new value at one level, as a re-sort does: it's one change. New data gets an afterglow within the attention budget. Nothing grows from the baseline on first render for decoration; the chart is simply there.
 8. **A chart never travels alone.** As height never travels alone: every chart has a written summary, a keyboard path through its data, a table view, and direct labels or patterns so no series is told apart by colour alone.

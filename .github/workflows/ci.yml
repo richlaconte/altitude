@@ -45,6 +45,7 @@ jobs:
         working-directory: build
         run: |
           npx tsc -p tsconfig.json
+          node palette.mjs --check
           node build.mjs
           node previews.mjs
           test -z "$(git ls-files --others --exclude-standard -- ../project)" || { echo "::error::Generated project files must be tracked."; exit 1; }
