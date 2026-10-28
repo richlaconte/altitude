@@ -8,7 +8,7 @@ export interface LineChartProps {
   x: string;
   /** 'linear' joins points with straight lines; 'monotone' curves through them without overshooting. Default 'linear'. */
   curve?: 'linear' | 'monotone';
-  /** Formats the y axis and readouts, when the series' own formats aren't wanted. */
+  /** Formats values (the axis, the readout, the names and the summary) of series that have no format of their own. */
   y?: { format?: (value: number) => string };
   /** Name each line at its end. Default: on for up to four series, and always under forced colours and in print. */
   endLabels?: boolean;
@@ -69,13 +69,14 @@ export function linePath(points: Array<[number, number] | null>, curve: 'linear'
  * end, so the legend is the lines themselves.
  */
 export function LineChart({ curve = 'linear', endLabels }: LineChartProps) {
-  const { data, series, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active } = useChart();
+  const { data, series, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis } = useChart();
   const labelled = endLabels ?? (series.length <= 4 || directLabels);
   const lines: React.ReactNode[] = [];
   const ends: Array<{ key: string; label: string; x: number; y: number; a: number }> = [];
   for (const s of series) {
     const e = encode(s.key);
-    const a = alpha(null, s.key);
+    // While the keyboard is on one series, the others recede.
+    const a = alpha(null, s.key) * (emphasis && emphasis !== s.key ? 0.3 : 1);
     const pts = data.map((d) => (isNum(d[s.key]) ? ([xOf(d), y(d[s.key] as number)] as [number, number]) : null));
     lines.push(
       <g key={s.key} className="alt-line" data-series={s.key} opacity={a < 1 ? a : undefined}>
@@ -102,7 +103,8 @@ export function LineChart({ curve = 'linear', endLabels }: LineChartProps) {
   // The record under the readout: each line's point there, ringed in the plot's own colour (an outline, not height).
   const hovered = active ? series.filter((s) => isNum(active[s.key])).map((s) => {
     const e = encode(s.key);
-    return <ChartMarker key={s.key + '-active'} className="alt-line-active" shape={patterns ? e.marker : 'circle'} x={xOf(active)} y={y(active[s.key] as number)} size={8} color={e.stroke} />;
+    return <ChartMarker key={s.key + '-active'} className="alt-line-active" shape={patterns ? e.marker : 'circle'} x={xOf(active)} y={y(active[s.key] as number)} size={8} color={e.stroke}
+      opacity={emphasis && emphasis !== s.key ? 0.3 : undefined} />;
   }) : null;
   return (
     <g className="alt-lines">
@@ -118,7 +120,7 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const labels = Object.values(config).map((c) => c.label);
   const labelled = p.endLabels ?? labels.length <= 4;
   return {
-    kind: 'Line chart', zero: false, swatch: 'line', yFormat: p.y?.format,
+    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format,
     right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
   };
 };

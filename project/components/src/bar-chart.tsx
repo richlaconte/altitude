@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useChart, type ChartConfig, type ChartDatum, type ChartInfo } from './chart';
+import { useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo } from './chart';
 
 export interface BarChartProps {
   /** The records: one per category. */
@@ -63,7 +63,9 @@ function barPath(horizontal: boolean, a: number, b: number, g: number, e: number
  * series, several side by side, or stacked into a total.
  */
 export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
-  const { data, series, x, y, ground, horizontal, alpha, encode, gap, xKey, format } = useChart();
+  const { data, series, x, y, ground, horizontal, alpha: presence, encode, gap, xKey, format, emphasis } = useChart();
+  // While the keyboard is on one series, the others recede.
+  const alpha: typeof presence = (d, key) => presence(d, key) * (key && emphasis && emphasis !== key ? 0.3 : 1);
   if (x.kind !== 'band') return null;
   const keys = series.map((s) => s.key);
   const expand = stack === 'expand';
@@ -135,6 +137,28 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
   });
   return <g className="alt-bar">{marks}{texts}</g>;
 }
+
+/** Where a record's bar for one series ends, for the keyboard's focus ring: the data end of that bar or segment. */
+BarChart.chartPoint = (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string): [number, number] => {
+  const p = props as unknown as BarChartProps;
+  const { x, y, series, gap, horizontal, xKey } = ctx;
+  if (x.kind !== 'band') return [0, 0];
+  const keys = series.map((s) => s.key);
+  const cat = String(d[xKey]);
+  let across: number, along: number;
+  if (p.stack) {
+    const sum = p.stack === 'expand' ? total(d, keys) || 1 : 1;
+    let up = 0, down = 0;
+    for (const k of keys) { const v = num(d[k]) / sum; if (v > 0) up += v; else down += v; if (k === key) { along = y(v >= 0 ? up : down); break; } }
+    across = x(cat) + x.bandwidth / 2;
+  } else {
+    const i = Math.max(0, keys.indexOf(key)), n = keys.length;
+    const w = Math.max(1, (x.bandwidth - gap * (n - 1)) / n);
+    across = x(cat) + i * (w + gap) + w / 2;
+    along = y(num(d[key]));
+  }
+  return horizontal ? [along!, across] : [across, along!];
+};
 
 BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): ChartInfo => {
   const p = props as unknown as BarChartProps;

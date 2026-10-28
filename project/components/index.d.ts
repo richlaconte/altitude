@@ -1501,6 +1501,8 @@ export interface ChartContextValue {
   formatX: (value: unknown) => string;
   /** Categories run down the side and values along the bottom: x(cat) is a distance from the top, y(v) from the left. */
   horizontal: boolean;
+  /** The series the keyboard is on, or null: chart types draw the others receded. */
+  emphasis: string | null;
   /** The record the readout is on (pointed at, touched, or focused from the keyboard), or null. */
   active: ChartDatum | null;
   /** Put the readout on a record by its index in `data`, or take it away with null: for keyboard paths. */
@@ -1632,7 +1634,7 @@ export interface LineChartProps {
   x: string;
   /** 'linear' joins points with straight lines; 'monotone' curves through them without overshooting. Default 'linear'. */
   curve?: 'linear' | 'monotone';
-  /** Formats the y axis, when the series' own formats aren't wanted. */
+  /** Formats values (the axis, the readout, the names and the summary) of series that have no format of their own. */
   y?: { format?: (value: number) => string };
   /** Name each line at its end. Default: on for up to four series, and always under forced colours and in print. */
   endLabels?: boolean;
