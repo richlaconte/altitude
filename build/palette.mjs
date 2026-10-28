@@ -1,4 +1,5 @@
 // The data palette (#49): chooses every data-* token in every scheme from the gates in Theming.md ("The data palette").
+// The colour science and the gates live in project/components/src/palette.ts, which checkScheme also uses.
 //
 //   node palette.mjs           choose the palette and write palette.json (python3 tokens.py then puts it in tokens.json)
 //   node palette.mjs --check   choose it again and fail if palette.json or tokens.json disagree, or a gate fails (CI)
@@ -10,29 +11,17 @@
 // is exhaustive over the grid, so the result is deterministic.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { oklch, fromOklch, maxChroma, deltaE, cvdDeltaE, contrast } from './color.mjs';
+import {
+  oklch, fromOklch, maxChroma, deltaE, cvdDeltaE, contrastRatio as contrast, hueGap, sequentialRamp, checkDataPalette,
+  DATA_GATES as GATES, DATA_RESERVED as RESERVED,
+} from '../project/components/src/palette.ts';
 
 const here = (p) => new URL(p, import.meta.url);
 const tokens = JSON.parse(readFileSync(here('../project/tokens.json'), 'utf8'));
 const V = Object.fromEntries(tokens.color.tokens.map((t) => [t.name, t.value]));
 const SCHEMES = { daylight: 'light', nightfall: 'dark', mesa: 'light', alpine: 'dark' };
-const RESERVED = ['accent', 'positive', 'caution', 'critical', 'presence-1', 'presence-2', 'presence-3'];
 const POLE_AVOID = ['positive', 'critical'];
-
-export const GATES = {
-  reserved: 12,     // OKLab ΔE×100 from accent, status and presence-*; E23 says why not 15
-  normal: 15,       // between any two categorical slots, normal vision
-  hue: 25,          // degrees between any two slots: identity is a hue, not a shade of one
-  cvd: 8,           // between adjacent slots, under protanopia and deuteranopia
-  cvdAny: 6,        // between any two slots; direct labels and patterns (#72) carry the rest
-  contrast: 3,      // marks on surface-ground and surface-raised
-  chroma: 0.1,
-  band: { light: [0.43, 0.77], dark: [0.48, 0.67] },
-  rampStep: 0.06,   // smallest lightness step in the sequential and diverging ramps
-};
 const SLOTS = 6;
-
-const hueGap = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
 const r3 = (x) => Math.round(x * 1000) / 1000;
 
 function candidates(scheme) {
@@ -96,12 +85,6 @@ function other(scheme, slots) {
   throw new Error(`${scheme}: no data-other clears the slots`);
 }
 
-/** Magnitude, low to high: light schemes darken from near-white; dark schemes start near their ground and climb. */
-function sequential(scheme, h) {
-  const Ls = SCHEMES[scheme] === 'dark' ? [0.32, 0.41, 0.5, 0.59, 0.68, 0.77, 0.86] : [0.94, 0.85, 0.76, 0.67, 0.58, 0.49, 0.4];
-  return Ls.map((L, i) => fromOklch(L, Math.min(maxChroma(L, h), 0.03 + (0.12 * i) / 6), h));
-}
-
 /**
  * Polarity: orange below the midpoint and blue above it, around a neutral midpoint. Under protanopia and deuteranopia
  * the blue–yellow axis survives, so the two sides stay apart (ColorBrewer's PuOr and RdBu do the same). The hues and
@@ -118,7 +101,7 @@ function diverging(scheme) {
     for (let warm = 40; warm <= 70; warm += 5) for (let cool = 230; cool <= 270; cool += 5) {
       const neg = ramp(warm), pos = ramp(cool);
       // Neither pole is positive or critical: red–green is the worst pair for colour-blind readers, and both are status.
-      if ([neg[2], pos[2]].some((c) => POLE_AVOID.some((s) => deltaE(c, V[s][scheme]) < GATES.normal))) continue;
+      if ([neg[2], pos[2]].some((c) => POLE_AVOID.some((s) => deltaE(c, V[s][scheme]) < GATES.pole))) continue;
       const score = Math.min(...[0, 1, 2].map((k) => cvdDeltaE(neg[k], pos[k])));
       if (score > best.score + 1e-9) best = { score, neg, pos };
     }
@@ -135,7 +118,7 @@ export function choose() {
     const t = {};
     slots.forEach((c, i) => (t[`data-${i + 1}`] = c));
     t['data-other'] = other(scheme, slots);
-    sequential(scheme, oklch(slots[0])[2]).forEach((c, i) => (t[`data-seq-${i + 1}`] = c));
+    sequentialRamp(oklch(slots[0])[2], SCHEMES[scheme] === 'dark').forEach((c, i) => (t[`data-seq-${i + 1}`] = c));
     [2, 1, 0].forEach((k) => (t[`data-div-neg-${k + 1}`] = div.neg[k]));
     t['data-div-mid'] = div.mid;
     [0, 1, 2].forEach((k) => (t[`data-div-pos-${k + 1}`] = div.pos[k]));
@@ -144,47 +127,24 @@ export function choose() {
   return out;
 }
 
-/** Every gate, measured: the failures, and the figures Research.md quotes. */
+/** Every gate, measured by the same check checkScheme runs, and the figures Research.md quotes. */
 export function measure(palette) {
   const fails = [], rows = [];
   for (const [scheme, t] of Object.entries(palette)) {
-    const [lo, hi] = GATES.band[SCHEMES[scheme]];
+    const get = (n) => t[n] ?? V[n][scheme];
+    fails.push(...checkDataPalette(get).map((m) => `${scheme}: ${m}`));
     const slots = Array.from({ length: SLOTS }, (_, i) => t[`data-${i + 1}`]);
-    const ground = V['surface-ground'][scheme], raised = V['surface-raised'][scheme];
     let adjCvd = Infinity, anyCvd = Infinity, anyNor = Infinity, minC = Infinity, near = { d: Infinity };
     slots.forEach((c, i) => {
-      const [L, C] = oklch(c);
-      if (L < lo - 0.005 || L > hi + 0.005) fails.push(`${scheme} data-${i + 1} ${c}: lightness ${L.toFixed(3)} outside ${lo}–${hi}`);
-      if (C < GATES.chroma - 0.002) fails.push(`${scheme} data-${i + 1} ${c}: chroma ${C.toFixed(3)} under ${GATES.chroma}`);
-      minC = Math.min(minC, contrast(c, ground), contrast(c, raised));
-      for (const r of RESERVED) { const d = deltaE(c, V[r][scheme]); if (d < near.d) near = { d, slot: `data-${i + 1}`, r }; }
+      minC = Math.min(minC, contrast(c, get('surface-ground')), contrast(c, get('surface-raised')));
+      for (const r of RESERVED) { const d = deltaE(c, get(r)); if (d < near.d) near = { d, slot: `data-${i + 1}`, r }; }
       if (i) adjCvd = Math.min(adjCvd, cvdDeltaE(slots[i - 1], c));
       for (let j = 0; j < i; j++) { anyCvd = Math.min(anyCvd, cvdDeltaE(slots[j], c)); anyNor = Math.min(anyNor, deltaE(slots[j], c)); }
     });
-    if (minC < GATES.contrast) fails.push(`${scheme}: a slot is ${minC.toFixed(2)}:1 on ground or raised`);
-    if (near.d < GATES.reserved) fails.push(`${scheme} ${near.slot}: ΔE ${near.d.toFixed(1)} from ${near.r}`);
-    if (adjCvd < GATES.cvd) fails.push(`${scheme}: adjacent CVD ΔE ${adjCvd.toFixed(1)}`);
-    if (anyCvd < GATES.cvdAny) fails.push(`${scheme}: CVD ΔE ${anyCvd.toFixed(1)} between two slots`);
-    if (anyNor < GATES.normal) fails.push(`${scheme}: normal ΔE ${anyNor.toFixed(1)} between two slots`);
-    const oc = Math.min(contrast(t['data-other'], ground), contrast(t['data-other'], raised));
-    if (oc < GATES.contrast) fails.push(`${scheme} data-other: ${oc.toFixed(2)}:1`);
-    const ramps = {
-      seq: Array.from({ length: 7 }, (_, i) => t[`data-seq-${i + 1}`]),
-      'div-neg': ['data-div-mid', 'data-div-neg-1', 'data-div-neg-2', 'data-div-neg-3'].map((k) => t[k]),
-      'div-pos': ['data-div-mid', 'data-div-pos-1', 'data-div-pos-2', 'data-div-pos-3'].map((k) => t[k]),
-    };
     let minStep = Infinity;
-    for (const [name, ramp] of Object.entries(ramps)) {
-      const Ls = ramp.map((c) => oklch(c)[0]), dir = Math.sign(Ls[1] - Ls[0]);
-      for (let i = 1; i < Ls.length; i++) {
-        const step = (Ls[i] - Ls[i - 1]) * dir;
-        minStep = Math.min(minStep, step);
-        if (step < GATES.rampStep - 1e-3) fails.push(`${scheme} ${name}: lightness step ${step.toFixed(3)} at ${i}`);
-      }
-    }
-    for (const pole of ['data-div-neg-3', 'data-div-pos-3']) for (const s of POLE_AVOID) {
-      const d = deltaE(t[pole], V[s][scheme]);
-      if (d < GATES.normal) fails.push(`${scheme} ${pole}: ΔE ${d.toFixed(1)} from ${s}`);
+    for (const ramp of [Array.from({ length: 7 }, (_, i) => `data-seq-${i + 1}`), ['data-div-mid', 'data-div-neg-1', 'data-div-neg-2', 'data-div-neg-3'], ['data-div-mid', 'data-div-pos-1', 'data-div-pos-2', 'data-div-pos-3']]) {
+      const Ls = ramp.map((k) => oklch(t[k])[0]), dir = Math.sign(Ls[1] - Ls[0]);
+      for (let i = 1; i < Ls.length; i++) minStep = Math.min(minStep, (Ls[i] - Ls[i - 1]) * dir);
     }
     const divCvd = Math.min(...[1, 2, 3].map((k) => cvdDeltaE(t[`data-div-neg-${k}`], t[`data-div-pos-${k}`])));
     rows.push({ scheme, adjCvd, anyCvd, anyNor, minC, near, minStep, divCvd });

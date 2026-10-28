@@ -94,6 +94,9 @@ function App() {
 .scheme h4 { margin: 0; font: 600 14px/20px var(--font-sans); }
 .scheme small { margin-top: -8px; font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
 .scheme .alt-btn { align-self: flex-start; }
+.series { display: flex; gap: 6px; align-items: center; }
+.series span { width: 14px; height: 14px; border-radius: var(--radius-full); }
+.series small { margin: 0 0 0 4px; }
 --- jsx
 // A custom scheme: warm paper grounds and green ink laid over mesa. checkScheme() passes it.
 const paper = { name: 'paper', base: 'mesa', tokens: {
@@ -113,6 +116,7 @@ function App() {
           <A.Button variant="primary" size="sm">Publish</A.Button>
           <A.Input size="sm" placeholder="Search" />
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><A.Switch defaultChecked aria-label="Enabled" /><A.Badge tone="accent">Beta</A.Badge></div>
+          <div className="series">{[1, 2, 3, 4, 5, 6].map((n) => <span key={n} style={{ background: `var(--data-${n})` }} />)}<small>{accent ? 'data-1…6, led by the accent' : 'data-1…6'}</small></div>
         </div></A.AltitudeProvider>
       ))}
     </div>

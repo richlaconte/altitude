@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { AltitudeContext, ModalProvider, modalDocument, useAltitudeContext } from './modal-state';
+import { DATA_RESERVED, DATA_SLOTS, DATA_TOKENS, accentCandidates, checkDataPalette, isDarkGround, leadSlots, oklch, sequentialRamp } from './palette';
 
 /** useLayoutEffect in the browser, useEffect on the server, where layout effects can't run (React 18 warns about them). */
 export const useIsoLayoutEffect = typeof window === 'undefined' ? React.useEffect : React.useLayoutEffect;
@@ -242,13 +243,21 @@ for (const g of ['surface-ground', 'surface-well', 'surface-raised', 'surface-tr
 for (const p of ['presence-1', 'presence-2', 'presence-3']) { PAIRS.push(['on-presence', p, 4.5]); for (const g of SURFACES) PAIRS.push([p, g, 3]); }
 const isHex = (v: string) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v);
 
+/** Which invariants checkScheme measures: `core` is the surface ladder and contrast, `data` the data palette's gates. */
+export type SchemeCheck = 'core' | 'data';
+
 /**
  * Check a scheme against the invariants every scheme keeps: the surfaces climb in lightness (trench < well < ground
  * < raised ≤ … ≤ modal) and text, control edges and presence colours hold their contrast on every surface. Pass the
  * colour tokens by name (without `--`), or an element to read them from. Returns one sentence per problem; [] passes.
  * Only hex values can be measured; any other value of a checked token is reported.
+ *
+ * `include` picks the checks; it defaults to `['core']`. Add `'data'` for the data palette's gates (Theming.md, "The
+ * data palette"): lightness band and chroma, colour-blind and normal-vision separation, 3:1 on ground and raised,
+ * distance from the accent, status and presence hues, and monotone ramps.
  */
-export function checkScheme(colors: Partial<Record<SchemeColorToken, string>> | Element): string[] {
+export function checkScheme(colors: Partial<Record<SchemeColorToken, string>> | Element, options: { include?: SchemeCheck[] } = {}): string[] {
+  const include = options.include ?? ['core'];
   const cs = typeof Element !== 'undefined' && colors instanceof Element ? getComputedStyle(colors) : null;
   const get = (n: string) => (cs ? cs.getPropertyValue('--' + n) : (colors as Record<string, string | undefined>)[n] ?? '').trim();
   const out: string[] = [];
@@ -260,6 +269,11 @@ export function checkScheme(colors: Partial<Record<SchemeColorToken, string>> | 
     return false;
   };
   const L = (n: string) => lum(hexToRgb(get(n)));
+  if (include.includes('data')) {
+    const need = ['surface-ground', 'surface-raised', ...DATA_RESERVED, ...DATA_TOKENS];
+    if (need.map(ok).every(Boolean)) out.push(...checkDataPalette(get));
+  }
+  if (!include.includes('core')) return out;
   for (let i = 1; i < SURFACES.length; i++) {
     const lo = SURFACES[i - 1], hi = SURFACES[i];
     if (!ok(lo) || !ok(hi)) continue;
@@ -282,6 +296,34 @@ export interface CustomScheme {
   base?: BuiltInScheme;
   /** Colour and shadow tokens by name, without `--`. */
   tokens: Partial<Record<SchemeColorToken | SchemeShadowToken, string>>;
+}
+
+/**
+ * The data palette for a custom accent, read against the scheme the provider's root wears: the scheme's slot nearest
+ * the accent makes way for a colour in the accent's hue (see leadSlots), the rest re-order behind it, and the magnitude
+ * ramp follows data-1's hue. Returns the variables, and one sentence per slot the accent cost.
+ */
+function deriveData(accent: string, root: HTMLElement): { vars: Record<string, string>; notes: string[] } {
+  // Read the scheme's own values from a twin of the root: the root itself already wears the derived variables.
+  const twin = root.ownerDocument.createElement('div');
+  twin.className = 'alt-root';
+  twin.hidden = true;
+  for (const a of ['data-theme', 'data-scheme-id']) { const v = root.getAttribute(a); if (v) twin.setAttribute(a, v); }
+  (root.parentNode ?? root.ownerDocument.body).insertBefore(twin, root);
+  const cs = getComputedStyle(twin);
+  const base: Record<string, string> = {};
+  for (const n of ['surface-ground', 'surface-raised', ...DATA_RESERVED, ...DATA_TOKENS]) base[n] = cs.getPropertyValue('--' + n).trim();
+  twin.remove();
+  base.accent = accent;
+  const bad = Object.entries(base).filter(([, v]) => !isHex(v)).map(([n]) => n);
+  if (bad.length) return { vars: {}, notes: [`${bad.join(', ')} ${bad.length > 1 ? 'aren\'t' : 'isn\'t'} a hex colour, so the data palette can't follow the accent.`] };
+  const get = (n: string) => base[n];
+  const { slots, dropped } = leadSlots(accent, accentCandidates(accent, get), DATA_SLOTS.map(get));
+  const vars: Record<string, string> = {};
+  DATA_SLOTS.forEach((n, i) => (vars['--' + n] = slots[i] ?? base['data-other']));
+  sequentialRamp(oklch(slots[0])[2], isDarkGround(base['surface-ground'])).forEach((c, i) => (vars[`--data-seq-${i + 1}`] = c));
+  const notes = dropped.map((c) => `${DATA_SLOTS[DATA_SLOTS.map(get).indexOf(c)]} ${c} can't sit beside the accent's data-1 ${slots[0]} for colour-blind readers in any order, so it's dropped and the palette ends in data-other.`);
+  return { vars, notes };
 }
 
 const SHADOW_OR_LINE = /^(trench|well|elev-\d|lip-top|lip-bottom|line)$/;
@@ -348,17 +390,24 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
   React.useEffect(() => {
     if (!custom || !rootRef.current || warned.current === schemeKey) return;
     warned.current = schemeKey!;
-    const issues = checkScheme(rootRef.current);
+    const issues = checkScheme(rootRef.current, { include: ['core', 'data'] });
     if (issues.length) console.warn(`Altitude: the scheme "${custom.name}" breaks ${issues.length} of the scheme invariants (see Theming.md):\n` + issues.join('\n'));
   }, [schemeKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const accentWarned = React.useRef('');
   useIsoLayoutEffect(() => {
     if (!accent || !rootRef.current) { setAccentVars(null); return; }
     const el = rootRef.current;
     const compute = () => {
       const cs = getComputedStyle(el);
       const read = (n: string) => cs.getPropertyValue(n).trim();
-      setAccentVars(deriveAccent(accent, ['--surface-ground', '--surface-trench', '--surface-raised', '--surface-modal'].map(read)));
+      const data = deriveData(accent, el);
+      setAccentVars({ ...deriveAccent(accent, ['--surface-ground', '--surface-trench', '--surface-raised', '--surface-modal'].map(read)), ...data.vars } as React.CSSProperties);
+      const key = accent + '|' + (el.getAttribute('data-theme') ?? el.ownerDocument.documentElement.getAttribute('data-theme') ?? '') + '|' + schemeKey;
+      if (data.notes.length && accentWarned.current !== key) {
+        accentWarned.current = key;
+        console.warn(`Altitude: the accent ${accent} changes the data palette (see Theming.md, "Custom accent"):\n` + data.notes.join('\n'));
+      }
     };
     compute();
     const mo = new MutationObserver(compute);
