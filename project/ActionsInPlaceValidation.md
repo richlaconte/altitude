@@ -75,7 +75,8 @@ The 320 CSS pixel checks use touch emulation (`tap` for controls, simulated text
 | REC-09 | Persistent labelled keyboard/tap action, focus/no-stealing, modal background inert; real touch/AT testing remains open. |
 | REC-10 | Delayed A dismissal cannot remove B; recovery destination persists after dismissal/replacement. |
 | REC-11 | D3/D4 share one source/service, all five named fixtures, reset/counters outside the product. |
-| REC-12 | Alert/Toaster guidance, generated source equality and CI wiring. |
+| REC-12 | Alert/Toaster guidance, generated source equality and CI wiring. Since #97: archive recovery is held in the row's slot, not a separate Alert. |
+| RR-01–07 | Since #97, `RemovalReceipt`: the receipt keeps the row's slot (nothing moves while it holds); the gap glides closed; Undo moves to a toast after the close, and the toast's Undo brings the row back; the hold pauses for pointer and focus and waits while a mouse is over the list; receipts due together close together; reduced motion closes at once; a known newer revision withdraws a toast's Undo. |
 | CON-01 | D2/D4 exact accessible name/description, consequence and initial Cancel asserted. Actual screen-reader announcement order remains open. |
 | CON-02 | Open/Cancel/Escape before dispatch produce zero mutations. |
 | CON-03 | One mutation for captured ID/revision; similar-name neighbor is unchanged. |
@@ -88,7 +89,7 @@ The 320 CSS pixel checks use touch emulation (`tap` for controls, simulated text
 | CON-10 | Full runnable recipe, pending/failure fixtures, generated previews and owning CI checks; no ConfirmAction export. |
 | DEM-01 | D1 title + independent table cell and harness-only dialog baseline share validation/save adapter/fixtures. |
 | DEM-02 | D2 sequential presentation toggle with the same records, target, semantics and reset. |
-| DEM-03 | D3 immediate archive, confirmed raised Alert Undo, persistent Archived route and real fixture inverse. |
+| DEM-03 | D3 immediate archive, confirmed Undo in the row's own slot and then in a toast, persistent Archived route and real fixture inverse. (Before #97, a raised Alert below the list.) |
 | DEM-04 | D4 uses shared InlineEdit/Dialog with ordinary Files/Archived actions; only archived files can be permanently deleted. |
 | DEM-05 | Immutable fictional IDs and five required deterministic timing/failure/conflict/interruption fixtures; accepted-operation logs. |
 | DEM-06 | Three canonical preview cards, four experiences, guide links, generated artifacts, checks and evidence upload. |
@@ -105,7 +106,11 @@ The pinned Playwright 1.48.2 does not forward `prefers-contrast` emulation. Incr
 
 Routine resolutions preserve the specified experience: D3/D4 use one hash-selected scene; their copyable guide is generated from canonical source. Existing `useAltitude().pushLayer()` remains a deprecated visual vote for source consumers; document ownership is private. All generated preview wrappers now include a viewport meta tag so 320 CSS pixel checks reflect actual mobile sizing, and a data favicon to avoid irrelevant local-server 404 noise. No tokens, dependencies, public action framework or version number were changed.
 
+**Left in place, then closed ([#97](https://github.com/richlaconte/altitude/issues/97)).** Measuring the original flow frame by frame showed the archived row vanishing in one frame (the rows below jumping 77px), its recovery Alert appearing 172px from the click, and a second 10px shift when the pending Alert became the recovery Alert. Recovery now shows in the row's own slot with `RemovalReceipt`, holds for the new `dur-linger` token, closes with a glide, and then hands Undo to a toast; failures stay with their row. This revises the earlier decision to keep a persistent Alert for actionable recovery, and adds one token.
+
 ## Outstanding human gates
+
+Two questions from #97 are open and can't be settled by a timer or a scan: whether the close (`dur-travel-3`) is noticeable enough, and whether waiting for the pointer to leave the list before closing reads as lag. `dur-linger` (2000ms) is a judgement, not a measurement.
 
 No formative participant sessions have been conducted. The required six to eight counterbalanced sessions and final accept/revise decision remain open. No speed, preference or comprehension improvement is claimed.
 

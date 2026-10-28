@@ -152,6 +152,7 @@ tokens = {
      {"name": "dur-onset", "value": "500ms", "usage": "Gradual onset of non-predicted menu items (ephemeral adaptation)."},
      {"name": "dur-hold", "value": "1000ms", "usage": "How long a HoldButton must be held to push through the ground and commit."},
      {"name": "dur-hover", "value": "1800ms", "usage": "One breath of a pending surface hovering above the ground."},
+     {"name": "dur-linger", "value": "2000ms", "usage": "How long a removed item's receipt holds in its slot before the gap closes: long enough to read and Undo."},
      {"name": "dur-settle", "value": "8000ms", "usage": "Afterglow: new or changed content arrives at level 2 and settles to its resting level over this long."}]},
  "easing": {"note": "Things rise decelerating, sink accelerating, and controls that snap into place settle with a 2–3% overshoot.",
    "tokens": [

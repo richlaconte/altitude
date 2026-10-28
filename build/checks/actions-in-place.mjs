@@ -74,6 +74,15 @@ if (!process.env.ALT_MODEL_ONLY) {
   const archive = async p => { await action(p, 'archive').click(); await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).waitFor(); };
   const archived = p => p.getByRole('button', { name: /^Archived \(/ }).click();
   const snapshot = p => p.evaluate(() => window.__filesDemo.snapshot());
+  const leave = p => p.mouse.move(1, 1);
+  const closed = (p, id = 'file-brand') => p.locator(`[data-file-id="${id}"]`).waitFor({ state: 'detached', timeout: 12000 });
+  const tops = p => p.$$eval('[data-file-id]', rows => rows.map(row => [row.dataset.fileId, Math.round(row.getBoundingClientRect().top), Math.round(row.getBoundingClientRect().height)]));
+  // Every position the next row passes through while a receipt holds and closes.
+  const track = (p, id, ms) => p.evaluate(([id, ms]) => new Promise(resolve => {
+    const out = [], row = document.querySelector(`[data-file-id="${id}"]`), t0 = performance.now();
+    const tick = () => { out.push(Math.round(row.getBoundingClientRect().top)); if (performance.now() - t0 < ms) requestAnimationFrame(tick); else resolve(out); };
+    requestAnimationFrame(tick);
+  }), [id, ms]);
   const confirm = p => p.getByRole('dialog').getByRole('button', { name: 'Delete permanently', exact: true });
   const run = async (name, test) => { if (process.env.ALT_ACTIONS_CASE && !name.includes(process.env.ALT_ACTIONS_CASE)) return; let p; try { p = await test(); } catch (error) { expect(false, name + ': ' + error.message); } finally { if (p) await p.close(); } };
   await run('REC-01/02/03/10 direct action and persistent recovery', async () => {
@@ -81,7 +90,7 @@ if (!process.env.ALT_MODEL_ONLY) {
     await action(p, 'archive').focus(); await p.keyboard.press('Enter');
     expect(await action(p, 'archive').count() === 0 && await p.getByRole('dialog').count() === 0, 'REC-01 immediate archive without confirmation');
     expect(await p.getByRole('button', { name: /^Undo archive/ }).count() === 0, 'REC-02 no Undo before confirmation');
-    expect(await p.locator('[data-recovery]').innerText().then(t => t.includes('Archiving')), 'REC-01 truthful pending announcement');
+    expect(await p.locator('[data-file-id="file-brand"][data-removed]').innerText().then(t => t.includes('Archiving')), 'REC-01 truthful pending announcement in the row’s own slot');
     expect(await action(p, 'archive', 'file-brand-draft').evaluate(el => el === document.activeElement), 'REC-09 row removal focuses corresponding next action');
     await p.getByPlaceholder('Search files').fill('Launch');
     await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).waitFor();
@@ -90,8 +99,9 @@ if (!process.env.ALT_MODEL_ONLY) {
     await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).click();
     await action(p, 'archive').waitFor(); await p.waitForTimeout(1250);
     expect((await snapshot(p)).records[0].revision === 3, 'REC-02 confirmed inverse restores stable record position');
-    await archive(p); await p.locator('[data-recovery]').getByRole('button', { name: 'Dismiss', exact: true }).click(); await p.waitForTimeout(450);
-    await archived(p); expect(await action(p, 'restore').count() === 1, 'REC-03/10 Archived remains after dismissal');
+    await archive(p); await leave(p); await closed(p);
+    await p.locator('.alt-toast').getByRole('button', { name: 'Dismiss', exact: true }).click(); await p.waitForTimeout(450);
+    await archived(p); expect(await action(p, 'restore').count() === 1, 'REC-03/10 Archived remains after the receipt closes and its toast is dismissed');
     await action(p, 'restore').click(); await p.waitForTimeout(1250);
     expect(!(await snapshot(p)).records[0].archived, 'REC-03 durable Restore performs real inverse');
     return p;
@@ -100,15 +110,15 @@ if (!process.env.ALT_MODEL_ONLY) {
     const p = await open();
     await action(p, 'archive').evaluate(el => { el.click(); el.click(); });
     await p.waitForTimeout(180); expect((await snapshot(p)).accepted.length === 1, 'REC-04 duplicate activation suppressed synchronously');
-    await p.locator('[data-recovery]').getByRole('button', { name: 'Dismiss', exact: true }).click();
     await action(p, 'archive', 'file-brand-draft').click(); await p.waitForTimeout(470);
-    expect(await p.getByRole('button', { name: 'Undo archive of Brand guidelines draft.pdf', exact: true }).count() === 1, 'REC-10 dismissal of A cannot remove or hide B');
+    expect(await p.getByRole('button', { name: 'Undo archive of Brand guidelines draft.pdf', exact: true }).count() === 1
+      && await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).count() === 1, 'REC-10 A’s receipt and B’s are held independently');
     await p.evaluate(() => window.__filesDemo.service.setFixture('success-1200'));
     await action(p, 'archive', 'file-launch').click();
     await archived(p);
     await p.evaluate(() => window.__filesDemo.service.setFixture('success-100'));
     await action(p, 'restore', 'file-brand-draft').click(); await p.waitForTimeout(1300);
-    expect(await p.locator('[data-recovery]').innerText().then(t => t.includes('Brand guidelines draft.pdf is restored')), 'REC-08 older response never replaces more recent success');
+    expect(await p.locator('[data-file-id="file-brand-draft"]').innerText().then(t => t.includes('Brand guidelines draft.pdf restored.')), 'REC-08 older response never replaces more recent success');
     expect((await snapshot(p)).records.find(r => r.id === 'file-launch').archived, 'REC-08 independent slower record still reconciles');
     return p;
   });
@@ -139,7 +149,7 @@ if (!process.env.ALT_MODEL_ONLY) {
     await p.evaluate(() => window.__filesDemo.service.change('file-brand', { name: 'Brand guidelines updated.pdf' }));
     await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).click();
     expect(await p.getByRole('button', { name: /^Undo archive/ }).count() === 0, 'REC-07 invalid Undo removed with explanation');
-    expect(await p.locator('[data-recovery]').innerText().then(t => t.includes('changed after it was archived')), 'REC-07 stale Undo gives current recovery route');
+    expect(await p.locator('[data-file-id="file-brand"]').innerText().then(t => t.includes('changed after it was archived')), 'REC-07 stale Undo gives current recovery route in its slot');
     return p;
   });
   await run('CON-01/02/03/04 captured target and cancellation', async () => {
@@ -244,7 +254,7 @@ if (!process.env.ALT_MODEL_ONLY) {
     const p = await open();
     expect(await p.evaluate(() => { window.__initialQuietStatus = document.querySelector('.aip-completion[role="status"]'); return !!window.__initialQuietStatus; }), 'REC-12 quiet live status exists before the action');
     await archive(p);
-    expect(await p.locator('[data-recovery] .alt-alert').count() === 1, 'REC-12 ongoing archive recovery retains its Alert');
+    expect(await p.locator('[data-file-id="file-brand"][data-removed]').count() === 1 && await p.locator('.aip-recovery, [data-file-id="file-brand"] .alt-alert').count() === 0, 'REC-12 archive recovery is held in its row, not a separate Alert');
     await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).click(); await p.waitForTimeout(180);
     expect(await p.locator('[data-recovery]').innerText().then(text => text.includes('is restored.')), 'REC-12 Restore still announces completion');
     expect(await p.evaluate(() => window.__initialQuietStatus && document.querySelector('.aip-completion[role="status"]') === window.__initialQuietStatus), 'REC-12 completion updates the existing live status node');
@@ -255,8 +265,8 @@ if (!process.env.ALT_MODEL_ONLY) {
     await row.getByRole('textbox', { name: /^File name:/ }).fill('Renamed brand.pdf'); await row.getByRole('button', { name: 'Save changes', exact: true }).click(); await p.waitForTimeout(180);
     expect(await p.locator('[data-product]').innerText().then(text => !text.includes('Brand guidelines.pdf is restored.')), 'REC-12 completed rename leaves no stale completion filename');
     await action(p, 'archive').click(); await p.waitForTimeout(180); await archived(p); await action(p, 'delete').click(); await confirm(p).click(); await p.waitForTimeout(350);
-    expect(await p.locator('[data-recovery]').innerText().then(text => text.includes('was permanently deleted.')), 'CON-10 Delete still announces completion');
-    expect(await p.locator('[data-recovery] .alt-alert').count() === 0 && await p.locator('[data-recovery]').getAttribute('role') === 'status', 'CON-10 ordinary Delete uses quiet status, not Alert');
+    expect(await p.locator('[data-file-id="file-brand"] [role="status"]').innerText().then(text => text.includes('was permanently deleted.')), 'CON-10 Delete announces completion in the row’s slot');
+    expect(await p.locator('.aip-recovery, [data-file-id="file-brand"] .alt-alert').count() === 0, 'CON-10 ordinary Delete uses no Alert');
     expect(await p.getByRole('button', { name: /^Undo archive/ }).count() === 0, 'CON-10 permanent deletion offers no Undo');
     return p;
   });
@@ -283,7 +293,7 @@ if (!process.env.ALT_MODEL_ONLY) {
     const p = await open(); await archive(p);
     await p.evaluate(change => { window.__filesDemo.service.change('file-brand', change); window.__filesDemo.sync('file-brand'); }, patch);
     expect(await p.getByRole('button', { name: /^Undo archive/ }).count() === 0, 'REC-07 known stale or deleted target immediately removes Undo');
-    expect(await p.locator('[data-recovery]').innerText().then(text => patch.deleted ? text.includes('removed') : text.includes('changed after it was archived')), 'REC-07 invalidation explains current state without requiring stale activation');
+    expect(await p.locator('[data-file-id="file-brand"]').innerText().then(text => patch.deleted ? text.includes('removed') : text.includes('changed after it was archived')), 'REC-07 invalidation explains current state in its slot without requiring stale activation');
     return p;
   });
   await run('REC-07/08 late receipt cannot revive known stale Undo', async () => {
@@ -298,7 +308,7 @@ if (!process.env.ALT_MODEL_ONLY) {
     await action(p, 'archive').tap(); await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).waitFor();
     await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).tap(); await p.waitForTimeout(180);
     await action(p, 'archive').tap(); await p.getByRole('button', { name: 'Undo archive of Brand guidelines.pdf', exact: true }).waitFor();
-    await p.locator('[data-recovery]').getByRole('button', { name: 'Dismiss', exact: true }).tap(); await p.waitForTimeout(450);
+    await closed(p);
     await p.getByRole('button', { name: /^Archived \(/ }).tap(); await action(p, 'restore').tap(); await p.waitForTimeout(180);
     await p.getByRole('button', { name: /^Files \(/ }).tap(); const row = p.locator('[data-file-id="file-brand"]');
     await row.getByRole('button', { name: 'Rename', exact: true }).tap(); await row.getByRole('textbox', { name: /^File name:/ }).fill('Touch name.pdf');
@@ -321,6 +331,61 @@ if (!process.env.ALT_MODEL_ONLY) {
     expect(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'DEM-07 no horizontal page overflow ' + JSON.stringify(options));
     expect(await confirm(p).isVisible(), 'CON-09 consequence actions visible ' + JSON.stringify(options));
     await p.keyboard.press('Escape'); return p;
+  });
+  await run('RR-01/02/03 left in place, then closed', async () => {
+    const p = await open(), before = await tops(p);
+    await archive(p); await leave(p);
+    expect(JSON.stringify(await tops(p)) === JSON.stringify(before), 'RR-01 the receipt keeps the row’s slot: nothing moves while it holds');
+    expect(await p.locator('[data-file-id="file-brand"]').innerText().then(t => t.includes('Brand guidelines.pdf archived.')), 'RR-01 the result is shown where the row was');
+    expect(await p.locator('.alt-toast').count() === 0, 'RR-01 no toast while the receipt holds');
+    const path = await track(p, 'file-brand-draft', 2700), positions = new Set(path).size;
+    expect(path[0] === before[1][1] && path[path.length - 1] === before[0][1] && positions > 4, `RR-02 the gap glides closed rather than jumping (${positions} positions)`);
+    await closed(p);
+    const toast = p.locator('.alt-toast').filter({ hasText: 'Brand guidelines.pdf archived.' });
+    expect(await toast.count() === 1, 'RR-03 after the close, Undo moves to a toast');
+    await toast.getByRole('button', { name: 'Undo', exact: true }).click(); await p.waitForTimeout(500);
+    expect(!(await snapshot(p)).records[0].archived && await action(p, 'archive').count() === 1, 'RR-03 the toast’s Undo brings the file back into its place');
+    return p;
+  });
+  await run('RR-04 the hold pauses for pointer and focus, and waits for the pointer to leave the list', async () => {
+    const p = await open(); await archive(p);
+    await p.locator('[data-file-id="file-brand"]').hover(); await p.waitForTimeout(3000);
+    expect(await p.locator('[data-file-id="file-brand"][data-removed]').count() === 1, 'RR-04 pointing at the receipt pauses its hold');
+    await p.locator('[data-file-id="file-brand-draft"]').hover(); await p.waitForTimeout(2600);
+    expect(await p.locator('[data-file-id="file-brand"][data-removed]').count() === 1, 'RR-04 a pointer over the list keeps the next row from moving under it');
+    await leave(p); await closed(p);
+    await action(p, 'archive', 'file-brand-draft').click(); await leave(p);
+    await p.getByRole('button', { name: 'Undo archive of Brand guidelines draft.pdf', exact: true }).focus(); await p.waitForTimeout(3000);
+    expect(await p.locator('[data-file-id="file-brand-draft"][data-removed]').count() === 1, 'RR-04 focus inside the receipt pauses its hold');
+    await p.getByPlaceholder('Search files').focus(); await closed(p, 'file-brand-draft');
+    return p;
+  });
+  await run('RR-05 receipts due together close together', async () => {
+    const p = await open(); await archive(p); await action(p, 'archive', 'file-brand-draft').click(); await leave(p);
+    const seen = await p.evaluate(() => new Promise(resolve => {
+      const at = {}, t0 = performance.now();
+      const tick = () => {
+        for (const id of ['file-brand', 'file-brand-draft']) if (at[id] === undefined && document.querySelector(`[data-file-id="${id}"][data-leaving]`)) at[id] = performance.now() - t0;
+        if (Object.keys(at).length === 2 || performance.now() - t0 > 5000) resolve(at); else requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }));
+    expect(seen['file-brand'] !== undefined && Math.abs(seen['file-brand'] - seen['file-brand-draft']) < 50, 'RR-05 two receipts due within 250ms start closing as one change');
+    return p;
+  });
+  await run('RR-06 reduced motion closes the gap at once', async () => {
+    const p = await open('success-100', { reducedMotion: 'reduce' }); await archive(p); await leave(p);
+    const positions = new Set(await track(p, 'file-brand-draft', 2700)).size;
+    expect(positions === 2, `RR-06 under reduced motion nothing travels: the row is in its old place, then its new one (${positions} positions)`);
+    return p;
+  });
+  await run('RR-07 a known newer revision withdraws the toast’s Undo', async () => {
+    const p = await open(); await archive(p); await leave(p); await closed(p);
+    await p.evaluate(() => { window.__filesDemo.service.change('file-brand', { name: 'Current brand.pdf' }); window.__filesDemo.sync('file-brand'); });
+    await p.waitForTimeout(500);
+    expect(await p.locator('.alt-toast').filter({ hasText: 'Brand guidelines.pdf archived.' }).count() === 0, 'RR-07 stale toast Undo is withdrawn');
+    expect(await p.locator('[data-recovery]').innerText().then(t => t.includes('changed after it was archived')), 'RR-07 the change is explained below the list');
+    return p;
   });
   await browser.close();
 }

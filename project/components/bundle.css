@@ -634,6 +634,26 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-alert-close:hover { background: color-mix(in oklab, var(--ink) 8%, transparent); color: var(--ink); }
 .alt-alert-close:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 
+/* ── RemovalReceipt. Left in place, then closed: the result shows in the item's slot, at its height, on the ground
+   (a trace of what happened, not a live surface). It lifts off as an Alert does, and only then does the gap glide shut. ── */
+.alt-receipt-item { display: contents; }
+/* The receipt lays itself out, whatever the item's own layout was (a row stacked on a phone included); at the item's
+   height, its line sits in the middle of the slot. */
+.alt-receipt[data-removed] { box-sizing: border-box; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; align-content: center; justify-content: flex-start; gap: var(--space-2) var(--space-3); }
+.alt-receipt-note:empty { display: none; }
+.alt-receipt-note { flex: 1 1 12rem; min-width: 0; display: flex; align-items: center; gap: var(--space-2); color: var(--ink-muted); font: 400 14px/20px var(--font-sans);
+  animation: alt-receipt-in var(--dur-travel-2) ease-out both; }
+.alt-receipt-icon { display: inline-flex; flex: none; }
+.alt-receipt[data-tone="critical"] .alt-receipt-note { color: var(--ink); }
+.alt-receipt[data-tone="critical"] .alt-receipt-icon { color: var(--critical); }
+.alt-receipt-action { display: flex; flex-wrap: wrap; gap: var(--space-2); animation: alt-receipt-in var(--dur-travel-2) ease-out both; }
+@keyframes alt-receipt-in { from { opacity: 0; } }
+/* Like every pending surface, it only shows as pending after dur-grace, so a fast write never flickers. */
+.alt-receipt[data-status="pending"] { background: var(--surface-lifted); border-radius: var(--radius-md); transition: background-color var(--dur-travel-1) var(--ease-rise) var(--dur-grace); animation-fill-mode: forwards; }
+.alt-receipt[data-leaving] { pointer-events: none; }
+.alt-receipt[data-leaving] > .alt-receipt-note, .alt-receipt[data-leaving] > .alt-receipt-action { animation: alt-lifted-off calc(var(--dur-travel-3) * 0.7) var(--ease-sink) both; }
+@media (forced-colors: active) { .alt-receipt[data-removed] { outline: 1px solid CanvasText; outline-offset: -1px; } }
+
 .alt-alert-stack { position: relative; display: grid; gap: var(--space-2); }
 .alt-alert-stack[data-sheets="1"] { --sheets: 1; } .alt-alert-stack[data-sheets="2"] { --sheets: 2; }
 .alt-alert-stack:not([data-expanded]) { padding-bottom: calc(var(--sheets, 0) * 6px); margin-bottom: 12px; }

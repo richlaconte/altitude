@@ -15,13 +15,15 @@ Both Files views use the same source and service in [`build/previews.txt`](../bu
 
 ## Act and recover
 
-Archive immediately removes the selected record from Files, updates the location count, and names the pending action. Undo is offered only after the server confirms the archive and its new revision. Undo is a new restore request against that revision; it changes that record’s archive state, never a stored snapshot of the entire list.
+**Left in place, then closed.** A record that leaves the current view keeps its slot until the result has been seen. Each row is a [RemovalReceipt](components/RemovalReceipt/README.md). Archive updates the location count at once, and the row's slot says “Archiving “Brand guidelines.pdf”…” in place. Undo is offered only after the server confirms the archive and its new revision. The slot then reads “Brand guidelines.pdf archived.” with View Archived and Undo, at the row's own height, so nothing on the page moves. Undo sits where Archive was, so a second click under the pointer reverses rather than navigates. Undo is a new restore request against that revision; it changes that record's archive state, never a stored snapshot of the entire list.
 
-A raised neutral [Alert](components/Alert/README.md) says the file *is archived* and offers Undo. That is an ongoing recoverable condition with an action. Generic completion messages continue to use a quiet settle or [Toast](components/Toaster/README.md). Restore and permanent deletion update a quiet local status region that is present from the initial render; starting a later rename clears the old completion. The example sends no duplicate toast. Archived remains visible, and its Restore action works after the recovery Alert is dismissed or replaced.
+The receipt holds for `dur-linger`. The hold pauses while the receipt is pointed at or focused, and while a modal owns the document. While a mouse is still over the list it waits, up to `dur-settle`, so the next row doesn't move under a pointer reaching for it. Then the receipt lifts off as an Alert does and the gap glides closed. Receipts due within 250ms close together, as one change. Undo during the hold restores the row in place, with an afterglow and focus on its Archive. After the close, Undo moves to a [Toast](components/Toaster/README.md), which floats over the page and moves nothing; its Undo brings the row back into its place. The toast supplements recovery: Archived remains visible, and its Restore action works after the receipt closes and the toast expires.
 
-Every Alert is keyed by the operation ID. Its delayed dismissal clears state only if that ID is still current. Dismissing A while B completes therefore leaves B present and actionable. Only the most recently initiated feedback can replace the current region, even when independent records complete out of order. An older failure stays actionable beside its record (or below the list when that record is outside the current view), without replacing the newer recovery.
+Restore from Archived and permanent deletion use the same receipt in Archived, without Undo. Undo in place, and outcomes for records that are no longer in view, update a quiet local status region below the list that is present from the initial render; starting a later rename clears the old completion. A held receipt stays in its slot, whatever the search, until it closes. Changing location drops held receipts; Archived is where an archived record went.
 
-One mutation per record may be in flight; other records and search remain available. Optimistic removal and server acknowledgement are separate. A known rejection reconciles only the affected authoritative record and offers a safe retry. A conflict reconciles the latest version and explains why the old Undo is unavailable. A deleted record is a tombstone and cannot be resurrected by an old response.
+A failure stays with its record: the row returns from its pending receipt with the error and Retry inline, or the error is shown below the list when that row is outside the current view. Feedback in the region below the list is keyed by operation ID. Only the most recently initiated feedback can replace it, even when independent records complete out of order.
+
+One mutation per record may be in flight; other records and search remain available. Optimistic location changes and server acknowledgement are separate. A known rejection reconciles only the affected authoritative record and offers a safe retry. A conflict reconciles the latest version and explains, in the receipt's slot, why the old Undo is unavailable. A known newer revision withdraws an Undo offered in a toast and explains the change below the list. A late receipt is judged against the latest known revision, never the one it describes. A deleted record is a tombstone and cannot be resurrected by an old response.
 
 ## Confirm a concrete consequence
 
@@ -139,6 +141,14 @@ function FilesExample({ service, full }) {
   const [confirmationOpen, setConfirmationOpen] = React.useState(false), openRef = React.useRef(false);
   const [deleteError, setDeleteError] = React.useState(null), [staleIntent, setStaleIntent] = React.useState(false);
   const sessionSequence = React.useRef(0), heading = React.useRef(null), renameResults = React.useRef(new Map());
+  // Receipts held in the slot of the row they came from, keyed by record, and Undo still offered in a toast.
+  const [held, setHeld] = React.useState({}), heldRef = React.useRef({}), offered = React.useRef(new Map());
+  const [arrived, setArrived] = React.useState(null), locationRef = React.useRef(location);
+  locationRef.current = location;
+  const belongs = (record, where) => !!record && !record.deleted && record.archived === (where === 'archived');
+  const publishHeld = next => { heldRef.current = next; setHeld(next); };
+  const dropHeld = id => { const { [id]: _, ...rest } = heldRef.current; publishHeld(rest); };
+  const go = where => { publishHeld({}); setLocation(where); };
   const recoveryAtCurrentRevision = (message, record) => {
     if (!message?.undo || !record || message.record.id !== record.id || (message.record.revision === record.revision && record.archived && !record.deleted)) return message;
     return { ...message, record, undo: false, tone: 'critical', route: !record.deleted, routeLocation: record.archived ? 'archived' : 'active',
@@ -149,7 +159,20 @@ function FilesExample({ service, full }) {
   const reconcileRecord = record => {
     if (!alive.current || !record) return;
     publishRecords(recordsRef.current.map(old => old.id === record.id && old.revision <= record.revision ? record : old));
-    setNotice(current => recoveryAtCurrentRevision(current, recordsRef.current.find(item => item.id === record.id)));
+    const latest = recordsRef.current.find(item => item.id === record.id);
+    setNotice(current => recoveryAtCurrentRevision(current, latest));
+    // A known newer revision invalidates an offered Undo at once, in its slot or in its toast.
+    const entry = heldRef.current[record.id];
+    if (entry && !entry.pending) {
+      const next = recoveryAtCurrentRevision(entry, latest);
+      if (next !== entry && belongs(latest, entry.location)) { dropHeld(record.id); announce({ ...next, sequence: ++sequence.current }); }
+      else if (next !== entry) publishHeld({ ...heldRef.current, [record.id]: next });
+    }
+    const toastOffer = offered.current.get(record.id);
+    if (toastOffer && recoveryAtCurrentRevision(toastOffer, latest) !== toastOffer) {
+      A.toast.dismiss(toastOffer.toast); offered.current.delete(record.id);
+      announce({ ...recoveryAtCurrentRevision(toastOffer, latest), sequence: ++sequence.current });
+    }
   };
   const announce = message => {
     if (!alive.current || message.sequence < lastNotice.current) return;
@@ -157,9 +180,8 @@ function FilesExample({ service, full }) {
   };
   const reportFailure = message => {
     if (!alive.current) return;
-    // Preserve newer recovery without silently dropping an older record's failure.
-    if (message.sequence < lastNotice.current) setRowErrors(errors => ({ ...errors, [message.id]: message }));
-    else announce(message);
+    // A failure stays with its record: in its row, or below the list when that row isn't in view.
+    setRowErrors(errors => ({ ...errors, [message.id]: message }));
   };
   const clearRowError = id => setRowErrors(errors => { const next = { ...errors }; delete next[id]; return next; });
   const setOpen = open => { openRef.current = open; setConfirmationOpen(open); };
@@ -200,25 +222,55 @@ function FilesExample({ service, full }) {
     const operation = nextOperation(kind, record);
     const current = service.read(record.id);
     if (!current || current.deleted || current.revision !== record.revision) {
+      const inSlot = !!heldRef.current[record.id];
       reconcileRecord(current);
-      announce({ ...operation, tone: 'critical', title: current?.deleted ? 'This file was removed.' : 'This file changed after it was archived.', body: current?.deleted ? 'It cannot be restored.' : 'Review it in Archived.', route: true });
+      // A receipt explains the change in its own slot; anywhere else, the region below the list does.
+      if (!inSlot) announce({ ...operation, tone: 'critical', title: current?.deleted ? 'This file was removed.' : 'This file changed after it was archived.', body: current?.deleted ? 'It cannot be restored.' : 'Review it in Archived.', route: true });
       return;
     }
+    if (undo) { A.toast.dismiss(offered.current.get(record.id)?.toast); offered.current.delete(record.id); }
     clearRowError(record.id); setFlight(record.id, operation);
-    repairFocus(record.id, kind === 'archive' ? 'archive' : 'restore');
+    // The row keeps its slot while the write is pending: Undo from its receipt, or a row leaving this view.
+    const slot = heldRef.current[record.id] || (belongs(record, locationRef.current) ? { location: locationRef.current } : null);
+    if (!heldRef.current[record.id]) repairFocus(record.id, kind === 'archive' ? 'archive' : 'restore');
+    if (slot) publishHeld({ ...heldRef.current, [record.id]: { ...operation, location: slot.location, pending: true, undoing: undo && !!heldRef.current[record.id], record, title: `${kind === 'archive' ? 'Archiving' : 'Restoring'} “${record.name}”…` } });
     publishRecords(recordsRef.current.map(old => old.id === record.id ? { ...old, archived: kind === 'archive' } : old));
-    announce({ ...operation, pending: true, title: `${kind === 'archive' ? 'Archiving' : 'Restoring'} “${record.name}”…` });
     try {
       const result = await authoritativeResult(operation);
       if (!alive.current) return;
       reconcileRecord(result);
-      announce({ ...operation, title: `${result.name} is ${kind === 'archive' ? 'archived' : 'restored'}.`, record: result, undo: kind === 'archive', route: kind === 'archive', quiet: kind === 'restore' });
+      // A late receipt describes an older revision than one already known: judge it against the latest.
+      const entry = heldRef.current[record.id], latest = recordsRef.current.find(item => item.id === record.id) || result;
+      if (entry?.operationId === operation.operationId && belongs(latest, entry.location)) {
+        // Undone in place: the row comes back in its slot, and keeps focus that was on its receipt.
+        const focusWasHere = document.activeElement === document.body || !!document.activeElement?.closest?.(`[data-file-id="${record.id}"]`);
+        dropHeld(record.id);
+        if (focusWasHere) requestAnimationFrame(() => document.querySelector(`[data-action="archive"][data-id="${record.id}"]`)?.focus({ preventScroll: true }));
+        announce({ ...operation, quiet: true, title: `${result.name} is restored.` });
+      } else if (entry?.operationId === operation.operationId) {
+        publishHeld({ ...heldRef.current, [record.id]: recoveryAtCurrentRevision({ ...operation, location: entry.location, record: result, title: `${result.name} ${kind === 'archive' ? 'archived' : 'restored'}.`,
+          undo: kind === 'archive', route: true, routeLocation: kind === 'archive' ? 'archived' : 'active' }, latest) });
+      } else {
+        // Not where it happened (Undo from a toast, or the view changed): bring it back here, or say so quietly.
+        if (belongs(result, locationRef.current)) setArrived(record.id);
+        announce({ ...operation, quiet: true, title: `${result.name} is ${kind === 'archive' ? 'archived' : 'restored'}.` });
+      }
     } catch (error) {
       if (!alive.current) return;
+      if (heldRef.current[record.id]?.operationId === operation.operationId) dropHeld(record.id);
       reconcileRecord(service.read(record.id));
       reportFailure({ ...operation, tone: 'critical', title: kind === 'archive' ? `Could not archive ${record.name}.` : `Could not restore ${record.name}.`,
         body: error.message, retry: error.code === 'rejected' ? { kind, record: service.read(record.id) } : null, route: true });
     } finally { setFlight(record.id, null); }
+  };
+  // The gap has closed. Undo moves to a toast; Archived → Restore stays the route that doesn't expire.
+  const closeReceipt = id => {
+    const entry = heldRef.current[id];
+    if (!entry || entry.pending) return;
+    dropHeld(id);
+    if (!entry.undo) return;
+    const offer = { ...entry, toast: A.toast({ title: `${entry.record.name} archived.`, action: { label: 'Undo', onClick: () => move('restore', entry.record, true) } }) };
+    offered.current.set(id, offer);
   };
   const beginDelete = record => {
     if (flights.current.has(record.id)) return;
@@ -242,7 +294,9 @@ function FilesExample({ service, full }) {
       if (!alive.current) return;
       // If Close returned focus to the soon-to-disappear Delete button, repair that focus too.
       repairFocus(captured.id, 'delete'); reconcileRecord(result);
-      announce({ ...operation, quiet: true, title: `${captured.name} was permanently deleted.` });
+      // Seen in Archived, the deletion is told in the row's slot; anywhere else, quietly below the list.
+      if (locationRef.current === 'archived') publishHeld({ ...heldRef.current, [captured.id]: { ...operation, location: 'archived', record: result, title: `${captured.name} was permanently deleted.` } });
+      else announce({ ...operation, quiet: true, title: `${captured.name} was permanently deleted.` });
       if (openRef.current && targetRef.current?.session === operation.session) setOpen(false);
     } catch (error) {
       if (!alive.current) return;
@@ -273,9 +327,13 @@ function FilesExample({ service, full }) {
     alive.current = true;
     const debug = { service, snapshot: () => ({ records: recordsRef.current, accepted: service.accepted, requests: service.requests }), sync: id => reconcileRecord(service.read(id)) };
     window.__filesDemo = debug;
-    return () => { alive.current = false; if (window.__filesDemo === debug) delete window.__filesDemo; };
+    return () => {
+      alive.current = false; if (window.__filesDemo === debug) delete window.__filesDemo;
+      for (const offer of offered.current.values()) A.toast.dismiss(offer.toast);
+    };
   }, [service]);
-  const shown = records.filter(record => !record.deleted && record.archived === (location === 'archived') && record.name.toLowerCase().includes(query.toLowerCase()));
+  // A held receipt is the result of what the person just did: it keeps its slot until it closes, whatever the search.
+  const shown = records.filter(record => held[record.id]?.location === location || (belongs(record, location) && record.name.toLowerCase().includes(query.toLowerCase())));
   const count = archived => records.filter(record => !record.deleted && record.archived === archived).length;
   const deleting = target && busy[target.id]?.kind === 'delete' && busy[target.id]?.session === target.session;
   const recordError = error => error && <A.Alert key={error.operationId} tone="critical" title={error.title} data-file-error={error.id}
@@ -284,12 +342,19 @@ function FilesExample({ service, full }) {
   return <main className="aip-product" data-product="files">
     <header className="aip-header"><div><p className="aip-eyebrow">Northstar Studio</p><h2>Files</h2></div><span className="aip-meta">Team library</span></header>
     <div className="aip-toolbar"><nav aria-label="File locations">
-      <A.Button variant={location === 'active' ? 'secondary' : 'ghost'} aria-pressed={location === 'active'} onClick={() => setLocation('active')}>Files ({count(false)})</A.Button>
-      <A.Button variant={location === 'archived' ? 'secondary' : 'ghost'} aria-pressed={location === 'archived'} onClick={() => setLocation('archived')}>Archived ({count(true)})</A.Button>
+      <A.Button variant={location === 'active' ? 'secondary' : 'ghost'} aria-pressed={location === 'active'} onClick={() => go('active')}>Files ({count(false)})</A.Button>
+      <A.Button variant={location === 'archived' ? 'secondary' : 'ghost'} aria-pressed={location === 'archived'} onClick={() => go('archived')}>Archived ({count(true)})</A.Button>
     </nav><A.Input aria-label="Search files" placeholder="Search files" value={query} onChange={event => setQuery(event.target.value)} /></div>
     <h3 ref={heading} tabIndex={-1} data-list-heading>{location === 'active' ? 'All files' : 'Archived files'}</h3>
     <ul className="aip-list" aria-label={location === 'active' ? 'All files' : 'Archived files'}>
-      {shown.map(record => <li key={record.id} data-file-id={record.id}>
+      {shown.map(record => { const receipt = held[record.id]?.location === location ? held[record.id] : null;
+        return <A.RemovalReceipt as="li" key={record.id} data-file-id={record.id} removed={!!receipt} pending={!!receipt?.pending} arrive={arrived === record.id}
+          tone={receipt?.tone === 'critical' ? 'critical' : 'neutral'} title={receipt && <>{receipt.title}{receipt.body && <> {receipt.body}</>}</>}
+          action={receipt && (receipt.undo || receipt.undoing || receipt.route) && <>
+            {receipt.route && <A.Button size="sm" variant="ghost" onClick={() => { setQuery(''); go(receipt.routeLocation); }}>View {receipt.routeLocation === 'active' ? 'Files' : 'Archived'}</A.Button>}
+            {/* Undo lands where Archive was, so a second click under the pointer reverses rather than navigates. */}
+            {(receipt.undo || receipt.undoing) && <A.Button size="sm" loading={!!receipt.undoing} aria-label={`Undo archive of ${receipt.record.name}`} onClick={() => move('restore', receipt.record, true)}>Undo</A.Button>}</>}
+          onClosed={() => closeReceipt(record.id)} focusFallback={() => heading.current}>
         <div className="aip-file"><div className="aip-name">{full ? <FileName label={`File name: ${record.name}`} editLabel="Rename" value={record.name} required maxLength={160} disabled={!!busy[record.id] && busy[record.id].kind !== 'rename'}
           validate={draft => !draft.trim() ? 'Enter a file name.' : recordsRef.current.some(other => other.id !== record.id && !other.deleted && other.name === draft.trim()) ? 'A file already has that name.' : undefined}
           onBeginEdit={() => setNotice(current => current?.quiet ? null : current)}
@@ -301,7 +366,7 @@ function FilesExample({ service, full }) {
           <A.Button size="sm" data-action="restore" data-id={record.id} aria-label={`Restore ${record.name}`} disabled={!!busy[record.id]} onClick={() => move('restore', record)}>Restore</A.Button>
           {full && <A.Button size="sm" variant="ghost" data-action="delete" data-id={record.id} aria-label={`Delete ${record.name} permanently`} aria-disabled={!!busy[record.id]} onClick={() => beginDelete(record)}>Delete permanently</A.Button>}
         </> : <A.Button size="sm" variant="ghost" data-action="archive" data-id={record.id} aria-label={`Archive ${record.name}`} disabled={!!busy[record.id]} onClick={() => move('archive', record)}>Archive</A.Button>}</div>
-      </li>)}
+      </A.RemovalReceipt>; })}
     </ul>
     {Object.values(rowErrors).filter(error => !shown.some(record => record.id === error.id)).map(recordError)}
     {!shown.length && <p className="aip-empty">{query ? 'No files match your search.' : location === 'archived' ? 'No archived files.' : 'No files here. Restore a file from Archived.'}</p>}
@@ -311,7 +376,7 @@ function FilesExample({ service, full }) {
         onDismiss={notice.pending ? undefined : () => setNotice(current => current?.operationId === notice.operationId ? null : current)}
         action={<>{notice.undo && <A.Button size="sm" aria-label={`Undo archive of ${notice.record.name}`} onClick={() => move('restore', notice.record, true)}>Undo</A.Button>}
           {notice.retry && <A.Button size="sm" onClick={() => move(notice.retry.kind, notice.retry.record)}>Retry {notice.retry.kind}</A.Button>}
-          {notice.route && <A.Button size="sm" variant="ghost" onClick={() => { setQuery(''); setLocation(notice.routeLocation || 'archived'); }}>View {notice.routeLocation === 'active' ? 'Files' : 'Archived'}</A.Button>}</>}>
+          {notice.route && <A.Button size="sm" variant="ghost" onClick={() => { setQuery(''); go(notice.routeLocation || 'archived'); }}>View {notice.routeLocation === 'active' ? 'Files' : 'Archived'}</A.Button>}</>}>
         {notice.body}
       </A.Alert>
     </A.Surface>}
@@ -327,7 +392,7 @@ function FilesExample({ service, full }) {
 ```
 <!-- recipe-source:end -->
 
-Mount it with the normal provider:
+Mount it with the normal provider and one `Toaster`, which carries Undo after a receipt closes:
 
 ```jsx
 export default function FilesApp() {
@@ -337,6 +402,7 @@ export default function FilesApp() {
       <div className="aip">
         <FilesExample service={service} full />
       </div>
+      <A.Toaster />
     </A.AltitudeProvider>
   );
 }
