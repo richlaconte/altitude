@@ -1499,6 +1499,8 @@ export interface ChartContextValue {
   /** Formats a value of a series (by its key), or an x value. */
   format: (key: string, value: number) => string;
   formatX: (value: unknown) => string;
+  /** Categories run down the side and values along the bottom: x(cat) is a distance from the top, y(v) from the left. */
+  horizontal: boolean;
   /** How to draw a series so it's told apart without colour: fill (a hatch while patterns are on), stroke, dash, marker, edge. */
   encode: (seriesKey: string) => ChartEncoding;
   /** Patterns are on: the `patterns` prop, forced colours or print. */
@@ -1560,6 +1562,22 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
 }
 /** The frame every chart shares: scales, axes, gridlines, the ground line, colour slots, a name and a summary. Flush, no level. */
 export declare function ChartContainer(props: ChartContainerProps): React.ReactElement;
+export interface BarChartProps {
+  /** The records: one per category. */
+  data: ChartDatum[];
+  /** The key of each record's category. */
+  x: string;
+  /** Order the categories by their total. Default: the data's order. */
+  sort?: 'asc' | 'desc';
+  /** Stack the series into one bar per category; 'expand' stacks them as shares of 100%. Default: side by side. */
+  stack?: boolean | 'expand';
+  /** 'horizontal' runs categories down the side. Default 'vertical'. */
+  layout?: 'vertical' | 'horizontal';
+  /** Label the largest bar, or the last category's. Never every bar. Default 'none'. */
+  labels?: 'max' | 'last' | 'none';
+}
+/** Amounts compared across categories, as flat lengths standing on the ground line. Renders inside a ChartContainer. */
+export declare function BarChart(props: BarChartProps): React.ReactElement | null;
 /** The scales, plot size and config of the nearest ChartContainer, for drawing your own marks. */
 export declare function useChart(): ChartContextValue;
 
@@ -1576,7 +1594,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

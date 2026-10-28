@@ -1,0 +1,37 @@
+<!-- @dsCard group="Charts" height=690 subtitle="Amounts as lengths on the ground line: one series, grouped, stacked, negative, horizontal" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BarChart — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.bc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 900px) { .bc { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .bc { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const teams = [{ team: "Atlas", deploys: 42 }, { team: "Birch", deploys: 35 }, { team: "Cedar", deploys: 51 }, { team: "Delta", deploys: 19 }, { team: "Ember", deploys: 28 }];
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((month, i) => ({ month, api: 20 + i * 7 % 11, web: 14 + i * 5 % 9, jobs: 6 + i * 3 % 7 }));
+const net = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((month, i) => ({ month, change: [12, -8, 5, -15, 9, 18][i] }));
+const regions = [{ region: "North America", seats: 1240 }, { region: "Europe, Middle East and Africa", seats: 980 }, { region: "Asia Pacific", seats: 610 }, { region: "Latin America", seats: 270 }];
+const stack3 = { api: { label: "API" }, web: { label: "Web" }, jobs: { label: "Jobs" } };
+function Chart({ id, title, sub, children, ...props }) {
+  return /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id }, title), /* @__PURE__ */ React.createElement(A.CardDescription, null, sub)), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": id, aspect: 1.45, ...props }, children)));
+}
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "bc" }, /* @__PURE__ */ React.createElement(Chart, { id: "b1", title: "Deploys by team", sub: 'One series, sorted, labels="max"', config: { deploys: { label: "Deploys" } }, summary: "Cedar deployed most, 51 times; Delta least." }, /* @__PURE__ */ React.createElement(A.BarChart, { data: teams, x: "team", sort: "desc", labels: "max" })), /* @__PURE__ */ React.createElement(Chart, { id: "b2", title: "Requests by service", sub: "Grouped: three series side by side", config: stack3 }, /* @__PURE__ */ React.createElement(A.BarChart, { data: months.slice(3), x: "month" })), /* @__PURE__ */ React.createElement(Chart, { id: "b3", title: "Requests, all services", sub: 'Stacked, labels="last"', config: stack3 }, /* @__PURE__ */ React.createElement(A.BarChart, { data: months, x: "month", stack: true, labels: "last" })), /* @__PURE__ */ React.createElement(Chart, { id: "b4", title: "Share of requests", sub: 'stack="expand": parts of 100%', config: stack3 }, /* @__PURE__ */ React.createElement(A.BarChart, { data: months, x: "month", stack: "expand" })), /* @__PURE__ */ React.createElement(Chart, { id: "b5", title: "Net new customers", sub: "Negative bars hang below the ground line", config: { change: { label: "Net change", format: (v) => (v > 0 ? "+" : "") + v } } }, /* @__PURE__ */ React.createElement(A.BarChart, { data: net, x: "month" })), /* @__PURE__ */ React.createElement(Chart, { id: "b6", title: "Seats by region", sub: 'layout="horizontal" for long names', config: { seats: { label: "Seats", format: (v) => v.toLocaleString("en") } } }, /* @__PURE__ */ React.createElement(A.BarChart, { data: regions, x: "region", layout: "horizontal", labels: "max" })));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -1455,6 +1455,13 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-chart-ground { stroke: var(--ink-muted); stroke-width: 1; shape-rendering: crispEdges; }
 .alt-chart-axis text { fill: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: 0.005em; }
 .alt-chart-summary { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); text-wrap: pretty; }
+/* ── BarChart: amounts as lengths standing on the ground line. Bars are the record, so they're flat data-* fills,
+   square where they meet the ground and rounded (radius-xs) only at the data end; neighbours and stacked segments
+   are parted by a real gap, never a shadow. A negative bar hangs below the ground line: that's position, not depth,
+   so it has no inner wall and doesn't read as an opening. A bar never lifts, on hover or anywhere else. Value labels
+   are selective and wear ink, never a series colour. ── */
+.alt-bar-label { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
+@media (forced-colors: active) { .alt-bar-label { fill: CanvasText; } }
 @media (prefers-contrast: more) {
   .alt-chart-grid line { stroke: var(--line-control); }
   .alt-chart-ground { stroke: var(--ink); }
