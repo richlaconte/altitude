@@ -1597,6 +1597,51 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   .alt-meter-legend rect { fill: CanvasText; }
 }
 
+/* ── BarList: a ranked list whose rows are their own bars. Rows are the record, flush on the ground with line
+   dividers, like a table's. Each row's bar is a flat tint of data-1 (22%, so ink holds 4.5:1 over it) behind its label,
+   its length the row's value against the largest; the label wraps rather than being cut, and the value sits at the
+   row's end in tabular figures. A row that does something (a link or a button) lifts one level when pointed at, as
+   Table's rows do, and its bar stays flat on it; a row that doesn't never moves. "Other" wears data-other. Filtering
+   in place raises matches and sinks misses. Re-ranked rows are carried to their places (FLIP, dur-travel-3,
+   ease-glide), and bars glide to their new lengths; under reduced motion both change in place. ── */
+.alt-barlist-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+.alt-barlist { align-self: stretch; margin: 0; padding: 0; list-style: none; font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.alt-barlist-row { --bar: color-mix(in oklab, var(--data-1) 22%, transparent); position: relative; border-bottom: 1px solid var(--line); }
+.alt-barlist-row:last-child { border-bottom-color: transparent; }
+.alt-barlist-row[data-other] { --bar: color-mix(in oklab, var(--data-other) 22%, transparent); }
+.alt-barlist-item {
+  position: relative; display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 36px;
+  margin: 0; padding: 3px var(--space-2) 3px 0; box-sizing: border-box; border: 0; border-radius: var(--radius-sm);
+  background: transparent; font: inherit; color: inherit; text-align: start; text-decoration: none;
+}
+button.alt-barlist-item, a.alt-barlist-item {
+  cursor: pointer; -webkit-tap-highlight-color: transparent; box-shadow: var(--elev-0);
+  transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
+}
+button.alt-barlist-item:hover, a.alt-barlist-item:hover { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+button.alt-barlist-item:active, a.alt-barlist-item:active { box-shadow: var(--elev-0); transform: none; transition-duration: var(--dur-press); }
+button.alt-barlist-item:focus-visible, a.alt-barlist-item:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-barlist-zone { position: relative; isolation: isolate; flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-3); min-height: 30px; padding: 4px var(--space-2); }
+.alt-barlist-bar {
+  position: absolute; z-index: -1; left: 0; top: 0; bottom: 0; border-radius: var(--radius-xs); background: var(--bar);
+  transition: width calc(var(--dur-travel-3) * var(--alt-travel)) var(--ease-glide);
+}
+.alt-barlist-name { flex: 1; min-width: 0; overflow-wrap: break-word; }
+.alt-barlist-value { flex: none; font-variant-numeric: tabular-nums; }
+.alt-barlist-share { flex: none; min-width: 3.2em; text-align: end; font-variant-numeric: tabular-nums; color: var(--ink-muted); }
+.alt-barlist-row[data-other] .alt-barlist-name { color: var(--ink-muted); }
+.alt-barlist-imprint { display: block; height: 0.6em; margin: 14px 0; }
+.alt-barlist-row[data-relevance="miss"] .alt-barlist-name, .alt-barlist-row[data-relevance="miss"] .alt-barlist-value { color: var(--ink-muted); }
+@media (prefers-contrast: more) { .alt-barlist-bar { box-shadow: inset 0 0 0 1px var(--ink); } }
+[data-contrast="more"] .alt-barlist-bar { box-shadow: inset 0 0 0 1px var(--ink); }
+@media (forced-colors: active) {
+  .alt-barlist-bar { forced-color-adjust: none; background: color-mix(in srgb, Highlight 25%, Canvas); border: 1px solid Highlight; }
+  button.alt-barlist-item:hover, a.alt-barlist-item:hover { outline: 1px solid CanvasText; }
+  .alt-barlist-row { border-bottom-color: GrayText; }
+  .alt-barlist-row[data-relevance="match"] { outline: 1px solid CanvasText; outline-offset: -1px; }
+  .alt-barlist-row[data-relevance="miss"] { border-bottom-style: dashed; }
+}
+
 /* ── ChartTooltip: reading exact values. The crosshair is a mark on the ground (1px line-control, snapped to the nearest
    x); the readout is live, a level-3 floating surface like Tooltip. It rises 4px once as its shadow grows from elev-1
    to elev-3, then steps between x positions with no easing (it follows the data, not each pixel of the pointer), flips

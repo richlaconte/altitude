@@ -443,6 +443,17 @@ A design review: `Meter` was rendered with storage under and past a threshold, s
 
 Not yet tested with people: whether a notch above and below the track is found as readily as a labelled threshold.
 
+### E35 · Can a list row be its own bar and still be read?
+
+A design review: `BarList` was rendered with 21 pages folded into seven and "Other", static referrers that re-rank and filter in place, and customers that load, in all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`. `checks/bar-list.mjs` measures it, including the contrast of `ink` over every bar composited on its card.
+
+- **Text over a bar.** A 22% tint of `data-1` keeps `ink` at 4.5:1 or better over every bar in every scheme ([WCAG 2.2, 1.4.3](https://www.w3.org/TR/WCAG22/#contrast-minimum)), so the bar can sit behind the label instead of beside it, and the label gets the full row.
+- **The bar stopped at the value.** In the first build the bar spanned the whole row, so the longest one ran under the share column and the percentage looked like part of the bar. The bar now runs under the label and the value only.
+- **Wrap, don't cut.** A long path wraps at its slashes and hyphens. Breaking anywhere split words mid-way at 360px ("cha / rt"), so it only breaks a word when nothing else fits.
+- **Lifting rows, flat bars.** As in `Table`, only rows that act lift. Lifting the bar with its row would make it a raised amount, so the bar is painted on the row and moves only because the row does.
+
+Not yet tested with people: whether bars sized against the largest (rather than the total) are misread as shares when `share` is on.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

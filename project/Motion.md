@@ -104,6 +104,8 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 **A reading glides.** A `Meter`'s fill glides to a new reading on `ease-glide` over `dur-travel-3`, as `Progress` does, but at no level: it's ink moving across a flush track. Crossing a threshold cross-fades the fill's colour and relights the state's lamp. Under reduced motion the fill changes in place.
 
+**A re-rank is carried.** When a `BarList`'s values change, its rows are carried to their new ranks (FLIP, `dur-travel-3`, `ease-glide`) all at once, as table rows are on a re-sort, and the bars glide to their new lengths. Under reduced motion both change in place.
+
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
 ## Approach

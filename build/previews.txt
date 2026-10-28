@@ -1227,6 +1227,51 @@ function App() {
   );
 }
 
+=== BarList | <!-- @dsCard group="Charts" height=640 subtitle="A ranked list whose rows are their own bars; only rows that act lift" -->
+--- css
+.bl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 960px; }
+@media (max-width: 720px) { .bl { grid-template-columns: minmax(0, 1fr); } }
+.bl-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+--- jsx
+const pages = [
+  { name: '/pricing', value: 4210 }, { name: '/', value: 3880 }, { name: '/docs/getting-started', value: 2410 }, { name: '/blog/height-is-the-interface-why-we-stopped-using-shadows-for-everything', value: 1630 },
+  { name: '/changelog', value: 1210 }, { name: '/docs/components/chart-container', value: 980 }, { name: '/careers', value: 610 },
+  ...Array.from({ length: 14 }, (_, i) => ({ name: `/docs/page-${i + 1}`, value: 420 - i * 25 })),
+];
+const referrers0 = [{ name: 'google.com', value: 5120 }, { name: 'github.com', value: 2310 }, { name: 'news.ycombinator.com', value: 1980 }, { name: 'x.com', value: 760 }, { name: 'Direct', value: 3400 }];
+const referrers1 = [{ name: 'google.com', value: 5240 }, { name: 'github.com', value: 2390 }, { name: 'news.ycombinator.com', value: 6120 }, { name: 'x.com', value: 1310 }, { name: 'Direct', value: 3460 }];
+function App() {
+  const [spike, setSpike] = React.useState(false);
+  const [q, setQ] = React.useState('');
+  const [later, setLater] = React.useState(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setLater([{ name: 'Acme Corp', value: 48200 }, { name: 'Globex', value: 31900 }, { name: 'Initech', value: 22750 }, { name: 'Umbrella', value: 9400 }]), 2400); return () => clearTimeout(t); }, []);
+  const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  return (
+    <div className="bl">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="bl-pages">Top pages</A.CardTitle><A.CardDescription>Last 7 days · views</A.CardDescription></A.CardHeader>
+        <A.CardContent><A.BarList aria-labelledby="bl-pages" data={pages.map((p) => ({ ...p, href: '#' + p.name }))} limit={7} share noun="pages" /></A.CardContent>
+      </A.Card>
+      <div style={{ display: 'grid', gap: 16, alignContent: 'start' }}>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="bl-ref">Top referrers</A.CardTitle><A.CardDescription>Static rows: nothing lifts</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <div className="bl-tools">
+              <A.Button size="sm" variant="secondary" onClick={() => setSpike((s) => !s)}>{spike ? 'Yesterday' : 'Today'}</A.Button>
+              <A.Input size="sm" placeholder="Filter" aria-label="Filter referrers" value={q} onChange={(e) => setQ(e.target.value)} />
+            </div>
+            <A.BarList aria-labelledby="bl-ref" data={spike ? referrers1 : referrers0} relevance={q ? (d) => (d.name.includes(q) ? 'match' : 'miss') : undefined} />
+          </A.CardContent>
+        </A.Card>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="bl-cust">Top customers</A.CardTitle><A.CardDescription>Spend this quarter</A.CardDescription></A.CardHeader>
+          <A.CardContent><A.BarList aria-labelledby="bl-cust" data={later} format={usd.format} limit={4} /></A.CardContent>
+        </A.Card>
+      </div>
+    </div>
+  );
+}
+
 === ChartTooltip | <!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
 --- css
 .ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
