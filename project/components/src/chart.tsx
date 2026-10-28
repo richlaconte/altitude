@@ -117,6 +117,14 @@ function textWidth(s: string) {
   return s.length * 7.3;
 }
 
+/** A label cut with an ellipsis to fit max px. The full text stays in the summary, the readout and the table. */
+function fit(s: string, max: number) {
+  if (textWidth(s) <= max) return s;
+  let lo = 0, hi = s.length;
+  while (lo < hi) { const m = Math.ceil((lo + hi) / 2); if (textWidth(s.slice(0, m).trimEnd() + '…') <= max) lo = m; else hi = m - 1; }
+  return s.slice(0, lo).trimEnd() + '…';
+}
+
 /* ───────────────────────── context ───────────────────────── */
 
 export interface ChartContextValue {
@@ -142,6 +150,11 @@ export interface ChartContextValue {
   /** Formats a value of a series (by its key), or an x value. */
   format: (key: string, value: number) => string;
   formatX: (value: unknown) => string;
+  /**
+   * Categories run down the side and values along the bottom. `x` still places categories and `y` values; only their
+   * directions change: x(cat) is a distance from the top, y(v) from the left, and `ground` is y(0) across.
+   */
+  horizontal: boolean;
   /**
    * How to draw a series so it's told apart without colour: its fill (a hatch when patterns are on), stroke, dash and
    * marker, fixed by its slot like its colour. Use these instead of `series.color` and every mode is handled.
@@ -222,7 +235,15 @@ export function useChart(): ChartContextValue {
  * What a chart type tells its container, as a static `chartInfo` on the component: its name for the summary, how to
  * place x, whether zero must be on y, and the y extent if it isn't the plain min and max of the series (a stack).
  */
-export interface ChartInfo { kind?: string; xScale?: 'band' | 'time' | 'linear'; zero?: boolean; yExtent?: [number, number]; }
+export interface ChartInfo {
+  kind?: string; xScale?: 'band' | 'time' | 'linear'; zero?: boolean; yExtent?: [number, number];
+  /** Categories down the side and values along the bottom (band x only). */
+  layout?: 'vertical' | 'horizontal';
+  /** The records as the chart wants them placed (sorted, say). Return the same array for the same input, or every render is a change. */
+  data?: ChartDatum[];
+  /** Formats the value axis, when the chart's values aren't its series' (shares of a stack). */
+  yFormat?: (value: number) => string;
+}
 type ChartChild = { chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean };
 
 /* ───────────────────────── frames and motion ───────────────────────── */
@@ -450,9 +471,10 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   const chartChild = kids.find((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartInfo);
   const childProps = chartChild?.props ?? {};
   const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(childProps, config) : {};
-  const data = (dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
+  const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   const xKey = xProp ?? (childProps.x as string | undefined) ?? '';
-  const zero = zeroProp ?? info.zero ?? true;
+  // A chart type that needs zero (bars) gets it whatever the prop says: a bar that starts above zero misstates its length.
+  const zero = info.zero === true ? true : zeroProp ?? info.zero ?? true;
 
   const configKey = Object.entries(config).map(([k, c]) => `${k}:${c.label}:${c.color ?? ''}`).join('|');
   const series: ChartSeries[] = React.useMemo(() => {
@@ -466,10 +488,11 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
 
   const sample = data.find((d) => d[xKey] != null)?.[xKey];
   const kind = xScaleProp ?? info.xScale ?? (isTimeLike(sample) ? 'time' : typeof sample === 'number' ? 'linear' : 'band');
-  const fmtY = yFormat ?? series[0]?.format ?? ((v: number) => new Intl.NumberFormat(locale).format(v));
+  const fmtY = yFormat ?? info.yFormat ?? series[0]?.format ?? ((v: number) => new Intl.NumberFormat(locale).format(v));
   const W = size?.w ?? 0, H = size?.h ?? 0;
+  const horizontal = info.layout === 'horizontal' && kind === 'band';
   const bottom = axes ? 26 : 1;
-  const right = kind === 'band' || !axes ? 2 : 18;
+  const right = horizontal ? (axes ? 20 : 2) : kind === 'band' || !axes ? 2 : 18;
 
   // The target frame: where the plot is going, independent of its width.
   let lo = Infinity, hi = -Infinity;
@@ -477,7 +500,9 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
   else for (const d of data) for (const s of series) { const v = d[s.key]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
   if (!isFinite(lo)) { lo = 0; hi = 1; }
   if (zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
-  const yCount = Math.max(3, Math.min(6, Math.round((H - TOP - bottom) / 56)));
+  // Horizontal: categories take at most 40% of the width (longer names are cut with an ellipsis), values the rest.
+  const catWidth = horizontal && axes ? Math.min(Math.ceil(Math.max(0, ...[...new Set(data.map((d) => String(d[xKey])))].map((c) => textWidth(xFormat ? xFormat(c) : c)))) + 12, Math.round(W * 0.4)) : 0;
+  const yCount = horizontal ? Math.max(2, Math.min(6, Math.round((W - catWidth - right) / 90))) : Math.max(3, Math.min(6, Math.round((H - TOP - bottom) / 56)));
   const ny = linearScale(yDomain ?? [lo, hi], [1, 0], yCount, !yDomain);
   const rowKey = (d: ChartDatum) => String(kind === 'time' ? toTime(d[xKey]) : d[xKey]);
   const cats = kind === 'band' ? [...new Set(data.map((d) => String(d[xKey])))] : [];
@@ -489,9 +514,10 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
     ticks: ny.ticks.map((v) => ({ v, a: 1 })),
     band: unit ? new Map(cats.map((c) => [c, [unit(c), unit.bandwidth]])) : null,
     rowAlpha: new Map(), seriesAlpha: new Map(series.map((s) => [s.key, 1])),
-    left: axes ? Math.ceil(Math.max(...ny.ticks.map((t) => textWidth(fmtY(t))), 0)) + 10 : 0,
+    left: !axes ? 0 : horizontal ? catWidth
+      : Math.ceil(Math.max(...ny.ticks.map((t) => textWidth(fmtY(t))), 0)) + 10,
   };
-  const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding]); // eslint-disable-line react-hooks/exhaustive-deps
+  const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal]); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef);
 
   // Forced colours, print and contrast="more" change how marks are drawn, not just their colours.
@@ -535,17 +561,26 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
     const left = Math.round(frame.left);
     const pw = Math.max(0, W - left - right), ph = Math.max(0, H - TOP - bottom);
     const [d0, d1] = frame.y;
-    const y = Object.assign((v: number) => ph - ((v - d0) / (d1 - d0 || 1)) * ph, { kind: 'linear' as const, domain: frame.y, range: [ph, 0] as [number, number], ticks: frame.ticks.map((t) => t.v) }) as LinearScale;
+    // Along the value axis: up the plot, or across it when horizontal.
+    const span = horizontal ? pw : ph;
+    const y = Object.assign((v: number) => (horizontal ? 0 : ph) + (horizontal ? 1 : -1) * ((v - d0) / (d1 - d0 || 1)) * span,
+      { kind: 'linear' as const, domain: frame.y, range: (horizontal ? [0, pw] : [ph, 0]) as [number, number], ticks: frame.ticks.map((t) => t.v) }) as LinearScale;
     let x: ChartXScale;
     let xTicks: Array<{ at: number; label: string; a: number }> = [];
     if (frame.kind === 'band') {
       const band = frame.band!;
       const domain = frame.rows.map((r) => String(r.d[xKey]));
-      const bw = (band.get(domain[0])?.[1] ?? 0) * pw;
-      x = Object.assign((v: string) => (band.get(String(v))?.[0] ?? 0) * pw, { kind: 'band' as const, domain, range: [0, pw] as [number, number], ticks: domain, bandwidth: bw, step: bw / (1 - bandPadding) }) as BandScale;
-      if (axes) {
-        const widest = Math.max(...domain.map((d) => textWidth(String(xFormat ? xFormat(d) : d))), 1);
-        const every = Math.max(1, Math.ceil((widest + 12) / Math.max(1, (x as BandScale).step)));
+      const along = horizontal ? ph : pw;
+      const bw = (band.get(domain[0])?.[1] ?? 0) * along;
+      x = Object.assign((v: string) => (band.get(String(v))?.[0] ?? 0) * along, { kind: 'band' as const, domain, range: [0, along] as [number, number], ticks: domain, bandwidth: bw, step: bw / (1 - bandPadding) }) as BandScale;
+      if (axes && horizontal) {
+        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: fit(xFormat ? xFormat(d) : d, left - 12), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 }));
+      } else if (axes) {
+        // Show every k-th label, k as small as lets each shown label clear its shown neighbours by 4px.
+        const ws = domain.map((d) => textWidth(String(xFormat ? xFormat(d) : d)));
+        const step = Math.max(1, (x as BandScale).step);
+        let every = 1;
+        while (every < domain.length && ws.some((w, i) => i % every === 0 && i + every < ws.length && (w + ws[i + every]) / 2 + 4 > every * step)) every++;
         xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: xFormat ? xFormat(d) : d, a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 })).filter((_, i) => i % every === 0);
       }
     } else if (frame.kind === 'time') {
@@ -562,13 +597,13 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
       if (axes) xTicks = (x as LinearScale).ticks.map((v) => ({ at: (x as LinearScale)(v), label: formatX(v), a: 1 }));
     }
     const xOf = (d: ChartDatum) => (x.kind === 'band' ? x(String(d[xKey])) + x.bandwidth / 2 : (x as LinearScale | TimeScale)(d[xKey] as number));
-    const ground = d0 <= 0 && d1 >= 0 ? y(0) : ph;
+    const ground = d0 <= 0 && d1 >= 0 ? y(0) : horizontal ? 0 : ph;
     const rowAlpha = (d: ChartDatum) => frame.rowAlpha.get(rowKey(d)) ?? 1;
     const ctx: ChartContextValue = {
       width: pw, height: ph, x, y, xOf, ground, data: frame.rows.map((r) => r.d), xKey, config, series: frame.series,
       alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? frame.seriesAlpha.get(key) ?? 1 : 1),
       format: (key, v) => (frame.series.find((s) => s.key === key)?.format ?? fmtY)(v),
-      formatX, encode, patterns, directLabels: env.forced || env.print,
+      formatX, horizontal, encode, patterns, directLabels: env.forced || env.print,
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
     };
     return { ctx, left, pw, ph, xTicks };
@@ -613,13 +648,30 @@ export function ChartContainer({ config, data: dataProp, x: xProp, xScale: xScal
                   <g key={i} transform={`translate(${left},${TOP})`} opacity={opacity < 1 ? opacity : undefined}>
                     <g className="alt-chart-grid">
                       {frame.ticks.map((t) => {
-                        const at = Math.round(ctx.y(t.v)) + 0.5;
-                        return at >= 0 && at <= ph + 1 ? <line key={t.v} x1={0} x2={pw} y1={at} y2={at} opacity={t.a < 1 ? t.a : undefined} /> : null;
+                        const at = Math.round(ctx.y(t.v)) + 0.5, end = horizontal ? pw : ph;
+                        if (at < 0 || at > end + 1) return null;
+                        return horizontal ? <line key={t.v} x1={at} x2={at} y1={0} y2={ph} opacity={t.a < 1 ? t.a : undefined} />
+                          : <line key={t.v} x1={0} x2={pw} y1={at} y2={at} opacity={t.a < 1 ? t.a : undefined} />;
                       })}
                     </g>
                     <g className="alt-chart-marks"><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
-                    <line className="alt-chart-ground" x1={0} x2={pw} y1={Math.round(ctx.ground) + 0.5} y2={Math.round(ctx.ground) + 0.5} />
-                    {axes && (
+                    {horizontal
+                      ? <line className="alt-chart-ground" x1={Math.round(ctx.ground) + 0.5} x2={Math.round(ctx.ground) + 0.5} y1={0} y2={ph} />
+                      : <line className="alt-chart-ground" x1={0} x2={pw} y1={Math.round(ctx.ground) + 0.5} y2={Math.round(ctx.ground) + 0.5} />}
+                    {axes && horizontal && (
+                      <>
+                        <g className="alt-chart-axis" data-axis="y">
+                          {frame.ticks.map((t) => {
+                            const at = ctx.y(t.v);
+                            return at >= -1 && at <= pw + 1 ? <text key={t.v} x={at} y={ph + 18} textAnchor="middle" opacity={t.a < 1 ? t.a : undefined}>{fmtY(t.v)}</text> : null;
+                          })}
+                        </g>
+                        <g className="alt-chart-axis" data-axis="x">
+                          {xTicks.map((t, j) => <text key={j} x={-12} y={t.at} dy="0.32em" textAnchor="end" opacity={t.a < 1 ? t.a : undefined}>{t.label}</text>)}
+                        </g>
+                      </>
+                    )}
+                    {axes && !horizontal && (
                       <>
                         <g className="alt-chart-axis" data-axis="y">
                           {frame.ticks.map((t) => {

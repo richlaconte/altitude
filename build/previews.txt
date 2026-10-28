@@ -938,7 +938,7 @@ function App() {
 .cm li[data-on] { color: var(--ink); font-weight: 500; }
 @media (max-width: 720px) { .cm { grid-template-columns: minmax(0, 1fr); } }
 --- jsx
-// Every chart moves by ChartContainer's one engine. These hand-drawn bars cycle through the changes it handles.
+// Every chart moves by ChartContainer's one engine. This BarChart cycles through the changes it handles.
 const steps = [
   ['Q2', [['North', 42], ['South', 35], ['East', 28], ['West', 19]]],
   ['Q3: values change', [['North', 51], ['South', 31], ['East', 37], ['West', 24]]],
@@ -947,12 +947,6 @@ const steps = [
   ['A region enters', [['North', 88], ['East', 71], ['South', 64], ['West', 40], ['Central', 22]]],
   ['…and leaves', [['North', 88], ['East', 71], ['South', 64], ['West', 40]]],
 ];
-function Bars() {
-  const { data, x, y, xKey, ground, alpha, encode } = A.useChart();
-  const e = encode('deals');
-  return data.map((d) => <rect key={d[xKey]} x={x(d[xKey])} y={Math.min(y(d.deals), ground)} width={x.bandwidth}
-    height={Math.abs(y(d.deals) - ground)} fill={e.fill} stroke={e.edge} opacity={alpha(d)} />);
-}
 function App() {
   const [i, setI] = React.useState(0);
   React.useEffect(() => { const t = setInterval(() => setI((n) => (n + 1) % steps.length), 2400); return () => clearInterval(t); }, []);
@@ -962,7 +956,7 @@ function App() {
       <A.Card>
         <A.CardHeader><A.CardTitle id="cm-t">Deals closed by region</A.CardTitle><A.CardDescription>{steps[i][0]}</A.CardDescription></A.CardHeader>
         <A.CardContent>
-          <A.ChartContainer aria-labelledby="cm-t" data={data} x="region" aspect={2} config={{ deals: { label: 'Deals' } }}><Bars /></A.ChartContainer>
+          <A.ChartContainer aria-labelledby="cm-t" aspect={2} config={{ deals: { label: 'Deals' } }}><A.BarChart data={data} x="region" /></A.ChartContainer>
         </A.CardContent>
       </A.Card>
       <ol>{steps.map(([label], n) => <li key={n} data-on={n === i ? '' : undefined}>{label}</li>)}</ol>
@@ -1010,6 +1004,50 @@ function App() {
         <A.CardContent><A.ChartContainer patterns aria-labelledby="cp-l" data={weeks} x="week" aspect={1.6}
           config={Object.fromEntries(teams.slice(0, 4).map((t) => [t.toLowerCase(), { label: t }]))}><Lines /></A.ChartContainer></A.CardContent>
       </A.Card>
+    </div>
+  );
+}
+
+=== BarChart | <!-- @dsCard group="Charts" height=690 subtitle="Amounts as lengths on the ground line: one series, grouped, stacked, negative, horizontal" -->
+--- css
+.bc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 900px) { .bc { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .bc { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const teams = [{ team: 'Atlas', deploys: 42 }, { team: 'Birch', deploys: 35 }, { team: 'Cedar', deploys: 51 }, { team: 'Delta', deploys: 19 }, { team: 'Ember', deploys: 28 }];
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, api: 20 + ((i * 7) % 11), web: 14 + ((i * 5) % 9), jobs: 6 + ((i * 3) % 7) }));
+const net = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, change: [12, -8, 5, -15, 9, 18][i] }));
+const regions = [{ region: 'North America', seats: 1240 }, { region: 'Europe, Middle East and Africa', seats: 980 }, { region: 'Asia Pacific', seats: 610 }, { region: 'Latin America', seats: 270 }];
+const stack3 = { api: { label: 'API' }, web: { label: 'Web' }, jobs: { label: 'Jobs' } };
+function Chart({ id, title, sub, children, ...props }) {
+  return (
+    <A.Card>
+      <A.CardHeader><A.CardTitle id={id}>{title}</A.CardTitle><A.CardDescription>{sub}</A.CardDescription></A.CardHeader>
+      <A.CardContent><A.ChartContainer aria-labelledby={id} aspect={1.45} {...props}>{children}</A.ChartContainer></A.CardContent>
+    </A.Card>
+  );
+}
+function App() {
+  return (
+    <div className="bc">
+      <Chart id="b1" title="Deploys by team" sub='One series, sorted, labels="max"' config={{ deploys: { label: 'Deploys' } }} summary="Cedar deployed most, 51 times; Delta least.">
+        <A.BarChart data={teams} x="team" sort="desc" labels="max" />
+      </Chart>
+      <Chart id="b2" title="Requests by service" sub="Grouped: three series side by side" config={stack3}>
+        <A.BarChart data={months.slice(3)} x="month" />
+      </Chart>
+      <Chart id="b3" title="Requests, all services" sub='Stacked, labels="last"' config={stack3}>
+        <A.BarChart data={months} x="month" stack labels="last" />
+      </Chart>
+      <Chart id="b4" title="Share of requests" sub='stack="expand": parts of 100%' config={stack3}>
+        <A.BarChart data={months} x="month" stack="expand" />
+      </Chart>
+      <Chart id="b5" title="Net new customers" sub="Negative bars hang below the ground line" config={{ change: { label: 'Net change', format: (v) => (v > 0 ? '+' : '') + v } }}>
+        <A.BarChart data={net} x="month" />
+      </Chart>
+      <Chart id="b6" title="Seats by region" sub='layout="horizontal" for long names' config={{ seats: { label: 'Seats', format: (v) => v.toLocaleString('en') } }}>
+        <A.BarChart data={regions} x="region" layout="horizontal" labels="max" />
+      </Chart>
     </div>
   );
 }

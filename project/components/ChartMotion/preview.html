@@ -29,23 +29,6 @@ const steps = [
   ["A region enters", [["North", 88], ["East", 71], ["South", 64], ["West", 40], ["Central", 22]]],
   ["\u2026and leaves", [["North", 88], ["East", 71], ["South", 64], ["West", 40]]]
 ];
-function Bars() {
-  const { data, x, y, xKey, ground, alpha, encode } = A.useChart();
-  const e = encode("deals");
-  return data.map((d) => /* @__PURE__ */ React.createElement(
-    "rect",
-    {
-      key: d[xKey],
-      x: x(d[xKey]),
-      y: Math.min(y(d.deals), ground),
-      width: x.bandwidth,
-      height: Math.abs(y(d.deals) - ground),
-      fill: e.fill,
-      stroke: e.edge,
-      opacity: alpha(d)
-    }
-  ));
-}
 function App() {
   const [i, setI] = React.useState(0);
   React.useEffect(() => {
@@ -53,7 +36,7 @@ function App() {
     return () => clearInterval(t);
   }, []);
   const data = React.useMemo(() => steps[i][1].map(([region, deals]) => ({ region, deals })), [i]);
-  return /* @__PURE__ */ React.createElement("div", { className: "cm" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cm-t" }, "Deals closed by region"), /* @__PURE__ */ React.createElement(A.CardDescription, null, steps[i][0])), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "cm-t", data, x: "region", aspect: 2, config: { deals: { label: "Deals" } } }, /* @__PURE__ */ React.createElement(Bars, null)))), /* @__PURE__ */ React.createElement("ol", null, steps.map(([label], n) => /* @__PURE__ */ React.createElement("li", { key: n, "data-on": n === i ? "" : void 0 }, label))));
+  return /* @__PURE__ */ React.createElement("div", { className: "cm" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cm-t" }, "Deals closed by region"), /* @__PURE__ */ React.createElement(A.CardDescription, null, steps[i][0])), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "cm-t", aspect: 2, config: { deals: { label: "Deals" } } }, /* @__PURE__ */ React.createElement(A.BarChart, { data, x: "region" })))), /* @__PURE__ */ React.createElement("ol", null, steps.map(([label], n) => /* @__PURE__ */ React.createElement("li", { key: n, "data-on": n === i ? "" : void 0 }, label))));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

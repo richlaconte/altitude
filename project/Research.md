@@ -333,6 +333,18 @@ Not yet tested with people: whether a generated summary is as useful as a writte
 
 **Without colour (#72).** Each slot has a fixed dash, marker and hatch, after ECharts' `aria.decal`, which it ships off by default. Altitude turns them on under forced colours and in print, and with the `patterns` prop anywhere else. Under Chromium's forced-colours emulation, `checks/chart-patterns.mjs` renders six hatched bars and four dashed, marked lines in `CanvasText`, all distinct; `GrayText` gridlines come out as the emulated system grey (a dark red, rgb 96 0 0). The print render keeps the colours and adds the patterns, so a greyscale printout still separates the series. Not yet checked on real Windows contrast themes.
 
+### E25 · Does BarChart read flat, in every form?
+
+The prototype review moved here from the Charts chapter (#48): `BarChart` was rendered as one sorted series, grouped, stacked, stacked to 100%, with negative values, and horizontal with long names. Each was in a `Card`, in all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`. `checks/bar-chart.mjs` measures the geometry.
+
+- **Flat and standing.** Every bar meets the ground line square and is rounded only at its data end, and none has a shadow or a filter. Stacked segments and grouped neighbours are 2px apart, so parts read as parts without an outline. A hovered bar on a static chart doesn't change at all.
+- **Negative bars read as position, not depth.** They hang below the ground line with the same flat fill, rounded at their lower end; nothing about them looks sunk.
+- **Labels were thinned too eagerly.** Category labels were thinned by the widest label plus 12px, which hid every other month at 960px. They're now thinned by each pair of neighbours' actual widths plus 4px, and every label shows in all six charts.
+- **Horizontal needed a budget.** Long category names took two-thirds of a card and crushed the value axis until its ticks overlapped. Names now take at most 40% of the width and are cut with an ellipsis (the full name stays in the summary), and the value ticks are counted from what's left.
+- **Forced colours.** Hatches tell all three stacked and grouped series apart in `CanvasText`; the first series stays solid.
+
+Not yet tested with people: whether a 2px gap is enough to separate stacked segments at a glance for colour-blind readers when patterns are off.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
