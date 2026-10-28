@@ -735,6 +735,36 @@ export declare function EditRegionForm<T extends Record<string, unknown> = Recor
 /** The error, the conflict notice and Save/Cancel, for a form with `actions={false}`. */
 export declare function EditRegionActions(): React.ReactNode;
 
+/**
+ * An item's slot that keeps its place when the item leaves. With `removed`, the result shows where the item was, at its
+ * height; it holds for dur-linger (paused while pointed at, focused or under a modal, and waiting while a mouse is over
+ * the list), lifts off, and then the gap glides closed and `onClosed` is called. Receipts due within 250ms close together.
+ */
+export interface RemovalReceiptProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'>, Pick<DepthProps, 'settle'> {
+  /** The slot's element. Use `li` inside a list. Default `div`. */
+  as?: 'div' | 'li' | 'section' | 'article';
+  /** false: the item itself (children). true: the receipt in the item's slot, held, then closed. */
+  removed: boolean;
+  /** The write isn't confirmed yet: the receipt hovers as pending and the hold hasn't started. */
+  pending?: boolean;
+  /** What happened, in past tense: “Brand guidelines.pdf archived.” Announced politely when it appears. */
+  title?: React.ReactNode;
+  /** Undo, or a route to where the item went. Keep it to one or two buttons. */
+  action?: React.ReactNode;
+  /** critical: the result changed under you (an Undo that's no longer valid). */
+  tone?: 'neutral' | 'critical';
+  icon?: React.ReactNode;
+  /** How long the receipt holds before it closes, in ms. Default dur-linger (2000ms). */
+  hold?: number;
+  /** The gap has closed. Drop the item from your list here. */
+  onClosed?: () => void;
+  /** Where focus goes when it's inside the slot as it closes and no neighbouring slot has anything to focus. */
+  focusFallback?: () => HTMLElement | null;
+  /** When mounted, the slot glides open from nothing (an item brought back from elsewhere), then settles. */
+  arrive?: boolean;
+}
+export declare function RemovalReceipt(props: RemovalReceiptProps): React.ReactElement;
+
 export type ItemGroupResult = { ok: true } | { ok: false; error: string };
 export type ItemGroupCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
 /**
@@ -1947,7 +1977,7 @@ declare global {
     Altitude: {
       AltitudeProvider: typeof AltitudeProvider; Surface: typeof Surface; Button: typeof Button;
       Card: typeof Card; CardHeader: typeof CardHeader; CardTitle: typeof CardTitle; CardDescription: typeof CardDescription; CardContent: typeof CardContent; CardFooter: typeof CardFooter;
-      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; ItemGroup: typeof ItemGroup; Item: typeof Item; ItemMedia: typeof ItemMedia; ItemContent: typeof ItemContent; ItemTitle: typeof ItemTitle; ItemDescription: typeof ItemDescription; ItemActions: typeof ItemActions; ItemSeparator: typeof ItemSeparator; PropertyList: typeof PropertyList; PropertyListItem: typeof PropertyListItem; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
+      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; ItemGroup: typeof ItemGroup; RemovalReceipt: typeof RemovalReceipt; Item: typeof Item; ItemMedia: typeof ItemMedia; ItemContent: typeof ItemContent; ItemTitle: typeof ItemTitle; ItemDescription: typeof ItemDescription; ItemActions: typeof ItemActions; ItemSeparator: typeof ItemSeparator; PropertyList: typeof PropertyList; PropertyListItem: typeof PropertyListItem; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;

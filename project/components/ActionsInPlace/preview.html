@@ -140,6 +140,22 @@ function FilesExample({ service, full }) {
   const [confirmationOpen, setConfirmationOpen] = React.useState(false), openRef = React.useRef(false);
   const [deleteError, setDeleteError] = React.useState(null), [staleIntent, setStaleIntent] = React.useState(false);
   const sessionSequence = React.useRef(0), heading = React.useRef(null), renameResults = React.useRef(/* @__PURE__ */ new Map());
+  const [held, setHeld] = React.useState({}), heldRef = React.useRef({}), offered = React.useRef(/* @__PURE__ */ new Map());
+  const [arrived, setArrived] = React.useState(null), locationRef = React.useRef(location);
+  locationRef.current = location;
+  const belongs = (record, where) => !!record && !record.deleted && record.archived === (where === "archived");
+  const publishHeld = (next) => {
+    heldRef.current = next;
+    setHeld(next);
+  };
+  const dropHeld = (id) => {
+    const { [id]: _, ...rest } = heldRef.current;
+    publishHeld(rest);
+  };
+  const go = (where) => {
+    publishHeld({});
+    setLocation(where);
+  };
   const recoveryAtCurrentRevision = (message, record) => {
     if (!message?.undo || !record || message.record.id !== record.id || message.record.revision === record.revision && record.archived && !record.deleted) return message;
     return {
@@ -160,7 +176,22 @@ function FilesExample({ service, full }) {
   const reconcileRecord = (record) => {
     if (!alive.current || !record) return;
     publishRecords(recordsRef.current.map((old) => old.id === record.id && old.revision <= record.revision ? record : old));
-    setNotice((current) => recoveryAtCurrentRevision(current, recordsRef.current.find((item) => item.id === record.id)));
+    const latest = recordsRef.current.find((item) => item.id === record.id);
+    setNotice((current) => recoveryAtCurrentRevision(current, latest));
+    const entry = heldRef.current[record.id];
+    if (entry && !entry.pending) {
+      const next = recoveryAtCurrentRevision(entry, latest);
+      if (next !== entry && belongs(latest, entry.location)) {
+        dropHeld(record.id);
+        announce({ ...next, sequence: ++sequence.current });
+      } else if (next !== entry) publishHeld({ ...heldRef.current, [record.id]: next });
+    }
+    const toastOffer = offered.current.get(record.id);
+    if (toastOffer && recoveryAtCurrentRevision(toastOffer, latest) !== toastOffer) {
+      A.toast.dismiss(toastOffer.toast);
+      offered.current.delete(record.id);
+      announce({ ...recoveryAtCurrentRevision(toastOffer, latest), sequence: ++sequence.current });
+    }
   };
   const announce = (message) => {
     if (!alive.current || message.sequence < lastNotice.current) return;
@@ -169,8 +200,7 @@ function FilesExample({ service, full }) {
   };
   const reportFailure = (message) => {
     if (!alive.current) return;
-    if (message.sequence < lastNotice.current) setRowErrors((errors) => ({ ...errors, [message.id]: message }));
-    else announce(message);
+    setRowErrors((errors) => ({ ...errors, [message.id]: message }));
   };
   const clearRowError = (id) => setRowErrors((errors) => {
     const next = { ...errors };
@@ -217,22 +247,48 @@ function FilesExample({ service, full }) {
     const operation = nextOperation(kind, record);
     const current = service.read(record.id);
     if (!current || current.deleted || current.revision !== record.revision) {
+      const inSlot = !!heldRef.current[record.id];
       reconcileRecord(current);
-      announce({ ...operation, tone: "critical", title: current?.deleted ? "This file was removed." : "This file changed after it was archived.", body: current?.deleted ? "It cannot be restored." : "Review it in Archived.", route: true });
+      if (!inSlot) announce({ ...operation, tone: "critical", title: current?.deleted ? "This file was removed." : "This file changed after it was archived.", body: current?.deleted ? "It cannot be restored." : "Review it in Archived.", route: true });
       return;
+    }
+    if (undo) {
+      A.toast.dismiss(offered.current.get(record.id)?.toast);
+      offered.current.delete(record.id);
     }
     clearRowError(record.id);
     setFlight(record.id, operation);
-    repairFocus(record.id, kind === "archive" ? "archive" : "restore");
+    const slot = heldRef.current[record.id] || (belongs(record, locationRef.current) ? { location: locationRef.current } : null);
+    if (!heldRef.current[record.id]) repairFocus(record.id, kind === "archive" ? "archive" : "restore");
+    if (slot) publishHeld({ ...heldRef.current, [record.id]: { ...operation, location: slot.location, pending: true, undoing: undo && !!heldRef.current[record.id], record, title: `${kind === "archive" ? "Archiving" : "Restoring"} \u201C${record.name}\u201D\u2026` } });
     publishRecords(recordsRef.current.map((old) => old.id === record.id ? { ...old, archived: kind === "archive" } : old));
-    announce({ ...operation, pending: true, title: `${kind === "archive" ? "Archiving" : "Restoring"} \u201C${record.name}\u201D\u2026` });
     try {
       const result = await authoritativeResult(operation);
       if (!alive.current) return;
       reconcileRecord(result);
-      announce({ ...operation, title: `${result.name} is ${kind === "archive" ? "archived" : "restored"}.`, record: result, undo: kind === "archive", route: kind === "archive", quiet: kind === "restore" });
+      const entry = heldRef.current[record.id], latest = recordsRef.current.find((item) => item.id === record.id) || result;
+      if (entry?.operationId === operation.operationId && belongs(latest, entry.location)) {
+        const focusWasHere = document.activeElement === document.body || !!document.activeElement?.closest?.(`[data-file-id="${record.id}"]`);
+        dropHeld(record.id);
+        if (focusWasHere) requestAnimationFrame(() => document.querySelector(`[data-action="archive"][data-id="${record.id}"]`)?.focus({ preventScroll: true }));
+        announce({ ...operation, quiet: true, title: `${result.name} is restored.` });
+      } else if (entry?.operationId === operation.operationId) {
+        publishHeld({ ...heldRef.current, [record.id]: recoveryAtCurrentRevision({
+          ...operation,
+          location: entry.location,
+          record: result,
+          title: `${result.name} ${kind === "archive" ? "archived" : "restored"}.`,
+          undo: kind === "archive",
+          route: true,
+          routeLocation: kind === "archive" ? "archived" : "active"
+        }, latest) });
+      } else {
+        if (belongs(result, locationRef.current)) setArrived(record.id);
+        announce({ ...operation, quiet: true, title: `${result.name} is ${kind === "archive" ? "archived" : "restored"}.` });
+      }
     } catch (error) {
       if (!alive.current) return;
+      if (heldRef.current[record.id]?.operationId === operation.operationId) dropHeld(record.id);
       reconcileRecord(service.read(record.id));
       reportFailure({
         ...operation,
@@ -245,6 +301,14 @@ function FilesExample({ service, full }) {
     } finally {
       setFlight(record.id, null);
     }
+  };
+  const closeReceipt = (id) => {
+    const entry = heldRef.current[id];
+    if (!entry || entry.pending) return;
+    dropHeld(id);
+    if (!entry.undo) return;
+    const offer = { ...entry, toast: A.toast({ title: `${entry.record.name} archived.`, action: { label: "Undo", onClick: () => move("restore", entry.record, true) } }) };
+    offered.current.set(id, offer);
   };
   const beginDelete = (record) => {
     if (flights.current.has(record.id)) return;
@@ -274,7 +338,8 @@ function FilesExample({ service, full }) {
       if (!alive.current) return;
       repairFocus(captured.id, "delete");
       reconcileRecord(result);
-      announce({ ...operation, quiet: true, title: `${captured.name} was permanently deleted.` });
+      if (locationRef.current === "archived") publishHeld({ ...heldRef.current, [captured.id]: { ...operation, location: "archived", record: result, title: `${captured.name} was permanently deleted.` } });
+      else announce({ ...operation, quiet: true, title: `${captured.name} was permanently deleted.` });
       if (openRef.current && targetRef.current?.session === operation.session) setOpen(false);
     } catch (error) {
       if (!alive.current) return;
@@ -311,9 +376,10 @@ function FilesExample({ service, full }) {
     return () => {
       alive.current = false;
       if (window.__filesDemo === debug) delete window.__filesDemo;
+      for (const offer of offered.current.values()) A.toast.dismiss(offer.toast);
     };
   }, [service]);
-  const shown = records.filter((record) => !record.deleted && record.archived === (location === "archived") && record.name.toLowerCase().includes(query.toLowerCase()));
+  const shown = records.filter((record) => held[record.id]?.location === location || belongs(record, location) && record.name.toLowerCase().includes(query.toLowerCase()));
   const count = (archived) => records.filter((record) => !record.deleted && record.archived === archived).length;
   const deleting = target && busy[target.id]?.kind === "delete" && busy[target.id]?.session === target.session;
   const recordError = (error) => error && /* @__PURE__ */ React.createElement(
@@ -328,28 +394,51 @@ function FilesExample({ service, full }) {
     },
     error.body
   );
-  return /* @__PURE__ */ React.createElement("main", { className: "aip-product", "data-product": "files" }, /* @__PURE__ */ React.createElement("header", { className: "aip-header" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "aip-eyebrow" }, "Northstar Studio"), /* @__PURE__ */ React.createElement("h2", null, "Files")), /* @__PURE__ */ React.createElement("span", { className: "aip-meta" }, "Team library")), /* @__PURE__ */ React.createElement("div", { className: "aip-toolbar" }, /* @__PURE__ */ React.createElement("nav", { "aria-label": "File locations" }, /* @__PURE__ */ React.createElement(A.Button, { variant: location === "active" ? "secondary" : "ghost", "aria-pressed": location === "active", onClick: () => setLocation("active") }, "Files (", count(false), ")"), /* @__PURE__ */ React.createElement(A.Button, { variant: location === "archived" ? "secondary" : "ghost", "aria-pressed": location === "archived", onClick: () => setLocation("archived") }, "Archived (", count(true), ")")), /* @__PURE__ */ React.createElement(A.Input, { "aria-label": "Search files", placeholder: "Search files", value: query, onChange: (event) => setQuery(event.target.value) })), /* @__PURE__ */ React.createElement("h3", { ref: heading, tabIndex: -1, "data-list-heading": true }, location === "active" ? "All files" : "Archived files"), /* @__PURE__ */ React.createElement("ul", { className: "aip-list", "aria-label": location === "active" ? "All files" : "Archived files" }, shown.map((record) => /* @__PURE__ */ React.createElement("li", { key: record.id, "data-file-id": record.id }, /* @__PURE__ */ React.createElement("div", { className: "aip-file" }, /* @__PURE__ */ React.createElement("div", { className: "aip-name" }, full ? /* @__PURE__ */ React.createElement(
-    FileName,
-    {
-      label: `File name: ${record.name}`,
-      editLabel: "Rename",
-      value: record.name,
-      required: true,
-      maxLength: 160,
-      disabled: !!busy[record.id] && busy[record.id].kind !== "rename",
-      validate: (draft) => !draft.trim() ? "Enter a file name." : recordsRef.current.some((other) => other.id !== record.id && !other.deleted && other.name === draft.trim()) ? "A file already has that name." : void 0,
-      onBeginEdit: () => setNotice((current) => current?.quiet ? null : current),
-      onSave: (draft, context, isMounted) => rename(record, draft, context.previousValue, isMounted),
-      onValueChange: (name) => {
-        const result = renameResults.current.get(record.id);
-        if (result) {
-          reconcileRecord({ ...result, name });
-          renameResults.current.delete(record.id);
-        }
+  return /* @__PURE__ */ React.createElement("main", { className: "aip-product", "data-product": "files" }, /* @__PURE__ */ React.createElement("header", { className: "aip-header" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "aip-eyebrow" }, "Northstar Studio"), /* @__PURE__ */ React.createElement("h2", null, "Files")), /* @__PURE__ */ React.createElement("span", { className: "aip-meta" }, "Team library")), /* @__PURE__ */ React.createElement("div", { className: "aip-toolbar" }, /* @__PURE__ */ React.createElement("nav", { "aria-label": "File locations" }, /* @__PURE__ */ React.createElement(A.Button, { variant: location === "active" ? "secondary" : "ghost", "aria-pressed": location === "active", onClick: () => go("active") }, "Files (", count(false), ")"), /* @__PURE__ */ React.createElement(A.Button, { variant: location === "archived" ? "secondary" : "ghost", "aria-pressed": location === "archived", onClick: () => go("archived") }, "Archived (", count(true), ")")), /* @__PURE__ */ React.createElement(A.Input, { "aria-label": "Search files", placeholder: "Search files", value: query, onChange: (event) => setQuery(event.target.value) })), /* @__PURE__ */ React.createElement("h3", { ref: heading, tabIndex: -1, "data-list-heading": true }, location === "active" ? "All files" : "Archived files"), /* @__PURE__ */ React.createElement("ul", { className: "aip-list", "aria-label": location === "active" ? "All files" : "Archived files" }, shown.map((record) => {
+    const receipt = held[record.id]?.location === location ? held[record.id] : null;
+    return /* @__PURE__ */ React.createElement(
+      A.RemovalReceipt,
+      {
+        as: "li",
+        key: record.id,
+        "data-file-id": record.id,
+        removed: !!receipt,
+        pending: !!receipt?.pending,
+        arrive: arrived === record.id,
+        tone: receipt?.tone === "critical" ? "critical" : "neutral",
+        title: receipt && /* @__PURE__ */ React.createElement(React.Fragment, null, receipt.title, receipt.body && /* @__PURE__ */ React.createElement(React.Fragment, null, " ", receipt.body)),
+        action: receipt && (receipt.undo || receipt.undoing || receipt.route) && /* @__PURE__ */ React.createElement(React.Fragment, null, receipt.route && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => {
+          setQuery("");
+          go(receipt.routeLocation);
+        } }, "View ", receipt.routeLocation === "active" ? "Files" : "Archived"), (receipt.undo || receipt.undoing) && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", loading: !!receipt.undoing, "aria-label": `Undo archive of ${receipt.record.name}`, onClick: () => move("restore", receipt.record, true) }, "Undo")),
+        onClosed: () => closeReceipt(record.id),
+        focusFallback: () => heading.current
       },
-      focusFallback: () => heading.current
-    }
-  ) : /* @__PURE__ */ React.createElement("strong", null, record.name)), /* @__PURE__ */ React.createElement("p", { className: "aip-meta" }, record.folder, " \xB7 ", record.size), recordError(rowErrors[record.id])), /* @__PURE__ */ React.createElement("div", { className: "aip-row-actions" }, record.archived ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", "data-action": "restore", "data-id": record.id, "aria-label": `Restore ${record.name}`, disabled: !!busy[record.id], onClick: () => move("restore", record) }, "Restore"), full && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", "data-action": "delete", "data-id": record.id, "aria-label": `Delete ${record.name} permanently`, "aria-disabled": !!busy[record.id], onClick: () => beginDelete(record) }, "Delete permanently")) : /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", "data-action": "archive", "data-id": record.id, "aria-label": `Archive ${record.name}`, disabled: !!busy[record.id], onClick: () => move("archive", record) }, "Archive"))))), Object.values(rowErrors).filter((error) => !shown.some((record) => record.id === error.id)).map(recordError), !shown.length && /* @__PURE__ */ React.createElement("p", { className: "aip-empty" }, query ? "No files match your search." : location === "archived" ? "No archived files." : "No files here. Restore a file from Archived."), /* @__PURE__ */ React.createElement("p", { className: "aip-completion", role: "status", "aria-live": "polite", "aria-atomic": "true", "data-recovery": notice?.quiet ? "" : void 0 }, notice?.quiet && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Icons.Check, { size: 16, "aria-hidden": "true" }), notice.title)), notice && !notice.quiet && /* @__PURE__ */ React.createElement(A.Surface, { className: "aip-recovery", level: 0, status: notice.pending ? "pending" : void 0, "data-recovery": true }, /* @__PURE__ */ React.createElement(
+      /* @__PURE__ */ React.createElement("div", { className: "aip-file" }, /* @__PURE__ */ React.createElement("div", { className: "aip-name" }, full ? /* @__PURE__ */ React.createElement(
+        FileName,
+        {
+          label: `File name: ${record.name}`,
+          editLabel: "Rename",
+          value: record.name,
+          required: true,
+          maxLength: 160,
+          disabled: !!busy[record.id] && busy[record.id].kind !== "rename",
+          validate: (draft) => !draft.trim() ? "Enter a file name." : recordsRef.current.some((other) => other.id !== record.id && !other.deleted && other.name === draft.trim()) ? "A file already has that name." : void 0,
+          onBeginEdit: () => setNotice((current) => current?.quiet ? null : current),
+          onSave: (draft, context, isMounted) => rename(record, draft, context.previousValue, isMounted),
+          onValueChange: (name) => {
+            const result = renameResults.current.get(record.id);
+            if (result) {
+              reconcileRecord({ ...result, name });
+              renameResults.current.delete(record.id);
+            }
+          },
+          focusFallback: () => heading.current
+        }
+      ) : /* @__PURE__ */ React.createElement("strong", null, record.name)), /* @__PURE__ */ React.createElement("p", { className: "aip-meta" }, record.folder, " \xB7 ", record.size), recordError(rowErrors[record.id])),
+      /* @__PURE__ */ React.createElement("div", { className: "aip-row-actions" }, record.archived ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", "data-action": "restore", "data-id": record.id, "aria-label": `Restore ${record.name}`, disabled: !!busy[record.id], onClick: () => move("restore", record) }, "Restore"), full && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", "data-action": "delete", "data-id": record.id, "aria-label": `Delete ${record.name} permanently`, "aria-disabled": !!busy[record.id], onClick: () => beginDelete(record) }, "Delete permanently")) : /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", "data-action": "archive", "data-id": record.id, "aria-label": `Archive ${record.name}`, disabled: !!busy[record.id], onClick: () => move("archive", record) }, "Archive"))
+    );
+  })), Object.values(rowErrors).filter((error) => !shown.some((record) => record.id === error.id)).map(recordError), !shown.length && /* @__PURE__ */ React.createElement("p", { className: "aip-empty" }, query ? "No files match your search." : location === "archived" ? "No archived files." : "No files here. Restore a file from Archived."), /* @__PURE__ */ React.createElement("p", { className: "aip-completion", role: "status", "aria-live": "polite", "aria-atomic": "true", "data-recovery": notice?.quiet ? "" : void 0 }, notice?.quiet && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Icons.Check, { size: 16, "aria-hidden": "true" }), notice.title)), notice && !notice.quiet && /* @__PURE__ */ React.createElement(A.Surface, { className: "aip-recovery", level: 0, status: notice.pending ? "pending" : void 0, "data-recovery": true }, /* @__PURE__ */ React.createElement(
     A.Alert,
     {
       key: notice.operationId,
@@ -359,7 +448,7 @@ function FilesExample({ service, full }) {
       onDismiss: notice.pending ? void 0 : () => setNotice((current) => current?.operationId === notice.operationId ? null : current),
       action: /* @__PURE__ */ React.createElement(React.Fragment, null, notice.undo && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", "aria-label": `Undo archive of ${notice.record.name}`, onClick: () => move("restore", notice.record, true) }, "Undo"), notice.retry && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => move(notice.retry.kind, notice.retry.record) }, "Retry ", notice.retry.kind), notice.route && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => {
         setQuery("");
-        setLocation(notice.routeLocation || "archived");
+        go(notice.routeLocation || "archived");
       } }, "View ", notice.routeLocation === "active" ? "Files" : "Archived"))
     },
     notice.body
@@ -397,7 +486,7 @@ function App() {
     setRun((old) => ({ fixture, key: old.key + 1 }));
     setTrace("No requests yet.");
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "aip" }, /* @__PURE__ */ React.createElement(FilesExample, { key: run.key, service, full }), /* @__PURE__ */ React.createElement("div", { className: "aip-documentation" }, /* @__PURE__ */ React.createElement("a", { href: full ? "#" : "#files" }, full ? "Show focused recovery example" : "Open complete Files example"), /* @__PURE__ */ React.createElement("details", { className: "aip-harness" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures and source"), /* @__PURE__ */ React.createElement("p", null, "Fictional local records. Select a fixture, then reset to mount the same example with that service behavior."), /* @__PURE__ */ React.createElement("label", null, "Service fixture ", /* @__PURE__ */ React.createElement("select", { "aria-label": "Service fixture", value: fixture, onChange: (event) => setFixture(event.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "success-100" }, "Success \xB7 100 ms"), /* @__PURE__ */ React.createElement("option", { value: "success-1200" }, "Slow success \xB7 1,200 ms"), /* @__PURE__ */ React.createElement("option", { value: "fail-once" }, "Fail once, then retry"), /* @__PURE__ */ React.createElement("option", { value: "conflict" }, "Record changes before save"), /* @__PURE__ */ React.createElement("option", { value: "interrupted-after-save" }, "Connection interrupted after save"))), /* @__PURE__ */ React.createElement("div", { className: "aip-harness-actions" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: reset }, "Reset example"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => {
+  return /* @__PURE__ */ React.createElement("div", { className: "aip" }, /* @__PURE__ */ React.createElement(FilesExample, { key: run.key, service, full }), /* @__PURE__ */ React.createElement(A.Toaster, null), /* @__PURE__ */ React.createElement("div", { className: "aip-documentation" }, /* @__PURE__ */ React.createElement("a", { href: full ? "#" : "#files" }, full ? "Show focused recovery example" : "Open complete Files example"), /* @__PURE__ */ React.createElement("details", { className: "aip-harness" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures and source"), /* @__PURE__ */ React.createElement("p", null, "Fictional local records. Select a fixture, then reset to mount the same example with that service behavior."), /* @__PURE__ */ React.createElement("label", null, "Service fixture ", /* @__PURE__ */ React.createElement("select", { "aria-label": "Service fixture", value: fixture, onChange: (event) => setFixture(event.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "success-100" }, "Success \xB7 100 ms"), /* @__PURE__ */ React.createElement("option", { value: "success-1200" }, "Slow success \xB7 1,200 ms"), /* @__PURE__ */ React.createElement("option", { value: "fail-once" }, "Fail once, then retry"), /* @__PURE__ */ React.createElement("option", { value: "conflict" }, "Record changes before save"), /* @__PURE__ */ React.createElement("option", { value: "interrupted-after-save" }, "Connection interrupted after save"))), /* @__PURE__ */ React.createElement("div", { className: "aip-harness-actions" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: reset }, "Reset example"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => {
     service.change("file-brand", { name: "Brand guidelines updated.pdf" });
     window.__filesDemo?.sync("file-brand");
   } }, "Change Brand on server"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => {

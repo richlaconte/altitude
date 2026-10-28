@@ -1,0 +1,87 @@
+<!-- @dsCard group="Display" height=520 subtitle="An item that leaves its list: the result in its own slot, held, then the gap glides closed" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RemovalReceipt — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.rr { max-width: 640px; }
+.rr h3 { font: 600 17px/24px var(--font-sans); margin: 0 0 var(--space-2); color: var(--ink); }
+.rr p.rr-hint { font: 400 13px/18px var(--font-sans); color: var(--ink-muted); margin: 0 0 var(--space-3); }
+.rr ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.rr li { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+.rr .rr-body { flex: 1; min-width: 0; }
+.rr .rr-name { font: 500 14.5px/21px var(--font-sans); color: var(--ink); }
+.rr .rr-url { font: 400 12.5px/17px var(--font-mono); color: var(--ink-muted); overflow-wrap: anywhere; }
+.rr .rr-empty { padding: var(--space-5) var(--space-3); color: var(--ink-muted); font: 400 13.5px/20px var(--font-sans); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const HOOKS = [
+  { id: "h1", name: "Deploy notifications", url: "https://hooks.example.com/deploys" },
+  { id: "h2", name: "Billing events", url: "https://hooks.example.com/billing" },
+  { id: "h3", name: "New sign-ups", url: "https://hooks.example.com/signups" },
+  { id: "h4", name: "Error alerts", url: "https://hooks.example.com/errors" }
+];
+const later = (value) => new Promise((resolve) => setTimeout(() => resolve(value), 400));
+function App() {
+  const [hooks, setHooks] = React.useState(HOOKS);
+  const [receipts, setReceipts] = React.useState({});
+  const [back, setBack] = React.useState(null);
+  const put = (id, value) => setReceipts((r) => {
+    const next = { ...r };
+    if (value) next[id] = value;
+    else delete next[id];
+    return next;
+  });
+  const remove = async (hook) => {
+    put(hook.id, { pending: true });
+    await later();
+    put(hook.id, { pending: false });
+  };
+  const undo = async (hook) => {
+    put(hook.id, { pending: true, undoing: true });
+    await later();
+    put(hook.id, null);
+  };
+  const restore = async (hook) => {
+    await later();
+    setHooks((list) => HOOKS.filter((h) => h.id === hook.id || list.some((x) => x.id === h.id)));
+    setBack(hook.id);
+  };
+  return /* @__PURE__ */ React.createElement("section", { className: "rr", "aria-labelledby": "rr-title" }, /* @__PURE__ */ React.createElement("h3", { id: "rr-title" }, "Webhooks"), /* @__PURE__ */ React.createElement("p", { className: "rr-hint" }, "Remove one: its result stays in its place, then the list closes up. Point at the result to keep it."), /* @__PURE__ */ React.createElement("ul", null, hooks.map((hook) => {
+    const receipt = receipts[hook.id];
+    return /* @__PURE__ */ React.createElement(
+      A.RemovalReceipt,
+      {
+        as: "li",
+        key: hook.id,
+        removed: !!receipt,
+        pending: receipt?.pending,
+        arrive: back === hook.id,
+        title: receipt?.undoing ? `Restoring ${hook.name}\u2026` : receipt?.pending ? `Removing ${hook.name}\u2026` : `${hook.name} removed.`,
+        action: receipt && (!receipt.pending || receipt.undoing) && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", loading: !!receipt.undoing, "aria-label": `Undo removing ${hook.name}`, onClick: () => undo(hook) }, "Undo"),
+        onClosed: () => {
+          put(hook.id, null);
+          setHooks((list) => list.filter((h) => h.id !== hook.id));
+          A.toast({ title: `${hook.name} removed.`, action: { label: "Undo", onClick: () => restore(hook) } });
+        }
+      },
+      /* @__PURE__ */ React.createElement("div", { className: "rr-body" }, /* @__PURE__ */ React.createElement("div", { className: "rr-name" }, hook.name), /* @__PURE__ */ React.createElement("div", { className: "rr-url" }, hook.url)),
+      /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", "aria-label": `Remove ${hook.name}`, onClick: () => remove(hook) }, "Remove")
+    );
+  })), !hooks.length && /* @__PURE__ */ React.createElement("p", { className: "rr-empty" }, "No webhooks."), /* @__PURE__ */ React.createElement(A.Toaster, null));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

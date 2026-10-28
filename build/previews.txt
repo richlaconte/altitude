@@ -2569,6 +2569,14 @@ function FilesExample({ service, full }) {
   const [confirmationOpen, setConfirmationOpen] = React.useState(false), openRef = React.useRef(false);
   const [deleteError, setDeleteError] = React.useState(null), [staleIntent, setStaleIntent] = React.useState(false);
   const sessionSequence = React.useRef(0), heading = React.useRef(null), renameResults = React.useRef(new Map());
+  // Receipts held in the slot of the row they came from, keyed by record, and Undo still offered in a toast.
+  const [held, setHeld] = React.useState({}), heldRef = React.useRef({}), offered = React.useRef(new Map());
+  const [arrived, setArrived] = React.useState(null), locationRef = React.useRef(location);
+  locationRef.current = location;
+  const belongs = (record, where) => !!record && !record.deleted && record.archived === (where === 'archived');
+  const publishHeld = next => { heldRef.current = next; setHeld(next); };
+  const dropHeld = id => { const { [id]: _, ...rest } = heldRef.current; publishHeld(rest); };
+  const go = where => { publishHeld({}); setLocation(where); };
   const recoveryAtCurrentRevision = (message, record) => {
     if (!message?.undo || !record || message.record.id !== record.id || (message.record.revision === record.revision && record.archived && !record.deleted)) return message;
     return { ...message, record, undo: false, tone: 'critical', route: !record.deleted, routeLocation: record.archived ? 'archived' : 'active',
@@ -2579,7 +2587,20 @@ function FilesExample({ service, full }) {
   const reconcileRecord = record => {
     if (!alive.current || !record) return;
     publishRecords(recordsRef.current.map(old => old.id === record.id && old.revision <= record.revision ? record : old));
-    setNotice(current => recoveryAtCurrentRevision(current, recordsRef.current.find(item => item.id === record.id)));
+    const latest = recordsRef.current.find(item => item.id === record.id);
+    setNotice(current => recoveryAtCurrentRevision(current, latest));
+    // A known newer revision invalidates an offered Undo at once, in its slot or in its toast.
+    const entry = heldRef.current[record.id];
+    if (entry && !entry.pending) {
+      const next = recoveryAtCurrentRevision(entry, latest);
+      if (next !== entry && belongs(latest, entry.location)) { dropHeld(record.id); announce({ ...next, sequence: ++sequence.current }); }
+      else if (next !== entry) publishHeld({ ...heldRef.current, [record.id]: next });
+    }
+    const toastOffer = offered.current.get(record.id);
+    if (toastOffer && recoveryAtCurrentRevision(toastOffer, latest) !== toastOffer) {
+      A.toast.dismiss(toastOffer.toast); offered.current.delete(record.id);
+      announce({ ...recoveryAtCurrentRevision(toastOffer, latest), sequence: ++sequence.current });
+    }
   };
   const announce = message => {
     if (!alive.current || message.sequence < lastNotice.current) return;
@@ -2587,9 +2608,8 @@ function FilesExample({ service, full }) {
   };
   const reportFailure = message => {
     if (!alive.current) return;
-    // Preserve newer recovery without silently dropping an older record's failure.
-    if (message.sequence < lastNotice.current) setRowErrors(errors => ({ ...errors, [message.id]: message }));
-    else announce(message);
+    // A failure stays with its record: in its row, or below the list when that row isn't in view.
+    setRowErrors(errors => ({ ...errors, [message.id]: message }));
   };
   const clearRowError = id => setRowErrors(errors => { const next = { ...errors }; delete next[id]; return next; });
   const setOpen = open => { openRef.current = open; setConfirmationOpen(open); };
@@ -2630,25 +2650,55 @@ function FilesExample({ service, full }) {
     const operation = nextOperation(kind, record);
     const current = service.read(record.id);
     if (!current || current.deleted || current.revision !== record.revision) {
+      const inSlot = !!heldRef.current[record.id];
       reconcileRecord(current);
-      announce({ ...operation, tone: 'critical', title: current?.deleted ? 'This file was removed.' : 'This file changed after it was archived.', body: current?.deleted ? 'It cannot be restored.' : 'Review it in Archived.', route: true });
+      // A receipt explains the change in its own slot; anywhere else, the region below the list does.
+      if (!inSlot) announce({ ...operation, tone: 'critical', title: current?.deleted ? 'This file was removed.' : 'This file changed after it was archived.', body: current?.deleted ? 'It cannot be restored.' : 'Review it in Archived.', route: true });
       return;
     }
+    if (undo) { A.toast.dismiss(offered.current.get(record.id)?.toast); offered.current.delete(record.id); }
     clearRowError(record.id); setFlight(record.id, operation);
-    repairFocus(record.id, kind === 'archive' ? 'archive' : 'restore');
+    // The row keeps its slot while the write is pending: Undo from its receipt, or a row leaving this view.
+    const slot = heldRef.current[record.id] || (belongs(record, locationRef.current) ? { location: locationRef.current } : null);
+    if (!heldRef.current[record.id]) repairFocus(record.id, kind === 'archive' ? 'archive' : 'restore');
+    if (slot) publishHeld({ ...heldRef.current, [record.id]: { ...operation, location: slot.location, pending: true, undoing: undo && !!heldRef.current[record.id], record, title: `${kind === 'archive' ? 'Archiving' : 'Restoring'} “${record.name}”…` } });
     publishRecords(recordsRef.current.map(old => old.id === record.id ? { ...old, archived: kind === 'archive' } : old));
-    announce({ ...operation, pending: true, title: `${kind === 'archive' ? 'Archiving' : 'Restoring'} “${record.name}”…` });
     try {
       const result = await authoritativeResult(operation);
       if (!alive.current) return;
       reconcileRecord(result);
-      announce({ ...operation, title: `${result.name} is ${kind === 'archive' ? 'archived' : 'restored'}.`, record: result, undo: kind === 'archive', route: kind === 'archive', quiet: kind === 'restore' });
+      // A late receipt describes an older revision than one already known: judge it against the latest.
+      const entry = heldRef.current[record.id], latest = recordsRef.current.find(item => item.id === record.id) || result;
+      if (entry?.operationId === operation.operationId && belongs(latest, entry.location)) {
+        // Undone in place: the row comes back in its slot, and keeps focus that was on its receipt.
+        const focusWasHere = document.activeElement === document.body || !!document.activeElement?.closest?.(`[data-file-id="${record.id}"]`);
+        dropHeld(record.id);
+        if (focusWasHere) requestAnimationFrame(() => document.querySelector(`[data-action="archive"][data-id="${record.id}"]`)?.focus({ preventScroll: true }));
+        announce({ ...operation, quiet: true, title: `${result.name} is restored.` });
+      } else if (entry?.operationId === operation.operationId) {
+        publishHeld({ ...heldRef.current, [record.id]: recoveryAtCurrentRevision({ ...operation, location: entry.location, record: result, title: `${result.name} ${kind === 'archive' ? 'archived' : 'restored'}.`,
+          undo: kind === 'archive', route: true, routeLocation: kind === 'archive' ? 'archived' : 'active' }, latest) });
+      } else {
+        // Not where it happened (Undo from a toast, or the view changed): bring it back here, or say so quietly.
+        if (belongs(result, locationRef.current)) setArrived(record.id);
+        announce({ ...operation, quiet: true, title: `${result.name} is ${kind === 'archive' ? 'archived' : 'restored'}.` });
+      }
     } catch (error) {
       if (!alive.current) return;
+      if (heldRef.current[record.id]?.operationId === operation.operationId) dropHeld(record.id);
       reconcileRecord(service.read(record.id));
       reportFailure({ ...operation, tone: 'critical', title: kind === 'archive' ? `Could not archive ${record.name}.` : `Could not restore ${record.name}.`,
         body: error.message, retry: error.code === 'rejected' ? { kind, record: service.read(record.id) } : null, route: true });
     } finally { setFlight(record.id, null); }
+  };
+  // The gap has closed. Undo moves to a toast; Archived → Restore stays the route that doesn't expire.
+  const closeReceipt = id => {
+    const entry = heldRef.current[id];
+    if (!entry || entry.pending) return;
+    dropHeld(id);
+    if (!entry.undo) return;
+    const offer = { ...entry, toast: A.toast({ title: `${entry.record.name} archived.`, action: { label: 'Undo', onClick: () => move('restore', entry.record, true) } }) };
+    offered.current.set(id, offer);
   };
   const beginDelete = record => {
     if (flights.current.has(record.id)) return;
@@ -2672,7 +2722,9 @@ function FilesExample({ service, full }) {
       if (!alive.current) return;
       // If Close returned focus to the soon-to-disappear Delete button, repair that focus too.
       repairFocus(captured.id, 'delete'); reconcileRecord(result);
-      announce({ ...operation, quiet: true, title: `${captured.name} was permanently deleted.` });
+      // Seen in Archived, the deletion is told in the row's slot; anywhere else, quietly below the list.
+      if (locationRef.current === 'archived') publishHeld({ ...heldRef.current, [captured.id]: { ...operation, location: 'archived', record: result, title: `${captured.name} was permanently deleted.` } });
+      else announce({ ...operation, quiet: true, title: `${captured.name} was permanently deleted.` });
       if (openRef.current && targetRef.current?.session === operation.session) setOpen(false);
     } catch (error) {
       if (!alive.current) return;
@@ -2703,9 +2755,13 @@ function FilesExample({ service, full }) {
     alive.current = true;
     const debug = { service, snapshot: () => ({ records: recordsRef.current, accepted: service.accepted, requests: service.requests }), sync: id => reconcileRecord(service.read(id)) };
     window.__filesDemo = debug;
-    return () => { alive.current = false; if (window.__filesDemo === debug) delete window.__filesDemo; };
+    return () => {
+      alive.current = false; if (window.__filesDemo === debug) delete window.__filesDemo;
+      for (const offer of offered.current.values()) A.toast.dismiss(offer.toast);
+    };
   }, [service]);
-  const shown = records.filter(record => !record.deleted && record.archived === (location === 'archived') && record.name.toLowerCase().includes(query.toLowerCase()));
+  // A held receipt is the result of what the person just did: it keeps its slot until it closes, whatever the search.
+  const shown = records.filter(record => held[record.id]?.location === location || (belongs(record, location) && record.name.toLowerCase().includes(query.toLowerCase())));
   const count = archived => records.filter(record => !record.deleted && record.archived === archived).length;
   const deleting = target && busy[target.id]?.kind === 'delete' && busy[target.id]?.session === target.session;
   const recordError = error => error && <A.Alert key={error.operationId} tone="critical" title={error.title} data-file-error={error.id}
@@ -2714,12 +2770,19 @@ function FilesExample({ service, full }) {
   return <main className="aip-product" data-product="files">
     <header className="aip-header"><div><p className="aip-eyebrow">Northstar Studio</p><h2>Files</h2></div><span className="aip-meta">Team library</span></header>
     <div className="aip-toolbar"><nav aria-label="File locations">
-      <A.Button variant={location === 'active' ? 'secondary' : 'ghost'} aria-pressed={location === 'active'} onClick={() => setLocation('active')}>Files ({count(false)})</A.Button>
-      <A.Button variant={location === 'archived' ? 'secondary' : 'ghost'} aria-pressed={location === 'archived'} onClick={() => setLocation('archived')}>Archived ({count(true)})</A.Button>
+      <A.Button variant={location === 'active' ? 'secondary' : 'ghost'} aria-pressed={location === 'active'} onClick={() => go('active')}>Files ({count(false)})</A.Button>
+      <A.Button variant={location === 'archived' ? 'secondary' : 'ghost'} aria-pressed={location === 'archived'} onClick={() => go('archived')}>Archived ({count(true)})</A.Button>
     </nav><A.Input aria-label="Search files" placeholder="Search files" value={query} onChange={event => setQuery(event.target.value)} /></div>
     <h3 ref={heading} tabIndex={-1} data-list-heading>{location === 'active' ? 'All files' : 'Archived files'}</h3>
     <ul className="aip-list" aria-label={location === 'active' ? 'All files' : 'Archived files'}>
-      {shown.map(record => <li key={record.id} data-file-id={record.id}>
+      {shown.map(record => { const receipt = held[record.id]?.location === location ? held[record.id] : null;
+        return <A.RemovalReceipt as="li" key={record.id} data-file-id={record.id} removed={!!receipt} pending={!!receipt?.pending} arrive={arrived === record.id}
+          tone={receipt?.tone === 'critical' ? 'critical' : 'neutral'} title={receipt && <>{receipt.title}{receipt.body && <> {receipt.body}</>}</>}
+          action={receipt && (receipt.undo || receipt.undoing || receipt.route) && <>
+            {receipt.route && <A.Button size="sm" variant="ghost" onClick={() => { setQuery(''); go(receipt.routeLocation); }}>View {receipt.routeLocation === 'active' ? 'Files' : 'Archived'}</A.Button>}
+            {/* Undo lands where Archive was, so a second click under the pointer reverses rather than navigates. */}
+            {(receipt.undo || receipt.undoing) && <A.Button size="sm" loading={!!receipt.undoing} aria-label={`Undo archive of ${receipt.record.name}`} onClick={() => move('restore', receipt.record, true)}>Undo</A.Button>}</>}
+          onClosed={() => closeReceipt(record.id)} focusFallback={() => heading.current}>
         <div className="aip-file"><div className="aip-name">{full ? <FileName label={`File name: ${record.name}`} editLabel="Rename" value={record.name} required maxLength={160} disabled={!!busy[record.id] && busy[record.id].kind !== 'rename'}
           validate={draft => !draft.trim() ? 'Enter a file name.' : recordsRef.current.some(other => other.id !== record.id && !other.deleted && other.name === draft.trim()) ? 'A file already has that name.' : undefined}
           onBeginEdit={() => setNotice(current => current?.quiet ? null : current)}
@@ -2731,7 +2794,7 @@ function FilesExample({ service, full }) {
           <A.Button size="sm" data-action="restore" data-id={record.id} aria-label={`Restore ${record.name}`} disabled={!!busy[record.id]} onClick={() => move('restore', record)}>Restore</A.Button>
           {full && <A.Button size="sm" variant="ghost" data-action="delete" data-id={record.id} aria-label={`Delete ${record.name} permanently`} aria-disabled={!!busy[record.id]} onClick={() => beginDelete(record)}>Delete permanently</A.Button>}
         </> : <A.Button size="sm" variant="ghost" data-action="archive" data-id={record.id} aria-label={`Archive ${record.name}`} disabled={!!busy[record.id]} onClick={() => move('archive', record)}>Archive</A.Button>}</div>
-      </li>)}
+      </A.RemovalReceipt>; })}
     </ul>
     {Object.values(rowErrors).filter(error => !shown.some(record => record.id === error.id)).map(recordError)}
     {!shown.length && <p className="aip-empty">{query ? 'No files match your search.' : location === 'archived' ? 'No archived files.' : 'No files here. Restore a file from Archived.'}</p>}
@@ -2741,7 +2804,7 @@ function FilesExample({ service, full }) {
         onDismiss={notice.pending ? undefined : () => setNotice(current => current?.operationId === notice.operationId ? null : current)}
         action={<>{notice.undo && <A.Button size="sm" aria-label={`Undo archive of ${notice.record.name}`} onClick={() => move('restore', notice.record, true)}>Undo</A.Button>}
           {notice.retry && <A.Button size="sm" onClick={() => move(notice.retry.kind, notice.retry.record)}>Retry {notice.retry.kind}</A.Button>}
-          {notice.route && <A.Button size="sm" variant="ghost" onClick={() => { setQuery(''); setLocation(notice.routeLocation || 'archived'); }}>View {notice.routeLocation === 'active' ? 'Files' : 'Archived'}</A.Button>}</>}>
+          {notice.route && <A.Button size="sm" variant="ghost" onClick={() => { setQuery(''); go(notice.routeLocation || 'archived'); }}>View {notice.routeLocation === 'active' ? 'Files' : 'Archived'}</A.Button>}</>}>
         {notice.body}
       </A.Alert>
     </A.Surface>}
@@ -2764,6 +2827,7 @@ function App() {
   const reset = () => { setService(createFilesService(fixture)); setRun(old => ({ fixture, key: old.key + 1 })); setTrace('No requests yet.'); };
   return <div className="aip">
     <FilesExample key={run.key} service={service} full={full} />
+    <A.Toaster />
     <div className="aip-documentation"><a href={full ? '#' : '#files'}>{full ? 'Show focused recovery example' : 'Open complete Files example'}</a>
       <details className="aip-harness"><summary>Example fixtures and source</summary>
         <p>Fictional local records. Select a fixture, then reset to mount the same example with that service behavior.</p>
@@ -3220,6 +3284,66 @@ function App() {
       </div>
     </details>
   </div>;
+}
+
+=== RemovalReceipt | <!-- @dsCard group="Display" height=520 subtitle="An item that leaves its list: the result in its own slot, held, then the gap glides closed" -->
+--- css
+.rr { max-width: 640px; }
+.rr h3 { font: 600 17px/24px var(--font-sans); margin: 0 0 var(--space-2); color: var(--ink); }
+.rr p.rr-hint { font: 400 13px/18px var(--font-sans); color: var(--ink-muted); margin: 0 0 var(--space-3); }
+.rr ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.rr li { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+.rr .rr-body { flex: 1; min-width: 0; }
+.rr .rr-name { font: 500 14.5px/21px var(--font-sans); color: var(--ink); }
+.rr .rr-url { font: 400 12.5px/17px var(--font-mono); color: var(--ink-muted); overflow-wrap: anywhere; }
+.rr .rr-empty { padding: var(--space-5) var(--space-3); color: var(--ink-muted); font: 400 13.5px/20px var(--font-sans); }
+--- jsx
+const HOOKS = [
+  { id: 'h1', name: 'Deploy notifications', url: 'https://hooks.example.com/deploys' },
+  { id: 'h2', name: 'Billing events', url: 'https://hooks.example.com/billing' },
+  { id: 'h3', name: 'New sign-ups', url: 'https://hooks.example.com/signups' },
+  { id: 'h4', name: 'Error alerts', url: 'https://hooks.example.com/errors' },
+];
+// A fictional service: removing and restoring a webhook each take 400ms.
+const later = (value) => new Promise((resolve) => setTimeout(() => resolve(value), 400));
+function App() {
+  const [hooks, setHooks] = React.useState(HOOKS);
+  const [receipts, setReceipts] = React.useState({});
+  const [back, setBack] = React.useState(null);
+  const put = (id, value) => setReceipts((r) => { const next = { ...r }; if (value) next[id] = value; else delete next[id]; return next; });
+  const remove = async (hook) => { put(hook.id, { pending: true }); await later(); put(hook.id, { pending: false }); };
+  const undo = async (hook) => { put(hook.id, { pending: true, undoing: true }); await later(); put(hook.id, null); };
+  const restore = async (hook) => {
+    await later();
+    setHooks((list) => HOOKS.filter((h) => h.id === hook.id || list.some((x) => x.id === h.id)));
+    setBack(hook.id);
+  };
+  return (
+    <section className="rr" aria-labelledby="rr-title">
+      <h3 id="rr-title">Webhooks</h3>
+      <p className="rr-hint">Remove one: its result stays in its place, then the list closes up. Point at the result to keep it.</p>
+      <ul>
+        {hooks.map((hook) => {
+          const receipt = receipts[hook.id];
+          return (
+            <A.RemovalReceipt as="li" key={hook.id} removed={!!receipt} pending={receipt?.pending} arrive={back === hook.id}
+              title={receipt?.undoing ? `Restoring ${hook.name}…` : receipt?.pending ? `Removing ${hook.name}…` : `${hook.name} removed.`}
+              action={receipt && (!receipt.pending || receipt.undoing) &&
+                <A.Button size="sm" loading={!!receipt.undoing} aria-label={`Undo removing ${hook.name}`} onClick={() => undo(hook)}>Undo</A.Button>}
+              onClosed={() => {
+                put(hook.id, null); setHooks((list) => list.filter((h) => h.id !== hook.id));
+                A.toast({ title: `${hook.name} removed.`, action: { label: 'Undo', onClick: () => restore(hook) } });
+              }}>
+              <div className="rr-body"><div className="rr-name">{hook.name}</div><div className="rr-url">{hook.url}</div></div>
+              <A.Button size="sm" variant="ghost" aria-label={`Remove ${hook.name}`} onClick={() => remove(hook)}>Remove</A.Button>
+            </A.RemovalReceipt>
+          );
+        })}
+      </ul>
+      {!hooks.length && <p className="rr-empty">No webhooks.</p>}
+      <A.Toaster />
+    </section>
+  );
 }
 
 === ItemGroup | <!-- @dsCard group="Display" height=760 subtitle="A list changed in the list: edit a slat in place, add, reorder, remove with Undo" -->

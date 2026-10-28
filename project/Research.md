@@ -525,6 +525,18 @@ A design review: `ChartSelect` was rendered as revenue by region that cross-filt
 
 Not yet tested with people: whether the readout's "Select to filter" line is read before the click, or only noticed after it.
 
+### E42 · Where does the result of removing an item go?
+
+A measurement, then a design review ([#97](https://github.com/richlaconte/altitude/issues/97)). In the Actions in place Files example, Archive was clicked while every element's position was sampled each animation frame (`shoot.mjs` with `ACT`, Daylight, 960px). Before: the row was gone in the first frame and the rows below jumped up 77px; the recovery Alert appeared 172px below the click, under the list; and about 100ms later it grew 10px when "Archiving…" became "…is archived", moving everything under it a second time. `ItemGroup` measured the same way: its slats jumped 84px and its Undo Alert appeared under the add slot.
+
+- **Left in place.** The result now shows in the row's own slot at the row's height. In the same measurement, nothing moves while it holds.
+- **Then closed, visibly.** The receipt lifts off as an Alert does, and the gap glides shut over `dur-travel-3`; `checks/actions-in-place.mjs` (RR-02) asserts the next row passes through intermediate positions instead of jumping.
+- **Undo where Archive was.** The first screenshot put View Archived under the pointer that had just clicked Archive, so a double-click would have navigated away. Undo now takes that place: a stray second click reverses instead.
+- **A pointer over the list holds the close.** A delayed close could move the next row under a pointer reaching for it. The close waits while a mouse is over the list, capped at `dur-settle`; touch has no hover, so it doesn't wait.
+- **`dur-linger` is 2000ms by judgement.** About four words read in roughly a second (Nielsen's 1s flow limit) plus a second to act; the top of the "second or two" asked for.
+
+Not yet tested with people: whether the close is noticeable enough at `dur-travel-3`, and whether waiting for the pointer to leave the list reads as lag. Both are open in [the validation record](ActionsInPlaceValidation.md).
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
