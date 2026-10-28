@@ -1,4 +1,4 @@
-<!-- @dsCard group="Layout" height=430 subtitle="Columns open to receive; a carried card floats at level 3" -->
+<!-- @dsCard group="Layout" height=560 subtitle="Columns open to receive; a carried card floats at level 3; add and rename in place" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -29,6 +29,7 @@ const titles = { todo: "To do", doing: "In progress", review: "Review", done: "D
 function App() {
   const [cols, setCols] = React.useState(start);
   const [last, setLast] = React.useState(null);
+  const seq = React.useRef(0);
   const move = ({ cardId, from, to }) => setCols((c) => {
     const next = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.slice()]));
     const [card] = next[from.column].splice(from.index, 1);
@@ -36,7 +37,45 @@ function App() {
     setLast(`${card.t} \u2192 ${titles[to.column]}`);
     return next;
   });
-  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 4 } }, /* @__PURE__ */ React.createElement(A.Board, { onMove: move, "aria-label": "Launch board" }, Object.keys(titles).map((k) => /* @__PURE__ */ React.createElement(A.BoardColumn, { key: k, id: k, title: titles[k], collapsible: k === "done", defaultCollapsed: k === "done" }, cols[k].map((c) => /* @__PURE__ */ React.createElement(A.BoardCard, { key: c.id, id: c.id, label: c.t, heldBy: c.held }, c.t, /* @__PURE__ */ React.createElement("small", null, c.m)))))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Moved: ${last}.` : "Drag a card, or focus one and press Space, then the arrow keys. Columns open while you carry it; Done is collapsed into a pile and still takes cards."));
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const refuse = (t) => /tbd/i.test(t) ? { ok: false, error: "Write the task, not \u201CTBD\u201D." } : null;
+  const create = (k) => async (t) => {
+    await wait(250);
+    const no = refuse(t);
+    if (no) return no;
+    const card = { id: "n" + ++seq.current, t, m: "New" };
+    setCols((c) => ({ ...c, [k]: [...c[k], card] }));
+    return { ok: true, value: { id: card.id } };
+  };
+  const rename = (k, id) => async (t) => {
+    await wait(200);
+    const no = refuse(t);
+    if (no) return no;
+    setCols((c) => ({ ...c, [k]: c[k].map((x) => x.id === id ? { ...x, t } : x) }));
+    return { ok: true, value: t };
+  };
+  const update = (k, id) => (v) => setCols((c) => ({ ...c, [k]: c[k].map((x) => x.id === id ? { ...x, t: v.title, m: v.meta } : x) }));
+  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 4 } }, /* @__PURE__ */ React.createElement(A.Board, { onMove: move, "aria-label": "Launch board" }, Object.keys(titles).map((k) => /* @__PURE__ */ React.createElement(A.BoardColumn, { key: k, id: k, title: titles[k], collapsible: k === "done", defaultCollapsed: k === "done", onCreate: k === "done" ? void 0 : create(k) }, cols[k].map((c) => /* @__PURE__ */ React.createElement(
+    A.BoardCard,
+    {
+      key: c.id,
+      id: c.id,
+      label: c.t,
+      heldBy: c.held,
+      onRename: rename(k, c.id),
+      ...k === "review" ? {
+        value: { title: c.t, meta: c.m },
+        onValueChange: update(k, c.id),
+        renderEditor: (field) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Field, { label: "Title" }, /* @__PURE__ */ React.createElement(A.Input, { ...field("title"), size: "sm" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Details" }, /* @__PURE__ */ React.createElement(A.Input, { ...field("meta"), size: "sm" }))),
+        onSave: async (draft) => {
+          await wait(200);
+          return refuse(draft.title) || { ok: true, value: draft };
+        }
+      } : {}
+    },
+    c.t,
+    /* @__PURE__ */ React.createElement("small", null, c.m)
+  ))))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Moved: ${last}.` : "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

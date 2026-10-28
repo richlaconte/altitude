@@ -66,4 +66,4 @@ Steps 1–5 were done on 2026-10-23, after the pilot. Step 6 remains, and step 7
    - **Claude allowlist:** widen it to the read-only and build commands agents actually use, or sandbox equivalently. Denials remained and were uneven: 20 in primitives, 32 in guidance, 37 in framework.
    - **Instrument gaps:** close them with fixture tests, then freeze assessor 2.1.0. The gaps are the column-header sort named other than "Name", two plausible "return to overview" controls, and first-use-empty phrasings.
    - **Blind review:** review with the condition hidden.
-   - **ErrorSummary target size:** filed as [#27](https://github.com/richlaconte/altitude/issues/27). Links about 18px tall with no spacing fail WCAG 2.5.8 under the default line-height.
+   - **Done — ErrorSummary target size:** filed as [#27](https://github.com/richlaconte/altitude/issues/27) and fixed in #29. Each link is now a 24px target (`min-block-size: 24px`) whatever line-height the host page sets.

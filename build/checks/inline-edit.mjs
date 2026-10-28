@@ -43,12 +43,17 @@ const mount = async (page, options = {}) => {
         onSave: (draft, context) => {
           api.calls.push({ draft, context });
           if (options.reentrant) document.querySelector('#inline-contract input').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-          if (options.save === 'sync') return { ok: true, value: draft.trim() };
+          if (options.save === 'sync') return { ok: true, value: typeof draft === 'string' && !options.editor ? draft.trim() : draft };
           if (options.save === 'throw') throw new Error('SECRET server detail');
           if (options.save === 'malformed') return { ok: true, value: 42 };
           const d = deferred(); api.saves.push(d); return d.promise;
         },
       };
+      if (options.multiline) Object.assign(props, { multiline: true, rows: 3, maxRows: 5 });
+      if (options.editor === 'select') Object.assign(props, {
+        commit: 'on-choose', renderValue: v => ({ a: 'Alpha', b: 'Bravo' })[v] ?? 'Not set',
+        editor: control => h(A.Select, { ...control, items: [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }] }),
+      });
       if (options.validate) props.validate = draft => {
         api.validations.push(draft);
         if (options.validate === 'sync') return draft === 'Duplicate' ? 'Choose a different name.' : undefined;
@@ -302,6 +307,93 @@ try {
     await dialog.waitFor({ state: 'hidden' });
     check(await page.getByText('Touch baseline.pdf', { exact: true }).isVisible(), 'DEM-08 baseline works using tap controls');
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'DEM-08 touch scene stays within 320 CSS pixels');
+    await page.close(); }
+
+  // Generic value and custom editors (#13).
+  { const page = await open(); await mount(page, { value: 'a', editor: 'select', save: 'sync' }); await edit(page);
+    const trigger = page.locator('#inline-contract .alt-select-trigger');
+    check(await trigger.evaluate(el => document.activeElement === el), 'GEN-01 opening a custom editor focuses its control');
+    check(await page.getByRole('button', { name: 'Save changes', exact: true }).count() === 0 && await page.getByText('Choose to save', { exact: true }).isVisible(), 'GEN-02 on-choose hides Save and shows the hint');
+    check(await trigger.evaluate(el => (el.getAttribute('aria-describedby') || '').split(' ').some(id => document.getElementById(id)?.textContent === 'Choose to save')), 'GEN-03 the hint describes the control');
+    await trigger.press('Enter'); await page.getByRole('option', { name: 'Alpha' }).waitFor();
+    await page.keyboard.press('Escape'); await page.getByRole('listbox').waitFor({ state: 'detached' });
+    check(await page.locator('#inline-contract .alt-inline-edit').getAttribute('data-state') === 'editing', 'GEN-04 Escape in an open list closes the list only');
+    await page.keyboard.press('Escape'); await read(page);
+    check(await page.getByRole('button', { name: 'Edit Record name', exact: true }).evaluate(el => document.activeElement === el), 'GEN-05 a second Escape cancels and returns focus to Edit');
+    await edit(page); await trigger.press('Enter'); await page.getByRole('option', { name: 'Alpha' }).click(); await read(page);
+    check((await api(page, 'calls')).length === 0, 'GEN-06 choosing the current value closes without a write');
+    await edit(page); await trigger.press('Enter'); await page.getByRole('option', { name: 'Bravo' }).click(); await read(page);
+    check(JSON.stringify(await api(page, 'calls')) === JSON.stringify([{ draft: 'b', context: { previousValue: 'a' } }]) && JSON.stringify(await api(page, 'publications')) === '["b"]', 'GEN-07 choosing dispatches one save and publishes the canonical value');
+    await page.locator('#inline-contract [role="status"]').filter({ hasText: 'Record name set to Bravo' }).waitFor();
+    check(true, 'GEN-08 on-choose announces the label and the rendered value');
+    await page.close(); }
+
+  { const page = await open();
+    const status = page.locator('[data-inline-scene] .alt-inline-edit[aria-label="Status"]');
+    await page.getByRole('button', { name: 'Edit Status', exact: true }).click();
+    await status.locator('.alt-select-trigger').press('Enter'); await page.getByRole('option', { name: 'Blocked' }).click();
+    await status.getByRole('alert').waitFor();
+    check(await status.getAttribute('data-state') === 'error' && (await status.locator('.alt-select-value').textContent()) === 'Blocked', 'GEN-09 a rejected on-choose save keeps the editor open on the chosen value');
+    check(await status.getByRole('button', { name: 'Try again', exact: true }).isVisible() && await status.getByRole('button', { name: 'Cancel', exact: true }).isVisible(), 'GEN-10 a rejected on-choose save offers Try again and Cancel');
+    await status.locator('.alt-select-trigger').click(); await page.getByRole('option', { name: 'In review' }).click();
+    await page.getByRole('button', { name: 'Edit Status', exact: true }).waitFor();
+    check(await status.locator('.alt-badge').textContent() === 'In review', 'GEN-11 choosing again saves and renderValue shows the canonical value');
+    const assignee = page.locator('[data-inline-scene] .alt-inline-edit[aria-label="Assignee"]');
+    await page.getByRole('button', { name: 'Edit Assignee', exact: true }).click();
+    const box = assignee.getByRole('combobox'); check(await box.evaluate(el => document.activeElement === el), 'GEN-12 a Combobox editor takes focus');
+    await box.fill('Tob'); await box.press('ArrowDown'); await box.press('Enter');
+    await page.getByRole('button', { name: 'Edit Assignee', exact: true }).waitFor();
+    check((await assignee.locator('.alt-inline-edit-value').textContent()) === 'Tobi Adeyemi', 'GEN-13 choosing from a Combobox saves the person');
+    const estimate = page.locator('[data-inline-scene] .alt-inline-edit[aria-label="Estimate"]');
+    await page.getByRole('button', { name: 'Edit Estimate', exact: true }).click();
+    const number = estimate.getByRole('spinbutton', { name: 'Estimate' });
+    check(await number.evaluate(el => document.activeElement === el), 'GEN-14 a numeric editor takes focus');
+    await number.fill('41'); await number.press('Enter'); await estimate.getByRole('alert').waitFor();
+    check((await estimate.getByRole('alert').textContent()).includes('Use a whole number from 0 to 40.') && await number.getAttribute('aria-invalid') === 'true', 'GEN-15 Enter in a numeric editor validates the parsed number');
+    await number.fill('5'); await number.press('Enter'); await page.getByRole('button', { name: 'Edit Estimate', exact: true }).waitFor();
+    check((await estimate.locator('.alt-inline-edit-value').textContent()) === '5 points', 'GEN-16 Enter saves the number and read mode renders it');
+    await page.close(); }
+
+  // Escape the moment the Select's list commits as open, before its "focus the list" effect runs: the list
+  // closes, focus stays on the trigger rather than falling to the body, and the next Escape still cancels the session.
+  { const page = await open(); await mount(page, { value: 'a', editor: 'select', save: 'sync' }); await edit(page);
+    const raced = await page.evaluate(() => new Promise(done => {
+      const trigger = document.querySelector('#inline-contract .alt-select-trigger');
+      const watch = new MutationObserver(() => {
+        if (!document.querySelector('#inline-contract .alt-select-list[data-state="open"]')) return;
+        watch.disconnect();
+        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        setTimeout(() => done({ list: !!document.querySelector('#inline-contract .alt-select-list'), onTrigger: document.activeElement === trigger, focus: document.activeElement.tagName }), 400);
+      });
+      watch.observe(document.getElementById('inline-contract'), { subtree: true, attributes: true, attributeFilter: ['data-state'], childList: true });
+      trigger.focus(); trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    }));
+    check(raced.onTrigger, `GEN-17 Escape as the list finishes opening keeps focus on the trigger (${JSON.stringify(raced)})`);
+    if (raced.list) { await page.keyboard.press('Escape'); await page.getByRole('listbox').waitFor({ state: 'detached' }); }
+    await page.keyboard.press('Escape'); await read(page);
+    check(true, 'GEN-18 after that race, Escape still cancels the session');
+    await page.close(); }
+
+  // Multiline (#14).
+  { const page = await open(); await mount(page, { multiline: true, save: 'sync', required: false, value: 'First line\nSecond line' });
+    check(await page.locator('#inline-contract .alt-inline-edit-value').evaluate(el => getComputedStyle(el).whiteSpace === 'pre-wrap'), 'ML-01 read mode preserves line breaks');
+    await edit(page); const area = page.getByRole('textbox', { name: 'Record name' });
+    check(await area.evaluate(el => el.tagName === 'TEXTAREA' && document.activeElement === el && el.selectionStart === el.value.length && el.selectionEnd === el.value.length), 'ML-02 opening focuses the textarea with the caret at the end');
+    check(await area.evaluate(el => (el.getAttribute('aria-describedby') || '').split(' ').map(id => document.getElementById(id)?.textContent).join(' ').includes('Enter to save')), 'ML-03 the key hint describes the textarea');
+    const before = await area.evaluate(el => el.offsetHeight);
+    await area.press('Enter'); await area.type('Third line');
+    check((await area.inputValue()) === 'First line\nSecond line\nThird line' && (await api(page, 'calls')).length === 0, 'ML-04 Enter inserts a newline and does not save');
+    await area.evaluate(el => { const ev = new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true, isComposing: true }); el.dispatchEvent(ev); });
+    check((await api(page, 'calls')).length === 0, 'ML-05 Ctrl+Enter during IME composition does not save');
+    await area.press('Escape'); await read(page);
+    check((await api(page, 'calls')).length === 0 && (await page.locator('#inline-contract .alt-inline-edit-value').textContent()) === 'First line\nSecond line', 'ML-06 Escape cancels the paragraph');
+    await edit(page); await area.press('Enter'); await area.type('3\n4\n5\n6\n7\n8');
+    const grown = await area.evaluate(el => ({ h: el.offsetHeight, scroll: getComputedStyle(el).overflowY }));
+    check(grown.h > before && grown.h <= 5 * 21 + 40 && grown.scroll === 'auto', `ML-07 the textarea grows with content up to maxRows, then scrolls (${before} → ${grown.h})`);
+    await area.press('Control+Enter'); await read(page);
+    check((await api(page, 'calls')).length === 1 && (await api(page, 'publications'))[0] === 'First line\nSecond line\n3\n4\n5\n6\n7\n8', 'ML-08 Ctrl+Enter saves the paragraph');
+    await edit(page); await area.fill(''); await area.press('Meta+Enter'); await read(page);
+    check((await api(page, 'calls')).length === 2 && (await page.locator('#inline-contract .alt-inline-edit-value').textContent()) === 'Not set', 'ML-09 Cmd+Enter saves, and an empty paragraph reads Not set');
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {

@@ -15,7 +15,7 @@ mkdirSync(out, { recursive: true });
 writeFileSync(`${out}/tokens.css`, tokensCss('project/tokens.json'));
 
 const rel = (p) => '../../' + p; // from .storybook/generated to the repo root
-const guides = [['Introduction', 'README.md'], ['Elevation', 'Elevation.md'], ['Motion', 'Motion.md'], ['Theming', 'Theming.md'], ['Research', 'Research.md'], ['Actions in place', 'ActionsInPlace.md'], ['Framework', 'framework/README.md'], ['Edit record', 'framework/patterns/edit-record.md'], ['Async collection', 'framework/patterns/async-collection.md'], ['Consequential action', 'framework/patterns/consequential-action.md'], ['Review and submit', 'framework/patterns/review-submit.md']];
+const guides = [['Introduction', 'README.md'], ['Elevation', 'Elevation.md'], ['Motion', 'Motion.md'], ['Charts', 'Charts.md'], ['Theming', 'Theming.md'], ['Research', 'Research.md'], ['Actions in place', 'ActionsInPlace.md'], ['Framework', 'framework/README.md'], ['Edit record', 'framework/patterns/edit-record.md'], ['Async collection', 'framework/patterns/async-collection.md'], ['Consequential action', 'framework/patterns/consequential-action.md'], ['Review and submit', 'framework/patterns/review-submit.md']];
 for (const [title, file] of guides) {
   writeFileSync(`${out}/guide-${title}.mdx`, `import { Meta, Markdown } from '@storybook/addon-docs/blocks';
 import md from '${rel('project/' + file)}?raw';

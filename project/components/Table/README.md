@@ -24,9 +24,13 @@ The header stays flush until rows scroll under it, then rises to `elev-2` (as in
 | `onRowClick` | interactive rows |
 | `relevance` | `(row) => 'match' \| 'miss' \| undefined` for filtering in place |
 | `onReorder` | move handles; hidden while a sort is active |
-| `toolbar`, `maxHeight`, `empty` | a filter field or button at the toolbar's end; scroll height; text for no rows |
+| `renderExpanded`, `expanded`/`defaultExpanded`/`onExpandedChange`, `expandMode` | a disclosure button per row opening a full-width detail row (`'single'` by default: one open at a time) |
+| `renderEditor`, `onSave`, `onRowChange` | an Edit button per row that opens the row's fields as an `EditRegion` in a full-width row beneath it (EditRegion's save contract; `onRowChange` publishes the canonical row) |
+| `toolbar`, `maxHeight`, `empty` | a filter field or button at the toolbar's end (at narrow widths the toolbar wraps onto more lines and a field in it shrinks, so nothing scrolls sideways); scroll height; text for no rows |
 
 **Loading.** While `DataTable`'s `rows` is undefined (your query hasn't returned) or a promise, the table keeps its real header over `skeleton.lines` rows of imprinted cells (default 5), so columns don't jump (see `Await`). An empty array is an empty table.
+
+**Opening a row.** Read-only detail (`renderExpanded`) is a reveal of the record, so it stays on the ground: a full-width row under the record, inset, with the disclosure chevron turned and `aria-expanded`/`aria-controls` on its button. Editing (`renderEditor` + `onSave`) is live, so it rises: the row and its region become one raised slab (`elev-1`) holding a static `EditRegion`, with the row's cells still visible above it so the record stays identified. The first field takes focus; Enter in a single-line field saves and Escape cancels, and focus returns to the row's Edit button. While a row is in edit, the other rows' Edit buttons, sorting and reordering wait, so the edited row isn't carried away mid-edit; once saved it settles with an afterglow and, if its sort position changed, is carried to its new place. It stays a table, not a grid: the region is one `td` spanning the row. Above about eight fields, open the record in a `Sheet` beside the table instead (`onRowClick`).
 
 **You provide:** the data or the rows, short column headers in sentence case, numbers right-aligned (`align="end"`), and a `getRowLabel` that names each row the way people refer to it.
 

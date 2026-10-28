@@ -49,6 +49,18 @@ So elevation should encode **a few ordered categories**, never a continuous valu
 - **Feedforward** tells people what an action will do before they take it, as distinct from feedback afterwards; it bridges Norman's gulf of execution ([Vermeulen et al., 2013](https://documentserver.uhasselt.be/bitstream/1942/14759/1/VermeulenLuytenVandenHovenConinx_chi2013.pdf)). Altitude's hover ghosts are feedforward: the check an unchecked box would get, the radio thumb where it would land, a tab's sheet peeking up, a closed accordion lid's ghost.
 - Targets that **expand as the pointer approaches** are acquired faster, even when the expansion starts late in the movement ([McGuffin & Balakrishnan, 2002](https://www.dgp.toronto.edu/~ravin/papers/chi2002_expandingtargets.pdf)). Altitude's approach response changes height, not size (a size change would reflow the layout), so it claims no Fitts' law gain. It's feedforward, and since E10 it's reserved for openings: an empty field opens as you reach for it, previewing what focusing it will do. Raised things no longer respond before the pointer is on them.
 
+### Charts
+
+These are the sources behind [Charts](Charts.md).
+
+- **Position and length are read best; depth, angle and area worse.** Cleveland and McGill ranked elementary perceptual tasks by accuracy, with position on a common scale and length ahead of angle, area and volume ([Cleveland & McGill, 1984](https://doi.org/10.1080/01621459.1984.10478080)); Heer and Bostock replicated the ranking with crowdsourced participants ([Heer & Bostock, 2010](https://doi.org/10.1145/1753326.1753357)). Munzner's ranking puts depth 6th of 10 magnitude channels (see "Depth is a weak channel for amounts"). So a mark's amount is its length or position, never its height, and Altitude has no pie or donut chart.
+- **Depth cues on bars cost accuracy.** Extraneous depth on bar graphs made people's estimates of bar heights less accurate ([Zacks, Levy, Tversky & Schiano, 1998](https://doi.org/10.1037/1076-898X.4.2.119)); Hughes (2001) reports a cost of about 10% for 3D bars. Microsoft's Office data-visualization guidance says chart elements should avoid drop shadows ([learn.microsoft.com](https://learn.microsoft.com/en-us/office/dev/add-ins/design/data-visualization-guidelines)). This is why marks are flat ink, and why a hovered bar never lifts.
+- **Dual axes mislead.** Charts with two scales on one plot are read less accurately and invite comparisons the data doesn't support ([Isenberg, Bezerianos, Dragicevic & Fekete, 2011](https://doi.org/10.1109/TVCG.2011.160)). Altitude allows one axis per plot.
+- **Decorative animation doesn't help.** Animation helps only when its motion is the change (Tversky, Morrison & Bétrancourt, above), so charts glide between values and never grow from the baseline on first render.
+- **Accessibility is checked, not assumed.** Chartability groups chart accessibility into heuristics a reviewer can audit quickly ([Elavsky, Bennett & Moritz, 2022](https://doi.org/10.1111/cgf.14522)); Charts' five-point check (visual, keyboard, screen reader, reduced motion, forced colours) follows it.
+
+Not yet checked against Altitude's rendering: the first charts will get an E-numbered prototype review (static renders of every part and state in all four schemes at 2×) once they exist.
+
 ### Accessibility
 
 - In forced-colors mode (Windows High Contrast), `box-shadow` is reverted, so anything conveyed only by a shadow is lost ([Microsoft Edge team](https://blogs.windows.com/msedgedev/2020/09/17/styling-for-windows-high-contrast-with-new-standards-for-forced-colors/)).
@@ -177,6 +189,111 @@ What didn't fit, each against a rule the rest of the system already keeps:
 
 **Following the other systems.** Fluent, Primer and Atlassian draw people as circles and everything else (teams, organisations, bots, agents) as squares, so `shape="square"` does the same, its corners taken from the radius scale by size. Primer and Atlassian ask for alt text only when no name is shown beside the avatar; Altitude always labels the face, and labels a group with its count and its overflow with the names it hides, because a "+2" alone tells a screen reader nothing. Carbon falls back from a photo to initials; Altitude also falls back when a photo fails to load.
 
+### E13 · How should several fields of one record be edited in place?
+
+A design review, not a study: `EditRegion` was prototyped in the EditRegion preview (three people with access, each row editable) and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard and race paths checked in a browser (`checks/edit-region.mjs`). It was compared with a Dialog per row (the existing ActionsInPlace recipe) and with one `InlineEdit` per field.
+
+- **In place, not modal.** NN/g's guidance on data tables notes that a modal editor hides the neighbouring rows people consult to choose a value ([Data tables: four major user tasks](https://www.nngroup.com/articles/data-tables/)), and Shneiderman's direct manipulation asks for a continuous view of the objects with rapid, reversible, incremental actions ([1983](https://doi.org/10.1109/MC.1983.1654471)). The region keeps the list visible and lifts only the record being worked on.
+- **One write, not several.** Independent `InlineEdit`s can leave a record half-changed when the second save fails. Saving the draft as one `onSave` with a `changed` list keeps the record consistent and still lets an application send a patch.
+- **No save on blur.** People sometimes click away from a multi-field editor expecting their work to persist. Autosave was rejected because the Actions in place guide rules it out and because a blur isn't a deliberate act; instead the draft simply stays open and nothing is lost.
+- **Whole-record conflicts.** A per-field merge (save the fields nobody else touched) was considered and rejected for now: it hides the other writer's change from the person saving, and `InlineEdit` already blocks the whole save.
+
+Not yet tested with people: whether the raised editor is noticed as “still unsaved” when someone scrolls away, and whether five fields is the right ceiling before a `Sheet`.
+
+### E14 · How should a set of tags be edited?
+A design review, not a study: `TagInput` was prototyped in its preview and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard paths checked in a browser (`checks/tag-input.mjs`). It was compared with the chip and tag models of React Aria `TagGroup`, MUI `Autocomplete multiple`, Material input chips, Fluent v9 `TagPicker` and Ant Design `Select mode="tags"`.
+- **Tags are labels, not controls.** They're part of the record, so they're Badge plates flush in the field's floor rather than raised chips; only the remove button reacts to a pointer. Material and Fluent raise chips; here that would say every tag is a button to press.
+- **One Tab stop for the tags.** React Aria and Fluent v9 make the tag group one stop with arrow keys; a stop per tag is slow with 20 tags. The input's description and the tags' own description state the keys.
+- **Backspace arms before it removes.** A single Backspace that deletes a tag is a common source of accidental loss, worse when removal is persisted. Arming (the tag lifts and is announced) costs one keystroke and makes the next one's effect visible first.
+- **The limit keeps focus.** Hiding or disabling the input at `max` drops keyboard focus to the body ([allxsmith/bestax#1103](https://github.com/allxsmith/bestax/issues/1103)); a read-only input with “Limit reached” keeps it.
+Not yet tested with people: whether arming is understood without the announcement, and whether people find Enter-to-edit on a focused tag.
+### E15 · How should a date be chosen?
+
+A design review, not a study: `DatePicker`, `DateRangePicker` and `Calendar` were prototyped in their preview and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with the APG grid keys, RTL and the segmented field checked in a browser (`checks/date-picker.mjs`). They were compared with the [APG date picker dialog](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/), React Aria's `DateField`/`DatePicker`, shadcn/ui's `Calendar` and native `<input type="date">`.
+
+- **Typed segments, not free text.** A free-text date field has to guess the order of “03/04/2026”; segments in the locale's order (from `Intl.DateTimeFormat.formatToParts`) make the order visible and work the same way in every locale, React Aria's reasoning. Native `type="date"` was rejected: its popup can't be styled into the elevation language and differs per browser.
+- **Days are flush; the choice is raised.** A well per day (the Checkbox build) at 42 days a month reads as texture. Keeping only the RadioGroup's one raised thumb, carried between days, says “one choice” and keeps the grid quiet.
+- **A month change cross-fades.** Sliding months sideways is common, but the Motion rules keep travel for changes of level and of hierarchy; a month is neither.
+- **ISO strings.** `Date` carries a time and a zone and shifts days across them; `Temporal.PlainDate` is right but needs a polyfill in some 2026 browsers. A `'YYYY-MM-DD'` string is exact and dependency-free.
+
+Not yet tested with people: whether the typed segments are discovered before the calendar button, and whether the range's “choose the end” prompt is enough.
+
+### E16 · How should a hierarchy be changed in place?
+
+A design review, not a study: `Tree` was prototyped as a page tree and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with the APG keys, RTL, rename, create and both carry paths checked in a browser (`checks/tree.mjs`). It was compared with the [APG tree view](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/), VS Code's explorer, Notion's sidebar, React Aria's `Tree` and outliners (Workflowy, Logseq).
+
+- **Flat rows with levels, not nested groups.** The APG allows either; a flat list with `aria-level`, `aria-setsize` and `aria-posinset` keeps one row model for rendering, focus and carrying, and supports lazy loading and later virtualisation.
+- **Carry by keyboard, shown in place.** The APG doesn't cover moving. Outliners use Alt+↑/↓ and indent/outdent; file managers use cut and paste. Picking up with Space (as `SortableList`) and showing the node where it will land, with its depth announced, keeps the result visible before the drop.
+- **Into versus between.** Pointer targets split a row into thirds: before, into, after. “Into” opens the node as a trench, a receptacle, and “between” is a thin well at the target depth, so the two read differently without colour. Spring-loaded folders (open after 600ms) follow the Finder convention.
+- **No hover-only actions.** Row buttons for “add” and “rename” would put interactive elements inside `treeitem`; instead the shortcuts are on the row and `TreeHandle` lets a toolbar offer the same actions to pointer users.
+
+Not yet tested with people: whether ↑ entering an open node above (rather than staying at the same depth) matches expectation, and whether the toolbar is found.
+
+### E17 · How should a list be written into?
+
+A design review, not a study: `Checklist` was prototyped with a nested and a flat list and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keys checked in a browser (`checks/checklist.mjs`). It was compared with Workflowy, Logseq, Things, Notion to-do blocks and GitHub task lists, which agree on Enter for a sibling, Tab/Shift+Tab to indent, and Backspace to merge.
+
+- **Commit on leaving the line.** Every outliner saves a line when you leave it; an explicit Save per line would make the list unwritable. It departs from `InlineEdit`'s rule, so it's scoped to this component, and a refused change keeps the text with Retry.
+- **Text inputs in a list, not a tree.** The tree pattern's arrow keys would fight the caret; nested `ul`s with ordinary inputs keep text editing native and the structure readable.
+- **No focus trap.** Tab indents, so Escape leaves the line first; then Tab moves on, as it does from the last, empty line.
+- **Ops, not arrays.** Reporting one op per action lets an application persist and merge per item instead of replacing the whole list.
+
+Not yet tested with people: whether Escape-then-Tab is discovered, and whether Backspace-to-merge surprises people who expect it to do nothing at the start of a line.
+
+### E18 · How should a query be built in place?
+
+A design review, not a study: `FilterBar` was prototyped over an issue table and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keys checked in a browser (`checks/filter-bar.mjs`). It was compared with Linear's filters, Notion database filters, GitHub's search tokens, Jira's basic search and Airtable.
+
+- **Conditions as sentences.** “Status is In review” reads the same to everyone and is the accessible name of each condition; segment buttons say which part they change.
+- **One Tab stop.** The [APG toolbar](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/) roving model keeps a row of five conditions (twenty segments) from adding twenty Tab stops.
+- **Filter in place.** Removing non-matching rows reflows the table and loses people's place; with `relevance`, matches rise and misses sink, so positions survive (the existing **Relevance** signal).
+- **Free text as a token, not a search box.** A “Title contains” condition sits beside the others, so the whole query is visible and editable in one place.
+
+Not yet tested with people: whether the field-then-value sequence for a new condition is faster than a single combined picker.
+
+### E19 · How should time be handled directly?
+
+A design review, not a study: `Schedule` was prototyped as a room-booking week and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with every operation checked by keyboard and by pointer in a browser (`checks/schedule.mjs`). It was compared with Google Calendar, Outlook, Notion Calendar, FullCalendar and Bryntum.
+
+- **Direct manipulation, with a keyboard twin for each drag.** Shneiderman's direct manipulation asks for visible objects and rapid, reversible actions ([1983](https://doi.org/10.1109/MC.1983.1654471)); WCAG 2.2 SC 2.5.7 asks that anything done by dragging can be done without it. Space-to-carry (as `Board` and `SortableList`), Shift+arrows to resize and Enter on empty time to create give each drag a keyboard path.
+- **A grid of slots.** Rows of time slots by day columns make arrow navigation predictable and give every empty slot a name (“Tuesday 27 October, 10:15”) to create into; events are buttons inside their start slot.
+- **Time opens only while something could land.** As Board's columns, days stay flat at rest and open into wells while carrying or drawing, so the grid isn't a field of holes.
+- **Naive local times.** A zoned type would need a library or `Temporal`; local `YYYY-MM-DDTHH:mm` strings are exact and leave the zone to the application, which already knows it.
+
+Not yet tested with people: whether Enter-to-create on empty time is found, and whether the side-by-side overlap layout stays readable past three events.
+
+### E20 · How should a table be edited cell by cell?
+
+A design review, not a study: `DataGrid` was prototyped as an inventory grid and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keys checked in a browser (`checks/data-grid.mjs`). It was compared with the [APG data grid](https://www.w3.org/WAI/ARIA/apg/patterns/grid/), MUI X Data Grid, AG Grid, Glide Data Grid, Airtable and Excel.
+
+- **A sibling, not a DataTable mode.** DataTable's README says it's “a table, not a grid”; adding cell focus and editing would change its semantics for everyone.
+- **Enter, Tab and a click commit.** InlineEdit keeps a session open across blur, but every spreadsheet commits on Enter, Tab and clicking another cell, and fighting that makes entry unusable. Focus leaving the grid is the one case that keeps the draft open, marked unsaved, so nothing is lost or written silently.
+- **No hover lift.** A click selects, so a lift would promise an action that doesn't happen; the header's pencil and `aria-readonly` carry editability.
+- **Ranges are a tint.** Height is reserved for live content and writes; a selection is only a target.
+
+Not yet tested with people: whether “Not saved yet” is noticed when someone tabs out of the grid mid-edit.
+
+### E21 · How should a list of records be changed in place?
+
+A design review, not a study: `ItemGroup` was prototyped with webhooks and a form builder's options and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard paths checked in a browser (`checks/item-group.mjs`). It was compared with shadcn/ui's Item, GOV.UK's add-another pattern, Ant Design's `Form.List` and the Files recipe in Actions in place.
+
+- **In place, not a dialog per operation.** Shneiderman's direct manipulation asks for continuous visibility and rapid, reversible actions ([1983](https://doi.org/10.1109/MC.1983.1654471)); NN/g finds modal editors hide the neighbours people refer to, and that one or two visible actions per row beat a hidden menu.
+- **Undo over confirmation, when it's real.** Raskin's “never use a warning when you mean undo” supports immediate removal with recovery; but only the application knows whether it can reverse a removal, so `removal` has no default and confirmation remains for the irreversible case.
+- **One editor at a time.** Two open editors split attention and make “which Save?” ambiguous; opening another keeps the first and returns focus to it, rather than discarding work.
+
+Not yet tested with people: whether focus moving to the fresh add slat after adding is expected, and whether Undo without a time-out is noticed.
+
+### E22 · How should a record's properties be edited?
+
+A design review, not a study: `PropertyList` was prototyped as an issue sidebar and a “Check your answers” summary and rendered at 320 and 960px in all four schemes, under forced colours, reduced motion and `contrast="more"`, with its keyboard paths checked in a browser (`checks/property-list.mjs`). It was compared with GOV.UK's [summary list](https://design-system.service.gov.uk/components/summary-list/), Ant Design's Descriptions and ProDescriptions, and Linear's and Jira's issue sidebars.
+
+- **The value is the button.** A separate “Change” link per row (GOV.UK) is clear but heavy in a sidebar; making the value plate itself the button, lifting on hover and named “Status: In review. Change status”, keeps the row quiet and the name meaningful out of context.
+- **Read-only values don't lift.** Hover is a promise: only what opens an editor reacts, so editability is visible without a pencil per row.
+- **Unset is an opening.** A dashed well that names what to add shows at a glance which properties are missing, as an empty field does.
+- **Shortcuts off by default.** Linear's single-key shortcuts are fast, but WCAG 2.1.4 requires that they can be turned off or remapped.
+
+Not yet tested with people: whether the hover-lifting plate is enough of an affordance on touch, where there's no hover (the open question in the issue).
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
@@ -187,6 +304,8 @@ What didn't fit, each against a rule the rest of the system already keeps:
 - **Glossy lamps and accent rims on fields.** See E10.
 - **Keycap avatars, socket badges, severity bars.** See E8.
 - **Hashed identity tints and presence as three heights on avatars.** See E12.
+- **Shadowed, walled or sheened chart marks**, "because Altitude is about height". A bar's length is already its height on screen; adding Altitude's height to it costs accuracy and says "press it". See [Charts](Charts.md).
+- **Hovered chart marks lifting a level**, as other interactive surfaces do. A lifted bar either leaves the ground line or casts a shadow below its top edge, and both misstate its value. Clickable marks get an outline instead.
 - **Read wear as altitude.** Frequent use is a different idea from "now", and raising frequently used items would make positions drift. A worn-edge treatment may suit it better; not built.
 
 ## How to validate with people

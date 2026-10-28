@@ -4,7 +4,7 @@ A design and HCI framework for agent-built React web applications, with a compon
 
 - **Site:** https://richlaconte.github.io/altitude/
 - **Storybook:** every component, with its guidelines and a live preview in all four schemes: https://richlaconte.github.io/altitude/storybook/
-- **The design guide:** [`project/README.md`](https://github.com/richlaconte/altitude/blob/main/project/README.md), then [Elevation](https://github.com/richlaconte/altitude/blob/main/project/Elevation.md), [Motion](https://github.com/richlaconte/altitude/blob/main/project/Motion.md), [Theming](https://github.com/richlaconte/altitude/blob/main/project/Theming.md) and [Research](https://github.com/richlaconte/altitude/blob/main/project/Research.md)
+- **The design guide:** [`project/README.md`](https://github.com/richlaconte/altitude/blob/main/project/README.md), then [Elevation](https://github.com/richlaconte/altitude/blob/main/project/Elevation.md), [Motion](https://github.com/richlaconte/altitude/blob/main/project/Motion.md), [Charts](https://github.com/richlaconte/altitude/blob/main/project/Charts.md), [Theming](https://github.com/richlaconte/altitude/blob/main/project/Theming.md) and [Research](https://github.com/richlaconte/altitude/blob/main/project/Research.md)
 
 ## Install
 

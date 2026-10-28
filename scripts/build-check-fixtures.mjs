@@ -12,7 +12,7 @@ const requireRoot = createRequire(process.env.ALT_PACKAGE_ROOT ? resolve(process
 const strict = process.env.ALT_CHECK_STRICT === '1';
 const installedEntry = process.env.ALT_PACKAGE_ROOT ? resolve(process.env.ALT_PACKAGE_ROOT, 'dist/index.js') : './project/components/src/index.tsx';
 const out = join(root, 'build/test', process.env.ALT_PACKAGE_ROOT ? 'react19-installed' : strict ? 'react19-strict' : 'react19');
-const names = (process.argv[2] || 'InlineEdit,Dialog,ActionsInPlace,Sheet,CommandPalette,Toaster').split(',').map(s => s.trim()).filter(Boolean);
+const names = (process.argv[2] || 'InlineEdit,EditRegion,Dialog,ActionsInPlace,Sheet,CommandPalette,Toaster,TagInput,DatePicker,Tree,Checklist,FilterBar,Schedule,DataGrid,ItemGroup,Board,TableEditing,PropertyList').split(',').map(s => s.trim()).filter(Boolean);
 const sections = new Map(readFileSync(join(root, 'build/previews.txt'), 'utf8').split(/^=== /m).filter(s => s.trim()).map(s => [s.split(' | ')[0], s]));
 const missing = names.filter(name => !sections.has(name));
 if (missing.length) throw new Error('Missing canonical preview sections: ' + missing.join(', '));

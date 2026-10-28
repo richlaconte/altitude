@@ -24,7 +24,7 @@ People reliably tell apart only a few depth categories at a glance; measured in 
 Rules that follow:
 
 - Never give two things different meanings by putting them one level apart within a tier. If they must read differently, put them in different tiers, or add a word.
-- Never encode an amount in height. A pile's thickness is three bins; the number goes in its badge.
+- Never encode an amount in height. A pile's thickness is three bins; the number goes in its badge. In a chart, amounts are length and position on a flat plot (see [Charts](Charts.md)).
 - Use `Surface level={n}` to place anything. Never pair one level's surface with another level's shadow.
 
 ## How a level is drawn
@@ -45,23 +45,31 @@ Rules that follow:
 | **Importance** | primary 2 · secondary 1 · ghost 0, drawn as wall thickness (4px, 2px, none) | `Button` |
 | **Affordance** | raised + wall + sheen = press it; sunk = fill it | every control |
 | **Interactivity** | only things that act lift on hover | `Card interactive`, `Surface interactive` |
-| **Selection** | every choice is built like the Switch: off is an empty trench; on pours the accent in and sets a raised white mark on it (the switch and radio thumb, the checkbox's check). A radio group is one switch with several positions, so its single thumb slides to the chosen option. In folder tabs the chosen tab and its panel are one raised sheet on top of the others | `Switch`, `Checkbox`, `RadioGroup`, `Tabs` |
+| **Selection** | every choice is built like the Switch: off is an empty trench; on pours the accent in and sets a raised white mark on it (the switch and radio thumb, the checkbox's check). A radio group is one switch with several positions, so its single thumb slides to the chosen option. In folder tabs the chosen tab and its panel are one raised sheet on top of the others | `Switch`, `Checkbox`, `RadioGroup`, `Tabs`, the chosen day in `Calendar` |
 | **Presence** | people who are here rest on the page at level 1 (a filled lamp when active, an empty ring when idle); offline people are plates flush in the page, grey; someone live lifts off their shadow and drifts | `Avatar` |
 | **Loading** | content to come is an imprint pressed into the page; it rises out of the imprint when it lands. Components whose content is still undefined (or a promise) draw their own imprint, at their own size, from their own Suspense boundary | `Skeleton`, `Await` (Suspense-native `Avatar`, `Badge`, `Card`, `DataTable`) |
 | **Status** | status that informs is a tinted sheet resting on the page (paper edge, contact shadow); status that asks for action is a raised card; dismissing lifts the sheet off; several make a stack whose peeking sheets show their tones | `Alert`, `AlertStack` |
-| **Labels** | a label is part of the record: an indicator plate set flush into the page, with a lamp for status that relights when it changes; only a count, which wants your attention, floats | `Badge` |
-| **Disclosure** | closed sections are lids flush on the page; opening one lifts the lid into a card and reveals a compartment sunk into it | `Accordion` |
-| **Completeness** | an empty field is a hole cut into the page, its back wall showing; once it holds a value the floor rises flush, so a form shows which fields still need filling. A select fills when a value is chosen; a combobox too, because a typed query isn't a value. A textarea with a limit fills from the floor as it nears it | `Input`, `Textarea`, `Select`, `Combobox` |
+| **Labels** | a label is part of the record: an indicator plate set flush into the page, with a lamp for status that relights when it changes; only a count, which wants your attention, floats | `Badge`, `Tag`, `TagInput` |
+| **Disclosure** | closed sections are lids flush on the page; opening one lifts the lid into a card and reveals a compartment sunk into it; a table row's read-only detail opens flush beneath it instead, because a row can't lift into a card without breaking the columns | `Accordion`, `DataTable` |
+| **Editing in place** | a record being edited lifts off the ground into a static raised card holding its fields, with its neighbours still in view; the write hovers while pending, drops to a trench on failure, and the accepted values settle back with one afterglow | `InlineEdit`, `EditRegion`, a `BoardCard` renamed or edited in place, a `DataTable` row and its region rising as one slab |
+| **Completeness** | an empty field is a hole cut into the page, its back wall showing; once it holds a value the floor rises flush, so a form shows which fields still need filling. A select fills when a value is chosen; a combobox too, because a typed query isn't a value; a date field when it holds a whole date, not a partial one. A textarea with a limit fills from the floor as it nears it; a tag field fills with its first tag | `Input`, `Textarea`, `Select`, `Combobox`, `TagInput` |
+| **A span** | a chosen range is a sunk track between two raised ends, the Slider's build laid across the weeks; while the end is being chosen the track previews to the day under the pointer | `DateRangePicker` |
+| **Editing in a list** | one slat at a time is lifted into its editor while its neighbours stay flush and readable; the add slat is an opening at the end of the list | `ItemGroup` |
 | **Validity** | an invalid field sinks to trench depth on `critical-soft` | `Input`, `Select`, `Combobox`, `Field` |
-| **The record, in rows** | a table's rows lie flush; selected rows are tinted and raised one level, interactive rows lift on hover, matches rise and misses sink when filtering in place, and a row in hand floats at level 3 over the slot it will land in | `Table` |
+| **The record, in rows** | a table's rows lie flush; selected rows are tinted and raised one level, interactive rows lift on hover, matches rise and misses sink when filtering in place, and a row in hand floats at level 3 over the slot it will land in | `Table`, `Tree` |
+| **The record, in cells** | in a grid, a cell being edited opens into a well in its flush row; when the value lands the floor rises flush and settles; the active cell is a ring and a range a tint, never a height | `DataGrid` |
 | **Receptacles** | a board's columns are flush at rest and open into wells only while a card is carried; the one under the card deepens to a trench; a collapsed column is a pile that still takes drops | `Board` |
 | **Progress** | the steps of a process are plates on one ground line: done steps are flush in the record with a stamped check, the current one stands raised on its wall, steps to come are imprints; advancing presses one down and raises the next out of its imprint | `Stepper` |
+| **Done is pressed into the record** | checking an item stamps it like a completed step: muted, struck through, and kept in place in the record rather than removed | `Checklist` |
+| **A condition** | a filter is a segmented plate stamped into the bar; each segment lifts when pointed at because it opens a picker, and a condition still waiting for its value keeps that segment as an opening | `FilterBar` |
+| **A span being drawn** | dragging across empty time draws a well the length of the new event, which rises into an event to be named when released; while an event is carried, time opens and the slot under it deepens to a trench as long as the event | `Schedule` |
+| **Properties of a record** | a record's properties lie on the ground; an editable value is one plate that lifts when pointed at, a read-only one never does, and an unset value is a small opening naming what to add | `PropertyList` |
 | **Recency** | new or changed content arrives tinted and lifted, then settles to rest over `dur-settle` (afterglow) | `settle` on `Surface`, `Card` |
 | **Commitment** | a pending write hovers (after `dur-grace`), a confirmed one lands, a failed one drops into a trench | `status` on `Surface`, `Card` |
 | **Possession** | whatever is in a hand floats at level 3, tilted; a collaborator's hold wears their `presence-*` colour and name | `heldBy`, `SortableList`, `BoardCard heldBy` |
-| **Readiness to receive** | receptacles open (sink) only while something could be dropped into them, and deepen under the pointer | `DropZone`, the slot in `SortableList` |
+| **Readiness to receive** | receptacles open (sink) only while something could be dropped into them, and deepen under the pointer | `DropZone`, the slot in `SortableList`, a slot or a node to drop into in `Tree` |
 | **Emptiness** | a region with nothing in it yet is an opening, a well with a dashed rim that the first record will fill; pointing at its action deepens it to a trench | `EmptyState` |
-| **Relevance** | filtering lifts matches and sinks misses instead of removing them, so positions survive | `relevance` on `Surface`, `Card`, `TableRow` |
+| **Relevance** | filtering lifts matches and sinks misses instead of removing them, so positions survive | `relevance` on `Surface`, `Card`, `TableRow`, driven by `FilterBar` |
 | **Overflow** | edges curve away where content continues; a header rises when content passes under it | `ScrollArea` |
 | **Quantity** | a group shows 0–3 sheets beneath it (2–3, 4–9, 10+ items), with the exact number in a badge; hovering it fans the sheets a little; click it and its items fan out from under the top card, each its own card, floating over the page below without moving anything | `Pile` |
 | **Hierarchy** | a stack: going deeper lays a sheet on top, going back lifts it off; the breadcrumb is a staircase: every step stands on the same ground line, outlined face and wall together, and each deeper place is a taller step; the view sits on a pile as thick as you are deep | `Drilldown` |
@@ -72,6 +80,9 @@ Rules that follow:
 | **Recency of messages** | toasts sink one level per newer toast behind them | `Toaster` |
 | **Focus of the moment** | the page recedes while a dialog or the command palette is at the summit; only one of them at a time | `Dialog`, `CommandPalette` with `AltitudeProvider` |
 | **Ranking** | the best match is on top; when results change, the rows that stay are carried to their new places, and only the top few new ones rise | `CommandPalette` |
+| **Amounts** | never height: length and position on a flat plot standing on the ground line; marks have no shadow, wall, sheen or lift, and only the chart's chrome (readout, legend toggles, brush, drill-down) uses height | every chart (see [Charts](Charts.md)) |
+| **Not yet the record** | projected and incomplete data is dashed or hatched and says so | `projected` on charts |
+| **A window on the record** | an overview in a trench, the chosen window a raised thumb | `ChartBrush` |
 | **A task beside the page** | a sheet is laid over the page at level 4, anchored to an edge: above menus, below the summit; it rises at its edge and is lifted off when you're done | `Sheet` |
 
 ## Rules
