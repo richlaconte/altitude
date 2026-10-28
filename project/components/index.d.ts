@@ -1452,6 +1452,86 @@ export declare function checkScheme(colors: Partial<Record<SchemeColorToken, str
 /** Which invariants checkScheme measures: `core` is the surface ladder and contrast, `data` the data palette. */
 export type SchemeCheck = 'core' | 'data';
 
+/** A categorical slot of the data palette. */
+export type ChartSlot = `data-${1 | 2 | 3 | 4 | 5 | 6}` | 'data-other';
+export interface ChartSeriesConfig {
+  /** The series' name, in the legend, the readout, the summary and the table. */
+  label: string;
+  /** Formats a value of this series: ticks, readouts, the summary. Default: Intl.NumberFormat. */
+  format?: (value: number) => string;
+  /** The series' colour slot. Default: its place in the config (the first is data-1); a seventh and later are data-other. */
+  color?: ChartSlot;
+}
+/** Each data key a chart draws, mapped to its label, format and colour slot. The order is the colour order, fixed for the chart's life. */
+export type ChartConfig = Record<string, ChartSeriesConfig>;
+export type ChartDatum = Record<string, unknown>;
+export interface ChartSeries {
+  key: string;
+  label: string;
+  slot: ChartSlot;
+  /** `var(--data-n)`: use it as a fill or stroke. The figure also sets `--color-<key>` to it. */
+  color: string;
+  format: (value: number) => string;
+}
+export interface LinearScale { (value: number): number; kind: 'linear'; domain: [number, number]; range: [number, number]; ticks: number[]; }
+export interface TimeScale { (value: string | number): number; kind: 'time'; domain: [number, number]; range: [number, number]; ticks: number[]; }
+export interface BandScale { (value: string): number; kind: 'band'; domain: string[]; range: [number, number]; ticks: string[]; bandwidth: number; step: number; }
+export type ChartXScale = LinearScale | TimeScale | BandScale;
+export interface ChartContextValue {
+  /** The plot's size in px, inside the axes. Marks draw from (0, 0) at its top left. */
+  width: number;
+  height: number;
+  x: ChartXScale;
+  y: LinearScale;
+  /** Where a datum sits on x: a band's centre, or its time or value. */
+  xOf: (d: ChartDatum) => number;
+  /** The y of the ground line: y(0) when zero is in the domain, otherwise the plot's foot. */
+  ground: number;
+  data: ChartDatum[];
+  xKey: string;
+  config: ChartConfig;
+  series: ChartSeries[];
+  /** Formats a value of a series (by its key), or an x value. */
+  format: (key: string, value: number) => string;
+  formatX: (value: unknown) => string;
+}
+export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  config: ChartConfig;
+  /** The records. Optional when the chart inside takes `data` itself. */
+  data?: ChartDatum[];
+  /** The key of x in each record. Optional when the chart inside takes `x`. */
+  x?: string;
+  /** How x is placed. Default: time for ISO dates, epoch numbers or Dates; linear for other numbers; band otherwise. */
+  xScale?: 'band' | 'time' | 'linear';
+  /** Width ÷ height of the plot. Default 2, unless `height` is set. */
+  aspect?: number;
+  /** The plot's height in px, instead of an aspect ratio. */
+  height?: number;
+  /** A visible name, inside the figure. Leave it out when a CardTitle names the chart, and pass `aria-labelledby`. */
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  /** What the chart shows, in a sentence or two. Shown under the plot. Without it a summary is generated for screen readers. */
+  summary?: React.ReactNode;
+  /** Force zero onto y. Default true: bars always stand on the ground line. */
+  zero?: boolean;
+  /** A fixed y domain, instead of the series' extent made nice. */
+  yDomain?: [number, number];
+  /** Formats y ticks. Default: the first series' format. */
+  yFormat?: (value: number) => string;
+  /** Formats x ticks and x values. Default: by the scale. */
+  xFormat?: (value: unknown) => string;
+  /** The gap between bands, as a fraction of a band's step. Default 0.2. */
+  bandPadding?: number;
+  /** Turns the axes off, for a chart that labels its marks directly. Gridlines and the ground line stay. */
+  axes?: boolean;
+  /** The locale for numbers and dates. Default: the reader's. */
+  locale?: string;
+}
+/** The frame every chart shares: scales, axes, gridlines, the ground line, colour slots, a name and a summary. Flush, no level. */
+export declare function ChartContainer(props: ChartContainerProps): React.ReactElement;
+/** The scales, plot size and config of the nearest ChartContainer, for drawing your own marks. */
+export declare function useChart(): ChartContextValue;
+
 declare global {
   interface Window {
     Altitude: {
@@ -1465,7 +1545,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

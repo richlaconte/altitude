@@ -1,0 +1,87 @@
+<!-- @dsCard group="Charts" height=430 subtitle="The frame every chart shares: scales, axes, the ground line and colour slots" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartContainer — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const usd = new Intl.NumberFormat("en", { style: "currency", currency: "USD", notation: "compact" });
+const months = [
+  { month: "2026-01-01", revenue: 8200, costs: 5100 },
+  { month: "2026-02-01", revenue: 8900, costs: 5e3 },
+  { month: "2026-03-01", revenue: 9400, costs: 5300 },
+  { month: "2026-04-01", revenue: 9100, costs: 5200 },
+  { month: "2026-05-01", revenue: 10600, costs: 5400 },
+  { month: "2026-06-01", revenue: 11800, costs: 5300 }
+];
+const regions = [
+  { region: "North", q2: 42, q3: 51 },
+  { region: "South", q2: 35, q3: 31 },
+  { region: "East", q2: 28, q3: 37 },
+  { region: "West", q2: 19, q3: 24 }
+];
+function Lines() {
+  const { series, data, xOf, y } = A.useChart();
+  return series.map((s) => /* @__PURE__ */ React.createElement(
+    "polyline",
+    {
+      key: s.key,
+      fill: "none",
+      stroke: s.color,
+      strokeWidth: "2",
+      strokeLinejoin: "round",
+      strokeLinecap: "round",
+      points: data.map((d) => `${xOf(d)},${y(d[s.key])}`).join(" ")
+    }
+  ));
+}
+function Bars() {
+  const { series, data, x, y, xKey, ground } = A.useChart();
+  const w = (x.bandwidth - 2 * (series.length - 1)) / series.length;
+  return data.map((d) => series.map((s, i) => {
+    const v = d[s.key], top = Math.min(y(v), ground);
+    return /* @__PURE__ */ React.createElement("rect", { key: d[xKey] + s.key, x: x(d[xKey]) + i * (w + 2), y: top, width: w, height: Math.abs(y(v) - ground), fill: s.color });
+  }));
+}
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "charts" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "rc" }, "Revenue and costs"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Jan to Jun 2026")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      "aria-labelledby": "rc",
+      data: months,
+      x: "month",
+      aspect: 1.7,
+      summary: "Revenue rose 44% while costs held flat.",
+      config: { revenue: { label: "Revenue", format: usd.format }, costs: { label: "Costs", format: usd.format } }
+    },
+    /* @__PURE__ */ React.createElement(Lines, null)
+  ))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "dr" }, "Deals closed by region"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Q2 and Q3")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      "aria-labelledby": "dr",
+      data: regions,
+      x: "region",
+      aspect: 1.7,
+      config: { q2: { label: "Q2" }, q3: { label: "Q3" } }
+    },
+    /* @__PURE__ */ React.createElement(Bars, null)
+  ))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

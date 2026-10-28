@@ -59,7 +59,9 @@ These are the sources behind [Charts](Charts.md).
 - **Decorative animation doesn't help.** Animation helps only when its motion is the change (Tversky, Morrison & Bétrancourt, above), so charts glide between values and never grow from the baseline on first render.
 - **Accessibility is checked, not assumed.** Chartability groups chart accessibility into heuristics a reviewer can audit quickly ([Elavsky, Bennett & Moritz, 2022](https://doi.org/10.1111/cgf.14522)); Charts' five-point check (visual, keyboard, screen reader, reduced motion, forced colours) follows it.
 
-Not yet checked against Altitude's rendering: the first charts will get an E-numbered prototype review (static renders of every part and state in all four schemes at 2×) once they exist.
+- **The frame follows the libraries people know.** `ChartContainer` and `ChartConfig` take shadcn/ui's chart names and its config shape (data key → label and colour), and Recharts, visx, Nivo, ECharts and Observable Plot were considered as engines. Each adds a dependency, and none exposes what Altitude needs (imprints while loading, the attention budget, hover only where a click acts, legend keys built as switches), so the scales and axes are in-house (see E24).
+
+The frame was reviewed against Altitude's rendering in E24. The full prototype review of every part and state comes with the first chart type, `BarChart`.
 
 ### Accessibility
 
@@ -316,6 +318,17 @@ The chosen palette, by scheme:
 | alpine | 25.0 | 7.7 | 15.2 | 3.02:1 | `data-4` ↔ `presence-3` 13.0 | 0.088 | 11.6 |
 
 Adjacent slots are now two to three times as far apart for colour-blind readers as the reference palette's (19.6–25.0 against 8.4–9.1). The cost is that any two slots can be as close as 6.6, so charts with more than a few series still need direct labels or patterns ([#72](https://github.com/richlaconte/altitude/issues/72)). `data-other` comes out near-black in the light schemes (L 0.33–0.35): every lighter neutral that holds 3:1 was within 15 of a slot. Not yet tested with people: whether the slots are told apart as well as these distances predict, in real charts and at small sizes.
+
+### E24 · Does the chart frame sit on the ground?
+
+A design review, not a study: `ChartContainer` was rendered with hand-drawn lines on a time scale and grouped bars on a band scale, each in a `Card`. The renders covered all four schemes at 960px, 360px at 2×, forced colours (Chromium's emulation) and `contrast="more"`.
+
+- **Flat and flush.** The plot, gridlines and marks read as part of the card, and the bars stand on the ground line. Nothing in the frame has a level.
+- **Ticks were tuned twice.** Monthly data first showed only every third month, because ticks were spaced for 84px labels; they're now spaced for the label's width (56px), so six months fit in a half-width card. At 360px the y axis allowed two ticks and stretched a $12K maximum to $20K; it now keeps at least three.
+- **Forced colours keep the frame but not the series.** Tick labels and the ground line turn `CanvasText` and gridlines `GrayText`, but in Chromium's emulation the marks keep their `data-*` colours, so series aren't told apart without colour. Patterns, markers and `CanvasText` marks are #72.
+- **Decided while building.** Charts ship in the main entry for now, because the scales and frame add about 8 KB to `bundle.js`. Tick labels use Instrument Sans with tabular figures, not JetBrains Mono, because they're labels, not values to copy. SVG only: past about 2,000 marks, aggregate or use a canvas library with Altitude's theme (#77).
+
+Not yet tested with people: whether a generated summary is as useful as a written one.
 
 ## What was rejected
 
