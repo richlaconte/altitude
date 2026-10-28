@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CHART_STATUS_WORDS, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { CHART_STATUS_WORDS, ChartRelevance, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 
 export interface BarChartProps {
   /** The records: one per category. */
@@ -24,6 +24,13 @@ export interface BarChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * Filter in place: which categories match. Misses recede to 35% and keep their place and colour; the frame says how
+   * many match. Nothing is removed.
+   */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** With relevance: fit the axis to the matches. Default false: the axis holds, so positions survive. */
+  rescale?: boolean;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */
@@ -73,7 +80,7 @@ function barPath(horizontal: boolean, a: number, b: number, g: number, e: number
  * series, several side by side, or stacked into a total.
  */
 export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
-  const { data, series, x, y, ground, horizontal, alpha: presence, encode, gap, xKey, format, emphasis, status, hasStatus } = useChart();
+  const { data, series, x, y, ground, horizontal, alpha: presence, encode, gap, xKey, format, emphasis, status, hasStatus, relevance, hasRelevance } = useChart();
   // While the keyboard is on one series, the others recede.
   const alpha: typeof presence = (d, key) => presence(d, key) * (key && emphasis && emphasis !== key ? 0.3 : 1);
   if (x.kind !== 'band') return null;
@@ -82,19 +89,21 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
   // Data-end radius: radius-xs, but never more than a third of a thin bar.
   const R = 4;
   const marks: React.ReactNode[] = [];
-  const ends: Array<{ cat: string; value: number; label: string; at: number; across: number; st?: ChartStatus }> = [];
+  const ends: Array<{ cat: string; value: number; label: string; at: number; across: number; st?: ChartStatus; miss?: boolean }> = [];
   /**
    * One bar or segment. Given a status, it's drawn twice: the solid fill and a hatch over it, one of them at zero
    * fill-opacity, so a partial period that completes cross-fades from hatch to solid rather than snapping.
    */
-  const bar = (k: string, s: (typeof series)[number], cat: string, d: string, opacity: number, st: ChartStatus | undefined) => {
+  const bar = (k: string, s: (typeof series)[number], cat: string, d: string, opacity: number, st: ChartStatus | undefined, miss = false) => {
     const enc = encode(s.key);
+    // Filtered in place: the bar sits in a group that recedes when it misses, so the change cross-fades.
+    const push = (...nodes: React.ReactNode[]) => { if (hasRelevance) marks.push(<ChartRelevance key={k + '-rel'} miss={miss}>{nodes}</ChartRelevance>); else marks.push(...nodes); };
     const base = <path key={k} className="alt-bar-mark" d={d} fill={enc.fill} stroke={enc.edge} strokeWidth={enc.edge ? 1 : undefined}
       style={hasStatus ? { fillOpacity: st ? 0 : 1, strokeOpacity: st ? 0 : 1 } : undefined}
       opacity={opacity} data-series={s.key} data-category={cat} data-status={st} />;
-    if (!hasStatus) { marks.push(base); return; }
+    if (!hasStatus) { push(base); return; }
     // Not yet the record: hatched, with no solid fill. A projection also carries its outline in the series colour.
-    marks.push(base, <path key={k + '-pending'} className="alt-bar-pending" d={d} fill={enc.pending}
+    push(base, <path key={k + '-pending'} className="alt-bar-pending" d={d} fill={enc.pending}
       stroke={st === 'projected' ? enc.stroke : enc.edge === 'CanvasText' ? 'CanvasText' : 'none'} strokeWidth={1.5}
       style={{ fillOpacity: st ? enc.pendingOpacity : 0, strokeOpacity: st ? 1 : 0 }} opacity={opacity} data-series={s.key} data-category={cat} data-pending={st} aria-hidden="true" />);
   };
@@ -104,6 +113,7 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
     const a0 = x(cat), bw = x.bandwidth;
     const rowA = alpha(d);
     const st = status(d);
+    const miss = relevance(d) === 'miss';
     if (stack) {
       const sum = expand ? total(d, keys) || 1 : 1;
       let up = 0, down = 0, firstUp = true, firstDown = true;
@@ -122,18 +132,18 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
         const e = y(top);
         if (Math.abs(e - g) < 0.5) { if (v > 0) up = top; else down = top; continue; }
         const outer = v > 0 ? s.key === lastUp : s.key === lastDown;
-        bar(cat + s.key, s, cat, barPath(horizontal, a0, a0 + bw, g, e, outer ? R : 0), rowA * alpha(null, s.key), st);
+        bar(cat + s.key, s, cat, barPath(horizontal, a0, a0 + bw, g, e, outer ? R : 0), rowA * alpha(null, s.key), st, miss);
         if (v > 0) { up = top; firstUp = false; } else { down = top; firstDown = false; }
       }
-      ends.push({ cat, value: expand ? total(d, keys) : keys.reduce((t, k) => t + num(d[k]), 0), label: '', at: y(expand ? up : Math.max(up, 0)), across: a0 + bw / 2, st });
+      ends.push({ cat, value: expand ? total(d, keys) : keys.reduce((t, k) => t + num(d[k]), 0), label: '', at: y(expand ? up : Math.max(up, 0)), across: a0 + bw / 2, st, miss });
     } else {
       const n = series.length;
       const w = Math.max(1, (bw - gap * (n - 1)) / n);
       series.forEach((s, i) => {
         const v = num(d[s.key]);
         const a = a0 + i * (w + gap);
-        if (v !== 0) bar(cat + s.key, s, cat, barPath(horizontal, a, a + w, ground, y(v), R), rowA * alpha(null, s.key), st);
-        ends.push({ cat, value: v, label: format(s.key, v), at: y(v), across: a + w / 2, st });
+        if (v !== 0) bar(cat + s.key, s, cat, barPath(horizontal, a, a + w, ground, y(v), R), rowA * alpha(null, s.key), st, miss);
+        ends.push({ cat, value: v, label: format(s.key, v), at: y(v), across: a + w / 2, st, miss });
       });
     }
   }
@@ -153,11 +163,12 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
     // A value that isn't yet the record says so in its label: "$61K so far" across, the word above the value upright.
     const word = e.st ? CHART_STATUS_WORDS[e.st].toLowerCase() : '';
     const neg = e.value < 0;
+    const cls = e.miss ? 'alt-bar-label alt-bar-label-miss' : 'alt-bar-label';
     return horizontal
-      ? <text key={i} className="alt-bar-label" x={e.at + (neg ? -6 : 6)} y={e.across} dy="0.32em" textAnchor={neg ? 'end' : 'start'}>{label}{word && <tspan className="alt-bar-label-status"> {word}</tspan>}</text>
+      ? <text key={i} className={cls} x={e.at + (neg ? -6 : 6)} y={e.across} dy="0.32em" textAnchor={neg ? 'end' : 'start'}>{label}{word && <tspan className="alt-bar-label-status"> {word}</tspan>}</text>
       : (
         <React.Fragment key={i}>
-          <text className="alt-bar-label" x={e.across} y={e.at + (neg ? 14 : -6)} textAnchor="middle">{label}</text>
+          <text className={cls} x={e.across} y={e.at + (neg ? 14 : -6)} textAnchor="middle">{label}</text>
           {word && <text className="alt-bar-label alt-bar-label-status" x={e.across} y={e.at + (neg ? 30 : -22)} textAnchor="middle">{word}</text>}
         </React.Fragment>
       );
@@ -213,7 +224,8 @@ BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Char
   if (p.stack === 'expand') yExtent = [0, 1];
   else if (p.stack && data) {
     let lo = 0, hi = 0;
-    for (const d of data) {
+    const fit = p.rescale && p.relevance && data.some((d) => p.relevance!(d) === 'match') ? data.filter((d) => p.relevance!(d) !== 'miss') : data;
+    for (const d of fit) {
       let up = 0, down = 0;
       for (const k of keys) { const v = num(d[k]); if (v > 0) up += v; else down += v; }
       hi = Math.max(hi, up); lo = Math.min(lo, down);
@@ -222,7 +234,7 @@ BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Char
   }
   return {
     kind: p.stack === 'expand' ? 'Stacked bar chart of shares' : p.stack ? 'Stacked bar chart' : 'Bar chart',
-    xScale: 'band', zero: true, swatch: 'rect', layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary,
+    xScale: 'band', zero: true, swatch: 'rect', layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

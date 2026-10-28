@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChartMarker, ChartStatusClip, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { ChartMarker, ChartRelevance, ChartStatusClip, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 import { linePath, windowed, type ChartWindow } from './line-chart';
 
 export interface AreaChartProps {
@@ -27,6 +27,13 @@ export interface AreaChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * Filter in place: which records match. The bands recede to 35% around its misses (each record owns its stretch of
+   * x), keeping its place and colour; the frame says how many match. Nothing is removed.
+   */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** With relevance: fit the axis to the matches. Default false: the axis holds, so positions survive. */
+  rescale?: boolean;
   /** Show only the latest stretch of x, as LineChart's `window`: it glides one step in a `live` container. */
   window?: ChartWindow;
   /** A ChartTooltip or ChartLegend. */
@@ -66,7 +73,7 @@ function bands(data: ChartDatum[], keys: string[], stack: AreaChartProps['stack'
  * line. No gradient fill: the only face gradient in Altitude is the sheen, and it means "press it".
  */
 export function AreaChart({ stack = false, curve = 'linear', labels }: AreaChartProps) {
-  const { data, series, xOf, y, alpha, encode, strokeWidth, emphasis, active, patterns, directLabels, width: W, height: H, statusRanges } = useChart();
+  const { data, series, xOf, y, alpha, encode, strokeWidth, emphasis, active, patterns, directLabels, width: W, height: H, statusRanges, hasRelevance, relevanceRegions } = useChart();
   const clip = React.useId().replace(/[^\w-]/g, '');
   const split = statusRanges.pending.length > 0;
   const keys = series.map((s) => s.key);
@@ -131,7 +138,12 @@ export function AreaChart({ stack = false, curve = 'linear', labels }: AreaChart
   return (
     <g className="alt-area" data-stack={stack ? String(stack) : undefined}>
       {split && <defs><ChartStatusClip id={`${clip}-r`} ranges={statusRanges.record} height={H} /><ChartStatusClip id={`${clip}-p`} ranges={statusRanges.pending} height={H} /></defs>}
-      {fills}{tops}{texts}{hovered}
+      {hasRelevance && <defs>{relevanceRegions.map((r, i) => <ChartStatusClip key={r.key} id={`${clip}-rel-${i}`} ranges={[[r.x0, r.x1]]} height={H} />)}</defs>}
+      {/* Filtered in place: the bands once per record's stretch of x, each clipped to it and receding when it misses. */}
+      {hasRelevance && relevanceRegions.length
+        ? relevanceRegions.map((r, i) => <ChartRelevance key={r.key} miss={r.miss} clipPath={`url(#${clip}-rel-${i})`}>{fills}{tops}</ChartRelevance>)
+        : <>{fills}{tops}</>}
+      {texts}{hovered}
     </g>
   );
 }
@@ -150,12 +162,13 @@ AreaChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const win = Array.isArray(p.data) && p.window ? windowed(p.data, p.x, p.window) : undefined;
   const rows = win ? win.rows : Array.isArray(p.data) ? p.data : undefined;
   let yExtent: [number, number] | undefined;
+  const fit = rows && p.rescale && p.relevance && rows.some((d) => p.relevance!(d) === 'match') ? rows.filter((d) => p.relevance!(d) !== 'miss') : rows;
   if (p.stack === 'expand') yExtent = [0, 1];
-  else if (p.stack && rows) yExtent = [0, Math.max(0, ...rows.map((d) => keys.reduce((t, k) => t + Math.max(0, num(d[k])), 0)))];
+  else if (p.stack && fit) yExtent = [0, Math.max(0, ...fit.map((d) => keys.reduce((t, k) => t + Math.max(0, num(d[k])), 0)))];
   return {
     kind: p.stack === 'expand' ? 'Stacked area chart of shares' : p.stack ? 'Stacked area chart' : 'Area chart',
     zero: true, swatch: 'rect', imprint: 'area', yExtent, format: p.y?.format, seriesUp: !!p.stack, share: !!p.stack, status: p.status, boundary: p.boundary,
-    data: win?.rows, xDomain: win?.domain,
+    data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

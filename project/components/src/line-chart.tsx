@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChartMarker, ChartStatusClip, toTime, useChart, type ChartConfig, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { ChartMarker, ChartRelevance, ChartStatusClip, toTime, useChart, type ChartConfig, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 
 export interface LineChartProps {
   /** The records, in x order: one per time or value of x. */
@@ -26,6 +26,13 @@ export interface LineChartProps {
    * series colour, never error bars and never a gradient. `label` names it in the readout (default "Range").
    */
   band?: { low: string; high: string; series?: string; label?: string };
+  /**
+   * Filter in place: which records match. The line recedes to 35% around its misses (each record owns its stretch of
+   * x), keeping its place and colour; the frame says how many match. Nothing is removed.
+   */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** With relevance: fit the axis to the matches. Default false: the axis holds, so positions survive. */
+  rescale?: boolean;
   /**
    * Show only the latest stretch of x: `{ minutes: 15 }` (or `hours`, `days`) of time, or the last `points` records.
    * In a `live` container, when the window moves on, x glides one step and the marks ride along with it.
@@ -115,7 +122,7 @@ export function linePath(points: Array<[number, number] | null>, curve: 'linear'
  * end, so the legend is the lines themselves.
  */
 export function LineChart({ curve = 'linear', endLabels, band }: LineChartProps) {
-  const { data, series, config, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis, status, statusRanges } = useChart();
+  const { data, series, config, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis, status, statusRanges, hasRelevance, relevanceRegions } = useChart();
   const labelled = endLabels ?? (series.length <= 4 || directLabels);
   const lines: React.ReactNode[] = [];
   const clip = React.useId().replace(/[^\w-]/g, '');
@@ -179,10 +186,15 @@ export function LineChart({ curve = 'linear', endLabels, band }: LineChartProps)
     return <ChartMarker key={s.key + '-active'} className="alt-line-active" shape={patterns ? e.marker : 'circle'} x={xOf(active)} y={y(active[s.key] as number)} size={8} color={e.stroke}
       opacity={emphasis && emphasis !== s.key ? 0.3 : undefined} />;
   }) : null;
+  // Filtered in place: the whole drawing once per record's stretch of x, each clipped to it and receding when it misses.
+  const body = hasRelevance && relevanceRegions.length
+    ? relevanceRegions.map((r, i) => <ChartRelevance key={r.key} miss={r.miss} clipPath={`url(#${clip}-rel-${i})`}>{lines}</ChartRelevance>)
+    : lines;
   return (
     <g className="alt-lines">
       {split && <defs><ChartStatusClip id={`${clip}-r`} ranges={statusRanges.record} height={height} /><ChartStatusClip id={`${clip}-p`} ranges={statusRanges.pending} height={height} /></defs>}
-      {lines}
+      {hasRelevance && <defs>{relevanceRegions.map((r, i) => <ChartStatusClip key={r.key} id={`${clip}-rel-${i}`} ranges={[[r.x0, r.x1]]} height={height} />)}</defs>}
+      {body}
       {hovered}
       {labelled && ends.map((p) => <text key={p.key} className="alt-line-label" x={p.x + 10} y={p.y} dy="0.32em" opacity={p.a < 1 ? p.a : undefined}>{p.label}</text>)}
     </g>
@@ -195,7 +207,7 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const labelled = p.endLabels ?? labels.length <= 4;
   const win = Array.isArray(p.data) && p.window ? windowed(p.data, p.x, p.window) : undefined;
   return {
-    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain,
+    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale,
     band: p.band ? { series: p.band.series, low: p.band.low, high: p.band.high, label: p.band.label ?? 'Range' } : undefined,
     right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
   };

@@ -1543,6 +1543,12 @@ export interface ChartContextValue {
   hasStatus: boolean;
   /** The stretches of x that aren't yet the record, and those that are, in plot px: for clipping a line or an area. */
   statusRanges: { record: Array<[number, number]>; pending: Array<[number, number]> };
+  /** Filtered in place: 'match', 'miss' or undefined. */
+  relevance: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** The chart was given a relevance: wrap marks in ChartRelevance so changes cross-fade. */
+  hasRelevance: boolean;
+  /** For lines and areas: each record's stretch of x (to the midpoints with its neighbours), and whether it misses. */
+  relevanceRegions: Array<{ key: string; x0: number; x1: number; miss: boolean }>;
 }
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
 export interface ChartEncoding {
@@ -1563,6 +1569,8 @@ export interface ChartEncoding {
   /** The dash a not-yet-record line takes: 5 4, or the slot's own dash while patterns are on. */
   pendingDash: string;
 }
+/** A group that recedes to 35% when what it draws misses the filter, cross-fading over dur-travel-1. */
+export declare function ChartRelevance(props: { miss: boolean; children?: React.ReactNode } & React.SVGProps<SVGGElement>): React.ReactElement;
 /** A clip to stretches of x from statusRanges, to draw a line's or an area's record and not-yet-record parts apart. */
 export declare function ChartStatusClip(props: { id: string; ranges: Array<[number, number]>; height: number }): React.ReactElement;
 /** A series' marker centred on (x, y): the shape its slot gives it. */
@@ -1622,6 +1630,8 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   onPausedChange?: (paused: boolean) => void;
   /** With live: what to announce when new data lands, or nothing. Nothing is announced per tick by default. */
   announce?: (data: ChartDatum[], previous: ChartDatum[] | null) => string | null | undefined;
+  /** While a chart type's relevance filters, how the frame says how many match. Default "4 of 12 match". */
+  countLabel?: (matches: number, total: number) => string;
 }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; /** An uncertainty band's row, keyed by a block of its fill. */ range?: boolean; }
@@ -1708,6 +1718,10 @@ export interface BarChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** With relevance: fit the axis to the matches. Default false: the axis holds. */
+  rescale?: boolean;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
 }
@@ -1732,6 +1746,10 @@ export interface LineChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** With relevance: fit the axis to the matches. Default false: the axis holds. */
+  rescale?: boolean;
   /** Show only the latest stretch of x: { minutes | hours | days } of time, or the last { points }. Glides one step in a live container. */
   window?: ChartWindow;
   /** An uncertainty band around a series (default the config's first), from each record's `low` to its `high`: a flat, low-opacity fill. `label` names it in the readout (default "Range"). */
@@ -1762,6 +1780,10 @@ export interface AreaChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** With relevance: fit the axis to the matches. Default false: the axis holds. */
+  rescale?: boolean;
   children?: React.ReactNode;
   empty?: ChartEmpty;
 }

@@ -18,6 +18,8 @@ A total over time and the parts that make it up (requests by region, storage by 
 
 **Not yet the record.** `status` marks partial or projected records. From the last settled point on, every band is hatched in its colour on the plot's own, with no solid fill, and the top line is dashed. A 1px `line-control` rule named "Today" (`boundary`) marks where the record ends, and the readout, point names and table say "Projected" or "So far". While patterns are on, a band with its own hatch keeps it there, faded, so bands stay told apart.
 
+**Filtering in place.** `relevance` recedes the bands to 35% around each missing record, so the stack keeps its shape; `rescale` fits the axis to the matches. See [ChartContainer](../ChartContainer/README.md), "Filtering in place".
+
 **A sliding window.** `window` works as `LineChart`'s: the latest stretch of x, gliding one step in a `live` container.
 
 **Props:** `data` and `x`; `window`; `stack` (`true` or `'expand'`); `curve` (`'linear'` or `'monotone'`); `y={{ format }}`; `labels`; `tooltip`; `status` and `boundary`; and a `ChartTooltip` or `ChartLegend` as children.
