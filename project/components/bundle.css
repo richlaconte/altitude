@@ -1437,6 +1437,36 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-menu[data-ephemeral][data-state="open"] .alt-menu-item:not([data-predicted]) { transition: opacity var(--dur-onset) linear, transform var(--dur-onset) var(--ease-rise); transition-delay: 0ms; }
 .alt-menu[data-ephemeral][data-state="open"] .alt-menu-item[data-predicted], .alt-menu[data-ephemeral][data-state="open"] .alt-menu-label { transition-duration: var(--dur-travel-1); transition-delay: 0ms; }
 
+/* ════════════════════ Charts ════════════════════ */
+
+/* ── ChartContainer: the frame every chart shares. A chart is the record drawn as a shape, so everything in the frame
+   lies flush on whatever it sits on, the page or a Card's surface-raised: no level, no shadow, no wall, no sheen. Amounts
+   are length and position on a flat plot standing on the ground line (1px ink-muted, as under Stepper and Drilldown),
+   never height. Gridlines are decorative line hairlines, horizontal only; tick labels are caption text in ink-muted
+   with tabular figures. Marks wear data-* fills and strokes and nothing else. On resize it lays out again without
+   animating. ── */
+.alt-chart { margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--space-3); color: var(--ink); }
+.alt-chart-head { display: flex; flex-direction: column; gap: 2px; }
+.alt-chart-title { font: 600 15px/22px var(--font-sans); color: var(--ink); }
+.alt-chart-desc { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+.alt-chart-plot { position: relative; width: 100%; min-width: 0; }
+.alt-chart-svg { position: absolute; inset: 0; display: block; overflow: visible; }
+.alt-chart-grid line { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-ground { stroke: var(--ink-muted); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-axis text { fill: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: 0.005em; }
+.alt-chart-summary { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); text-wrap: pretty; }
+@media (prefers-contrast: more) {
+  .alt-chart-grid line { stroke: var(--line-control); }
+  .alt-chart-ground { stroke: var(--ink); }
+}
+[data-contrast="more"] .alt-chart-grid line { stroke: var(--line-control); }
+[data-contrast="more"] .alt-chart-ground { stroke: var(--ink); }
+@media (forced-colors: active) {
+  .alt-chart-axis text { fill: CanvasText; }
+  .alt-chart-grid line { stroke: GrayText; }
+  .alt-chart-ground { stroke: CanvasText; }
+}
+
 /* ════════════════════ Accessible elevation ════════════════════ */
 
 /* High contrast: elevation becomes a hard slab whose thickness is the height (1 level = 1px more),
