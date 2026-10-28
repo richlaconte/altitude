@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChartMarker, useChart, type ChartConfig, type ChartDatum, type ChartInfo } from './chart';
+import { ChartMarker, ChartStatusClip, useChart, type ChartConfig, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 
 export interface LineChartProps {
   /** The records, in x order: one per time or value of x. */
@@ -14,8 +14,21 @@ export interface LineChartProps {
   endLabels?: boolean;
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
+  /**
+   * Which records aren't yet the record: 'partial' for a period still being counted, 'projected' for a forecast. The
+   * line is dashed from the last settled point on, its points hollow, and each says "So far" or "Projected".
+   */
+  status?: (d: ChartDatum) => ChartStatus | undefined;
+  /** The rule where the record ends: its word (default "Today"), or false for none. */
+  boundary?: string | false;
+  /**
+   * An uncertainty band around a series, from each record's `low` to its `high`: a flat, low-opacity fill of the
+   * series colour, never error bars and never a gradient. `label` names it in the readout (default "Range").
+   */
+  band?: { low: string; high: string; series?: string; label?: string };
   /** A ChartTooltip, to change what the readout shows. */
-  children?: React.ReactNode;  /** What the plot says when there's no data: an EmptyState at widget size. */
+  children?: React.ReactNode;
+  /** What the plot says when there's no data: an EmptyState at widget size. */
   empty?: import('./chart').ChartEmpty;
 }
 
@@ -69,27 +82,54 @@ export function linePath(points: Array<[number, number] | null>, curve: 'linear'
  * no fill, no glow. A missing value breaks the line. The last point carries a marker and each line is named at its
  * end, so the legend is the lines themselves.
  */
-export function LineChart({ curve = 'linear', endLabels }: LineChartProps) {
-  const { data, series, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis } = useChart();
+export function LineChart({ curve = 'linear', endLabels, band }: LineChartProps) {
+  const { data, series, config, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis, status, statusRanges } = useChart();
   const labelled = endLabels ?? (series.length <= 4 || directLabels);
   const lines: React.ReactNode[] = [];
+  const clip = React.useId().replace(/[^\w-]/g, '');
+  const split = statusRanges.pending.length > 0;
+  // The uncertainty band: drawn first, under every line, as one flat fill per run of records that have both edges.
+  const bandSeries = band ? series.find((s) => s.key === (band.series ?? Object.keys(config)[0])) : undefined;
+  if (band && bandSeries) {
+    const e = encode(bandSeries.key);
+    const runs: number[][] = [];
+    let run: number[] = [];
+    data.forEach((d, i) => { if (isNum(d[band.low]) && isNum(d[band.high])) run.push(i); else if (run.length) { runs.push(run); run = []; } });
+    if (run.length) runs.push(run);
+    const d = runs.filter((r) => r.length > 1).map((r) => {
+      const up = linePath(r.map((i) => [xOf(data[i]), y(data[i][band.high] as number)] as [number, number]), curve);
+      const down = linePath(r.slice().reverse().map((i) => [xOf(data[i]), y(data[i][band.low] as number)] as [number, number]), curve);
+      return up + 'L' + down.slice(1) + 'Z';
+    }).join('');
+    const a = alpha(null, bandSeries.key) * (emphasis && emphasis !== bandSeries.key ? 0.3 : 1);
+    if (d) lines.push(<path key="band" className="alt-line-band" data-series={bandSeries.key} d={d} fill={patterns ? e.pending : e.stroke} fillOpacity={patterns ? undefined : 0.16} opacity={a < 1 ? a : undefined} />);
+  }
   const ends: Array<{ key: string; label: string; x: number; y: number; a: number }> = [];
   for (const s of series) {
     const e = encode(s.key);
     // While the keyboard is on one series, the others recede.
     const a = alpha(null, s.key) * (emphasis && emphasis !== s.key ? 0.3 : 1);
     const pts = data.map((d) => (isNum(d[s.key]) ? ([xOf(d), y(d[s.key] as number)] as [number, number]) : null));
+    const path = linePath(pts, curve);
+    // A point that isn't yet the record is hollow: ringed in its colour on the plot's own, not filled.
+    const hollow = (i: number) => !!status(data[i]);
     lines.push(
       <g key={s.key} className="alt-line" data-series={s.key} opacity={a < 1 ? a : undefined}>
-        <path className="alt-line-stroke" d={linePath(pts, curve)} fill="none" stroke={e.stroke} strokeWidth={strokeWidth} strokeDasharray={e.dash} strokeLinejoin="round" strokeLinecap="round" />
-        {patterns && pts.map((p, i) => (p ? <ChartMarker key={i} shape={e.marker} x={p[0]} y={p[1]} size={7} color={e.stroke} /> : null))}
+        {split ? (
+          // The record solid, and the rest dashed: one path, clipped two ways, so a curve never kinks at the boundary.
+          <>
+            <path className="alt-line-stroke" d={path} fill="none" stroke={e.stroke} strokeWidth={strokeWidth} strokeDasharray={e.dash} strokeLinejoin="round" strokeLinecap="round" clipPath={`url(#${clip}-r)`} />
+            <path className="alt-line-stroke" data-pending="" d={path} fill="none" stroke={e.stroke} strokeWidth={strokeWidth} strokeDasharray={e.pendingDash} strokeLinejoin="round" strokeLinecap="butt" clipPath={`url(#${clip}-p)`} />
+          </>
+        ) : <path className="alt-line-stroke" d={path} fill="none" stroke={e.stroke} strokeWidth={strokeWidth} strokeDasharray={e.dash} strokeLinejoin="round" strokeLinecap="round" />}
+        {patterns && pts.map((p, i) => (p ? <ChartMarker key={i} className={hollow(i) ? 'alt-line-hollow' : undefined} stroke={hollow(i) ? e.stroke : undefined} shape={e.marker} x={p[0]} y={p[1]} size={7} color={e.stroke} /> : null))}
       </g>,
     );
     let last = pts.length - 1;
     while (last >= 0 && !pts[last]) last--;
     if (last >= 0) {
       const [lx, ly] = pts[last]!;
-      if (!patterns) lines.push(<ChartMarker key={s.key + '-end'} shape="circle" x={lx} y={ly} size={8} color={e.stroke} opacity={a < 1 ? a : undefined} />);
+      if (!patterns) lines.push(<ChartMarker key={s.key + '-end'} className={hollow(last) ? 'alt-line-hollow' : undefined} stroke={hollow(last) ? e.stroke : undefined} shape="circle" x={lx} y={ly} size={8} color={e.stroke} opacity={a < 1 ? a : undefined} />);
       ends.push({ key: s.key, label: s.label, x: lx, y: ly, a });
     }
   }
@@ -109,6 +149,7 @@ export function LineChart({ curve = 'linear', endLabels }: LineChartProps) {
   }) : null;
   return (
     <g className="alt-lines">
+      {split && <defs><ChartStatusClip id={`${clip}-r`} ranges={statusRanges.record} height={height} /><ChartStatusClip id={`${clip}-p`} ranges={statusRanges.pending} height={height} /></defs>}
       {lines}
       {hovered}
       {labelled && ends.map((p) => <text key={p.key} className="alt-line-label" x={p.x + 10} y={p.y} dy="0.32em" opacity={p.a < 1 ? p.a : undefined}>{p.label}</text>)}
@@ -121,7 +162,8 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const labels = Object.values(config).map((c) => c.label);
   const labelled = p.endLabels ?? labels.length <= 4;
   return {
-    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format,
+    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary,
+    band: p.band ? { series: p.band.series, low: p.band.low, high: p.band.high, label: p.band.label ?? 'Range' } : undefined,
     right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
   };
 };

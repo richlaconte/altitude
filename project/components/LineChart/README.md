@@ -12,7 +12,11 @@ Change over time: latency over a day, revenue over a year, one series or a few c
 
 **Accessibility.** Without a written `summary`, the generated one says which way each series went between its first and last values ("p95 rises from 168 ms at 14 Mar, 12:00 AM to 207 ms…"), and its lowest and highest points. The keyboard path along x and between series is #63, the readout #52, and the table view #64.
 
-**Props:** `data` and `x`; `curve` (`'linear'` or `'monotone'`); `y={{ format }}` to format the axis; `endLabels` to turn end labels on or off (default on for up to four series, and always under forced colours and in print). `linePath(points, curve)` is exported for your own marks: it draws the same path, gaps and all.
+**Props:** `data` and `x`; `curve` (`'linear'` or `'monotone'`); `y={{ format }}` to format the axis; `endLabels` to turn end labels on or off (default on for up to four series, and always under forced colours and in print). `status` and `boundary` (below); `band={{ low, high, series?, label? }}` for an uncertainty band. `linePath(points, curve)` is exported for your own marks: it draws the same path, gaps and all.
+
+**Not yet the record.** `status={(d) => d.day > today ? 'projected' : undefined}` dashes the line (5 4) from the last settled point on, and draws those points hollow: ringed in the series colour on the plot's own. It's one path clipped two ways, so a curve doesn't kink where the record ends. A 1px `line-control` rule named "Today" marks the boundary. Point names, the readout's heading and the table say "Projected" or "So far", and the generated summary reads its trend from the settled points only, then says what's projected. While patterns are on, a line that has its own dash keeps it, and the hollow points carry the difference.
+
+**Uncertainty is a band.** `band={{ low: 'p10', high: 'p90', label: 'Range 10th–90th percentile' }}` draws a flat fill of the series colour at 16% between the two keys, under the lines. It's never error bars, which readers misjudge (Correll & Gleicher 2014), and never a gradient. Its edges count toward the y axis. The readout adds a row for it ("499–787 Range 10th–90th percentile"), and so do point names and the table.
 
 **You provide:** a `ChartContainer` with a `config` naming each series, the `data` in x order, and usually a `summary`.
 

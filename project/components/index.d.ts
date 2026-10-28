@@ -1482,6 +1482,10 @@ export interface ChartSeriesConfig {
 /** Each data key a chart draws, mapped to its label, format and colour slot. The order is the colour order, fixed for the chart's life. */
 export type ChartConfig = Record<string, ChartSeriesConfig>;
 export type ChartDatum = Record<string, unknown>;
+/** Data that isn't yet the record: a period still being counted ('partial') or a forecast ('projected'). Hatched or dashed, never raised. */
+export type ChartStatus = 'partial' | 'projected';
+/** The words each status says: "So far" and "Projected". */
+export declare const CHART_STATUS_WORDS: Record<ChartStatus, string>;
 export interface ChartSeries {
   key: string;
   label: string;
@@ -1533,6 +1537,12 @@ export interface ChartContextValue {
   /** Line width (2, or 3 under contrast="more"), and the gap between adjacent marks (2, or 3). */
   strokeWidth: number;
   gap: number;
+  /** Whether a record is the record yet: undefined, 'partial' or 'projected'. */
+  status: (d: ChartDatum) => ChartStatus | undefined;
+  /** The chart was given a status: draw not-yet-record parts with encode(key).pending. */
+  hasStatus: boolean;
+  /** The stretches of x that aren't yet the record, and those that are, in plot px: for clipping a line or an area. */
+  statusRanges: { record: Array<[number, number]>; pending: Array<[number, number]> };
 }
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
 export interface ChartEncoding {
@@ -1546,7 +1556,15 @@ export interface ChartEncoding {
   marker: ChartMarkerShape;
   /** A 1px edge for a filled mark: ink under contrast="more", CanvasText under forced colours, otherwise none. */
   edge?: string;
+  /** For a mark that isn't yet the record: a 45° hatch of the series colour on the plot's own; while patterns are on, the slot's own hatch. */
+  pending: string;
+  /** The fill-opacity to draw `pending` at: 1, or 0.45 for a slot's own hatch while patterns are on. */
+  pendingOpacity: number;
+  /** The dash a not-yet-record line takes: 5 4, or the slot's own dash while patterns are on. */
+  pendingDash: string;
 }
+/** A clip to stretches of x from statusRanges, to draw a line's or an area's record and not-yet-record parts apart. */
+export declare function ChartStatusClip(props: { id: string; ranges: Array<[number, number]>; height: number }): React.ReactElement;
 /** A series' marker centred on (x, y): the shape its slot gives it. */
 export declare function ChartMarker(props: { shape: ChartMarkerShape; x: number; y: number; size?: number; color: string } & React.SVGProps<SVGElement>): React.ReactElement;
 export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
@@ -1597,7 +1615,7 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   empty?: ChartEmpty;
 }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
-export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; }
+export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; /** An uncertainty band's row, keyed by a block of its fill. */ range?: boolean; }
 export interface ChartTooltipContentProps {
   /** How each row is keyed: a short stroke of the series colour (default), a dot, or a dashed stroke. */
   indicator?: 'line' | 'dot' | 'dashed';
@@ -1609,6 +1627,8 @@ export interface ChartTooltipContentProps {
   label?: unknown;
   payload?: ChartTooltipItem[];
   formatX?: (x: unknown) => string;
+  /** "So far" or "Projected", after the heading, when the record under the readout isn't yet the record. */
+  note?: string;
 }
 /** The readout's rows: value first, series name second, keyed by the series colour. */
 export declare function ChartTooltipContent(props: ChartTooltipContentProps): React.ReactElement;
@@ -1653,6 +1673,10 @@ export interface BarChartProps {
   labels?: 'max' | 'last' | 'none';
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
+  /** Which records aren't yet the record: 'partial' (a period still being counted) or 'projected' (a forecast). Hatched or dashed, and said in words. */
+  status?: (d: ChartDatum) => ChartStatus | undefined;
+  /** The rule where the record ends: its word (default "Today"), or false for none. */
+  boundary?: string | false;
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
 }
@@ -1673,6 +1697,12 @@ export interface LineChartProps {
   endLabels?: boolean;
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
+  /** Which records aren't yet the record: 'partial' (a period still being counted) or 'projected' (a forecast). Hatched or dashed, and said in words. */
+  status?: (d: ChartDatum) => ChartStatus | undefined;
+  /** The rule where the record ends: its word (default "Today"), or false for none. */
+  boundary?: string | false;
+  /** An uncertainty band around a series (default the config's first), from each record's `low` to its `high`: a flat, low-opacity fill. `label` names it in the readout (default "Range"). */
+  band?: { low: string; high: string; series?: string; label?: string };
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
 }
@@ -1693,6 +1723,10 @@ export interface AreaChartProps {
   labels?: boolean;
   /** The crosshair and readout. Default true. */
   tooltip?: boolean;
+  /** Which records aren't yet the record: 'partial' (a period still being counted) or 'projected' (a forecast). Hatched or dashed, and said in words. */
+  status?: (d: ChartDatum) => ChartStatus | undefined;
+  /** The rule where the record ends: its word (default "Today"), or false for none. */
+  boundary?: string | false;
   children?: React.ReactNode;
   empty?: ChartEmpty;
 }

@@ -466,6 +466,19 @@ A design review: `AreaChart` was rendered as three stacked regions over two week
 
 Not yet tested with people: how well the middle bands of a stack are read, since only the bottom band stands on a common baseline (Cleveland & McGill's position-on-a-common-scale advantage applies to it alone). This is why the README puts the steadiest part at the bottom.
 
+### E37 · Can data that isn't yet the record be told apart without lifting it?
+
+A design review: `ChartStatus` was rendered as monthly revenue with October so far, daily signups projected from today with a 10th–90th percentile band, regional requests with a three-week forecast, and quarterly bookings with Q3 so far and Q4 projected (and a button that closes the period), in all four schemes at 960px, at 360px at 2×, under forced colours and with `contrast="more"`. `checks/chart-status.mjs` measures it.
+
+- **Pattern and a word, not height.** Altitude's pending writes hover until they land, but a hovering bar misstates its value, so the Commitment signal can't carry over. Partial and projected marks lie on the ground with the record, hatched or dashed, and say "So far" or "Projected" wherever a value is named.
+- **Partial bars lose their fill.** A hatch on the plot's colour reads as "less than solid" at a glance, which is the point: the most common dashboard misreading is a half-counted month taken for a drop. A projection also keeps its outline, so it reads as a shape still to be filled.
+- **One path, clipped.** Splitting a monotone line into two paths at the boundary put a kink there, because each half gets its own end tangents. The line is drawn once and clipped two ways, solid and dashed.
+- **Patterns already use the hatch.** Under forced colours `data-2`'s own hatch is also 45°, so the pending hatch made its settled and projected parts identical. While patterns are on, a slot that has a hatch keeps it in the pending stretch, faded to 45%; slot 1, which is solid, takes the pending hatch.
+- **Bands, not error bars.** After Correll & Gleicher (VIS 2014), the uncertainty is a flat fill at 16%. Its edges count toward y, and it's named in the readout.
+- **Trends from the record.** The generated summary reads trends and extremes from the settled records and then says what's partial or projected. Otherwise a half-counted October would become the "lowest" month.
+
+Not yet tested with people: whether "Today" is the right word for the rule when the first pending record is a partial period, since today falls inside that period rather than at its start.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

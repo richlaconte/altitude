@@ -72,6 +72,8 @@ A `RevealGroup` around a row of charts and stats lands them together.
 
 **The table view.** `views` adds a segmented Chart | Table control beside the title: the same record as a sortable `DataTable`, x first (headed by `xLabel`), a column per series in its own format, and a Total for stacks. It sits in the chart's own box and scrolls there, so switching doesn't move the page; the two views cross-fade over `dur-travel-2`, and the hidden one is inert. `views="table"` starts on the table; `view` and `onViewChange` control it. It's opt-in so that small widget charts don't each grow a control; give it to any chart people may want to read, copy or check.
 
+**Not yet the record.** `BarChart`, `LineChart` and `AreaChart` take `status={(d) => 'partial' | 'projected' | undefined}`. The ground is the record, and a projection or an unfinished period isn't yet, so it's drawn hatched or dashed, never raised, and said in words: "So far" or "Projected" in point names ("Oct 1, 2026, Revenue, $61K, so far."), after the readout's heading, in a Status column in the table, and at the end of the generated summary, whose trend and extremes are read from the settled records. A 1px `line-control` rule named "Today" marks where the record ends. For your own marks, `useChart()` gives `status(d)`, `statusRanges` (the stretches of x that are pending, for `ChartStatusClip`) and `encode(key).pending`, `pendingOpacity` and `pendingDash`.
+
 **Readout and legend.** Every chart has a readout ([`ChartTooltip`](../ChartTooltip/README.md)); add a [`ChartLegend`](../ChartLegend/README.md) to name series, or to let people hide and show them. Hidden series keep their slots and leave the scales.
 
 **Your own marks.** `useChart()` gives you the following, and children are drawn inside the plot, in its coordinates, under the ground line's rule:
@@ -83,7 +85,8 @@ A `RevealGroup` around a row of charts and stats lands them together.
 - `alpha(datum, seriesKey)`: how present a mark is while it enters or leaves, to multiply into its opacity;
 - `series`, with their colours and formats, and `format`;
 - `encode(key)`: the series' `fill`, `stroke`, `dash`, `marker` and `edge` for the current mode. `ChartMarker` draws the marker shape;
-- `patterns`, `directLabels`, `strokeWidth` and `gap`.
+- `patterns`, `directLabels`, `strokeWidth` and `gap`;
+- `status(datum)`, `hasStatus` and `statusRanges`, for data that isn't yet the record.
 
 Draw with `encode()` rather than `series.color`, and forced colours, print and `contrast="more"` are handled for you.
 

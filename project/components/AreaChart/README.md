@@ -16,7 +16,9 @@ A total over time and the parts that make it up (requests by region, storage by 
 
 **Accessibility.** The keyboard path is the container's (#63): ←/→ along x and, in a stack, ↑/↓ through the bands at that x, from the bottom up, so ↑ goes to the band above. Each point names its band's value and its share of the total: "Oct 1, 2026, EU, 1.1K. 34% of 3.2K. 1 of 14." The table view (`views`) has a column per band and a Total.
 
-**Props:** `data` and `x`; `stack` (`true` or `'expand'`); `curve` (`'linear'` or `'monotone'`); `y={{ format }}`; `labels`; `tooltip`; and a `ChartTooltip` or `ChartLegend` as children.
+**Not yet the record.** `status` marks partial or projected records. From the last settled point on, every band is hatched in its colour on the plot's own, with no solid fill, and the top line is dashed. A 1px `line-control` rule named "Today" (`boundary`) marks where the record ends, and the readout, point names and table say "Projected" or "So far". While patterns are on, a band with its own hatch keeps it there, faded, so bands stay told apart.
+
+**Props:** `data` and `x`; `stack` (`true` or `'expand'`); `curve` (`'linear'` or `'monotone'`); `y={{ format }}`; `labels`; `tooltip`; `status` and `boundary`; and a `ChartTooltip` or `ChartLegend` as children.
 
 **You provide:** a `ChartContainer` whose `config` names each band in stacking order (the base first), the `data` in x order, and usually a `summary`.
 

@@ -23,6 +23,14 @@ export interface ChartSeriesConfig {
 export type ChartConfig = Record<string, ChartSeriesConfig>;
 export type ChartDatum = Record<string, unknown>;
 
+/**
+ * Data that isn't yet the record (#67): `partial` is a period still being counted (this month so far), `projected` a
+ * value that hasn't happened (a forecast). Both are drawn hatched or dashed, never raised, and say so in words.
+ */
+export type ChartStatus = 'partial' | 'projected';
+/** The words each status says, in point names, the readout and the table. */
+export const CHART_STATUS_WORDS: Record<ChartStatus, string> = { partial: 'So far', projected: 'Projected' };
+
 export interface ChartSeries {
   key: string;
   label: string;
@@ -182,6 +190,15 @@ export interface ChartContextValue {
   /** Line width (2, or 3 under contrast="more"), and the gap between adjacent marks (2, or 3). */
   strokeWidth: number;
   gap: number;
+  /** Whether a record is the record yet: undefined for settled data, or 'partial' / 'projected' (#67). */
+  status: (d: ChartDatum) => ChartStatus | undefined;
+  /** Some record has a status: chart types draw the not-yet-record parts with `encode(key).pending`. */
+  hasStatus: boolean;
+  /**
+   * The stretches of x that aren't yet the record, and those that are, in plot px, for clipping a line or an area: a
+   * segment is pending when either of its ends is. Empty `pending` when every record is settled.
+   */
+  statusRanges: { record: Array<[number, number]>; pending: Array<[number, number]> };
 }
 
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
@@ -196,6 +213,15 @@ export interface ChartEncoding {
   marker: ChartMarkerShape;
   /** A 1px edge for a filled mark: ink under contrast="more", CanvasText under forced colours, otherwise none. */
   edge?: string;
+  /**
+   * For a mark that isn't yet the record: a 45° hatch of the series colour on the plot's own colour, no solid fill.
+   * While patterns are on, a slot that already has a hatch keeps it, faded to `pendingOpacity`, so it stays told apart.
+   */
+  pending: string;
+  /** The fill-opacity to draw `pending` at: 1, or less for a slot's own hatch while patterns are on. */
+  pendingOpacity: number;
+  /** The dash a not-yet-record line takes: the slot's own dash while patterns are on, otherwise 5 4. */
+  pendingDash: string;
 }
 
 /** Each slot's redundant encoding, fixed like its colour (#72). */
@@ -221,6 +247,11 @@ export function ChartMarker({ shape, x, y, size = 8, color, ...rest }: { shape: 
     case 'cross': return <path d={`M${x - r},${y - r}L${x + r},${y + r}M${x + r},${y - r}L${x - r},${y + r}`} fill="none" stroke={color} strokeWidth={r * 0.5} strokeLinecap="round" {...p} />;
     default: return <circle cx={x} cy={y} r={r} fill={color} {...(rest as React.SVGProps<SVGCircleElement>)} />;
   }
+}
+
+/** A clip to stretches of x (from `statusRanges`), for drawing a line or an area's record and not-yet-record parts apart. */
+export function ChartStatusClip({ id, ranges, height }: { id: string; ranges: Array<[number, number]>; height: number }) {
+  return <clipPath id={id}>{ranges.map(([a, b], i) => <rect key={i} x={a} y={-40} width={Math.max(0, b - a)} height={height + 80} />)}</clipPath>;
 }
 
 /** One hatch tile, in the pattern's own colour: lines or dots over the series colour (or over Canvas, forced). */
@@ -270,6 +301,12 @@ export interface ChartInfo {
   seriesUp?: boolean;
   /** A stacked point names its share of the total ("31% of 3.9K") rather than only the total. */
   share?: boolean;
+  /** Which records aren't yet the record (#67). */
+  status?: (d: ChartDatum) => ChartStatus | undefined;
+  /** The rule where the record ends and the rest begins: its word (default "Today"), or false for none. */
+  boundary?: string | false;
+  /** An uncertainty band around one series: its low and high keys, which also count toward y's extent. */
+  band?: { series?: string; low: string; high: string; label: string };
 }
 type ChartChild = {
   chartInfo?: (props: Record<string, unknown>, config: ChartConfig) => ChartInfo; chartHtml?: boolean; chartTooltip?: boolean; chartLegend?: boolean;
@@ -287,6 +324,8 @@ export interface ChartTooltipItem {
   text: string;
   color: string;
   dash?: string;
+  /** An uncertainty band's row ("80K–95K, Range"), keyed by a block of its fill rather than a stroke. */
+  range?: boolean;
 }
 export interface ChartTooltipContentProps {
   /** How each row is keyed: a short stroke of the series colour (default), a dot, or a dashed stroke. */
@@ -300,20 +339,28 @@ export interface ChartTooltipContentProps {
   payload?: ChartTooltipItem[];
   /** Filled in by the container: formats x. */
   formatX?: (x: unknown) => string;
+  /** Filled in by the container: "So far" or "Projected" when the record under the readout isn't yet the record. */
+  note?: string;
 }
 /**
  * The readout's rows: value first (ink, tabular), series name second (ink-muted), keyed by a short stroke of the
  * series colour, which takes the series' dash when patterns are on. Labels are text, never HTML.
  */
-export function ChartTooltipContent({ indicator = 'line', labelFormat, hideLabel, hideIndicator, label, payload = [], formatX }: ChartTooltipContentProps) {
+export function ChartTooltipContent({ indicator = 'line', labelFormat, hideLabel, hideIndicator, label, payload = [], formatX, note }: ChartTooltipContentProps) {
   return (
     <>
-      {!hideLabel && <div className="alt-chart-readout-label">{labelFormat ? labelFormat(label) : formatX ? formatX(label) : String(label)}</div>}
+      {!hideLabel && (
+        <div className="alt-chart-readout-label">
+          {labelFormat ? labelFormat(label) : formatX ? formatX(label) : String(label)}
+          {note && <span className="alt-chart-readout-note">{note}</span>}
+        </div>
+      )}
       {payload.map((p) => (
         <div key={p.key} className="alt-chart-readout-row">
           {!hideIndicator && (
             <svg className="alt-chart-readout-key" width="14" height="10" aria-hidden="true">
-              {indicator === 'dot' ? <circle cx="7" cy="5" r="4" fill={p.color} />
+              {p.range ? <rect x="1" y="1" width="12" height="8" rx="2" fill={p.color} fillOpacity="0.32" />
+                : indicator === 'dot' ? <circle cx="7" cy="5" r="4" fill={p.color} />
                 : <line x1="1" y1="5" x2="13" y2="5" stroke={p.color} strokeWidth="2.5" strokeLinecap="round" strokeDasharray={indicator === 'dashed' ? '3 2' : p.dash} />}
             </svg>
           )}
@@ -431,6 +478,8 @@ interface Frame {
   seriesAlpha: Map<string, number>;
   /** The y axis's width in px. */
   left: number;
+  /** Keys that glide with the series' values but aren't series: an uncertainty band's low and high. */
+  extra: string[];
 }
 type Layer = { frame: Frame; opacity: number };
 /** Where a change is: the axis rescaling, the marks gliding to their values, or a cross-fade. */
@@ -465,7 +514,7 @@ function mix(from: Frame, to: Frame, p1: number, p2: number): Frame {
   ];
   const fromRows = new Map(from.rows.map((r) => [r.key, r]));
   const toKeys = new Set(to.rows.map((r) => r.key));
-  const keys = [...new Set([...to.series, ...from.series].map((s) => s.key))];
+  const keys = [...new Set([...to.series.map((s) => s.key), ...from.series.map((s) => s.key), ...to.extra])];
   const rows: Row[] = [];
   const rowAlpha = new Map<string, number>();
   for (const r of to.rows) {
@@ -493,7 +542,7 @@ function mix(from: Frame, to: Frame, p1: number, p2: number): Frame {
     if (from.band) for (const [k, v] of from.band) if (!band.has(k)) band.set(k, v);
   }
   return {
-    kind: to.kind, rows, series, ticks, band, rowAlpha, seriesAlpha,
+    kind: to.kind, rows, series, ticks, band, rowAlpha, seriesAlpha, extra: to.extra,
     y: [lerp(from.y[0], to.y[0], e1), lerp(from.y[1], to.y[1], e1)],
     left: lerp(from.left, to.left, e1),
   };
@@ -675,6 +724,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const shownConfig = hidden.length ? Object.fromEntries(Object.entries(config).filter(([k]) => !hidden.includes(k))) : config;
   const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(childProps, shownConfig) : {};
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
+  // The band's series, by default the config's first: hiding it hides the band rather than moving it to another series.
+  const bandInfo = info.band ? { ...info.band, series: info.band.series ?? Object.keys(config)[0] } : undefined;
+  const statusOf = (d: ChartDatum): ChartStatus | undefined => {
+    const v = info.status?.(d);
+    return v === 'partial' || v === 'projected' ? v : undefined;
+  };
   const xKey = xProp ?? (childProps.x as string | undefined) ?? '';
   // A chart type that needs zero (bars) gets it whatever the prop says: a bar that starts above zero misstates its length.
   const zero = info.zero === true ? true : zeroProp ?? info.zero ?? true;
@@ -702,7 +757,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // The target frame: where the plot is going, independent of its width.
   let lo = Infinity, hi = -Infinity;
   if (info.yExtent) [lo, hi] = info.yExtent;
-  else for (const d of data) for (const s of series) { const v = d[s.key]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+  else {
+    // An uncertainty band counts toward the extent, so its edges are never cut off.
+    const bandOn = bandInfo && series.some((s) => s.key === bandInfo!.series);
+    const extentKeys = [...series.map((s) => s.key), ...(bandOn ? [bandInfo!.low, bandInfo!.high] : [])];
+    for (const d of data) for (const k of extentKeys) { const v = d[k]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+  }
   if (!isFinite(lo)) { lo = 0; hi = 1; }
   if (zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
   // All zero is real data: give it 0–1, so the ground line is the floor, not the middle of an invented range.
@@ -723,6 +783,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     rowAlpha: new Map(), seriesAlpha: new Map(series.map((s) => [s.key, 1])),
     left: !axes ? 0 : horizontal ? catWidth
       : Math.ceil(Math.max(...ny.ticks.map((t) => textWidth(fmtY(t))), 0)) + 10,
+    extra: bandInfo ? [bandInfo.low, bandInfo.high] : [],
   };
   const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef);
@@ -769,6 +830,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       fill: patterns && e.hatch ? `url(#${pid}-${slot})` : color,
       dash: patterns ? e.dash : undefined,
       edge: env.forced ? 'CanvasText' : env.more ? 'var(--ink)' : undefined,
+      pending: patterns && e.hatch ? `url(#${pid}-${slot})` : `url(#${pid}-${slot}-pending)`,
+      pendingOpacity: patterns && e.hatch ? 0.45 : 1,
+      pendingDash: patterns && e.dash ? e.dash : '5 4',
     };
   };
 
@@ -850,6 +914,30 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const xOf = (d: ChartDatum) => (x.kind === 'band' ? x(String(d[xKey])) + x.bandwidth / 2 : (x as LinearScale | TimeScale)(d[xKey] as number));
     const ground = d0 <= 0 && d1 >= 0 ? y(0) : horizontal ? 0 : ph;
     const rowAlpha = (d: ChartDatum) => frame.rowAlpha.get(rowKey(d)) ?? 1;
+    // Not yet the record (#67): which stretches of x are pending, and where the record ends.
+    const rows = frame.rows.map((r) => r.d);
+    const pend = rows.map((d) => !!statusOf(d));
+    const pending: Array<[number, number]> = [];
+    if (pend.some(Boolean) && frame.kind !== 'band') {
+      // A segment is pending when either end is, so a pending run reaches back to the record point before it.
+      for (let i = 0; i < rows.length; i++) {
+        if (!pend[i]) continue;
+        let j = i;
+        while (j + 1 < rows.length && pend[j + 1]) j++;
+        pending.push([xOf(rows[Math.max(0, i - 1)]), xOf(rows[Math.min(rows.length - 1, j + 1)])]);
+        i = j;
+      }
+    }
+    const record: Array<[number, number]> = [];
+    let from = -40;
+    for (const [a, b] of pending) { if (a > from) record.push([from, a]); from = b; }
+    record.push([from, pw + 40]);
+    let boundaryAt: number | null = null;
+    const turn = pend.findIndex((p, i) => p && i > 0 && !pend[i - 1]);
+    if (turn > 0) {
+      if (x.kind === 'band') boundaryAt = x(String(rows[turn][xKey])) - (x.step - x.bandwidth) / 2;
+      else boundaryAt = xOf(rows[turn - 1]);
+    }
     const ctx: ChartContextValue = {
       width: pw, height: ph, x, y, xOf, ground, data: frame.rows.map((r) => r.d), xKey, config, series: frame.series,
       alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? frame.seriesAlpha.get(key) ?? 1 : 1),
@@ -859,11 +947,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       active: activeIdx !== null ? frame.rows[activeIdx]?.d ?? null : null,
       setActive: (i) => show(i),
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
+      status: statusOf, hasStatus: !!info.status, statusRanges: { record, pending },
     };
-    return { ctx, left, pw, ph, xTicks };
+    return { ctx, left, pw, ph, xTicks, boundaryAt };
   };
 
-  const generated = describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind);
+  const generated = describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf);
   const titleId = title ? `${id}-t` : undefined, descId = description ? `${id}-d` : undefined, sumId = `${id}-s`;
   const labelledBy = (rest['aria-labelledby'] as string | undefined) ?? titleId;
   const vars: Record<string, string> = {};
@@ -885,6 +974,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       ...allSeries.map((s) => ({ key: s.key, header: s.label, align: 'end' as const,
         cell: (d: ChartDatum) => (isNum(d[s.key]) ? s.format(d[s.key] as number) : '—'), sortValue: (d: ChartDatum) => (isNum(d[s.key]) ? (d[s.key] as number) : -Infinity) })),
       ...(total ? [{ key: '__total', header: 'Total', align: 'end' as const, cell: (d: ChartDatum) => allSeries[0].format(sum(d)), sortValue: sum }] : []),
+      ...(bandInfo ? [{ key: '__band', header: bandInfo.label, align: 'end' as const,
+        cell: (d: ChartDatum) => { const b = bandInfo!, f = allSeries.find((s) => s.key === b.series)?.format ?? fmtY; return isNum(d[b.low]) && isNum(d[b.high]) ? `${f(d[b.low] as number)}–${f(d[b.high] as number)}` : '—'; } }] : []),
+      // Data that isn't yet the record says so in its own column, so the table never passes it off as settled.
+      ...(info.status && data.some((d) => statusOf(d)) ? [{ key: '__status', header: 'Status', cell: (d: ChartDatum) => { const st = statusOf(d); return st ? CHART_STATUS_WORDS[st] : 'Actual'; } }] : []),
     ];
     return <DataTable columns={columns} rows={data} getRowId={rowKey} aria-label={typeof title === 'string' ? `${title}, data` : 'Chart data'} />;
   })() : null;
@@ -977,7 +1070,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const s = series[si], d = data[pi];
     if (!s || !d) return '';
     const v = d[s.key];
-    let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}.`;
+    const st = statusOf(d);
+    let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}${st ? `, ${CHART_STATUS_WORDS[st].toLowerCase()}` : ''}.`;
+    if (bandInfo && bandInfo.series === s.key && num(d[bandInfo.low]) && num(d[bandInfo.high])) {
+      out += ` ${bandInfo.label} ${s.format(d[bandInfo.low] as number)} to ${s.format(d[bandInfo.high] as number)}.`;
+    }
     if (num(v) && kind !== 'band' && pi > 0) {
       const prev = data[pi - 1], pv = prev[s.key];
       if (num(pv)) {
@@ -1049,7 +1146,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (!tipMounted || !d) return null;
     const payload: ChartTooltipItem[] = top.ctx.series
       .filter((s) => typeof d[s.key] === 'number' && isFinite(d[s.key] as number) && top.ctx.alpha(null, s.key) > 0.5)
-      .map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, value: d[s.key] as number, text: top.ctx.format(s.key, d[s.key] as number), color: e.stroke, dash: e.dash }; });
+      .flatMap((s) => {
+        const e = encode(s.key);
+        const item: ChartTooltipItem = { key: s.key, label: s.label, value: d[s.key] as number, text: top.ctx.format(s.key, d[s.key] as number), color: e.stroke, dash: e.dash };
+        const b = bandInfo;
+        if (!b || b.series !== s.key || !num(d[b.low]) || !num(d[b.high])) return [item];
+        // The uncertainty band's row: its low and high, named by what the band is ("Range 10th–90th percentile").
+        return [item, { key: `${s.key}-range`, label: b.label, value: d[b.high] as number, text: `${top.ctx.format(s.key, d[b.low] as number)}–${top.ctx.format(s.key, d[b.high] as number)}`, color: e.stroke, range: true }];
+      });
     const at = top.ctx.xOf(d);
     const style: React.CSSProperties = {};
     let side: string;
@@ -1058,7 +1162,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const content = tipEl?.props.content ?? <ChartTooltipContent />;
     return (
       <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
-        {React.cloneElement(content, { label: d[xKey], payload, formatX })}
+        {React.cloneElement(content, { label: d[xKey], payload, formatX, note: (() => { const st = statusOf(d); return st ? CHART_STATUS_WORDS[st] : undefined; })() })}
       </div>
     );
   })();
@@ -1088,16 +1192,20 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           )}
           {W > 0 && data.length > 0 && (
             <svg className="alt-chart-svg" width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
-              {patterns && (
+              {(patterns || info.status) && (
                 <defs>
-                  {[...new Set(allSeries.map((s) => s.slot))].map((slot) => {
+                  {patterns && [...new Set(allSeries.map((s) => s.slot))].map((slot) => {
                     const hatch = ENCODINGS[slot].hatch;
                     return hatch ? <Hatch key={slot} id={`${pid}-${slot}`} kind={hatch} bg={env.forced ? 'Canvas' : `var(--${slot})`} fg={env.forced ? 'CanvasText' : 'var(--surface-raised)'} /> : null;
                   })}
+                  {/* Not yet the record: the series colour hatched at 45° on the plot's own colour, with no solid fill. */}
+                  {info.status && [...new Set(allSeries.map((s) => s.slot))].map((slot) => (
+                    <Hatch key={slot + '-pending'} id={`${pid}-${slot}-pending`} kind="rise" bg={env.forced ? 'Canvas' : 'var(--alt-chart-bg)'} fg={env.forced ? 'CanvasText' : `var(--${slot})`} />
+                  ))}
                 </defs>
               )}
               {layers.map(({ frame, opacity }, i) => {
-                const { ctx, left, pw, ph, xTicks } = i === layers.length - 1 ? top : draw(frame);
+                const { ctx, left, pw, ph, xTicks, boundaryAt } = i === layers.length - 1 ? top : draw(frame);
                 return (
                   <g key={i} transform={`translate(${left},${TOP})`} opacity={opacity < 1 ? opacity : undefined}>
                     <g className="alt-chart-grid">
@@ -1112,7 +1220,18 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                       const at = Math.round(ctx.xOf(ctx.active)) + 0.5;
                       return horizontal ? <line className="alt-chart-crosshair" x1={0} x2={pw} y1={at} y2={at} /> : <line className="alt-chart-crosshair" x1={at} x2={at} y1={0} y2={ph} />;
                     })()}
+                    {/* Where the record ends: a 1px line-control rule on the ground under the marks, named in words ("Today") over them. */}
+                    {boundaryAt !== null && info.boundary !== false && (() => {
+                      const at = Math.round(boundaryAt) + 0.5;
+                      return <g className="alt-chart-boundary">{horizontal ? <line x1={0} x2={pw} y1={at} y2={at} /> : <line x1={at} x2={at} y1={0} y2={ph} />}</g>;
+                    })()}
                     <g className="alt-chart-marks"><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
+                    {boundaryAt !== null && info.boundary !== false && (() => {
+                      const at = Math.round(boundaryAt) + 0.5, word = info.boundary ?? 'Today';
+                      if (horizontal) return <text className="alt-chart-boundary-label" x={pw} y={at - 5} textAnchor="end">{word}</text>;
+                      const flip = at + 8 + textWidth(word) > pw;
+                      return <text className="alt-chart-boundary-label" x={flip ? at - 5 : at + 5} y={12} textAnchor={flip ? 'end' : 'start'}>{word}</text>;
+                    })()}
                     {/* The ground line is zero. When zero isn't on the axis, the plot's foot is an ordinary gridline, not ground. */}
                     {horizontal
                       ? <line className={frame.y[0] <= 0 && frame.y[1] >= 0 ? 'alt-chart-ground' : 'alt-chart-floor'} x1={Math.round(ctx.ground) + 0.5} x2={Math.round(ctx.ground) + 0.5} y1={0} y2={ph} />
@@ -1279,12 +1398,16 @@ function ChartImprint({ config, title, description, aspect, height, shape = 'bar
 }
 
 /** The generated summary: what kind of chart, which series, the x range, and each series' lowest and highest values. */
-function describe(kind: string, series: ChartSeries[], data: ChartDatum[], xKey: string, formatX: (v: unknown) => string, scale: string) {
+function describe(kind: string, series: ChartSeries[], data: ChartDatum[], xKey: string, formatX: (v: unknown) => string, scale: string, status: (d: ChartDatum) => ChartStatus | undefined) {
   if (!data.length || !series.length) return `${kind} with no data.`;
+  // Trends are read from the record; what isn't yet the record is said after them.
+  const all = data;
+  const settled = data.filter((d) => !status(d));
+  if (settled.length && settled.length < data.length) data = settled;
   const names = series.map((s) => s.label);
   const list = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0];
-  const first = formatX(data[0][xKey]), last = formatX(data[data.length - 1][xKey]);
-  const span = scale === 'band' ? `${data.length} ${data.length === 1 ? 'category' : 'categories'}, ${first} to ${last}` : `${first} to ${last}`;
+  const first = formatX(all[0][xKey]), last = formatX(all[all.length - 1][xKey]);
+  const span = scale === 'band' ? `${all.length} ${all.length === 1 ? 'category' : 'categories'}, ${first} to ${last}` : `${first} to ${last}`;
   const parts = series.map((s) => {
     let lo: ChartDatum | null = null, hi: ChartDatum | null = null;
     for (const d of data) {
@@ -1305,5 +1428,11 @@ function describe(kind: string, series: ChartSeries[], data: ChartDatum[], xKey:
     }
     return `${s.label} is lowest at ${formatX(lo[xKey])} (${s.format(lo[s.key] as number)}) and highest at ${formatX(hi[xKey])} (${s.format(hi[s.key] as number)}).`;
   });
-  return `${kind} of ${list}, ${span}. ${parts.join(' ')}`;
+  const notes = (['partial', 'projected'] as ChartStatus[]).map((st) => {
+    const rows = all.filter((d) => status(d) === st);
+    if (!rows.length) return '';
+    const at = rows.length === 1 ? formatX(rows[0][xKey]) : `${formatX(rows[0][xKey])} to ${formatX(rows[rows.length - 1][xKey])}`;
+    return st === 'partial' ? ` ${at} ${rows.length === 1 ? 'is' : 'are'} so far, not complete.` : ` ${at} ${rows.length === 1 ? 'is' : 'are'} projected.`;
+  }).join('');
+  return `${kind} of ${list}, ${span}. ${parts.join(' ')}${notes}`;
 }

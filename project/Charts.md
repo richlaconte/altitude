@@ -64,7 +64,7 @@ Choose by the job the data does, not by what looks rich.
 These are the elevation signals a chart adds to **Elevation**'s table:
 
 - **Amounts** are never height. They are length and position on a flat plot standing on the ground line.
-- **Not yet the record.** A projected value or an incomplete period (this month so far) is dashed or hatched and says so in its label and readout. It's the record to come, so it's drawn as an imprint of the record, not raised as live.
+- **Not yet the record.** A projected value or an incomplete period (this month so far) is dashed or hatched and says so in its label and readout. It's the record to come, so it's drawn as an imprint of the record, not raised as live. Built as `status` on `BarChart`, `LineChart` and `AreaChart`, with a "Today" rule where the record ends and an uncertainty `band` on `LineChart` (E37).
 - **A window on the record.** An overview sits in a trench and the chosen window is a raised thumb in it, so the part you're looking at is the part you can move.
 - **Recency.** A value that just arrived, or just changed, gets the afterglow, within the attention budget, never a lift.
 - **Selection** is a tint and an outline, never a height. Selected marks keep their place on the ground line; unselected ones mute rather than sink.
