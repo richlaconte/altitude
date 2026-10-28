@@ -294,6 +294,29 @@ A design review, not a study: `PropertyList` was prototyped as an issue sidebar 
 
 Not yet tested with people: whether the hover-lifting plate is enough of an affordance on touch, where there's no hover (the open question in the issue).
 
+### E23 · Can a chart palette stay clear of status, presence and the accent?
+
+A measurement, not a study: `build/palette.mjs` (which CI reruns) searches OKLCH candidates in every scheme, simulates protanopia and deuteranopia after [Machado, Oliveira & Fernandes (2009)](https://doi.org/10.1109/TVCG.2009.113) at severity 1, and measures differences in [OKLab](https://bottosson.github.io/posts/oklab/) as ΔE×100 (not the ΔE₀₀ the other experiments use). Contrast is WCAG 2.
+
+**A stock palette collides.** An 8-hue reference palette separates series well for colour-blind readers (worst adjacent ΔE 8.4–9.1) but lands within 15 of the reserved hues in every scheme (violet 3.6 from `presence-3` in daylight, red 7.7 from `critical` in nightfall), and in the light schemes four of its eight slots are under 3:1 on the ground. Okabe-Ito, Tableau 10, shadcn's `--chart-*` and the Recharts and ECharts defaults have the same problem: they use red, green, amber, magenta, teal and violet freely.
+
+**The accent itself fails the gates.** `data-1` was proposed to be the accent. The shipped accents sit 9.6 (daylight), 6.0 (nightfall) from `presence-3`, 5.0 from `critical` (mesa) and 7.5 from `positive` (alpine), and both dark accents are lighter (OKLCH L 0.73 and 0.80) than a dark scheme's marks may be. So `data-1` takes the accent's *hue* at a lightness that clears them; in mesa no lightness of terracotta clears `critical` and `caution`, so it takes the nearest hue that does (a salmon, h 35 against the accent's 39). Charts' "never a series in `accent`" holds.
+
+**Six slots need the reserved distance at 12, not 15.** With every other gate in place, the light schemes hold only four slots at 15: daylight and mesa leave about 85 candidates once 3:1 on white is required, and their status and presence hues sit at the same lightness as those candidates. Five fit only at chroma 0.24–0.30, which is neon beside the rest of the system. Daylight fails six at 14 and at 13; at 12 all four schemes hold six. Twelve is still well clear of confusion (the closest pair is 12.0, a plum `data-5` against daylight's violet `presence-3`), but it is a deliberate loosening of the issue's 15, recorded here.
+
+**Gates added during the search.** Optimising only adjacent pairs let two slots share a hue (two greens 15 apart in lightness): slots now also keep 25° of hue and colour-blind ΔE ≥ 6 between *any* two, since a legend or a crossing line puts any pair side by side. The diverging ramp's best colour-blind pair was olive against indigo, which reads muddy at the dark pole; it's held to orange against blue (ColorBrewer's PuOr and RdBu family), which loses little (13.5 against 14.1 at the weakest step in daylight).
+
+The chosen palette, by scheme:
+
+| Scheme | Worst adjacent CVD ΔE | Worst CVD ΔE, any pair | Worst normal ΔE, any pair | Lowest contrast on ground or raised | Closest reserved hue | Smallest ramp step (L) | Diverging sides, worst CVD ΔE |
+|---|---|---|---|---|---|---|---|
+| daylight | 19.6 | 6.6 | 15.2 | 3.08:1 | `data-5` ↔ `presence-3` 12.0 | 0.089 | 13.5 |
+| nightfall | 24.4 | 6.7 | 15.2 | 3.01:1 | `data-5` ↔ `accent` 12.3 | 0.089 | 13.6 |
+| mesa | 22.8 | 6.8 | 15.1 | 3.00:1 | `data-1` ↔ `accent` 12.0 | 0.089 | 13.5 |
+| alpine | 25.0 | 7.7 | 15.2 | 3.02:1 | `data-4` ↔ `presence-3` 13.0 | 0.088 | 11.6 |
+
+Adjacent slots are now two to three times as far apart for colour-blind readers as the reference palette's (19.6–25.0 against 8.4–9.1). The cost is that any two slots can be as close as 6.6, so charts with more than a few series still need direct labels or patterns ([#72](https://github.com/richlaconte/altitude/issues/72)). `data-other` comes out near-black in the light schemes (L 0.33–0.35): every lighter neutral that holds 3:1 was within 15 of a slot. Not yet tested with people: whether the slots are told apart as well as these distances predict, in real charts and at small sizes.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
@@ -304,6 +327,7 @@ Not yet tested with people: whether the hover-lifting plate is enough of an affo
 - **Glossy lamps and accent rims on fields.** See E10.
 - **Keycap avatars, socket badges, severity bars.** See E8.
 - **Hashed identity tints and presence as three heights on avatars.** See E12.
+- **A stock categorical palette for charts** (Okabe-Ito, Tableau 10, shadcn's chart colours): it puts series on top of status and presence hues. See E23.
 - **Shadowed, walled or sheened chart marks**, "because Altitude is about height". A bar's length is already its height on screen; adding Altitude's height to it costs accuracy and says "press it". See [Charts](Charts.md).
 - **Hovered chart marks lifting a level**, as other interactive surfaces do. A lifted bar either leaves the ground line or casts a shadow below its top edge, and both misstate its value. Clickable marks get an outline instead.
 - **Read wear as altitude.** Frequent use is a different idea from "now", and raising frequently used items would make positions drift. A worn-edge treatment may suit it better; not built.

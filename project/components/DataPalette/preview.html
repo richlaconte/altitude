@@ -1,0 +1,47 @@
+<!-- @dsCard group="Foundations" height=340 page subtitle="Chart colours: identity, magnitude and polarity, flat on the ground" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataPalette — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.dp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+.dp-half { padding: 16px; border-radius: var(--radius-lg); }
+.dp-half.ground { border: 1px solid var(--line); }
+.dp-half h4 { margin: 0 0 10px; font: 600 13px/18px var(--font-sans); color: var(--ink-muted); }
+.dp-row { display: grid; grid-template-columns: 76px minmax(0, 1fr) 56px 12px; gap: 10px; align-items: center; height: 26px; }
+.dp-row code { font: 400 12px/16px var(--font-mono); color: var(--ink-muted); }
+.dp-bar { height: 12px; }
+.dp-dot { width: 10px; height: 10px; border-radius: var(--radius-full); }
+.dp-ramp { display: flex; margin-top: 12px; }
+.dp-ramp span { flex: 1; height: 22px; display: grid; place-items: center; font: 500 11px/1 var(--font-mono); }
+.dp-ramp + p { margin: 4px 0 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+@media (max-width: 640px) { .dp { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const slots = ["data-1", "data-2", "data-3", "data-4", "data-5", "data-6", "data-other"];
+const seq = [1, 2, 3, 4, 5, 6, 7].map((i) => `data-seq-${i}`);
+const div = ["data-div-neg-3", "data-div-neg-2", "data-div-neg-1", "data-div-mid", "data-div-pos-1", "data-div-pos-2", "data-div-pos-3"];
+function Slots() {
+  return slots.map((t, i) => /* @__PURE__ */ React.createElement("div", { className: "dp-row", key: t }, /* @__PURE__ */ React.createElement("code", null, t), /* @__PURE__ */ React.createElement("div", { className: "dp-bar", style: { background: `var(--${t})`, width: `${92 - i * 9}%` } }), /* @__PURE__ */ React.createElement("svg", { width: "56", height: "16", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("polyline", { points: "2,12 16,6 30,9 44,3 54,7", fill: "none", stroke: `var(--${t})`, strokeWidth: "2", strokeLinejoin: "round", strokeLinecap: "round" })), /* @__PURE__ */ React.createElement("span", { className: "dp-dot", style: { background: `var(--${t})` } })));
+}
+function Ramp({ tokens, label }) {
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "dp-ramp" }, tokens.map((t) => /* @__PURE__ */ React.createElement("span", { key: t, title: t, style: { background: `var(--${t})` } }))), /* @__PURE__ */ React.createElement("p", null, label));
+}
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "dp" }, /* @__PURE__ */ React.createElement("div", { className: "dp-half ground" }, /* @__PURE__ */ React.createElement("h4", null, "On the ground"), /* @__PURE__ */ React.createElement(Slots, null), /* @__PURE__ */ React.createElement(Ramp, { tokens: seq, label: "data-seq-1 \u2026 7 \xB7 magnitude, one hue" })), /* @__PURE__ */ React.createElement(A.Card, { className: "dp-half" }, /* @__PURE__ */ React.createElement("h4", null, "On a card (surface-raised)"), /* @__PURE__ */ React.createElement(Slots, null), /* @__PURE__ */ React.createElement(Ramp, { tokens: div, label: "data-div-neg-3 \u2026 mid \u2026 pos-3 \xB7 polarity around a midpoint" })));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -63,7 +63,32 @@ To add a scheme to Altitude itself, add a theme to `tokens.json` and give it a v
 - `ink`, `ink-muted`, `accent-ink` and the three status colors each clear 4.5:1 on all eight surfaces. `line-control` and `accent` clear 3:1 on ground, well, trench and raised.
 - `presence-1`–`presence-3` clear 3:1 on every surface, and `on-presence` clears 4.5:1 on each.
 - Button and key walls are derived (the face colour mixed 34% toward black; `surface-trench` under neutral faces), so a new scheme or a custom accent gets correct walls without new tokens.
+- Every `data-*` token keeps the gates in **The data palette** below; `node build/palette.mjs` chooses them and checks them.
 - Shadows keep the four-layer structure (rim, ring, key, ambient) at every level, including `elev-0`, `well` and `trench`, so transitions interpolate.
+
+## The data palette
+
+Charts get their own colours, so a series never borrows a meaning (see [Charts](Charts.md), rule 5). Each scheme has:
+
+| Tokens | Job | How it's built |
+|---|---|---|
+| `data-1` … `data-6` | identity: which series | six hues in a fixed order. `data-1` is in the accent's hue where a slot can be, at a different lightness from the accent; in mesa, where terracotta sits between `critical` and `caution`, it's the nearest hue that clears them |
+| `data-other` | the seventh and later series, folded | a neutral in the ground's hue |
+| `data-seq-1` … `data-seq-7` | magnitude: how much | `data-1`'s hue, lightness in even steps; light schemes darken from near-white, dark schemes climb from near their ground |
+| `data-div-neg-3` … `data-div-mid` … `data-div-pos-3` | polarity: which side of a midpoint | orange below, blue above, around a neutral; the blue–yellow axis is the one colour-blind readers keep |
+
+Six is a measured limit, not a choice: past it, series fold into `data-other` or become small multiples, and no colour is ever generated. The values are chosen by `build/palette.mjs`, which enumerates OKLCH candidates and orders and keeps the order with the best colour-blind separation that passes every gate, and CI fails if `tokens.json` drifts from it. The gates, measured in OKLab ΔE×100 with colour-blind vision simulated after Machado, Oliveira & Fernandes (2009):
+
+- Each scheme chooses its own values. Dark schemes are stepped for their own ground, not inverted.
+- Categorical slots sit at least 12 from `accent`, `positive`, `caution`, `critical` and `presence-*`, so a series never impersonates a control, a status or a person (Research, E23, says why 12 and not 15).
+- Any two slots: normal-vision ΔE ≥ 15, hues at least 25° apart, colour-blind ΔE ≥ 6. Adjacent slots: colour-blind ΔE ≥ 8 under both protanopia and deuteranopia.
+- OKLCH lightness within 0.43–0.77 in light schemes and 0.48–0.67 in dark ones; chroma ≥ 0.10.
+- Marks hold 3:1 against both `surface-ground` and `surface-raised`, because charts sit on the page and in `Card`s. `data-other` too.
+- The ramps are monotone in lightness, with steps of at least 0.06.
+- The diverging poles are never `positive` or `critical` (ΔE ≥ 15 from both): red–green is the worst pair for colour-blind readers, and both hues mean status.
+- When a series *means* good or bad (error rate, uptime), it wears the status tokens with an icon and a word, not a `data-*` slot, and never both in one chart.
+
+A custom scheme that sets its own surfaces or status colours should set the `data-*` tokens too and check them; checking them with `checkScheme` and deriving them from a custom accent is [#50](https://github.com/richlaconte/altitude/issues/50).
 
 ## Your own fonts
 

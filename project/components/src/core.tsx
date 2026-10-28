@@ -227,7 +227,10 @@ export function deriveAccent(accent: string, surfaces: string[]) {
 const SURFACES = ['surface-trench', 'surface-well', 'surface-ground', 'surface-raised', 'surface-lifted', 'surface-floating', 'surface-overlay', 'surface-modal'] as const;
 export type SchemeColorToken = typeof SURFACES[number] | 'ink' | 'ink-muted' | 'ink-faint' | 'line' | 'line-control'
   | 'accent' | 'on-accent' | 'accent-ink' | 'accent-soft' | 'positive' | 'positive-soft' | 'caution' | 'caution-soft'
-  | 'critical' | 'critical-soft' | 'on-critical' | 'presence-1' | 'presence-2' | 'presence-3' | 'on-presence' | 'scrim';
+  | 'critical' | 'critical-soft' | 'on-critical' | 'presence-1' | 'presence-2' | 'presence-3' | 'on-presence' | 'scrim' | DataColorToken;
+/** The data palette (charts only): categorical slots, the fold, the magnitude ramp and the diverging ramp. */
+export type DataColorToken = `data-${1 | 2 | 3 | 4 | 5 | 6}` | 'data-other' | `data-seq-${1 | 2 | 3 | 4 | 5 | 6 | 7}`
+  | `data-div-${'neg' | 'pos'}-${1 | 2 | 3}` | 'data-div-mid';
 export type SchemeShadowToken = 'trench' | 'well' | 'elev-0' | 'elev-1' | 'elev-2' | 'elev-3' | 'elev-4' | 'elev-5' | 'lip-top' | 'lip-bottom';
 
 // The invariants of Theming.md ("Making a new scheme"), as [text, ground, minimum ratio]; build/tokens.py checks the same.
