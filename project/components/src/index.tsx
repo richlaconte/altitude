@@ -45,6 +45,8 @@ export { ChartContainer, ChartMarker, ChartTooltip, ChartTooltipContent, ChartLe
 export { BarChart } from './bar-chart';
 export { LineChart, linePath } from './line-chart';
 export type { LineChartProps } from './line-chart';
+export { Sparkline } from './sparkline';
+export type { SparklineProps } from './sparkline';
 export type { BarChartProps } from './bar-chart';
 export type { ChartConfig, ChartSeriesConfig, ChartSlot, ChartSeries, ChartDatum, ChartContextValue, ChartContainerProps, ChartXScale, LinearScale, TimeScale, BandScale, ChartStage, ChartEncoding, ChartMarkerShape, ChartTooltipItem, ChartTooltipContentProps, ChartLegendItem, ChartLegendContentProps, ChartEmpty } from './chart';
 export { useEditRecord, ErrorSummary, WorkflowStatus } from './pattern-edit-record';

@@ -410,6 +410,17 @@ A design review: the imprint, an empty plot with an action, a refetch and all-ze
 
 Not yet compared with people: whether shaped imprints are ever read as data at a glance (the issue's open question).
 
+### E32 · Can a trend be the size of a word?
+
+A design review: `Sparkline` was rendered beside a headline number, in running text (a line with a normal range, bars with a zero day, and one still loading), and in a `DataTable` with decorative and labelled cells, in all four schemes at 960px and 360px, under forced colours at 2× and with `contrast="more"`. `checks/sparkline.mjs` measures it. Tufte calls sparklines "data-intense, design-simple, word-sized graphics" ([Tufte, *Beautiful Evidence*, 2006](https://www.edwardtufte.com/tufte/books_be)): their scale is the text beside them, which is why it has no axes and its label says the numbers in words.
+
+- **As tall as the text.** It takes `1lh` of the surrounding type, so in a 23px paragraph it's 23px and in a table cell it's the cell's line. The first build zeroed its own line height to tidy the SVG's baseline, which made `1lh` zero and drew nothing; the SVG is a block instead.
+- **Forced colours lost to a tone.** A sparkline with `tone="data"` kept `data-1` under forced colours, because the tone rule was more specific than the forced one. Every tone is now `CanvasText` when forced.
+- **Gaps show as gaps.** A team with two missing days shows a short run, a break, then the rest; a single point between gaps is a dot.
+- **Bars stand on zero.** A zero day has no bar, and the other bars still share one baseline, so the gap reads as nothing rather than as missing.
+
+Not yet tested with people: whether `ink-muted` is enough contrast for a trend read at a glance in a dense table, or whether `data-1` should be the default.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

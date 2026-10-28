@@ -1510,6 +1510,29 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 @media (forced-colors: active) { .alt-line-label { fill: CanvasText; } }
 .alt-line-active { stroke: var(--alt-chart-bg); stroke-width: 2; paint-order: stroke; }
 
+/* ── Sparkline: a word-sized trend, the record in the row it sits in. It lies flush on the ground like every mark: a
+   1.5px stroke (2px under contrast="more"), round joins, no fill under it, no axes, no gridlines, no readout, and a 4px
+   marker on the last point. Bars are flat fills parted by 1px, standing on zero. A normal range is a flat band of
+   line behind the marks. Its height is one line of the text around it (1lh) and it sits on that text's baseline. The
+   colour is context (ink-muted) unless it's the series (data-1) or a status. While its data loads it's an imprint one
+   line high and its own width. ── */
+.alt-sparkline { --spark: var(--ink-muted); display: inline-block; vertical-align: middle; height: 1.4em; height: 1lh; min-width: 0; }
+.alt-sparkline > svg { display: block; overflow: visible; }
+.alt-sparkline[data-tone="data"] { --spark: var(--data-1); }
+.alt-sparkline[data-tone="positive"] { --spark: var(--positive); }
+.alt-sparkline[data-tone="caution"] { --spark: var(--caution); }
+.alt-sparkline[data-tone="critical"] { --spark: var(--critical); }
+.alt-sparkline-line { fill: none; stroke: var(--spark); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.alt-sparkline-end, .alt-sparkline-bar { fill: var(--spark); }
+.alt-sparkline-band { fill: var(--line); }
+.alt-sparkline-imprint { display: inline-block; vertical-align: middle; height: 0.6em; border-radius: var(--radius-xs); }
+@media (prefers-contrast: more) { .alt-sparkline-line { stroke-width: 2; } }
+[data-contrast="more"] .alt-sparkline-line { stroke-width: 2; }
+@media (forced-colors: active) {
+  .alt-sparkline, .alt-sparkline[data-tone] { --spark: CanvasText; }
+  .alt-sparkline-band { fill: none; stroke: GrayText; stroke-dasharray: 2 2; }
+}
+
 /* ── ChartTooltip: reading exact values. The crosshair is a mark on the ground (1px line-control, snapped to the nearest
    x); the readout is live, a level-3 floating surface like Tooltip. It rises 4px once as its shadow grows from elev-1
    to elev-3, then steps between x positions with no easing (it follows the data, not each pixel of the pointer), flips
