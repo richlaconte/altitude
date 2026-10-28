@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "id": "review-submit",
+  "version": 1,
+  "title": "Review and submit",
+  "intents": [
+    "review",
+    "submit",
+    "process",
+    "application",
+    "wizard",
+    "answers"
+  ],
+  "purpose": "Review and correct answers before final commitment.",
+  "useWhen": [
+    "A process benefits from reviewing meaningful choices before submission."
+  ],
+  "avoidWhen": [
+    "Use edit-record for a short simple save; avoid extra steps without a task need."
+  ],
+  "alternatives": [
+    "Use edit-record for a short simple save; avoid extra steps without a task need."
+  ],
+  "requiredInputs": [
+    "initial answers",
+    "validation",
+    "submission promise returning receipt",
+    "step and correction routing",
+    "durable draft/receipt storage if needed"
+  ],
+  "states": [
+    "editing",
+    "invalid",
+    "reviewing",
+    "submitting",
+    "failure",
+    "complete"
+  ],
+  "transitions": [
+    "editing \u2192 reviewing after validation",
+    "reviewing \u2192 editing to correct",
+    "reviewing \u2192 submitting",
+    "submitting \u2192 failure or complete",
+    "failure \u2192 retry with retained applicable data"
+  ],
+  "rules": [
+    "ALT-REVIEW-001",
+    "ALT-EDIT-001",
+    "ALT-EDIT-002",
+    "ALT-STATUS-001"
+  ],
+  "sources": [
+    "govuk-validation",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "A process benefits from reviewing meaningful choices before submission.",
+  "exceptions": [
+    "Require only states supported by the application; do not fabricate capabilities."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/review-submit.md",
+  "implementation": "project/components/src/pattern-review-submit.tsx",
+  "examples": [
+    "build/fixtures/pattern-workflows.tsx",
+    "scripts/build-framework-fixture.mjs"
+  ],
+  "verification": [
+    "build/checks/pattern-workflows.mjs"
+  ]
+}

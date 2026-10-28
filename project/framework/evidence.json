@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "wcag22",
+      "authority": "normative-standard",
+      "title": "W3C WCAG 2.2",
+      "url": "https://www.w3.org/TR/WCAG22/",
+      "status": "published-standard",
+      "applicability": "Complete pages and processes; individual success criteria have distinct applicability and exceptions.",
+      "reviewed": "2026-10-23"
+    },
+    {
+      "id": "apg-dialog",
+      "authority": "contextual-pattern",
+      "title": "WAI-ARIA APG modal dialog",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
+      "status": "informative-guidance",
+      "applicability": "Modal dialogs; test supported browser and assistive-technology combinations.",
+      "reviewed": "2026-10-23"
+    },
+    {
+      "id": "govuk-validation",
+      "authority": "contextual-pattern",
+      "title": "GOV.UK validation",
+      "url": "https://design-system.service.gov.uk/patterns/validation/",
+      "status": "practice-guidance",
+      "applicability": "Service forms; earlier validation requires task-specific justification.",
+      "reviewed": "2026-10-23"
+    },
+    {
+      "id": "altitude-elevation",
+      "authority": "altitude-policy",
+      "title": "Altitude Elevation",
+      "url": "visual/Elevation.md",
+      "status": "implemented-policy",
+      "applicability": "Altitude visual language; not evidence of improved human performance.",
+      "reviewed": "2026-10-23"
+    },
+    {
+      "id": "task-review",
+      "authority": "heuristic",
+      "title": "Task-context review",
+      "url": "principles.md",
+      "status": "expert-judgment",
+      "applicability": "Actual audience, terminology and consequences require review.",
+      "reviewed": "2026-10-23"
+    },
+    {
+      "id": "hold-hypothesis",
+      "authority": "experimental-hypothesis",
+      "title": "Hold-to-confirm task benefit",
+      "url": "visual/Research.md",
+      "status": "unvalidated-hypothesis",
+      "applicability": "Scoped option only; no universal destructive-action mandate.",
+      "reviewed": "2026-10-23"
+    }
+  ]
+}

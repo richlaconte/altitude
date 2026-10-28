@@ -4,7 +4,7 @@ The primitive every component is built from: a box placed on one rung of the ele
 
 `level` picks the tint and shadow together (`surface-raised` + `elev-1` at level 1, `surface-well` + `well` at −1, and so on), so the two can never drift apart. `interactive` makes it climb one level on hover and focus and drop to ground while pressed.
 
-**You provide:** `level`, children, and padding and radius through `className`/`style` (the default radius is `radius-lg`). With `interactive` and `onClick` on a `div`, it becomes focusable; add `role="button"` or render `as="button"` for a real control.
+**You provide:** `level`, children, and padding and radius through `className`/`style` (the default radius is `radius-lg`). With `interactive` and `onClick`, a non-native surface receives button semantics, keyboard focus, Enter activation and Space activation on release. Consumer keyboard handlers can cancel that behavior with `preventDefault()`. Prefer `as="button"` for a single action (its default `type` is `button`) or `as="a" href="…"` for navigation; their native keyboard behavior is preserved. `disabled` or `aria-disabled` prevents activation, including native links without a click callback. Disabled links omit their destination and retain link semantics. Events from nested controls do not activate the containing surface. Keep interactive content outside a native button or link; use a separate named action when a card contains several controls.
 
 **Depth signals** (also on `Card`, and available to your own components through `useDepth`):
 
