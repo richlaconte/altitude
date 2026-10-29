@@ -2782,6 +2782,35 @@ export interface SavedViewsProps {
 /** Saved views as folder Tabs; a changed view is a draft with Save view, Save as new view and Reset. */
 export declare function SavedViews(props: SavedViewsProps): React.ReactElement;
 
+export interface TimelineProps extends React.HTMLAttributes<HTMLElement> {
+  /** 'day' (default) puts a heading before each day's events. */
+  groupBy?: 'day' | 'none';
+  /** The level of the day headings. Default 3. */
+  headingLevel?: 2 | 3 | 4;
+  locale?: string;
+  'aria-label'?: string;
+  /** TimelineItem elements; give each a key. */
+  children: React.ReactNode;
+}
+/** Events in order on one ground line turned upright; new events settle in, yours hover until they land. */
+export declare function Timeline(props: TimelineProps): React.ReactElement;
+export interface TimelineItemProps {
+  icon?: React.ReactNode;
+  time: Date | string | number;
+  /** An event you caused: pending hovers until it lands; failed drops to a trench with Retry. */
+  status?: 'pending' | 'committed' | 'failed';
+  onRetry?: () => void;
+  /** More about it, behind a Details disclosure. */
+  detail?: React.ReactNode;
+  /** The event links somewhere: it lifts when pointed at. */
+  href?: string;
+  locale?: string;
+  children: React.ReactNode;
+  isNew?: boolean;
+}
+/** One event: a sentence with its time, flush on the line. */
+export declare function TimelineItem(props: TimelineItemProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2801,6 +2830,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Timeline: typeof Timeline; TimelineItem: typeof TimelineItem;
       SavedViews: typeof SavedViews; useSavedViews: typeof useSavedViews;
       ModeContext: typeof ModeContext;
       PrimaryScope: typeof PrimaryScope;

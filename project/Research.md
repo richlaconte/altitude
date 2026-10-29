@@ -981,6 +981,17 @@ A design review: `FilterBar nesting={2}` was rendered with "Plan is Pro and any 
 
 Not yet tested with people: whether "any of" groups are understood without an "or" between their conditions.
 
+### E83 · Should past events be cards?
+
+A design review: `Timeline` was rendered with events from today and yesterday, one linking, one with detail open, and a comment you made landing and failing, in all four schemes and under forced colours. `checks/timeline.mjs` measures it.
+
+- **Flush, on an upright ground line.** Activity feeds are often lists of raised cards, which claims every past event is live. A history is the record, so its events are flush entries on the same ground line Stepper and charts stand on, turned upright.
+- **Only what's new or yours moves.** New events take the afterglow, staggered. An event you caused hovers as a pending write until it lands. A failure drops to a trench without the afterglow's tint, because a failure isn't news to celebrate.
+- **Detail as a lid.** Detail opens as a raised card (the Accordion's lid), because opening it is something you did, unlike the events themselves.
+- **One sentence each.** Each event is a sentence with its time, so a screen reader can read the list without the line or markers.
+
+Not yet tested with people: whether day headings help or slow scanning in a busy feed.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

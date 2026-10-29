@@ -16,6 +16,7 @@ export { Link } from './link';
 export { FormattedNumber, formatNumber, describeNumber } from './formatted-number';
 export type { FormatNumberOptions, NumberFormatPreset, DurationUnit } from './formatted-number';
 export { RelativeTime, formatRelativeTime } from './relative-time';
+export { Timeline, TimelineItem } from './timeline';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';
