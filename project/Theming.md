@@ -141,3 +141,63 @@ The props mirror shadcn/ui, and the tokens can drive shadcn's own components. Bo
 ```
 
 That gets shadcn's components onto Altitude's colors and shadows. The elevation behavior (hover lift, press to ground, wells for inputs, the receding page) lives in Altitude's component styles, so shadcn components adopted this way still need those states added to their class lists.
+
+### Charts
+
+shadcn/ui's `Chart` is Recharts underneath (Tremor wraps Recharts too), so charts already built with it can take Altitude's colours and most of its chart rules without being rewritten. What they can't take is listed at the end. [`examples/shadcn-chart`](../examples/shadcn-chart) is this setup, checked in all four schemes by `build/checks/shadcn-chart.mjs`.
+
+**Map the palette.** Add the chart lines to the `@theme inline` block above, so Tailwind's `fill-chart-1` and the like are Altitude's slots:
+
+```css
+@theme inline {
+  --color-chart-1: var(--data-1);
+  --color-chart-2: var(--data-2);
+  --color-chart-3: var(--data-3);
+  --color-chart-4: var(--data-4);
+  --color-chart-5: var(--data-5);
+}
+```
+
+shadcn's chart configs name the variables directly (`color: "var(--chart-1)"`), so point those at the palette too, on every element a scheme can be set on:
+
+```css
+:root, [data-theme] {
+  --chart-1: var(--data-1);
+  --chart-2: var(--data-2);
+  --chart-3: var(--data-3);
+  --chart-4: var(--data-4);
+  --chart-5: var(--data-5);
+}
+```
+
+On `:root` alone, a `nightfall` panel inside a `daylight` page would draw daylight's colours: a variable that refers to another is resolved where it's declared, and children inherit the result. `AltitudeProvider` always sets `data-theme` on its root, custom accent and custom scheme included, so `[data-theme]` covers them.
+
+Delete shadcn's own `--chart-*` values, in `:root` and `.dark` alike. They aren't checked against Altitude's grounds, its status hues or its reserved hues (`accent`, `presence-*`), and the five Altitude slots are (see **The data palette**). A sixth series is `data-6`; past that, fold into `data-other`.
+
+**Recharts props that keep Altitude's rules.** The rules are in [Charts](Charts.md) ("The rules"). These are documentation, not code; set them on your own charts:
+
+| Rule | Recharts |
+|---|---|
+| Recessive grid | `<CartesianGrid vertical={false} stroke="var(--line)" />` |
+| Ground line | `<ReferenceLine y={0} stroke="var(--ink-muted)" />` |
+| Flat marks, rounded only at the data end | `<Bar radius={[4, 4, 0, 0]} />`; no `<defs>` gradients on `<Area>`, a flat `fill` instead |
+| Readout at level 3 | `<ChartTooltipContent indicator="line" className="bg-popover shadow-lg" />`: `surface-floating` and `elev-3` through the mapping above |
+| Hover is a promise | `cursor={false}` on a bar chart's `<ChartTooltip>` (no band behind the category); on a line or area chart `cursor={{ style: { stroke: 'var(--ink-muted)' } }}`, the crosshair, and `activeDot={false}` on each `<Line>` and `<Area>` |
+| Keyboard | keep `accessibilityLayer` (on by default in Recharts 3): the chart is one tab stop and the arrow keys move the readout |
+| Reduced motion | `isAnimationActive={!prefersReducedMotion}` on every mark, from a `matchMedia('(prefers-reduced-motion: reduce)')` hook of your own |
+| Text in ink | `tick={{ fill: 'var(--ink-muted)' }}` on each axis, never the series colour |
+
+Three things the example found:
+
+- **Pass `tick` yourself.** `ChartContainer` colours ticks with a selector for `.recharts-cartesian-axis-tick text`. Recharts 3.10 draws tick text in a separate group, so that selector no longer matches and ticks fall back to Recharts' grey.
+- **Colour the crosshair with `style`.** `ChartContainer`'s stylesheet colours it `border`, and a stylesheet beats Recharts' `stroke` attribute; an inline style beats both.
+- **Give an `<Area>` its series colour as `stroke`.** The legend's swatch and the readout's indicator are taken from the stroke, so a stroke in the plot's colour (to part stacked areas, as Altitude's `AreaChart` does) leaves them blank.
+
+**What doesn't carry over.** These need Altitude's own chart components (`ChartContainer` and the charts inside it) or code of your own:
+
+- **Marks that act.** A clickable mark's 2px `ink` outline and pointer cursor, its action in the readout, and selection that recedes the rest are your own code.
+- **Legend keys as switches.** shadcn's legend only labels; toggling a series is your own state.
+- **Waiting and absence.** No Suspense imprint at the chart's size and no `EmptyState` opening; Recharts draws empty axes.
+- **A table view and a written summary** for every chart.
+- **Afterglows and staged rescales.** Recharts animates every change the same way, and on first render grows marks from the baseline unless animation is off.
+- **Patterns under forced colours, and direct labels** so no series is told apart by colour alone.

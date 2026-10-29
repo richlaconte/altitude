@@ -33,6 +33,7 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             build/package-lock.json
+            examples/shadcn-chart/package-lock.json
 
       - name: Install
         run: |
@@ -148,6 +149,14 @@ jobs:
         run: |
           npm run build
           node scripts/record-check.mjs package-api node scripts/check-actions-package.mjs
+
+      # Theming.md's shadcn/ui chart setup, built as an app outside the package and read back in every scheme.
+      - name: shadcn/ui chart on Altitude's tokens
+        working-directory: build
+        run: |
+          npm ci --prefix ../examples/shadcn-chart
+          node ../examples/shadcn-chart/build.mjs
+          node ../scripts/record-check.mjs shadcn-chart node checks/shadcn-chart.mjs
 
       - name: Framework contracts and installed consumer
         run: npm run check:framework

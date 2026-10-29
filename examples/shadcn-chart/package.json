@@ -1,0 +1,19 @@
+{
+  "name": "altitude-example-shadcn-chart",
+  "private": true,
+  "description": "A shadcn/ui chart (Recharts) on Altitude's tokens, in all four schemes. Not part of the package.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "clsx": "2.1.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-is": "19.3.0",
+    "recharts": "3.10.1",
+    "tailwind-merge": "3.7.0",
+    "tailwindcss": "4.3.3"
+  }
+}
