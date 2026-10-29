@@ -2114,6 +2114,17 @@ export declare function BarList(props: BarListProps): React.ReactElement;
 /** The scales, plot size and config of the nearest ChartContainer, for drawing your own marks. */
 export declare function useChart(): ChartContextValue;
 
+export interface SeparatorProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
+  /** Default horizontal. A vertical one stretches to the height of the row it's in. */
+  orientation?: 'horizontal' | 'vertical';
+  /** Purely visual: hidden from assistive technology (role="none"). Use it when the layout already says what's parted. */
+  decorative?: boolean;
+  /** A word between two lines ("or"). It's read in the flow, so it's never decorative. */
+  label?: React.ReactNode;
+}
+/** A divider on the ground: 1px of `line`, never `line-control` and never a shadow. role="separator" unless decorative. */
+export declare const Separator: React.ForwardRefExoticComponent<SeparatorProps & React.RefAttributes<HTMLDivElement>>;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2133,6 +2144,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Separator: typeof Separator;
     };
   }
 }

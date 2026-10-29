@@ -1,0 +1,30 @@
+<!-- @dsCard group="Layout" height=330 subtitle="A divider is 1px of line on the ground; a word between two lines when it says something" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Separator — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.sp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sp .bar { display: flex; align-items: center; gap: 8px; }
+.sp .signin { display: flex; flex-direction: column; gap: 12px; }
+@media (max-width: 720px) { .sp { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "sp" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Workspace"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Name, URL and region")), /* @__PURE__ */ React.createElement(A.Separator, null), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement("p", { className: "cap" }, 'Sections in a card are parted by a horizontal separator: role="separator", 1px of line.'))), /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost" }, "Bold"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost" }, "Italic"), /* @__PURE__ */ React.createElement(A.Separator, { orientation: "vertical", decorative: true }), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost" }, "Link")), /* @__PURE__ */ React.createElement("div", { className: "signin" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "secondary" }, "Continue with SSO"), /* @__PURE__ */ React.createElement(A.Separator, { label: "or" }), /* @__PURE__ */ React.createElement(A.Input, { placeholder: "Email address", "aria-label": "Email address" })), /* @__PURE__ */ React.createElement("p", { className: "cap" }, 'A vertical one between groups of buttons is decorative. "or" is read as a word; its lines are drawn.')));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
