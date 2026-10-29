@@ -6,6 +6,8 @@ At rest it's a level-2 button (danger by default). While held, it sinks steadily
 
 **When the hold completes, it's final.** `onConfirm` is called once, the button settles flat on the ground, shows `doneLabel` and can't be pressed again: the action is now part of the record. It stays focusable (it uses `aria-disabled`, not `disabled`) so keyboard focus isn't lost. For actions that can be repeated, set `repeatable` and the button re-arms after a moment.
 
+**It never changes width.** Its label, `holdingLabel` and `doneLabel` are laid out in the same place and only the current one shows, so the button is as wide as the longest of them from the start and nothing beside it moves when it completes.
+
 This is a design friction: a small, deliberate obstacle in front of an action that's hard to undo, cheaper than a confirmation dialog and harder to trigger by accident than a click.
 
 **You provide:** the label ("Hold to delete"), `onConfirm`, optional `holdingLabel` and `doneLabel` (say what happened: "Project deleted"), `variant` (`danger` or `primary`), `duration` in ms, `repeatable`.
