@@ -283,6 +283,28 @@
       "criteria": [],
       "reviewedAt": "2026-10-29",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-VISUAL-003",
+      "title": "Persistent states don't rise",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "States that feel important but persist: unread, invited (awaiting someone else), recommended or most popular, current plan or item, locked behind a plan, an app-wide mode, proposed by an agent, streaming text.",
+      "exceptions": [
+        "A state that is live right now (a write in flight, something in a hand, an action being asked for) uses its own signal from Elevation.md."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation"
+      ],
+      "repair": "Say the state in words, a plate, a dot, weight or an ARIA state, and keep the thing at its own level: unread is a dot and weight 600; invited is a plate, not pending; recommended is a plate with only its CTA at level 2; current is the word and aria-current; locked stays live and opens the upgrade; a mode is a strip and a viewport border; an agent's proposal is raised, asking; streaming text stays on the ground and settles once. See Elevation.md, \"States that don't rise\".",
+      "verification": [
+        "manual:review the screen against Elevation.md, \"States that don't rise\""
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-29",
+      "owner": "Altitude maintainers"
     }
   ]
 }
