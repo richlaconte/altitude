@@ -45,6 +45,7 @@ export { Select, SelectItem, Combobox } from './select';
 export { Stepper } from './stepper';
 export { EmptyState } from './empty';
 export { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption, DataTable, Board, BoardColumn, BoardCard } from './collections';
+export type { DataTablePaging } from './collections';
 export { Await, RevealGroup, readPromised, LoadingScope } from './suspense';
 export type { Promised, Pending, SkeletonOption, AwaitProps } from './suspense';
 export type { AvatarProps, AvatarGroupProps } from './controls';

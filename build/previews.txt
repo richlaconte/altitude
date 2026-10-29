@@ -3092,6 +3092,41 @@ function App() {
   </div>;
 }
 
+=== TablePaging | <!-- @dsCard group="Display" height=720 subtitle="DataTable rows paged by the server: Pagination in the footer, or Load more" -->
+--- css
+.tp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .tp { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+// A stand-in server: 214 invoices and 46 events, answering after 500ms.
+const invoices = Array.from({ length: 214 }, (_, i) => ({ id: 'INV-' + String(1000 + i), customer: ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli'][i % 5], amount: 1900 + ((i * 7919) % 48000) }));
+const events = Array.from({ length: 46 }, (_, i) => ({ id: 'e' + i, what: ['Signed in', 'Exported invoices', 'Changed a role', 'Rotated an API key'][i % 4], who: ['Maya', 'Theo', 'Ada'][i % 3] }));
+const fetchPage = (list, page, size) => new Promise((r) => setTimeout(() => r(list.slice((page - 1) * size, page * size)), 500));
+function Pages() {
+  const [page, setPage] = React.useState(1);
+  const [rows, setRows] = React.useState(invoices.slice(0, 8));
+  const [loading, setLoading] = React.useState(false);
+  const go = (p) => { setPage(p); setLoading(true); fetchPage(invoices, p, 8).then((r) => { setRows(r); setLoading(false); }); };
+  return <A.DataTable aria-label="Invoices" rows={rows} getRowId={(r) => r.id} density="compact"
+    columns={[{ key: 'id', header: 'Invoice' }, { key: 'customer', header: 'Customer' }, { key: 'amount', header: 'Amount', align: 'end', cell: (r) => <A.FormattedNumber value={r.amount} format="currency" currency="EUR" locale="en-IE" /> }]}
+    pagination={{ page, pageCount: Math.ceil(invoices.length / 8), pageSize: 8, total: invoices.length, onPageChange: go, loading, noun: 'invoices' }} />;
+}
+function More() {
+  const [rows, setRows] = React.useState(events.slice(0, 6));
+  const [loading, setLoading] = React.useState(false);
+  const load = () => { setLoading(true); fetchPage(events, rows.length / 6 + 1, 6).then((r) => { setRows((x) => [...x, ...r]); setLoading(false); }); };
+  return <A.DataTable aria-label="Audit events" rows={rows} getRowId={(r) => r.id} maxHeight={420} density="compact"
+    columns={[{ key: 'what', header: 'Event' }, { key: 'who', header: 'By' }]}
+    pagination={{ mode: 'more', hasMore: rows.length < events.length, onLoadMore: load, total: events.length, loading, noun: 'events' }} />;
+}
+function App() {
+  return (
+    <div className="col">
+      <div className="tp"><Pages /><More /></div>
+      <p className="cap">While the next page loads, the rows stay on the ground at half strength and the page thumb is held pressed. Loaded rows arrive with the afterglow, and the new range is announced.</p>
+    </div>
+  );
+}
+
 === TableEditing | <!-- @dsCard group="Display" height=620 subtitle="DataTable rows that open: detail stays on the ground; an edit rises with its row" -->
 --- css
 .te-demo { max-width: 820px; }

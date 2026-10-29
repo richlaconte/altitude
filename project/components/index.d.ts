@@ -1271,7 +1271,13 @@ export interface DataTableProps<T> {
   onDensityChange?: (density: 'comfortable' | 'compact') => void;
   /** A "Columns" button in the toolbar: show, hide and reorder columns, and choose the density. */
   columnsMenu?: boolean;
+  /** Rows paged by your server: Pagination in the footer, or "Load more". */
+  pagination?: DataTablePaging;
 }
+export type DataTablePaging =
+  | { mode?: 'pages'; page: number; pageCount?: number; pageSize?: number; total?: number; onPageChange: (page: number) => void; hrefFor?: (page: number) => string; hasNext?: boolean;
+      /** The next page is loading: the rows stay at half strength and the page thumb is held pressed. */ loading?: boolean; noun?: string }
+  | { mode: 'more'; hasMore: boolean; onLoadMore: () => void; total?: number; loading?: boolean; noun?: string };
 /** A Table from data: sorting that carries rows, selection with a counted toolbar, filtering in place, interactive rows and reordering. */
 export declare function DataTable<T>(props: DataTableProps<T>): React.ReactElement;
 
