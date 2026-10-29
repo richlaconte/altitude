@@ -2501,6 +2501,29 @@ function App() {
   );
 }
 
+=== PasswordInput | <!-- @dsCard group="Inputs" height=440 subtitle="Reveal, caps lock, and strength as a reading, not a progress bar" -->
+--- css
+.pw { display: grid; grid-template-columns: repeat(2, minmax(0, 300px)); gap: 16px 32px; align-items: start; }
+@media (max-width: 680px) { .pw { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+// A stand-in score: in an app this would be zxcvbn or your own rules.
+const score = (v) => Math.min(4, [v.length >= 8, v.length >= 12, /[A-Z]/.test(v) && /[a-z]/.test(v), /\d/.test(v), /[^\w\s]/.test(v)].filter(Boolean).length - (v.length < 8 ? 1 : 0));
+const common = ['password', 'password1', '12345678', 'qwerty123'];
+function App() {
+  return (
+    <div className="pw">
+      <A.Field label="Password"><A.PasswordInput defaultValue="correct horse" /></A.Field>
+      <A.Field label="New password">
+        <A.PasswordInput defaultValue="Glacier7" strength={score}
+          requirements={[
+            { label: 'At least 12 characters', test: (v) => v.length >= 12 },
+            { label: 'Not a common password', test: (v) => v.length > 0 && !common.includes(v.toLowerCase()) },
+          ]} />
+      </A.Field>
+    </div>
+  );
+}
+
 === Select | <!-- @dsCard group="Inputs" height=380 subtitle="An opening you fill by choosing; the list rises at level 3" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 24px; max-width: 900px; align-items: start; }

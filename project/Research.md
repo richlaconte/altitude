@@ -773,6 +773,17 @@ A design review: `TimeInput` was rendered on a 12-hour clock with a time zone, o
 
 Not yet tested with people: whether auto-advance after one digit ("9" moves on) surprises people who meant to type "09".
 
+### E64 · Is a password's strength a task or a reading?
+
+A design review: `PasswordInput` was rendered for signing in and for creating a password with a strength meter and two requirements, in all four schemes at 960px and under forced colours, typed into with Caps Lock on and off. `checks/password-input.mjs` measures it.
+
+- **A reading.** Strength bars are usually drawn as progress, which says "keep going and you'll finish". Strength is a judgement of what's there, so it's a `Meter`: flat ink in a flush track, with the word beside it. That's the Charts rule applied outside a chart.
+- **No caution colour.** The issue proposed `caution` and `positive` fills past thresholds. Meter's thresholds mean higher is worse (quotas, load), and a fill that turns caution as strength rises would say the opposite. The word carries the meaning, and the fill stays neutral.
+- **Announce when typing pauses.** A live region that speaks on every key talks over the typing. Strength and unmet rules are said 0.9s after the last key.
+- **The reveal toggle keeps its name.** "Show password" with `aria-pressed`, not "Show" becoming "Hide", is the Toggle rule (E58). Focus stays on the toggle, so revealing doesn't move the caret or the reading position.
+
+Not yet tested with people: whether "Good" is read as good enough, or as a hint to keep going.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

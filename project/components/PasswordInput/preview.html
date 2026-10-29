@@ -1,0 +1,40 @@
+<!-- @dsCard group="Inputs" height=440 subtitle="Reveal, caps lock, and strength as a reading, not a progress bar" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PasswordInput — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.pw { display: grid; grid-template-columns: repeat(2, minmax(0, 300px)); gap: 16px 32px; align-items: start; }
+@media (max-width: 680px) { .pw { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const score = (v) => Math.min(4, [v.length >= 8, v.length >= 12, /[A-Z]/.test(v) && /[a-z]/.test(v), /\d/.test(v), /[^\w\s]/.test(v)].filter(Boolean).length - (v.length < 8 ? 1 : 0));
+const common = ["password", "password1", "12345678", "qwerty123"];
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "pw" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Password" }, /* @__PURE__ */ React.createElement(A.PasswordInput, { defaultValue: "correct horse" })), /* @__PURE__ */ React.createElement(A.Field, { label: "New password" }, /* @__PURE__ */ React.createElement(
+    A.PasswordInput,
+    {
+      defaultValue: "Glacier7",
+      strength: score,
+      requirements: [
+        { label: "At least 12 characters", test: (v) => v.length >= 12 },
+        { label: "Not a common password", test: (v) => v.length > 0 && !common.includes(v.toLowerCase()) }
+      ]
+    }
+  )));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
