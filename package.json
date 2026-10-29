@@ -36,6 +36,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./chart-themes": {
+      "import": {
+        "types": "./dist/types/chart-themes.d.ts",
+        "default": "./dist/chart-themes.js"
+      },
+      "require": {
+        "types": "./dist/types-cjs/chart-themes.d.cts",
+        "default": "./dist/chart-themes.cjs"
+      }
+    },
     "./altitude.css": "./dist/altitude.css",
     "./altitude.no-fonts.css": "./dist/altitude.no-fonts.css",
     "./fonts.css": "./dist/fonts.css",

@@ -6,6 +6,7 @@
 //   dist/fonts.css                  the font import on its own
 //   dist/tokens.css, tokens.json    the tokens on their own
 //   dist/altitude.iife.js           the same bundle the design system uses: a <script> that sets window.Altitude
+//   dist/chart-themes.js, .cjs      theme objects for ECharts and Chart.js (altitude-design/chart-themes); no dependencies
 // --css-only writes just the stylesheets (Storybook uses it).
 import { build } from 'esbuild';
 import { execSync } from 'child_process';
@@ -38,6 +39,11 @@ const shared = {
 };
 await build({ ...shared, format: 'esm', outfile: 'dist/index.js' });
 await build({ ...shared, format: 'cjs', outfile: 'dist/index.cjs' });
+// A subpath of its own, so apps that only want a chart theme don't load the components. It imports neither them nor
+// any chart library; React is for useChartTheme only.
+const themes = { ...shared, entryPoints: ['project/components/src/chart-themes.tsx'] };
+await build({ ...themes, format: 'esm', outfile: 'dist/chart-themes.js' });
+await build({ ...themes, format: 'cjs', outfile: 'dist/chart-themes.cjs' });
 execSync('npx tsc -p tsconfig.json', { stdio: 'inherit' });
 // NodeNext requires explicit relative specifiers. A CJS declaration tree matches the
 // require runtime, while ESM/Bundler keep the primary .d.ts tree. Both derive from tsc.

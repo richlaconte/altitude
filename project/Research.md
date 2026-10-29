@@ -606,6 +606,15 @@ A build, then a read-back ([#76](https://github.com/richlaconte/altitude/issues/
 - **Two props are needed where shadcn's styles stop working.** Recharts 3.10 moved tick text out of the group `ChartContainer`'s selector targets, so ticks fell back to Recharts' grey until `tick` was passed; and the stylesheet's crosshair colour beats Recharts' `stroke` attribute, so only an inline `style` makes it `ink-muted`.
 - **What doesn't carry is behaviour, not colour:** marks that act, legend switches, imprints and empty states, the table view, afterglows and patterns. These stay with Altitude's own charts.
 
+### E48 · Can a chart library Altitude doesn't draw read the scheme?
+
+A build and a read-back ([#77](https://github.com/richlaconte/altitude/issues/77)). `altitude-design/chart-themes` turns the computed tokens of an element into an ECharts theme and Chart.js defaults. It imports neither library, and its only import is React, for `useChartTheme`.
+
+- **Read from the element, not copied.** A theme read inside a scheme or a custom accent is that scheme's. `build/checks/chart-themes.mjs` compares each scheme's theme with `tokens.json`, checks that tokens passed by name give the same object, and checks that `useChartTheme` re-reads after the provider's `scheme` and `accent` change (80 assertions).
+- **Motion follows the provider.** `motion="reduced"` or `"full"` on `AltitudeProvider` overrides the system setting, as it does for Altitude's own components, because the theme reads `--alt-travel` rather than the media query alone.
+- **ECharts takes the theme's `aria` without an option of its own.** Tried in Node against ECharts 6.1.0 (SSR, SVG renderer): the model's `aria.enabled` came from the theme, series used `data-1` and `data-2`, and `{ patterns: true }` rendered decal patterns. Chart.js 4.6.1 accepted the object through `Chart.defaults.set`. Neither library is a dependency, so CI doesn't repeat this.
+- **Not vouched for:** keyboard paths and screen-reader output are the library's own. A theme can't keep the rules in **Charts** for anyone.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

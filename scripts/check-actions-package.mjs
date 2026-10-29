@@ -18,6 +18,18 @@ for (const [name, api] of Object.entries({ esm, cjs, iife: window.Altitude })) {
   for (const part of ['EditRegion', 'EditRegionView', 'EditRegionForm', 'EditRegionTrigger', 'EditRegionActions']) assert.equal(typeof api[part], 'function', `${name}: ${part} export`);
   for (const deferred of ['ActionsInPlace', 'ConfirmAction']) assert.equal(deferred in api, false, `${name}: ${deferred} is not a runtime export`);
 }
+// altitude-design/chart-themes: its own subpath, importing nothing but React, usable with tokens by name and no DOM.
+const themesEsm = await import('../dist/chart-themes.js');
+const themesCjs = require('../dist/chart-themes.cjs');
+const daylight = Object.fromEntries([...JSON.parse(readFileSync(new URL('../dist/tokens.json', import.meta.url), 'utf8')).color.tokens].map(t => [t.name, typeof t.value === 'string' ? t.value : t.value.daylight]));
+for (const [name, api] of Object.entries({ esm: themesEsm, cjs: themesCjs })) {
+  for (const fn of ['echartsTheme', 'chartjsDefaults', 'dataColors', 'readChartTokens', 'useChartTheme']) assert.equal(typeof api[fn], 'function', `chart-themes ${name}: ${fn} export`);
+  assert.equal(api.echartsTheme(daylight).color[0], daylight['data-1'], `chart-themes ${name}: echartsTheme from tokens by name`);
+}
+const themeImports = [...readFileSync(new URL('../dist/chart-themes.js', import.meta.url), 'utf8').matchAll(/^import .* from ["']([^"']+)["']/gm)].map(m => m[1]);
+assert.deepEqual(themeImports, ['react'], `chart-themes imports only React (${themeImports})`);
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+for (const path of [pkg.exports['./chart-themes'].import.types, pkg.exports['./chart-themes'].import.default, pkg.exports['./chart-themes'].require.types, pkg.exports['./chart-themes'].require.default]) readFileSync(new URL('../' + path, import.meta.url));
 const folder = new URL('../build/test/alt-05/', import.meta.url);
 mkdirSync(folder, { recursive: true });
 const fixture = new URL('public-api.tsx', folder);
@@ -50,4 +62,4 @@ void [props, result, dialog, globalInline, invalid, invalidBackground, invalidRe
 const program = ts.createProgram([fileURLToPath(fixture)], { noEmit: true, strict: true, skipLibCheck: true, target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, jsx: ts.JsxEmit.React, lib: ['lib.es2021.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'] });
 const diagnostics = ts.getPreEmitDiagnostics(program);
 if (diagnostics.length) throw new Error(ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCurrentDirectory: () => process.cwd(), getCanonicalFileName: name => name, getNewLine: () => '\n' }));
-console.log('ESM, CommonJS and IIFE exports passed; npm, hand-maintained and Window declarations agree; invalid API examples rejected.');
+console.log('ESM, CommonJS and IIFE exports passed; chart-themes subpath passed; npm, hand-maintained and Window declarations agree; invalid API examples rejected.');

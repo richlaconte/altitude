@@ -201,3 +201,71 @@ Three things the example found:
 - **A table view and a written summary** for every chart.
 - **Afterglows and staged rescales.** Recharts animates every change the same way, and on first render grows marks from the baseline unless animation is off.
 - **Patterns under forced colours, and direct labels** so no series is told apart by colour alone.
+
+## Charts Altitude doesn't draw
+
+Altitude's charts are SVG, and they stop where SVG does: tens of thousands of points, maps, sankeys, treemaps, candlesticks. For those, use a canvas library. `altitude-design/chart-themes` gives ECharts and Chart.js Altitude's palette, type, surfaces and motion, read from the tokens of the active scheme, so nobody copies hex values. It returns plain objects and imports neither library.
+
+```ts
+import * as echarts from 'echarts';
+import { echartsTheme } from 'altitude-design/chart-themes';
+
+echarts.registerTheme('altitude', echartsTheme(document.documentElement));  // reads the computed tokens of the active scheme
+const chart = echarts.init(el, 'altitude');
+```
+
+Pass the chart's own element (or anything inside an `AltitudeProvider`) to read that scheme and accent, or pass the tokens by name (`{ 'data-1': '#…', ink: '#…', … }`, as `checkScheme` takes them) where there's no DOM.
+
+| | `echartsTheme(source, options?)` | `chartjsDefaults(source, options?)` |
+|---|---|---|
+| Use | `echarts.init(el, theme)` or `registerTheme` | `Chart.defaults.set(defaults)` |
+| Series | `color`: `data-1` … `data-6`, then `data-other` | none: Chart.js has no palette default, so give each dataset a colour from `dataColors(source)` |
+| Magnitude | `visualMap.inRange.color`: `data-seq-1` … `data-seq-7` (swap in `data-div-*` for polarity) | |
+| Text | `--font-sans`; `ink`, axis labels `ink-muted` | `--font-sans`; `ink-muted`, legend `ink` |
+| Axes and grid | axis lines `line-control`, split lines `line` | `scale.border` `line-control`, `scale.grid` `line` |
+| Readout | `surface-floating` with `extraCssText: box-shadow: <elev-3>`; an `ink-muted` crosshair | `surface-floating`, in `ink` (a canvas readout can't cast a shadow) |
+| Accessibility | `aria.enabled`; `aria.decal.show` under forced colours or with `{ patterns: true }` | |
+| Motion | `dur-travel-3` on ease-glide's curve; 0 under reduced motion | the same; `animation: false` under reduced motion |
+
+Reduced motion is the provider's `motion` if it sets one, else the system's; forced colours is the system's. Both can be passed in `options` instead.
+
+**Re-theme on scheme change.** The objects are read once. `useChartTheme` re-reads them when an `AltitudeProvider`'s `scheme`, `accent` or `motion` changes, a `data-theme` changes on the page, or the reduced-motion or forced-colours setting does. It's `null` until mounted:
+
+```tsx
+import { echartsTheme, useChartTheme } from 'altitude-design/chart-themes';
+
+function Flows({ option }: { option: echarts.EChartsOption }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const theme = useChartTheme(echartsTheme, ref);
+  React.useEffect(() => {
+    if (!theme) return;
+    const chart = echarts.init(ref.current!, theme);
+    chart.setOption(option);
+    return () => chart.dispose();
+  }, [theme, option]);
+  return <div ref={ref} style={{ height: 360 }} />;
+}
+```
+
+What Altitude can't vouch for:
+
+- **Keyboard and screen readers.** ECharts' `aria` writes a description of the chart for screen readers, and only if its `AriaComponent` is imported (`echarts.use([AriaComponent])` with the modular build). Neither library gives a keyboard path through the data the way Altitude's charts do. Whatever keyboard support the library has is what you get, so add a table view of the data yourself.
+- **The rest of [Charts](Charts.md).** A theme can't keep you from a dual axis, a pie, a gradient or a 3D bar. The rules still apply, and choosing the form is still yours.
+
+**Observable Plot and Vega-Lite** need no helper. Pass the palette and ink:
+
+```ts
+import { dataColors, readChartTokens } from 'altitude-design/chart-themes';
+const t = readChartTokens(el);
+
+// Observable Plot
+Plot.plot({ color: { range: dataColors(el) }, style: { color: t['ink-muted'], fontFamily: t['font-sans'], background: 'transparent' }, marks });
+
+// Vega-Lite: the config block
+const config = {
+  background: 'transparent', font: t['font-sans'],
+  range: { category: dataColors(el), ramp: [1, 2, 3, 4, 5, 6, 7].map((n) => t[`data-seq-${n}`]) },
+  axis: { domainColor: t['line-control'], tickColor: t['line-control'], gridColor: t.line, labelColor: t['ink-muted'], titleColor: t.ink },
+  legend: { labelColor: t.ink, titleColor: t.ink }, title: { color: t.ink },
+};
+```
