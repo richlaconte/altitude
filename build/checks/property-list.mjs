@@ -28,7 +28,7 @@ try {
     await status.click(); await issue.locator('.alt-select-trigger').press('Enter'); await page.getByRole('option', { name: 'Done' }).click();
     await issue.getByRole('button', { name: 'Status: Done. Change status' }).waitFor();
     check(await focused(page) === 'Status: Done. Change status', 'PL-05 choosing saves and focus returns to the value');
-    await page.waitForFunction(() => [...document.querySelectorAll('.alt-property .alt-inline-edit-status')].some(e => e.textContent === 'Status set to Done'));
+    await page.waitForFunction(() => [...document.querySelectorAll('.alt-property .alt-inline-edit [role="status"]')].some(e => e.textContent === 'Status set to Done'));
     check(true, 'PL-06 the change is announced (“Status set to Done”)');
     await issue.getByRole('button', { name: 'Priority: Add priority. Change priority' }).click();
     await issue.locator('.alt-select-trigger').press('Enter'); await page.getByRole('option', { name: 'High' }).click();

@@ -103,7 +103,7 @@ try {
     check(JSON.stringify(await api(page, 'publications')) === '["Valid name"]', 'canonical result publishes exactly once');
     check(await page.locator('#inline-contract .alt-inline-edit-value').textContent() === 'Valid name', 'read mode shows the controlled canonical value');
     check(await page.locator('#inline-contract [role="status"]').textContent() === 'Changes saved', 'accepted success announces outside the busy subtree');
-    check(await page.locator('#inline-contract .alt-inline-edit-surface').evaluate(el => el.hasAttribute('data-settle') && getComputedStyle(el, '::before').animationDuration === '5s'), 'a saved value’s afterglow fades over the 5s settleDuration default');
+    check(await page.locator('#inline-contract .alt-inline-edit-slot').evaluate(el => el.hasAttribute('data-settle') && getComputedStyle(el, '::before').animationDuration === '5s'), 'a saved value’s afterglow fades over the 5s settleDuration default');
     await page.close(); }
 
   { const page = await open(); await mount(page, { required: false }); await edit(page); await input(page).fill(''); await save(page);
@@ -395,6 +395,55 @@ try {
     check((await api(page, 'calls')).length === 1 && (await api(page, 'publications'))[0] === 'First line\nSecond line\n3\n4\n5\n6\n7\n8', 'ML-08 Ctrl+Enter saves the paragraph');
     await edit(page); await area.fill(''); await area.press('Meta+Enter'); await read(page);
     check((await api(page, 'calls')).length === 2 && (await page.locator('#inline-contract .alt-inline-edit-value').textContent()) === 'Not set', 'ML-09 Cmd+Enter saves, and an empty paragraph reads Not set');
+    await page.close(); }
+
+  // In place (E52): the value's text doesn't move when its control opens, and the ways to open move nothing either.
+  { const page = await open();
+    const textAt = locator => locator.evaluate(el => {
+      if (el instanceof HTMLInputElement) { const r = el.getBoundingClientRect(); return { x: Math.round(r.left), y: Math.round(r.top + r.height / 2) }; }
+      const range = document.createRange(); range.selectNodeContents(el); const r = range.getClientRects()[0]; return { x: Math.round(r.left), y: Math.round(r.top + r.height / 2) };
+    });
+    const settled = () => page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity && Number(a.effect?.getTiming().duration) < 2000).map(a => a.finished.catch(() => {}))));
+    const task = page.locator('.inline-demo-task > .alt-inline-edit');
+    const before = await textAt(task.locator('.alt-inline-edit-value'));
+    await page.getByRole('button', { name: 'Edit task title', exact: true }).click(); await settled();
+    const after = await textAt(task.getByRole('textbox', { name: 'Task title' }));
+    check(after.x === before.x && Math.abs(after.y - before.y) <= 1, `IP-01 opening leaves the value's text where it was (${JSON.stringify(before)} → ${JSON.stringify(after)})`);
+    check(await task.getByRole('textbox', { name: 'Task title' }).evaluate(el => getComputedStyle(el).fontSize === '19px'), 'IP-02 the control takes the value’s own font');
+    check(await task.locator('.alt-inline-edit-line .alt-inline-edit-actions').getByRole('button', { name: 'Save changes' }).isVisible(), 'IP-03 Save and Cancel take Edit’s place on the same line');
+    check(await task.locator('.alt-field-label').count() === 0, 'IP-04 no visible label is added above the value');
+    await page.keyboard.press('Escape'); await settled();
+
+    const pencil = page.getByRole('button', { name: 'Project name: Northwind launch. Edit Project name', exact: true });
+    const pencilAt = await pencil.boundingBox();
+    check(await pencil.locator('.alt-inline-edit-pencil').evaluate(el => getComputedStyle(el).opacity === '0'), 'IP-05 the pencil is hidden at rest');
+    await pencil.hover(); await settled();
+    const hovered = await pencil.boundingBox();
+    check(await pencil.locator('.alt-inline-edit-pencil').evaluate(el => getComputedStyle(el).opacity === '1') && hovered.x === pencilAt.x && hovered.width === pencilAt.width, 'IP-06 hovering shows the pencil in reserved space, moving nothing');
+    check(await pencil.evaluate(el => getComputedStyle(el, '::after').content !== 'none' && getComputedStyle(el, '::after').height === '1px'), 'IP-07 hint="seam" scores a groove under the value at rest');
+    const pencilText = await textAt(pencil.locator('.alt-inline-edit-value'));
+    await pencil.click(); await settled();
+    const projectInput = page.getByRole('textbox', { name: 'Project name' });
+    const pencilOpen = await textAt(projectInput);
+    check(pencilOpen.x === pencilText.x && Math.abs(pencilOpen.y - pencilText.y) <= 1 && await projectInput.evaluate(el => el.selectionStart === 0 && el.selectionEnd === el.value.length), 'IP-08 the pencil opens the field in place with the value selected');
+    await page.keyboard.press('Escape'); await settled();
+    check(await pencil.evaluate(el => document.activeElement === el), 'IP-09 Escape returns focus to the value');
+
+    const field = page.getByRole('button', { name: 'Meeting title: Quarterly planning review. Edit Meeting title', exact: true });
+    const fieldAt = await field.boundingBox();
+    await field.hover(); await settled();
+    check(await field.evaluate(el => getComputedStyle(el).borderTopColor !== 'rgba(0, 0, 0, 0)' && getComputedStyle(el, '::after').opacity === '0') && JSON.stringify(await field.boundingBox()) === JSON.stringify(fieldAt), 'IP-10 hovering draws the field around the value, replacing the seam, moving nothing');
+    const valueBox = await field.locator('.alt-inline-edit-value').boundingBox();
+    await page.mouse.click(valueBox.x + valueBox.width / 2, valueBox.y + valueBox.height / 2); await settled();
+    const meeting = page.getByRole('textbox', { name: 'Meeting title' });
+    const caret = await meeting.evaluate(el => [el.selectionStart, el.selectionEnd, el.value.length]);
+    check(caret[0] === caret[1] && caret[0] > 0 && caret[0] < caret[2], `IP-11 a click puts the caret where it landed (${caret})`);
+    await meeting.fill('Quarterly planning review 2'); await meeting.press('Enter');
+    await page.getByRole('button', { name: /^Meeting title: Quarterly planning review 2/ }).waitFor();
+    const announced = page.locator('[data-inline-scene] .alt-inline-edit[data-trigger="field"] [role="status"]').first();
+    check(await announced.textContent() === 'Changes saved' && await announced.evaluate(el => el.getBoundingClientRect().width <= 1), 'IP-12 the save is announced, never shown');
+    await page.waitForTimeout(2300);
+    check(await announced.textContent() === '', 'IP-13 the announcement clears itself after dur-linger');
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {

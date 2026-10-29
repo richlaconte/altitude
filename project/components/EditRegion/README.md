@@ -26,11 +26,11 @@ Edit several fields of one record where the record is shown, and save them toget
 ## Elevation
 
 - **Read mode** is the record on the ground (level 0): the values as text and a visible ghost “Edit <label>” button.
-- **Editing** lifts the region into a static raised card (level 1, `surface-raised`, `elev-1`, a `line-control` border), as an `Accordion` lid lifts over its compartment. It doesn't lift on hover: it's being worked in, not offered. The fields inside are openings: empty wells, filled flush, invalid trenches, as `Input`, `Select` and `Field` draw them.
+- **Editing** lifts the region into a static raised card (level 1, `surface-raised`, `elev-1`, a `line-control` border), as an `Accordion` lid lifts over its compartment. The card's padding and border are there in read mode too, transparent, under a matching negative margin, so lifting changes colour and shadow but never moves the record. Leave room for that margin either side: `space-3` plus 1px, or 22px with `layout="in-place"`. It doesn't lift on hover: it's being worked in, not offered. The fields inside are openings: empty wells, filled flush, invalid trenches, as `Input`, `Select` and `Field` draw them.
 - **Saving** uses `Surface status="pending"`: after `dur-grace` it hovers at level 2, so a fast save shows nothing. **A known failure** drops to the failed trench with a critical `Alert` inside the editor; the draft stays. **Accepted** values settle back to the ground with one afterglow for the region, however many fields changed.
 - **An outside change** while editing keeps the draft, blocks Save and shows a caution `Alert` “This record changed” with “Use current values”.
 
-The words carry every state without height: the form's name, the button labels, `aria-invalid` and error text on fields, `aria-busy` on the form while saving, and the polite status region (“Checking”, “Saving changes”, “Saved” or the error). Under forced colours the editor is a raised Surface with a border; under `contrast="more"` it gets level 1's ink slab.
+The words carry every state without height: the form's name, the button labels, `aria-invalid` and error text on fields, `aria-busy` on the form while saving, and the polite status (“Checking”, “Saving changes”, “Saved” or the error), which is announced, never shown, and clears itself after `dur-linger`. The afterglow fills the padded card, so it never sits against the text. Under forced colours the editor is a raised Surface with a border; under `contrast="more"` it gets level 1's ink slab.
 
 ## Props
 
@@ -44,10 +44,38 @@ The words carry every state without height: the form's name, the button labels, 
 | `disabled`, `initialFocus`, `focusFallback`, `isEqual` | as `InlineEdit`; `initialFocus` names a field key; `isEqual` compares one field's values (default `Object.is`) |
 | `editLabel`, `saveLabel`, `cancelLabel` | default “Edit <label>”, “Save changes”, “Cancel” |
 | `settleDuration` | how long the afterglow takes to fade after a save, in ms. Default 5000 (shorter than `dur-settle`, because the person is watching the change) |
+| `layout` | `'form'` (default): editing opens your form. `'in-place'`: each value's well opens where its text is (below) |
 
-Parts: `EditRegionView` (read mode; `trigger={false}` to place `EditRegionTrigger` yourself), `EditRegionForm` (edit mode; children may be a function of the draft binder; `actions={false}` to place `EditRegionActions` yourself), `EditRegionTrigger`, `EditRegionActions`.
+Parts: `EditRegionView` (read mode; `trigger={false}` to place `EditRegionTrigger` yourself), `EditRegionValue` (one value in read mode, named by its field; `reserve` for labelled rows), `EditRegionForm` (edit mode; children may be a function of the draft binder; `actions={false}` to place `EditRegionActions` yourself), `EditRegionTrigger`, `EditRegionActions`.
 
 The binder: `field(key)` for text controls (`value` + `onChange`, `readOnly` while locked), `field.value(key)` for `Select`, `Combobox` and `Slider` (`value` + `onValueChange`), `field.checked(key)` for `Switch` and `Checkbox`, `field.error(key)` for the field's `Field`, and `field.draft`. Each binding carries `data-field`, which `initialFocus` and error focus use.
+
+## In place: `layout="in-place"`
+
+With `layout="in-place"` the fields open where the values are, as a single `InlineEdit` does, instead of a form replacing the record.
+
+```tsx
+<EditRegion layout="in-place" label={person.name} value={person} onValueChange={…} onSave={…}>
+  <EditRegionView>
+    <span className="name"><EditRegionValue field="name">{person.name}</EditRegionValue></span>
+    <span className="meta"><EditRegionValue field="email">{person.email}</EditRegionValue> · <EditRegionValue field="role">{roleName}</EditRegionValue></span>
+  </EditRegionView>
+  <EditRegionForm>
+    {(field) => <>
+      <div className="name"><Field label="Name" error={field.error('name')}><Input {...field('name')} /></Field></div>
+      <div className="meta-row">
+        <Field label="Email" error={field.error('email')}><Input {...field('email')} /></Field>
+        <Field label="Role"><Select {...field.value('role')} items={roles} /></Field>
+      </div>
+    </>}
+  </EditRegionForm>
+</EditRegion>
+```
+
+- **Mark each read value** with `EditRegionValue field="…"`, using the same key you bind. A field whose text opens where its value was simply appears; one that opens elsewhere (a control wider or taller than its text pushes the next one along) fades in there. Nothing slides.
+- **Lay the fields out where the values were**, in the same wrappers, so each control takes the value's font. Controls reach 13px past their column on each side, the inset their text sits at, so the text lines up and the well reaches into the gutter: leave 26px more between columns than you want to see. Give rows fixed columns (a grid) rather than columns sized by what's typed, so nothing reflows while the editor opens. The form adds no spacing of its own.
+- **A `Field`'s label is announced, not shown**: the record around the field already names it (a row's label, the value's place). Its error, `aria-invalid` and description still work.
+- **Labelled rows**: `EditRegionValue reserve` gives a read value its control's height and inset now. In a list of label–value rows, Edit all then moves nothing, and only the actions row is added at the end.
 
 ## Behaviour
 
@@ -73,4 +101,4 @@ The record, the write (with a server-side revision or equivalent concurrency gua
 
 ## Demo and verification
 
-The `EditRegion` section of `build/previews.txt` lists three people with access; each row is an EditRegion over a fictional people service with revisions. A collapsed harness picks a save fixture (`success`, `slow`, `fail-once`, `conflict-during-save`) and applies an outside update. `node checks/edit-region.mjs` (from `build/`, after rendering previews; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers opening and focus, unchanged saves, one write per save, `changed`, validation and error focus, Escape with an open Select, IME Enter, failure and retry, pending lock, both conflict paths, focus return, and a 320/960px layout in four schemes under reduced motion, forced colours and `contrast="more"`.
+The `EditRegion` section of `build/previews.txt` lists three people with access; each row is an in-place EditRegion over a fictional people service with revisions. Below it, trip details are label–value rows with reserved values. A collapsed harness picks a save fixture (`success`, `slow`, `fail-once`, `conflict-during-save`) and applies an outside update. `node checks/edit-region.mjs` (from `build/`, after rendering previews; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers editing in place (fields hold their place on every frame while the editor grows, the record below is pushed through the glide, lifting never moves the record, each field opens at its value's x, reserved values open exactly where they were, the padded afterglow, the announcement that clears itself), opening and focus, unchanged saves, one write per save, `changed`, validation and error focus, Escape with an open Select, IME Enter, failure and retry, pending lock, both conflict paths, focus return, and a 320/960px layout in four schemes under reduced motion, forced colours and `contrast="more"`.

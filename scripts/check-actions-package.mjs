@@ -15,7 +15,7 @@ vm.runInNewContext(readFileSync(new URL('../dist/altitude.iife.js', import.meta.
 for (const [name, api] of Object.entries({ esm, cjs, iife: window.Altitude })) {
   assert.equal(typeof api.InlineEdit, 'function', `${name}: InlineEdit export`);
   assert.equal(typeof api.Dialog, 'function', `${name}: Dialog export`);
-  for (const part of ['EditRegion', 'EditRegionView', 'EditRegionForm', 'EditRegionTrigger', 'EditRegionActions']) assert.equal(typeof api[part], 'function', `${name}: ${part} export`);
+  for (const part of ['EditRegion', 'EditRegionView', 'EditRegionValue', 'EditRegionForm', 'EditRegionTrigger', 'EditRegionActions']) assert.equal(typeof api[part], 'function', `${name}: ${part} export`);
   for (const deferred of ['ActionsInPlace', 'ConfirmAction']) assert.equal(deferred in api, false, `${name}: ${deferred} is not a runtime export`);
 }
 // altitude-design/chart-themes: its own subpath, importing nothing but React, usable with tokens by name and no DOM.

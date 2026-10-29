@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cx, Surface, useIsoLayoutEffect } from './core';
 import { Alert, Button } from './controls';
+import { useInPlaceMotion, useLingeringStatus } from './in-place';
 
 type Fields<T> = Partial<Record<keyof T, string>>;
 export type EditRegionSaveResult<T> = { ok: true; value: T } | { ok: false; error: string; fieldErrors?: Fields<T> };
@@ -30,6 +31,12 @@ export interface EditRegionProps<T extends Record<string, unknown>> {
   cancelLabel?: string;
   /** How long the region's afterglow takes to fade after a save, in ms. Default 5000. */
   settleDuration?: number;
+  /**
+   * 'form' (default): editing opens a form laid out your way. 'in-place': each value's well opens where its text is: mark
+   * read values with EditRegionValue, and lay the fields out where the values were. Controls take the value's font and
+   * reach 13px past their column on each side (the inset their text sits at), so leave 26px between columns.
+   */
+  layout?: 'form' | 'in-place';
   className?: string;
   /** EditRegionView and EditRegionForm. */
   children: React.ReactNode;
@@ -51,7 +58,7 @@ export interface EditRegionBinder<T> {
 type Phase = 'editing' | 'validating' | 'saving' | 'error' | 'conflict';
 type Session<T> = { generation: number; phase: Phase; baseline: T; draft: T; error?: string; fieldErrors?: Fields<T>; failed?: boolean; conflicted?: boolean };
 interface RegionContext {
-  label: string; editLabel: string; disabled: boolean; open: boolean;
+  label: string; editLabel: string; disabled: boolean; open: boolean; layout: 'form' | 'in-place';
   session: Session<any> | null; begin: () => void; trigger: React.Ref<HTMLButtonElement>;
   formProps: () => React.ReactNode;
 }
@@ -66,7 +73,6 @@ const SAVE_ERROR = 'We couldn’t save these changes. Try again.';
 const CHANGED = 'This record changed while you were editing. Review the current values before saving.';
 const CHANGED_DURING_SAVE = 'This record changed while saving. Your save may have completed. Check the current record.';
 const FOCUSABLE = 'input:not([type="hidden"]), textarea, select, button, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
-const ms = (cs: CSSStyleDeclaration, name: string, fallback: number) => parseFloat(cs.getPropertyValue(name)) || fallback;
 
 function canFocus(element: HTMLElement | null | undefined): element is HTMLElement {
   return !!element?.isConnected && !element.matches(':disabled, [aria-disabled="true"]') && !element.closest('[inert]') &&
@@ -76,14 +82,15 @@ function canFocus(element: HTMLElement | null | undefined): element is HTMLEleme
 
 /**
  * Several fields of one record, edited where the record is shown and saved together as one write. Read mode is the
- * record on the ground; Edit lifts it into a static raised editor holding the fields. The session follows InlineEdit:
- * no save on blur, one write in flight, a known failure keeps the draft, and an outside change blocks Save.
+ * record on the ground; Edit lifts it into a static raised editor holding the fields. The editor's padding is there in
+ * both modes (with a negative margin), so lifting changes colour and shadow, never position. The session follows
+ * InlineEdit: no save on blur, one write in flight, a known failure keeps the draft, and an outside change blocks Save.
  */
 export function EditRegion<T extends Record<string, unknown>>({ label, value, onValueChange, onSave, validate, open: openProp,
   defaultOpen = false, onOpenChange, disabled = false, initialFocus, focusFallback, isEqual = Object.is,
-  editLabel = `Edit ${label.toLowerCase()}`, saveLabel = 'Save changes', cancelLabel = 'Cancel', settleDuration = 5000, className, children }: EditRegionProps<T>) {
+  editLabel = `Edit ${label.toLowerCase()}`, saveLabel = 'Save changes', cancelLabel = 'Cancel', settleDuration = 5000, layout = 'form', className, children }: EditRegionProps<T>) {
   const [session, setSession] = React.useState<Session<T> | null>(() => defaultOpen || openProp ? { generation: 1, phase: 'editing', baseline: value, draft: value } : null);
-  const [announcement, setAnnouncement] = React.useState('');
+  const [announcement, setAnnouncement] = useLingeringStatus();
   const [settled, setSettled] = React.useState(0);
   const current = React.useRef<Session<T> | null>(session);
   const generation = React.useRef(session ? 1 : 0);
@@ -95,8 +102,8 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
   const trigger = React.useRef<HTMLButtonElement>(null);
   const returnFocus = React.useRef(false);
   const focusField = React.useRef<keyof T | true | null>(null);
-  const fromHeight = React.useRef<number | null>(null);
   const formId = React.useId();
+  const capture = useInPlaceMotion(surface, { values: layout === 'in-place' });
 
   const same = (a: T, b: T) => {
     const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
@@ -134,18 +141,17 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
       active.phase = 'conflict'; active.error = CHANGED; active.failed = false;
       setAnnouncement('');
     }
-    refresh(active);
+    capture(); refresh(active);
   }, [value, disabled]);
 
-  const glide = () => { fromHeight.current = surface.current?.offsetHeight ?? null; };
   const begin = () => {
     if (disabled || current.current) return;
-    setAnnouncement(''); focusField.current = initialFocus ?? true; glide();
+    setAnnouncement(''); focusField.current = initialFocus ?? true; capture();
     publishSession({ generation: ++generation.current, phase: 'editing', baseline: value, draft: value });
   };
   const close = () => {
     returnFocus.current = !!root.current?.contains(document.activeElement);
-    generation.current++; glide();
+    generation.current++; capture();
     publishSession(null);
   };
   const cancel = () => {
@@ -175,23 +181,13 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
       const target = canFocus(trigger.current) ? trigger.current : focusFallback?.();
       if (canFocus(target)) target.focus();
     }
-    // The editor's height glides between the read view and the form; under reduced motion it changes at once.
-    const from = fromHeight.current, el = surface.current;
-    fromHeight.current = null;
-    if (from === null || !el || typeof el.animate !== 'function') return;
-    const cs = getComputedStyle(el);
-    if (parseFloat(cs.getPropertyValue('--alt-travel')) === 0) return;
-    const to = el.offsetHeight;
-    if (Math.abs(to - from) < 2) return;
-    el.animate([{ height: from + 'px', overflow: 'hidden' }, { height: to + 'px', overflow: 'hidden' }],
-      { duration: ms(cs, '--dur-travel-3', 280) * (session ? 1 : 0.7), easing: cs.getPropertyValue(session ? '--ease-glide' : '--ease-sink').trim() || 'ease' });
   }, [session !== null, session?.generation, session?.fieldErrors, focusFallback]);
 
   const fail = (active: Session<T>, error: string | undefined, fieldErrors?: Fields<T>, failed = false) => {
     if (!valid(active)) return;
     active.phase = 'error'; active.error = error; active.fieldErrors = fieldErrors; active.failed = failed;
     setAnnouncement('');
-    refresh(active);
+    capture(); refresh(active);
     const first = fieldErrors && Object.keys(fieldErrors).find(key => fieldErrors[key as keyof T]);
     if (first && !failed) focusField.current = first as keyof T;
   };
@@ -206,6 +202,7 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
     const draft = active.draft;
     const changed = changedKeys(draft, active.baseline);
     if (!changed.length) { setAnnouncement(''); close(); return; }
+    if (active.error || active.fieldErrors) capture();
     active.error = undefined; active.fieldErrors = undefined; active.failed = false;
     if (validate) {
       active.phase = 'validating'; refresh(active); setAnnouncement('Checking');
@@ -225,7 +222,7 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
     if (!valid(active)) return;
     if (active.conflicted) {
       active.phase = 'conflict'; active.error = CHANGED_DURING_SAVE; active.failed = false;
-      refresh(active); setAnnouncement(''); return;
+      capture(); refresh(active); setAnnouncement(''); return;
     }
     if (!result || typeof result !== 'object' || (result.ok === true ? !result.value || typeof result.value !== 'object'
       : result.ok !== false || typeof result.error !== 'string' || !result.error)) { fail(active, SAVE_ERROR, undefined, true); return; }
@@ -237,6 +234,7 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
   const set = (key: keyof T, next: unknown) => {
     const active = current.current;
     if (!active || active.phase === 'saving' || active.phase === 'validating' || active.conflicted) return;
+    if (active.error || active.fieldErrors?.[key]) capture();
     active.draft = { ...active.draft, [key]: next };
     active.phase = 'editing'; active.failed = false; active.error = undefined;
     if (active.fieldErrors?.[key]) { const { [key]: _gone, ...rest } = active.fieldErrors; active.fieldErrors = Object.keys(rest).length ? rest as Fields<T> : undefined; }
@@ -245,7 +243,7 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
   const useCurrent = () => {
     const active = current.current;
     if (!active || active.phase === 'saving') return;
-    setAnnouncement(''); focusField.current = initialFocus ?? true;
+    setAnnouncement(''); focusField.current = initialFocus ?? true; capture();
     publishSession({ generation: ++generation.current, phase: 'editing', baseline: value, draft: value });
   };
 
@@ -284,7 +282,7 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
   const validating = session?.phase === 'validating';
   const formProps = () => {
     if (!session) return null;
-    return <div className="alt-edit-region-chrome">
+    return <div className="alt-edit-region-chrome" data-arrive="">
       {session.conflicted ? <Alert tone="caution" title="This record changed" action={!saving && <Button size="sm" type="button" onClick={useCurrent}>Use current values</Button>}>{session.error}</Alert>
         : session.error && <Alert tone="critical">{session.error}</Alert>}
       <div className="alt-edit-region-actions">
@@ -294,15 +292,15 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
     </div>;
   };
   const ctx: RegionContext & { binder: EditRegionBinder<T>; saving: boolean; formId: string; label: string } = {
-    label, editLabel, disabled, open: !!session, session, begin, trigger, formProps, binder, saving, formId,
+    label, editLabel, disabled, open: !!session, layout, session, begin, trigger, formProps, binder, saving, formId,
   };
   return <Ctx.Provider value={ctx}>
-    <div ref={root} className={cx('alt-edit-region', className)} data-state={session?.phase ?? 'read'} onKeyDown={onKeyDown}>
+    <div ref={root} className={cx('alt-edit-region', className)} data-state={session?.phase ?? 'read'} data-layout={layout} onKeyDown={onKeyDown}>
       <Surface ref={surface} className="alt-edit-region-surface" level={session ? 1 : 0} settle={settled || undefined}
         style={{ '--dur-settle': `${settleDuration}ms` } as React.CSSProperties} status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
         {children}
       </Surface>
-      <span className="alt-edit-region-status" role="status" aria-live="polite" aria-atomic="true">{announcement}</span>
+      <span className="alt-sr" role="status" aria-live="polite" aria-atomic="true">{announcement}</span>
     </div>
   </Ctx.Provider>;
 }
@@ -315,6 +313,15 @@ export function EditRegionView({ children, trigger = true, className }: { childr
     <div className="alt-edit-region-values">{children}</div>
     {trigger && <EditRegionTrigger />}
   </div>;
+}
+
+/**
+ * One value in read mode, named by the field that edits it. With layout 'in-place', a field whose text opens where its
+ * value was simply appears; one that opens elsewhere fades in. `reserve` gives the value its control's height and inset
+ * now, so in a list of labelled rows nothing moves at all when Edit opens.
+ */
+export function EditRegionValue({ field, reserve = false, children, className }: { field: string; reserve?: boolean; children?: React.ReactNode; className?: string }) {
+  return <span className={cx('alt-edit-region-value', className)} data-value-for={field} data-reserve={reserve ? '' : undefined}>{children}</span>;
 }
 
 /** The visible Edit button. Rendered by EditRegionView by default. */
@@ -339,7 +346,7 @@ export function EditRegionForm<T extends Record<string, unknown> = Record<string
     <div className="alt-edit-region-fields">{typeof children === 'function' ? children(ctx.binder) : children}</div>
     {actions && <EditRegionActions />}
   </>;
-  const shared = { ref: ref as any, className: cx('alt-edit-region-form', className), 'aria-label': `Edit ${ctx.label.toLowerCase()}`, 'aria-busy': ctx.saving || undefined };
+  const shared = { ref: ref as any, className: cx('alt-edit-region-form', className), 'data-layout': ctx.layout, 'aria-label': `Edit ${ctx.label.toLowerCase()}`, 'aria-busy': ctx.saving || undefined };
   // Nested in an application form, a group: forms can't nest, and its submit stays the application's.
   return nested ? <div role="group" {...shared}>{body}</div>
     : <form {...shared} noValidate onSubmit={(event) => event.preventDefault()}>{body}</form>;

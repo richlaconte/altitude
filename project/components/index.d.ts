@@ -678,8 +678,14 @@ export interface InlineEditProps<V = string> {
   rows?: number;
   /** With multiline, the textarea grows with its content up to this many lines, then scrolls. Default 12. */
   maxRows?: number;
-  /** 'value': read mode is one button holding the value, named “<label>: <value>. <editLabel>”. Default 'button' (value, then an Edit button). */
-  trigger?: 'button' | 'value';
+  /**
+   * How editing starts. 'button' (default): the value, then a visible Edit button. The others make the value its own
+   * button, named “<label>: <value>. <editLabel>”: 'value' a plate that lifts on hover, 'pencil' a pencil shown on hover
+   * or focus, 'field' the input's own border and floor drawn on hover, and a click puts the caret where it landed.
+   */
+  trigger?: 'button' | 'value' | 'pencil' | 'field';
+  /** With trigger 'value', 'pencil' or 'field': 'seam' scores a faint groove under the value at rest, where its well will open, so people know to point at it. Default 'none'. */
+  hint?: 'none' | 'seam';
   /** Shown for an empty value. Default “Not set”. */
   emptyLabel?: string;
   /** Single-key shortcut announced on the trigger (aria-keyshortcuts); the surrounding list handles the key. */
@@ -718,6 +724,12 @@ export interface EditRegionProps<T extends Record<string, unknown>> {
   cancelLabel?: string;
   /** How long the region's afterglow takes to fade after a save, in ms. Default 5000. */
   settleDuration?: number;
+  /**
+   * 'form' (default): editing opens a form laid out your way. 'in-place': each value's well opens where its text is: mark
+   * read values with EditRegionValue, and lay the fields out where the values were. Controls take the value's font and
+   * reach 13px past their column on each side (the inset their text sits at), so leave 26px between columns.
+   */
+  layout?: 'form' | 'in-place';
   className?: string;
   /** EditRegionView and EditRegionForm. */
   children: React.ReactNode;
@@ -737,6 +749,12 @@ export interface EditRegionBinder<T> {
 }
 /** Several fields of one record, edited where it's shown and saved together. Read mode on the ground; editing lifts it into a static raised card. */
 export declare function EditRegion<T extends Record<string, unknown>>(props: EditRegionProps<T>): React.ReactElement;
+/**
+ * One value in read mode, named by the field that edits it. With layout 'in-place', a field whose text opens where its
+ * value was simply appears; one that opens elsewhere fades in. `reserve` gives the value its control's height and inset
+ * now, so in a list of labelled rows nothing moves at all when Edit opens.
+ */
+export declare function EditRegionValue(props: { field: string; reserve?: boolean; children?: React.ReactNode; className?: string }): React.ReactElement;
 /** Read mode. Shows an Edit button after the values unless `trigger={false}`. */
 export declare function EditRegionView(props: { children?: React.ReactNode; trigger?: boolean; className?: string }): React.ReactElement | null;
 /** The visible Edit button, for when EditRegionView's `trigger` is false. */

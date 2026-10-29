@@ -2037,24 +2037,78 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
   -webkit-backdrop-filter: none;
 }
 
-/* Single-line editing reuses Surface, Field, Input and Button state signals. */
+/* ── InlineEdit: one value edited where it sits. The value's text lives in a slot with the control's own inset (12px
+   and a transparent 1px border, as .alt-input and .alt-select-trigger have) and font, at the control's height, and the
+   line reaches 13px past its column on each side so the text itself lines up with the page. Opening puts the control in
+   the same slot: the text stays exactly where it was and only the well (floor, walls, border) fades in around it. Save
+   and Cancel take the Edit button's place on the same row; notes under the line (an error, the key hint, "Choose to
+   save") arrive as the line's glide reaches them. The status is announced, never shown. ── */
 .alt-inline-edit { min-width: 0; }
-.alt-inline-edit-surface { min-width: 0; border-radius: var(--radius-lg); }
-.alt-inline-edit:not([data-state="read"]) .alt-inline-edit-surface { padding: var(--space-3); border: 1px solid var(--line-control); }
-.alt-inline-edit-read { display: flex; align-items: baseline; gap: var(--space-2); flex-wrap: wrap; }
+.alt-inline-edit-surface { min-width: 0; border-radius: var(--radius-md); }
+.alt-inline-edit-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; margin-inline: -13px; }
+.alt-inline-edit-slot, .alt-inline-edit-slot-box { flex: 0 1 auto; min-width: 0; }
+.alt-inline-edit[data-state]:not([data-state="read"]) .alt-inline-edit-slot-box { flex: 1 1 14rem; }
+.alt-inline-edit-slot {
+  position: relative; box-sizing: border-box; display: flex; align-items: center; max-width: 100%; min-height: max(40px, calc(1lh + 18px));
+  padding: 0 12px; border: 1px solid transparent; border-radius: var(--radius-md);
+}
 .alt-inline-edit-value { overflow-wrap: anywhere; min-width: 0; }
-.alt-inline-edit .alt-field, .alt-inline-edit .alt-input { min-width: 0; }
+.alt-inline-edit-slot-box > .alt-input:not([data-multiline]) { font: inherit; height: max(40px, calc(1lh + 18px)); }
+.alt-inline-edit-slot-box .alt-input input, .alt-inline-edit-slot-box .alt-input textarea, .alt-inline-edit-slot-box .alt-select-trigger { font: inherit; }
+.alt-inline-edit-slot-box .alt-select > .alt-input { font: inherit; height: max(40px, calc(1lh + 18px)); }
+.alt-inline-edit .alt-input, .alt-inline-edit .alt-select { min-width: 0; }
 .alt-inline-edit .alt-input input { width: 100%; min-width: 0; }
-.alt-inline-edit-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+/* The well opens under text that stays put: only its floor, walls and border fade in. */
+.alt-inline-edit-slot-box > .alt-input, .alt-inline-edit-slot-box .alt-select > .alt-input, .alt-edit-region-form[data-layout="in-place"] :is(.alt-input, .alt-select > .alt-input) { animation: alt-well-open var(--dur-travel-2) var(--ease-sink); }
+@keyframes alt-well-open { from { background-color: transparent; border-color: transparent; box-shadow: none; } }
+.alt-inline-edit-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); margin-inline-start: auto; }
 .alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
-.alt-inline-edit-current { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
-/* Multiline: read mode keeps the text's line breaks with Edit below it; the textarea grows with its content (sized by
-   the component, so no resize handle) and the hint names the save keys. */
-.alt-inline-edit[data-multiline] .alt-inline-edit-read { flex-direction: column; align-items: flex-start; }
+.alt-inline-edit-note { margin: var(--space-2) 0 0; }
+.alt-inline-edit-current { color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
+/* Multiline: the slot takes the textarea's inset and the whole width; Edit, then Save and Cancel, sit under it on the right. */
+.alt-inline-edit[data-multiline] .alt-inline-edit-slot, .alt-inline-edit[data-multiline] .alt-inline-edit-slot-box { flex: 1 1 100%; }
+.alt-inline-edit[data-multiline] .alt-inline-edit-slot { align-items: flex-start; min-height: 0; padding: var(--space-2) 12px; }
 .alt-inline-edit[data-multiline] .alt-inline-edit-value { white-space: pre-wrap; }
 .alt-inline-edit[data-multiline] textarea { flex: none; min-height: 0; resize: none; }
+.alt-inline-edit[data-multiline] .alt-inline-edit-actions { margin-inline-start: 0; justify-content: flex-start; }
 .alt-inline-edit-keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
-.alt-inline-edit-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+
+/* The value as its own button ('pencil', 'field'): the same slot, so its text sits where it always does. */
+.alt-inline-edit-slot-button { width: auto; margin: 0; font: inherit; color: inherit; text-align: start; background: transparent; cursor: pointer;
+  transition: background-color var(--dur-travel-1) var(--ease-rise), border-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
+.alt-inline-edit-slot-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-inline-edit-slot-button:disabled { cursor: default; }
+.alt-inline-edit-slot-button[data-empty] .alt-inline-edit-value { color: var(--ink-muted); }
+/* Pencil: a faint well tint and the pencil, whose space is always reserved, so showing it moves nothing. Touch screens
+   can't hover, so they always show it. */
+.alt-inline-edit-pencil { flex: none; margin-inline-start: var(--space-2); color: var(--ink-muted); opacity: 0; transition: opacity var(--dur-travel-1) var(--ease-rise); }
+.alt-inline-edit[data-trigger="pencil"] .alt-inline-edit-slot-button:hover:not(:disabled) { background: var(--surface-well); }
+.alt-inline-edit-slot-button:hover:not(:disabled) .alt-inline-edit-pencil, .alt-inline-edit-slot-button:focus-visible .alt-inline-edit-pencil { opacity: 1; }
+@media (hover: none) { .alt-inline-edit-pencil { opacity: 1; } }
+/* Field: pointing at the value draws the filled input's border and floor around it, so the click only focuses it. */
+.alt-inline-edit[data-trigger="field"] .alt-inline-edit-slot-button { cursor: text; }
+.alt-inline-edit[data-trigger="field"] .alt-inline-edit-slot-button:is(:hover, :focus-visible):not(:disabled) { background: var(--surface-raised); border-color: var(--line-control); box-shadow: 0 1px 0 0 var(--alt-lip); }
+.alt-inline-edit[data-trigger="field"] .alt-inline-edit-slot-button:focus-visible { outline-color: var(--alt-rim-held); }
+/* It was drawn on hover already, so the real field doesn't fade in again. */
+.alt-inline-edit[data-trigger="field"] .alt-inline-edit-slot-box > .alt-input { animation: none; }
+/* hint="seam": at rest, a hairline groove is scored under the value where its well will open (a line-control cut with
+   the well's light lip beneath it), so a value whose trigger only shows on hover still reads as something to point at.
+   The field trigger's border replaces it on hover. Flat in contrast="more" and forced colours. */
+.alt-inline-edit [data-hint="seam"]::after {
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: 6px; height: 1px; border-radius: 1px; pointer-events: none;
+  background: color-mix(in oklab, var(--line-control) 40%, transparent); box-shadow: 0 1px 0 0 var(--alt-lip);
+  transition: opacity var(--dur-travel-1) var(--ease-rise);
+}
+.alt-inline-edit[data-trigger="pencil"] [data-hint="seam"]::after { right: calc(12px + 15px + var(--space-2)); }
+.alt-inline-edit-plate[data-hint="seam"] { position: relative; }
+.alt-inline-edit-plate[data-hint="seam"]::after { left: 12px; right: 12px; bottom: 3px; }
+.alt-inline-edit[data-trigger="field"] [data-hint="seam"]:is(:hover, :focus-visible)::after { opacity: 0; }
+.alt-inline-edit [data-hint="seam"][data-empty]::after { display: none; }
+[data-contrast="more"] .alt-inline-edit [data-hint="seam"]::after { background: var(--line-control); box-shadow: none; }
+@media (forced-colors: active) {
+  .alt-inline-edit [data-hint="seam"]::after { background: none; border-bottom: 1px dashed CanvasText; box-shadow: none; }
+  .alt-inline-edit[data-trigger="field"] .alt-inline-edit-slot-button:is(:hover, :focus-visible) { border-color: CanvasText; }
+}
 
 /* ── EditRegion: several fields of one record, saved together. Read mode is the record on the ground (level 0) with a
    visible Edit button. Editing lifts the region into a static raised card (level 1, no hover lift: it's being worked
@@ -2062,9 +2116,13 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    and Surface's own signals carry the write: pending hovers after dur-grace, a known failure drops to a trench, an
    accepted save settles back to the ground with one afterglow for the whole region. The height glides open; the
    fields fade in together, never staggered. Forced colours and contrast="more" come from Surface and the controls. ── */
-.alt-edit-region { min-width: 0; }
-.alt-edit-region-surface { min-width: 0; border-radius: var(--radius-lg); }
-.alt-edit-region:not([data-state="read"]) .alt-edit-region-surface { padding: var(--space-4); border: 1px solid var(--line-control); }
+.alt-edit-region { min-width: 0; --alt-er-pad: var(--space-3); }
+.alt-edit-region[data-layout="in-place"] { --alt-er-pad: calc(var(--space-2) + 13px); }
+/* The editor's padding and border are there in read mode too, under a matching negative margin, so lifting it changes
+   colour and shadow but never moves the record; the afterglow fills that padded box, so it never sits against the text. */
+.alt-edit-region-surface { min-width: 0; margin: calc(-1 * (var(--space-2) + 1px)) calc(-1 * (var(--alt-er-pad) + 1px)); padding: var(--space-2) var(--alt-er-pad); border: 1px solid transparent; border-radius: var(--radius-lg);
+  transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), border-color var(--dur-travel-1) var(--ease-rise); }
+.alt-edit-region:not([data-state="read"]) .alt-edit-region-surface { border-color: var(--line-control); }
 .alt-edit-region-view { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
 .alt-edit-region-values { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
 .alt-edit-region-form { display: grid; gap: var(--space-4); min-width: 0; --alt-from-y: 0px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
@@ -2074,7 +2132,20 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-edit-region-chrome { display: grid; gap: var(--space-3); }
 .alt-edit-region-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .alt-edit-region-actions .alt-btn { max-width: 100%; white-space: normal; }
-.alt-edit-region-status { display: block; min-height: 1.25em; margin-top: var(--space-1); color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
+/* In place: the form doesn't fade in as a whole; fields whose text lands where their value was simply appear, the
+   rest fade in, and nothing slides. Controls take the value's font and reach 13px past their column on each side. */
+.alt-edit-region-form[data-layout="in-place"] { gap: var(--space-3); animation: none; }
+/* The fields sit where the values were, so the form adds no spacing of its own between them. */
+.alt-edit-region-form[data-layout="in-place"] .alt-edit-region-fields { display: block; }
+.alt-edit-region-form[data-layout="in-place"] :is(.alt-input:not(.alt-select > .alt-input), .alt-select) { margin-inline: -13px; }
+.alt-edit-region-form[data-layout="in-place"] :is(.alt-input input, .alt-input textarea, .alt-select-trigger, .alt-switch-row) { font: inherit; }
+.alt-edit-region-form[data-layout="in-place"] .alt-input:not([data-multiline]), .alt-edit-region-form[data-layout="in-place"] .alt-select > .alt-input { font: inherit; height: max(40px, calc(1lh + 18px)); }
+.alt-edit-region-form[data-layout="in-place"] .alt-edit-region-actions { justify-content: flex-end; }
+/* The record around the fields names them (a row's label, the value's place), so a Field's label is announced, not shown. */
+.alt-edit-region-form[data-layout="in-place"] .alt-field { gap: var(--space-1); }
+.alt-edit-region-form[data-layout="in-place"] .alt-field-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* A reserved value already has its control's height and inset, so in labelled rows Edit moves nothing. */
+.alt-edit-region-value[data-reserve] { box-sizing: border-box; display: flex; align-items: center; min-height: max(40px, calc(1lh + 18px)); margin-inline: -13px; padding: 0 12px; border: 1px solid transparent; overflow-wrap: anywhere; }
 /* ── TagInput: a set of short values in one field. The field is an opening, built like Input; once it holds a tag its
    floor rises flush (filled). Each tag is a label, part of the record, so it's a Badge plate stamped flush into the
    floor, and stamped again (down 3px, settling) when it arrives. A first Backspace arms the last tag: it lifts one
@@ -2555,7 +2626,9 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-tr[data-editing]:not(.alt-table-editrow) > .alt-td:first-child::before { bottom: -2px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; clip-path: inset(-12px -12px 0 -12px); }
 .alt-table-editrow > .alt-td:first-child::before { border-top-left-radius: 0; border-top-right-radius: 0; clip-path: inset(0 -12px -12px -12px); }
 .alt-table-editrow > .alt-td { padding: var(--space-2) var(--space-4) var(--space-4); white-space: normal; }
-.alt-table-editrow .alt-edit-region:not([data-state="read"]) .alt-edit-region-surface { border: 0; padding: 0; background: none; box-shadow: none; }
+.alt-table-editrow .alt-edit-region-surface { margin: 0; border: 0; padding: 0; background: none; box-shadow: none; }
+/* ItemGroup swaps a slat for its editor, so the editor keeps to the list's column rather than reaching past it. */
+.alt-item-group .alt-edit-region-surface { margin-inline: 0; }
 @media (forced-colors: active) { .alt-tr[data-editing] > .alt-td { border-block: 1px solid CanvasText; } }
 
 /* ── PropertyList: one record's properties. They're the record, on the ground. An editable value is one plate (the
@@ -2574,20 +2647,17 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-property-empty { color: var(--ink-muted); }
 .alt-property .alt-inline-edit-read { display: block; }
 .alt-inline-edit-plate {
-  display: inline-flex; align-items: center; min-height: 30px; max-width: 100%; margin-left: -8px; padding: 2px 8px; border: 0; border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; min-height: 30px; max-width: 100%; padding: 2px 12px; border: 1px solid transparent; border-radius: var(--radius-sm);
   background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
 }
 .alt-inline-edit-plate:hover:not(:disabled) { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
 .alt-inline-edit-plate:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
 .alt-inline-edit-plate:disabled { cursor: default; }
-.alt-inline-edit-plate[data-empty] { margin-left: 0; border: 1px dashed var(--line-control); background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); font-size: 13px; }
+.alt-inline-edit-plate[data-empty] { margin-left: 13px; padding-inline: 8px; border: 1px dashed var(--line-control); background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); font-size: 13px; }
 .alt-inline-edit-plate[data-empty]:hover:not(:disabled) { background: var(--surface-trench); box-shadow: var(--trench); transform: none; color: var(--ink); }
 [data-contrast="more"] .alt-inline-edit-plate:hover:not(:disabled) { box-shadow: 0 2px 0 0 var(--ink); }
 @media (forced-colors: active) { .alt-inline-edit-plate[data-empty] { border: 1px dashed CanvasText; } .alt-inline-edit-plate:hover { outline: 1px solid CanvasText; } }
-/* In a list of properties each value's status line is announced but not shown: it would open a gap under every row. */
-.alt-property .alt-inline-edit-status { position: absolute; width: 1px; height: 1px; min-height: 0; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.alt-property .alt-inline-edit .alt-field-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Workflow feedback uses the existing invalid trench and readable ground signals. */
 .alt-error-summary { border: 2px solid var(--critical); border-radius: var(--radius-lg); background: var(--critical-soft); color: var(--ink); padding: var(--space-4); overflow-wrap: anywhere; }

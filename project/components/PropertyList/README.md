@@ -21,7 +21,7 @@ One record's properties as label–value pairs, each editable where it sits: an 
 - **Properties** are the record, on the ground: a `dl`, labels `ink-muted` above (`layout="stacked"`, a sidebar) or beside (`layout="inline"`, a summary, with `line` rules) their values.
 - **An editable value** is one plate, the InlineEdit trigger, that lifts one level (`elev-1`) when pointed at, because clicking it opens its editor. Read-only values never lift, so editability shows without a pencil per row (hover is a promise).
 - **An unset value** is a small opening: a dashed well, the empty field's treatment at plate size, naming what to add (“Add priority”), so a half-filled record reads at a glance. Setting it fills it.
-- **Editing** is InlineEdit's static raised editor in the value's place; with `commit="on-choose"` the picker's list rises from it and there's no Save. Pending, failed and accepted are InlineEdit's.
+- **Editing** opens InlineEdit's well in the value's place, under its own text, so the value doesn't move; with `commit="on-choose"` the picker's list rises from it and there's no Save. Pending, failed and accepted are InlineEdit's.
 - **Edit all** (`editAll`) lifts the whole list into one raised `EditRegion`, for records with cross-field rules (a last day on or after the first).
 
 Each editable value is a button named by the label, the value and the verb (“Status: In review. Change status”), as GOV.UK's visually hidden “Change name” guidance asks, so it makes sense out of context. Each change is announced (“Status set to Done”). Forced colours: unset values dashed, the hover plate outlined. `contrast="more"`: the hover plate gets the level-1 ink slab.

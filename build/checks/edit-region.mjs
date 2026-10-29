@@ -28,7 +28,7 @@ const name = page => form(page).getByRole('textbox', { name: 'Name' });
 const email = page => form(page).getByRole('textbox', { name: 'Email' });
 const edit = page => page.getByRole('button', { name: 'Edit Mara Quist', exact: true }).click();
 const focused = (locator) => locator.evaluate(el => el === document.activeElement);
-const status = page => region(page).locator('.alt-edit-region-status');
+const status = page => region(page).locator('[role="status"]');
 
 try {
   { const page = await open();
@@ -128,6 +128,55 @@ try {
     await input.fill('Ada Lovelace'); await input.press('Enter');
     await page.locator('#er-strict-name').waitFor();
     check(await page.locator('#er-strict-name').textContent() === 'Ada Lovelace' && JSON.stringify(await page.evaluate(() => window.erSaves)) === '["Ada Lovelace"]', 'ER-25 a defaultOpen region saves once under StrictMode');
+    await page.close(); }
+
+  // In place (E52): the shell never moves the record, the fields never slide while the editor grows, and a reserved sheet moves nothing.
+  { const page = await open();
+    const textAt = (scope, selector) => scope.locator(selector).first().evaluate(el => {
+      if (el instanceof HTMLInputElement) { const r = el.getBoundingClientRect(); return { x: Math.round(r.left), y: Math.round(r.top + r.height / 2) }; }
+      if (el.matches('.alt-select-trigger')) { const r = el.getBoundingClientRect(); return { x: Math.round(r.left + parseFloat(getComputedStyle(el).paddingLeft)), y: Math.round(r.top + r.height / 2) }; }
+      const range = document.createRange(); range.selectNodeContents(el.firstChild ?? el); const r = range.getClientRects()[0]; return { x: Math.round(r.left), y: Math.round(r.top + r.height / 2) };
+    });
+    const row = page.locator('.er-list > li').first();
+    const readAt = { name: await textAt(row, '[data-value-for="name"]'), email: await textAt(row, '[data-value-for="email"]') };
+    const regionAt = await row.locator('.alt-edit-region-surface').boundingBox();
+    await edit(page); await form(page).waitFor();
+    await page.evaluate(() => document.getAnimations().forEach(a => a.pause()));
+    const frames = [];
+    for (const t of [0, 60, 120, 180, 240, 400]) frames.push(await page.evaluate(t => {
+      document.getAnimations().forEach(a => { a.currentTime = t; });
+      const surface = document.querySelector('.er-list > li .alt-edit-region-surface').getBoundingClientRect();
+      const at = sel => { const r = document.querySelector(`.er-list > li:first-child ${sel}`).getBoundingClientRect(); return [Math.round(r.left - surface.left), Math.round(r.top - surface.top), Math.round(r.width)]; };
+      return { next: Math.round(document.querySelector('.er-list > li:nth-child(2)').getBoundingClientRect().top), fields: JSON.stringify([at('input[name="name"]'), at('input[name="email"]'), at('.alt-select'), at('.alt-switch-row')]) };
+    }, t));
+    await page.evaluate(() => document.getAnimations().forEach(a => a.finish()));
+    check(new Set(frames.map(f => f.fields)).size === 1, 'ER-26 every field holds its place in the editor on every frame while it opens: nothing slides');
+    const pushes = frames.map(f => f.next);
+    check(new Set(pushes).size >= 4 && pushes.every((y, i) => i === 0 || y >= pushes[i - 1]), `ER-27 the record below is pushed through the glide, not jumped (${pushes.join(', ')})`);
+    check(JSON.stringify(await row.locator('.alt-edit-region-surface').boundingBox().then(b => [b.x, b.y, b.width])) === JSON.stringify([regionAt.x, regionAt.y, regionAt.width]), 'ER-28 lifting the editor changes its colour and shadow, not its place');
+    const openAt = { name: await textAt(form(page), 'input[name="name"]'), email: await textAt(form(page), 'input[name="email"]') };
+    check(openAt.name.x === readAt.name.x && openAt.email.x === readAt.email.x, `ER-29 in place, each field's text opens at its value's x (${JSON.stringify(readAt)} → ${JSON.stringify(openAt)})`);
+    check(await form(page).locator('.alt-field-label').first().evaluate(el => el.getBoundingClientRect().width <= 1) && await name(page).isVisible(), 'ER-30 in place, a Field’s label is announced, not shown');
+    await name(page).fill('Mara Quist-Lund'); await name(page).press('Enter');
+    await page.getByRole('button', { name: 'Edit Mara Quist-Lund', exact: true }).waitFor();
+    const glow = await row.locator('.alt-edit-region-surface').evaluate(el => { const cs = getComputedStyle(el); return el.hasAttribute('data-settle') && parseFloat(cs.paddingLeft) >= 16 && parseFloat(cs.paddingTop) >= 8; });
+    check(glow, 'ER-31 the afterglow fills the padded editor box, never against the text');
+    check(await status(page).textContent() === 'Saved' && await status(page).evaluate(el => el.getBoundingClientRect().width <= 1), 'ER-32 “Saved” is announced, never shown');
+    await page.waitForTimeout(2300);
+    check(await status(page).textContent() === '', 'ER-33 the announcement clears itself after dur-linger');
+
+    const sheet = page.locator('.er-sheet');
+    const rows = ['traveller', 'email', 'seat'];
+    const sheetRead = Object.fromEntries(await Promise.all(rows.map(async k => [k, await textAt(sheet, `[data-value-for="${k}"]`)])));
+    const below = await page.locator('.er-harness').first().boundingBox();
+    await sheet.getByRole('button', { name: 'Edit all', exact: true }).click();
+    await page.evaluate(() => Promise.all(document.getAnimations().filter(a => Number(a.effect?.getTiming().duration) < 2000).map(a => a.finished.catch(() => {}))));
+    const sheetOpen = { traveller: await textAt(sheet, 'input[name="traveller"]'), email: await textAt(sheet, 'input[name="email"]'), seat: await textAt(sheet, '.alt-select-trigger') };
+    check(rows.every(k => sheetOpen[k].x === sheetRead[k].x && Math.abs(sheetOpen[k].y - sheetRead[k].y) <= 1), `ER-34 reserved values open exactly where they were (${JSON.stringify(sheetRead)} → ${JSON.stringify(sheetOpen)})`);
+    const grown = (await page.locator('.er-harness').first().boundingBox()).y - below.y;
+    const actions = await sheet.locator('.alt-edit-region-chrome').boundingBox();
+    check(grown > 0 && grown <= actions.height + 16, `ER-35 only the actions row is added below a reserved sheet (${grown}px for a ${actions.height}px row)`);
+    await page.keyboard.press('Escape');
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
