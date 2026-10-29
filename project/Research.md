@@ -638,6 +638,10 @@ A design review and a measurement ([#101](https://github.com/richlaconte/altitud
 - **Found while testing.** Chromium reports `navigator.userAgentData.platform` as “macOS”, which a case-sensitive `/Mac/` test misses. Checklist's test is now case-insensitive. `InlineEdit` has the same test and the same gap.
 - **The announcement is one at a time, the latest.** Saying the same words twice needs the status cleared first. Clearing it and speaking a frame later let a stale removal overwrite a newer “Indented under …”, so only the latest is spoken.
 
+### E51 · How long should a save's afterglow last?
+
+A design review ([#114](https://github.com/richlaconte/altitude/pull/114), the edit-in-place lab). `dur-settle` (8s) is sized for change detection: content that changed while someone looked elsewhere has to still be tinted when they look back (study 2 below). A save in `InlineEdit` or `EditRegion` is different: the person pressed Save and is watching the value, so the tint confirms rather than announces, and 8s of it read as lingering. Both now default to 5s, and `settleDuration` (ms) sets it per instance. The keyframes are unchanged, so the full tint still holds for the first 12% (600ms) before decaying. Other afterglows (an arriving row or card, a restored slat) keep `dur-settle`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -684,6 +684,8 @@ export interface InlineEditProps<V = string> {
   emptyLabel?: string;
   /** Single-key shortcut announced on the trigger (aria-keyshortcuts); the surrounding list handles the key. */
   shortcut?: string;
+  /** How long a saved value's afterglow takes to fade, in ms. Default 5000. */
+  settleDuration?: number;
 }
 export declare function InlineEdit<V = string>(props: InlineEditProps<V>): React.ReactElement;
 
@@ -714,6 +716,8 @@ export interface EditRegionProps<T extends Record<string, unknown>> {
   editLabel?: string;
   saveLabel?: string;
   cancelLabel?: string;
+  /** How long the region's afterglow takes to fade after a save, in ms. Default 5000. */
+  settleDuration?: number;
   className?: string;
   /** EditRegionView and EditRegionForm. */
   children: React.ReactNode;

@@ -43,6 +43,7 @@ The words carry every state without height: the form's name, the button labels, 
 | `open`, `defaultOpen`, `onOpenChange` | control the session. Closing a controlled region doesn't cancel a dispatched save |
 | `disabled`, `initialFocus`, `focusFallback`, `isEqual` | as `InlineEdit`; `initialFocus` names a field key; `isEqual` compares one field's values (default `Object.is`) |
 | `editLabel`, `saveLabel`, `cancelLabel` | default “Edit <label>”, “Save changes”, “Cancel” |
+| `settleDuration` | how long the afterglow takes to fade after a save, in ms. Default 5000 (shorter than `dur-settle`, because the person is watching the change) |
 
 Parts: `EditRegionView` (read mode; `trigger={false}` to place `EditRegionTrigger` yourself), `EditRegionForm` (edit mode; children may be a function of the draft binder; `actions={false}` to place `EditRegionActions` yourself), `EditRegionTrigger`, `EditRegionActions`.
 

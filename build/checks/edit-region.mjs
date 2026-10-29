@@ -46,6 +46,7 @@ try {
     check(events.filter(e => e.event === 'requested').length === 1, 'ER-05 Save dispatches one write however often it is pressed');
     check(JSON.stringify(events.find(e => e.event === 'committed').changed) === '["name","role"]', 'ER-06 changed lists only the fields that differ');
     check(await page.getByText('Mara de Quist', { exact: true }).isVisible() && (await status(page).textContent()) === 'Saved', 'ER-07 the canonical record is shown and “Saved” announced');
+    check(await region(page).locator('.alt-edit-region-surface').evaluate(el => el.hasAttribute('data-settle') && getComputedStyle(el, '::before').animationDuration === '5s'), 'ER-07b the afterglow fades over the 5s settleDuration default');
     await page.close(); }
 
   { const page = await open();
