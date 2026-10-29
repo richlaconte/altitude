@@ -1995,6 +1995,48 @@ function App() {
   );
 }
 
+=== Toolbar | <!-- @dsCard group="Actions" height=330 subtitle="A row of tools with one tab stop; what doesn't fit moves into a menu" -->
+--- css
+.tb { display: flex; flex-direction: column; gap: 16px; }
+.tb .narrow { width: 260px; max-width: 100%; }
+.tb b, .tb i, .tb u { font: 600 15px/1 var(--font-serif, Georgia, serif); }
+--- jsx
+const I = ({ d }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
+const link = 'M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1';
+const list = 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01';
+const quote = 'M7 7h4v6H5V9zM15 7h4v6h-6V9zM9 13l-2 4M17 13l-2 4';
+const code = 'M8 8l-4 4 4 4M16 8l4 4-4 4';
+function Bar({ className }) {
+  const [marks, setMarks] = React.useState(['bold']);
+  const [quoted, setQuoted] = React.useState(false);
+  return (
+    <A.Toolbar aria-label="Formatting" overflow="menu" bordered className={className}>
+      <A.ToggleGroup type="multiple" value={marks} onValueChange={setMarks} aria-label="Text style">
+        <A.ToggleGroupItem value="bold" aria-label="Bold" square><b>B</b></A.ToggleGroupItem>
+        <A.ToggleGroupItem value="italic" aria-label="Italic" square><i>I</i></A.ToggleGroupItem>
+        <A.ToggleGroupItem value="underline" aria-label="Underline" square><u>U</u></A.ToggleGroupItem>
+      </A.ToggleGroup>
+      <A.ToolbarSeparator />
+      <A.ToolbarGroup aria-label="Blocks">
+        <A.ToolbarButton aria-label="Bulleted list" square><I d={list} /></A.ToolbarButton>
+        <A.ToolbarToggle aria-label="Quote" square pressed={quoted} onPressedChange={setQuoted}><I d={quote} /></A.ToolbarToggle>
+        <A.ToolbarButton aria-label="Code" square><I d={code} /></A.ToolbarButton>
+      </A.ToolbarGroup>
+      <A.ToolbarSeparator />
+      <A.ToolbarButton aria-label="Insert link" square><I d={link} /></A.ToolbarButton>
+    </A.Toolbar>
+  );
+}
+function App() {
+  return (
+    <div className="tb">
+      <Bar />
+      <Bar className="narrow" />
+      <p className="cap">One tab stop for the whole bar; arrows move between tools. The narrow bar moves what doesn't fit into "More tools", where Quote stays a checkable item.</p>
+    </div>
+  );
+}
+
 === CopyButton | <!-- @dsCard group="Actions" height=300 subtitle="Copy a value and say so in words, pressed to the ground for a moment" -->
 --- css
 .cb { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }

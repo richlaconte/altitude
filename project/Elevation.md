@@ -79,6 +79,7 @@ Rules that follow:
 | **Anticipation** | an opening responds before the pointer arrives: an empty field deepens to receive, and holds that depth while it's focused; a bottom sheet's finger pull opens. Raised things never anticipate: they wait until the pointer is on them | `Input`, `Textarea`, `Select`, `Combobox`, `Sheet` |
 | **Feedforward** | hovering shows what a click will do before it does it: the ghost of the check a box would get, the radio thumb where it would land, a tab's sheet peeking up, a closed lid's ghost | `Checkbox`, `RadioGroup`, `Tabs`, `Accordion` |
 | **A press that confirms** | copying presses the button to the ground for `dur-linger` with a check and "Copied", announced politely while it keeps its name; no rise and no afterglow, since nothing new arrived on the page | `CopyButton` |
+| **A row of tools** | a toolbar lies on the ground and its tools are ghosts that lift when pointed at; latched tools are Toggles; what doesn't fit moves into a floating "More tools" menu, where toggles stay checkable | `Toolbar` |
 | **Consequence** | a destructive action is pushed *through* the ground: hold until it sinks to a trench; once done it lies flat and can't be pressed again | `HoldButton` |
 | **Prediction** | likely menu items arrive first; the rest fade in over `dur-onset` | `predicted` on `DropdownMenu` items |
 | **Recency of messages** | toasts sink one level per newer toast behind them | `Toaster` |

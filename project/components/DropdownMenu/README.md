@@ -8,4 +8,5 @@ The menu rises like a Popover. Items stagger in at 16ms each. A single `accent-s
 
 **Predicted items.** Mark items you expect the person to want with `predicted: true`. They appear at once; the others fade in over `dur-onset` (500ms). Nothing moves, so the menu stays learnable. In Findlater et al.'s studies this made selection faster than a static menu and than highlighting, but only when predictions were right about four times in five; misses cost a little time. Leave it off unless your predictions are that good.
 
+- Do use `checked` for an item that turns something on or off: it becomes a `menuitemcheckbox` with a check, and every item keeps a slot for the check so labels line up.
 - Do put destructive actions last, after a separator, in `critical`.
