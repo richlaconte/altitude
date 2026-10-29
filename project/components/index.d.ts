@@ -2883,6 +2883,28 @@ export interface DiffViewProps {
 /** What changed between two versions, in signs and words; flush on the ground, never colour alone. */
 export declare function DiffView(props: DiffViewProps): React.ReactElement;
 
+export interface SaveBarProps {
+  /** A useEditRecord result: SaveBar reads dirty, phase and errors from it, and calls submit and reset. */
+  record?: { dirty: boolean; phase: 'editing' | 'invalid' | 'submitting' | 'saved' | 'failed'; errors: object; error?: string; draft?: object; baseline?: object; submit: () => unknown; reset: () => unknown };
+  dirty?: boolean;
+  saving?: boolean;
+  /** Why the last save failed. The draft is kept. */
+  error?: string;
+  /** Fields that need attention before saving. */
+  invalidCount?: number;
+  /** How many fields changed. Default: counted from the record. */
+  changedCount?: number;
+  onSave?: () => void;
+  onDiscard?: () => void;
+  /** The bar appears once a change has settled into the draft. Default 600 ms. */
+  delay?: number;
+  saveLabel?: string;
+  discardLabel?: string;
+  className?: string;
+}
+/** Unsaved changes held above the page at level 3 until saved or discarded; saving hovers, failing drops to a trench. */
+export declare function SaveBar(props: SaveBarProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2902,6 +2924,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      SaveBar: typeof SaveBar;
       DiffView: typeof DiffView; diffLines: typeof diffLines;
       SyncIndicator: typeof SyncIndicator;
       NotificationCenter: typeof NotificationCenter; NotificationList: typeof NotificationList;
