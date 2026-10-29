@@ -1,4 +1,4 @@
-<!-- @dsCard group="Display" height=470 subtitle="Sheets laid on the page; a stack when there are several" -->
+<!-- @dsCard group="Display" height=640 subtitle="Sheets laid on the page; a stack when there are several; a banner across the top" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -12,6 +12,8 @@
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
 .wrap { max-width: 580px; }
+.frame { --alt-page-pad: 20px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.frame main { display: block; padding: 16px 20px; outline: none; }
 </style>
 </head>
 <body>
@@ -31,7 +33,19 @@ function App() {
       return () => clearTimeout(t);
     }
   }, [items]);
-  return /* @__PURE__ */ React.createElement("div", { className: "col wrap" }, /* @__PURE__ */ React.createElement(A.Alert, { title: "Scheduled maintenance" }, "The API will be read-only on Sunday from 02:00 to 02:30 UTC."), /* @__PURE__ */ React.createElement(A.Alert, { tone: "positive", title: "Domain verified" }, "acme.dev now points at this project."), /* @__PURE__ */ React.createElement(A.Alert, { tone: "caution", variant: "raised", title: "You're at 90% of your plan", action: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "primary" }, "Upgrade") }), /* @__PURE__ */ React.createElement(A.AlertStack, null, items.map((a) => /* @__PURE__ */ React.createElement(A.Alert, { key: a.id, tone: a.tone, title: a.title, onDismiss: () => setItems((xs) => xs.filter((x) => x.id !== a.id)) }, a.body))));
+  const [trial, setTrial] = React.useState(true);
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "frame" }, trial && /* @__PURE__ */ React.createElement(
+    A.Alert,
+    {
+      placement: "page",
+      tone: "caution",
+      variant: "raised",
+      title: "Your trial ends in 3 days",
+      action: /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", size: "sm" }, "Choose a plan"),
+      onDismiss: () => setTrial(false),
+      dismissLabel: "Remind me tomorrow"
+    }
+  ), /* @__PURE__ */ React.createElement(A.Alert, { placement: "page", title: "We're seeing delays in email delivery" }, "Messages may take up to 15 minutes to arrive."), /* @__PURE__ */ React.createElement("main", { tabIndex: -1 }, /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Page banners lie edge to edge across the top. One that asks for action is raised; one that informs is a flat sheet."))), /* @__PURE__ */ React.createElement("div", { className: "col wrap" }, /* @__PURE__ */ React.createElement(A.Alert, { title: "Scheduled maintenance" }, "The API will be read-only on Sunday from 02:00 to 02:30 UTC."), /* @__PURE__ */ React.createElement(A.Alert, { tone: "positive", title: "Domain verified" }, "acme.dev now points at this project."), /* @__PURE__ */ React.createElement(A.Alert, { tone: "caution", variant: "raised", title: "You're at 90% of your plan", action: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "primary" }, "Upgrade") }), /* @__PURE__ */ React.createElement(A.AlertStack, null, items.map((a) => /* @__PURE__ */ React.createElement(A.Alert, { key: a.id, tone: a.tone, title: a.title, onDismiss: () => setItems((xs) => xs.filter((x) => x.id !== a.id)) }, a.body)))));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

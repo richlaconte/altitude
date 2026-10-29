@@ -883,6 +883,17 @@ A design review: `ContextMenu` was rendered on rows of a file list, each with a 
 
 Not yet tested with people: whether the outline is noticed when the menu covers most of the row.
 
+### E74 · Does a page banner need a new reading?
+
+A design review: `Alert placement="page"` was rendered as a raised "trial ends" banner with an action and a worded dismiss, and a flat "email delays" banner, across the top of a page, in all four schemes at 960px and 360px and under forced colours. `checks/alert-banner.mjs` measures it.
+
+- **No new tier.** A banner is status at page scope, so the existing Alert rule holds: informing is a flat sheet (ground) and asking for action is raised. Only the shape changes: edge to edge, no side rounding, and only a bottom edge and contact shadow, because a sheet laid across the whole width has no sides to show.
+- **A region, so it can be skipped.** A banner repeated on every page is in the way for screen reader users, so it's a region named by its title.
+- **Focus goes to the page.** Dismissing removes the button that had focus. Focus moves to `main` rather than to the top of the document.
+- **Worded dismiss.** "Remind me tomorrow" says what dismissing does, where an × would suggest the notice is gone for good.
+
+Not yet tested with people: whether a raised banner is read as more urgent than a flat one at the very top of an app.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

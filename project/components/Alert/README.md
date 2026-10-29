@@ -2,6 +2,8 @@
 
 Tells the person something about the current context. An alert is **a sheet laid on the page**: it rests on the ground, you can see its paper edge and the contact shadow under it, and it never floats. When it asks the person to act it becomes a raised card.
 
+**Page banners.** `placement="page"` lays the alert edge to edge across the top of the app or page: "Your trial ends in 3 days", "Scheduled maintenance Sunday 02:00 UTC", "We're seeing delays in email delivery". It has no side rounding and no side edges, and its text wraps on narrow screens. The elevation rule is the same at page scope: one that informs is a flat sheet, and one that asks for action is raised. `sticky` keeps it at the top while the page scrolls. It sits in a `region` named by its title, so it can be found and skipped. `dismissLabel` gives the dismiss button words ("Remind me tomorrow"), and dismissing moves focus to the page's `main`. Several page banners go in `AlertStack placement="page"`, most severe first. Put a banner above `AppShell`, or at the top of the page.
+
 - `variant="flat"` (default): a thin sheet in the tone's `-soft` colour (neutral is `surface-raised`), with a tone-tinted hairline, a 1px paper edge and a contact shadow. It informs.
 - `variant="raised"`: a card at level 2 with the sheen of something you can act on, the icon in the tone colour. Use it when the alert has an `action` or blocks progress.
 - `onDismiss`: adds a dismiss button. Dismissing **lifts the sheet off the page**: it rises 8px as its shadow spreads, fades, and then the gap closes; `onDismiss` is called once it's gone.

@@ -525,6 +525,12 @@ export interface AlertProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   icon?: React.ReactNode;
   /** Adds a dismiss button; the sheet lifts off the page, the gap closes, then this is called. */
   onDismiss?: () => void;
+  /** The dismiss button's words ("Remind me tomorrow"). Default: an × named "Dismiss". */
+  dismissLabel?: string;
+  /** 'page': a banner for the whole app or page, edge to edge with no side rounding, in a labelled region. Default 'inline'. */
+  placement?: 'inline' | 'page';
+  /** With placement="page": stays at the top while the page scrolls. */
+  sticky?: boolean;
   /** Afterglow when the value changes (see DepthProps). */
   settle?: unknown;
 }
@@ -540,6 +546,8 @@ export interface AlertStackProps extends React.HTMLAttributes<HTMLDivElement> {
   moreLabel?: (hidden: number) => React.ReactNode;
   /** Default "Show less". */
   lessLabel?: React.ReactNode;
+  /** 'page': a stack of page banners, edge to edge. Give each Alert placement="page" too. */
+  placement?: 'inline' | 'page';
 }
 /** Several alerts as a stack of sheets: one on top, the rest peeking out beneath in their own tones, with a count. Opens into a column. */
 export declare function AlertStack(props: AlertStackProps): React.ReactElement;
