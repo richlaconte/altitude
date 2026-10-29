@@ -1047,6 +1047,17 @@ A design review: `PermissionMatrix` was rendered with a locked Owner, three edit
 
 Not yet tested with people: whether a stamped check is read as "inherited" without its tooltip.
 
+### E89 · Should the recommended plan stand taller?
+
+A design review: `PlanPicker` was rendered with four plans (one current, one recommended, one unavailable) and a period switch, chosen by pointer and keyboard, in all four schemes and under forced colours. `checks/plan-picker.mjs` measures it.
+
+- **No lifted card.** Pricing pages raise and glow the plan they want sold. Height in Altitude means "matters now"; a sales preference isn't that, and a raised card would also promise to be pressable in a different way from the others. "Recommended" is a plate.
+- **One mark.** The plans are one choice, so they're RadioGroup's build at card size: flush cards and one raised mark that travels to the chosen card.
+- **Prices don't count.** FormattedNumber cross-fades prices when the period changes. Counting digits would delay the number for decoration (the Stat rule).
+- **The CTA lives outside.** Law 1 keeps one level-2 slab in the view, so the picker doesn't draw buttons on its cards. Your Continue button names the outcome.
+
+Not yet tested with people: whether a "Recommended" plate steers as many choices as a raised card, which is the question a growth team will ask.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

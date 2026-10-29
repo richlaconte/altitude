@@ -2923,6 +2923,39 @@ export interface PermissionMatrixProps {
 /** Roles against permissions: editable grants are Checkboxes, inherited and fixed ones are stamped, the active cell a ring. */
 export declare function PermissionMatrix(props: PermissionMatrixProps): React.ReactElement;
 
+export interface Plan {
+  id: string;
+  name: string;
+  description?: React.ReactNode;
+  /** In minor units, per period; a single number is the same for both; null for "Contact sales". */
+  price: { month: number; year: number } | number | null;
+  /** ISO 4217. Default 'USD'. */
+  currency?: string;
+  /** What the price is for ("per seat"). */
+  unit?: string;
+  features?: string[];
+  /** Why it can't be chosen. */
+  unavailable?: string;
+}
+export interface PlanPickerProps {
+  plans: Plan[];
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (id: string) => void;
+  /** The plan they're on now: a "Current plan" plate. */
+  current?: string;
+  /** A suggested plan: a "Recommended" plate, never extra height. */
+  recommended?: string;
+  /** The billing period, with a Monthly / Annually switch when onPeriodChange is given. */
+  period?: 'month' | 'year';
+  onPeriodChange?: (period: 'month' | 'year') => void;
+  locale?: string;
+  'aria-label'?: string;
+  className?: string;
+}
+/** Choose a plan: flush cards in one radio group with one travelling mark; current and recommended are plates. */
+export declare function PlanPicker(props: PlanPickerProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2942,6 +2975,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      PlanPicker: typeof PlanPicker;
       PermissionMatrix: typeof PermissionMatrix;
       SaveBar: typeof SaveBar;
       DiffView: typeof DiffView; diffLines: typeof diffLines;

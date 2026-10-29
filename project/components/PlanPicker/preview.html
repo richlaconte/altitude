@@ -1,0 +1,36 @@
+<!-- @dsCard group="Inputs" height=560 subtitle="Choose a plan: one mark travels between them; current and recommended are words, not height" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PlanPicker — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const plans = [
+  { id: "free", name: "Free", price: 0, currency: "EUR", unit: "per seat", features: ["3 projects", "Community support"] },
+  { id: "pro", name: "Pro", price: { month: 2400, year: 2e3 }, currency: "EUR", unit: "per seat", features: ["Unlimited projects", "SAML SSO", "Audit log"] },
+  { id: "business", name: "Business", price: { month: 4800, year: 4e3 }, currency: "EUR", unit: "per seat", features: ["Everything in Pro", "Custom roles", "99.9% uptime SLA"] },
+  { id: "enterprise", name: "Enterprise", price: null, unavailable: "Contact sales for more than 500 seats." }
+];
+function App() {
+  const [plan, setPlan] = React.useState("free");
+  const [period, setPeriod] = React.useState("year");
+  const name = plans.find((p) => p.id === plan).name;
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.PlanPicker, { plans, value: plan, onValueChange: setPlan, current: "free", recommended: "pro", period, onPeriodChange: setPeriod, locale: "en-IE", "aria-label": "Choose a plan" }), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", disabled: plan === "free" }, plan === "free" ? "You're on Free" : `Continue to ${name}`)));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

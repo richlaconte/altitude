@@ -45,7 +45,7 @@ Rules that follow:
 | **Importance** | primary 2 · secondary 1 · ghost 0, drawn as wall thickness (4px, 2px, none); a page header has one slot for the primary | `Button`, `PageHeader` |
 | **Affordance** | raised + wall + sheen = press it; sunk = fill it | every control |
 | **Interactivity** | only things that act lift on hover | `Card interactive`, `Surface interactive` |
-| **Selection** | every choice is built like the Switch: off is an empty trench; on pours the accent in and sets a raised white mark on it (the switch and radio thumb, the checkbox's check). A radio group is one switch with several positions, so its single thumb slides to the chosen option. In folder tabs the chosen tab and its panel are one raised sheet on top of the others | `Switch`, `Checkbox`, `RadioGroup`, `Tabs`, the chosen day in `Calendar`, the chosen swatch in `ColorPicker`, the current page in `Pagination` |
+| **Selection** | every choice is built like the Switch: off is an empty trench; on pours the accent in and sets a raised white mark on it (the switch and radio thumb, the checkbox's check). A radio group is one switch with several positions, so its single thumb slides to the chosen option. In folder tabs the chosen tab and its panel are one raised sheet on top of the others | `Switch`, `Checkbox`, `RadioGroup`, `Tabs`, the chosen day in `Calendar`, the chosen swatch in `ColorPicker`, the current page in `Pagination`, the chosen plan in `PlanPicker` (whose current and recommended plans are plates, not height) |
 | **Presence** | people who are here rest on the page at level 1 (a filled lamp when active, an empty ring when idle); offline people are plates flush in the page, grey; someone live lifts off their shadow and drifts | `Avatar` |
 | **Loading** | content to come is an imprint pressed into the page; it rises out of the imprint when it lands. Components whose content is still undefined (or a promise) draw their own imprint, at their own size, from their own Suspense boundary | `Skeleton`, `Await` (Suspense-native `Avatar`, `Badge`, `Card`, `DataTable`) |
 | **Status** | status that informs is a tinted sheet resting on the page (paper edge, contact shadow); status that asks for action is a raised card; dismissing lifts the sheet off; several make a stack whose peeking sheets show their tones; a page banner is the same sheet laid edge to edge across the top | `Alert`, `AlertStack` (`placement="page"`) |
@@ -135,7 +135,7 @@ Some states feel as if they deserve height, and don't get it. They're persistent
 |---|---|---|
 | **Unread** | raised, or tinted until read | settles like everything else: a dot, weight 600, and "Unread" in its name (`NotificationCenter`) |
 | **Invited, awaiting someone else** | pending (hovering) | ground, with a `Badge` "Invited". Pending is only a write you dispatched that's still in flight (#167) |
-| **Recommended, most popular** | a lifted card | a "Recommended" plate on the ground; only its call to action is level 2 (#144) |
+| **Recommended, most popular** | a lifted card | a "Recommended" plate on the ground; only its call to action is level 2 (`PlanPicker`) |
 | **Current plan, current item** | extra height beyond selection | the word "Current" and `aria-current`; the selection build where it's a choice |
 | **Locked behind a plan** | disabled (flush, faint) | live: it lifts on hover and opens the upgrade, with a lock and the plan's name (#145) |
 | **A mode (test, viewing as someone, read-only)** | a raised banner | a word and a viewport border: `AltitudeProvider mode` |

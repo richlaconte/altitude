@@ -2955,6 +2955,26 @@ function App() {
   );
 }
 
+=== PlanPicker | <!-- @dsCard group="Inputs" height=560 subtitle="Choose a plan: one mark travels between them; current and recommended are words, not height" -->
+--- jsx
+const plans = [
+  { id: 'free', name: 'Free', price: 0, currency: 'EUR', unit: 'per seat', features: ['3 projects', 'Community support'] },
+  { id: 'pro', name: 'Pro', price: { month: 2400, year: 2000 }, currency: 'EUR', unit: 'per seat', features: ['Unlimited projects', 'SAML SSO', 'Audit log'] },
+  { id: 'business', name: 'Business', price: { month: 4800, year: 4000 }, currency: 'EUR', unit: 'per seat', features: ['Everything in Pro', 'Custom roles', '99.9% uptime SLA'] },
+  { id: 'enterprise', name: 'Enterprise', price: null, unavailable: 'Contact sales for more than 500 seats.' },
+];
+function App() {
+  const [plan, setPlan] = React.useState('free');
+  const [period, setPeriod] = React.useState('year');
+  const name = plans.find((p) => p.id === plan).name;
+  return (
+    <div className="col">
+      <A.PlanPicker plans={plans} value={plan} onValueChange={setPlan} current="free" recommended="pro" period={period} onPeriodChange={setPeriod} locale="en-IE" aria-label="Choose a plan" />
+      <div className="row"><A.Button variant="primary" disabled={plan === 'free'}>{plan === 'free' ? 'You\'re on Free' : `Continue to ${name}`}</A.Button></div>
+    </div>
+  );
+}
+
 === Select | <!-- @dsCard group="Inputs" height=380 subtitle="An opening you fill by choosing; the list rises at level 3" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 24px; max-width: 900px; align-items: start; }
