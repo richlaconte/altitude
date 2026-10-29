@@ -89,6 +89,8 @@ export interface MenuItem {
   type?: 'item'; label: React.ReactNode; icon?: React.ReactNode; shortcut?: React.ReactNode; onSelect?: () => void; tone?: 'critical'; disabled?: boolean;
   /** Ephemeral adaptation: predicted items appear at once, the rest fade in over dur-onset. Only worth it when predictions are right most of the time. */
   predicted?: boolean;
+  /** A checkable item (role="menuitemcheckbox"), shown with a check when true: a toggle moved into a menu. */
+  checked?: boolean;
 }
 export type MenuEntry =
   | MenuItem
@@ -138,6 +140,8 @@ export function DropdownMenu({ trigger, items, align = 'start', side = 'bottom',
     else if (e.key === 'Escape' || e.key === 'Tab') { close(); (anchor.current?.firstElementChild as HTMLElement)?.focus(); }
   };
   let n = 0;
+  // When any item can be checked, every item keeps a slot for the check, so their labels line up.
+  const checks = items.some((it: any) => it.checked !== undefined);
   const activeTone = active >= 0 ? (items[active] as any).tone : undefined;
   return (
     <span className="alt-pop-anchor" ref={anchor}>
@@ -157,10 +161,11 @@ export function DropdownMenu({ trigger, items, align = 'start', side = 'bottom',
             if (it.type === 'label') return <div key={i} className="alt-menu-label" style={{ ['--i' as any]: n++ }}>{it.label}</div>;
             const item = it as MenuItem;
             return (
-              <div key={i} id={`${id}-${i}`} ref={(el) => { refs.current[i] = el; }} role="menuitem" aria-disabled={item.disabled || undefined}
+              <div key={i} id={`${id}-${i}`} ref={(el) => { refs.current[i] = el; }} role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
+                aria-checked={item.checked} aria-disabled={item.disabled || undefined}
                 className="alt-menu-item" data-tone={item.tone} data-predicted={(item as any).predicted ? '' : undefined} style={{ ['--i' as any]: n++ }}
                 onPointerMove={() => !item.disabled && active !== i && setActive(i)} onClick={() => choose(i)}>
-                {item.icon && <span className="alt-menu-icon">{item.icon}</span>}
+                {(item.icon || checks) && <span className="alt-menu-icon">{item.checked ? <Icons.Check /> : item.icon}</span>}
                 <span className="alt-menu-text">{item.label}</span>
                 {item.shortcut && <span className="alt-menu-shortcut">{item.shortcut}</span>}
               </div>

@@ -1,0 +1,39 @@
+<!-- @dsCard group="Actions" height=330 subtitle="A row of tools with one tab stop; what doesn't fit moves into a menu" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toolbar — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.tb { display: flex; flex-direction: column; gap: 16px; }
+.tb .narrow { width: 260px; max-width: 100%; }
+.tb b, .tb i, .tb u { font: 600 15px/1 var(--font-serif, Georgia, serif); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const I = ({ d }) => /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d }));
+const link = "M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1";
+const list = "M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01";
+const quote = "M7 7h4v6H5V9zM15 7h4v6h-6V9zM9 13l-2 4M17 13l-2 4";
+const code = "M8 8l-4 4 4 4M16 8l4 4-4 4";
+function Bar({ className }) {
+  const [marks, setMarks] = React.useState(["bold"]);
+  const [quoted, setQuoted] = React.useState(false);
+  return /* @__PURE__ */ React.createElement(A.Toolbar, { "aria-label": "Formatting", overflow: "menu", bordered: true, className }, /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "multiple", value: marks, onValueChange: setMarks, "aria-label": "Text style" }, /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "bold", "aria-label": "Bold", square: true }, /* @__PURE__ */ React.createElement("b", null, "B")), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "italic", "aria-label": "Italic", square: true }, /* @__PURE__ */ React.createElement("i", null, "I")), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "underline", "aria-label": "Underline", square: true }, /* @__PURE__ */ React.createElement("u", null, "U"))), /* @__PURE__ */ React.createElement(A.ToolbarSeparator, null), /* @__PURE__ */ React.createElement(A.ToolbarGroup, { "aria-label": "Blocks" }, /* @__PURE__ */ React.createElement(A.ToolbarButton, { "aria-label": "Bulleted list", square: true }, /* @__PURE__ */ React.createElement(I, { d: list })), /* @__PURE__ */ React.createElement(A.ToolbarToggle, { "aria-label": "Quote", square: true, pressed: quoted, onPressedChange: setQuoted }, /* @__PURE__ */ React.createElement(I, { d: quote })), /* @__PURE__ */ React.createElement(A.ToolbarButton, { "aria-label": "Code", square: true }, /* @__PURE__ */ React.createElement(I, { d: code }))), /* @__PURE__ */ React.createElement(A.ToolbarSeparator, null), /* @__PURE__ */ React.createElement(A.ToolbarButton, { "aria-label": "Insert link", square: true }, /* @__PURE__ */ React.createElement(I, { d: link })));
+}
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "tb" }, /* @__PURE__ */ React.createElement(Bar, null), /* @__PURE__ */ React.createElement(Bar, { className: "narrow" }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, `One tab stop for the whole bar; arrows move between tools. The narrow bar moves what doesn't fit into "More tools", where Quote stays a checkable item.`));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

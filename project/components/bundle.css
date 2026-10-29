@@ -1023,6 +1023,21 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   .alt-btn.alt-toggle[data-variant="secondary"][aria-pressed="false"] { border: 1px solid CanvasText; }
 }
 
+/* ── Toolbar: the bar lies on the ground (a line rim when bordered); its tools are ghost buttons that lift one level
+   when pointed at, and latched tools are Toggles. Groups are parted by decorative separators. With overflow="menu" the
+   tools that don't fit are hidden from the end and offered in a "More tools" menu; they don't animate as they go. ── */
+.alt-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); min-width: 0; }
+.alt-toolbar[data-overflow="menu"] { flex-wrap: nowrap; }
+.alt-toolbar[data-orientation="vertical"] { flex-direction: column; align-items: stretch; }
+.alt-toolbar[data-bordered] { padding: var(--space-1); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-ground); }
+.alt-toolbar > [data-overflowed] { display: none; }
+.alt-toolbar-group { display: inline-flex; align-items: center; gap: 2px; }
+.alt-toolbar[data-orientation="vertical"] .alt-toolbar-group { flex-direction: column; align-items: stretch; }
+.alt-toolbar .alt-sep[data-orientation="vertical"] { align-self: center; height: 20px; min-height: 0; margin-inline: var(--space-1); }
+.alt-toolbar[data-orientation="vertical"] .alt-sep[data-orientation="vertical"] { width: auto; height: 1px; margin: var(--space-1) 0; }
+.alt-toolbar-more { flex: none; margin-left: auto; }
+@media (forced-colors: active) { .alt-toolbar-btn:hover:not([aria-pressed="true"]), .alt-toolbar-btn:focus-visible:not([aria-pressed="true"]) { border: 1px solid CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

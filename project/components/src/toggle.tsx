@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cx, useControllable, useIsoLayoutEffect } from './core';
 import { Button, ButtonProps } from './controls';
-import { RovingCtx, useRoving } from './roving';
+import { RovingCtx, useMergedRef, useOverflowEntry, useRoving } from './roving';
 
 /* ───────────────────────── Toggle ───────────────────────── */
 
@@ -20,7 +20,9 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(function 
   { pressed, defaultPressed = false, onPressedChange, variant = 'ghost', className, onClick, ...rest }, ref) {
   const [on, setOn] = useControllable(pressed, defaultPressed, onPressedChange);
   const roving = React.useContext(RovingCtx);
-  return <Button ref={ref} variant={variant} className={cx('alt-toggle', className)} aria-pressed={on} data-roving-item={roving ? '' : undefined}
+  const [own, setRef] = useMergedRef(ref);
+  useOverflowEntry(own, { onSelect: () => setOn(!on), checked: on, disabled: rest.disabled });
+  return <Button ref={setRef} variant={variant} className={cx('alt-toggle', className)} aria-pressed={on} data-roving-item={roving ? '' : undefined}
     {...rest} onClick={(e) => { onClick?.(e); if (!e.defaultPrevented) setOn(!on); }} />;
 });
 
@@ -107,11 +109,13 @@ export const ToggleGroupItem = React.forwardRef<HTMLButtonElement, ToggleGroupIt
   { value, square, className, children, onClick, ...rest }, ref) {
   const g = React.useContext(ToggleGroupCtx)!;
   const on = g.values.includes(value);
+  const [own, setRef] = useMergedRef(ref);
+  useOverflowEntry(own, { onSelect: () => g.toggle(value), checked: on, disabled: g.disabled || rest.disabled });
   if (g.type === 'single') {
-    return <button ref={ref} type="button" role="radio" aria-checked={on} data-value={value} data-roving-item="" disabled={g.disabled || rest.disabled}
+    return <button ref={setRef} type="button" role="radio" aria-checked={on} data-value={value} data-roving-item="" disabled={g.disabled || rest.disabled}
       className={cx('alt-tabs-trigger', 'alt-tgroup-item', className)} {...rest}
       onClick={(e) => { onClick?.(e); if (!e.defaultPrevented) g.toggle(value); }}>{children}</button>;
   }
-  return <Button ref={ref} variant={g.variant} size={g.size} square={square} className={cx('alt-toggle', 'alt-tgroup-item', className)} aria-pressed={on} data-value={value} data-roving-item=""
+  return <Button ref={setRef} variant={g.variant} size={g.size} square={square} className={cx('alt-toggle', 'alt-tgroup-item', className)} aria-pressed={on} data-value={value} data-roving-item=""
     {...rest} disabled={g.disabled || rest.disabled} onClick={(e) => { onClick?.(e); if (!e.defaultPrevented) g.toggle(value); }}>{children}</Button>;
 });

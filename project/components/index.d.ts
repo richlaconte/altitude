@@ -614,6 +614,8 @@ export interface MenuItem {
   type?: 'item'; label: React.ReactNode; icon?: React.ReactNode; shortcut?: React.ReactNode; onSelect?: () => void; tone?: 'critical'; disabled?: boolean;
   /** Appears at once while the others fade in over dur-onset. Only worth it when predictions are right ~4 times in 5. */
   predicted?: boolean;
+  /** A checkable item (role="menuitemcheckbox"), shown with a check when true: a toggle moved into a menu. */
+  checked?: boolean;
 }
 export type MenuEntry =
   | MenuItem
@@ -2243,6 +2245,28 @@ export interface ToggleGroupItemProps extends Omit<React.ButtonHTMLAttributes<HT
 }
 export declare const ToggleGroupItem: React.ForwardRefExoticComponent<ToggleGroupItemProps & React.RefAttributes<HTMLButtonElement>>;
 
+export interface ToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Names the toolbar ("Formatting"). Required. */
+  'aria-label': string;
+  orientation?: 'horizontal' | 'vertical';
+  /** When the tools don't fit: 'wrap' (default) onto another row; 'menu' moves the ones that don't fit, from the end, into a "More tools" menu. */
+  overflow?: 'wrap' | 'menu';
+  /** A line rim around the bar. Default false. */
+  bordered?: boolean;
+}
+/** A row of tools with one tab stop: the bar lies on the ground, its tools are ghosts that lift when pointed at. */
+export declare function Toolbar(props: ToolbarProps): React.ReactElement;
+/** Tools that belong together, parted from the next group by a ToolbarSeparator. */
+export declare function ToolbarGroup(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+/** A decorative 1px line between groups. */
+export declare function ToolbarSeparator(props: { className?: string }): React.ReactElement;
+export interface ToolbarButtonProps extends Omit<ButtonProps, 'variant'> {}
+/** A ghost tool. Icon-only tools need an aria-label. */
+export declare const ToolbarButton: React.ForwardRefExoticComponent<ToolbarButtonProps & React.RefAttributes<HTMLButtonElement>>;
+export interface ToolbarToggleProps extends Omit<ToggleProps, 'variant'> {}
+/** A latched tool: a ghost Toggle. */
+export declare const ToolbarToggle: React.ForwardRefExoticComponent<ToolbarToggleProps & React.RefAttributes<HTMLButtonElement>>;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2262,6 +2286,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Toolbar: typeof Toolbar; ToolbarGroup: typeof ToolbarGroup; ToolbarSeparator: typeof ToolbarSeparator; ToolbarButton: typeof ToolbarButton; ToolbarToggle: typeof ToolbarToggle;
       Toggle: typeof Toggle; ToggleGroup: typeof ToggleGroup; ToggleGroupItem: typeof ToggleGroupItem;
       CopyButton: typeof CopyButton;
       RelativeTime: typeof RelativeTime; formatRelativeTime: typeof formatRelativeTime;

@@ -7,6 +7,28 @@ import { useIsoLayoutEffect } from './core';
 /** True inside a roving container: its buttons mark themselves as items (data-roving-item). */
 export const RovingCtx = React.createContext(false);
 
+/** What a control looks like when a toolbar moves it into its "More" menu. */
+export type OverflowEntry = { label?: string; onSelect: () => void; checked?: boolean; disabled?: boolean };
+/** Set by a Toolbar with overflow="menu": its controls register how to show themselves in the menu. */
+export const OverflowCtx = React.createContext<React.MutableRefObject<Map<HTMLElement, OverflowEntry>> | null>(null);
+/** Registers a control (by its element) with the nearest overflowing Toolbar. The entry is read when the menu renders. */
+export function useOverflowEntry(el: React.RefObject<HTMLElement | null>, entry: OverflowEntry) {
+  const registry = React.useContext(OverflowCtx);
+  useIsoLayoutEffect(() => { if (registry && el.current) registry.current.set(el.current, entry); });
+  React.useEffect(() => { const node = el.current; return () => { if (registry && node) registry.current.delete(node); }; }, [registry, el]);
+}
+/** One ref for a forwarded ref and our own. */
+export function useMergedRef<T>(forwarded: React.ForwardedRef<T>) {
+  const own = React.useRef<T | null>(null);
+  const set = React.useCallback((el: T | null) => {
+    own.current = el;
+    if (typeof forwarded === 'function') forwarded(el); else if (forwarded) forwarded.current = el;
+  }, [forwarded]);
+  return [own, set] as const;
+}
+/** A control's name for a menu: its aria-label, else its text. */
+export const nameOf = (el: HTMLElement | null) => el?.getAttribute('aria-label') || el?.textContent?.trim() || '';
+
 /** The items a roving container owns: marked with data-roving-item, not disabled, not inside a nested roving container. */
 const itemsOf = (box: HTMLElement) => [...box.querySelectorAll<HTMLElement>('[data-roving-item]')]
   .filter((el) => el.closest('[data-roving]') === box && !(el as HTMLButtonElement).disabled);

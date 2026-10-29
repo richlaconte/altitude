@@ -718,6 +718,17 @@ A design review: `Toggle` and `ToggleGroup` were rendered as a formatting bar (m
 
 Not yet tested with people: whether a sunk, tinted toggle is read as "on" as quickly as a raised, tinted one.
 
+### E59 · What should a toolbar do when it runs out of room?
+
+A design review: `Toolbar` was rendered as a seven-tool formatting bar (a ToggleGroup, a group with a ToolbarToggle, and a link button) at full width and squeezed to 260px with `overflow="menu"`, in all four schemes and under forced colours. `checks/toolbar.mjs` measures it.
+
+- **Hide from the end, into a menu.** Wrapping onto a second row moves the tools you know into new places, and a horizontally scrolling bar hides them with no sign. The menu keeps every visible tool where it was and puts the rest in one predictable place. Hidden tools don't animate as they go: a resize isn't an event.
+- **Toggles stay toggles in the menu.** A latched tool moved into the menu becomes a `menuitemcheckbox` with a check, so its state survives the move. `DropdownMenu` gained `checked` for this.
+- **One tab stop, shared with ToggleGroup.** The bar and any ToggleGroup in it share one roving-focus hook, so a group inside the bar adds no tab stop of its own.
+- **No separator at the edge.** A row that ends in a divider reads as if something is missing after it, so a trailing separator goes into the menu with what follows it.
+
+Not yet tested with people: whether "More tools" is found as readily as a wrapped second row.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
