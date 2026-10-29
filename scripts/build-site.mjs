@@ -1,7 +1,6 @@
 // Builds the landing page into site-dist/ from site/ and the design system's own sources.
 //   site-dist/index.html      the page served at the GitHub Pages root (a full document; everything inlined)
 //   site-dist/artifact.html   the same page as a fragment, for a hosted preview that adds its own document skeleton
-//   site-dist/lab/*.html      prototypes for discussion (site/lab/), built the same way with site/lab/lab.css added
 // CI then copies Storybook into site-dist/storybook/ (see .github/workflows/ci.yml).
 import { build } from 'esbuild';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
@@ -57,18 +56,6 @@ ${body}
 </html>
 `;
 writeFileSync(`${out}/index.html`, page({ title, description, css, body }));
-
-const lab = [
-  { entry: 'site/lab/edit-in-place.tsx', file: 'edit-in-place.html', title: 'Edit in place · Altitude lab',
-    description: 'A prototype comparing today’s InlineEdit and EditRegion with editing in place: values stay where they are, and whatever changes size glides.' },
-];
-mkdirSync(`${out}/lab`, { recursive: true });
-const labCss = css + '\n' + readFileSync('site/lab/lab.css', 'utf8');
-for (const p of lab) {
-  const labJs = await bundle(p.entry);
-  writeFileSync(`${out}/lab/${p.file}`, page({ title: p.title, description: p.description, css: labCss,
-    body: `${early}\n<div id="altitude-site"></div>\n<script>${labJs}</script>` }));
-}
 
 writeFileSync(`${out}/artifact.html`, `<title>${title}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
