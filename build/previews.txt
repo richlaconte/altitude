@@ -2372,6 +2372,30 @@ function App() {
   );
 }
 
+=== PageHeader | <!-- @dsCard group="Navigation" height=380 subtitle="The block a page opens with, with one slot for its primary action" -->
+--- css
+.ph { --alt-page-pad: 20px; height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 0 20px; }
+.ph .rows { display: flex; flex-direction: column; gap: 8px; padding: 12px 0 20px; }
+.ph .rows div { height: 44px; border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1); }
+--- jsx
+function App() {
+  const [tab, setTab] = React.useState('members');
+  return (
+    <div className="ph">
+      <A.PageHeader sticky
+        breadcrumb={<A.Breadcrumb items={[{ label: 'Settings', href: '#/settings' }, { label: 'Members' }]} />}
+        primary={<A.Button variant="primary">Invite members</A.Button>}
+        actions={<A.Button variant="secondary">Export list</A.Button>}
+        overflow={[{ label: 'Download audit log' }, { label: 'Members settings' }]}
+        tabs={<A.Tabs variant="segmented" value={tab} onValueChange={setTab}><A.TabsList aria-label="Members sections"><A.TabsTrigger value="members">Members</A.TabsTrigger><A.TabsTrigger value="invites">Invitations</A.TabsTrigger><A.TabsTrigger value="roles">Roles</A.TabsTrigger></A.TabsList></A.Tabs>}>
+        <A.PageHeaderTitle>Members</A.PageHeaderTitle>
+        <A.PageHeaderDescription>People who can see and edit this workspace.</A.PageHeaderDescription>
+      </A.PageHeader>
+      <div className="rows">{Array.from({ length: 10 }, (_, i) => <div key={i} />)}</div>
+    </div>
+  );
+}
+
 === Drilldown | <!-- @dsCard group="Navigation" height=330 subtitle="Descend into children, ascend back" -->
 --- css
 .wrap { max-width: 460px; }

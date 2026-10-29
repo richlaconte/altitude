@@ -1,0 +1,42 @@
+<!-- @dsCard group="Navigation" height=380 subtitle="The block a page opens with, with one slot for its primary action" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PageHeader — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.ph { --alt-page-pad: 20px; height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 0 20px; }
+.ph .rows { display: flex; flex-direction: column; gap: 8px; padding: 12px 0 20px; }
+.ph .rows div { height: 44px; border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [tab, setTab] = React.useState("members");
+  return /* @__PURE__ */ React.createElement("div", { className: "ph" }, /* @__PURE__ */ React.createElement(
+    A.PageHeader,
+    {
+      sticky: true,
+      breadcrumb: /* @__PURE__ */ React.createElement(A.Breadcrumb, { items: [{ label: "Settings", href: "#/settings" }, { label: "Members" }] }),
+      primary: /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Invite members"),
+      actions: /* @__PURE__ */ React.createElement(A.Button, { variant: "secondary" }, "Export list"),
+      overflow: [{ label: "Download audit log" }, { label: "Members settings" }],
+      tabs: /* @__PURE__ */ React.createElement(A.Tabs, { variant: "segmented", value: tab, onValueChange: setTab }, /* @__PURE__ */ React.createElement(A.TabsList, { "aria-label": "Members sections" }, /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "members" }, "Members"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "invites" }, "Invitations"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "roles" }, "Roles")))
+    },
+    /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, "Members"),
+    /* @__PURE__ */ React.createElement(A.PageHeaderDescription, null, "People who can see and edit this workspace.")
+  ), /* @__PURE__ */ React.createElement("div", { className: "rows" }, Array.from({ length: 10 }, (_, i) => /* @__PURE__ */ React.createElement("div", { key: i }))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

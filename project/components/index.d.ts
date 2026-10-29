@@ -2526,6 +2526,29 @@ export interface PaginationProps extends Omit<React.HTMLAttributes<HTMLElement>,
 /** Move through pages: the numbers sit in a trench and one raised thumb travels to the current page. */
 export declare function Pagination(props: PaginationProps): React.ReactElement;
 
+export interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  /** A Breadcrumb above the title. */
+  breadcrumb?: React.ReactNode;
+  /** The page's one primary action: a single Button variant="primary". */
+  primary?: React.ReactElement;
+  /** Secondary and ghost actions, before the primary. */
+  actions?: React.ReactNode;
+  /** Actions that don't need to be seen, in a "More actions" menu. */
+  overflow?: MenuEntry[];
+  /** Tabs under the title, for the page's sections. */
+  tabs?: React.ReactNode;
+  /** Stays at the top while the page scrolls, and rises one level when content passes under it. */
+  sticky?: boolean;
+  /** PageHeaderTitle and PageHeaderDescription. */
+  children?: React.ReactNode;
+}
+/** The block a page opens with: lies on the ground, with one slot for the primary action (law 1). */
+export declare function PageHeader(props: PageHeaderProps): React.ReactElement;
+/** The page's h1. */
+export declare function PageHeaderTitle(props: React.HTMLAttributes<HTMLHeadingElement>): React.ReactElement;
+/** One line saying what the page is for. */
+export declare function PageHeaderDescription(props: React.HTMLAttributes<HTMLParagraphElement>): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2545,6 +2568,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      PageHeader: typeof PageHeader; PageHeaderTitle: typeof PageHeaderTitle; PageHeaderDescription: typeof PageHeaderDescription;
       Pagination: typeof Pagination; pageRange: typeof pageRange;
       Breadcrumb: typeof Breadcrumb; BreadcrumbList: typeof BreadcrumbList; BreadcrumbItem: typeof BreadcrumbItem; BreadcrumbLink: typeof BreadcrumbLink; BreadcrumbPage: typeof BreadcrumbPage; BreadcrumbSeparator: typeof BreadcrumbSeparator; BreadcrumbEllipsis: typeof BreadcrumbEllipsis;
       ColorPicker: typeof ColorPicker; ColorSwatchPicker: typeof ColorSwatchPicker;

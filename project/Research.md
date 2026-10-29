@@ -839,6 +839,17 @@ A design review: `Pagination` was rendered with 11 pages and a summary, and in c
 
 Not yet tested with people: whether the thumb is read as "current page" as quickly as a filled, coloured button.
 
+### E70 · Can a header make law 1 structural?
+
+A design review: `PageHeader` was rendered with a breadcrumb, a primary, a secondary, an overflow menu and segmented tabs, sticky inside a scrolling page, in all four schemes at 960px and 360px and under forced colours. `checks/page-header.mjs` measures it.
+
+- **One slot.** Pages assembled by hand often end up with two or three primary buttons in the header, which breaks law 1. A `primary` prop that takes one element, and a development warning when a primary button is put among the other actions, make the law the easy path.
+- **The primary last.** The primary sits at the end of the row, nearest the reading edge and furthest from the breadcrumb, so it's where the eye lands after the title.
+- **Rise only while covered.** A header raised all the time would be a card on top of the page. It lies on the ground and rises one level only while content passes under it, as ScrollArea's header does, through an IntersectionObserver sentinel rather than a scroll listener.
+- **Reach through the padding.** A sticky header's rise that stops at the page's padding looks like a floating strip. `--alt-page-pad` lets it span the page.
+
+Not yet tested with people: whether the overflow menu between the secondary and the primary hides actions people look for.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
