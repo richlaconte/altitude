@@ -9,6 +9,7 @@ export {
   Tabs, TabsList, TabsTrigger, TabsContent, Slider, Progress, Badge, Avatar, AvatarGroup,
   Skeleton, Alert, AlertStack, Accordion, HoldButton, ScrollArea, DropZone, SortableList,
 } from './controls';
+export type { UploadItem } from './controls';
 export { Pile } from './pile';
 export { Separator } from './separator';
 export { Link } from './link';

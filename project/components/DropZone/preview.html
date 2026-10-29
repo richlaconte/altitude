@@ -1,4 +1,4 @@
-<!-- @dsCard group="Inputs" height=230 subtitle="Receptacles open when they're needed" -->
+<!-- @dsCard group="Inputs" height=600 subtitle="Receptacles open when they're needed; dropped files queue under them" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -21,7 +21,39 @@
 var A = window.Altitude;
 const Body = () => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("svg", { width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M12 16V4M7 9l5-5 5 5M5 20h14" })), /* @__PURE__ */ React.createElement("span", null, "Drop files or ", /* @__PURE__ */ React.createElement("u", null, "browse")));
 function App() {
-  return /* @__PURE__ */ React.createElement("div", { className: "three" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "lab" }, "idle \xB7 flush"), /* @__PURE__ */ React.createElement(A.DropZone, { state: "idle" }, /* @__PURE__ */ React.createElement(Body, null))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "lab" }, "armed \xB7 a file is in flight"), /* @__PURE__ */ React.createElement(A.DropZone, { state: "armed" }, /* @__PURE__ */ React.createElement(Body, null))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "lab" }, "over \xB7 ready to receive"), /* @__PURE__ */ React.createElement(A.DropZone, { state: "over" }, /* @__PURE__ */ React.createElement(Body, null))));
+  return /* @__PURE__ */ React.createElement("div", { className: "three" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "lab" }, "idle \xB7 flush"), /* @__PURE__ */ React.createElement(A.DropZone, { state: "idle" }, /* @__PURE__ */ React.createElement(Body, null))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "lab" }, "armed \xB7 a file is in flight"), /* @__PURE__ */ React.createElement(A.DropZone, { state: "armed" }, /* @__PURE__ */ React.createElement(Body, null))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "lab" }, "over \xB7 ready to receive"), /* @__PURE__ */ React.createElement(A.DropZone, { state: "over" }, /* @__PURE__ */ React.createElement(Body, null))), /* @__PURE__ */ React.createElement("div", { style: { gridColumn: "1 / -1" } }, /* @__PURE__ */ React.createElement(Queue, null)));
+}
+const start = [
+  { id: "a", name: "Q3 board deck.pdf", size: 24e5, state: "uploading", progress: 0 },
+  { id: "b", name: "Customer list.csv", size: 48e4, state: "uploading", progress: 0 },
+  { id: "c", name: "Brand guidelines.pdf", size: 182e5, state: "uploading", progress: 0, fails: true }
+];
+function Queue() {
+  const [items, setItems] = React.useState(start);
+  React.useEffect(() => {
+    const t = setInterval(() => setItems((xs) => xs.map((x) => {
+      if (x.state === "uploading") {
+        const p = Math.min(100, x.progress + (x.id === "b" ? 34 : 13));
+        if (x.fails && p > 40) return { ...x, state: "failed", error: "The connection dropped" };
+        return p >= 100 ? { ...x, state: "processing", progress: 100 } : { ...x, progress: p };
+      }
+      if (x.state === "processing") return Math.random() < 0.35 ? { ...x, state: "done" } : x;
+      return x;
+    })), 450);
+    return () => clearInterval(t);
+  }, []);
+  return /* @__PURE__ */ React.createElement(
+    A.DropZone,
+    {
+      multiple: true,
+      queue: items,
+      onFiles: (fs) => setItems((xs) => [...xs, ...fs.map((f, i) => ({ id: f.name + Date.now() + i, name: f.name, size: f.size, state: "uploading", progress: 0 }))]),
+      onRetry: (id) => setItems((xs) => xs.map((x) => x.id === id ? { ...x, state: "uploading", progress: 40, fails: false, error: void 0 } : x)),
+      onCancel: (id) => setItems((xs) => xs.filter((x) => x.id !== id)),
+      onRemove: (id) => setItems((xs) => xs.filter((x) => x.id !== id))
+    },
+    /* @__PURE__ */ React.createElement(Body, null)
+  );
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

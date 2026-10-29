@@ -1420,6 +1420,17 @@ export interface ScrollAreaProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 export declare function ScrollArea(props: ScrollAreaProps): React.ReactElement;
 
+export interface UploadItem {
+  id: string;
+  name: string;
+  /** Bytes. */
+  size?: number;
+  state: 'uploading' | 'processing' | 'done' | 'failed';
+  /** 0–100, while uploading. */
+  progress?: number;
+  /** Why it failed, in words. */
+  error?: string;
+}
 export interface DropZoneProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onDrop'> {
   onFiles?: (files: File[]) => void;
   accept?: string;
@@ -1427,6 +1438,11 @@ export interface DropZoneProps extends Omit<React.HTMLAttributes<HTMLDivElement>
   multiple?: boolean;
   /** Force a visual state (documentation): idle, armed or over. */
   state?: 'idle' | 'armed' | 'over';
+  /** The files you're handling, as slats under the zone: uploading (a Progress fill), processing (hovering, pending), done (lands and settles) or failed (a trench with Retry). */
+  queue?: UploadItem[];
+  onRetry?: (id: string) => void;
+  onCancel?: (id: string) => void;
+  onRemove?: (id: string) => void;
 }
 export declare function DropZone(props: DropZoneProps): React.ReactElement;
 

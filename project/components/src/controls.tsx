@@ -946,9 +946,25 @@ export interface DropZoneProps extends Omit<React.HTMLAttributes<HTMLDivElement>
   multiple?: boolean;
   /** Force a visual state, for documentation: idle, armed (a file is being dragged somewhere on the page) or over. */
   state?: 'idle' | 'armed' | 'over';
+  /** The files you're handling, shown as slats under the zone: uploading (a Progress fill), processing (hovering, pending), done (lands and settles) or failed (a trench with Retry). */
+  queue?: UploadItem[];
+  onRetry?: (id: string) => void;
+  onCancel?: (id: string) => void;
+  onRemove?: (id: string) => void;
+}
+export interface UploadItem {
+  id: string;
+  name: string;
+  /** Bytes. */
+  size?: number;
+  state: 'uploading' | 'processing' | 'done' | 'failed';
+  /** 0–100, while uploading. */
+  progress?: number;
+  /** Why it failed, in words. */
+  error?: string;
 }
 /** Receptacles open when they're needed: a drop zone is flush until a file is dragged anywhere on the page, then sinks open; over it, it deepens. */
-export function DropZone({ onFiles, accept, multiple = true, state, className, children, ...rest }: DropZoneProps) {
+export function DropZone({ onFiles, accept, multiple = true, state, queue, onRetry, onCancel, onRemove, className, children, ...rest }: DropZoneProps) {
   const [armed, setArmed] = React.useState(false);
   const [over, setOver] = React.useState(false);
   const [landed, setLanded] = React.useState(0);
@@ -966,7 +982,7 @@ export function DropZone({ onFiles, accept, multiple = true, state, className, c
   }, []);
   const take = (files: File[]) => { if (!files.length) return; onFiles?.(files); setLanded((x) => x + 1); };
   const visual = state ?? (over ? 'over' : armed ? 'armed' : 'idle');
-  return (
+  const zone = (
     <div className={cx('alt-drop', className)} data-drop={visual} role="button" tabIndex={0} {...depth} style={depthStyle}
       onClick={() => input.current?.click()} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.current?.click(); } }}
       onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
@@ -974,6 +990,60 @@ export function DropZone({ onFiles, accept, multiple = true, state, className, c
       <input ref={input} type="file" hidden accept={accept} multiple={multiple} onChange={(e) => take(Array.from(e.target.files || []))} />
       {children}
     </div>
+  );
+  if (!queue) return zone;
+  return <div className="alt-drop-wrap">{zone}<UploadQueue items={queue} onRetry={onRetry} onCancel={onCancel} onRemove={onRemove} /></div>;
+}
+
+/** The files under a DropZone. Progress is said at 25, 50, 75 and 100%, and on finishing or failing, never continuously. */
+function UploadQueue({ items, onRetry, onCancel, onRemove }: { items: UploadItem[]; onRetry?: (id: string) => void; onCancel?: (id: string) => void; onRemove?: (id: string) => void }) {
+  const [said, setSaid] = React.useState('');
+  const last = React.useRef(new Map<string, string>());
+  React.useEffect(() => {
+    const words: string[] = [];
+    for (const it of items) {
+      const step = it.state === 'uploading' ? `u${Math.floor((it.progress ?? 0) / 25) * 25}` : it.state;
+      const was = last.current.get(it.id);
+      if (was !== undefined && was !== step) {
+        if (it.state === 'uploading' && (it.progress ?? 0) >= 25) words.push(`${it.name}, ${Math.floor((it.progress ?? 0) / 25) * 25}% uploaded`);
+        else if (it.state === 'processing') words.push(`${it.name} uploaded, processing`);
+        else if (it.state === 'done') words.push(`${it.name} done`);
+        else if (it.state === 'failed') words.push(`${it.name} failed${it.error ? `: ${it.error}` : ''}`);
+      }
+      last.current.set(it.id, step);
+    }
+    if (words.length) setSaid(words.join('. ') + '.');
+  }, [items]);
+  return (
+    <>
+      <ul className="alt-upload-list" aria-label="Files">{items.map((it) => <UploadSlat key={it.id} item={it} onRetry={onRetry} onCancel={onCancel} onRemove={onRemove} />)}</ul>
+      <span className="alt-sr" aria-live="polite">{said}</span>
+    </>
+  );
+}
+const bytes = (n?: number) => { if (n === undefined) return ''; const u = ['B', 'KB', 'MB', 'GB']; let i = 0; while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; } return `${i ? n.toFixed(1) : n} ${u[i]}`; };
+function UploadSlat({ item, onRetry, onCancel, onRemove }: { item: UploadItem; onRetry?: (id: string) => void; onCancel?: (id: string) => void; onRemove?: (id: string) => void }) {
+  // Uploading is a task (a Progress fill in its trench); processing is a write the server hasn't confirmed, so it hovers;
+  // done lands and settles; failed drops to a trench.
+  const [doneKey, setDoneKey] = React.useState(0);
+  const was = React.useRef(item.state);
+  React.useEffect(() => { if (item.state === 'done' && was.current !== 'done') setDoneKey((k) => k + 1); was.current = item.state; }, [item.state]);
+  const status = item.state === 'processing' ? 'pending' : item.state === 'failed' ? 'failed' : item.state === 'done' ? 'committed' : undefined;
+  const { style: depthStyle, ...depth } = useDepth({ status, settle: doneKey || undefined });
+  const words = item.state === 'uploading' ? `Uploading, ${Math.round(item.progress ?? 0)}%` : item.state === 'processing' ? 'Processing' : item.state === 'done' ? 'Uploaded' : item.error ?? 'Upload failed';
+  return (
+    <li className="alt-upload" data-state={item.state} {...depth} style={depthStyle}>
+      <div className="alt-upload-text">
+        <span className="alt-upload-name">{item.name}</span>
+        <span className="alt-upload-state">{item.size !== undefined && <span className="alt-upload-size">{bytes(item.size)} · </span>}{item.state === 'failed' && <Icons.AlertCircle size={14} />}{words}</span>
+        {item.state === 'uploading' && <Progress value={item.progress ?? null} aria-label={`Uploading ${item.name}`} />}
+      </div>
+      <div className="alt-upload-actions">
+        {item.state === 'failed' && onRetry && <Button size="sm" variant="secondary" onClick={() => onRetry(item.id)} aria-label={`Retry upload of ${item.name}`}>Retry</Button>}
+        {(item.state === 'uploading' || item.state === 'processing') && onCancel && <Button size="sm" variant="ghost" onClick={() => onCancel(item.id)} aria-label={`Cancel upload of ${item.name}`}>Cancel</Button>}
+        {(item.state === 'done' || item.state === 'failed') && onRemove && <Button size="sm" variant="ghost" square onClick={() => onRemove(item.id)} aria-label={`Remove ${item.name}`}><Icons.X size={14} /></Button>}
+      </div>
+    </li>
   );
 }
 
