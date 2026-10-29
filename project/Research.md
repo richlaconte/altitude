@@ -784,6 +784,17 @@ A design review: `PasswordInput` was rendered for signing in and for creating a 
 
 Not yet tested with people: whether "Good" is read as good enough, or as a hint to keep going.
 
+### E65 · How should a secret shown once read?
+
+A design review: `SecretField` was rendered as a just-created API key in a card whose Done button waits for it, and as a stored webhook secret with reveal, rotate and revoke, in all four schemes at 960px and under forced colours. `checks/secret-field.mjs` measures it.
+
+- **Completeness, inverted.** A field normally fills when it holds a value. A new secret holds its value from the start, but the task isn't done until the person has taken it away. So it stays a sunk well with its back wall showing until they confirm, and then it fills flush and masks. The depth says "something is still owed here".
+- **The prefix stays.** Masking `ak_live_EXAMPLE…4f2a` to "••••4f2a" loses which kind of key it is. A new secret keeps its own prefix ("ak_live_") when it masks.
+- **Bullets aren't read.** A screen reader reading "bullet bullet bullet bullet 4 f 2 a" is noise. A masked secret is announced as "Secret key, ending in 4f2a".
+- **Focus doesn't fall to the page.** Checking "I've saved this key" removes the checkbox, so focus moves to the sentence that replaces it rather than to the top of the document.
+
+Not yet tested with people: whether the sunk well alone, without the checkbox, makes people copy the key before leaving.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

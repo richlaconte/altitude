@@ -1126,6 +1126,24 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-pw-reqs li[data-met] .alt-pw-stamp { border-color: transparent; background: var(--surface-well); box-shadow: var(--well); }
 @media (forced-colors: active) { .alt-pw-stamp { border-color: CanvasText; } .alt-pw-caps svg { color: CanvasText; } }
 
+/* ── SecretField: two readings. A new secret is an opening, something to take away: a sunk well (its back wall
+   showing, though it holds text) in mono, with a raised Copy beside it and a caution warning, until you confirm you've
+   saved it; then its floor rises flush and it masks to its tail. A stored secret is settled: flush, masked, with a
+   reveal Toggle (if allowed), Rotate and a held revoke. ── */
+.alt-secret { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.alt-secret-row { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.alt-secret-field { flex: 1; min-width: 0; cursor: default; }
+.alt-input.alt-secret-field[data-open] { --w: 4px; background: var(--surface-well); }
+.alt-input.alt-secret-field[data-filled] { border-color: var(--line); }
+.alt-secret-value { flex: 1; min-width: 0; font: 400 13.5px/20px var(--font-mono); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; animation: alt-emerge var(--dur-travel-2) var(--ease-rise); --alt-from-y: 0px; }
+.alt-input input.alt-secret-value { font: 400 13.5px/20px var(--font-mono); cursor: text; }
+.alt-secret-dots { letter-spacing: 0.1em; color: var(--ink-muted); }
+.alt-secret-warning { display: flex; align-items: flex-start; gap: 6px; margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink); }
+.alt-secret-warning svg { flex: none; margin-top: 1.5px; color: var(--caution); }
+.alt-secret-saved:focus { outline: none; }
+.alt-secret-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+@media (forced-colors: active) { .alt-input.alt-secret-field[data-filled] { border-style: solid !important; } .alt-secret-warning svg { color: CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

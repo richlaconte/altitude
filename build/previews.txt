@@ -2524,6 +2524,38 @@ function App() {
   );
 }
 
+=== SecretField | <!-- @dsCard group="Inputs" height=480 subtitle="A key shown once, then masked to its tail; revoking is held" -->
+--- css
+.sf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 720px) { .sf { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+function App() {
+  const [saved, setSaved] = React.useState(false);
+  const [said, setSaid] = React.useState('');
+  return (
+    <div className="sf">
+      <A.Card>
+        <A.CardHeader><A.CardTitle>API key created</A.CardTitle><A.CardDescription>Production · created just now</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.SecretField label="Secret key" value="ak_live_EXAMPLE0000demo4f2a" once onAcknowledge={() => setSaved(true)} />
+        </A.CardContent>
+        <A.CardFooter><A.Button variant="primary" disabled={!saved}>Done</A.Button></A.CardFooter>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Webhook signing secret</A.CardTitle><A.CardDescription>Used to verify deliveries to /hooks/billing</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <div className="col">
+            <A.SecretField label="Signing secret" noun="secret" prefix="whk_" maskedTail="9d1c"
+              onReveal={() => new Promise((r) => setTimeout(() => r('whk_EXAMPLE0000demo9d1c'), 400))}
+              onRotate={() => setSaid('A new secret would be created; the old one keeps working for 24 hours.')} onRevoke={() => setSaid('Secret revoked.')} />
+            <p className="cap" role="status">{said}</p>
+          </div>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === Select | <!-- @dsCard group="Inputs" height=380 subtitle="An opening you fill by choosing; the list rises at level 3" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 24px; max-width: 900px; align-items: start; }

@@ -2383,6 +2383,35 @@ export interface PasswordInputProps extends Omit<InputProps, 'type' | 'trailing'
 /** A password field with a reveal Toggle, a caps-lock notice, and strength as a reading (a Meter) when creating one. */
 export declare const PasswordInput: React.ForwardRefExoticComponent<PasswordInputProps & React.RefAttributes<HTMLInputElement>>;
 
+export interface SecretFieldProps {
+  /** What the secret is ("Secret key"). It names the field. */
+  label: string;
+  /** The word used in the buttons and the warning: "Copy key", "Show key", "Revoke key". Default "key". */
+  noun?: string;
+  /** A secret just created: shown in full, once. */
+  value?: string;
+  /** With value: the secret is shown only now. It stays an opening until onAcknowledge, then masks. */
+  once?: boolean;
+  /** Called when the person confirms they've saved the secret. Gate closing on it. */
+  onAcknowledge?: () => void;
+  /** The confirmation's words. Default "I've saved this {noun}". */
+  acknowledgeLabel?: string;
+  /** The warning while the secret is new. */
+  warning?: React.ReactNode;
+  /** A stored secret: the part shown before the mask ("sk_live_"). */
+  prefix?: string;
+  /** A stored secret: its last characters ("4f2a"). */
+  maskedTail?: string;
+  /** A stored secret that may be shown again: returns it (it may be a promise). Without it there's no reveal. */
+  onReveal?: () => string | Promise<string>;
+  onRotate?: () => void;
+  /** Revoking is held, not clicked (HoldButton). */
+  onRevoke?: () => void;
+  className?: string;
+}
+/** A key or token shown once when created (an opening until acknowledged), masked to its tail afterwards. */
+export declare function SecretField(props: SecretFieldProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2402,6 +2431,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      SecretField: typeof SecretField;
       PasswordInput: typeof PasswordInput;
       TimeInput: typeof TimeInput;
       InputOTP: typeof InputOTP; InputOTPGroup: typeof InputOTPGroup; InputOTPSlot: typeof InputOTPSlot; InputOTPSeparator: typeof InputOTPSeparator;
