@@ -584,6 +584,37 @@ function App() {
   );
 }
 
+=== CommentThread | <!-- @dsCard group="Display" height=600 subtitle="Comments on a record, with mentions, posting and resolving" -->
+--- css
+.ct { max-width: 560px; }
+--- jsx
+const people = [{ id: 'maya', name: 'Maya Chen' }, { id: 'theo', name: 'Theo Marsh' }, { id: 'ada', name: 'Ada Obi' }];
+const ago = (m) => new Date(Date.now() - m * 60000);
+function App() {
+  const [comments, setComments] = React.useState([
+    { id: 'c1', author: { name: 'Theo Marsh' }, body: 'Can we ship this before the release freeze on Friday?', createdAt: ago(90) },
+    { id: 'c2', author: { name: 'Maya Chen' }, body: '@Theo Marsh yes, if QA signs off by Thursday.', mentions: ['Theo Marsh'], createdAt: ago(40) },
+  ]);
+  const [resolved, setResolved] = React.useState(false);
+  const [failNext, setFailNext] = React.useState(false);
+  const post = (body, mentions) => {
+    const id = 'n' + Date.now(), fail = failNext;
+    setComments((xs) => [...xs, { id, author: { name: 'You' }, body, mentions: mentions.map((m) => m.name), createdAt: new Date(), status: 'pending', mine: true }]);
+    setTimeout(() => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, status: fail ? 'failed' : undefined } : x))), 900);
+  };
+  return (
+    <div className="col ct">
+      <A.CommentThread comments={comments} resolved={resolved ? { by: 'You' } : false} onPost={post}
+        onResolve={() => setResolved(true)} onReopen={() => setResolved(false)}
+        onRetry={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, status: undefined } : x)))}
+        onDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: true } : x)))}
+        onUndoDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: false } : x)))}
+        mentionable={(q) => people.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))} typing={resolved ? [] : ['Ada Obi']} />
+      <A.Switch label="Make the next post fail" checked={failNext} onCheckedChange={setFailNext} />
+    </div>
+  );
+}
+
 === Kbd | <!-- @dsCard group="Display" height=110 subtitle="Keys that press when you press them" -->
 --- jsx
 function App() {

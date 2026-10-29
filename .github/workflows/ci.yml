@@ -120,6 +120,7 @@ jobs:
           node ../scripts/record-check.mjs react18-permission-matrix node checks/permission-matrix.mjs
           node ../scripts/record-check.mjs react18-plan-picker node checks/plan-picker.mjs
           node ../scripts/record-check.mjs react18-feature-gate node checks/feature-gate.mjs
+          node ../scripts/record-check.mjs react18-comment-thread node checks/comment-thread.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs

@@ -2974,6 +2974,41 @@ export interface FeatureGateProps {
 /** A feature that needs another plan, locked rather than disabled: live, with a lock and a plan plate, opening the upgrade. */
 export declare function FeatureGate(props: FeatureGateProps): React.ReactElement;
 
+export interface ThreadComment {
+  id: string;
+  author: { name: string; avatar?: string };
+  /** Plain text; "@Name" for someone mentioned. */
+  body: string;
+  createdAt: Date | string | number;
+  /** One you're posting: pending hovers, failed drops to a trench with Retry and keeps the text. */
+  status?: 'pending' | 'failed';
+  /** Names mentioned in the body, drawn as plates. */
+  mentions?: string[];
+  mine?: boolean;
+  /** Deleted: its result stays in its slot with Undo. */
+  deleted?: boolean;
+}
+export interface Mentionable { id: string; name: string }
+export interface CommentThreadProps {
+  comments: ThreadComment[];
+  /** The thread is resolved: stamped, muted and collapsed to one line, kept in place. */
+  resolved?: { by: string } | false;
+  onPost?: (body: string, mentions: Mentionable[]) => void;
+  onResolve?: () => void;
+  onReopen?: () => void;
+  onRetry?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onUndoDelete?: (id: string) => void;
+  /** People who can be mentioned, for a query after "@". */
+  mentionable?: (query: string) => Mentionable[];
+  /** Other people typing now (never announced). */
+  typing?: string[];
+  'aria-label'?: string;
+  className?: string;
+}
+/** Comments on a record: posting hovers as pending, a resolved thread is stamped in place, mentions are a listbox. */
+export declare function CommentThread(props: CommentThreadProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2993,6 +3028,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      CommentThread: typeof CommentThread;
       FeatureGate: typeof FeatureGate;
       PlanPicker: typeof PlanPicker;
       PermissionMatrix: typeof PermissionMatrix;
