@@ -1074,6 +1074,32 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 [data-contrast="more"] .alt-numfield-step:not(:disabled) { box-shadow: 0 1px 0 0 var(--ink), var(--elev-1); }
 @media (forced-colors: active) { .alt-numfield-step:not(:disabled) { border: 1px solid ButtonText; } }
 
+/* ── InputOTP: a one-time code as a row of openings. One real input lies invisible over the row and drives it; each
+   slot is built like an Input (the same well, wall and floor): empty, its back wall shows; the slot the next character
+   goes into is held (floor lit, the depth approach would preview, the neutral rim when reached by keyboard) with a
+   caret; once its character lands its floor rises flush. A pasted or autofilled code fills left to right, staggered
+   35ms a slot. A rejected code drops the whole row to a trench on critical-soft. ── */
+.alt-otp { position: relative; display: inline-flex; align-items: center; gap: var(--space-2); max-width: 100%; }
+.alt-otp-input {
+  position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; outline: 0; opacity: 0;
+  background: transparent; color: transparent; caret-color: transparent; font-size: 16px; cursor: text;
+}
+.alt-otp-input:disabled { cursor: not-allowed; }
+.alt-otp-group { display: inline-flex; gap: 6px; }
+.alt-otp-slot { justify-content: center; width: 40px; height: 48px; padding: 0; font: 600 20px/1 var(--font-mono); cursor: text; }
+.alt-otp-slot[data-filled]:not([data-invalid]):not([data-disabled]) { --w: 0px; --n: 0; background: var(--surface-raised); }
+.alt-otp-slot[data-active]:not([data-invalid]) { background: var(--surface-raised); --n: var(--alt-travel); }
+.alt-otp[data-key-focus] .alt-otp-slot[data-active] { border-color: var(--alt-rim-held); outline-color: var(--alt-rim-held); }
+.alt-otp[data-key-focus] .alt-otp-slot[data-active][data-invalid] { border-color: var(--critical); outline-color: var(--critical); }
+.alt-otp-char { transform: translateY(calc(var(--wd) * 0.5)); transition: transform var(--dur-travel-2) var(--ease-settle); }
+.alt-otp-caret { position: absolute; left: 50%; top: 50%; width: 1.5px; height: 22px; margin: -11px 0 0 -0.75px; background: var(--ink); animation: alt-otp-blink 1.1s steps(1) infinite; }
+@keyframes alt-otp-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .alt-otp-caret { animation: none; } }
+[data-motion="reduced"] .alt-otp-caret { animation: none; }
+.alt-otp[data-burst] .alt-otp-slot { transition-delay: calc(var(--i) * 35ms); }
+.alt-otp-sep { flex: none; width: 10px; height: 2px; border-radius: var(--radius-full); background: var(--line-control); }
+@media (forced-colors: active) { .alt-otp-slot[data-filled]:not([data-invalid]) { border-style: solid !important; } .alt-otp-caret { background: CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

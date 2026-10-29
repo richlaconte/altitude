@@ -751,6 +751,17 @@ A design review: `NumberInput` was rendered for seats (1–500), days (a unit), 
 
 Not yet tested with people: whether 15px-tall steppers are large enough on touch screens, where people type instead.
 
+### E62 · Six inputs or one?
+
+A design review: `InputOTP` was rendered with six digits in two groups and eight alphanumeric characters, empty, partly filled, focused by keyboard, rejected and verifying, in all four schemes at 960px and under forced colours. `checks/input-otp.mjs` types, pastes and deletes in it.
+
+- **One input.** Hand-rolled code fields often use one input per character, which breaks SMS autofill (`autocomplete="one-time-code"` fills one field), splits a pasted code, and makes a screen reader announce six unlabelled fields. One invisible input over the row keeps all three working, and the slots are drawn from its value.
+- **Completeness per slot.** The Input rule (an empty field shows its back wall, a filled one rises flush) applied to each character shows progress through the code without a counter.
+- **Filter, don't refuse.** Codes arrive formatted ("123-456", "123 456"). Dropping characters that don't match the pattern accepts both, where a strict `pattern` attribute would reject the paste.
+- **Rejection keeps the code.** The row drops to a trench and stays filled, so a single mistyped digit can be corrected rather than retyped.
+
+Not yet tested with people: whether the staggered fill on paste is noticed, or read as lag.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

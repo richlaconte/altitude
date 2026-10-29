@@ -69,7 +69,7 @@ export const inert = { inert: React.version.split('.')[0] === '18' ? '' : true }
  * A field shows its held rim only when focus arrived from the keyboard; a field you clicked into shows its lit floor and
  * the caret, which is enough when you know where you clicked. Browsers match :focus-visible on text fields after a click
  * too, so one shared listener remembers whether the last input was a key or a pointer and, when focus enters a field
- * (an `.alt-input`, or a whole `.alt-select` with its list), marks it `data-key-focus` until focus leaves it. It's decided
+ * (an `.alt-input`, a whole `.alt-select` with its list, or an `.alt-otp` row), marks it `data-key-focus` until focus leaves it. It's decided
  * as focus arrives, so typing into a field you clicked doesn't add the rim, and clicking a field removes it. Until the
  * first pointer input, focus counts as keyboard, so an autofocused field shows its rim.
  */
@@ -79,7 +79,7 @@ export function useKeyFocus() {
     if (keyFocusStarted || typeof document === 'undefined') return;
     keyFocusStarted = true;
     let key = true;
-    const scope = (t: EventTarget | null) => (t instanceof Element ? t.closest<HTMLElement>('.alt-select') ?? t.closest<HTMLElement>('.alt-input') : null);
+    const scope = (t: EventTarget | null) => (t instanceof Element ? t.closest<HTMLElement>('.alt-select') ?? t.closest<HTMLElement>('.alt-input') ?? t.closest<HTMLElement>('.alt-otp') : null);
     const inside = (s: HTMLElement, t: EventTarget | null) => t instanceof Node && s.contains(t);
     document.addEventListener('keydown', (e) => { if (!e.metaKey && !e.ctrlKey && !e.altKey) key = true; }, true);
     document.addEventListener('pointerdown', (e) => { key = false; scope(e.target)?.removeAttribute('data-key-focus'); }, true);
