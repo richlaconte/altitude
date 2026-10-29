@@ -2471,8 +2471,9 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 /* ── ItemGroup: a list changed in the list itself. Slats are the record, flush on the ground with line dividers, as
    Table rows. Editing lifts one slat at a time into its EditRegion (a static raised card) while its neighbours stay
    flush and readable. The add slat is an opening: a dashed well that deepens to a trench under the pointer. A slat
-   picked up to reorder floats at level 3, tilted, over a slot that opens as a well. A recoverable removal leaves a
-   raised Alert with Undo; a confirmed one asks in a stationary Dialog. ── */
+   picked up to reorder floats at level 3, tilted, over a slot that opens as a well. A recoverable removal leaves its
+   RemovalReceipt in the slat's place, then glides the gap shut; a confirmed one asks in a stationary Dialog, then
+   glides the slat shut. ── */
 .alt-item-group { position: relative; display: grid; gap: var(--space-2); min-width: 0; color: var(--ink); }
 .alt-item-list { margin: 0; padding: 0; list-style: none; outline: none; }
 .alt-item-slat { position: relative; display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); border-radius: 0; transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1); }

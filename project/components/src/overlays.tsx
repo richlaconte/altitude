@@ -379,7 +379,11 @@ export function Dialog({ open, defaultOpen = false, onOpenChange, trigger, title
 /* ───────────────────────── Toast ───────────────────────── */
 
 export type ToastTone = 'neutral' | 'positive' | 'caution' | 'critical';
-export interface ToastOptions { title: React.ReactNode; description?: React.ReactNode; tone?: ToastTone; duration?: number; action?: { label: string; onClick: () => void } }
+export interface ToastOptions {
+  title: React.ReactNode; description?: React.ReactNode; tone?: ToastTone; duration?: number; action?: { label: string; onClick: () => void };
+  /** false: shown but not announced, because what it says was already announced where it happened. Default true. */
+  announce?: boolean;
+}
 type ToastItem = ToastOptions & { id: number; leaving?: boolean; entered?: boolean };
 
 let toasts: ToastItem[] = [];
@@ -434,7 +438,7 @@ export function Toaster({ className }: { className?: string }) {
   });
   React.useEffect(() => {
     if (!blocked || !element || !documentState) return;
-    for (const item of toasts.filter(t => !t.leaving)) {
+    for (const item of toasts.filter(t => !t.leaving && t.announce !== false)) {
       const text = element.querySelector(`[data-toast-id="${item.id}"] .alt-toast-body`)?.textContent;
       if (text) documentState.announce(item.id, text);
     }
@@ -462,7 +466,8 @@ export function Toaster({ className }: { className?: string }) {
           if (!t.leaving && i >= 0) offset += h + GAP;
           const I = toastIcon[t.tone || 'neutral'];
           return (
-            <div key={t.id} className="alt-toast" data-toast-id={t.id} data-tone={t.tone} data-behind={behind ? '' : undefined} role={blocked ? undefined : t.tone === 'critical' ? 'alert' : 'status'}
+            <div key={t.id} className="alt-toast" data-toast-id={t.id} data-tone={t.tone} data-behind={behind ? '' : undefined} role={blocked || t.announce === false ? undefined : t.tone === 'critical' ? 'alert' : 'status'}
+              aria-live={t.announce === false ? 'off' : undefined}
               ref={(el) => { if (el) { const nh = el.offsetHeight; if (heights.current.get(t.id) !== nh && !behind) { heights.current.set(t.id, nh); } } }}
               style={{ transform: `translateY(${y}) scale(${s})`, opacity: o, boxShadow: sh, zIndex: 100 - Math.max(i, 0), height: behind ? frontH : undefined, pointerEvents: o ? undefined : 'none' }}>
               <span className="alt-toast-icon"><I size={18} /></span>

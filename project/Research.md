@@ -615,6 +615,20 @@ A build and a read-back ([#77](https://github.com/richlaconte/altitude/issues/77
 - **ECharts takes the theme's `aria` without an option of its own.** Tried in Node against ECharts 6.1.0 (SSR, SVG renderer): the model's `aria.enabled` came from the theme, series used `data-1` and `data-2`, and `{ patterns: true }` rendered decal patterns. Chart.js 4.6.1 accepted the object through `Chart.defaults.set`. Neither library is a dependency, so CI doesn't repeat this.
 - **Not vouched for:** keyboard paths and screen-reader output are the library's own. A theme can't keep the rules in **Charts** for anyone.
 
+### E49 · Can ItemGroup leave its result where the slat was?
+
+A measurement, as in E46, of [#100](https://github.com/richlaconte/altitude/issues/100): Daylight, 960px, the webhooks preview, with the slat below sampled every animation frame (`checks/item-group.mjs`).
+- **Before.** At about 219ms the removed slat was gone and the slats below jumped 84px in one frame. The Undo Alert appeared under the add slot.
+- **After.** From the click to Undo during the hold, the slat below doesn't move at all (IG-RR-03). Left alone, the receipt holds for `dur-linger`, and then the slat below passes through many positions as the gap glides shut (IG-RR-06).
+
+Findings:
+- **Undo moves twice, and each move is shown.** During the hold, Undo is where the slat was. After the close it's in a toast, which `ItemGroup` raises itself. The toast doesn't announce again (`announce: false`, new on `toast`), because the receipt already said “… is removed. Undo is available.”
+- **Undo after the close glides the slot open.** Animating only the height made it jump the slat's padding (25px) before gliding. `RemovalReceipt` now opens and closes the whole box, padding, borders and margins included. Under StrictMode the opening ran twice, and the second run measured the first run's empty frame, so the slot stayed shut and then jumped. The opening is now cancelled on cleanup.
+- **A confirmed removal glides shut** with no receipt, because there's nothing to undo and nothing to read.
+- **Repeated words are still news.** Removing and restoring the same webhook twice left the polite status saying “Staging EU restored.” already, so the second restore was silent, and its focus repair waited for a render that never came. The status now clears before it speaks.
+
+Not yet tested with people: whether Undo moving from the slot to a toast reads as the same Undo.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
