@@ -333,8 +333,8 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   background: none; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); cursor: pointer; white-space: nowrap;
   transition: color var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise);
 }
-.alt-tabs-trigger:hover, .alt-tabs-trigger[aria-selected="true"] { color: var(--ink); }
-.alt-tabs[data-variant="segmented"] .alt-tabs-trigger:hover:not([aria-selected="true"]) { background: color-mix(in oklab, var(--surface-raised) 40%, transparent); }
+.alt-tabs-trigger:hover, .alt-tabs-trigger[aria-selected="true"], .alt-tabs-trigger[aria-checked="true"] { color: var(--ink); }
+.alt-tabs[data-variant="segmented"] .alt-tabs-trigger:hover:not([aria-selected="true"]), .alt-tgroup .alt-tabs-trigger:hover:not([aria-checked="true"]):not(:disabled) { background: color-mix(in oklab, var(--surface-raised) 40%, transparent); }
 .alt-tabs-content { animation: alt-emerge var(--dur-travel-2) var(--ease-rise); border-radius: var(--radius-sm); }
 
 .alt-tabs[data-variant="folder"] { gap: 0; }
@@ -997,6 +997,31 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-btn.alt-copy[data-variant="ghost"][data-copy="copied"] { background: transparent; }
 .alt-btn.alt-copy[data-copy="failed"] .alt-copy-icons { color: var(--critical); }
 @media (forced-colors: active) { .alt-btn.alt-copy:hover:not([data-copy="copied"]) { border: 1px solid ButtonText; } }
+
+/* ── Toggle and ToggleGroup: a button that stays on. On is a choice, so it's built like the Switch, not like a held
+   press (which would read as loading): the face is cut into a shallow well with accent-soft poured in and the label in
+   accent-ink. Off is the ghost (ground) or secondary (level 1) slab it started as. Pointing at an on toggle previews
+   off: the well lightens toward the raised face it will become. Sinking uses ease-sink, rising ease-rise.
+   type="single" is segmented Tabs without panels: options in a well, one raised pill that glides (the same classes).
+   type="multiple" is a row of Toggles. ── */
+.alt-btn.alt-toggle[aria-pressed="true"], .alt-btn.alt-toggle[aria-pressed="true"]:hover:not(:disabled):not([data-loading]),
+.alt-btn.alt-toggle[aria-pressed="true"]:focus-visible, .alt-btn.alt-toggle[aria-pressed="true"]:active:not(:disabled) {
+  --wall: 0px; background: var(--accent-soft); background-image: none; color: var(--accent-ink); box-shadow: var(--well); transform: none;
+  transition: background-color var(--dur-travel-2) var(--ease-sink), box-shadow var(--dur-travel-2) var(--ease-sink), color var(--dur-travel-2) var(--ease-sink);
+}
+.alt-btn.alt-toggle[aria-pressed="true"]:hover:not(:disabled):not([data-loading]) { background: color-mix(in oklab, var(--accent-soft) 55%, var(--surface-raised)); }
+.alt-btn.alt-toggle[aria-pressed="true"]:disabled { background: var(--surface-well); color: var(--ink-faint); }
+.alt-tgroup[data-type="multiple"] { display: inline-flex; align-items: center; gap: 2px; }
+.alt-tgroup[data-orientation="vertical"] { flex-direction: column; align-items: stretch; }
+.alt-tgroup[data-type="single"] .alt-tabs-indicator { transition: none; }
+.alt-tgroup[data-type="single"] .alt-tabs-indicator[data-ready] { transition: transform var(--dur-travel-3) var(--ease-glide), top var(--dur-travel-3) var(--ease-glide), width var(--dur-travel-3) var(--ease-glide), height var(--dur-travel-3) var(--ease-glide), opacity var(--dur-travel-1); }
+@media (prefers-reduced-motion: reduce) { .alt-tgroup[data-type="single"] .alt-tabs-indicator[data-ready] { transition: opacity var(--dur-travel-1); } }
+[data-motion="reduced"] .alt-tgroup[data-type="single"] .alt-tabs-indicator[data-ready] { transition: opacity var(--dur-travel-1); }
+.alt-tgroup .alt-tabs-trigger:disabled { color: var(--ink-faint); cursor: not-allowed; }
+@media (forced-colors: active) {
+  .alt-btn.alt-toggle[aria-pressed="true"] { border: 1px dashed CanvasText; background: Highlight; color: HighlightText; forced-color-adjust: none; }
+  .alt-btn.alt-toggle[data-variant="secondary"][aria-pressed="false"] { border: 1px solid CanvasText; }
+}
 
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,

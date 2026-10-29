@@ -707,6 +707,17 @@ A design review: `CopyButton` was rendered icon-only beside an API key, as a sec
 
 Not yet tested with people: whether two seconds is long enough to notice "Copied" on an icon-only button.
 
+### E58 · How should a latched button look when it's on?
+
+A design review: `Toggle` and `ToggleGroup` were rendered as a formatting bar (multiple), a view switch (single), "Show archived" (secondary) and a thumbs up/down vote, in all four schemes at 960px, under forced colours and with `contrast="more"`. `checks/toggle.mjs` measures them.
+
+- **Sunk and filled, not held at ground.** "Pressing returns to ground; loading holds it there", so an on button drawn flush at ground level reads as a button still loading, which is the ambiguity the issue raised. On is a choice, so it borrows the Switch's build: a shallow well with `accent-soft` poured in and the label in `accent-ink`. That keeps "push up, fill down" (an on toggle is filled, not pressed), and it's the one stated exception to "never style a button as sunk". The alternative, a ground-level face with an accent bar, was rejected without being built: it puts a status-like bar on a control.
+- **Single choice is segmented Tabs.** A view switch without panels is the same choice as segmented `Tabs`, so it uses the same classes (a well and one gliding pill) and is a radio group, where arrows move and choose.
+- **One tab stop.** A 3-button formatting group costs one Tab, not three. Focus returns to the item you left, and inside a `Toolbar` the group leaves the arrow keys to the bar (shared roving focus).
+- **The name doesn't change.** "Bold" stays "Bold" with `aria-pressed`. Renaming to "Unbold" makes the state ambiguous ([APG, button](https://www.w3.org/WAI/ARIA/apg/patterns/button/)).
+
+Not yet tested with people: whether a sunk, tinted toggle is read as "on" as quickly as a raised, tinted one.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

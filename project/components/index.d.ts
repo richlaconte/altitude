@@ -2203,6 +2203,46 @@ export interface CopyButtonProps extends Omit<ButtonProps, 'value' | 'onCopy' | 
 /** Copies a value and says so in words: pressed to the ground with a check and "Copied" for dur-linger, announced politely. */
 export declare const CopyButton: React.ForwardRefExoticComponent<CopyButtonProps & React.RefAttributes<HTMLButtonElement>>;
 
+export interface ToggleProps extends Omit<ButtonProps, 'variant' | 'onChange'> {
+  pressed?: boolean;
+  defaultPressed?: boolean;
+  onPressedChange?: (pressed: boolean) => void;
+  /** ghost (default): flush at rest, as in a toolbar. secondary: a raised slab at rest. */
+  variant?: 'ghost' | 'secondary';
+}
+/** A button that stays on. On is a choice, built like the Switch: a shallow well with accent-soft poured in. aria-pressed. */
+export declare const Toggle: React.ForwardRefExoticComponent<ToggleProps & React.RefAttributes<HTMLButtonElement>>;
+interface ToggleGroupBase extends Omit<React.HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange'> {
+  /** For type="multiple": ghost (default) or secondary toggles. type="single" is always the segmented build. */
+  variant?: 'ghost' | 'secondary';
+  size?: ButtonProps['size'];
+  orientation?: 'horizontal' | 'vertical';
+  disabled?: boolean;
+}
+export interface ToggleGroupSingleProps extends ToggleGroupBase {
+  /** One choice: the options sit in a well and one raised pill glides between them, as segmented Tabs. A radio group. */
+  type: 'single';
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+}
+export interface ToggleGroupMultipleProps extends ToggleGroupBase {
+  /** Any number on: a row of Toggles, each with aria-pressed. */
+  type: 'multiple';
+  value?: string[];
+  defaultValue?: string[];
+  onValueChange?: (value: string[]) => void;
+}
+export type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
+/** A group of toggles with one tab stop: one choice (segmented, a radio group) or any number (a row of Toggles). */
+export declare function ToggleGroup(props: ToggleGroupProps): React.ReactElement;
+export interface ToggleGroupItemProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'value'> {
+  value: string;
+  /** type="multiple" only: an icon-only square toggle. */
+  square?: boolean;
+}
+export declare const ToggleGroupItem: React.ForwardRefExoticComponent<ToggleGroupItemProps & React.RefAttributes<HTMLButtonElement>>;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2222,6 +2262,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Toggle: typeof Toggle; ToggleGroup: typeof ToggleGroup; ToggleGroupItem: typeof ToggleGroupItem;
       CopyButton: typeof CopyButton;
       RelativeTime: typeof RelativeTime; formatRelativeTime: typeof formatRelativeTime;
       FormattedNumber: typeof FormattedNumber; formatNumber: typeof formatNumber; describeNumber: typeof describeNumber;
