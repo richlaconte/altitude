@@ -113,6 +113,8 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 **Numbers change, they don't count.** A `Stat`'s changed value cross-fades over `dur-travel-2` (the old figure fading out over the new) and the stat takes the afterglow within the attention budget. Counting up is never offered: it delays the number for decoration. A stat whose value loads lands out of its imprint like `Await` content; in a `StatGroup` they land together.
 
+**A number in a line changes the same way.** A `FormattedNumber` cross-fades over `dur-travel-2` and takes a ground-level tint that decays over `dur-settle` on `ease-decay`, the afterglow without its lift, because a word in a line can't rise. Under reduced motion the figure changes in place and the tint remains.
+
 **A reading glides.** A `Meter`'s fill glides to a new reading on `ease-glide` over `dur-travel-3`, as `Progress` does, but at no level: it's ink moving across a flush track. Crossing a threshold cross-fades the fill's colour and relights the state's lamp. Under reduced motion the fill changes in place.
 
 **A re-rank is carried.** When a `BarList`'s values change, its rows are carried to their new ranks (FLIP, `dur-travel-3`, `ease-glide`) all at once, as table rows are on a re-sort, and the bars glide to their new lengths. Under reduced motion both change in place.

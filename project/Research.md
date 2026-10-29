@@ -674,6 +674,17 @@ A design review: `Link` was rendered in prose, as an external link, and as "View
 
 Not yet tested with people: whether the thicker underline on hover is noticed without a colour change.
 
+### E55 · How should a number in a sentence change?
+
+A design review: `FormattedNumber` was rendered in every preset (currency in minor units, bytes, durations, percent, compact) in a definition list and inside a sentence whose value changes, in all four schemes at 960px, under forced colours and with reduced motion. `checks/formatted-number.mjs` measures it.
+
+- **A tint, not the afterglow's lift.** `Stat` takes the full afterglow, a lift with `elev-2`. Inside a sentence the shadow would land on the line below, so a number takes only the tint (`accent-soft` decaying over `dur-settle`), as a live chart's "Updated" caption does.
+- **Cross-fade over `dur-travel-2`, not `dur-hover`.** The issue proposed `dur-hover`, but that token is 1800ms (it paces a pending write's hover). `Stat`'s `dur-travel-2` keeps the two consistent.
+- **Spoken units, not `aria-label`.** `<data>` has the generic role, which can't be named ([WAI-ARIA 1.2, generic](https://www.w3.org/TR/wai-aria-1.2/#generic)), so the words ("4.5 gigabytes") are visually hidden text and the symbol is hidden from assistive technology.
+- **Currency in minor units by default,** as the issue's sketch has it and as payment APIs (Stripe, Adyen) send amounts. The divisor comes from the currency, so JPY isn't divided. `minorUnits={false}` takes whole units.
+
+Not yet tested with people: whether "4.5 GB" with the exact bytes in a tooltip is enough, or tables want the exact value shown.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

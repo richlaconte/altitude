@@ -1,0 +1,38 @@
+<!-- @dsCard group="Display" height=400 subtitle="Currency, bytes, durations and percentages, formatted once; a change settles, never counts" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FormattedNumber — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.fn { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.fn dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font: 400 15px/23px var(--font-sans); }
+.fn dt { color: var(--ink-muted); }
+.fn dd { margin: 0; }
+.fn p { margin: 0; font: 400 15px/23px var(--font-sans); }
+@media (max-width: 720px) { .fn { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const usage = [4212e6, 4512e6, 503e7];
+function App() {
+  const [i, setI] = React.useState(0);
+  React.useEffect(() => {
+    const t = setInterval(() => setI((n) => (n + 1) % usage.length), 2600);
+    return () => clearInterval(t);
+  }, []);
+  return /* @__PURE__ */ React.createElement("div", { className: "fn" }, /* @__PURE__ */ React.createElement("dl", null, /* @__PURE__ */ React.createElement("dt", null, "Plan"), /* @__PURE__ */ React.createElement("dd", null, /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: 4900, format: "currency", currency: "EUR", locale: "en-IE" }), " a month"), /* @__PURE__ */ React.createElement("dt", null, "Storage"), /* @__PURE__ */ React.createElement("dd", null, /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: 4512e6, format: "bytes" })), /* @__PURE__ */ React.createElement("dt", null, "Latency"), /* @__PURE__ */ React.createElement("dd", null, /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: 128, format: "duration" }), " \xB7 ", /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: 95e3, format: "duration" })), /* @__PURE__ */ React.createElement("dt", null, "Error rate"), /* @__PURE__ */ React.createElement("dd", null, /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: 0.0123, format: "percent", maximumFractionDigits: 1 })), /* @__PURE__ */ React.createElement("dt", null, "Requests"), /* @__PURE__ */ React.createElement("dd", null, /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: 4213, format: "compact" })), /* @__PURE__ */ React.createElement("dt", null, "Seats"), /* @__PURE__ */ React.createElement("dd", null, /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: 1250 }))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Usage"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Refreshes as files are uploaded")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement("p", null, "You've used ", /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: usage[i], format: "bytes" }), " of ", /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: 1e10, format: "bytes" }), "."), /* @__PURE__ */ React.createElement("p", { className: "cap" }, 'A changed value cross-fades and settles with a tint. It never counts up. Point at "4.2K" or a byte size for its exact value.'))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

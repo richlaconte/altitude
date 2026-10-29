@@ -1146,6 +1146,40 @@ function App() {
   );
 }
 
+=== FormattedNumber | <!-- @dsCard group="Display" height=400 subtitle="Currency, bytes, durations and percentages, formatted once; a change settles, never counts" -->
+--- css
+.fn { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.fn dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font: 400 15px/23px var(--font-sans); }
+.fn dt { color: var(--ink-muted); }
+.fn dd { margin: 0; }
+.fn p { margin: 0; font: 400 15px/23px var(--font-sans); }
+@media (max-width: 720px) { .fn { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const usage = [4_212_000_000, 4_512_000_000, 5_030_000_000];
+function App() {
+  const [i, setI] = React.useState(0);
+  React.useEffect(() => { const t = setInterval(() => setI((n) => (n + 1) % usage.length), 2600); return () => clearInterval(t); }, []);
+  return (
+    <div className="fn">
+      <dl>
+        <dt>Plan</dt><dd><A.FormattedNumber value={4900} format="currency" currency="EUR" locale="en-IE" /> a month</dd>
+        <dt>Storage</dt><dd><A.FormattedNumber value={4_512_000_000} format="bytes" /></dd>
+        <dt>Latency</dt><dd><A.FormattedNumber value={128} format="duration" /> · <A.FormattedNumber value={95_000} format="duration" /></dd>
+        <dt>Error rate</dt><dd><A.FormattedNumber value={0.0123} format="percent" maximumFractionDigits={1} /></dd>
+        <dt>Requests</dt><dd><A.FormattedNumber value={4213} format="compact" /></dd>
+        <dt>Seats</dt><dd><A.FormattedNumber value={1250} /></dd>
+      </dl>
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Usage</A.CardTitle><A.CardDescription>Refreshes as files are uploaded</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <p>You've used <A.FormattedNumber value={usage[i]} format="bytes" /> of <A.FormattedNumber value={10_000_000_000} format="bytes" />.</p>
+          <p className="cap">A changed value cross-fades and settles with a tint. It never counts up. Point at "4.2K" or a byte size for its exact value.</p>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === Stat | <!-- @dsCard group="Charts" height=560 subtitle="A headline number, its change in words, and colour only when you say which way is good" -->
 --- css
 .st { display: grid; gap: 20px; max-width: 960px; }

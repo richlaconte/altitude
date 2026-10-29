@@ -960,6 +960,20 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 [data-contrast="more"] .alt-link { text-decoration-thickness: 2px; }
 @media (forced-colors: active) { .alt-link { color: LinkText; } .alt-link:focus-visible { outline-color: Highlight; } }
 
+/* ── FormattedNumber: a number is the record, so it lies flush in its sentence or cell, in tabular figures. A changed
+   value cross-fades (the old figure fading out over the new) and takes a ground-level tint that decays over dur-settle:
+   the afterglow without the lift, because a word in a line can't rise. It never counts. ── */
+.alt-num { display: inline-grid; padding: 0 3px; margin: 0 -3px; border-radius: var(--radius-xs); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.alt-num-text { grid-area: 1 / 1; }
+.alt-num-text[data-in] { animation: alt-stat-in var(--dur-travel-2) var(--ease-glide) both; }
+.alt-num-text[data-out] { animation: alt-stat-out var(--dur-travel-2) var(--ease-glide) both; }
+.alt-num[data-settle]::before { animation-name: alt-chart-tint-a; }
+.alt-num[data-settle="b"]::before { animation-name: alt-chart-tint-b; }
+@media (prefers-reduced-motion: reduce) { .alt-num-text[data-in] { animation: none; } .alt-num-text[data-out] { display: none; } }
+[data-motion="reduced"] .alt-num-text[data-in] { animation: none; }
+[data-motion="reduced"] .alt-num-text[data-out] { display: none; }
+@media (forced-colors: active) { .alt-num[data-settle]::before { border: 1px solid Highlight; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */
