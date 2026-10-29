@@ -817,6 +817,17 @@ A design review: `ColorPicker` was rendered with six brand swatches, a hex field
 
 Not yet tested with people: whether the 2D area is needed at all, or the hex field and swatches cover brand use.
 
+### E68 · Can the staircase leave Drilldown?
+
+A design review: `Breadcrumb` was rendered for a three-step path and a six-step path collapsed to four, through a router element, in all four schemes at 960px and under forced colours, beside `Drilldown`. `checks/breadcrumb.mjs` measures it, and `approach-and-lamps.mjs` still checks Drilldown's steps.
+
+- **One staircase.** Drilldown's step is extracted (`CrumbStep`) and both components use it, so the two can't drift. The CSS now targets `.alt-crumb-link`, so a step can be a button (Drilldown), a link or a router's element.
+- **No pile and no rise.** Drilldown lays a sheet on a pile as you go deeper, and its new step rises out of the ground. A route change isn't you carrying something deeper, and it happens on every navigation, so Breadcrumb re-renders without motion.
+- **No separators.** Height already says "deeper". A chevron between steps would say it twice and cost width.
+- **Keep the ends.** Collapsing a deep path keeps the root (where you can always go) and the nearest steps (where you usually go), with the middle in a menu.
+
+Not yet tested with people: whether a staircase is read as a path in a route-based app as readily as it is in Drilldown, where you built it yourself.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

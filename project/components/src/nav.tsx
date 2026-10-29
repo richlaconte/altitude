@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { CrumbStep } from './breadcrumb';
 import { cx, Icons } from './core';
 
 export interface DrillNode {
@@ -74,9 +75,9 @@ export function Drilldown({ root, className, ...rest }: DrilldownProps) {
       <nav className="alt-crumbs" aria-label="Location">
         <ol>
           {path.map((n, i) => (
-            <li key={n.id} data-d={Math.min(i, 3)} style={{ ['--d' as any]: i, zIndex: i + 1 }} data-current={i === depth ? '' : undefined} data-new={i === depth && dir === 'down' && i > 0 ? '' : undefined}>
-              <button type="button" onClick={() => back(i)} aria-current={i === depth ? 'location' : undefined}>{n.title}</button>
-            </li>
+            <CrumbStep key={n.id} depth={i} current={i === depth} isNew={i === depth && dir === 'down' && i > 0}>
+              <button type="button" className="alt-crumb-link" onClick={() => back(i)} aria-current={i === depth ? 'location' : undefined}>{n.title}</button>
+            </CrumbStep>
           ))}
         </ol>
       </nav>
