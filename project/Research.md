@@ -597,6 +597,15 @@ A measurement, then a design review ([#97](https://github.com/richlaconte/altitu
 
 Not yet tested with people: whether the close is noticeable enough at `dur-travel-3`, and whether waiting for the pointer to leave the list reads as lag. Both are open in [the validation record](ActionsInPlaceValidation.md).
 
+### E47 · Can a chart Altitude doesn't draw keep its rules?
+
+A build, then a read-back ([#76](https://github.com/richlaconte/altitude/issues/76)). shadcn/ui's chart component, as published, over Recharts 3.10, set up as **Theming** says and rendered in all four schemes, each nested in a daylight page (`examples/shadcn-chart`, read by `build/checks/shadcn-chart.mjs`).
+
+- **The palette carries over, if it's declared where the scheme is.** shadcn's configs name `var(--chart-1)` directly, so mapping Tailwind's `--color-chart-*` isn't enough. With `--chart-*` declared on `:root` only, the three nested panels drew daylight's colours (9 failures); on `:root, [data-theme]` every mark matched its panel's `data-*`.
+- **Most rules are props.** The grid, ground line, flat marks, readout level, crosshair, keyboard path and reduced motion each map to a Recharts prop, and all read back correctly.
+- **Two props are needed where shadcn's styles stop working.** Recharts 3.10 moved tick text out of the group `ChartContainer`'s selector targets, so ticks fell back to Recharts' grey until `tick` was passed; and the stylesheet's crosshair colour beats Recharts' `stroke` attribute, so only an inline `style` makes it `ink-muted`.
+- **What doesn't carry is behaviour, not colour:** marks that act, legend switches, imprints and empty states, the table view, afterglows and patterns. These stay with Altitude's own charts.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -99,6 +99,10 @@ A chart is accessible when someone can get the same answer from it without seein
 
 Every chart also offers a table view of its data, built with `Table`.
 
+## Charts Altitude doesn't draw
+
+Charts already built with shadcn/ui or Recharts can take Altitude's palette and most of these rules: **Theming** ("With shadcn/ui", "Charts") maps the colours and lists the props that carry each rule, and what doesn't carry over.
+
 ## Don't
 
 - Don't give a mark a shadow, a wall, a sheen, a gradient or a glow, "because Altitude is about height".

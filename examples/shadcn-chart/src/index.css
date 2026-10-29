@@ -1,0 +1,56 @@
+/* The setup Theming.md ("With shadcn/ui") describes, verbatim: Altitude's tokens, then Tailwind with shadcn's theme
+   pointed at them. shadcn's generated :root / .dark colour variables, --chart-* included, are deleted. */
+/* In an app: @import "altitude-design/altitude.no-fonts.css". Here, the package built at the repository root. */
+@import "../../../dist/altitude.no-fonts.css";
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--surface-ground);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface-raised);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface-floating);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--surface-raised);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-well);
+  --color-muted-foreground: var(--ink-muted);
+  --color-accent: var(--accent-soft);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--critical);
+  --color-border: var(--line);
+  --color-input: var(--line-control);
+  --color-ring: var(--accent-ink);
+
+  --color-chart-1: var(--data-1);
+  --color-chart-2: var(--data-2);
+  --color-chart-3: var(--data-3);
+  --color-chart-4: var(--data-4);
+  --color-chart-5: var(--data-5);
+
+  --shadow-xs: var(--elev-1);
+  --shadow-sm: var(--elev-1);
+  --shadow-md: var(--elev-2);
+  --shadow-lg: var(--elev-3);
+  --shadow-xl: var(--elev-4);
+  --shadow-2xl: var(--elev-5);
+}
+
+/* shadcn's chart configs say color: "var(--chart-1)". Declared wherever a scheme is, so a nested scheme or a custom
+   accent re-resolves them instead of inheriting the page's. */
+:root, [data-theme] {
+  --chart-1: var(--data-1);
+  --chart-2: var(--data-2);
+  --chart-3: var(--data-3);
+  --chart-4: var(--data-4);
+  --chart-5: var(--data-5);
+}
+
+/* shadcn's own base layer: borders default to the border colour, not currentColor. */
+@layer base {
+  * { @apply border-border outline-ring/50; }
+}
+
+body { margin: 0; background: var(--surface-ground); color: var(--ink); font-family: var(--font-sans); }
