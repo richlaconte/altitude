@@ -1,0 +1,35 @@
+<!-- @dsCard group="Navigation" height=300 subtitle="Where you are, as Drilldown's staircase: each deeper place a taller step" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Breadcrumb — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const RouterLink = React.forwardRef(({ to, ...rest }, ref) => /* @__PURE__ */ React.createElement("a", { ref, href: "#" + to, ...rest }));
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Breadcrumb, { items: [{ label: "Settings", href: "#/settings" }, { label: "Members", href: "#/settings/members" }, { label: "Jane Doe" }] }), /* @__PURE__ */ React.createElement(
+    A.Breadcrumb,
+    {
+      maxItems: 4,
+      renderLink: (item, props) => /* @__PURE__ */ React.createElement(RouterLink, { to: item.href.slice(1), ...props }, item.label),
+      items: [{ label: "Projects", href: "#/projects" }, { label: "Atlas", href: "#/projects/atlas" }, { label: "Q4 launch", href: "#/projects/atlas/q4" }, { label: "Issues", href: "#/projects/atlas/q4/issues" }, { label: "Billing page", href: "#/projects/atlas/q4/issues/212" }, { label: "Comments" }]
+    }
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, `Each step you can go back to lifts when pointed at; the current page is the tallest step and doesn't press. A deep path keeps its first and last steps, with the middle behind "\u2026".`));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

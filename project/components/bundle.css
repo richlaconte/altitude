@@ -97,14 +97,14 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    outline 2px off a box that covers the face and the wall, because an outline never adds to the page's scrollable
    area: a button at the edge of a narrow screen must not give the page a sideways scroll. At rest the box is the face
    alone, so only a keyboard-focused button's wall (the box's bottom edge, at most 5px) reaches past its own box. */
-.alt-btn:focus-visible, .alt-crumbs button:focus-visible { outline: none; }
-.alt-btn::after, .alt-crumbs button::after {
+.alt-btn:focus-visible, .alt-crumbs .alt-crumb-link:focus-visible { outline: none; }
+.alt-btn::after, .alt-crumbs .alt-crumb-link::after {
   content: ""; position: absolute; pointer-events: none; opacity: 0;
   inset: 0; outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-md);
   transition: opacity var(--dur-travel-1) var(--ease-rise), bottom var(--dur-press) ease-out;
 }
-.alt-btn[data-size="sm"]::after, .alt-crumbs button::after { border-radius: var(--radius-sm); }
-.alt-btn:focus-visible::after, .alt-crumbs button:focus-visible::after { opacity: 1; bottom: calc(-1 * var(--wall, 0px) - 1px); }
+.alt-btn[data-size="sm"]::after, .alt-crumbs .alt-crumb-link::after { border-radius: var(--radius-sm); }
+.alt-btn:focus-visible::after, .alt-crumbs .alt-crumb-link:focus-visible::after { opacity: 1; bottom: calc(-1 * var(--wall, 0px) - 1px); }
 .alt-btn:active::after, .alt-btn[data-loading]::after { bottom: 0; }
 .alt-btn-label { display: inline-flex; align-items: center; gap: var(--space-2); transition: opacity var(--dur-travel-1) var(--ease-rise); }
 .alt-btn-label > svg { flex: none; margin-inline: -2px; }
@@ -1344,6 +1344,11 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   border: 1.5px dashed var(--line-control); transition: top var(--dur-travel-2) var(--ease-settle);
 }
 
+/* ── Breadcrumb and Drilldown share one staircase (CrumbStep): every step stands on the ground line, each deeper one a
+   taller slab. Breadcrumb's steps are links (or your router's), the current page a step that doesn't press, and a deep
+   path's middle waits behind a "…" step that opens a menu. A route change re-renders it without motion. ── */
+.alt-breadcrumb ol { padding-top: 14px; padding-bottom: 4px; }
+
 /* ── Drilldown: hierarchy as a stack. Each place you go into is laid on top of the last: the crumbs climb a
    staircase (each one step higher, its wall one pixel thicker), and the view sits on a pile as thick as you are deep. ── */
 .alt-drill { display: flex; flex-direction: column; gap: var(--space-4); }
@@ -1352,10 +1357,10 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    higher, so all the contact shadows line up. Face and wall share one hairline so the top edge always reads.
    Shadow list: [face ring, wall, wall ring, contact, ambient]. */
 .alt-crumbs li { position: relative; display: flex; --rise: calc(var(--d) * 3px); }
-.alt-crumbs button {
+.alt-crumbs .alt-crumb-link {
   --wd: calc(2px + var(--rise)); --wall: var(--wd); --wall-c: color-mix(in oklab, var(--surface-trench), var(--ink) 6%);
-  position: relative; height: 30px; padding: 0 12px; border: 0; border-radius: var(--radius-sm);
-  font: 500 13px/18px var(--font-sans); color: var(--ink-muted); white-space: nowrap; cursor: pointer;
+  position: relative; display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border: 0; border-radius: var(--radius-sm);
+  font: 500 13px/18px var(--font-sans); color: var(--ink-muted); white-space: nowrap; text-decoration: none; cursor: pointer;
   background: var(--surface-raised); background-image: var(--alt-sheen);
   box-shadow: 0 0 0 1px var(--alt-ring), 0 var(--wd) 0 0 var(--wall-c), 0 var(--wd) 0 1px var(--alt-ring),
     0 calc(var(--wd) + 1px) 2px 0 var(--alt-cast), 0 calc(var(--wd) + 3px) 8px -3px var(--alt-cast);
@@ -1363,12 +1368,12 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   transition: transform var(--dur-travel-2) var(--ease-settle), box-shadow var(--dur-travel-2) var(--ease-settle),
     color var(--dur-travel-1), background-color var(--dur-travel-1);
 }
-.alt-crumbs li:not([data-current]) button:hover, .alt-crumbs li:not([data-current]) button:focus-visible {
+.alt-crumbs li:not([data-current]) .alt-crumb-link:hover, .alt-crumbs li:not([data-current]) .alt-crumb-link:focus-visible {
   --wd: calc(3px + var(--rise)); color: var(--ink); background-color: var(--surface-lifted);
 }
-.alt-crumbs li:not([data-current]) button:active { --wd: 0px; background-image: none; transition-duration: var(--dur-press); transition-timing-function: ease-out; }
-.alt-crumbs li[data-current] button { color: var(--ink); font-weight: 600; cursor: default; }
-.alt-crumbs li[data-new] button { animation: alt-crumb-rise var(--dur-travel-3) var(--ease-settle); }
+.alt-crumbs li:not([data-current]) .alt-crumb-link:active { --wd: 0px; background-image: none; transition-duration: var(--dur-press); transition-timing-function: ease-out; }
+.alt-crumbs li[data-current] .alt-crumb-link { color: var(--ink); font-weight: 600; cursor: default; }
+.alt-crumbs li[data-new] .alt-crumb-link { animation: alt-crumb-rise var(--dur-travel-3) var(--ease-settle); }
 /* A new step is built: it rises out of the ground to its height. */
 @keyframes alt-crumb-rise {
   from { transform: none; box-shadow: 0 0 0 1px var(--alt-ring), 0 0 0 0 var(--wall-c), 0 0 0 1px var(--alt-ring), 0 1px 2px 0 var(--alt-cast), 0 3px 8px -3px var(--alt-cast); }
@@ -2273,7 +2278,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
     --line: var(--line-control); --alt-sheen: none;
     --alt-ring: var(--ink); --alt-cast: transparent; --alt-cast-deep: transparent; --alt-wall-in: var(--ink-muted); --alt-lip: transparent; --alt-rim-held: var(--ink);
   }
-  .alt-btn, .alt-kbd, .alt-crumbs button { --wall-c: var(--ink); }
+  .alt-btn, .alt-kbd, .alt-crumbs .alt-crumb-link { --wall-c: var(--ink); }
   .alt-empty { border-style: solid; }
 }
 [data-contrast="more"], [data-contrast="more"] [data-theme] {
@@ -2288,7 +2293,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
   --line: var(--line-control); --alt-sheen: none;
   --alt-ring: var(--ink); --alt-cast: transparent; --alt-cast-deep: transparent; --alt-wall-in: var(--ink-muted); --alt-lip: transparent; --alt-rim-held: var(--ink);
 }
-[data-contrast="more"] .alt-btn, [data-contrast="more"] .alt-kbd, [data-contrast="more"] .alt-crumbs button { --wall-c: var(--ink); }
+[data-contrast="more"] .alt-btn, [data-contrast="more"] .alt-kbd, [data-contrast="more"] .alt-crumbs .alt-crumb-link { --wall-c: var(--ink); }
 [data-contrast="more"] .alt-empty { border-style: solid; }
 
 /* Forced colours (Windows High Contrast) drop every box-shadow, which erases elevation entirely
@@ -2312,7 +2317,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
   .alt-tabs[data-variant="folder"] .alt-tabs-trigger[aria-selected="true"] { border: 2px solid CanvasText; border-bottom: 0; }
   .alt-tabs[data-variant="folder"] > .alt-tabs-content { border: 1px solid CanvasText; }
   .alt-acc-item[data-state="open"] { border: 1px solid CanvasText; } .alt-acc-content { border: 1px dashed CanvasText; }
-  .alt-crumbs button { border: 1px solid CanvasText; } .alt-crumbs li[data-current] button { border-width: 2px; }
+  .alt-crumbs .alt-crumb-link { border: 1px solid CanvasText; } .alt-crumbs li[data-current] .alt-crumb-link { border-width: 2px; }
   .alt-cmd { border: 4px double CanvasText; } .alt-cmd-hl { display: none; } .alt-cmd-item[aria-selected="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
   .alt-sheet { border: 2px solid CanvasText; } .alt-sheet-pull { border: 1px dashed CanvasText; }
   .alt-input[data-filled]:not([data-invalid]) { border-style: solid !important; }

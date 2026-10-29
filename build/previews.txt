@@ -2342,6 +2342,20 @@ function App() {
   );
 }
 
+=== Breadcrumb | <!-- @dsCard group="Navigation" height=300 subtitle="Where you are, as Drilldown's staircase: each deeper place a taller step" -->
+--- jsx
+const RouterLink = React.forwardRef(({ to, ...rest }, ref) => <a ref={ref} href={'#' + to} {...rest} />);
+function App() {
+  return (
+    <div className="col">
+      <A.Breadcrumb items={[{ label: 'Settings', href: '#/settings' }, { label: 'Members', href: '#/settings/members' }, { label: 'Jane Doe' }]} />
+      <A.Breadcrumb maxItems={4} renderLink={(item, props) => <RouterLink to={item.href.slice(1)} {...props}>{item.label}</RouterLink>}
+        items={[{ label: 'Projects', href: '#/projects' }, { label: 'Atlas', href: '#/projects/atlas' }, { label: 'Q4 launch', href: '#/projects/atlas/q4' }, { label: 'Issues', href: '#/projects/atlas/q4/issues' }, { label: 'Billing page', href: '#/projects/atlas/q4/issues/212' }, { label: 'Comments' }]} />
+      <p className="cap">Each step you can go back to lifts when pointed at; the current page is the tallest step and doesn't press. A deep path keeps its first and last steps, with the middle behind "…".</p>
+    </div>
+  );
+}
+
 === Drilldown | <!-- @dsCard group="Navigation" height=330 subtitle="Descend into children, ascend back" -->
 --- css
 .wrap { max-width: 460px; }

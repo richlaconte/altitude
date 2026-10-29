@@ -2472,6 +2472,34 @@ export interface ColorPickerProps {
 /** A brand or label colour: swatches, an optional hex field and full picker, and a contrast check in words. */
 export declare function ColorPicker(props: ColorPickerProps): React.ReactElement;
 
+export interface BreadcrumbEntry {
+  label: React.ReactNode;
+  /** Where the step goes. The last entry is the current page and never a link. */
+  href?: string;
+  onClick?: (e: React.MouseEvent) => void;
+}
+export interface BreadcrumbProps extends Omit<React.HTMLAttributes<HTMLElement>, 'children'> {
+  items?: BreadcrumbEntry[];
+  /** Deeper paths keep the first step and the last (maxItems − 1), with the middle in a menu behind "…". */
+  maxItems?: number;
+  /** Renders a step's link your way (a router's Link). Spread the props onto it. */
+  renderLink?: (item: BreadcrumbEntry, props: React.AnchorHTMLAttributes<HTMLAnchorElement> & { className: string }) => React.ReactElement;
+  /** Called when a step in the "…" menu is chosen. Default: follow its href. */
+  onNavigate?: (item: BreadcrumbEntry) => void;
+  /** Composable parts (BreadcrumbList, BreadcrumbItem, …), instead of items. */
+  children?: React.ReactNode;
+}
+/** Where you are, as Drilldown's staircase: each deeper place a taller step on one ground line. */
+export declare function Breadcrumb(props: BreadcrumbProps): React.ReactElement;
+export declare function BreadcrumbList(props: React.OlHTMLAttributes<HTMLOListElement>): React.ReactElement;
+export interface BreadcrumbItemProps { depth?: number; children: React.ReactNode }
+export declare function BreadcrumbItem(props: BreadcrumbItemProps): React.ReactElement;
+export declare const BreadcrumbLink: React.ForwardRefExoticComponent<React.AnchorHTMLAttributes<HTMLAnchorElement> & React.RefAttributes<HTMLAnchorElement>>;
+export declare function BreadcrumbPage(props: React.HTMLAttributes<HTMLSpanElement>): React.ReactElement;
+/** Renders nothing: each step's height already says it's deeper. */
+export declare function BreadcrumbSeparator(props: { children?: React.ReactNode }): null;
+export declare function BreadcrumbEllipsis(props: { items: BreadcrumbEntry[]; onNavigate?: (item: BreadcrumbEntry) => void }): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2491,6 +2519,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Breadcrumb: typeof Breadcrumb; BreadcrumbList: typeof BreadcrumbList; BreadcrumbItem: typeof BreadcrumbItem; BreadcrumbLink: typeof BreadcrumbLink; BreadcrumbPage: typeof BreadcrumbPage; BreadcrumbSeparator: typeof BreadcrumbSeparator; BreadcrumbEllipsis: typeof BreadcrumbEllipsis;
       ColorPicker: typeof ColorPicker; ColorSwatchPicker: typeof ColorSwatchPicker;
       CodeBlock: typeof CodeBlock;
       SecretField: typeof SecretField;

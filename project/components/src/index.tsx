@@ -29,6 +29,8 @@ export { ColorPicker, ColorSwatchPicker } from './color-picker';
 export type { ColorSwatch } from './color-picker';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
+export { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbEllipsis } from './breadcrumb';
+export type { BreadcrumbEntry } from './breadcrumb';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';
 export { CommandPalette, commandScore } from './command';
 export { Select, SelectItem, Combobox } from './select';
