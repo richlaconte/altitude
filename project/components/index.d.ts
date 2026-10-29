@@ -2905,6 +2905,24 @@ export interface SaveBarProps {
 /** Unsaved changes held above the page at level 3 until saved or discarded; saving hovers, failing drops to a trench. */
 export declare function SaveBar(props: SaveBarProps): React.ReactElement;
 
+export interface MatrixRole { id: string; name: string; /** Every permission is always granted (an owner). */ locked?: boolean }
+export interface MatrixPermission { id: string; name: string; group?: string }
+export interface MatrixInherited { granted: boolean; from: string }
+export interface PermissionMatrixProps {
+  roles: MatrixRole[];
+  permissions: MatrixPermission[];
+  /** Grants you can change: value[roleId][permissionId]. */
+  value: Record<string, Record<string, boolean>>;
+  /** A grant decided elsewhere: shown as a stamped mark, not a choice. */
+  inherited?: (roleId: string, permissionId: string) => MatrixInherited | undefined;
+  /** Called when a choice is toggled; a promise makes the cell hover as pending, a rejection reverts it. */
+  onChange?: (roleId: string, permissionId: string, granted: boolean) => void | Promise<unknown>;
+  'aria-label'?: string;
+  className?: string;
+}
+/** Roles against permissions: editable grants are Checkboxes, inherited and fixed ones are stamped, the active cell a ring. */
+export declare function PermissionMatrix(props: PermissionMatrixProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2924,6 +2942,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      PermissionMatrix: typeof PermissionMatrix;
       SaveBar: typeof SaveBar;
       DiffView: typeof DiffView; diffLines: typeof diffLines;
       SyncIndicator: typeof SyncIndicator;

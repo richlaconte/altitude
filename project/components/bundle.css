@@ -1539,6 +1539,28 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 [data-contrast="more"] .alt-savebar { box-shadow: 0 3px 0 0 var(--ink), var(--elev-3); }
 @media (forced-colors: active) { .alt-savebar { border: 2px solid CanvasText; } .alt-savebar[data-status="pending"] { border-style: dotted; } .alt-savebar[data-status="failed"] { border: 3px dashed CanvasText; } }
 
+/* ── PermissionMatrix: roles against permissions. The grid is settled, on the ground with line dividers. An editable
+   grant is a choice, a Checkbox's trench that the accent pours into; an inherited or fixed grant is already decided, so
+   it's a flush stamped check (or a dash), muted, like a done Checklist item: pressed into the record, not disabled. The
+   active cell is a 2px accent-ink ring, never a height. A saving cell hovers; a saved one settles. ── */
+.alt-matrix { overflow-x: auto; }
+.alt-matrix-grid { border-collapse: separate; border-spacing: 0; min-width: 100%; font: 400 14px/20px var(--font-sans); color: var(--ink); }
+.alt-matrix-grid th, .alt-matrix-grid td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: center; }
+.alt-matrix-grid thead th { font: 600 13px/18px var(--font-sans); color: var(--ink); white-space: nowrap; }
+.alt-matrix-grid .alt-matrix-perm { text-align: left; font-weight: 400; white-space: nowrap; }
+.alt-matrix-group th { padding-top: var(--space-4); text-align: left; font: 600 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-matrix-cell { position: relative; }
+.alt-matrix-box { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: var(--radius-sm); cursor: pointer; outline: none; }
+.alt-matrix-box[data-fixed] { cursor: help; }
+.alt-matrix-box:focus-visible { box-shadow: 0 0 0 2px var(--accent-ink); }
+.alt-matrix-box[data-on] .alt-check-fill { opacity: 1; clip-path: circle(75% at 50% 50%); }
+.alt-matrix-box[data-on] .alt-check-tick { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-travel-2) var(--ease-rise) 60ms; }
+.alt-matrix-box[data-on] .alt-check-track { border-color: var(--accent); }
+.alt-matrix-stamp { display: grid; place-items: center; width: 22px; height: 22px; color: var(--ink-muted); }
+.alt-matrix-dash { display: block; width: 10px; height: 2px; border-radius: 1px; background: var(--ink-faint); }
+[data-contrast="more"] .alt-matrix-box:focus-visible { box-shadow: 0 0 0 3px var(--accent-ink); }
+@media (forced-colors: active) { .alt-matrix-box:focus-visible { box-shadow: none; outline: 2px solid Highlight; } .alt-matrix-dash { background: CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

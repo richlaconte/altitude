@@ -1036,6 +1036,17 @@ A design review: `SaveBar` was rendered over a four-field settings form driven b
 
 Not yet tested with people: whether 600ms feels responsive or late after a single edit.
 
+### E88 · Is an inherited permission disabled?
+
+A design review: `PermissionMatrix` was rendered with a locked Owner, three editable roles, inherited grants and denials, and a cell saving, in all four schemes and under forced colours. `checks/permission-matrix.mjs` drives it.
+
+- **Decided, not disabled.** Agent-built matrices draw inherited and fixed grants as disabled checkboxes, which says "you can't have this". These cells are already decided, so they're stamped into the record like a done Checklist item, and they say where the decision comes from.
+- **Reachable read-only cells.** Skipping them in the grid would hide why a role has a permission. They're focusable, read their reason, and pressing Space says they can't be changed here.
+- **A ring, not a lift.** The active cell is DataGrid's ring, because a cell lifting out of its row breaks the grid.
+- **A saving cell hovers.** Permission changes usually go to a server one at a time, so a promise from `onChange` makes that cell hover as pending, then settle, or revert on failure.
+
+Not yet tested with people: whether a stamped check is read as "inherited" without its tooltip.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
