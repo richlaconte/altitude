@@ -983,6 +983,21 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-reltime[data-settle="b"]::before { animation-name: alt-chart-tint-b; }
 @media (forced-colors: active) { .alt-reltime[data-settle]::before { border: 1px solid Highlight; } .alt-reltime:focus-visible { outline-color: Highlight; } }
 
+/* ── CopyButton: copying is a press that confirms in words. It's a Button (ghost by default); once copied it stays
+   pressed to the ground for dur-linger, its icon cross-fades from copy to a check and its words to "Copied" (all its
+   words share one cell, so its width never changes). No rise and no afterglow: nothing new arrived on the page. A
+   failure says so in words, with the way to copy by hand announced. ── */
+.alt-copy-icons, .alt-copy-words { display: inline-grid; place-items: center; }
+.alt-copy-icons > svg, .alt-copy-words > span { grid-area: 1 / 1; transition: opacity var(--dur-travel-1) var(--ease-rise); }
+.alt-copy-icons > svg:not([data-shown]), .alt-copy-words > span:not([data-shown]) { opacity: 0; visibility: hidden; }
+.alt-copy-words > span { white-space: nowrap; }
+.alt-btn.alt-copy[data-copy="copied"], .alt-btn.alt-copy[data-copy="copied"]:hover, .alt-btn.alt-copy[data-copy="copied"]:focus-visible {
+  box-shadow: 0 0 0 0 var(--wall-c), var(--elev-0); background-image: none; transform: translateY(var(--wall));
+}
+.alt-btn.alt-copy[data-variant="ghost"][data-copy="copied"] { background: transparent; }
+.alt-btn.alt-copy[data-copy="failed"] .alt-copy-icons { color: var(--critical); }
+@media (forced-colors: active) { .alt-btn.alt-copy:hover:not([data-copy="copied"]) { border: 1px solid ButtonText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

@@ -2188,6 +2188,21 @@ export interface RelativeTimeProps extends RelativeTimeOptions, Omit<React.TimeH
 /** A moment as "3 minutes ago" in a <time>, refreshed on one shared timer, with its exact time on hand. Ticking isn't a change. */
 export declare function RelativeTime(props: RelativeTimeProps): React.ReactElement;
 
+export interface CopyButtonProps extends Omit<ButtonProps, 'value' | 'onCopy' | 'onError' | 'square' | 'loading' | 'leading'> {
+  /** What's copied, or a function that returns it (it may return a promise). */
+  value: string | (() => string | Promise<string>);
+  /** The button's name: its aria-label and Tooltip when it's icon-only, and kept as its name while it says "Copied". Default "Copy". */
+  label?: string;
+  /** Shown for dur-linger once copied. Default "Copied". */
+  copiedLabel?: string;
+  /** Shown for dur-linger when copying fails. Default "Couldn't copy". */
+  failedLabel?: string;
+  onCopy?: (value: string) => void;
+  onError?: (error: unknown) => void;
+}
+/** Copies a value and says so in words: pressed to the ground with a check and "Copied" for dur-linger, announced politely. */
+export declare const CopyButton: React.ForwardRefExoticComponent<CopyButtonProps & React.RefAttributes<HTMLButtonElement>>;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2207,6 +2222,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      CopyButton: typeof CopyButton;
       RelativeTime: typeof RelativeTime; formatRelativeTime: typeof formatRelativeTime;
       FormattedNumber: typeof FormattedNumber; formatNumber: typeof formatNumber; describeNumber: typeof describeNumber;
       Link: typeof Link;

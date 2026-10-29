@@ -696,6 +696,17 @@ A design review: `RelativeTime` was rendered in an activity feed reaching from s
 
 Not yet tested with people: whether 15 seconds is fresh enough for "now" in a chat-like feed.
 
+### E57 · How should a copy confirm itself?
+
+A design review: `CopyButton` was rendered icon-only beside an API key, as a secondary "Copy invite link", and failing on purpose, in all four schemes at 960px and under forced colours, and pressed with the pointer and the keyboard. `checks/copy-button.mjs` measures it with a stubbed clipboard.
+
+- **Pressed, not glowing.** The afterglow means new content arrived, and a copy adds nothing to the page. The confirmation is where the hand is: the button stays pressed for `dur-linger` with a check and the word. A toast for a two-second event would draw the eye away from the value just copied.
+- **The name doesn't change.** Renaming a focused button makes some screen readers re-announce it as a new control. The button keeps its name (`label`, or its text as `aria-label` while it says "Copied"), and a polite status region outside the button says what happened.
+- **Its width doesn't change.** "Copied" is shorter than "Copy invite link" and "Couldn't copy" may be longer, so every label shares one cell, the fix #116 made for HoldButton.
+- **A failure says what to do.** Clipboard writes fail in insecure contexts and under permission policies. After the fallback (a selected hidden textarea and the copy command) fails, it announces how to copy by hand with the platform's shortcut.
+
+Not yet tested with people: whether two seconds is long enough to notice "Copied" on an icon-only button.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

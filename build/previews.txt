@@ -1956,6 +1956,25 @@ function App() {
   );
 }
 
+=== CopyButton | <!-- @dsCard group="Actions" height=300 subtitle="Copy a value and say so in words, pressed to the ground for a moment" -->
+--- css
+.cb { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.cb .key { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: var(--radius-md); background: var(--surface-well); box-shadow: var(--well); font: 400 13px/20px var(--font-mono); color: var(--ink); }
+.cb .key code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+--- jsx
+function App() {
+  return (
+    <div className="cb">
+      <div className="key"><code>sk_live_51Hc8x2Lw9Qe7TfR4mNpZa</code><A.CopyButton size="sm" value="sk_live_51Hc8x2Lw9Qe7TfR4mNpZa" label="Copy API key" /></div>
+      <div className="row">
+        <A.CopyButton variant="secondary" value={() => 'https://app.example.com/invite/7Fq2'}>Copy invite link</A.CopyButton>
+        <A.CopyButton value={() => Promise.reject(new Error('denied'))}>Copy install command</A.CopyButton>
+      </div>
+      <p className="cap">Copied: pressed to the ground with a check and "Copied" for two seconds, announced politely; the button keeps its name and its width. The last one fails on purpose, to show what a failure says.</p>
+    </div>
+  );
+}
+
 === Pile | <!-- @dsCard group="Display" height=480 subtitle="Thickness says how many; click to fan it out" -->
 --- css
 .piles { display: flex; gap: 28px; align-items: flex-start; }

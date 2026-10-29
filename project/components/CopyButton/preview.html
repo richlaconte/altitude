@@ -1,0 +1,29 @@
+<!-- @dsCard group="Actions" height=300 subtitle="Copy a value and say so in words, pressed to the ground for a moment" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CopyButton — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cb { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.cb .key { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: var(--radius-md); background: var(--surface-well); box-shadow: var(--well); font: 400 13px/20px var(--font-mono); color: var(--ink); }
+.cb .key code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "cb" }, /* @__PURE__ */ React.createElement("div", { className: "key" }, /* @__PURE__ */ React.createElement("code", null, "sk_live_51Hc8x2Lw9Qe7TfR4mNpZa"), /* @__PURE__ */ React.createElement(A.CopyButton, { size: "sm", value: "sk_live_51Hc8x2Lw9Qe7TfR4mNpZa", label: "Copy API key" })), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.CopyButton, { variant: "secondary", value: () => "https://app.example.com/invite/7Fq2" }, "Copy invite link"), /* @__PURE__ */ React.createElement(A.CopyButton, { value: () => Promise.reject(new Error("denied")) }, "Copy install command")), /* @__PURE__ */ React.createElement("p", { className: "cap" }, 'Copied: pressed to the ground with a check and "Copied" for two seconds, announced politely; the button keeps its name and its width. The last one fails on purpose, to show what a failure says.'));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
