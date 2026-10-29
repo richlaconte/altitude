@@ -1,6 +1,7 @@
 // Builds the landing page into site-dist/ from site/ and the design system's own sources.
 //   site-dist/index.html      the page served at the GitHub Pages root (a full document; everything inlined)
 //   site-dist/artifact.html   the same page as a fragment, for a hosted preview that adds its own document skeleton
+//   site-dist/lab/*.html      prototypes for discussion (site/lab/), built the same way with site/lab/lab.css added
 // CI then copies Storybook into site-dist/storybook/ (see .github/workflows/ci.yml).
 import { build } from 'esbuild';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
@@ -10,13 +11,16 @@ const out = 'site-dist';
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
-const result = await build({
-  entryPoints: ['site/main.tsx'], bundle: true, write: false, format: 'iife', minify: true, target: 'es2020', legalComments: 'none',
-  jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment',
-  define: { 'process.env.NODE_ENV': '"production"' },
-});
-// An inline script ends at the first "</script", wherever it appears.
-const js = result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
+async function bundle(entry) {
+  const result = await build({
+    entryPoints: [entry], bundle: true, write: false, format: 'iife', minify: true, target: 'es2020', legalComments: 'none',
+    jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment',
+    define: { 'process.env.NODE_ENV': '"production"' },
+  });
+  // An inline script ends at the first "</script", wherever it appears.
+  return result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
+}
+const js = await bundle('site/main.tsx');
 
 const components = readFileSync('project/components/bundle.css', 'utf8');
 const fontImport = (components.match(/^@import url\('([^']+)'\);/) || [])[1];
@@ -33,7 +37,7 @@ const body = `${early}
 <div id="altitude-site"></div>
 <script>${js}</script>`;
 
-writeFileSync(`${out}/index.html`, `<!doctype html>
+const page = ({ title, description, css, body }) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -51,7 +55,20 @@ ${css}
 ${body}
 </body>
 </html>
-`);
+`;
+writeFileSync(`${out}/index.html`, page({ title, description, css, body }));
+
+const lab = [
+  { entry: 'site/lab/edit-in-place.tsx', file: 'edit-in-place.html', title: 'Edit in place · Altitude lab',
+    description: 'A prototype comparing today’s InlineEdit and EditRegion with editing in place: values stay where they are, and whatever changes size glides.' },
+];
+mkdirSync(`${out}/lab`, { recursive: true });
+const labCss = css + '\n' + readFileSync('site/lab/lab.css', 'utf8');
+for (const p of lab) {
+  const labJs = await bundle(p.entry);
+  writeFileSync(`${out}/lab/${p.file}`, page({ title: p.title, description: p.description, css: labCss,
+    body: `${early}\n<div id="altitude-site"></div>\n<script>${labJs}</script>` }));
+}
 
 writeFileSync(`${out}/artifact.html`, `<title>${title}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
