@@ -14,6 +14,7 @@ export type { FormatNumberOptions, NumberFormatPreset, DurationUnit } from './fo
 export { RelativeTime, formatRelativeTime } from './relative-time';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
+export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';

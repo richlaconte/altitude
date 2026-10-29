@@ -1,0 +1,34 @@
+<!-- @dsCard group="Actions" height=330 subtitle="Buttons that stay on: on is a well the accent pours into, as a Switch" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toggle — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.tg { display: flex; flex-direction: column; gap: 16px; }
+.tg .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.tg b, .tg i, .tg u { font: 600 15px/1 var(--font-serif, Georgia, serif); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const Thumb = ({ down }) => /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", style: down ? { transform: "scaleY(-1)" } : void 0 }, /* @__PURE__ */ React.createElement("path", { d: "M7 10v11H4V10zM7 10l4-7a2 2 0 0 1 3 2l-1 5h6a2 2 0 0 1 2 2.3l-1.5 7A2 2 0 0 1 17.5 21H7" }));
+function App() {
+  const [view, setView] = React.useState("board");
+  const [marks, setMarks] = React.useState(["bold"]);
+  const [archived, setArchived] = React.useState(false);
+  const [vote, setVote] = React.useState("");
+  return /* @__PURE__ */ React.createElement("div", { className: "tg" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "multiple", value: marks, onValueChange: setMarks, "aria-label": "Text style" }, /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "bold", "aria-label": "Bold", square: true }, /* @__PURE__ */ React.createElement("b", null, "B")), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "italic", "aria-label": "Italic", square: true }, /* @__PURE__ */ React.createElement("i", null, "I")), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "underline", "aria-label": "Underline", square: true }, /* @__PURE__ */ React.createElement("u", null, "U"))), /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "single", value: view, onValueChange: setView, "aria-label": "View" }, /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "list" }, "List"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "board" }, "Board"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "calendar" }, "Calendar")), /* @__PURE__ */ React.createElement(A.Toggle, { variant: "secondary", pressed: archived, onPressedChange: setArchived }, "Show archived")), /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("span", { className: "cap" }, "Was this answer helpful?"), /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "single", value: vote, onValueChange: setVote, "aria-label": "Rate this answer" }, /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "up", "aria-label": "Helpful" }, /* @__PURE__ */ React.createElement(Thumb, null)), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "down", "aria-label": "Not helpful" }, /* @__PURE__ */ React.createElement(Thumb, { down: true })))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "On is a choice, built like the Switch: the face sinks into a well with the accent poured in. Pointing at an on toggle previews off. One choice (View) is segmented Tabs without panels. Each group is one tab stop; arrows move inside it."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

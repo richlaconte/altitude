@@ -52,6 +52,7 @@ Rules that follow:
 | **Labels** | a label is part of the record: an indicator plate set flush into the page, with a lamp for status that relights when it changes; only a count, which wants your attention, floats | `Badge`, `Tag`, `TagInput` |
 | **A divider** | a divider is part of the page: 1px of `line` on the ground with no shadow or wall, never `line-control`; a word between two lines ("or") is read, its lines are drawn | `Separator`, `ItemSeparator` |
 | **Navigation in text** | a link is text in the record and never lifts, since lifting a word would break its line: `accent-ink` with an underline that thickens on hover, the focus ring, and an icon plus "(opens in a new tab)" when it leaves the app | `Link` |
+| **Latched** | a button that stays on is a choice: on, its face is cut into a shallow well with `accent-soft` poured in and its label in `accent-ink`; off is the ghost or secondary slab it started as; pointing at an on toggle previews off. One choice among several is segmented Tabs without panels | `Toggle`, `ToggleGroup` |
 | **Disclosure** | closed sections are lids flush on the page; opening one lifts the lid into a card and reveals a compartment sunk into it; a table row's read-only detail opens flush beneath it instead, because a row can't lift into a card without breaking the columns | `Accordion`, `DataTable` |
 | **Editing in place** | a value being edited stays where it is while its well opens around it; a record being edited lifts into a static raised card whose padding was already there, so it rises without moving, with its neighbours still in view; the write hovers while pending, drops to a trench on failure, and the accepted values settle back with one afterglow | `InlineEdit`, `EditRegion`, a `BoardCard` renamed or edited in place, a `DataTable` row and its region rising as one slab |
 | **Completeness** | an empty field is a hole cut into the page, its back wall showing; once it holds a value the floor rises flush, so a form shows which fields still need filling. A select fills when a value is chosen; a combobox too, because a typed query isn't a value; a date field when it holds a whole date, not a partial one. A textarea with a limit fills from the floor as it nears it; a tag field fills with its first tag | `Input`, `Textarea`, `Select`, `Combobox`, `TagInput` |
@@ -99,7 +100,7 @@ Rules that follow:
 
 ## Rules
 
-- **Push up, fill down.** Never style an input as raised or a button as sunk.
+- **Push up, fill down.** Never style an input as raised or a button as sunk. The one exception is a toggle that's on: it's a choice, so it's built like the Switch (a shallow well the accent pours into), not like a held press, which would read as loading.
 - **Choices are switches.** Switch, Checkbox and RadioGroup share one build: a trench track that the accent pours into when it's on, with a raised white mark on top. When only one option can be chosen there is only one mark, and it travels.
 - **Hover is a promise.** A lift on hover means clicking does something. Static surfaces never lift; interactive ones always do.
 - **Pressing returns to ground; loading holds it there.** Disabled things are flush and stay flush.

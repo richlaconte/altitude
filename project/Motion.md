@@ -123,6 +123,10 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
+## Latching
+
+**A toggle sinks when it turns on.** A `Toggle` turning on sinks into its well over `dur-travel-2` on `ease-sink` while the accent pours in. Turning off rises on `ease-rise`. A single-choice `ToggleGroup`'s pill glides between options on `ease-glide` over `dur-travel-3`, as segmented `Tabs`' does. Under reduced motion the pill appears in place and the fill still changes.
+
 ## Confirming a press
 
 **A copy stays pressed for a moment.** A `CopyButton` presses to the ground on `dur-press` like any button, then stays there for `dur-linger` while its icon and words cross-fade (`dur-travel-1`) to a check and "Copied". Then it springs back on `ease-settle`. Nothing rises, so reduced motion changes only the cross-fade's travel, which is none.
