@@ -115,6 +115,7 @@ jobs:
           node ../scripts/record-check.mjs react18-timeline node checks/timeline.mjs
           node ../scripts/record-check.mjs react18-notifications node checks/notifications.mjs
           node ../scripts/record-check.mjs react18-sync-indicator node checks/sync-indicator.mjs
+          node ../scripts/record-check.mjs react18-diff-view node checks/diff-view.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs

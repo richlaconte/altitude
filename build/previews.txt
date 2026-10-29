@@ -544,6 +544,46 @@ function App() {
   );
 }
 
+=== DiffView | <!-- @dsCard group="Display" height=620 subtitle="What changed between two versions, in signs and words" -->
+--- css
+.dv { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 760px) { .dv { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const v4 = `# Deploy settings
+region: eu-central-1
+replicas: 2
+memory: 512Mi
+timeout: 30s
+retries: 3
+logging: info
+metrics: enabled
+tracing: disabled
+cache: 5m
+health: /healthz
+owner: platform-team`;
+const v5 = `# Deploy settings
+region: eu-central-1
+replicas: 4
+memory: 1Gi
+timeout: 30s
+retries: 3
+logging: info
+metrics: enabled
+tracing: disabled
+cache: 5m
+health: /healthz
+owner: platform-team
+alerts: on-call`;
+function App() {
+  return (
+    <div className="dv">
+      <A.DiffView caption="deploy.yaml · version 4 → 5" before={v4} after={v5} context={1} />
+      <A.DiffView mode="properties" caption="Subscription changed by Maya" before={{ plan: 'Pro', seats: 12, billing: 'Monthly' }} after={{ plan: 'Business', seats: 25, billing: 'Monthly' }}
+        fields={[{ key: 'plan', label: 'Plan' }, { key: 'seats', label: 'Seats' }, { key: 'billing', label: 'Billing' }]} />
+    </div>
+  );
+}
+
 === Kbd | <!-- @dsCard group="Display" height=110 subtitle="Keys that press when you press them" -->
 --- jsx
 function App() {

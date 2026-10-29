@@ -1482,6 +1482,45 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-sync-queue-title { margin: 0; font: 600 13px/18px var(--font-sans); color: var(--ink); }
 [data-contrast="more"] .alt-sync-plate { box-shadow: inset 0 0 0 1px var(--line-control); }
 
+/* ── DiffView: both versions are the record, so it lies flush with a line rim (as CodeBlock). Additions are positive-
+   soft with a + sign, removals critical-soft and struck through with a − sign, and words that changed inside a line take
+   a stronger tint; a changed property shows the old value struck through beside the new. Signs and words carry it, never
+   colour alone. Long unchanged runs fold behind lids. ── */
+.alt-diff { margin: 0; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-ground); overflow: hidden; }
+.alt-diff-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: 6px 6px 6px var(--space-4); border-bottom: 1px solid var(--line); }
+.alt-diff-caption { font: 500 13px/18px var(--font-sans); color: var(--ink); }
+.alt-diff-summary { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-diff-nav { display: inline-flex; gap: 2px; margin-left: auto; }
+.alt-diff-body { overflow: auto; max-height: 420px; padding: var(--space-2) 0; }
+.alt-diff-lines { min-width: max-content; font: 400 13px/20px var(--font-mono); }
+.alt-diff-line { display: flex; padding-right: var(--space-4); outline: none; }
+.alt-diff-line:focus-visible { box-shadow: inset 2px 0 0 var(--accent-ink); }
+.alt-diff-sign { flex: none; width: 28px; text-align: center; color: var(--ink-muted); user-select: none; }
+.alt-diff-text { white-space: pre; text-decoration: none; color: var(--ink); }
+.alt-diff-line[data-kind="add"] { background: var(--positive-soft); }
+.alt-diff-line[data-kind="del"] { background: var(--critical-soft); }
+.alt-diff-line[data-kind="del"] .alt-diff-text { text-decoration: line-through; text-decoration-color: color-mix(in oklab, var(--critical) 60%, transparent); }
+.alt-diff-line[data-kind="add"] .alt-diff-sign { color: var(--positive); }
+.alt-diff-line[data-kind="del"] .alt-diff-sign { color: var(--critical); }
+.alt-diff-word { color: inherit; border-radius: 2px; }
+.alt-diff-line[data-kind="add"] .alt-diff-word { background: color-mix(in oklab, var(--positive) 22%, transparent); }
+.alt-diff-line[data-kind="del"] .alt-diff-word { background: color-mix(in oklab, var(--critical) 18%, transparent); }
+.alt-diff-fold button { display: flex; align-items: center; gap: 6px; width: 100%; padding: 4px var(--space-4) 4px 28px; border: 0; border-block: 1px solid var(--line); background: var(--surface-ground); font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); cursor: pointer; text-align: left; }
+.alt-diff-fold button:hover { background: var(--surface-raised); color: var(--ink); }
+.alt-diff-fold button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-diff-props { display: flex; flex-direction: column; margin: 0; padding: 0 var(--space-4); }
+.alt-diff-prop { display: grid; grid-template-columns: minmax(96px, 30%) 1fr; gap: var(--space-3); padding: 8px 0; border-bottom: 1px solid var(--line); font: 400 14px/20px var(--font-sans); outline: none; }
+.alt-diff-prop:last-child { border-bottom: 0; }
+.alt-diff-prop:focus-visible { box-shadow: inset 2px 0 0 var(--accent-ink); }
+.alt-diff-prop dt { color: var(--ink-muted); }
+.alt-diff-prop dd { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; }
+.alt-diff-old { padding: 0 4px; border-radius: var(--radius-xs); background: var(--critical-soft); text-decoration: line-through; color: var(--ink); }
+.alt-diff-new { padding: 0 4px; border-radius: var(--radius-xs); background: var(--positive-soft); text-decoration: none; color: var(--ink); font-weight: 500; }
+.alt-diff-arrow { transform: rotate(-90deg); color: var(--ink-muted); }
+[data-contrast="more"] .alt-diff-line[data-kind="add"] { box-shadow: inset 2px 0 0 var(--positive); }
+[data-contrast="more"] .alt-diff-line[data-kind="del"] { box-shadow: inset 2px 0 0 var(--critical); }
+@media (forced-colors: active) { .alt-diff-line[data-kind], .alt-diff-old, .alt-diff-new, .alt-diff-word { background: none; } .alt-diff { border: 1px solid CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */
