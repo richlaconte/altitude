@@ -55,3 +55,15 @@ What each condition means for your rows, and the results. Saved views and nested
 ## Demo and verification
 
 The `FilterBar` section of `build/previews.txt` filters an issue table in place. `node checks/filter-bar.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the one Tab stop and arrow keys, opening and closing pickers, changing a value and an operator, the announcement with its count, re-stamping, Add filter with its field-then-value sequence and the empty value opening, text and date-range values, Match all/any, removal with focus repair, the paired table's relevance, and 320/960px layouts in four schemes under reduced motion, forced colours and `contrast="more"`.
+
+## Nested groups
+
+Automation rules, segments and advanced search need nested logic: "Plan is Pro **and** any of (Country is Germany, Seats > 50)". Pass a `FilterTree` and `nesting={2}`:
+
+```tsx
+<FilterBar fields={fields} nesting={2} value={tree} onValueChange={setTree} />
+// tree: { match: 'all', items: [Filter | { id, match: 'any', items: Filter[] }] }
+```
+
+A group is drawn as **a flush bracket on the ground**: a 1px `line-control` rule around its own conditions, with its own all/any switch (shown even with one condition) and its own Add filter. Groups are part of the record of the query, not live surfaces. Depth is capped at one level of groups so it never becomes a code editor, and groups follow the top level's conditions. "+ Add group" starts an "any of" group, and removing a group's last condition removes the group. `filterSentence(fields, tree)` reads the whole expression in words, and it's announced as it changes. `value: Filter[]` keeps working as before.
+

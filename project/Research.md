@@ -970,6 +970,17 @@ A design review: `DropZone queue` was rendered with files uploading, processing,
 
 Not yet tested with people: whether the pending hover is read as "the server is working" rather than as a hover effect.
 
+### E82 · How deep should a filter go?
+
+A design review: `FilterBar nesting={2}` was rendered with "Plan is Pro and any of: Country is Germany, Seats > 50" over a table filtered in place, a group added and removed, in all four schemes and under forced colours. `checks/filter-groups.mjs` measures it.
+
+- **A bracket, not a card.** A group could be a raised panel, but it doesn't act: it's part of the query's record. A flush 1px `line-control` rule groups its conditions as brackets do in writing.
+- **One level.** Rule builders that nest without limit turn into code editors with boxes. Real segments almost never need more than "A and (B or C)", so groups go one level deep.
+- **Composition over a new model.** Each group is a FilterBar of its own (its conditions, its all/any, its Add filter), so the keyboard model, pickers and announcements are the ones FilterBar already has.
+- **The sentence.** `filterSentence` reads the whole tree ("… and any of: …"), so screen reader users and summaries get the logic, not just a count.
+
+Not yet tested with people: whether "any of" groups are understood without an "or" between their conditions.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

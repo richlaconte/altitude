@@ -1,0 +1,58 @@
+<!-- @dsCard group="Inputs" height=520 subtitle="Nested conditions (all of / any of) as brackets on the ground, for rules and segments" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FilterGroups — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const GF = [
+  { key: "plan", label: "Plan", type: "enum", options: ["Free", "Pro", "Enterprise"].map((x) => ({ value: x, label: x })) },
+  { key: "country", label: "Country", type: "enum", options: [{ value: "DE", label: "Germany" }, { value: "FR", label: "France" }, { value: "US", label: "United States" }] },
+  { key: "seats", label: "Seats", type: "number" }
+];
+const GROWS = [
+  { id: "a", name: "Acme", plan: "Pro", country: "DE", seats: 12 },
+  { id: "b", name: "Globex", plan: "Pro", country: "US", seats: 80 },
+  { id: "c", name: "Initech", plan: "Pro", country: "US", seats: 9 },
+  { id: "d", name: "Umbrella", plan: "Free", country: "DE", seats: 3 },
+  { id: "e", name: "Hooli", plan: "Enterprise", country: "FR", seats: 400 }
+];
+const test = (r, f) => f.value === void 0 || (f.operator === "is" ? r[f.field] === f.value : f.operator === "is not" ? r[f.field] !== f.value : f.operator === ">" ? r[f.field] > f.value : f.operator === "<" ? r[f.field] < f.value : r[f.field] === f.value);
+const holds = (r, node) => {
+  const ts = node.items.map((x) => x.items ? holds(r, x) : test(r, x));
+  return node.match === "all" ? ts.every(Boolean) : ts.some(Boolean);
+};
+function App() {
+  const [tree, setTree] = React.useState({ match: "all", items: [
+    { id: "p", field: "plan", operator: "is", value: "Pro" },
+    { id: "g", match: "any", items: [{ id: "c", field: "country", operator: "is", value: "DE" }, { id: "s", field: "seats", operator: ">", value: 50 }] }
+  ] });
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.FilterBar, { fields: GF, value: tree, onValueChange: setTree, nesting: 2, "aria-label": "Segment rules" }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, A.filterSentence(GF, tree)), /* @__PURE__ */ React.createElement(
+    A.DataTable,
+    {
+      "aria-label": "Accounts",
+      rows: GROWS,
+      getRowId: (r) => r.id,
+      density: "compact",
+      relevance: (r) => tree.items.length ? holds(r, tree) ? "match" : "miss" : void 0,
+      columns: [{ key: "name", header: "Account" }, { key: "plan", header: "Plan" }, { key: "country", header: "Country" }, { key: "seats", header: "Seats", align: "end" }]
+    }
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -17,10 +17,20 @@ export interface FilterField {
 }
 export type FilterValue = string | number | { start: string; end: string } | undefined;
 export interface Filter { id: string; field: string; operator: string; value: FilterValue }
+/** Nested logic: conditions and, with nesting={2}, groups of conditions, each with its own all/any. */
+export interface FilterTree { match: 'all' | 'any'; items: (Filter | FilterGroup)[] }
+export interface FilterGroup { id: string; match: 'all' | 'any'; items: Filter[] }
+const isGroup = (x: Filter | FilterGroup): x is FilterGroup => Array.isArray((x as FilterGroup).items);
+
 export interface FilterBarProps {
   fields: FilterField[];
-  value: Filter[];
-  onValueChange: (filters: Filter[]) => void;
+  /** The conditions; or a FilterTree for nested logic ("Plan is Pro and any of: …"). */
+  value: Filter[] | FilterTree;
+  onValueChange: ((filters: Filter[]) => void) | ((tree: FilterTree) => void);
+  /** With a FilterTree: 2 allows groups one level deep. Default 1 (no groups). */
+  nesting?: 1 | 2;
+  /** Show the all/any segment even with one condition (a group's own switch). */
+  matchAlways?: boolean;
   /** Shown as a segment when there's more than one filter. Omit to hide it. */
   match?: 'all' | 'any';
   onMatchChange?: (match: 'all' | 'any') => void;
@@ -58,7 +68,48 @@ const segKey = (s: Seg) => `${s.filter ?? ''}:${s.part}`;
  * lift when pointed at because each opens its picker (level 3). A condition still waiting for a value keeps that
  * segment as an opening, and so does Add filter. The bar is one Tab stop: a toolbar with ←/→ between segments.
  */
-export function FilterBar({ fields, value, onValueChange, match, onMatchChange, resultCount, createId = () => `filter-${++counter}`, className, ...aria }: FilterBarProps) {
+/** The whole expression in words: "Plan is Pro and any of: Country is Germany, Seats > 50". */
+export function filterSentence(fields: FilterField[], value: Filter[] | FilterTree, match: 'all' | 'any' = 'all'): string {
+  const of = (key: string) => fields.find((f) => f.key === key)!;
+  const tree: FilterTree = Array.isArray(value) ? { match, items: value } : value;
+  const join = (m: 'all' | 'any') => (m === 'all' ? ' and ' : ' or ');
+  return tree.items.map((x) => (isGroup(x) ? `${x.match === 'all' ? 'all' : 'any'} of: ${x.items.map((y) => sentence(of(y.field), y)).join(', ')}` : sentence(of(x.field), x))).join(join(tree.match));
+}
+
+export function FilterBar(props: FilterBarProps) {
+  if (!Array.isArray(props.value)) return <FilterTreeBar {...props} value={props.value} onValueChange={props.onValueChange as (t: FilterTree) => void} />;
+  return <FilterList {...props} value={props.value} onValueChange={props.onValueChange as (f: Filter[]) => void} />;
+}
+
+/**
+ * Nested logic as brackets on the ground: the top level's conditions, then each group, a flush 1px line-control
+ * bracket around its own conditions and its own all/any switch. Groups are part of the record of the query, not live
+ * surfaces, and depth is capped so it never becomes a code editor. Groups follow the top level's conditions.
+ */
+function FilterTreeBar({ fields, value, onValueChange, nesting = 1, resultCount, createId = () => `filter-${++counter}`, className, ...aria }: Omit<FilterBarProps, 'value' | 'onValueChange'> & { value: FilterTree; onValueChange: (t: FilterTree) => void }) {
+  const top = value.items.filter((x): x is Filter => !isGroup(x));
+  const groups = value.items.filter(isGroup);
+  const set = (items: (Filter | FilterGroup)[], match = value.match) => onValueChange({ match, items });
+  return (
+    <div className={cx('alt-filter-tree', className)} role="group" aria-label={aria['aria-label'] ?? 'Filters'}>
+      <FilterList fields={fields} value={top} onValueChange={(f) => set([...f, ...groups])} match={value.match} onMatchChange={(m) => set(value.items, m)}
+        matchAlways={groups.length > 0} resultCount={resultCount} createId={createId} aria-label="Conditions" />
+      {groups.map((g) => (
+        <div key={g.id} className="alt-filter-group" role="group" aria-label={g.match === 'any' ? 'Any of' : 'All of'}>
+          <FilterList fields={fields} value={g.items} match={g.match} matchAlways createId={createId} aria-label={`${g.match === 'any' ? 'Any' : 'All'} of these conditions`}
+            onMatchChange={(m) => set(value.items.map((x) => (x === g ? { ...g, match: m } : x)))}
+            onValueChange={(f) => set(f.length ? value.items.map((x) => (x === g ? { ...g, items: f } : x)) : value.items.filter((x) => x !== g))} />
+          <Button size="sm" variant="ghost" square className="alt-filter-group-remove" aria-label="Remove this group" onClick={() => set(value.items.filter((x) => x !== g))}><Icons.X size={12} /></Button>
+        </div>
+      ))}
+      {nesting >= 2 && <Button size="sm" variant="ghost" className="alt-filter-add-group" onClick={() => set([...value.items, { id: createId(), match: 'any', items: [] }])}>+ Add group</Button>}
+      <p className="alt-sr" aria-live="polite">{value.items.length ? filterSentence(fields, value) : ''}</p>
+    </div>
+  );
+}
+
+function FilterList({ fields, value, onValueChange, match, onMatchChange, matchAlways, resultCount, createId = () => `filter-${++counter}`, className, nesting: _n, ...aria }: Omit<FilterBarProps, 'value' | 'onValueChange'> & { value: Filter[]; onValueChange: (f: Filter[]) => void }) {
+  const showMatch = !!match && (value.length > 1 || !!matchAlways);
   const [open, setOpen] = React.useState<Seg | null>(null);
   const [active, setActive] = React.useState<string>('');
   const [stamped, setStamped] = React.useState<string | null>(null);
@@ -71,7 +122,7 @@ export function FilterBar({ fields, value, onValueChange, match, onMatchChange, 
   const fieldOf = (key: string) => fields.find((f) => f.key === key)!;
 
   const segs: Seg[] = [
-    ...(match && value.length > 1 ? [{ filter: null, part: 'match' } as Seg] : []),
+    ...(showMatch ? [{ filter: null, part: 'match' } as Seg] : []),
     ...value.flatMap((x) => (['field', 'operator', 'value', 'remove'] as const).map((part) => ({ filter: x.id, part }) as Seg)),
     { filter: null, part: 'add' },
   ];
@@ -167,7 +218,7 @@ export function FilterBar({ fields, value, onValueChange, match, onMatchChange, 
   };
 
   return <div ref={root} className={cx('alt-filter-bar', className)} role="toolbar" aria-label={aria['aria-label'] ?? 'Filters'} onKeyDown={onKey}>
-    {match && value.length > 1 && button({ filter: null, part: 'match' }, <>Match <strong>{match}</strong> of</>, `Match ${match} filters. Change to ${match === 'all' ? 'any' : 'all'}`)}
+    {showMatch && button({ filter: null, part: 'match' }, <>Match <strong>{match}</strong> of</>, `Match ${match} filters. Change to ${match === 'all' ? 'any' : 'all'}`)}
     {value.map((x) => {
       const f = fieldOf(x.field);
       const v = filterValueText(f, x.value);
