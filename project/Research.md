@@ -762,6 +762,17 @@ A design review: `InputOTP` was rendered with six digits in two groups and eight
 
 Not yet tested with people: whether the staggered fill on paste is noticed, or read as lag.
 
+### E63 · When is a time complete?
+
+A design review: `TimeInput` was rendered on a 12-hour clock with a time zone, on a 24-hour clock empty, and with a range it was outside, in all four schemes at 960px and under forced colours. `checks/time-input.mjs` types into it.
+
+- **Whole or not at all.** "09:––" can't be scheduled, so it isn't a value: the field stays an opening and the value stays null until hour, minute (and AM/PM) are all there. That's the DatePicker's rule, and the two fields read the same in a form.
+- **Typed by segment, not picked.** A list of 96 quarter hours is slower than typing "930p", and the native time input renders differently in every browser and ignores the scheme. The segments reuse DatePicker's, so typing, arrows and Backspace behave identically.
+- **The value is always 24-hour.** Whatever the clock shows, the value is "HH:mm" from 00:00 to 23:59, so an app never parses "9:30 PM".
+- **The zone is a label, not a conversion.** Converting a wall time across zones needs a date (daylight saving), which a time of day doesn't have. The short name tells people which zone the time is in, and the app does any converting.
+
+Not yet tested with people: whether auto-advance after one digit ("9" moves on) surprises people who meant to type "09".
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -1,0 +1,31 @@
+<!-- @dsCard group="Inputs" height=360 subtitle="A time of day typed by segment; it fills only when the whole time is there" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TimeInput — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.ti { display: grid; grid-template-columns: repeat(2, minmax(0, 240px)); gap: 16px 24px; align-items: start; }
+@media (max-width: 560px) { .ti { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [report, setReport] = React.useState("09:30");
+  const [quiet, setQuiet] = React.useState(null);
+  const [open, setOpen] = React.useState("08:00");
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "ti" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Send the report at", hint: report ? `Stored as ${report}` : "Not set" }, /* @__PURE__ */ React.createElement(A.TimeInput, { value: report, onValueChange: setReport, step: 15, hourCycle: "h12", locale: "en-US", timeZone: "Europe/Berlin" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Quiet hours start", hint: "24-hour clock" }, /* @__PURE__ */ React.createElement(A.TimeInput, { value: quiet, onValueChange: setQuiet, hourCycle: "h23" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Opens at", hint: "Between 06:00 and 12:00", error: open && (open < "06:00" || open > "12:00") ? "Choose a time between 06:00 and 12:00." : void 0 }, /* @__PURE__ */ React.createElement(A.TimeInput, { value: open, onValueChange: setOpen, min: "06:00", max: "12:00", hourCycle: "h23" }))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, 'Type digits (they move on by themselves), or use Up and Down; minutes step by 15 in the first field. "a" or "p" sets AM or PM. The field fills only once the whole time is there.'));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

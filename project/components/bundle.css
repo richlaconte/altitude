@@ -1100,6 +1100,14 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-otp-sep { flex: none; width: 10px; height: 2px; border-radius: var(--radius-full); background: var(--line-control); }
 @media (forced-colors: active) { .alt-otp-slot[data-filled]:not([data-invalid]) { border-style: solid !important; } .alt-otp-caret { background: CanvasText; } }
 
+/* ── TimeInput: a time of day typed by segment, built like DatePicker's field (the same segments and well). It's an
+   opening that fills only when every segment holds a value: a partial time ("09:––") is still a hole. A time zone's
+   short name sits after it in ink-muted, and is spoken with it. ── */
+.alt-time { width: fit-content; min-width: 132px; max-width: 100%; }
+.alt-time-icon { margin-left: -2px; }
+.alt-time-gap { display: inline-block; width: 0.35em; }
+.alt-time-zone { font: 400 13px/20px var(--font-sans); }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

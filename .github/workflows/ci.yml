@@ -92,6 +92,7 @@ jobs:
           node ../scripts/record-check.mjs react18-split-button node checks/split-button.mjs
           node ../scripts/record-check.mjs react18-number-input node checks/number-input.mjs
           node ../scripts/record-check.mjs react18-input-otp node checks/input-otp.mjs
+          node ../scripts/record-check.mjs react18-time-input node checks/time-input.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
