@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, DepthProps, Icons, inert, riseDelay, Spinner, useApproach, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus } from './core';
+import { cx, DepthProps, Icons, inert, riseDelay, Spinner, useApproach, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
 import { Arrive, Await, hasPromise, hint, isPromise, LoadingScope, Promised, readChildren, readPromised, SkeletonOption, TextImprint, useArrival, useHasWaited, useReportWaiting, useScopeWaiting } from './suspense';
 
 /* ───────────────────────── Button ───────────────────────── */
@@ -15,8 +15,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = 'secondary', size = 'md', square, loading, leading, trailing, className, children, disabled, type = 'button', ...rest }, ref) {
+  const own = React.useRef<HTMLButtonElement | null>(null);
+  usePrimaryRegistration(own, variant === 'primary');
+  const setRef = React.useCallback((el: HTMLButtonElement | null) => { own.current = el; if (typeof ref === 'function') ref(el); else if (ref) ref.current = el; }, [ref]);
   return (
-    <button ref={ref} type={type} className={cx('alt-btn', className)} data-variant={variant} data-size={size}
+    <button ref={setRef} type={type} className={cx('alt-btn', className)} data-variant={variant} data-size={size}
       data-square={square ? '' : undefined} data-loading={loading ? '' : undefined}
       aria-busy={loading || undefined} disabled={disabled} {...rest}
       onClick={loading ? (e) => e.preventDefault() : rest.onClick}>

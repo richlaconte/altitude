@@ -40,3 +40,7 @@ Nothing moves: a mode is there from load. Entering it is announced once, politel
 - Do use a mode for anything that changes what actions do (simulated payments, acting as someone else).
 - Don't use a page banner for a mode; a banner can be dismissed and scrolls away.
 
+## One primary per view
+
+Law 1 says the primary action rests at level 2, one per view. With `devChecks` (on by default when `process.env.NODE_ENV` isn't `'production'`), a `Button variant="primary"` registers with the provider while it's mounted. When more than one *visible* primary sits in the same view, one grouped warning names them and law 1. The page is one view, and each `Dialog`, `Sheet` and `Popover` is its own. Wrap independent parts (cards on a dashboard, each with its own task) in `<PrimaryScope>` to make them views of their own. The check is a warning only, it's gone from production builds, and the rule is `ALT-VISUAL-002` (`altitude explain ALT-VISUAL-002`). `PageHeader`'s `primary` slot is where a page's one primary belongs.
+

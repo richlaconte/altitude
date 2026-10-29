@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Layer, ModePlate, useApproach, useControllable, useIsoLayoutEffect } from './core';
+import { cx, Icons, Layer, ModePlate, PrimaryScope, useApproach, useControllable, useIsoLayoutEffect } from './core';
 import { Button } from './controls';
 import { useModal } from './overlays';
 
@@ -111,7 +111,7 @@ export function Sheet({ open, defaultOpen = false, onOpenChange, trigger, side =
                     onPointerDown={onPullDown} onPointerMove={onPullMove} onPointerUp={onPullUp} onPointerCancel={onPullUp} />
                 )}
                 <div className="alt-sheet-scroll" ref={scroller} onScroll={measure}>
-                  <div className="alt-sheet-inner" ref={inner}>{children}</div>
+                  <div className="alt-sheet-inner" ref={inner}><PrimaryScope name="sheet">{children}</PrimaryScope></div>
                 </div>
                 {dismissible && (
                   <Button variant="ghost" size="sm" square aria-label="Close" className="alt-sheet-close" onClick={close}><Icons.X /></Button>
