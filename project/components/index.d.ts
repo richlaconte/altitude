@@ -2811,6 +2811,37 @@ export interface TimelineItemProps {
 /** One event: a sentence with its time, flush on the line. */
 export declare function TimelineItem(props: TimelineItemProps): React.ReactElement;
 
+export interface NotificationEntry {
+  id: string;
+  title: React.ReactNode;
+  body?: React.ReactNode;
+  createdAt: Date | string | number;
+  read: boolean;
+  /** Where it leads. Opening it marks it read. */
+  href?: string;
+  /** Things to do about it ("Approve"). */
+  actions?: React.ReactNode;
+}
+export interface NotificationListProps {
+  items: NotificationEntry[];
+  onMarkRead?: (ids: string[]) => void;
+  onMarkAllRead?: () => void;
+  preferencesHref?: string;
+  /** 'day' (default) puts a heading before each day. */
+  groupBy?: 'day' | 'none';
+  locale?: string;
+  onOpen?: (item: NotificationEntry) => void;
+}
+/** The list of notifications on the ground; unread is a mark, not a height. */
+export declare function NotificationList(props: NotificationListProps): React.ReactElement;
+export interface NotificationCenterProps extends NotificationListProps {
+  /** Below this width the panel is a bottom Sheet. Default 640. */
+  mobileBreakpoint?: number;
+  className?: string;
+}
+/** A bell with a floating count that opens the list in a Popover (a Sheet on narrow screens). */
+export declare function NotificationCenter(props: NotificationCenterProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2830,6 +2861,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      NotificationCenter: typeof NotificationCenter; NotificationList: typeof NotificationList;
       Timeline: typeof Timeline; TimelineItem: typeof TimelineItem;
       SavedViews: typeof SavedViews; useSavedViews: typeof useSavedViews;
       ModeContext: typeof ModeContext;

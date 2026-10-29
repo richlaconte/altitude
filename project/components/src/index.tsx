@@ -17,6 +17,8 @@ export { FormattedNumber, formatNumber, describeNumber } from './formatted-numbe
 export type { FormatNumberOptions, NumberFormatPreset, DurationUnit } from './formatted-number';
 export { RelativeTime, formatRelativeTime } from './relative-time';
 export { Timeline, TimelineItem } from './timeline';
+export { NotificationCenter, NotificationList } from './notifications';
+export type { NotificationEntry } from './notifications';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';

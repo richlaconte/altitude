@@ -650,6 +650,30 @@ function App() {
   );
 }
 
+=== NotificationCenter | <!-- @dsCard group="Overlays" height=600 subtitle="An inbox of what happened, where unread is a mark, not a height" -->
+--- css
+.nc { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius-lg); }
+--- jsx
+const ago = (m) => new Date(Date.now() - m * 60000);
+function App() {
+  const [items, setItems] = React.useState([
+    { id: 'n1', title: 'Maya mentioned you in Q4 planning', body: '“@you can you take the pricing section?”', createdAt: ago(5), read: false, href: '#/docs/q4' },
+    { id: 'n2', title: 'Theo asked to approve an expense', body: '€1,240 · Conference travel', createdAt: ago(48), read: false, actions: <A.Button size="sm" variant="secondary">Approve</A.Button> },
+    { id: 'n3', title: 'Export of 812 invoices is ready', createdAt: ago(60 * 3), read: true, href: '#/exports/7' },
+    { id: 'n4', title: 'Nightly sync failed for Salesforce', body: 'The token expired. Reconnect to resume.', createdAt: ago(60 * 27), read: true, href: '#/integrations' },
+  ]);
+  const markRead = (ids) => setItems((xs) => xs.map((x) => (ids.includes(x.id) ? { ...x, read: true } : x)));
+  return (
+    <div className="col">
+      <div className="nc">
+        <A.Button size="sm" variant="secondary" onClick={() => setItems((xs) => [{ id: 'n' + Date.now(), title: 'Ada assigned you “Billing page”', createdAt: new Date(), read: false, href: '#/issues/212' }, ...xs])}>Simulate a new notification</A.Button>
+        <A.NotificationCenter items={items} onMarkRead={markRead} onMarkAllRead={() => setItems((xs) => xs.map((x) => ({ ...x, read: true })))} preferencesHref="#/settings/notifications" />
+      </div>
+      <p className="cap">Unread is a dot and a bolder title, never a height. A new notification arrives lifted and settles, and is announced even while the panel is closed.</p>
+    </div>
+  );
+}
+
 === Dialog | <!-- @dsCard group="Overlays" height=620 subtitle="A focused decision; the background can stay in place" -->
 --- css
 .dialog-demo { max-width: 720px; margin: auto; display: grid; gap: 20px; }

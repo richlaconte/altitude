@@ -1,0 +1,35 @@
+<!-- @dsCard group="Overlays" height=600 subtitle="An inbox of what happened, where unread is a mark, not a height" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NotificationCenter — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.nc { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--radius-lg); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const ago = (m) => new Date(Date.now() - m * 6e4);
+function App() {
+  const [items, setItems] = React.useState([
+    { id: "n1", title: "Maya mentioned you in Q4 planning", body: "\u201C@you can you take the pricing section?\u201D", createdAt: ago(5), read: false, href: "#/docs/q4" },
+    { id: "n2", title: "Theo asked to approve an expense", body: "\u20AC1,240 \xB7 Conference travel", createdAt: ago(48), read: false, actions: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Approve") },
+    { id: "n3", title: "Export of 812 invoices is ready", createdAt: ago(60 * 3), read: true, href: "#/exports/7" },
+    { id: "n4", title: "Nightly sync failed for Salesforce", body: "The token expired. Reconnect to resume.", createdAt: ago(60 * 27), read: true, href: "#/integrations" }
+  ]);
+  const markRead = (ids) => setItems((xs) => xs.map((x) => ids.includes(x.id) ? { ...x, read: true } : x));
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "nc" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: () => setItems((xs) => [{ id: "n" + Date.now(), title: "Ada assigned you \u201CBilling page\u201D", createdAt: /* @__PURE__ */ new Date(), read: false, href: "#/issues/212" }, ...xs]) }, "Simulate a new notification"), /* @__PURE__ */ React.createElement(A.NotificationCenter, { items, onMarkRead: markRead, onMarkAllRead: () => setItems((xs) => xs.map((x) => ({ ...x, read: true }))), preferencesHref: "#/settings/notifications" })), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Unread is a dot and a bolder title, never a height. A new notification arrives lifted and settles, and is announced even while the panel is closed."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
