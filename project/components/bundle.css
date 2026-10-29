@@ -944,6 +944,22 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 [data-contrast="more"] .alt-sep:not(.alt-sep-labelled), [data-contrast="more"] .alt-sep-labelled::before, [data-contrast="more"] .alt-sep-labelled::after { background: var(--line-control); }
 @media (forced-colors: active) { .alt-sep:not(.alt-sep-labelled), .alt-sep-labelled::before, .alt-sep-labelled::after { background: CanvasText; forced-color-adjust: none; } }
 
+/* ── Link: navigation is text in the record, so it never lifts: lifting a word would break its line. It's accent-ink
+   with an underline (never colour alone); hover thickens the underline, focus is the 2px accent-ink ring. An external
+   link ends with an icon and says it opens a new tab. ── */
+.alt-link {
+  color: var(--accent-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+  border-radius: var(--radius-xs); cursor: pointer; transition: text-decoration-thickness var(--dur-travel-1) var(--ease-rise);
+}
+.alt-link:hover { text-decoration-thickness: 2px; }
+.alt-link:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-link[data-visited]:visited { text-decoration-color: var(--ink-muted); }
+.alt-link-tail { white-space: nowrap; }
+.alt-link-ext { display: inline-block; margin-left: 0.2em; vertical-align: -0.1em; }
+@media (prefers-contrast: more) { .alt-link { text-decoration-thickness: 2px; } }
+[data-contrast="more"] .alt-link { text-decoration-thickness: 2px; }
+@media (forced-colors: active) { .alt-link { color: LinkText; } .alt-link:focus-visible { outline-color: Highlight; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

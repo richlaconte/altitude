@@ -2091,6 +2091,34 @@ function App() {
   );
 }
 
+=== Link | <!-- @dsCard group="Navigation" height=300 subtitle="Navigation in accent-ink with an underline; a link in text never lifts" -->
+--- css
+.lk { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.lk p { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+@media (max-width: 720px) { .lk { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+// A router's link, to show asChild: Link styles it and it keeps its own behaviour.
+const RouterLink = React.forwardRef(({ to, ...rest }, ref) => <a ref={ref} href={'#' + to} {...rest} />);
+function App() {
+  return (
+    <div className="lk">
+      <div className="col">
+        <p>Webhooks send a signed POST for each event. <A.Link href="#webhooks">Read about webhooks</A.Link> before you add an endpoint, or check the <A.Link href="https://status.example.com" external>status page</A.Link> if deliveries stop.</p>
+        <p className="cap">In prose, the underline thickens on hover. Nothing lifts, so the line of text stays put.</p>
+      </div>
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Invoices</A.CardTitle><A.CardDescription>Your last three invoices</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <div className="col">
+            <span>INV-0042 · €49.00 · Paid</span>
+            <A.Link asChild><RouterLink to="/billing/invoices">View all invoices →</RouterLink></A.Link>
+          </div>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === Drilldown | <!-- @dsCard group="Navigation" height=330 subtitle="Descend into children, ascend back" -->
 --- css
 .wrap { max-width: 460px; }

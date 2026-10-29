@@ -658,11 +658,21 @@ A design review and a set of measurements, prototyped on a lab page ([#114](http
 
 A design review: `Separator` was rendered as a section divider in a card, between groups of toolbar buttons and as "or" between two ways to sign in, in all four schemes at 960px, under forced colours and with `contrast="more"`. `checks/separator.mjs` measures it.
 
-- **Only `line`.** A divider is decorative ink on the ground, so it's 1px of `line` with no shadow. `line-control` (the edge of a control) made a toolbar's separator read as the side of a button; it's used only under `contrast="more"`.
+- **Only `line`.** A divider is decorative ink on the ground, so it's 1px of `line` with no shadow. `line-control` is the edge of a control, and a toolbar separator drawn in it would sit next to button edges in the same ink; it's used only under `contrast="more"`.
 - **A labelled separator isn't `role="separator"`.** A separator's children are presentational ([WAI-ARIA 1.2, separator](https://www.w3.org/TR/wai-aria-1.2/#separator)), so "or" inside one is not reliably read. The word is plain text and the lines are pseudo-elements, so "Continue with SSO, or, Email address" reads in order.
 - **Decorative is opt-in.** A screen reader announcing every divider is noise, but a divider that parts unrelated content is information. Defaulting to `role="separator"` keeps the information, and `decorative` is one prop for the toolbar case.
 
 Not yet tested with people: whether a labelled "or" is clearer than a heading above the second option.
+
+### E54 · Should a link lift?
+
+A design review: `Link` was rendered in prose, as an external link, and as "View all invoices →" through a router element (`asChild`), in all four schemes at 960px, under forced colours and with `contrast="more"`. `checks/link.mjs` measures it.
+
+- **No lift.** Everything else that acts lifts one level on hover, but a link in a paragraph would have to leave its own baseline to do it, and height means "press it", which is a button's job. So a link stays on the ground, and the underline (1px → 2px) is its hover. The check confirms its box doesn't move.
+- **Underline always.** [WCAG 1.4.1](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color) wants a link in text told apart by more than colour (or by 3:1 against the text around it, which no scheme's `accent-ink` was chosen for), so the underline is never removed, even for a standalone link.
+- **New tabs are said.** An external link announces "(opens in a new tab)" ([WCAG G201](https://www.w3.org/WAI/WCAG22/Techniques/general/G201)) and shows an icon. The text is visually hidden, so the link reads as written.
+
+Not yet tested with people: whether the thicker underline on hover is noticed without a colour change.
 
 ## What was rejected
 
