@@ -42,7 +42,7 @@ Rules that follow:
 
 | Signal | Encoding | Where |
 |---|---|---|
-| **Importance** | primary 2 · secondary 1 · ghost 0, drawn as wall thickness (4px, 2px, none) | `Button` |
+| **Importance** | primary 2 · secondary 1 · ghost 0, drawn as wall thickness (4px, 2px, none); a page header has one slot for the primary | `Button`, `PageHeader` |
 | **Affordance** | raised + wall + sheen = press it; sunk = fill it | every control |
 | **Interactivity** | only things that act lift on hover | `Card interactive`, `Surface interactive` |
 | **Selection** | every choice is built like the Switch: off is an empty trench; on pours the accent in and sets a raised white mark on it (the switch and radio thumb, the checkbox's check). A radio group is one switch with several positions, so its single thumb slides to the chosen option. In folder tabs the chosen tab and its panel are one raised sheet on top of the others | `Switch`, `Checkbox`, `RadioGroup`, `Tabs`, the chosen day in `Calendar`, the chosen swatch in `ColorPicker`, the current page in `Pagination` |
@@ -76,7 +76,7 @@ Rules that follow:
 | **Readiness to receive** | receptacles open (sink) only while something could be dropped into them, and deepen under the pointer | `DropZone`, the slot in `SortableList`, a slot or a node to drop into in `Tree` |
 | **Emptiness** | a region with nothing in it yet is an opening, a well with a dashed rim that the first record will fill; pointing at its action deepens it to a trench | `EmptyState` |
 | **Relevance** | filtering lifts matches and sinks misses instead of removing them, so positions survive | `relevance` on `Surface`, `Card`, `TableRow`, driven by `FilterBar` |
-| **Overflow** | edges curve away where content continues; a header rises when content passes under it | `ScrollArea` |
+| **Overflow** | edges curve away where content continues; a header rises when content passes under it | `ScrollArea`, a sticky `PageHeader` |
 | **Quantity** | a group shows 0–3 sheets beneath it (2–3, 4–9, 10+ items), with the exact number in a badge; hovering it fans the sheets a little; click it and its items fan out from under the top card, each its own card, floating over the page below without moving anything | `Pile` |
 | **Hierarchy** | a stack: going deeper lays a sheet on top, going back lifts it off; the breadcrumb is a staircase: every step stands on the same ground line, outlined face and wall together, and each deeper place is a taller step; the view sits on a pile as thick as you are deep; a route-based app's `Breadcrumb` is the same staircase without the pile | `Drilldown`, `Breadcrumb` |
 | **Anticipation** | an opening responds before the pointer arrives: an empty field deepens to receive, and holds that depth while it's focused; a bottom sheet's finger pull opens. Raised things never anticipate: they wait until the pointer is on them | `Input`, `Textarea`, `Select`, `Combobox`, `Sheet` |

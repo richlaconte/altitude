@@ -99,6 +99,7 @@ jobs:
           node ../scripts/record-check.mjs react18-color-picker node checks/color-picker.mjs
           node ../scripts/record-check.mjs react18-breadcrumb node checks/breadcrumb.mjs
           node ../scripts/record-check.mjs react18-pagination node checks/pagination.mjs
+          node ../scripts/record-check.mjs react18-page-header node checks/page-header.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
