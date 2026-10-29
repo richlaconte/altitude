@@ -1,0 +1,41 @@
+<!-- @dsCard group="Inputs" height=480 subtitle="A key shown once, then masked to its tail; revoking is held" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecretField — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.sf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 720px) { .sf { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [saved, setSaved] = React.useState(false);
+  const [said, setSaid] = React.useState("");
+  return /* @__PURE__ */ React.createElement("div", { className: "sf" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "API key created"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Production \xB7 created just now")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.SecretField, { label: "Secret key", value: "ak_live_EXAMPLE0000demo4f2a", once: true, onAcknowledge: () => setSaved(true) })), /* @__PURE__ */ React.createElement(A.CardFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", disabled: !saved }, "Done"))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Webhook signing secret"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Used to verify deliveries to /hooks/billing")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(
+    A.SecretField,
+    {
+      label: "Signing secret",
+      noun: "secret",
+      prefix: "whk_",
+      maskedTail: "9d1c",
+      onReveal: () => new Promise((r) => setTimeout(() => r("whk_EXAMPLE0000demo9d1c"), 400)),
+      onRotate: () => setSaid("A new secret would be created; the old one keeps working for 24 hours."),
+      onRevoke: () => setSaid("Secret revoked.")
+    }
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap", role: "status" }, said)))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

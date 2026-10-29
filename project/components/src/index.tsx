@@ -22,6 +22,7 @@ export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from './inpu
 export { TimeInput } from './time-input';
 export { PasswordInput } from './password-input';
 export type { PasswordRequirement } from './password-input';
+export { SecretField } from './secret-field';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';
