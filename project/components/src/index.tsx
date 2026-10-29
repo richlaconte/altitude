@@ -20,6 +20,8 @@ export { SplitButton } from './split-button';
 export { NumberInput, parseNumber } from './number-input';
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from './input-otp';
 export { TimeInput } from './time-input';
+export { PasswordInput } from './password-input';
+export type { PasswordRequirement } from './password-input';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';

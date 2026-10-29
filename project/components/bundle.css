@@ -1108,6 +1108,24 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-time-gap { display: inline-block; width: 0.35em; }
 .alt-time-zone { font: 400 13px/20px var(--font-sans); }
 
+/* ── PasswordInput: an Input with a reveal Toggle in its end cap (sunk and filled while the password shows). Creating
+   a password, its strength is a reading, so it's a Meter (a flush track with flat ink), never Progress's raised fill,
+   with the word beside its label; each requirement is stamped as met, like a done Checklist item, muted with a check.
+   Caps Lock is a caption with an icon. ── */
+.alt-pw { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.alt-pw .alt-input { padding-right: 4px; }
+.alt-pw-reveal.alt-btn[data-square][data-size="sm"] { width: 30px; height: 30px; color: var(--ink-muted); }
+.alt-pw-caps { display: flex; align-items: center; gap: 6px; margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink); }
+.alt-pw-caps svg { flex: none; color: var(--caution); }
+.alt-pw-strength .alt-meter-label { display: inline-flex; gap: 8px; }
+.alt-pw-word { font-weight: 600; color: var(--ink); }
+.alt-pw-reqs { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font: 400 13px/18px var(--font-sans); color: var(--ink); }
+.alt-pw-reqs li { display: flex; align-items: center; gap: 8px; transition: color var(--dur-travel-1) var(--ease-rise); }
+.alt-pw-reqs li[data-met] { color: var(--ink-muted); }
+.alt-pw-stamp { display: grid; place-items: center; flex: none; width: 16px; height: 16px; border-radius: var(--radius-full); border: 1px solid var(--line-control); color: var(--ink-muted); }
+.alt-pw-reqs li[data-met] .alt-pw-stamp { border-color: transparent; background: var(--surface-well); box-shadow: var(--well); }
+@media (forced-colors: active) { .alt-pw-stamp { border-color: CanvasText; } .alt-pw-caps svg { color: CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

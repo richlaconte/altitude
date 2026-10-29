@@ -2366,6 +2366,23 @@ export interface TimeInputProps {
 /** A time of day typed by segment; an opening that fills only when every segment holds a value. */
 export declare function TimeInput(props: TimeInputProps): React.ReactElement;
 
+export interface PasswordRequirement {
+  label: string;
+  test: (value: string) => boolean;
+}
+export interface PasswordInputProps extends Omit<InputProps, 'type' | 'trailing'> {
+  /** Scores a password from 0 (weakest) to 4 (strongest); your app supplies the scoring. Shown as a Meter. */
+  strength?: (value: string) => number;
+  /** The word for each score, 0 to 4. Default "Very weak", "Weak", "Fair", "Good", "Strong". */
+  strengthLabels?: [string, string, string, string, string];
+  /** Rules shown under the field, each stamped as met or not as the password changes. */
+  requirements?: PasswordRequirement[];
+  /** The reveal toggle's name. It never changes with its state. Default "Show password". */
+  revealLabel?: string;
+}
+/** A password field with a reveal Toggle, a caps-lock notice, and strength as a reading (a Meter) when creating one. */
+export declare const PasswordInput: React.ForwardRefExoticComponent<PasswordInputProps & React.RefAttributes<HTMLInputElement>>;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2385,6 +2402,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      PasswordInput: typeof PasswordInput;
       TimeInput: typeof TimeInput;
       InputOTP: typeof InputOTP; InputOTPGroup: typeof InputOTPGroup; InputOTPSlot: typeof InputOTPSlot; InputOTPSeparator: typeof InputOTPSeparator;
       NumberInput: typeof NumberInput; parseNumber: typeof parseNumber;

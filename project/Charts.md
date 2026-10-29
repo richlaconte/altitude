@@ -30,7 +30,7 @@ Choose by the job the data does, not by what looks rich.
 | Change over time | `LineChart`; `AreaChart` for a total and its parts |
 | Compare amounts across categories | `BarChart`; `BarList` for a ranked top-N |
 | One headline number | `Stat`, with a `Sparkline` for its trend |
-| A value within a known range | `Meter` |
+| A value within a known range | `Meter` (a password's strength too, in `PasswordInput`) |
 | A value per cell over two dimensions | `Heatmap` |
 | How two measures relate | `ScatterChart` |
 | Part of a whole | a stacked `BarChart`, or a segmented `Meter` |
