@@ -261,6 +261,28 @@
       "criteria": [],
       "reviewedAt": "2026-10-23",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-VISUAL-002",
+      "title": "One primary action per view",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Any view: a page, and each Dialog, Sheet and Popover. Independent parts (cards on a dashboard) can be scoped with PrimaryScope.",
+      "exceptions": [
+        "A dashboard of independent cards, each with its own task, wrapped in PrimaryScope."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-elevation"
+      ],
+      "repair": "Keep one Button variant=\"primary\" per view (PageHeader's primary slot on a page); make the rest secondary or ghost, or put them in an overflow menu.",
+      "verification": [
+        "build/checks/primary-scope.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-29",
+      "owner": "Altitude maintainers"
     }
   ]
 }

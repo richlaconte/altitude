@@ -39,6 +39,8 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   approach?: boolean;
   /** The whole app is in a mode (test mode, viewing as a customer, read-only): a flush strip naming it, a 2px viewport frame, and a plate in every Dialog and Sheet. */
   mode?: AppMode;
+  /** Development checks: warns when more than one primary Button is visible in one view (law 1). Default: on when process.env.NODE_ENV isn't 'production'. */
+  devChecks?: boolean;
 }export interface AppMode {
   label: string;
   description?: React.ReactNode;
@@ -48,6 +50,8 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   action?: React.ReactNode;
 }
 /** The app's mode, if any. */
+/** A view of its own for the one-primary check: an independent card on a dashboard. Dialog, Sheet and Popover are already their own. */
+export declare function PrimaryScope(props: { name?: string; children: React.ReactNode }): React.ReactElement;
 export declare const ModeContext: React.Context<AppMode | null>;
 
 /** Sets the scheme, accent and motion for everything inside it, and hosts dialogs and toasts. Wrap your app once. */
@@ -2697,6 +2701,7 @@ declare global {
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       ModeContext: typeof ModeContext;
+      PrimaryScope: typeof PrimaryScope;
       ContextMenu: typeof ContextMenu;
       ResizablePanelGroup: typeof ResizablePanelGroup; ResizablePanel: typeof ResizablePanel; ResizableHandle: typeof ResizableHandle;
       AppShell: typeof AppShell; SidebarProvider: typeof SidebarProvider; Sidebar: typeof Sidebar; SidebarHeader: typeof SidebarHeader; SidebarContent: typeof SidebarContent; SidebarGroup: typeof SidebarGroup; SidebarGroupLabel: typeof SidebarGroupLabel; SidebarMenu: typeof SidebarMenu; SidebarMenuItem: typeof SidebarMenuItem; SidebarMenuButton: typeof SidebarMenuButton; SidebarMenuBadge: typeof SidebarMenuBadge; SidebarFooter: typeof SidebarFooter; SidebarTrigger: typeof SidebarTrigger; SidebarInset: typeof SidebarInset; useSidebar: typeof useSidebar;

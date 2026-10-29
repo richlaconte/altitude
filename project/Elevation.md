@@ -111,6 +111,7 @@ Rules that follow:
 - **Push up, fill down.** Never style an input as raised or a button as sunk. The one exception is a toggle that's on: it's a choice, so it's built like the Switch (a shallow well the accent pours into), not like a held press, which would read as loading.
 - **Choices are switches.** Switch, Checkbox and RadioGroup share one build: a trench track that the accent pours into when it's on, with a raised white mark on top. When only one option can be chosen there is only one mark, and it travels.
 - **Hover is a promise.** A lift on hover means clicking does something. Static surfaces never lift; interactive ones always do.
+- **One primary per view.** The primary action rests at level 2, and a view has one: a page, a dialog, a sheet or a popover. `AltitudeProvider devChecks` warns in development when two are visible in one view (`ALT-VISUAL-002`).
 - **Pressing returns to ground; loading holds it there.** Disabled things are flush and stay flush.
 - **Labels never lift.** Badges are stamped into the ground and informational alerts rest on it; only an alert that asks for action is raised, and only a count (which wants you) floats.
 - **Anticipate, don't perform.** Only openings anticipate, and only by deepening (at most 2px), only near the pointer, never for touch, and gone under reduced motion. Nothing raised moves before the pointer is on it, and nothing follows the pointer across its face: a control that drifts on its own reads as a fault. No lean, no tilt and no page-wide parallax.

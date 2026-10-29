@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Layer, ModePlate, useControllable, useIsoLayoutEffect, useOutside, usePresence } from './core';
+import { cx, Icons, Layer, ModePlate, PrimaryScope, useControllable, useIsoLayoutEffect, useOutside, usePresence } from './core';
 import { Button } from './controls';
 import { ModalOwner, modalDocument, tabbables, useAltitudeContext } from './modal-state';
 
@@ -77,7 +77,7 @@ export function Popover({ trigger, children, open, defaultOpen = false, onOpenCh
         <div ref={panel} id={id} role="dialog" aria-label={rest['aria-label']} tabIndex={-1} className={cx('alt-pop', className)}
           data-state={state} data-side={side} data-align={align}
           onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); (ref.current?.firstElementChild as HTMLElement)?.focus(); } }}>
-          {children}
+          <PrimaryScope name="popover">{children}</PrimaryScope>
         </div>
       )}
     </span>
@@ -377,6 +377,7 @@ export function Dialog({ open, defaultOpen = false, onOpenChange, trigger, title
             <div className="alt-scrim" onClick={() => dismissible && set(false)} />
             <div ref={panel} role="dialog" aria-labelledby={`${id}-t`} aria-describedby={description ? `${id}-d` : undefined}
               tabIndex={-1} className={cx('alt-dialog', className)} data-size={size}>
+              <PrimaryScope name="dialog">
               <div className="alt-dialog-head">
                 <ModePlate />
                 <h2 className="alt-dialog-title" id={`${id}-t`} tabIndex={initialFocus === 'title' ? -1 : undefined}>{title}</h2>
@@ -387,6 +388,7 @@ export function Dialog({ open, defaultOpen = false, onOpenChange, trigger, title
               {dismissible && (
                 <Button variant="ghost" size="sm" square aria-label="Close" className="alt-dialog-close" onClick={() => set(false)}><Icons.X /></Button>
               )}
+              </PrimaryScope>
             </div>
           </div>
         </Layer>

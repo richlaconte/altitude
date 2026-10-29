@@ -905,6 +905,17 @@ A design review: `AltitudeProvider mode` was rendered as test mode over a dashbo
 
 Not yet tested with people: whether the frame alone, without the strip in view, is recognised as "test mode" by people new to the app.
 
+### E76 · Can law 1 be checked?
+
+An engineering review: two primaries on a page, one on a page plus one in a Dialog, two in separate `PrimaryScope`s, one hidden, and the check switched off, rendered in a preview page. `checks/primary-scope.mjs` counts the warnings.
+
+- **Count what's visible, per view.** A page commonly holds primaries it isn't showing (a closed tab panel, a collapsed section). Only visible primaries count, and each Dialog, Sheet and Popover is its own view, because only one of them is in front at a time.
+- **One warning per arrangement.** A warning that repeats on every render is ignored, so each scope warns once per set of names, and the warning names the buttons so they can be found.
+- **Off in the design system's own build.** The IIFE bundle has no `process.env`, so the check is on only where a bundler says it's development (or with `devChecks`). That keeps the previews, which fail on any console warning, honest about real warnings.
+- **An explicit opt-out.** Dashboards of independent cards each have a legitimate primary. `PrimaryScope` says so in the code, which is clearer than a global switch.
+
+Not yet tested with people: whether agents reliably move the second primary into `actions` when they see the warning.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -386,6 +386,11 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
    * flush strip naming the mode at the top, a 2px frame around the viewport, and a plate in every Dialog and Sheet.
    */
   mode?: AppMode;
+  /**
+   * Development checks: warns when more than one primary Button is visible in one view (law 1). Each Dialog, Sheet and
+   * Popover is its own view, and <PrimaryScope> makes another. Default: on when process.env.NODE_ENV isn't 'production'.
+   */
+  devChecks?: boolean;
 }
 export interface AppMode {
   label: string;
@@ -395,6 +400,45 @@ export interface AppMode {
   /** A way out ("Leave test mode"). The strip can't be dismissed. */
   action?: React.ReactNode;
 }
+/* ── One primary per view (law 1), checked in development. ── */
+declare const process: { env: { NODE_ENV?: string } } | undefined;
+type PrimaryScopeT = { register: (el: HTMLElement) => () => void } | null;
+const PrimaryScopeCtx = React.createContext<PrimaryScopeT>(null);
+const warnedScopes = new Set<string>();
+const visible = (el: HTMLElement) => el.isConnected && (typeof el.checkVisibility === 'function' ? el.checkVisibility() : el.offsetParent !== null);
+/** A scope of its own for "one primary action": a page, a Dialog, a Sheet, a Popover, or an independent card. */
+function useScopeValue(name: string, enabled: boolean): PrimaryScopeT {
+  const els = React.useRef(new Set<HTMLElement>());
+  const timer = React.useRef<number | undefined>(undefined);
+  return React.useMemo(() => {
+    if (!enabled) return null;
+    const check = () => {
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => {
+        const shown = [...els.current].filter(visible);
+        if (shown.length < 2) return;
+        const names = shown.map((b) => `"${(b.getAttribute('aria-label') || b.textContent || '').trim()}"`);
+        const key = name + '|' + names.join(',');
+        if (warnedScopes.has(key)) return;
+        warnedScopes.add(key);
+        console.warn(`Altitude: ${shown.length} primary buttons are visible in one ${name} (${names.join(', ')}). Law 1: the primary action rests at level 2, one per view. Make the others secondary, or wrap independent parts in <PrimaryScope>.`);
+      }, 50);
+    };
+    return { register: (el: HTMLElement) => { els.current.add(el); check(); return () => { els.current.delete(el); check(); }; } };
+  }, [enabled, name]);
+}
+/** Opens a scope of its own for the one-primary check: an independent card on a dashboard, a dialog. */
+export function PrimaryScope({ name = 'scope', children }: { name?: string; children: React.ReactNode }) {
+  const parent = React.useContext(PrimaryScopeCtx);
+  const value = useScopeValue(name, parent !== null);
+  return <PrimaryScopeCtx.Provider value={value}>{children}</PrimaryScopeCtx.Provider>;
+}
+/** Button variant="primary" registers itself with the nearest scope while it's mounted. */
+export function usePrimaryRegistration(el: React.RefObject<HTMLElement | null>, primary: boolean) {
+  const scope = React.useContext(PrimaryScopeCtx);
+  React.useEffect(() => { if (!scope || !primary || !el.current) return; return scope.register(el.current); }, [scope, primary, el]);
+}
+
 /** The app's mode, for Dialog and Sheet to name it in their headers. */
 export const ModeContext = React.createContext<AppMode | null>(null);
 /** The mode's name as a plate, for headers of things that float above the page (Dialog, Sheet). */
@@ -403,7 +447,9 @@ export function ModePlate() {
   return mode ? <span className="alt-badge alt-mode-plate" data-tone={mode.tone ?? 'caution'} data-variant="plate">{mode.label}</span> : null;
 }
 
-export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', recede = true, approach = true, mode, className, style, children, ...rest }: AltitudeProviderProps) {
+export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', recede = true, approach = true, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
+  const checks = devChecks ?? (typeof process !== 'undefined' && process?.env.NODE_ENV !== 'production');
+  const pageScope = useScopeValue('page', checks);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const [host, setHost] = React.useState<HTMLElement | null>(null);
   const parent = useAltitudeContext();
@@ -466,7 +512,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
         data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined}
         data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>
         {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
-        <ModeContext.Provider value={mode ?? null}>
+        <PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
           {mode && (
             <section className="alt-mode-strip" data-tone={mode.tone ?? 'caution'} aria-label={mode.label}>
               <strong className="alt-mode-label">{mode.label}</strong>
@@ -478,7 +524,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
           <div className="alt-layers" ref={setHost} />
           {mode && <div className="alt-mode-frame" data-tone={mode.tone ?? 'caution'} aria-hidden="true" />}
           {mode && <span className="alt-sr" aria-live="polite">{modeSaid}</span>}
-        </ModeContext.Provider>
+        </ModeContext.Provider></PrimaryScopeCtx.Provider>
       </div>
     </AltitudeContext.Provider>
   );
