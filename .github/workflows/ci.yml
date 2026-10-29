@@ -109,6 +109,7 @@ jobs:
           node ../scripts/record-check.mjs react18-table-columns node checks/table-columns.mjs
           node ../scripts/record-check.mjs react18-table-paging node checks/table-paging.mjs
           node ../scripts/record-check.mjs react18-table-bulk node checks/table-bulk.mjs
+          node ../scripts/record-check.mjs react18-saved-views node checks/saved-views.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs

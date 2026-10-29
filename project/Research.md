@@ -949,6 +949,17 @@ A design review: `DataTable` was rendered with 25 loaded rows of 2,341 matching,
 
 Not yet tested with people: whether "except 1" is noticed before a destructive bulk action.
 
+### E80 · What is a view, and when is it modified?
+
+A design review: `SavedViews` was rendered over a FilterBar and a DataTable with three views, switched, modified (a sort and a filter changed), saved, saved as new and reset, in all four schemes. `checks/saved-views.mjs` measures it.
+
+- **A view is the combination.** Filters, their match, the sort and the columns change together, so the hook holds them as one draft per view and spreads them onto FilterBar and DataTable. Agent-built versions usually store some of these and forget the rest.
+- **A draft per view.** Switching tabs shouldn't throw away a change you were making, so each view keeps its draft until it's saved or reset.
+- **Folder tabs, as the issue said.** The views own the table beneath them, so the active tab and the sheet holding the filters and table are one raised piece. The actions sit beside the list, not inside it, because a tab list may hold only tabs.
+- **Modified is a word and a dot.** It's announced once, when the view first diverges, not on every change.
+
+Not yet tested with people: whether "Save view" over a shared view needs a confirmation.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

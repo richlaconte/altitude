@@ -3093,6 +3093,17 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 /* Selecting past the page: once a page is selected, a flush accent-soft row offers every matching record; a selection of
    "all matching" is said in words. With actionsPlacement floating (or auto, once the toolbar scrolls away), the count and
    actions dock at the bottom edge as a bar at level 3: a selection is a set of records in your hand. */
+/* Saved views: folder Tabs whose active tab is one raised sheet with the filters and table beneath it. A view you've
+   changed is a draft: a dot on its tab (and "modified" in its name), and Save view, Save as new view and Reset beside
+   the tabs, as a SaveBar does for a page. */
+.alt-views { position: relative; }
+.alt-views-actions { position: absolute; top: 0; right: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); height: 38px; align-items: center; }
+.alt-views-dot { display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: var(--radius-full); background: var(--accent); vertical-align: 2px; }
+.alt-views-sheet { display: flex; flex-direction: column; gap: var(--space-3); }
+.alt-views-new { display: flex; flex-direction: column; gap: var(--space-3); width: 240px; max-width: 100%; }
+.alt-views-new .alt-btn { align-self: flex-end; }
+@media (max-width: 640px) { .alt-views-actions { position: static; height: auto; margin-bottom: var(--space-2); justify-content: flex-start; } }
+@media (forced-colors: active) { .alt-views-dot { background: CanvasText; forced-color-adjust: none; } }
 .alt-table-allrow > .alt-td { padding: var(--space-2) var(--space-3); background: var(--accent-soft); text-align: center; font: 400 13px/18px var(--font-sans); color: var(--ink); }
 .alt-table-allrow .alt-link { padding: 0; border: 0; background: none; font: inherit; font-weight: 600; }
 .alt-table-floatbar {
