@@ -502,6 +502,37 @@ const items = [
 ];
 function App() { return <div className="wrap"><A.Accordion items={items} defaultValue={['b']} /></div>; }
 
+=== CodeBlock | <!-- @dsCard group="Display" height=560 subtitle="Code to read and copy lies flush on the ground; forms switch, lines highlight" -->
+--- css
+.cbk { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.cbk > :first-child { grid-column: 1 / -1; }
+@media (max-width: 720px) { .cbk { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const payload = `{
+  "id": "evt_1Q8xZ2",
+  "type": "invoice.paid",
+  "created": 1793304000,
+  "data": {
+    "invoice": "INV-0042",
+    "amount": 4900,
+    "currency": "eur"
+  }
+}`;
+// A stand-in highlighter, to show the syntax prop: comments in ink-muted, keywords in accent-ink.
+const tiny = (code) => code.split(/(\/\/.*$|\b(?:const|await|import|from)\b)/m).map((part, i) => part.startsWith('//') ? <span key={i} className="tok-comment">{part}</span> : /^(const|await|import|from)$/.test(part) ? <span key={i} className="tok-keyword">{part}</span> : part);
+function App() {
+  const [streamed, setStreamed] = React.useState('');
+  const full = "import { Altitude } from 'altitude-design';\n// Verify the signature before trusting the event\nconst event = await verify(request, secret);";
+  React.useEffect(() => { let i = 0; const t = setInterval(() => { i = Math.min(full.length, i + 3); setStreamed(full.slice(0, i)); if (i >= full.length) clearInterval(t); }, 60); return () => clearInterval(t); }, []);
+  return (
+    <div className="cbk">
+      <A.CodeBlock title="Install" tabs={[{ label: 'npm', language: 'sh', code: 'npm install altitude-design' }, { label: 'pnpm', language: 'sh', code: 'pnpm add altitude-design' }, { label: 'yarn', language: 'sh', code: 'yarn add altitude-design' }]} />
+      <A.CodeBlock title="invoice.paid" language="json" code={payload} highlight={[3, 7]} lineNumbers maxHeight={220} />
+      <A.CodeBlock title="webhook.ts" language="ts" code={streamed} syntax={tiny} streaming={streamed.length < full.length} />
+    </div>
+  );
+}
+
 === Kbd | <!-- @dsCard group="Display" height=110 subtitle="Keys that press when you press them" -->
 --- jsx
 function App() {
