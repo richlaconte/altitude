@@ -828,6 +828,17 @@ A design review: `Breadcrumb` was rendered for a three-step path and a six-step 
 
 Not yet tested with people: whether a staircase is read as a path in a route-based app as readily as it is in Drilldown, where you built it yourself.
 
+### E69 · Should pages look like a choice?
+
+A design review: `Pagination` was rendered with 11 pages and a summary, and in cursor mode, in all four schemes at 960px and 360px and under forced colours, and paged by pointer and keyboard. `checks/pagination.mjs` measures it.
+
+- **A thumb, not a row of buttons.** Numbered page buttons each promise an action. The current page is a position among the others, which is RadioGroup's reading: one raised thumb in a trench. It travels on `dur-travel-1`, faster than RadioGroup's thumb, because paging is frequent.
+- **Links in Tab order, despite the look.** Drawing them like a radio group could suggest arrow keys, but pages are navigation, often with URLs, so they keep link semantics and plain Tab order, as the issue proposed.
+- **One page, not "…".** A gap of exactly one page shows the page: "…" would take as much room and hide where it leads.
+- **Held while loading.** "Loading: held pressed" applied to the thumb shows that the request is in flight without a spinner, and the rows land as DataTable's do.
+
+Not yet tested with people: whether the thumb is read as "current page" as quickly as a filled, coloured button.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

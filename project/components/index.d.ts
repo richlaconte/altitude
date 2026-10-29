@@ -2500,6 +2500,32 @@ export declare function BreadcrumbPage(props: React.HTMLAttributes<HTMLSpanEleme
 export declare function BreadcrumbSeparator(props: { children?: React.ReactNode }): null;
 export declare function BreadcrumbEllipsis(props: { items: BreadcrumbEntry[]; onNavigate?: (item: BreadcrumbEntry) => void }): React.ReactElement;
 
+/** The pages shown: the first, the last, the current one and `siblings` either side, with a gap where pages are skipped. */
+export declare function pageRange(page: number, count: number, siblings?: number): (number | 'gap')[];
+export interface PaginationProps extends Omit<React.HTMLAttributes<HTMLElement>, 'onChange'> {
+  /** The current page, from 1. */
+  page: number;
+  /** How many pages. Leave it out for cursor paging: Previous and Next, and "Page 3". */
+  pageCount?: number;
+  onPageChange?: (page: number) => void;
+  /** With pageSize: the summary "21–40 of 214". */
+  total?: number;
+  pageSize?: number;
+  /** Pages have URLs: they're links. Without it they're buttons. */
+  hrefFor?: (page: number) => string;
+  /** For cursor paging: whether there's a next page. Default true. */
+  hasNext?: boolean;
+  /** Pages either side of the current one. Default 1. */
+  siblings?: number;
+  /** The next page is loading: the thumb is held pressed until it lands. */
+  loading?: boolean;
+  /** What's being paged, plural, for the summary ("invoices"). */
+  noun?: string;
+  locale?: string;
+}
+/** Move through pages: the numbers sit in a trench and one raised thumb travels to the current page. */
+export declare function Pagination(props: PaginationProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2519,6 +2545,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Pagination: typeof Pagination; pageRange: typeof pageRange;
       Breadcrumb: typeof Breadcrumb; BreadcrumbList: typeof BreadcrumbList; BreadcrumbItem: typeof BreadcrumbItem; BreadcrumbLink: typeof BreadcrumbLink; BreadcrumbPage: typeof BreadcrumbPage; BreadcrumbSeparator: typeof BreadcrumbSeparator; BreadcrumbEllipsis: typeof BreadcrumbEllipsis;
       ColorPicker: typeof ColorPicker; ColorSwatchPicker: typeof ColorSwatchPicker;
       CodeBlock: typeof CodeBlock;
