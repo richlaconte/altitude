@@ -3007,6 +3007,7 @@ function App() {
 .inline-demo p { overflow-wrap: anywhere; }
 .inline-demo-scene { display: grid; gap: var(--space-6); }
 .inline-demo-task { border-bottom: 1px solid var(--line); padding-bottom: var(--space-4); }
+.inline-demo-task > .alt-inline-edit { font: 600 19px/26px var(--font-sans); }
 .inline-demo .alt-table { width: 100%; table-layout: fixed; }
 .inline-demo .alt-table th, .inline-demo .alt-table td { white-space: normal; overflow-wrap: anywhere; padding-inline: var(--space-2); }
 .inline-demo .alt-table th:last-child { width: 100px; }
@@ -3027,7 +3028,6 @@ function App() {
   #root { padding: 12px; }
   .inline-demo .alt-table th:last-child { width: 64px; }
   .inline-demo .alt-table th, .inline-demo .alt-table td { padding-inline: 4px; }
-  .inline-demo .alt-table .alt-inline-edit:not([data-state="read"]) .alt-inline-edit-surface { padding: 8px; }
 }
 --- jsx
 const INLINE_RECORDS = Object.freeze([
@@ -3168,6 +3168,7 @@ function InlineExample({ fixture, slowValidation, epoch }) {
         <A.Button variant="ghost" onClick={() => setOutsideCount(count => count + 1)}>Show file details</A.Button>
         {outsideCount > 0 && <p className="inline-demo-meta">Three fictional files · Details opened {outsideCount} time{outsideCount === 1 ? '' : 's'}.</p>}
       </section>
+      <InlineWaysToOpen />
     </div>
     <details className="inline-demo-harness">
       <summary>Comparison and fixture controls</summary>
@@ -3218,6 +3219,24 @@ function InlineDialogBaseline({ open, onOpenChange, value, validate, onSave, onV
     }} /></A.Field>
     <p role="status">{busy}</p>
   </A.Dialog>;
+}
+
+// The value as its own button: a pencil on hover, or the field itself on hover. The seam says so at rest.
+function InlineWaysToOpen() {
+  const [values, setValues] = React.useState({ project: 'Northwind launch', meeting: 'Quarterly planning review', owner: '' });
+  const set = key => next => setValues(all => ({ ...all, [key]: next }));
+  const save = draft => ({ ok: true, value: draft.trim() });
+  return <section aria-labelledby="inline-ways-title">
+    <h2 id="inline-ways-title">Ways to open</h2>
+    <div className="inline-demo-props">
+      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Pencil on hover, with a seam</span>
+        <A.InlineEdit label="Project name" trigger="pencil" hint="seam" value={values.project} onValueChange={set('project')} onSave={save} required /></div>
+      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, with a seam</span>
+        <A.InlineEdit label="Meeting title" trigger="field" hint="seam" value={values.meeting} onValueChange={set('meeting')} onSave={save} required /></div>
+      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, empty</span>
+        <A.InlineEdit label="Owner" trigger="field" hint="seam" emptyLabel="Add an owner" value={values.owner} onValueChange={set('owner')} onSave={save} /></div>
+    </div>
+  </section>;
 }
 
 function App() {
@@ -3341,7 +3360,19 @@ function App(){
 .er-list > li { padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
 .er-name { display: block; font: 500 15px/22px var(--font-sans); }
 .er-meta { display: block; color: var(--ink-muted); font: 400 13px/19px var(--font-sans); }
-.er-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); }
+/* In place: the fields sit where the values were. Columns are fixed by the row, not by what's typed, so nothing shifts
+   while the editor opens; controls reach 13px into the gaps, so the gaps are 26px wider than they look. */
+.er-name-edit { font: 500 15px/22px var(--font-sans); }
+.er-meta-edit { margin-top: var(--space-2); display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(7rem, 1fr) auto; column-gap: calc(26px + var(--space-2)); row-gap: var(--space-2); align-items: start; font: 400 13px/19px var(--font-sans); }
+.er-meta-edit .alt-switch-row { min-height: 40px; }
+@media (max-width: 560px) { .er-meta-edit { grid-template-columns: minmax(0, 1fr); } }
+.er-sheet { margin-top: var(--space-6); }
+.er-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 30px; }
+.er-sheet-head h2 { margin: 0; }
+.er-sheet-grid { display: grid; grid-template-columns: minmax(5rem, 9rem) minmax(0, 1fr); gap: var(--space-1) var(--space-4); margin: 0; font: 400 14px/20px var(--font-sans); }
+.er-sheet-grid dt { align-self: center; color: var(--ink-muted); font: 400 13px/19px var(--font-sans); }
+.er-sheet-grid dd { min-width: 0; margin: 0; }
+@media (max-width: 420px) { .er-sheet-grid { grid-template-columns: minmax(0, 1fr); } .er-sheet-grid dt { margin-top: var(--space-2); } }
 .er-harness { border-top: 1px solid var(--line); margin-top: var(--space-6); padding-top: var(--space-3); font: 400 13px/20px var(--font-sans); }
 .er-harness summary { cursor: pointer; font-weight: 500; }
 .er-harness-controls { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: end; margin: var(--space-3) 0; }
@@ -3396,27 +3427,28 @@ function EditRegionExample({ fixture }) {
       <h2 id="er-title">People with access</h2>
       <ul className="er-list">
         {people.map(person => <li key={person.id}>
-          <A.EditRegion label={person.name} editLabel={`Edit ${person.name}`} value={erFields(person)} validate={validate}
+          <A.EditRegion layout="in-place" label={person.name} editLabel={`Edit ${person.name}`} value={erFields(person)} validate={validate}
             onValueChange={canonical => setPeople(people => people.map(p => p.id === person.id ? { ...server.current.get(person.id), ...canonical } : p))}
             onSave={save(person)}>
             <A.EditRegionView>
-              <span className="er-name">{person.name}</span>
-              <span className="er-meta">{person.email} · {ER_ROLES.find(r => r.value === person.role).label}{person.notify ? ' · Gets updates' : ''}</span>
+              <span className="er-name"><A.EditRegionValue field="name">{person.name}</A.EditRegionValue></span>
+              <span className="er-meta"><A.EditRegionValue field="email">{person.email}</A.EditRegionValue> · <A.EditRegionValue field="role">{ER_ROLES.find(r => r.value === person.role).label}</A.EditRegionValue>{person.notify ? <> · <A.EditRegionValue field="notify">Gets updates</A.EditRegionValue></> : ''}</span>
             </A.EditRegionView>
             <A.EditRegionForm>
               {field => <>
-                <div className="er-pair">
-                  <A.Field label="Name" required error={field.error('name')}><A.Input {...field('name')} autoComplete="off" /></A.Field>
+                <div className="er-name-edit"><A.Field label="Name" required error={field.error('name')}><A.Input {...field('name')} autoComplete="off" /></A.Field></div>
+                <div className="er-meta-edit">
                   <A.Field label="Email" required error={field.error('email')}><A.Input {...field('email')} type="email" autoComplete="off" /></A.Field>
+                  <A.Field label="Role"><A.Select {...field.value('role')} items={ER_ROLES} /></A.Field>
+                  <A.Switch {...field.checked('notify')} label="Gets updates" />
                 </div>
-                <A.Field label="Role"><A.Select {...field.value('role')} items={ER_ROLES} /></A.Field>
-                <A.Switch {...field.checked('notify')} label="Email them when this project changes" />
               </>}
             </A.EditRegionForm>
           </A.EditRegion>
         </li>)}
       </ul>
     </section>
+    <TripSheet />
     <details className="er-harness">
       <summary>Fixture controls</summary>
       <p>Documentation harness only: change Mara's record on the “server” while it's being edited.</p>
@@ -3424,6 +3456,36 @@ function EditRegionExample({ fixture }) {
       <output className="er-log" data-er-log="" aria-label="Fixture operation log">{JSON.stringify(log, null, 2)}</output>
     </details>
   </>;
+}
+
+// Labelled rows whose values already have their controls' height (EditRegionValue reserve): Edit all moves nothing.
+const ER_SEATS = [{ value: 'aisle', label: 'Aisle' }, { value: 'window', label: 'Window' }, { value: 'any', label: 'No preference' }];
+function TripSheet() {
+  const [trip, setTrip] = React.useState({ traveller: 'Mara Quist', email: 'mara@northwind.example', phone: '', seat: 'aisle' });
+  const validate = draft => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()) ? undefined : { email: 'Enter an email address, like name@example.com.' };
+  const rows = [['traveller', 'Traveller'], ['email', 'Email'], ['phone', 'Phone'], ['seat', 'Seat']];
+  return <section className="er-sheet" aria-labelledby="er-sheet-title">
+    <A.EditRegion layout="in-place" label="Trip details" editLabel="Edit all trip details" value={trip} validate={validate} onValueChange={setTrip}
+      onSave={async draft => { await erWait(250); return { ok: true, value: { ...draft, traveller: draft.traveller.trim(), email: draft.email.trim(), phone: draft.phone.trim() } }; }}>
+      <A.EditRegionView trigger={false}>
+        <div className="er-sheet-head"><h2 id="er-sheet-title">Trip details</h2><A.EditRegionTrigger>Edit all</A.EditRegionTrigger></div>
+        <dl className="er-sheet-grid">{rows.map(([key, label]) => <React.Fragment key={key}><dt>{label}</dt><dd>
+          <A.EditRegionValue field={key} reserve>{key === 'seat' ? ER_SEATS.find(s => s.value === trip.seat).label : trip[key] || <span className="er-meta">Not set</span>}</A.EditRegionValue>
+        </dd></React.Fragment>)}</dl>
+      </A.EditRegionView>
+      <A.EditRegionForm>
+        {field => <>
+          <div className="er-sheet-head"><h2>Trip details</h2></div>
+          <dl className="er-sheet-grid">
+            <dt>Traveller</dt><dd><A.Field label="Traveller" required error={field.error('traveller')}><A.Input {...field('traveller')} autoComplete="off" /></A.Field></dd>
+            <dt>Email</dt><dd><A.Field label="Email" required error={field.error('email')}><A.Input {...field('email')} type="email" autoComplete="off" /></A.Field></dd>
+            <dt>Phone</dt><dd><A.Field label="Phone"><A.Input {...field('phone')} type="tel" placeholder="Add a phone number" autoComplete="off" /></A.Field></dd>
+            <dt>Seat</dt><dd><A.Field label="Seat"><A.Select {...field.value('seat')} items={ER_SEATS} /></A.Field></dd>
+          </dl>
+        </>}
+      </A.EditRegionForm>
+    </A.EditRegion>
+  </section>;
 }
 
 function App() {

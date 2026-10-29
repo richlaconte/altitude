@@ -167,6 +167,7 @@ export const Icons = {
   ChevronDown: icon(<path d="M6 9l6 6 6-6" />),
   X: icon(<path d="M6 6l12 12M18 6L6 18" />),
   Info: icon(<><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></>),
+  Pencil: icon(<><path d="M16.5 3.5l4 4L8 20l-5 1 1-5z" /><path d="M14 6l4 4" /></>),
   CircleCheck: icon(<><circle cx="12" cy="12" r="9" /><path d="M8.5 12.5l2.5 2.5 4.5-5" /></>),
   AlertCircle: icon(<><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5M12 16.5h.01" /></>),
   AlertTriangle: icon(<><path d="M10.3 4.2L2.6 17.5A2 2 0 0 0 4.3 20.5h15.4a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z" /><path d="M12 9.5v4M12 17h.01" /></>),
