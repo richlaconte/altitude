@@ -28,6 +28,8 @@ export interface EditRegionProps<T extends Record<string, unknown>> {
   editLabel?: string;
   saveLabel?: string;
   cancelLabel?: string;
+  /** How long the region's afterglow takes to fade after a save, in ms. Default 5000. */
+  settleDuration?: number;
   className?: string;
   /** EditRegionView and EditRegionForm. */
   children: React.ReactNode;
@@ -79,7 +81,7 @@ function canFocus(element: HTMLElement | null | undefined): element is HTMLEleme
  */
 export function EditRegion<T extends Record<string, unknown>>({ label, value, onValueChange, onSave, validate, open: openProp,
   defaultOpen = false, onOpenChange, disabled = false, initialFocus, focusFallback, isEqual = Object.is,
-  editLabel = `Edit ${label.toLowerCase()}`, saveLabel = 'Save changes', cancelLabel = 'Cancel', className, children }: EditRegionProps<T>) {
+  editLabel = `Edit ${label.toLowerCase()}`, saveLabel = 'Save changes', cancelLabel = 'Cancel', settleDuration = 5000, className, children }: EditRegionProps<T>) {
   const [session, setSession] = React.useState<Session<T> | null>(() => defaultOpen || openProp ? { generation: 1, phase: 'editing', baseline: value, draft: value } : null);
   const [announcement, setAnnouncement] = React.useState('');
   const [settled, setSettled] = React.useState(0);
@@ -297,7 +299,7 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
   return <Ctx.Provider value={ctx}>
     <div ref={root} className={cx('alt-edit-region', className)} data-state={session?.phase ?? 'read'} onKeyDown={onKeyDown}>
       <Surface ref={surface} className="alt-edit-region-surface" level={session ? 1 : 0} settle={settled || undefined}
-        status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
+        style={{ '--dur-settle': `${settleDuration}ms` } as React.CSSProperties} status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
         {children}
       </Surface>
       <span className="alt-edit-region-status" role="status" aria-live="polite" aria-atomic="true">{announcement}</span>

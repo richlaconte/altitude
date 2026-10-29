@@ -103,6 +103,7 @@ try {
     check(JSON.stringify(await api(page, 'publications')) === '["Valid name"]', 'canonical result publishes exactly once');
     check(await page.locator('#inline-contract .alt-inline-edit-value').textContent() === 'Valid name', 'read mode shows the controlled canonical value');
     check(await page.locator('#inline-contract [role="status"]').textContent() === 'Changes saved', 'accepted success announces outside the busy subtree');
+    check(await page.locator('#inline-contract .alt-inline-edit-surface').evaluate(el => el.hasAttribute('data-settle') && getComputedStyle(el, '::before').animationDuration === '5s'), 'a saved value’s afterglow fades over the 5s settleDuration default');
     await page.close(); }
 
   { const page = await open(); await mount(page, { required: false }); await edit(page); await input(page).fill(''); await save(page);

@@ -48,6 +48,8 @@ export interface InlineEditProps<V = string> {
   emptyLabel?: string;
   /** Single-key shortcut announced on the trigger (aria-keyshortcuts); the surrounding list handles the key. */
   shortcut?: string;
+  /** How long a saved value's afterglow takes to fade, in ms. Default 5000. */
+  settleDuration?: number;
 }
 type Session<V> = {
   generation: number;
@@ -81,7 +83,7 @@ function canFocus(element: HTMLElement | null | undefined): element is HTMLEleme
 /** One local editing session. The application remains the sole owner of the committed value and write. */
 export function InlineEdit<V = string>({ value, onValueChange, onSave, label, validate, required = false, maxLength,
   disabled = false, editLabel = `Edit ${label}`, saveLabel = 'Save changes', cancelLabel = 'Cancel',
-  focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is, multiline = false, rows = 3, maxRows = 12, trigger: triggerMode = 'button', emptyLabel = 'Not set', shortcut }: InlineEditProps<V>): React.ReactElement {
+  focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is, multiline = false, rows = 3, maxRows = 12, trigger: triggerMode = 'button', emptyLabel = 'Not set', shortcut, settleDuration = 5000 }: InlineEditProps<V>): React.ReactElement {
   const [session, setSession] = React.useState<Session<V> | null>(null);
   const [announcement, setAnnouncement] = React.useState('');
   const [settled, setSettled] = React.useState(0);
@@ -285,7 +287,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   return <div ref={root} className={cx('alt-inline-edit', className)} role="group" aria-label={label}
     data-state={session?.phase ?? 'read'} data-multiline={textarea ? '' : undefined} onKeyDown={session ? onKeyDown : undefined}>
     <Surface ref={surface} className="alt-inline-edit-surface" level={session ? 1 : 0} settle={settled || undefined}
-      status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
+      style={{ '--dur-settle': `${settleDuration}ms` } as React.CSSProperties} status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
       {session ? <>
         {editor ? <div className="alt-field">
           <label className="alt-field-label" htmlFor={controlId}>{label}{required && <span className="alt-field-req" aria-hidden="true"> *</span>}</label>

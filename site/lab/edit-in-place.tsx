@@ -12,7 +12,7 @@ const cx = (...names: (string | false | null | undefined)[]) => names.filter(Boo
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: string };
-const Lab = React.createContext<{ shouldFail: () => boolean }>({ shouldFail: () => false });
+const Lab = React.createContext<{ shouldFail: () => boolean; settleDuration: number }>({ shouldFail: () => false, settleDuration: 5000 });
 
 // A pretend server shared by both sides: 600ms per write, and one failure when "Next save fails" is on.
 async function serverSave<T>(draft: T, shouldFail: () => boolean): Promise<Result<T>> {
@@ -66,9 +66,11 @@ function useInPlaceMotion(box: React.RefObject<HTMLElement | null>) {
       const from = was.slots.get(slot.dataset.slot!);
       if (!from) continue;
       const now = slot.getBoundingClientRect();
-      const dx = from.left - now.left, dy = from.top - now.top;
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
-      slot.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration, easing });
+      const dx = from.left - now.left, dy = from.top - now.top, dw = now.width - from.width;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(dw) < 1) continue;
+      // A well wider than its text grows sideways from the text's box; flex is pinned so the width can drive it.
+      const size = Math.abs(dw) < 1 ? [{}, {}] : [{ flex: '0 0 auto', width: from.width + 'px' }, { flex: '0 0 auto', width: now.width + 'px' }];
+      slot.animate([{ transform: `translate(${dx}px, ${dy}px)`, ...size[0] }, { transform: 'none', ...size[1] }], { duration, easing });
     }
     if (to > was.h + 1) for (const part of el.querySelectorAll<HTMLElement>('[data-arrive]')) {
       const at = Math.max(0, Math.min(1, (part.getBoundingClientRect().top - top - was.h) / (to - was.h)));
@@ -107,6 +109,7 @@ function useInPlace<T extends Record<string, unknown>>(label: string, value: T, 
   const box = React.useRef<HTMLDivElement>(null);
   const trigger = React.useRef<HTMLButtonElement>(null);
   const focusNext = React.useRef<string | null>(null);
+  const caret = React.useRef<number | null>(null);
   const capture = useInPlaceMotion(box);
   const depth = useDepth({ settle: glow || undefined });
 
@@ -118,11 +121,16 @@ function useInPlace<T extends Record<string, unknown>>(label: string, value: T, 
     const scope = want === 'first' ? '' : `[data-slot="${want}"] `;
     const target = box.current?.querySelector<HTMLElement>(`${scope}input, ${scope}.alt-select-trigger, ${scope}[role="switch"]`);
     target?.focus();
-    if (want === 'first' && target instanceof HTMLInputElement) target.select();
+    if (want === 'first' && target instanceof HTMLInputElement) {
+      // Opened from a click on the text: the caret goes where the click was. Otherwise the whole value is selected.
+      if (caret.current === null) target.select(); else target.setSelectionRange(caret.current, caret.current);
+    }
+    caret.current = null;
   });
 
-  const open = () => {
+  const open = (at?: number) => {
     if (editing) return;
+    caret.current = at ?? null;
     capture(); setDraft(value); setErrors(undefined); setFailure(undefined); setJustSaved(false); say('');
     focusNext.current = 'first'; setEditing(true);
   };
@@ -166,7 +174,7 @@ function useInPlace<T extends Record<string, unknown>>(label: string, value: T, 
     if (event.key === 'Escape') { event.preventDefault(); cancel(); }
     else if (event.key === 'Enter' && target instanceof HTMLInputElement) { event.preventDefault(); void save(); }
   };
-  const glowProps = justSaved ? depth : {};
+  const glowProps = justSaved ? { ...depth, style: { ...depth.style, '--dur-settle': `${lab.settleDuration}ms` } as React.CSSProperties } : {};
   return { editing, draft, set, errors, failure, saving, open, cancel, save, box, trigger, onKeyDown, status, glowProps };
 }
 
@@ -175,25 +183,51 @@ const ErrorLine = ({ id, children }: { id?: string; children: React.ReactNode })
 
 /* ───────────── proposed: one value ───────────── */
 
-function InPlaceText({ label, value, onValueChange, className }: { label: string; value: string; onValueChange: (v: string) => void; className?: string }) {
+const Pencil = () => <svg className="lab-pencil" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <path d="M11 2.5l2.5 2.5L6 12.5 2.5 13.5l1-3.5z" /><path d="M9.5 4l2.5 2.5" />
+</svg>;
+
+// Where in the value a click landed, so the caret can go there. A keyboard press (detail 0) selects everything instead.
+function caretFrom(event: React.MouseEvent, text: HTMLElement | null, length: number): number | undefined {
+  if (event.detail === 0 || !text) return undefined;
+  const doc = document as Document & { caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null };
+  const pos = doc.caretPositionFromPoint?.(event.clientX, event.clientY);
+  const range = pos ? null : document.caretRangeFromPoint?.(event.clientX, event.clientY);
+  const node = pos?.offsetNode ?? range?.startContainer, offset = pos?.offset ?? range?.startOffset;
+  if (node && node.nodeType === Node.TEXT_NODE && text.contains(node) && offset !== undefined) return offset;
+  return event.clientX > text.getBoundingClientRect().right ? length : 0;
+}
+
+export type TextTrigger = 'button' | 'pencil' | 'field';
+
+function InPlaceText({ label, value, onValueChange, trigger = 'button', className }: { label: string; value: string; onValueChange: (v: string) => void; trigger?: TextTrigger; className?: string }) {
   const s = useInPlace(label, { text: value }, (v) => onValueChange(v.text), (d) => d.text.trim() ? undefined : { text: `Enter a ${label.toLowerCase()}.` });
   const errorId = React.useId();
   const problem = s.errors?.text ?? s.failure;
+  const textRef = React.useRef<HTMLSpanElement>(null);
+  const shown = value || 'Not set';
   return (
-    <div ref={s.box} className={cx('lab-ip', className)} role="group" aria-label={label} data-editing={s.editing ? '' : undefined} onKeyDown={s.onKeyDown}>
+    <div ref={s.box} className={cx('lab-ip', className)} role="group" aria-label={label} data-trigger={trigger} data-editing={s.editing ? '' : undefined} onKeyDown={s.onKeyDown}>
       <div className="lab-ip-line">
         {s.editing
           ? <div className="lab-slot-box" data-slot="text">
               <Input aria-label={label} value={s.draft.text} readOnly={s.saving} invalid={!!s.errors?.text}
                 aria-describedby={problem ? errorId : undefined} onChange={(e) => s.set('text', e.target.value)} />
             </div>
-          : <div className="lab-slot" data-slot="text" {...s.glowProps}><span className="lab-slot-text">{value || 'Not set'}</span></div>}
-        <div className="lab-actions">
+          : trigger === 'button'
+            ? <div className="lab-slot" data-slot="text" {...s.glowProps}><span ref={textRef} className="lab-slot-text">{shown}</span></div>
+            // The value is its own button. Its pencil's space is always reserved, so showing it moves nothing.
+            : <button ref={s.trigger} type="button" className="lab-slot lab-slot-button" data-slot="text" {...s.glowProps}
+                aria-label={`${label}: ${shown}. Edit ${label.toLowerCase()}`}
+                onClick={(event) => s.open(trigger === 'field' ? caretFrom(event, textRef.current, value.length) : undefined)}>
+                <span ref={textRef} className="lab-slot-text">{shown}</span>{trigger === 'pencil' && <Pencil />}
+              </button>}
+        {(s.editing || trigger === 'button') && <div className="lab-actions">
           {s.editing ? <>
             <Button variant="primary" loading={s.saving} onClick={() => void s.save()}>Save</Button>
             <Button variant="ghost" disabled={s.saving} onClick={s.cancel}>Cancel</Button>
-          </> : <Button ref={s.trigger} variant="ghost" onClick={s.open}>Edit<span className="alt-sr"> {label.toLowerCase()}</span></Button>}
-        </div>
+          </> : <Button ref={s.trigger} variant="ghost" onClick={() => s.open()}>Edit<span className="alt-sr"> {label.toLowerCase()}</span></Button>}
+        </div>}
       </div>
       {s.editing && problem && <ErrorLine id={errorId}>{problem}</ErrorLine>}
       <span className="alt-sr" role="status" aria-live="polite">{s.status}</span>
@@ -228,7 +262,7 @@ function InPlacePerson({ person, onValueChange }: { person: Person; onValueChang
         {s.editing
           ? <div className="lab-slot-box" data-slot="name"><Input aria-label="Name" value={d.name} readOnly={s.saving} invalid={!!s.errors?.name} onChange={(e) => s.set('name', e.target.value)} /></div>
           : <div className="lab-slot" data-slot="name"><span className="lab-slot-text">{person.name}</span></div>}
-        {!s.editing && <Button ref={s.trigger} size="sm" variant="ghost" className="lab-edit" onClick={s.open}>Edit<span className="alt-sr"> {person.name}</span></Button>}
+        {!s.editing && <Button ref={s.trigger} size="sm" variant="ghost" className="lab-edit" onClick={() => s.open()}>Edit<span className="alt-sr"> {person.name}</span></Button>}
       </div>
       <div className="lab-line lab-meta">
         {s.editing
@@ -280,7 +314,7 @@ function InPlaceSheet() {
       data-editing={s.editing ? '' : undefined} onKeyDown={s.onKeyDown} {...s.glowProps} data-measure="[data-slot=traveller] .lab-slot-text|[data-slot=traveller] input">
       <div className="lab-sheet-head">
         <h3 className="lab-h4">Trip details</h3>
-        {!s.editing && <Button ref={s.trigger} size="sm" variant="ghost" onClick={s.open}>Edit all</Button>}
+        {!s.editing && <Button ref={s.trigger} size="sm" variant="ghost" onClick={() => s.open()}>Edit all</Button>}
       </div>
       <dl className="lab-sheet-grid">
         <dt>Traveller</dt><dd>{text('traveller', 'Traveller')}</dd>
@@ -308,18 +342,18 @@ function CurrentTask() {
   const [title, setTitle] = React.useState('Prepare launch checklist');
   return (
     <div className="lab-task" data-measure=".alt-inline-edit-value|input">
-      <InlineEdit label="Task title" value={title} onValueChange={setTitle} required className="lab-title"
+      <InlineEdit label="Task title" value={title} onValueChange={setTitle} required className="lab-title" settleDuration={lab.settleDuration}
         onSave={(draft) => serverSave(draft, lab.shouldFail)} />
       <TaskRest />
     </div>
   );
 }
 
-function ProposedTask() {
+function ProposedTask({ trigger }: { trigger: TextTrigger }) {
   const [title, setTitle] = React.useState('Prepare launch checklist');
   return (
     <div className="lab-task" data-measure=".lab-slot-text|input">
-      <InPlaceText label="Task title" value={title} onValueChange={setTitle} className="lab-title" />
+      <InPlaceText label="Task title" value={title} onValueChange={setTitle} trigger={trigger} className="lab-title" />
       <TaskRest />
     </div>
   );
@@ -336,7 +370,7 @@ function CurrentPeople() {
   return (
     <ul className="lab-people">
       {people.map(({ id, ...person }) => <li key={id} data-measure=".lab-cur-name|input[name='name']">
-        <EditRegion label={person.name} editLabel={`Edit ${person.name}`} value={person} validate={validatePerson}
+        <EditRegion label={person.name} editLabel={`Edit ${person.name}`} value={person} validate={validatePerson} settleDuration={lab.settleDuration}
           onValueChange={(next) => setPeople((all) => all.map((p) => p.id === id ? { ...p, ...next } : p))}
           onSave={(draft) => serverSave(draft, lab.shouldFail)}>
           <EditRegionView>
@@ -390,11 +424,11 @@ async function settled(host: Element) {
 }
 
 // Opening anything in the panel measures where the value's text was and where it ends up once motion has stopped.
-function Panel({ kind, title, children, notes }: { kind: 'today' | 'proposed'; title: string; children: React.ReactNode; notes: React.ReactNode }) {
+function Panel({ kind, title, children, notes, toolbar }: { kind: 'today' | 'proposed'; title: string; children: React.ReactNode; notes: React.ReactNode; toolbar?: React.ReactNode }) {
   const [reading, setReading] = React.useState('Open an editor to measure how far its value moves.');
   const onClickCapture = (event: React.MouseEvent) => {
     const button = (event.target as Element).closest('button');
-    if (!button || !/^Edit/.test(button.textContent?.trim() ?? '')) return;
+    if (!button || !(button.matches('[data-slot]') || /^Edit/.test(button.textContent?.trim() ?? ''))) return;
     const host = button.closest<HTMLElement>('[data-measure]');
     const [readSel, editSel] = host?.dataset.measure?.split('|') ?? [];
     const readEl = host?.querySelector(readSel);
@@ -415,10 +449,20 @@ function Panel({ kind, title, children, notes }: { kind: 'today' | 'proposed'; t
         <span className="lab-tag" data-kind={kind}>{kind === 'today' ? 'Today' : 'Proposed'}</span>
         <span className="lab-panel-title">{title}</span>
       </header>
+      {toolbar}
       <div className="lab-stage lab-inplace">{children}</div>
       <p className="lab-reading" aria-live="polite"><Icons.Info size={14} />{reading}</p>
       <div className="lab-notes">{notes}</div>
     </section>
+  );
+}
+
+function Choice<V extends string>({ label, value, options, onChange }: { label: string; value: V; options: [V, string][]; onChange: (v: V) => void }) {
+  return (
+    <div className="lab-choice" role="group" aria-label={label}>
+      <span className="lab-choice-label" aria-hidden="true">{label}</span>
+      {options.map(([v, text]) => <Button key={v} size="sm" variant={v === value ? 'secondary' : 'ghost'} aria-pressed={v === value} onClick={() => onChange(v)}>{text}</Button>)}
+    </div>
   );
 }
 
@@ -444,9 +488,12 @@ function LabPage() {
   const [slow, setSlow] = React.useState(false);
   const [reduced, setReduced] = React.useState(false);
   const [failNext, setFailNext] = React.useState(false);
+  const [settleDuration, setSettleDuration] = React.useState('5000');
+  const [trigger, setTrigger] = React.useState<TextTrigger>('button');
   const fail = React.useRef(false);
   fail.current = failNext;
-  const lab = React.useMemo(() => ({ shouldFail: () => { if (!fail.current) return false; fail.current = false; setFailNext(false); return true; } }), []);
+  const shouldFail = React.useCallback(() => { if (!fail.current) return false; fail.current = false; setFailNext(false); return true; }, []);
+  const lab = React.useMemo(() => ({ shouldFail, settleDuration: Number(settleDuration) }), [shouldFail, settleDuration]);
   const [epoch, setEpoch] = React.useState(0);
   usePlaybackRate(slow ? 0.25 : 1);
   React.useLayoutEffect(() => { document.body.setAttribute('data-theme', scheme); }, [scheme]);
@@ -469,6 +516,12 @@ function LabPage() {
             <Switch checked={reduced} onCheckedChange={setReduced} label="Reduced motion" />
             <Switch checked={failNext} onCheckedChange={setFailNext} label="Next save fails" />
             <Switch checked={scheme === 'nightfall'} onCheckedChange={(on) => setScheme(on ? 'nightfall' : 'daylight')} label="Dark" />
+            <span className="lab-control">
+              <span id="lab-settle-label">Afterglow</span>
+              <Select size="sm" aria-labelledby="lab-settle-label" value={settleDuration} onValueChange={setSettleDuration} items={[
+                { value: '2000', label: '2s' }, { value: '3000', label: '3s' }, { value: '5000', label: '5s (new default)' }, { value: '8000', label: '8s (dur-settle)' },
+              ]} />
+            </span>
             <Button size="sm" variant="ghost" onClick={() => setEpoch((n) => n + 1)}>Reset examples</Button>
           </div>
         </div>
@@ -484,11 +537,14 @@ function LabPage() {
                   <li>A label is added above, so the title moves down and right, and shrinks to 14px.</li>
                   <li>After a save, “Changes saved” stays under the title.</li>
                 </ul>}><CurrentTask /></Panel>
-                <Panel kind="proposed" title="In-place value" notes={<ul>
+                <Panel kind="proposed" title="In-place value" toolbar={<Choice label="Open with" value={trigger} onChange={setTrigger}
+                  options={[['button', 'Edit button'], ['pencil', 'Pencil on hover'], ['field', 'Field on hover']]} />} notes={<ul>
                   <li>The well opens under the title's own text, in its own font, so nothing moves.</li>
-                  <li>Save and Cancel take Edit's place on the same row. They wrap below only when there's no room, and that wrap glides.</li>
+                  {trigger === 'button' && <li>Save and Cancel take Edit's place on the same row. They wrap below only when there's no room, and that wrap glides.</li>}
+                  {trigger === 'pencil' && <li>The title is the button. A pencil shows at the end of the text on hover or keyboard focus, in space that's always reserved, so it moves nothing. Touch screens can't hover, so they always show it.</li>}
+                  {trigger === 'field' && <li>Hovering draws the input's border and floor around the text, so clicking just puts the caret where you clicked. Keyboard focus shows the same field, and Enter or Space selects the whole title.</li>}
                   <li>The afterglow has room around the text. The status is for screen readers only, and clears itself.</li>
-                </ul>}><ProposedTask /></Panel>
+                </ul>}><ProposedTask key={trigger} trigger={trigger} /></Panel>
               </div>
             </div>
           </section>

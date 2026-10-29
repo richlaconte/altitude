@@ -98,3 +98,30 @@
 .lab-sheet-grid dt { align-self: center; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
 .lab-sheet-grid dd { min-width: 0; margin: 0 calc(-1 * var(--inset)); }
 @media (max-width: 420px) { .lab-sheet-grid { grid-template-columns: minmax(0, 1fr); } .lab-sheet-grid dt { margin-top: var(--space-2); } }
+
+/* Controls added for the trigger and afterglow comparisons */
+.lab-control { display: inline-flex; align-items: center; gap: var(--space-2); font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.lab-control .alt-select { min-width: 10.5rem; }
+.lab-choice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); }
+.lab-choice-label { margin-inline-end: var(--space-2); font: 500 13px/19px var(--font-sans); color: var(--ink-muted); }
+
+/* The value as its own button: same box as the slot, so the text sits where it always does. */
+.lab-slot-button { width: auto; max-width: 100%; margin: 0; font: inherit; color: inherit; text-align: start; background: transparent; cursor: pointer;
+  transition: background-color var(--dur-travel-1) var(--ease-rise), border-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
+.lab-slot-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+
+/* Pencil on hover: a faint tint and the pencil, whose space is always reserved. Always shown where there's no hover. */
+.lab-pencil { flex: none; margin-inline-start: var(--space-2); color: var(--ink-muted); opacity: 0; transition: opacity var(--dur-travel-1) var(--ease-rise); }
+.lab-ip[data-trigger="pencil"] .lab-slot-button:hover { background: var(--surface-well); }
+.lab-slot-button:hover .lab-pencil, .lab-slot-button:focus-visible .lab-pencil { opacity: 1; }
+@media (hover: none) { .lab-pencil { opacity: 1; } }
+
+/* Field on hover: hovering draws the filled input's border and floor around the text, so the click only focuses it. */
+.lab-ip[data-trigger="field"] .lab-slot-button { cursor: text; }
+.lab-ip[data-trigger="field"] .lab-slot-button:hover, .lab-ip[data-trigger="field"] .lab-slot-button:focus-visible {
+  background: var(--surface-raised); border-color: var(--line-control); box-shadow: 0 1px 0 0 var(--alt-lip, transparent); }
+.lab-ip[data-trigger="field"] .lab-slot-button:focus-visible { outline-color: var(--alt-rim-held, var(--accent-ink)); }
+/* The field was already drawn on hover, so the real one doesn't fade in again. */
+.lab-ip[data-trigger="field"] .lab-slot-box > .alt-input { animation: none; }
+/* Pencil and field read rows hold no button, so the same row fits Save and Cancel without growing. */
+.lab-ip[data-trigger="pencil"]:not([data-editing]) .lab-ip-line > [data-slot], .lab-ip[data-trigger="field"]:not([data-editing]) .lab-ip-line > [data-slot] { flex: 0 1 auto; }

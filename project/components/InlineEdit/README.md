@@ -109,7 +109,7 @@ Opening focuses and selects the input (with a custom `editor`, it focuses the ed
 
 The Field label and single alert wire the input's name, description and invalid state. A polite status announces checking, saving and accepted success outside the saving region's `aria-busy` subtree. The editor is a static raised Surface, persistence uses its existing pending signal, failed writes use its failed treatment, and accepted canonical text settles locally. Text, controls, error icons and borders preserve every state without motion or shadows. Actions wrap below the field at narrow widths.
 
-Optional labels are `editLabel` (default `Edit ${label}`), `saveLabel` (“Save changes”) and `cancelLabel` (“Cancel”). `className` applies to the local group. There is no autosave, history, portal or form abstraction.
+Optional labels are `editLabel` (default `Edit ${label}`), `saveLabel` (“Save changes”) and `cancelLabel` (“Cancel”). `settleDuration` sets how long a saved value's afterglow takes to fade, in ms (default 5000, shorter than `dur-settle` because the person is watching the change). `className` applies to the local group. There is no autosave, history, portal or form abstraction.
 
 ## Demo and verification
 
