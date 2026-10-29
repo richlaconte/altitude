@@ -2267,6 +2267,21 @@ export interface ToolbarToggleProps extends Omit<ToggleProps, 'variant'> {}
 /** A latched tool: a ghost Toggle. */
 export declare const ToolbarToggle: React.ForwardRefExoticComponent<ToolbarToggleProps & React.RefAttributes<HTMLButtonElement>>;
 
+export interface SplitButtonProps extends Omit<ButtonProps, 'variant' | 'children' | 'square'> {
+  /** The default action's words ("Save changes"). They also name the group. */
+  label: React.ReactNode;
+  /** primary (default) or secondary. */
+  variant?: 'primary' | 'secondary';
+  /** The alternatives, in a DropdownMenu. */
+  items: MenuEntry[];
+  /** The chevron's name. Default "More options". Say what for: "More save options". */
+  menuLabel?: string;
+  /** Names the group when label isn't plain text. */
+  groupLabel?: string;
+}
+/** One action with its alternatives: two faces on one slab sharing one wall; each lifts on its own. */
+export declare const SplitButton: React.ForwardRefExoticComponent<SplitButtonProps & React.RefAttributes<HTMLButtonElement>>;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2286,6 +2301,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      SplitButton: typeof SplitButton;
       Toolbar: typeof Toolbar; ToolbarGroup: typeof ToolbarGroup; ToolbarSeparator: typeof ToolbarSeparator; ToolbarButton: typeof ToolbarButton; ToolbarToggle: typeof ToolbarToggle;
       Toggle: typeof Toggle; ToggleGroup: typeof ToggleGroup; ToggleGroupItem: typeof ToggleGroupItem;
       CopyButton: typeof CopyButton;

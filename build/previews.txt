@@ -1956,6 +1956,27 @@ function App() {
   );
 }
 
+=== SplitButton | <!-- @dsCard group="Actions" height=300 subtitle="One action and its alternatives: two faces on one slab" -->
+--- jsx
+function App() {
+  const [said, setSaid] = React.useState('');
+  const [deploying, setDeploying] = React.useState(false);
+  const deploy = (where) => { setSaid(`Deploying to ${where}…`); setDeploying(true); setTimeout(() => { setDeploying(false); setSaid(`Deployed to ${where}.`); }, 1600); };
+  return (
+    <div className="col">
+      <div className="row">
+        <A.SplitButton label="Save changes" menuLabel="More save options" onClick={() => setSaid('Saved.')}
+          items={[{ label: 'Save as draft', onSelect: () => setSaid('Saved as a draft.') }, { label: 'Save and close', onSelect: () => setSaid('Saved and closed.') }]} />
+        <A.SplitButton variant="secondary" label="Merge" menuLabel="More merge options" onClick={() => setSaid('Merged.')}
+          items={[{ label: 'Squash and merge', onSelect: () => setSaid('Squashed and merged.') }, { label: 'Rebase and merge', onSelect: () => setSaid('Rebased and merged.') }]} />
+        <A.SplitButton variant="secondary" label="Deploy" menuLabel="More deploy options" loading={deploying} onClick={() => deploy('staging')}
+          items={[{ label: 'Deploy to staging', onSelect: () => deploy('staging') }, { label: 'Deploy to production', onSelect: () => deploy('production'), tone: 'critical' }]} />
+      </div>
+      <p className="cap" role="status">{said || 'Each face lifts on its own. Alt+Down on an action opens its menu. While Deploy is loading, its chevron still works.'}</p>
+    </div>
+  );
+}
+
 === Toggle | <!-- @dsCard group="Actions" height=330 subtitle="Buttons that stay on: on is a well the accent pours into, as a Switch" -->
 --- css
 .tg { display: flex; flex-direction: column; gap: 16px; }

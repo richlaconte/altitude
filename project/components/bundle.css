@@ -1038,6 +1038,22 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-toolbar-more { flex: none; margin-left: auto; }
 @media (forced-colors: active) { .alt-toolbar-btn:hover:not([aria-pressed="true"]), .alt-toolbar-btn:focus-visible:not([aria-pressed="true"]) { border: 1px solid CanvasText; } }
 
+/* ── SplitButton: one action with its alternatives. Two faces on one slab, sharing one wall: the action and a chevron,
+   parted by a 1px notch (line-control). Each face lifts on its own when pointed at, because each does something
+   different, and each has its own focus ring around its face and wall. A loading action is held pressed while the
+   chevron stays usable. ── */
+.alt-split { display: inline-flex; align-items: stretch; isolation: isolate; }
+.alt-split .alt-pop-anchor { display: inline-flex; }
+.alt-split .alt-split-action { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.alt-split .alt-split-menu { border-top-left-radius: 0; border-bottom-left-radius: 0; width: 32px; }
+.alt-split .alt-split-menu[data-size="sm"] { width: 26px; }
+.alt-split .alt-split-action::after { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.alt-split .alt-split-menu::after { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.alt-split .alt-split-menu::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 1px; background: var(--line-control); pointer-events: none; }
+.alt-split[data-variant="primary"] .alt-split-menu::before { background: color-mix(in oklab, var(--on-accent) 45%, var(--accent)); }
+.alt-split .alt-split-action:focus-visible, .alt-split .alt-split-menu:focus-visible, .alt-split .alt-split-action:hover, .alt-split .alt-split-menu:hover { z-index: 1; }
+@media (forced-colors: active) { .alt-split .alt-split-menu::before { background: CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */
