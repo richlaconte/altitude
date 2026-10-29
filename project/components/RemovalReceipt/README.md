@@ -30,5 +30,5 @@ The slot of an item that can leave its list: a file archived, a webhook removed,
 - Do keep the item in its slot until its removal is confirmed; show a failure in the restored row, not somewhere else.
 - Do put Undo where the removing action was, so a second click under the pointer reverses rather than navigates.
 - Don't hold the receipt for longer to "make sure": the person can stop it by pointing at it or focusing it.
-- Don't use it for a line removed while typing (an empty `Checklist` line); nothing was lost, and the hold would sit in the way.
+- Don't use it for a line removed while typing (an empty `Checklist` line); nothing was lost, and the hold would sit in the way. Checklist glides the line shut instead.
 - Don't use it for permanent deletion without saying so: a deletion's receipt has no Undo.

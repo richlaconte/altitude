@@ -629,6 +629,15 @@ Findings:
 
 Not yet tested with people: whether Undo moving from the slot to a toast reads as the same Undo.
 
+### E50 · How should a line removed while typing leave?
+
+A design review and a measurement ([#101](https://github.com/richlaconte/altitude/issues/101)). In `Checklist`, removal happens only from the keyboard: Backspace on an empty line, or at the start of a line, which merges its text into the line above. Before, the line vanished in one frame, and a raised Undo bar was added after the list, which changed the page's height a second time.
+
+- **No receipt.** E46's in-place receipt would sit between lines being typed, and its hold would delay the context the caret needs. Nothing was lost, so there's nothing to read. The line now glides shut over `dur-travel-2`. `checks/checklist.mjs` samples the line below every frame and sees it pass through several positions (CL-20, CL-21), with the caret already at the end of the line above (CL-23).
+- **No bar.** Undo stays on Ctrl/Cmd+Z, and the announcement names it for the platform: “Empty item removed. Undo with Ctrl+Z.” (⌘Z on Apple). Pointer-only users of `onUndo` lose the bar, but they couldn't remove a line without a keyboard in the first place.
+- **Found while testing.** Chromium reports `navigator.userAgentData.platform` as “macOS”, which a case-sensitive `/Mac/` test misses. Checklist's test is now case-insensitive. `InlineEdit` has the same test and the same gap.
+- **The announcement is one at a time, the latest.** Saying the same words twice needs the status cleared first. Clearing it and speaking a frame later let a stale removal overwrite a newer “Indented under …”, so only the latest is spoken.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
