@@ -105,30 +105,30 @@ export interface DropdownMenuProps {
   defaultOpen?: boolean;
   className?: string;
 }
-export function DropdownMenu({ trigger, items, align = 'start', side = 'bottom', defaultOpen = false, className }: DropdownMenuProps) {
-  const [open, setOpen] = React.useState(defaultOpen);
-  const [active, setActive] = React.useState(-1);
+/**
+ * The menu itself, shared by DropdownMenu and ContextMenu: its items, the highlight that glides between them, the
+ * keyboard, and choosing. `onClose(true)` asks the owner to close and give focus back.
+ */
+export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', className, style, startFirst, onClose }: {
+  items: MenuEntry[]; id: string; state: string; side?: 'top' | 'bottom'; align?: 'start' | 'end'; className?: string; style?: React.CSSProperties;
+  /** Opened from the keyboard: the first item is active at once. */
+  startFirst?: boolean;
+  onClose: () => void;
+}) {
+  const enabled = items.map((it, i) => (!it.type || it.type === 'item') && !(it as any).disabled ? i : -1).filter((i) => i >= 0);
+  const [active, setActive] = React.useState(startFirst ? enabled[0] ?? -1 : -1);
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
-  const anchor = React.useRef<HTMLSpanElement>(null);
   const menu = React.useRef<HTMLDivElement>(null);
   const refs = React.useRef<(HTMLDivElement | null)[]>([]);
-  const id = React.useId();
-  const { mounted, state } = usePresence(open, EXIT_3);
-  const close = React.useCallback(() => { setOpen(false); setActive(-1); }, []);
-  useOutside(anchor, open, close);
-  const enabled = items.map((it, i) => (!it.type || it.type === 'item') && !(it as any).disabled ? i : -1).filter((i) => i >= 0);
-
   useIsoLayoutEffect(() => {
     const el = active >= 0 ? refs.current[active] : null;
     setHl(el ? { y: el.offsetTop, h: el.offsetHeight } : null);
-  }, [active, mounted]);
+  }, [active]);
   React.useEffect(() => { if (state === 'open') menu.current?.focus({ preventScroll: true }); }, [state]);
-
   const choose = (i: number) => {
     const it = items[i] as any;
     if (!it || it.disabled) return;
-    close();
-    (anchor.current?.firstElementChild as HTMLElement)?.focus();
+    onClose();
     it.onSelect?.();
   };
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -138,42 +138,54 @@ export function DropdownMenu({ trigger, items, align = 'start', side = 'bottom',
     else if (e.key === 'Home') { e.preventDefault(); setActive(enabled[0]); }
     else if (e.key === 'End') { e.preventDefault(); setActive(enabled[enabled.length - 1]); }
     else if ((e.key === 'Enter' || e.key === ' ') && active >= 0) { e.preventDefault(); choose(active); }
-    else if (e.key === 'Escape' || e.key === 'Tab') { close(); (anchor.current?.firstElementChild as HTMLElement)?.focus(); }
+    else if (e.key === 'Escape' || e.key === 'Tab') { if (e.key === 'Escape') e.stopPropagation(); onClose(); }
   };
   let n = 0;
   // When any item can be checked, every item keeps a slot for the check, so their labels line up.
   const checks = items.some((it: any) => it.checked !== undefined);
   const activeTone = active >= 0 ? (items[active] as any).tone : undefined;
   return (
+    <div ref={menu} id={id} role="menu" tabIndex={-1} className={cx('alt-pop alt-menu', className)} data-state={state} data-side={side} data-align={align} style={style}
+      data-ephemeral={items.some((it: any) => it.predicted) ? '' : undefined}
+      aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined} onKeyDown={onKeyDown} onPointerLeave={() => setActive(-1)}>
+      <span className="alt-menu-hl" aria-hidden="true" data-tone={activeTone}
+        style={hl ? { transform: `translateY(${hl.y}px)`, height: hl.h, opacity: 1 } : { opacity: 0 }} />
+      {items.map((it, i) => {
+        if (it.type === 'separator') return <div key={i} className="alt-menu-sep" role="separator" />;
+        if (it.type === 'label') return <div key={i} className="alt-menu-label" style={{ ['--i' as any]: n++ }}>{it.label}</div>;
+        const item = it as MenuItem;
+        return (
+          <div key={i} id={`${id}-${i}`} ref={(el) => { refs.current[i] = el; }} role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
+            aria-checked={item.checked} aria-disabled={item.disabled || undefined}
+            className="alt-menu-item" data-tone={item.tone} data-predicted={(item as any).predicted ? '' : undefined} style={{ ['--i' as any]: n++ }}
+            onPointerMove={() => !item.disabled && active !== i && setActive(i)} onClick={() => choose(i)}>
+            {(item.icon || checks) && <span className="alt-menu-icon">{item.checked ? <Icons.Check /> : item.icon}</span>}
+            <span className="alt-menu-text">{item.label}</span>
+            {item.shortcut && <span className="alt-menu-shortcut">{item.shortcut}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function DropdownMenu({ trigger, items, align = 'start', side = 'bottom', defaultOpen = false, className }: DropdownMenuProps) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  const [byKey, setByKey] = React.useState(false);
+  const anchor = React.useRef<HTMLSpanElement>(null);
+  const id = React.useId();
+  const { mounted, state } = usePresence(open, EXIT_3);
+  const close = React.useCallback(() => setOpen(false), []);
+  useOutside(anchor, open, close);
+  const closeAndReturn = () => { close(); (anchor.current?.firstElementChild as HTMLElement)?.focus(); };
+  return (
     <span className="alt-pop-anchor" ref={anchor}>
       {React.cloneElement(trigger, {
         'aria-haspopup': 'menu', 'aria-expanded': open, 'aria-controls': id,
-        onClick: (e: any) => { trigger.props.onClick?.(e); open ? close() : setOpen(true); },
-        onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setOpen(true); setActive(enabled[0]); } },
+        onClick: (e: any) => { trigger.props.onClick?.(e); setByKey(false); setOpen(!open); },
+        onKeyDown: (e: React.KeyboardEvent) => { trigger.props.onKeyDown?.(e); if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setByKey(true); setOpen(true); } },
       })}
-      {mounted && (
-        <div ref={menu} id={id} role="menu" tabIndex={-1} className={cx('alt-pop alt-menu', className)} data-state={state} data-side={side} data-align={align}
-          data-ephemeral={items.some((it: any) => it.predicted) ? '' : undefined}
-          aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined} onKeyDown={onKeyDown} onPointerLeave={() => setActive(-1)}>
-          <span className="alt-menu-hl" aria-hidden="true" data-tone={activeTone}
-            style={hl ? { transform: `translateY(${hl.y}px)`, height: hl.h, opacity: 1 } : { opacity: 0 }} />
-          {items.map((it, i) => {
-            if (it.type === 'separator') return <div key={i} className="alt-menu-sep" role="separator" />;
-            if (it.type === 'label') return <div key={i} className="alt-menu-label" style={{ ['--i' as any]: n++ }}>{it.label}</div>;
-            const item = it as MenuItem;
-            return (
-              <div key={i} id={`${id}-${i}`} ref={(el) => { refs.current[i] = el; }} role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
-                aria-checked={item.checked} aria-disabled={item.disabled || undefined}
-                className="alt-menu-item" data-tone={item.tone} data-predicted={(item as any).predicted ? '' : undefined} style={{ ['--i' as any]: n++ }}
-                onPointerMove={() => !item.disabled && active !== i && setActive(i)} onClick={() => choose(i)}>
-                {(item.icon || checks) && <span className="alt-menu-icon">{item.checked ? <Icons.Check /> : item.icon}</span>}
-                <span className="alt-menu-text">{item.label}</span>
-                {item.shortcut && <span className="alt-menu-shortcut">{item.shortcut}</span>}
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {mounted && <MenuPanel items={items} id={id} state={state} side={side} align={align} className={className} startFirst={byKey} onClose={closeAndReturn} />}
     </span>
   );
 }

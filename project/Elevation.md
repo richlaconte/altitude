@@ -86,7 +86,8 @@ Rules that follow:
 | **A row of tools** | a toolbar lies on the ground and its tools are ghosts that lift when pointed at; latched tools are Toggles; what doesn't fit moves into a floating "More tools" menu, where toggles stay checkable | `Toolbar` |
 | **An action with alternatives** | one slab with two faces sharing one wall, parted by a 1px notch; each face lifts on its own because each does something different; the alternatives float in a menu | `SplitButton` |
 | **Consequence** | a destructive action is pushed *through* the ground: hold until it sinks to a trench; once done it lies flat and can't be pressed again | `HoldButton` |
-| **Prediction** | likely menu items arrive first; the rest fade in over `dur-onset` | `predicted` on `DropdownMenu` items |
+| **Prediction** | likely menu items arrive first; the rest fade in over `dur-onset` | `predicted` on `DropdownMenu` and `ContextMenu` items |
+| **The subject of a menu** | the thing right-clicked keeps its level and takes a 2px `accent-ink` outline while its menu floats at level 3, so a flush row never lifts out of its table | `ContextMenu` |
 | **Recency of messages** | toasts sink one level per newer toast behind them | `Toaster` |
 | **Focus of the moment** | the page recedes while a dialog or the command palette is at the summit; only one of them at a time | `Dialog`, `CommandPalette` with `AltitudeProvider` |
 | **Ranking** | the best match is on top; when results change, the rows that stay are carried to their new places, and only the top few new ones rise | `CommandPalette` |

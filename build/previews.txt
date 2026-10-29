@@ -603,6 +603,42 @@ function App() {
   );
 }
 
+=== ContextMenu | <!-- @dsCard group="Overlays" height=360 subtitle="Actions on a thing, where you right-click or long-press it, or with Shift+F10" -->
+--- css
+.cm2 { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; max-width: 560px; }
+.cm2 .file { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); font: 400 14px/20px var(--font-sans); color: var(--ink); background: var(--surface-ground); }
+.cm2 .file:last-child { border-bottom: 0; }
+.cm2 .file:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.cm2 .name { flex: 1; }
+.cm2 .meta { color: var(--ink-muted); font-size: 13px; }
+--- jsx
+function App() {
+  const [files, setFiles] = React.useState(['Q3 board deck.pdf', 'Invoices 2026.xlsx', 'Brand guidelines.fig']);
+  const [said, setSaid] = React.useState('');
+  const actions = (f) => [
+    { label: 'Open', onSelect: () => setSaid(`Opened ${f}.`) },
+    { label: 'Rename', onSelect: () => setSaid(`Renaming ${f}…`) },
+    { label: 'Duplicate', onSelect: () => setSaid(`Duplicated ${f}.`) },
+    { type: 'separator' },
+    { label: 'Delete file', tone: 'critical', onSelect: () => { setFiles((xs) => xs.filter((x) => x !== f)); setSaid(`Deleted ${f}.`); } },
+  ];
+  return (
+    <div className="col">
+      <div className="cm2" role="list" aria-label="Files">
+        {files.map((f) => (
+          <A.ContextMenu key={f} items={() => actions(f)}>
+            <div className="file" role="listitem" tabIndex={0}>
+              <span className="name">{f}</span><span className="meta">Edited 2 days ago</span>
+              <A.DropdownMenu align="end" items={actions(f)} trigger={<A.Button variant="ghost" size="sm" square aria-label={`Actions for ${f}`}><A.Icons.More /></A.Button>} />
+            </div>
+          </A.ContextMenu>
+        ))}
+      </div>
+      <p className="cap" role="status">{said || 'Right-click a file (or long-press, or focus it and press Shift+F10). The same actions are behind each row\'s ⋯ button, because a context menu is never the only way.'}</p>
+    </div>
+  );
+}
+
 === Dialog | <!-- @dsCard group="Overlays" height=620 subtitle="A focused decision; the background can stay in place" -->
 --- css
 .dialog-demo { max-width: 720px; margin: auto; display: grid; gap: 20px; }
