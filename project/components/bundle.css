@@ -1054,6 +1054,26 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-split .alt-split-action:focus-visible, .alt-split .alt-split-menu:focus-visible, .alt-split .alt-split-action:hover, .alt-split .alt-split-menu:hover { z-index: 1; }
 @media (forced-colors: active) { .alt-split .alt-split-menu::before { background: CanvasText; } }
 
+/* ── NumberInput: an opening that fills, like Input, with two small raised steppers in its end cap: you press them,
+   so they're slabs (push up, fill down), level 1 with a 1px wall, lifting to 2 when pointed at, flush and faint at a
+   limit. The unit sits beside the number in ink-muted. Editing isn't a change to the record, so nothing glows. ── */
+.alt-numfield { padding-right: 3px; }
+.alt-numfield input { font-variant-numeric: tabular-nums; }
+.alt-numfield-unit { font: 400 14px/20px var(--font-sans); }
+.alt-numfield-steps { display: flex; flex-direction: column; gap: 2px; flex: none; align-self: center; }
+.alt-numfield-step {
+  display: grid; place-items: center; width: 24px; height: 15px; padding: 0; border: 0; border-radius: var(--radius-xs); cursor: pointer;
+  background: var(--surface-raised); background-image: var(--alt-sheen); color: var(--ink-muted);
+  box-shadow: 0 1px 0 0 var(--surface-trench), var(--elev-1);
+  transition: box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-2) var(--ease-settle), color var(--dur-travel-1);
+}
+.alt-numfield[data-size="sm"] .alt-numfield-step { height: 13px; }
+.alt-numfield-step:hover:not(:disabled) { background-color: var(--surface-lifted); color: var(--ink); box-shadow: 0 2px 0 0 var(--surface-trench), var(--elev-2); transform: translateY(calc(-1px * var(--alt-travel))); }
+.alt-numfield-step:active:not(:disabled) { box-shadow: 0 0 0 0 var(--surface-trench), var(--elev-0); background-image: none; transform: translateY(1px); transition-duration: var(--dur-press); }
+.alt-numfield-step:disabled { background: transparent; background-image: none; box-shadow: none; color: var(--ink-faint); cursor: default; }
+[data-contrast="more"] .alt-numfield-step:not(:disabled) { box-shadow: 0 1px 0 0 var(--ink), var(--elev-1); }
+@media (forced-colors: active) { .alt-numfield-step:not(:disabled) { border: 1px solid ButtonText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

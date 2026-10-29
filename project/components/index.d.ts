@@ -2282,6 +2282,32 @@ export interface SplitButtonProps extends Omit<ButtonProps, 'variant' | 'childre
 /** One action with its alternatives: two faces on one slab sharing one wall; each lifts on its own. */
 export declare const SplitButton: React.ForwardRefExoticComponent<SplitButtonProps & React.RefAttributes<HTMLButtonElement>>;
 
+/** Reads what was typed in the locale's own way: "1.000,5" is 1000.5 in German. Returns null for nothing, NaN for nonsense. */
+export declare function parseNumber(text: string, locale?: string): number | null;
+export interface NumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'defaultValue' | 'onChange' | 'size' | 'type' | 'min' | 'max' | 'step'> {
+  value?: number | null;
+  defaultValue?: number | null;
+  /** Called with the parsed value when it's committed (on blur, Enter, a step or a stepper), or null when cleared. */
+  onValueChange?: (value: number | null) => void;
+  min?: number;
+  max?: number;
+  /** Default 1. Shift+arrow, PageUp and PageDown move ten steps. */
+  step?: number;
+  /** Intl.NumberFormat options; the unit is shown beside the number and spoken with it. With style 'percent' the value is a fraction. */
+  format?: Intl.NumberFormatOptions;
+  /** Default: the browser's. Parsing follows it. */
+  locale?: string;
+  invalid?: boolean;
+  size?: 'sm' | 'md';
+  /** The scroll wheel steps the value while the field is focused. Default false. */
+  wheel?: boolean;
+  /** The steppers' names. Default "Increase" and "Decrease". */
+  incrementLabel?: string;
+  decrementLabel?: string;
+}
+/** A number field: an opening that fills, with two small raised steppers in its end cap. A spinbutton; parses by locale. */
+export declare const NumberInput: React.ForwardRefExoticComponent<NumberInputProps & React.RefAttributes<HTMLInputElement>>;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2301,6 +2327,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      NumberInput: typeof NumberInput; parseNumber: typeof parseNumber;
       SplitButton: typeof SplitButton;
       Toolbar: typeof Toolbar; ToolbarGroup: typeof ToolbarGroup; ToolbarSeparator: typeof ToolbarSeparator; ToolbarButton: typeof ToolbarButton; ToolbarToggle: typeof ToolbarToggle;
       Toggle: typeof Toggle; ToggleGroup: typeof ToggleGroup; ToggleGroupItem: typeof ToggleGroupItem;

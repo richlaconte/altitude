@@ -740,6 +740,17 @@ A design review: `SplitButton` was rendered as a primary "Save changes", a secon
 
 Not yet tested with people: whether Alt+Down on the action is discovered without being taught.
 
+### E61 · Where do a number field's steppers go?
+
+A design review: `NumberInput` was rendered for seats (1–500), days (a unit), a price in `de-DE` euros and a percentage, empty and filled, in all four schemes at 960px, under forced colours and with `contrast="more"`. `checks/number-input.mjs` types, steps and pastes into them.
+
+- **Slabs in the end cap.** The field is an opening and the steppers are things you press, so they're raised (level 1, 1px wall) inside the well's end cap. A sunk stepper would read as another field, and "push up, fill down" says why that's wrong. At a limit a stepper lies flush and faint, as a disabled button does.
+- **Clamp when committed, not while typing.** Clamping each keystroke turns "12" into "1" then "12" in a field whose minimum is 10. The value is clamped on blur, Enter or a step, which keeps it in range without fighting the typing.
+- **The locale's own separators.** `<input type="number">` refuses "1,5" in German and takes "1.000" as one. Parsing uses `Intl.NumberFormat`'s own group and decimal signs, so "1.250,50" is 1250.5 in `de-DE`.
+- **No scroll-wheel accidents.** A page scroll over a number field changes its value in some browsers. The wheel steps only when `wheel` is set and the field is focused.
+
+Not yet tested with people: whether 15px-tall steppers are large enough on touch screens, where people type instead.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
