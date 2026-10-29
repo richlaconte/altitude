@@ -28,8 +28,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(function Link
     target: external ? target ?? '_blank' : target,
     rel: external ? rel ?? 'noopener noreferrer' : rel,
   };
-  if (asChild && React.isValidElement<any>(children)) {
-    const child = children;
+  if (asChild && React.isValidElement(children)) {
+    const child = children as React.ReactElement<{ className?: string; children?: React.ReactNode }>;
     return React.cloneElement(child, { ...props, className: cx('alt-link', child.props.className, className) }, glue(child.props.children));
   }
   return <a {...props}>{glue(children)}</a>;
