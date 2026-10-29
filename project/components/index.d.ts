@@ -561,8 +561,8 @@ export declare function Kbd(props: KbdProps): React.ReactElement;
 
 export interface TooltipProps {
   content: React.ReactNode;
-  /** Default 'top'. */
-  side?: 'top' | 'bottom';
+  /** Default 'top'. 'right' is for a rail of icons, where above would cover the next one. */
+  side?: 'top' | 'bottom' | 'right';
   /** Milliseconds before the first tooltip opens. Default 450. Neighbours open instantly for 400ms after one closes. */
   delay?: number;
   defaultOpen?: boolean;
@@ -2549,6 +2549,69 @@ export declare function PageHeaderTitle(props: React.HTMLAttributes<HTMLHeadingE
 /** One line saying what the page is for. */
 export declare function PageHeaderDescription(props: React.HTMLAttributes<HTMLParagraphElement>): React.ReactElement;
 
+export interface SidebarProviderProps {
+  /** Collapsed to a rail of icons. Persisting it is up to your app. */
+  collapsed?: boolean;
+  defaultCollapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+  /** Below this width the sidebar becomes a drawer. Default 768. */
+  mobileBreakpoint?: number;
+  children: React.ReactNode;
+}
+/** Holds the sidebar's state, and toggles it with ⌘B / Ctrl+B. */
+export declare function SidebarProvider(props: SidebarProviderProps): React.ReactElement;
+/** The sidebar's state and how to toggle it. */
+export declare function useSidebar(): { collapsed: boolean; setCollapsed: (c: boolean) => void; mobile: boolean; drawer: boolean; setDrawer: (o: boolean) => void; toggle: () => void };
+export interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
+  /** 'icon' (default) collapses to a rail of icons; 'none' never collapses. */
+  collapsible?: 'icon' | 'none';
+  /** The navigation landmark's name. Default "Main". */
+  'aria-label'?: string;
+}
+/** The sidebar: a nav on the ground; a Sheet drawer on narrow screens. */
+export declare function Sidebar(props: SidebarProps): React.ReactElement;
+export declare function SidebarHeader(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export declare function SidebarFooter(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+/** The scrolling middle, where the current destination's pill glides. */
+export declare function SidebarContent(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export interface SidebarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  label?: React.ReactNode;
+  /** The label is a disclosure button that shows and hides the group. */
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+}
+export declare function SidebarGroup(props: SidebarGroupProps): React.ReactElement;
+export declare function SidebarGroupLabel(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export declare function SidebarMenu(props: React.HTMLAttributes<HTMLUListElement>): React.ReactElement;
+export declare function SidebarMenuItem(props: React.LiHTMLAttributes<HTMLLIElement>): React.ReactElement;
+export interface SidebarMenuButtonProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  /** The page you're on: aria-current="page", and the raised pill. */
+  current?: boolean;
+  icon?: React.ReactNode;
+  /** Styles your own link element (a router's Link). */
+  asChild?: boolean;
+}
+export declare const SidebarMenuButton: React.ForwardRefExoticComponent<SidebarMenuButtonProps & React.RefAttributes<HTMLAnchorElement>>;
+export interface SidebarMenuBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  children: React.ReactNode;
+  /** What the count is, for its name: "4 unread". */
+  label?: string;
+}
+/** A count on a destination: it floats, and it's part of the destination's name. */
+export declare function SidebarMenuBadge(props: SidebarMenuBadgeProps): React.ReactElement;
+export declare function SidebarTrigger(props: React.ButtonHTMLAttributes<HTMLButtonElement>): React.ReactElement;
+/** The main landmark beside the sidebar. */
+export declare function SidebarInset(props: React.HTMLAttributes<HTMLElement>): React.ReactElement;
+export interface AppShellProps extends Omit<SidebarProviderProps, 'children'> {
+  sidebar: React.ReactNode;
+  /** The top bar's contents. A SidebarTrigger comes first by itself. */
+  topBar?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}
+/** The frame of an app on the ground: a sidebar, a top bar that rises when content passes under it, and the page. */
+export declare function AppShell(props: AppShellProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2568,6 +2631,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      AppShell: typeof AppShell; SidebarProvider: typeof SidebarProvider; Sidebar: typeof Sidebar; SidebarHeader: typeof SidebarHeader; SidebarContent: typeof SidebarContent; SidebarGroup: typeof SidebarGroup; SidebarGroupLabel: typeof SidebarGroupLabel; SidebarMenu: typeof SidebarMenu; SidebarMenuItem: typeof SidebarMenuItem; SidebarMenuButton: typeof SidebarMenuButton; SidebarMenuBadge: typeof SidebarMenuBadge; SidebarFooter: typeof SidebarFooter; SidebarTrigger: typeof SidebarTrigger; SidebarInset: typeof SidebarInset; useSidebar: typeof useSidebar;
       PageHeader: typeof PageHeader; PageHeaderTitle: typeof PageHeaderTitle; PageHeaderDescription: typeof PageHeaderDescription;
       Pagination: typeof Pagination; pageRange: typeof pageRange;
       Breadcrumb: typeof Breadcrumb; BreadcrumbList: typeof BreadcrumbList; BreadcrumbItem: typeof BreadcrumbItem; BreadcrumbLink: typeof BreadcrumbLink; BreadcrumbPage: typeof BreadcrumbPage; BreadcrumbSeparator: typeof BreadcrumbSeparator; BreadcrumbEllipsis: typeof BreadcrumbEllipsis;

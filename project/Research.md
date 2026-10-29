@@ -850,6 +850,17 @@ A design review: `PageHeader` was rendered with a breadcrumb, a primary, a secon
 
 Not yet tested with people: whether the overflow menu between the secondary and the primary hides actions people look for.
 
+### E71 · Is the current page a live surface?
+
+A design review: `AppShell` was rendered with a workspace switcher, two groups (one collapsible), a count, a footer user and a page with a `PageHeader`, expanded, collapsed to a rail and as a drawer at 360px, in all four schemes and under forced colours. `checks/app-shell.mjs` measures it.
+
+- **A raised pill, as the issue proposed.** "Selected: raised out of its well" was written for choices inside a control, and the issue asked for a comparison with a flush plate and an accent bar. The pill keeps navigation in the Tabs family (one raised mark that travels between options), and its glide shows where you went. The accent bar was not built: a coloured bar on a destination reads as status.
+- **The frame stays on the ground.** Sidebars are often floated as raised cards. A frame that's always there is the record of where you can go, so it lies flush, divided by lines, and only what acts lifts.
+- **The rail's tooltips go right.** Above, a tooltip covers the icon over it. Tooltip gained `side="right"`, and the rail lets its tooltips out past its edge.
+- **One measurement path.** The pill is measured when `aria-current` moves (a MutationObserver) or the sidebar resizes, not after every render. An after-every-render measurement fed back into React's updates in this tree, and hit React's update-depth limit on navigation.
+
+Not yet tested with people: whether a rail of icons with tooltips is learnable without the expanded labels.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

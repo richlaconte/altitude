@@ -1,0 +1,53 @@
+<!-- @dsCard group="Layout" height=560 subtitle="The frame of an app on the ground: a sidebar of destinations, a top bar and the page" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AppShell — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.as { height: 520px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.as-ws { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px; border: 0; border-radius: var(--radius-sm); background: none; font: 600 14px/20px var(--font-sans); color: var(--ink); cursor: pointer; }
+.as-ws:hover { background: var(--surface-raised); box-shadow: var(--elev-1); }
+.as .search { flex: 1; max-width: 360px; justify-content: flex-start; color: var(--ink-muted); }
+.as .rows { display: flex; flex-direction: column; gap: 8px; }
+.as .rows div { height: 52px; border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const I = ({ d }) => /* @__PURE__ */ React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d }));
+const icons = { inbox: "M3 13h5l2 3h4l2-3h5M5 5h14l2 8v6H3v-6z", projects: "M3 7h7l2 2h9v10H3z", reports: "M5 20V10M12 20V4M19 20v-7", members: "M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6", billing: "M3 7h18v10H3zM3 11h18", settings: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M19 12l2-1-2-4-2 1-2-1-1-2h-4l-1 2-2 1-2-1-2 4 2 1v0l-2 1 2 4 2-1 2 1 1 2h4l1-2 2-1 2 1 2-4z" };
+function App() {
+  const [at, setAt] = React.useState("inbox");
+  const item = (key, label, badge) => /* @__PURE__ */ React.createElement(A.SidebarMenuItem, { key }, /* @__PURE__ */ React.createElement(A.SidebarMenuButton, { href: "#/" + key, current: at === key, icon: /* @__PURE__ */ React.createElement(I, { d: icons[key] }), onClick: (e) => {
+    e.preventDefault();
+    setAt(key);
+  } }, label), badge && /* @__PURE__ */ React.createElement(A.SidebarMenuBadge, { label: `${badge} unread` }, badge));
+  return /* @__PURE__ */ React.createElement("div", { className: "as" }, /* @__PURE__ */ React.createElement(
+    A.AppShell,
+    {
+      sidebar: /* @__PURE__ */ React.createElement(A.Sidebar, null, /* @__PURE__ */ React.createElement(A.SidebarHeader, null, /* @__PURE__ */ React.createElement(
+        A.DropdownMenu,
+        {
+          items: [{ label: "Acme Inc." }, { label: "Northwind" }, { type: "separator" }, { label: "Create workspace" }],
+          trigger: /* @__PURE__ */ React.createElement("button", { className: "as-ws" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Acme Inc.", size: 24 }), /* @__PURE__ */ React.createElement("span", { className: "alt-sidebar-text" }, "Acme Inc."))
+        }
+      )), /* @__PURE__ */ React.createElement(A.SidebarContent, null, /* @__PURE__ */ React.createElement(A.SidebarGroup, { label: "Workspace" }, /* @__PURE__ */ React.createElement(A.SidebarMenu, null, item("inbox", "Inbox", 4), item("projects", "Projects"), item("reports", "Reports"))), /* @__PURE__ */ React.createElement(A.SidebarGroup, { label: "Admin", collapsible: true }, /* @__PURE__ */ React.createElement(A.SidebarMenu, null, item("members", "Members"), item("billing", "Billing"), item("settings", "Settings")))), /* @__PURE__ */ React.createElement(A.SidebarFooter, null, /* @__PURE__ */ React.createElement(A.SidebarMenu, null, /* @__PURE__ */ React.createElement(A.SidebarMenuItem, null, /* @__PURE__ */ React.createElement(A.SidebarMenuButton, { href: "#/me", icon: /* @__PURE__ */ React.createElement(A.Avatar, { name: "Maya Chen", size: 20 }) }, "Maya Chen"))))),
+      topBar: /* @__PURE__ */ React.createElement(A.Button, { variant: "secondary", size: "sm", className: "search" }, "Search\u2026 ", /* @__PURE__ */ React.createElement(A.Kbd, null, "\u2318K"))
+    },
+    /* @__PURE__ */ React.createElement(A.PageHeader, { primary: /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "New message") }, /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, at[0].toUpperCase() + at.slice(1)), /* @__PURE__ */ React.createElement(A.PageHeaderDescription, null, "The sidebar's current destination sits on a raised pill that glides as you move. \u2318B collapses it to a rail.")),
+    /* @__PURE__ */ React.createElement("div", { className: "rows" }, Array.from({ length: 8 }, (_, i) => /* @__PURE__ */ React.createElement("div", { key: i })))
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

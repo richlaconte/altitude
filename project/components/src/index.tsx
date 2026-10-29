@@ -33,6 +33,7 @@ export { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbP
 export type { BreadcrumbEntry } from './breadcrumb';
 export { Pagination, pageRange } from './pagination';
 export { PageHeader, PageHeaderTitle, PageHeaderDescription } from './page-header';
+export { AppShell, SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge, SidebarFooter, SidebarTrigger, SidebarInset, useSidebar } from './app-shell';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';
 export { CommandPalette, commandScore } from './command';
 export { Select, SelectItem, Combobox } from './select';
