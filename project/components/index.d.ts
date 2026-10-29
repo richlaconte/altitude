@@ -2308,6 +2308,34 @@ export interface NumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInp
 /** A number field: an opening that fills, with two small raised steppers in its end cap. A spinbutton; parses by locale. */
 export declare const NumberInput: React.ForwardRefExoticComponent<NumberInputProps & React.RefAttributes<HTMLInputElement>>;
 
+export interface InputOTPProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'defaultValue' | 'onChange' | 'pattern' | 'children'> {
+  /** How many characters the code has. */
+  maxLength: number;
+  value?: string;
+  defaultValue?: string;
+  onChange?: (code: string) => void;
+  /** Called when the last character lands, and again whenever a full code changes. */
+  onComplete?: (code: string) => void;
+  /** Which characters it takes. Default 'digits'. Anything else typed or pasted is dropped. */
+  pattern?: 'digits' | 'alphanumeric' | RegExp;
+  /** Show • instead of the characters. */
+  mask?: boolean;
+  invalid?: boolean;
+  /** The code is being checked: aria-busy, and nothing more can be typed. */
+  verifying?: boolean;
+  /** InputOTPGroup, InputOTPSlot and InputOTPSeparator. Default: one group of maxLength slots. */
+  children?: React.ReactNode;
+  className?: string;
+}
+/** A one-time code as a row of openings that fill, driven by one real input (autocomplete="one-time-code"). */
+export declare const InputOTP: React.ForwardRefExoticComponent<InputOTPProps & React.RefAttributes<HTMLInputElement>>;
+/** Slots that sit together. */
+export declare function InputOTPGroup(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+/** One character's opening. */
+export declare function InputOTPSlot(props: { index: number; className?: string }): React.ReactElement;
+/** A decorative dash between groups. */
+export declare function InputOTPSeparator(props: { className?: string }): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2327,6 +2355,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      InputOTP: typeof InputOTP; InputOTPGroup: typeof InputOTPGroup; InputOTPSlot: typeof InputOTPSlot; InputOTPSeparator: typeof InputOTPSeparator;
       NumberInput: typeof NumberInput; parseNumber: typeof parseNumber;
       SplitButton: typeof SplitButton;
       Toolbar: typeof Toolbar; ToolbarGroup: typeof ToolbarGroup; ToolbarSeparator: typeof ToolbarSeparator; ToolbarButton: typeof ToolbarButton; ToolbarToggle: typeof ToolbarToggle;

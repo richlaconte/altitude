@@ -2477,6 +2477,30 @@ function App() {
   );
 }
 
+=== InputOTP | <!-- @dsCard group="Inputs" height=360 subtitle="A one-time code as a row of openings whose floors rise as each character lands" -->
+--- jsx
+function App() {
+  const [code, setCode] = React.useState('');
+  const [state, setState] = React.useState('idle');
+  const verify = (c) => { setState('verifying'); setTimeout(() => setState(c === '123456' ? 'ok' : 'wrong'), 900); };
+  const hint = state === 'verifying' ? 'Checking code…' : state === 'ok' ? 'Verified.' : 'We sent it to j•••@acme.com. Try 123456, or any other code to see a rejection.';
+  return (
+    <div className="col">
+      <A.Field label="Verification code" hint={hint} error={state === 'wrong' ? 'That code didn\'t work. Check the latest email and try again.' : undefined}>
+        <A.InputOTP maxLength={6} value={code} verifying={state === 'verifying'}
+          onChange={(c) => { setCode(c); if (state === 'wrong') setState('idle'); }} onComplete={verify}>
+          <A.InputOTPGroup>{[0, 1, 2].map((i) => <A.InputOTPSlot key={i} index={i} />)}</A.InputOTPGroup>
+          <A.InputOTPSeparator />
+          <A.InputOTPGroup>{[3, 4, 5].map((i) => <A.InputOTPSlot key={i} index={i} />)}</A.InputOTPGroup>
+        </A.InputOTP>
+      </A.Field>
+      <A.Field label="Backup code" hint="8 letters or digits.">
+        <A.InputOTP maxLength={8} pattern="alphanumeric" defaultValue="K7Q2" />
+      </A.Field>
+    </div>
+  );
+}
+
 === Select | <!-- @dsCard group="Inputs" height=380 subtitle="An opening you fill by choosing; the list rises at level 3" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 24px; max-width: 900px; align-items: start; }

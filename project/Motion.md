@@ -135,6 +135,10 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 **A link doesn't move.** Hovering a `Link` thickens its underline from 1px to 2px over `dur-travel-1` on `ease-rise`. Nothing travels, so reduced motion changes nothing.
 
+## Codes
+
+**A code fills slot by slot.** Each `InputOTP` slot's floor rises flush as its character lands, on the `Input`'s own transition. A pasted or autofilled code fills left to right, 35ms a slot, so six slots take about 200ms, within the attention budget. A rejection drops the row to a trench on `ease-sink`. Under reduced motion floors change in place and the caret doesn't blink.
+
 ## Approach
 
 Openings respond to the pointer *before* it arrives; nothing else does. One shared tracker (started by any component that uses it) follows a mouse or pen, never touch, and writes `--near` (0 at the edge of the element's radius, 1 when touching, smoothstepped) and, while hovered, `--mx`/`--my` (where the pointer is on the element, −1…1).

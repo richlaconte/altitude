@@ -1,0 +1,49 @@
+<!-- @dsCard group="Inputs" height=360 subtitle="A one-time code as a row of openings whose floors rise as each character lands" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InputOTP — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [code, setCode] = React.useState("");
+  const [state, setState] = React.useState("idle");
+  const verify = (c) => {
+    setState("verifying");
+    setTimeout(() => setState(c === "123456" ? "ok" : "wrong"), 900);
+  };
+  const hint = state === "verifying" ? "Checking code\u2026" : state === "ok" ? "Verified." : "We sent it to j\u2022\u2022\u2022@acme.com. Try 123456, or any other code to see a rejection.";
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Verification code", hint, error: state === "wrong" ? "That code didn't work. Check the latest email and try again." : void 0 }, /* @__PURE__ */ React.createElement(
+    A.InputOTP,
+    {
+      maxLength: 6,
+      value: code,
+      verifying: state === "verifying",
+      onChange: (c) => {
+        setCode(c);
+        if (state === "wrong") setState("idle");
+      },
+      onComplete: verify
+    },
+    /* @__PURE__ */ React.createElement(A.InputOTPGroup, null, [0, 1, 2].map((i) => /* @__PURE__ */ React.createElement(A.InputOTPSlot, { key: i, index: i }))),
+    /* @__PURE__ */ React.createElement(A.InputOTPSeparator, null),
+    /* @__PURE__ */ React.createElement(A.InputOTPGroup, null, [3, 4, 5].map((i) => /* @__PURE__ */ React.createElement(A.InputOTPSlot, { key: i, index: i })))
+  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Backup code", hint: "8 letters or digits." }, /* @__PURE__ */ React.createElement(A.InputOTP, { maxLength: 8, pattern: "alphanumeric", defaultValue: "K7Q2" })));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
