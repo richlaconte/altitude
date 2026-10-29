@@ -1,0 +1,77 @@
+<!-- @dsCard group="Display" height=440 subtitle="Whether your work has reached the server, said in words on a flush plate" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SyncIndicator — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.si { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 20px; align-items: start; }
+.si .bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font: 600 15px/20px var(--font-sans); }
+.si .change { padding: 8px 10px; border-radius: var(--radius-md); font: 400 13px/18px var(--font-sans); }
+@media (max-width: 720px) { .si { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [text, setText] = React.useState("Q4 goals: grow self-serve revenue 20% and halve time to first value.");
+  const [state, setState] = React.useState("saved");
+  const [at, setAt] = React.useState(() => new Date(Date.now() - 12e4));
+  const [offline, setOffline] = React.useState(false);
+  const [waiting, setWaiting] = React.useState([]);
+  const timer = React.useRef();
+  const edit = (v) => {
+    setText(v);
+    if (offline) {
+      setWaiting((w) => [...w.slice(-2), "Edited the goals paragraph"]);
+      setState("offline");
+      return;
+    }
+    setState("saving");
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      setState("saved");
+      setAt(/* @__PURE__ */ new Date());
+    }, 700);
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "si" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("span", null, "Q4 planning"), /* @__PURE__ */ React.createElement(
+    A.SyncIndicator,
+    {
+      state,
+      pending: waiting.length,
+      lastSyncedAt: at,
+      conflicts: 1,
+      onRetry: () => {
+        setState("saving");
+        setTimeout(() => {
+          setState("saved");
+          setAt(/* @__PURE__ */ new Date());
+        }, 700);
+      },
+      onOpenConflicts: () => setState("saved"),
+      queue: waiting.length ? waiting.map((w, i) => /* @__PURE__ */ React.createElement(A.Surface, { key: i, status: "pending", className: "change" }, w)) : void 0
+    }
+  )), /* @__PURE__ */ React.createElement(A.Textarea, { value: text, onChange: (e) => edit(e.target.value), "aria-label": "Q4 goals" })), /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Switch, { label: "Offline", checked: offline, onCheckedChange: (on) => {
+    setOffline(on);
+    if (!on) {
+      setWaiting([]);
+      setState("saving");
+      setTimeout(() => {
+        setState("saved");
+        setAt(/* @__PURE__ */ new Date());
+      }, 700);
+    }
+  } }), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setState("failed") }, "Make a save fail"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setState("conflict") }, "Cause a conflict"), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Type to save. Go offline and the plate counts what's waiting; press it to see those changes, each hovering until it lands.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

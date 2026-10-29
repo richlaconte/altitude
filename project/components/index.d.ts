@@ -2842,6 +2842,26 @@ export interface NotificationCenterProps extends NotificationListProps {
 /** A bell with a floating count that opens the list in a Popover (a Sheet on narrow screens). */
 export declare function NotificationCenter(props: NotificationCenterProps): React.ReactElement;
 
+export type SyncState = 'saved' | 'saving' | 'offline' | 'failed' | 'conflict';
+export interface SyncIndicatorProps {
+  state: SyncState;
+  /** Changes not yet on the server. */
+  pending?: number;
+  /** Conflicts waiting to be resolved, with state="conflict". */
+  conflicts?: number;
+  /** When the work last reached the server. */
+  lastSyncedAt?: Date | string | number;
+  onRetry?: () => void;
+  onOpenConflicts?: () => void;
+  /** The waiting changes, shown in a Popover when the plate is pressed. */
+  queue?: React.ReactNode;
+  /** Announces "Saved" at most this often, in ms. Default 5000. */
+  announceEvery?: number;
+  className?: string;
+}
+/** Whether work has reached the server, in words on a flush Badge plate whose lamp relights on change. */
+export declare function SyncIndicator(props: SyncIndicatorProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2861,6 +2881,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      SyncIndicator: typeof SyncIndicator;
       NotificationCenter: typeof NotificationCenter; NotificationList: typeof NotificationList;
       Timeline: typeof Timeline; TimelineItem: typeof TimelineItem;
       SavedViews: typeof SavedViews; useSavedViews: typeof useSavedViews;
