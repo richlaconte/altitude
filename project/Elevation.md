@@ -121,6 +121,23 @@ Rules that follow:
 - **A mode isn't a height.** When the whole app is in a mode (test mode, viewing as a customer, read-only), the ground itself is different, which height can't say. It's said in words and a border: a flush strip naming it, a frame around the viewport, and a plate in every dialog and sheet (`AltitudeProvider mode`).
 - **Height never travels alone.** Every signal above also has a word, an icon, an ARIA state or a border, so it survives a screen reader, forced colors and low vision.
 
+## States that don't rise
+
+Some states feel as if they deserve height, and don't get it. They're persistent states, not live ones, and altitude is importance *right now*. Giving them height breaks "tiers carry meaning".
+
+| State | Not | Instead |
+|---|---|---|
+| **Unread** | raised, or tinted until read | settles like everything else: a dot, weight 600, and "Unread" in its name (#146) |
+| **Invited, awaiting someone else** | pending (hovering) | ground, with a `Badge` "Invited". Pending is only a write you dispatched that's still in flight (#167) |
+| **Recommended, most popular** | a lifted card | a "Recommended" plate on the ground; only its call to action is level 2 (#144) |
+| **Current plan, current item** | extra height beyond selection | the word "Current" and `aria-current`; the selection build where it's a choice |
+| **Locked behind a plan** | disabled (flush, faint) | live: it lifts on hover and opens the upgrade, with a lock and the plan's name (#145) |
+| **A mode (test, viewing as someone, read-only)** | a raised banner | a word and a viewport border: `AltitudeProvider mode` |
+| **Proposed by an agent** | pending (hovering) | raised, asking for action; pending only once approved (#153) |
+| **Streaming text** | lifted or glowing | on the ground under the "not yet the record" rule; it settles once, when it's done (#151) |
+
+The rule an agent can look up is `ALT-VISUAL-003` (`altitude explain ALT-VISUAL-003`).
+
 ## Accessible elevation
 
 - **Forced colors** (Windows High Contrast) strips every shadow. Altitude falls back to borders by tier: dashed for sunk (thicker for trench), none for ground, 1px for raised, 2px for floating, double for modal; pending is dotted, failed is a thick dash.
