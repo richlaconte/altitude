@@ -3127,6 +3127,25 @@ function App() {
   );
 }
 
+=== TableBulk | <!-- @dsCard group="Display" height=560 subtitle="Select every row that matches, across pages, with the actions floating at the bottom edge" -->
+--- css
+.tb2 { height: 500px; overflow: auto; padding-right: 4px; }
+--- jsx
+const users = Array.from({ length: 25 }, (_, i) => ({ id: 'u' + i, name: ['Maya Chen', 'Theo Marsh', 'Ada Obi', 'Noa Levi', 'Sam Okafor'][i % 5] + ' ' + (i + 1), last: 30 + i * 3 }));
+function App() {
+  const [selection, setSelection] = React.useState({ kind: 'ids', ids: [] });
+  const [said, setSaid] = React.useState('');
+  return (
+    <div className="tb2">
+      <A.DataTable aria-label="Inactive users" rows={users} getRowId={(r) => r.id} getRowLabel={(r) => r.name} selectable noun="inactive users"
+        selection={selection} onSelectionChange={setSelection} matchingTotal={2341} actionsPlacement="auto"
+        actions={(ids, sel) => <A.Button size="sm" onClick={() => { setSaid(sel.kind === 'query' ? `Archiving ${sel.total - sel.except.length} users…` : `Archiving ${ids.length} users…`); setSelection({ kind: 'ids', ids: [] }); }}>Archive</A.Button>}
+        columns={[{ key: 'name', header: 'Name' }, { key: 'last', header: 'Last seen', align: 'end', cell: (r) => r.last + ' days ago' }]} />
+      <p className="cap" role="status">{said || 'Select the page with the header checkbox, then "Select all 2,341 matching". Scroll down: the count and actions float at the bottom edge.'}</p>
+    </div>
+  );
+}
+
 === TableEditing | <!-- @dsCard group="Display" height=620 subtitle="DataTable rows that open: detail stays on the ground; an edit rises with its row" -->
 --- css
 .te-demo { max-width: 820px; }

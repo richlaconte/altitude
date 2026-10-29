@@ -3090,6 +3090,20 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    the ground at half strength, as a refetching chart does, and the page thumb is held pressed. */
 .alt-table-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--line); margin-top: -1px; }
 .alt-table[data-refetching] tbody { opacity: 0.5; transition: opacity var(--dur-travel-2) var(--ease-sink); }
+/* Selecting past the page: once a page is selected, a flush accent-soft row offers every matching record; a selection of
+   "all matching" is said in words. With actionsPlacement floating (or auto, once the toolbar scrolls away), the count and
+   actions dock at the bottom edge as a bar at level 3: a selection is a set of records in your hand. */
+.alt-table-allrow > .alt-td { padding: var(--space-2) var(--space-3); background: var(--accent-soft); text-align: center; font: 400 13px/18px var(--font-sans); color: var(--ink); }
+.alt-table-allrow .alt-link { padding: 0; border: 0; background: none; font: inherit; font-weight: 600; }
+.alt-table-floatbar {
+  position: sticky; bottom: var(--space-3); z-index: 6; display: flex; justify-content: center; margin-top: var(--space-3); pointer-events: none;
+}
+.alt-table-floatbar > .alt-table-selection {
+  pointer-events: auto; display: inline-flex; align-items: center; gap: var(--space-2); padding: 6px 8px 6px 10px; border-radius: var(--radius-lg);
+  background: var(--surface-floating); box-shadow: var(--elev-3); font: 500 14px/20px var(--font-sans);
+  animation: alt-emerge var(--dur-travel-3) var(--ease-rise); --alt-from-y: 12px;
+}
+@media (forced-colors: active) { .alt-table-floatbar > .alt-table-selection { border: 2px solid CanvasText; } }
 .alt-table-columns { display: flex; flex-direction: column; gap: var(--space-2); width: 240px; max-width: 100%; }
 .alt-table-columns-title { margin: 0; font: 600 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .alt-table-columns-title + * { margin-bottom: var(--space-2); }
