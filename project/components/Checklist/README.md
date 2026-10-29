@@ -29,7 +29,7 @@ Each action reaches `onChange` as one op (`add`, `edit`, `toggle`, `remove`, `mo
 - **The checkbox** is `Checkbox`: an empty trench, then the accent pours in with a raised mark.
 - **Done** is pressed into the record: the text goes `ink-muted` with a strike drawn left to right, and the item stays in place (or, with `sortDone`, goes after the open ones).
 - **A new item** opens as a well under the line (`ease-sink`). **Pending** writes hover at level 2 after `dur-grace`; a **failed** one drops to a trench with a critical rim and Retry.
-- **Removed**: the item leaves and a raised bar offers Undo (when `onUndo` is given).
+- **Removed**: the line glides shut where it was (`dur-travel-2`, `ease-glide`) while the caret is already on the line above. There's no receipt and no hold: removal only happens from the keyboard, on an empty line or by merging a line's text into the one above, so nothing was lost. Undo is Ctrl+Z (⌘Z on Apple platforms) through `onUndo`, and the polite announcement says so: “Empty item removed. Undo with Ctrl+Z.” Nothing is added after the list. Under reduced motion the line closes at once.
 
 Without height: nested `ul`s carry the structure; each checkbox is named by its item; done items say “done”; the list's description lists the keys; a polite status announces indents, moves, removals and errors. `contrast="more"`: the open well gets a solid inner top edge.
 

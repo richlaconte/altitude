@@ -1,4 +1,4 @@
-// Checklist: the outliner keys, commit on leaving a line, failure and undo. ALT_FIXTURE_ROOT selects React 19 fixtures.
+// Checklist: the outliner keys, commit on leaving a line, failure, a removed line gliding shut, and undo. ALT_FIXTURE_ROOT selects React 19 fixtures.
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
 import { fixturePath } from './fixture-path.mjs';
@@ -7,16 +7,22 @@ const browser = await chromium.launch(process.env.CHROME ? { executablePath: pro
 const errors = [];
 let passed = 0;
 const check = (condition, message) => { assert.ok(condition, message); passed++; };
+// The announcement names the platform's undo shortcut, so the platform is pinned rather than the machine's.
+const platform = (page, name, ua) => page.addInitScript(([name, ua]) => {
+  Object.defineProperty(Navigator.prototype, 'platform', { get: () => name });
+  Object.defineProperty(Navigator.prototype, 'userAgentData', { get: () => ({ platform: ua }) });
+}, [name, ua]);
 const open = async ({ scheme = 'daylight', width = 960 } = {}) => {
   const page = await browser.newPage({ viewport: { width, height: 700 } });
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (['error', 'warning'].includes(m.type())) errors.push(m.text()); });
+  await platform(page, 'Linux x86_64', 'Linux');
   await page.goto(`file://${fixturePath('Checklist', scheme)}`);
   page.setDefaultTimeout(5000);
   return page;
 };
 // The list as text: two spaces per level, [x] for done.
-const outline = (page, n = 0) => page.evaluate(n => [...document.querySelectorAll('.alt-checklist')[n].querySelectorAll('.alt-checklist-item:not(.alt-checklist-new)')].map(li => {
+const outline = (page, n = 0) => page.evaluate(n => [...document.querySelectorAll('.alt-checklist')[n].querySelectorAll('.alt-checklist-item:not(.alt-checklist-new):not([data-closing])')].map(li => {
   let depth = 0; for (let p = li.parentElement; p && !p.classList.contains('alt-checklist'); p = p.parentElement) if (p.matches('ul')) depth++;
   return `${'  '.repeat(depth - 1)}${li.hasAttribute('data-done') ? '[x]' : '[ ]'} ${li.querySelector(':scope > .alt-checklist-line .alt-checklist-text').value}`;
 }).join('\n'), n);
@@ -59,9 +65,56 @@ try {
     check(await page.getByText('Write the task, not “TBD”.').first().isVisible() && await page.getByRole('button', { name: 'Retry' }).isVisible(), 'CL-14 a refused change marks the line and offers Retry');
     // Remove, then undo.
     await at(page, 'Design the card', 'end'); for (let i = 0; i < 15; i++) await page.keyboard.press('Backspace'); await page.keyboard.press('Backspace');
-    check(!(await outline(page)).includes('Design the card') && await page.getByText('removed.', { exact: false }).first().isVisible(), 'CL-15 removing offers Undo');
+    check(!(await outline(page)).includes('Design the card') && await page.locator('.alt-checklist-undo').count() === 0, 'CL-15 removing leaves no Undo bar after the list');
+    await page.waitForFunction(() => document.querySelector('.alt-checklist-status').textContent === 'Empty item removed. Undo with Ctrl+Z.');
+    check(true, 'CL-15b the announcement names the shortcut: “Empty item removed. Undo with Ctrl+Z.”');
     await page.keyboard.press('Control+z');
     check((await outline(page)).includes('  [ ] Design the card'), 'CL-16 Ctrl+Z restores the removed item');
+    await page.close(); }
+
+  // The line glides shut over dur-travel-2, and nothing else moves first; a merge glides too, its text already above.
+  for (const reduce of [false, true]) {
+    const page = await open();
+    if (reduce) await page.emulateMedia({ reducedMotion: 'reduce' });
+    const sample = () => page.evaluate(() => { window.__ys = []; const below = [...document.querySelectorAll('.alt-checklist')[0].querySelectorAll('.alt-checklist-new')][0];
+      const tick = () => { window.__ys.push([Math.round(below.getBoundingClientRect().top * 10) / 10, !!document.querySelector('[data-closing]'), document.body.scrollHeight]); if (window.__ys.length < 40) requestAnimationFrame(tick); }; tick(); });
+    const read = () => page.evaluate(() => new Promise(r => setTimeout(() => r(window.__ys), 900)));
+    // An empty line: Enter at the end makes one, Backspace removes it.
+    await at(page, 'Choose catering', 'end'); await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    await sample(); await page.keyboard.press('Backspace');
+    const ys = await read();
+    const tops = new Set(ys.map(y => y[0]));
+    const caret = await active(page);
+    if (!reduce) {
+      check(ys.some(y => y[1]) && tops.size >= 4, `CL-20 the removed line glides shut (${tops.size} positions of the line below, ${ys.filter(y => y[1]).length} frames closing)`);
+      const steps = ys.map(y => y[0]).filter((t, i, a) => i && t !== a[i - 1]).length;
+      check(steps >= 3, `CL-21 the lines below move with it, in steps, not one jump (${steps})`);
+    } else check(tops.size <= 2, `CL-22 reduced motion: it closes at once (${tops.size} positions)`);
+    check(caret.value === 'Choose catering' && caret.caret === 'Choose catering'.length, `CL-23${reduce ? 'r' : ''} the caret is at the end of the line above, at once`);
+    check(new Set(ys.map(y => y[2])).size <= (reduce ? 2 : 40) && await page.locator('.alt-checklist-undo').count() === 0, `CL-24${reduce ? 'r' : ''} no bar is added after the list`);
+    // A merge: the text joins the line above, and the emptied line glides shut.
+    if (!reduce) {
+      await at(page, 'Choose catering', 0); await sample(); await page.keyboard.press('Backspace');
+      const merged = await read();
+      check((await outline(page)).includes('Design the cardChoose catering') && merged.some(y => y[1]) && new Set(merged.map(y => y[0])).size >= 4, 'CL-25 a merged line glides shut too, its text already joined above');
+      await page.waitForFunction(() => document.querySelector('.alt-checklist-status').textContent === 'Choose catering removed. Undo with Ctrl+Z.');
+      check(true, 'CL-26 a merge announces the line removed, with the shortcut');
+      await page.keyboard.press('Control+z');
+      check((await outline(page)).endsWith('[ ] Choose catering'), 'CL-27 Ctrl+Z brings the merged line back');
+    }
+    await page.close();
+  }
+  // On Apple platforms the announcement says ⌘Z, and ⌘Z undoes.
+  { const page = await browser.newPage({ viewport: { width: 960, height: 700 } });
+    page.on('pageerror', e => errors.push(e.message));
+    await platform(page, 'MacIntel', 'macOS');
+    await page.goto(`file://${fixturePath('Checklist', 'daylight')}`);
+    await at(page, 'Choose catering', 'end'); await page.keyboard.press('Enter'); await page.keyboard.press('Backspace');
+    await page.waitForFunction(() => document.querySelector('.alt-checklist-status').textContent === 'Empty item removed. Undo with ⌘Z.');
+    const before = (await outline(page)).split('\n').length;
+    await page.keyboard.press('Meta+z');
+    check((await outline(page)).split('\n').length === before + 1, 'CL-28 on Apple platforms it says ⌘Z, and ⌘Z restores the line');
     await page.close(); }
 
   { const page = await open();

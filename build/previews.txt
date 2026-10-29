@@ -2003,7 +2003,7 @@ function App() {
   const pack = useChecklist(CL_PACK);
   const props = { getKey: t => t.id, getText: t => t.text, isDone: t => t.done, getChildren: t => t.children };
   return <div className="cl-demo">
-    <section><h3 id="cl-launch">Launch tasks</h3><p>Nested: Tab and Shift+Tab indent and outdent. Writing “TBD” is refused.</p>
+    <section><h3 id="cl-launch">Launch tasks</h3><p>Nested: Tab and Shift+Tab indent and outdent. Backspace on an empty line removes it; Ctrl+Z (⌘Z) brings it back. Writing “TBD” is refused.</p>
       <A.Checklist aria-labelledby="cl-launch" nested {...props} {...launch} /></section>
     <section><h3 id="cl-pack">Packing</h3><p>Flat, done items last.</p>
       <A.Checklist aria-labelledby="cl-pack" sortDone {...props} {...pack} placeholder="Add something to pack" /></section>

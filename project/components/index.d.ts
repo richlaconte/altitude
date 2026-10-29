@@ -1390,7 +1390,7 @@ export interface ChecklistProps<T> {
   sortDone?: boolean;
   /** Each action, as one op. Return a failure to mark the item and offer Retry. */
   onChange: (op: ChecklistOp) => ChecklistResult | void | Promise<ChecklistResult | void>;
-  /** Ctrl/Cmd+Z, and the Undo after a removal: reverse the last structural op (add, remove, move, indent, outdent). */
+  /** Ctrl/Cmd+Z: reverse the last structural op (add, remove, move, indent, outdent). A removal's announcement names the shortcut. */
   onUndo?: (op: ChecklistOp) => void;
   /** Ids for new items. Default: a random id. */
   createId?: () => string;

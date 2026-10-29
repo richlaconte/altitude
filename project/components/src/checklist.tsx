@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { cx, Icons } from './core';
+import { cx, Icons, inert } from './core';
 import { Button, Checkbox } from './controls';
+import { glideShut } from './removal-receipt';
 
 export interface ChecklistPlace { parentId: string | null; index: number }
 /** One change per action. The application applies it to `items` (synchronously, or before resolving). */
@@ -25,7 +26,7 @@ export interface ChecklistProps<T> {
   sortDone?: boolean;
   /** Each action, as one op. Return a failure to mark the item and offer Retry. */
   onChange: (op: ChecklistOp) => ChecklistResult | void | Promise<ChecklistResult | void>;
-  /** Ctrl/Cmd+Z, and the Undo after a removal: reverse the last structural op (add, remove, move, indent, outdent). */
+  /** Ctrl/Cmd+Z: reverse the last structural op (add, remove, move, indent, outdent). A removal's announcement names the shortcut. */
   onUndo?: (op: ChecklistOp) => void;
   /** Ids for new items. Default: a random id. */
   createId?: () => string;
@@ -52,7 +53,9 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
   const [newText, setNewText] = React.useState('');
   const [pending, setPending] = React.useState<string[]>([]);
   const [failed, setFailed] = React.useState<Record<string, { op: ChecklistOp; error: string }>>({});
-  const [removed, setRemoved] = React.useState<{ op: ChecklistOp; text: string } | null>(null);
+  // Removed lines, still closing where they were: `after` is the line above them in the same list.
+  const [closing, setClosing] = React.useState<{ key: string; parentKey: string | null; after: string | null; done: boolean }[]>([]);
+  const [apple, setApple] = React.useState(false);
   const [announcement, setAnnouncement] = React.useState('');
   const [arrived, setArrived] = React.useState<string | null>(null);
   const inputs = React.useRef(new Map<string, HTMLInputElement>());
@@ -63,6 +66,17 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
   const mounted = React.useRef(true);
   const auto = React.useId();
   React.useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  // Cleared, then said a frame later, so the same words twice (two empty lines removed in a row) are announced twice.
+  // Only the latest is said.
+  const said = React.useRef(0);
+  const announce = (text: string) => {
+    const n = ++said.current;
+    setAnnouncement('');
+    if (text) requestAnimationFrame(() => { if (mounted.current && said.current === n) setAnnouncement(text); });
+  };
+  React.useEffect(() => {
+    if (typeof navigator !== 'undefined') setApple(/mac|iphone|ipad|ipod/i.test((navigator as any).userAgentData?.platform || navigator.platform || navigator.userAgent));
+  }, []);
 
   const order = (list: T[]) => (sortDone ? [...list.filter((x) => !isDone(x)), ...list.filter((x) => isDone(x))] : list);
   const rows: Row<T>[] = [];
@@ -107,10 +121,10 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
     setPending((p) => p.filter((k) => k !== op.id));
     if (result && result.ok === false) {
       const error = typeof result.error === 'string' && result.error ? result.error : SAVE_ERROR;
-      setFailed((f) => ({ ...f, [op.id]: { op, error } })); setAnnouncement(error);
+      setFailed((f) => ({ ...f, [op.id]: { op, error } })); announce(error);
       return false;
     }
-    if (!quiet) setAnnouncement('');
+    if (!quiet) announce('');
     return true;
   };
   /** Commits a line's draft, if it changed. */
@@ -134,8 +148,13 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
     if (focusTo) focusNext.current = { key: focusTo, caret };
     setDrafts((d) => { const { [row.key]: _, ...rest } = d; return rest; });
     const op: ChecklistOp = { type: 'remove', id: row.key, text: row.text, done: row.done, parentId: place.parentId, index: place.index };
-    setRemoved(onUndo ? { op, text: row.text || 'Empty item' } : null);
-    setAnnouncement(onUndo ? `${row.text || 'Empty item'} removed. Undo is available.` : `${row.text || 'Empty item'} removed.`);
+    // The line glides shut where it was. No receipt and no hold: the caret has already moved on, and nothing was lost
+    // (the line was empty, or its text joined the line above). Undo is Ctrl/Cmd+Z, and the announcement says so.
+    const above = rows.filter((r) => r.parentKey === row.parentKey);
+    const after = above[above.indexOf(row) - 1]?.key ?? null;
+    setClosing((list) => [...list.filter((c) => c.key !== row.key), { key: row.key, parentKey: row.parentKey, after, done: row.done }]);
+    const words = `${textOf(row) || 'Empty item'} removed.` + (onUndo ? ` Undo with ${apple ? '⌘Z' : 'Ctrl+Z'}.` : '');
+    announce(words);
     void send(op, true);
   };
   const move = (row: Row<T>, type: 'move' | 'indent' | 'outdent', to: ChecklistPlace, message: string) => {
@@ -143,15 +162,15 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
     const from = placeOf(row.key);
     focusNext.current = { key: row.key, caret: inputs.current.get(row.key)?.selectionStart ?? 'end' };
     void send({ type, id: row.key, ...to, from: { parentId: from.parentId, index: from.index } }, true);
-    setAnnouncement(message);
+    announce(message);
   };
   const undo = () => {
     const op = lastStructural.current;
     if (!op || !onUndo) return false;
-    lastStructural.current = null; setRemoved(null);
+    lastStructural.current = null;
     onUndo(op);
     if (op.type === 'remove') focusNext.current = { key: op.id, caret: 'end' };
-    setAnnouncement('Undone.');
+    announce('Undone.');
     return true;
   };
 
@@ -173,7 +192,7 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
       parents[depth + 1] = id; indexAt[depth + 1] = 0;
     }
     focusNext.current = { key: '__new', caret: 'end' };
-    setAnnouncement(`Added ${lines.length} items.`);
+    announce(`Added ${lines.length} items.`);
     return true;
   };
 
@@ -184,7 +203,7 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
     const mod = e.ctrlKey || e.metaKey;
     const place = placeOf(row.key);
     if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey && onUndo) { if (undo()) e.preventDefault(); return; }
-    if (e.key === 'Enter' && mod) { e.preventDefault(); void send({ type: 'toggle', id: row.key, done: !row.done }); setAnnouncement(`${text} ${row.done ? 'not done' : 'done'}`); return; }
+    if (e.key === 'Enter' && mod) { e.preventDefault(); void send({ type: 'toggle', id: row.key, done: !row.done }); announce(`${text} ${row.done ? 'not done' : 'done'}`); return; }
     if (e.key === 'Enter') {
       e.preventDefault();
       // Split at the caret: the text after it becomes the next item.
@@ -245,13 +264,22 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
     if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return;
     const mod = e.ctrlKey || e.metaKey;
     if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey && onUndo) { if (undo()) e.preventDefault(); return; }
-    if (e.key === 'Enter' && newText.trim()) { e.preventDefault(); add(newText, { parentId: null, index: items.length }, false, 'new'); setNewText(''); setAnnouncement(`Added ${newText}`); return; }
+    if (e.key === 'Enter' && newText.trim()) { e.preventDefault(); add(newText, { parentId: null, index: items.length }, false, 'new'); setNewText(''); announce(`Added ${newText}`); return; }
     if (e.key === 'ArrowUp' && rows.length) { e.preventDefault(); focusNext.current = { key: rows[rows.length - 1].key, caret: 'end' }; setDrafts((d) => ({ ...d })); return; }
     if (e.key === 'Backspace' && !newText && rows.length) { e.preventDefault(); focusNext.current = { key: rows[rows.length - 1].key, caret: 'end' }; setDrafts((d) => ({ ...d })); }
   };
 
-  // Group rows back into nested lists for rendering.
-  const render = (parentKey: string | null): React.ReactNode[] => rows.filter((r) => r.parentKey === parentKey).map((row) => {
+  // Group rows back into nested lists for rendering, with any line still closing in its place.
+  const render = (parentKey: string | null): React.ReactNode[] => {
+    const out = renderRows(parentKey);
+    for (const c of closing) {
+      if (c.parentKey !== parentKey || rows.some((r) => r.key === c.key)) continue;
+      const at = c.after === null ? 0 : out.findIndex((n) => (n as React.ReactElement).key === c.after) + 1 || out.length;
+      out.splice(at, 0, <ClosingLine key={'closing:' + c.key} done={c.done} onClosed={() => setClosing((list) => list.filter((x) => x.key !== c.key))} />);
+    }
+    return out;
+  };
+  const renderRows = (parentKey: string | null): React.ReactNode[] => rows.filter((r) => r.parentKey === parentKey).map((row) => {
     const i = rows.indexOf(row);
     const fail = failed[row.key];
     const kids = rows.some((r) => r.parentKey === row.key);
@@ -288,9 +316,17 @@ export function Checklist<T>({ items, getKey, getText, isDone, getChildren = () 
     <span id={auto + '-keys'} hidden>
       Enter adds an item, Backspace on an empty item removes it, Ctrl+Enter checks it, Alt+arrows move it{nested ? ', Tab and Shift+Tab indent and outdent, Escape then Tab leaves the list' : ''}.
     </span>
-    {removed && <div className="alt-checklist-undo"><span>“{removed.text}” removed.</span>
-      <Button size="sm" variant="ghost" onClick={() => { lastStructural.current = removed.op; undo(); }}>Undo</Button>
-      <Button size="sm" variant="ghost" aria-label="Dismiss" onClick={() => setRemoved(null)}><Icons.X size={14} /></Button></div>}
     <span className="alt-checklist-status" role="status" aria-live="polite" aria-atomic="true">{announcement}</span>
   </div>;
+}
+
+/** A removed line: empty (its text, if any, already joined the line above), gliding shut over dur-travel-2. */
+function ClosingLine({ done, onClosed }: { done: boolean; onClosed: () => void }) {
+  const ref = React.useRef<HTMLLIElement>(null);
+  const closed = React.useRef(onClosed);
+  closed.current = onClosed;
+  React.useLayoutEffect(() => (ref.current ? glideShut(ref.current, () => closed.current(), '--dur-travel-2') : undefined), []);
+  return <li ref={ref} className="alt-checklist-item" data-closing="" data-done={done ? '' : undefined} aria-hidden="true" {...inert}>
+    <div className="alt-checklist-line"><Checkbox checked={done} disabled aria-label="" tabIndex={-1} /><span className="alt-checklist-text" /></div>
+  </li>;
 }
