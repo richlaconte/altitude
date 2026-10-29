@@ -31,6 +31,8 @@ export type { Plan } from './plan-picker';
 export { FeatureGate } from './feature-gate';
 export { CommentThread } from './comment-thread';
 export type { ThreadComment, Mentionable } from './comment-thread';
+export { Tour } from './tour';
+export type { TourStep } from './tour';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';

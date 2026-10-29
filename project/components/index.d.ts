@@ -3009,6 +3009,24 @@ export interface CommentThreadProps {
 /** Comments on a record: posting hovers as pending, a resolved thread is stamped in place, mentions are a listbox. */
 export declare function CommentThread(props: CommentThreadProps): React.ReactElement;
 
+export interface TourStep {
+  /** What it points at: a CSS selector or an element. */
+  target: string | HTMLElement | null;
+  title: string;
+  body?: React.ReactNode;
+}
+export interface TourProps {
+  steps: TourStep[];
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Called once, when the last step's Done is pressed or the tour is skipped or dismissed. */
+  onFinish?: (how: 'done' | 'skipped') => void;
+  onStepChange?: (index: number) => void;
+}
+/** A few steps pointing at the interface: one level-3 card at a time, the target ringed; never dims, never modal. */
+export declare function Tour(props: TourProps): React.ReactElement | null;
+
 declare global {
   interface Window {
     Altitude: {
@@ -3028,6 +3046,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Tour: typeof Tour;
       CommentThread: typeof CommentThread;
       FeatureGate: typeof FeatureGate;
       PlanPicker: typeof PlanPicker;

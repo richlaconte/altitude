@@ -1080,6 +1080,17 @@ A design review: `CommentThread` was rendered with two comments (one mentioning)
 
 Not yet tested with people: whether a collapsed resolved thread is reopened when it should be.
 
+### E92 · Should a product tour dim the page?
+
+A design review: `Tour` was rendered with three steps on a toolbar (a ghost button, an input, the primary), moved through by pointer and keyboard, skipped and finished, in all four schemes and under forced colours. `checks/tour.mjs` drives it.
+
+- **No dimming.** Conventional tours dim everything but a cut-out spotlight. That's a level-5 summit, it blocks the thing being explained, and it would compete with any real dialog. A step is a level-3 note, so the page stays at full strength and usable.
+- **A ring on the target.** The target may be text or a region, not something you press, so it's ringed rather than lifted (DataGrid's active cell).
+- **No flying.** Moving on lifts one step off and raises the next at its target. A card sliding across the screen would carry the eye past what matters.
+- **Focus comes back.** The tour is a non-modal dialog: focus goes to the step, Tab can reach the target, and focus returns where it was when the tour ends.
+
+Not yet tested with people: whether an undimmed tour is noticed as quickly on a busy page.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

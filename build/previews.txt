@@ -745,6 +745,32 @@ function App() {
   );
 }
 
+=== Tour | <!-- @dsCard group="Overlays" height=460 subtitle="A few steps pointing at parts of the interface, without taking it over" -->
+--- css
+.tr { display: flex; flex-direction: column; gap: 16px; }
+.tr .bar { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-lg); }
+--- jsx
+function App() {
+  const [open, setOpen] = React.useState(false);
+  const [said, setSaid] = React.useState('');
+  return (
+    <div className="tr">
+      <div className="bar">
+        <A.Button variant="ghost" id="tour-projects">Projects</A.Button>
+        <A.Input size="sm" placeholder="Filter by owner" aria-label="Filter by owner" data-tour="owner" style={{ maxWidth: 220 }} />
+        <span style={{ marginLeft: 'auto' }}><A.Button variant="primary" data-tour="new">New project</A.Button></span>
+      </div>
+      <div className="row"><A.Button onClick={() => setOpen(true)}>Take the tour</A.Button></div>
+      <p className="cap">{said || 'The tour points at one thing at a time with a ring. The page isn\'t dimmed and stays usable: try typing in the filter while it\'s on that step.'}</p>
+      <A.Tour open={open} onOpenChange={setOpen} onFinish={(how) => setSaid(how === 'done' ? 'Tour finished.' : 'Tour skipped.')} steps={[
+        { target: '#tour-projects', title: 'Projects moved here', body: 'All your projects now live in one place.' },
+        { target: '[data-tour="owner"]', title: 'Filter by owner', body: 'Type a name to see only their projects.' },
+        { target: '[data-tour="new"]', title: 'Start something new', body: 'Projects can start from a template.' },
+      ]} />
+    </div>
+  );
+}
+
 === Dialog | <!-- @dsCard group="Overlays" height=620 subtitle="A focused decision; the background can stay in place" -->
 --- css
 .dialog-demo { max-width: 720px; margin: auto; display: grid; gap: 20px; }

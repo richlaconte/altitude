@@ -1649,6 +1649,29 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 [data-motion="reduced"] .alt-comments-dots i { animation: none; }
 @media (forced-colors: active) { .alt-comment-mention { border: 1px solid CanvasText; } }
 
+/* ── Tour: a note in the air above the page. One step at a time floats at level 3 beside its target, which takes a
+   2px accent-ink ring (a ring, not a lift: the target may not be something you press). It never dims the page,
+   because receding is the summit's privilege, and it isn't modal. Moving on lifts the step off; the next rises at its
+   own target. ── */
+.alt-tour {
+  position: fixed; z-index: var(--z-floating); width: min(320px, calc(100vw - 16px)); padding: var(--space-4); border-radius: var(--radius-lg);
+  background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink); outline: none;
+  animation: alt-emerge var(--dur-travel-3) var(--ease-rise); --alt-from-y: 6px;
+}
+.alt-tour[data-side="above"] { --alt-from-y: -6px; }
+.alt-tour:focus-visible { box-shadow: var(--elev-3), 0 0 0 2px var(--accent-ink); }
+.alt-tour-count { margin: 0 0 2px; font: 500 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-tour-title { margin: 0 24px 6px 0; font: 600 15px/21px var(--font-sans); }
+.alt-tour-body { font: 400 14px/20px var(--font-sans); color: var(--ink-muted); }
+.alt-tour-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-3); }
+.alt-tour-dots { display: inline-flex; gap: 4px; margin-right: auto; }
+.alt-tour-dots i { width: 6px; height: 6px; border-radius: var(--radius-full); background: var(--line-control); }
+.alt-tour-dots i[data-on] { background: var(--accent); }
+.alt-tour-close { position: absolute; top: 8px; right: 8px; }
+[data-tour-target] { outline: 2px solid var(--accent-ink) !important; outline-offset: 3px !important; border-radius: var(--radius-sm); }
+[data-contrast="more"] .alt-tour { box-shadow: 0 4px 0 0 var(--ink), var(--elev-3); }
+@media (forced-colors: active) { .alt-tour { border: 2px solid CanvasText; } [data-tour-target] { outline-color: Highlight !important; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */
