@@ -685,6 +685,17 @@ A design review: `FormattedNumber` was rendered in every preset (currency in min
 
 Not yet tested with people: whether "4.5 GB" with the exact bytes in a tooltip is enough, or tables want the exact value shown.
 
+### E56 · Is time passing a change?
+
+A design review: `RelativeTime` was rendered in an activity feed reaching from seconds to 40 days back (`format="auto"`) and as "Last edited" on a card that can be edited again, in all four schemes at 960px and under forced colours. `checks/relative-time.mjs` measures it with a clock it controls.
+
+- **Ticking is not a change.** The afterglow says "this is new". If every timestamp glowed as it ticked, a feed would shimmer every few seconds, and the glow would mean nothing. Only a new moment glows.
+- **One timer, paused while hidden.** Each instance with its own interval adds up in a long feed. One shared 15-second timer refreshes them all. It stops while the page is hidden and catches up when it's shown, so a tab left open overnight doesn't show "2 minutes ago".
+- **"now" and "yesterday".** `numeric: "auto"` gives the locale's own words for the nearest units, and seconds under 45 are "now". A count of seconds that changes on every tick is noise.
+- **Focusable only for its tooltip.** A tab stop on every timestamp is costly in a feed, but keyboard users must reach the exact time where it matters, so the tab stop comes with the tooltip and goes with `tooltip={false}`, which falls back to `title`.
+
+Not yet tested with people: whether 15 seconds is fresh enough for "now" in a chat-like feed.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

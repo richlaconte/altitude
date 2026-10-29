@@ -2167,6 +2167,27 @@ export interface FormattedNumberProps extends FormatNumberOptions {
 /** A number is the record: flush, tabular, its exact value on hand; a changed value cross-fades and settles, never counts. */
 export declare function FormattedNumber(props: FormattedNumberProps): React.ReactElement;
 
+export interface RelativeTimeOptions {
+  /** 'relative' (default) always says "3 minutes ago"; 'auto' is relative within `threshold`, then a date ("Mar 4"). */
+  format?: 'relative' | 'auto';
+  /** For format="auto": how far from now stays relative. An ISO 8601 duration ("P7D", "PT12H") or milliseconds. Default "P7D". */
+  threshold?: string | number;
+  /** 'past' never says "in 2 minutes" (a clock running ahead shows "now"); 'future' never says "ago". Default 'auto'. */
+  tense?: 'auto' | 'past' | 'future';
+  /** Default: the browser's. */
+  locale?: string;
+}
+/** A moment as words relative to `now`, the way RelativeTime shows it: "3 minutes ago", "yesterday", "in 2 hours", "Mar 4". */
+export declare function formatRelativeTime(date: Date | string | number, now?: number, options?: RelativeTimeOptions): string;
+export interface RelativeTimeProps extends RelativeTimeOptions, Omit<React.TimeHTMLAttributes<HTMLElement>, 'children' | 'dateTime'> {
+  /** The moment. When it changes (the record was edited again) it settles with the afterglow; time passing doesn't. */
+  date: Date | string | number;
+  /** Show the exact date, time and zone in a Tooltip on hover and focus (the element becomes focusable). Default true. */
+  tooltip?: boolean;
+}
+/** A moment as "3 minutes ago" in a <time>, refreshed on one shared timer, with its exact time on hand. Ticking isn't a change. */
+export declare function RelativeTime(props: RelativeTimeProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2186,6 +2207,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      RelativeTime: typeof RelativeTime; formatRelativeTime: typeof formatRelativeTime;
       FormattedNumber: typeof FormattedNumber; formatNumber: typeof formatNumber; describeNumber: typeof describeNumber;
       Link: typeof Link;
       Separator: typeof Separator;

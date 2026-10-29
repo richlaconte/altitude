@@ -974,6 +974,15 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 [data-motion="reduced"] .alt-num-text[data-out] { display: none; }
 @media (forced-colors: active) { .alt-num[data-settle]::before { border: 1px solid Highlight; } }
 
+/* ── RelativeTime: a timestamp is part of the record, so it's plain text on the ground. Ticking forward ("3 min" to
+   "4 min") isn't a change to the record and gets nothing; a new moment (the record edited again) takes the same
+   ground-level tint as a changed number. It's focusable for its Tooltip, so it carries the focus ring. ── */
+.alt-reltime { padding: 0 2px; border-radius: var(--radius-xs); font-variant-numeric: tabular-nums; }
+.alt-reltime:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 0; }
+.alt-reltime[data-settle]::before { animation-name: alt-chart-tint-a; }
+.alt-reltime[data-settle="b"]::before { animation-name: alt-chart-tint-b; }
+@media (forced-colors: active) { .alt-reltime[data-settle]::before { border: 1px solid Highlight; } .alt-reltime:focus-visible { outline-color: Highlight; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

@@ -11,6 +11,8 @@ export { Separator } from './separator';
 export { Link } from './link';
 export { FormattedNumber, formatNumber, describeNumber } from './formatted-number';
 export type { FormatNumberOptions, NumberFormatPreset, DurationUnit } from './formatted-number';
+export { RelativeTime, formatRelativeTime } from './relative-time';
+export type { RelativeTimeOptions } from './relative-time';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';
