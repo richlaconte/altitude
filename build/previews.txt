@@ -2181,6 +2181,26 @@ function App() {
   );
 }
 
+=== FeatureGate | <!-- @dsCard group="Actions" height=380 subtitle="A feature that needs another plan, locked rather than disabled" -->
+--- jsx
+function App() {
+  const [said, setSaid] = React.useState('');
+  return (
+    <div className="col">
+      <div className="row">
+        <A.Button variant="secondary">Export view</A.Button>
+        <A.FeatureGate requires="Business" description="Export any view to CSV, and schedule exports by email." onUpgrade={() => setSaid('Opening plans…')} compareHref="#/billing/plans">
+          <A.Button variant="secondary">Export to CSV</A.Button>
+        </A.FeatureGate>
+        <A.FeatureGate requires="Enterprise" description="Sign in with your identity provider (Okta, Azure AD, Google)." canUpgrade={false}>
+          <A.Button variant="ghost">SAML SSO</A.Button>
+        </A.FeatureGate>
+      </div>
+      <p className="cap" role="status">{said || 'Locked features keep their ink, lift when pointed at and are reachable by keyboard; pressing one explains the plan. Without permission to upgrade, it says to ask an admin.'}</p>
+    </div>
+  );
+}
+
 === Toggle | <!-- @dsCard group="Actions" height=330 subtitle="Buttons that stay on: on is a well the accent pours into, as a Switch" -->
 --- css
 .tg { display: flex; flex-direction: column; gap: 16px; }

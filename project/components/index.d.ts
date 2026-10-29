@@ -2956,6 +2956,24 @@ export interface PlanPickerProps {
 /** Choose a plan: flush cards in one radio group with one travelling mark; current and recommended are plates. */
 export declare function PlanPicker(props: PlanPickerProps): React.ReactElement;
 
+export interface FeatureGateProps {
+  /** The plan it needs ("Business"). */
+  requires: string;
+  /** What the feature does, in the explanation. */
+  description?: React.ReactNode;
+  /** Opens the upgrade. */
+  onUpgrade?: () => void;
+  /** Where the plans are compared. */
+  compareHref?: string;
+  /** False when this person can't upgrade: the button becomes "Ask an admin to upgrade". Default true. */
+  canUpgrade?: boolean;
+  /** The control that needs the plan: one element. It stays live. */
+  children: React.ReactElement<any>;
+  className?: string;
+}
+/** A feature that needs another plan, locked rather than disabled: live, with a lock and a plan plate, opening the upgrade. */
+export declare function FeatureGate(props: FeatureGateProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2975,6 +2993,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      FeatureGate: typeof FeatureGate;
       PlanPicker: typeof PlanPicker;
       PermissionMatrix: typeof PermissionMatrix;
       SaveBar: typeof SaveBar;

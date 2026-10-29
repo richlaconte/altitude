@@ -1600,6 +1600,19 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 [data-contrast="more"] .alt-plans-mark { box-shadow: 0 2px 0 0 var(--ink), inset 0 0 0 3px var(--surface-raised); }
 @media (forced-colors: active) { .alt-plan { border: 1px solid CanvasText; } .alt-plan[data-chosen] { border-width: 2px; } .alt-plans-mark { forced-color-adjust: none; outline: 1px solid CanvasText; } }
 
+/* ── FeatureGate: locked, not disabled. Disabled means nothing happens; a locked control explains the plan and offers
+   the upgrade, so it keeps its own build and normal ink and lifts when pointed at (hover is a promise), with a lock and
+   a flush plan plate. Pressing it opens a Popover at level 3 with the upgrade as its one primary. ── */
+.alt-gate { display: inline-flex; }
+.alt-gate-trigger .alt-btn-label, .alt-gate-trigger { gap: 6px; }
+.alt-gate-lock { flex: none; color: var(--ink-muted); }
+.alt-gate-plan { margin-left: 2px; }
+.alt-gate-pop { width: min(300px, calc(100vw - 32px)); }
+.alt-gate-body { display: flex; flex-direction: column; gap: var(--space-2); }
+.alt-gate-title { display: flex; align-items: center; gap: 6px; margin: 0; font: 600 14px/20px var(--font-sans); color: var(--ink); }
+.alt-gate-desc, .alt-gate-admin { margin: 0; font: 400 13.5px/19px var(--font-sans); color: var(--ink-muted); }
+.alt-gate-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-1); font: 400 13.5px/19px var(--font-sans); }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */
