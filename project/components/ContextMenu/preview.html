@@ -1,0 +1,44 @@
+<!-- @dsCard group="Overlays" height=360 subtitle="Actions on a thing, where you right-click or long-press it, or with Shift+F10" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ContextMenu — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cm2 { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; max-width: 560px; }
+.cm2 .file { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); font: 400 14px/20px var(--font-sans); color: var(--ink); background: var(--surface-ground); }
+.cm2 .file:last-child { border-bottom: 0; }
+.cm2 .file:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.cm2 .name { flex: 1; }
+.cm2 .meta { color: var(--ink-muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [files, setFiles] = React.useState(["Q3 board deck.pdf", "Invoices 2026.xlsx", "Brand guidelines.fig"]);
+  const [said, setSaid] = React.useState("");
+  const actions = (f) => [
+    { label: "Open", onSelect: () => setSaid(`Opened ${f}.`) },
+    { label: "Rename", onSelect: () => setSaid(`Renaming ${f}\u2026`) },
+    { label: "Duplicate", onSelect: () => setSaid(`Duplicated ${f}.`) },
+    { type: "separator" },
+    { label: "Delete file", tone: "critical", onSelect: () => {
+      setFiles((xs) => xs.filter((x) => x !== f));
+      setSaid(`Deleted ${f}.`);
+    } }
+  ];
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "cm2", role: "list", "aria-label": "Files" }, files.map((f) => /* @__PURE__ */ React.createElement(A.ContextMenu, { key: f, items: () => actions(f) }, /* @__PURE__ */ React.createElement("div", { className: "file", role: "listitem", tabIndex: 0 }, /* @__PURE__ */ React.createElement("span", { className: "name" }, f), /* @__PURE__ */ React.createElement("span", { className: "meta" }, "Edited 2 days ago"), /* @__PURE__ */ React.createElement(A.DropdownMenu, { align: "end", items: actions(f), trigger: /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", square: true, "aria-label": `Actions for ${f}` }, /* @__PURE__ */ React.createElement(A.Icons.More, null)) }))))), /* @__PURE__ */ React.createElement("p", { className: "cap", role: "status" }, said || "Right-click a file (or long-press, or focus it and press Shift+F10). The same actions are behind each row's \u22EF button, because a context menu is never the only way."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

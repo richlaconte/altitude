@@ -872,6 +872,17 @@ A design review: `Resizable` was rendered as a list and detail at 35/65, dragged
 
 Not yet tested with people: whether an 8px-wide grip is found without a hover.
 
+### E73 · What marks the thing a context menu is about?
+
+A design review: `ContextMenu` was rendered on rows of a file list, each with a "⋯" menu of the same actions, opened by right-click, by Shift+F10 and by a long press, in all four schemes and under forced colours. `checks/context-menu.mjs` measures it.
+
+- **A ring, not a lift.** The thing must show it's the subject, and lifting is how Altitude usually says "this one". But a row lifted out of a table breaks the columns (the reason DataTable's details open flush). A 2px `accent-ink` outline is DataGrid's active-cell ring, and works on any surface.
+- **One menu implementation.** DropdownMenu's panel (items, highlight, keyboard, choosing) is now a shared internal `MenuPanel`, and ContextMenu positions it at the pointer in a portal. The two can't drift.
+- **No submenus.** The issue sketched "Move to…" with nested items. That's floating on floating, which the rules forbid, and nested menus are a known keyboard and pointer trap. A long choice opens a Dialog.
+- **Keyboard first-class.** Shift+F10 and the Menu key open it at the thing with the first item active. The thing must be focusable for that, so the README says so.
+
+Not yet tested with people: whether the outline is noticed when the menu covers most of the row.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

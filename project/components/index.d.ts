@@ -2643,6 +2643,18 @@ export interface ResizableHandleProps extends React.HTMLAttributes<HTMLDivElemen
 /** The divider: a window splitter whose grip floats at level 3 while held. */
 export declare function ResizableHandle(props: ResizableHandleProps): React.ReactElement;
 
+export interface ContextMenuProps {
+  /** The actions on the thing. A function is called each time the menu opens. */
+  items: MenuEntry[] | (() => MenuEntry[]);
+  /** The thing: one focusable element. */
+  children: React.ReactElement<any>;
+  /** Names the menu. Default "Actions". */
+  'aria-label'?: string;
+  onOpenChange?: (open: boolean) => void;
+}
+/** Actions on a thing, opened where you right-click or long-press it, or with Shift+F10: DropdownMenu's menu at the pointer. */
+export declare function ContextMenu(props: ContextMenuProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2662,6 +2674,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      ContextMenu: typeof ContextMenu;
       ResizablePanelGroup: typeof ResizablePanelGroup; ResizablePanel: typeof ResizablePanel; ResizableHandle: typeof ResizableHandle;
       AppShell: typeof AppShell; SidebarProvider: typeof SidebarProvider; Sidebar: typeof Sidebar; SidebarHeader: typeof SidebarHeader; SidebarContent: typeof SidebarContent; SidebarGroup: typeof SidebarGroup; SidebarGroupLabel: typeof SidebarGroupLabel; SidebarMenu: typeof SidebarMenu; SidebarMenuItem: typeof SidebarMenuItem; SidebarMenuButton: typeof SidebarMenuButton; SidebarMenuBadge: typeof SidebarMenuBadge; SidebarFooter: typeof SidebarFooter; SidebarTrigger: typeof SidebarTrigger; SidebarInset: typeof SidebarInset; useSidebar: typeof useSidebar;
       PageHeader: typeof PageHeader; PageHeaderTitle: typeof PageHeaderTitle; PageHeaderDescription: typeof PageHeaderDescription;

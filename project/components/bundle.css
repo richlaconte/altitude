@@ -1354,6 +1354,14 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 [data-contrast="more"] .alt-resizable-handle[data-held] .alt-resizable-grip { box-shadow: 0 2px 0 0 var(--ink), var(--elev-3); }
 @media (forced-colors: active) { .alt-resizable-handle { background: CanvasText; } .alt-resizable-grip { border: 1px solid CanvasText; } .alt-resizable-handle[data-held] .alt-resizable-grip { border-width: 2px; } }
 
+/* ── ContextMenu: DropdownMenu's menu (level 3, the gliding highlight), opened where you right-click or long-press, or
+   at the thing with Shift+F10. The thing shows it's the subject with a 2px accent-ink outline: a ring, never a height,
+   so a flush row doesn't lift out of its table. ── */
+.alt-context { position: fixed; z-index: var(--z-floating); }
+.alt-context .alt-context-menu { position: relative; top: auto; left: auto; right: auto; bottom: auto; margin: 0; }
+[data-context-open] { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+@media (forced-colors: active) { [data-context-open] { outline-color: Highlight; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

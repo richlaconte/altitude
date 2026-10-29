@@ -36,6 +36,7 @@ export { PageHeader, PageHeaderTitle, PageHeaderDescription } from './page-heade
 export { AppShell, SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge, SidebarFooter, SidebarTrigger, SidebarInset, useSidebar } from './app-shell';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './resizable';
+export { ContextMenu } from './context-menu';
 export { CommandPalette, commandScore } from './command';
 export { Select, SelectItem, Combobox } from './select';
 export { Stepper } from './stepper';
