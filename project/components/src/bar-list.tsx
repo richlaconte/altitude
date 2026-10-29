@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, useIsoLayoutEffect } from './core';
+import { cssMs, cx, useIsoLayoutEffect } from './core';
 import { Button } from './controls';
 import { Arrive, Await, useArrival, useHasWaited, useReportWaiting } from './suspense';
 
@@ -84,7 +84,7 @@ function BarListFace({ data, format, limit, share, sort = 'desc', noun, onSelect
     const cs = refs.current.size ? getComputedStyle([...refs.current.values()][0]) : null;
     const travel = cs ? parseFloat(cs.getPropertyValue('--alt-travel')) : 1;
     if (cs && travel !== 0 && tops.current.size) {
-      const dur = parseFloat(cs.getPropertyValue('--dur-travel-3')) || 220;
+      const dur = cssMs(cs, '--dur-travel-3', 220);
       const ease = cs.getPropertyValue('--ease-glide').trim() || 'ease';
       next.forEach((top, k) => {
         const was = tops.current.get(k);

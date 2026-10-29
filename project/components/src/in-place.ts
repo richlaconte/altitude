@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useIsoLayoutEffect } from './core';
+import { cssMs, useIsoLayoutEffect } from './core';
 
 /* Editing in place: the motion InlineEdit and EditRegion share. Nothing here is exported from the package. */
 
@@ -8,7 +8,7 @@ const travels = (el: Element) => parseFloat(cssVar(el, '--alt-travel') || '1') !
 
 /** A change of size at one level: dur-travel-3 up to 120px, then a little longer per pixel (capped), so a long push stays readable. */
 export const glideMs = (el: Element, distance: number) => {
-  const base = parseFloat(cssVar(el, '--dur-travel-3')) || 220;
+  const base = cssMs(getComputedStyle(el), '--dur-travel-3', 220);
   return Math.min(base + 140, base + Math.max(0, distance - 120) * 0.9);
 };
 

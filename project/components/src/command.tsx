@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Kbd, Layer, riseDelay, useControllable, useIsoLayoutEffect } from './core';
+import { cssMs, cx, Kbd, Layer, riseDelay, useControllable, useIsoLayoutEffect } from './core';
 import { Input } from './controls';
 import { summitTaken, useModal } from './overlays';
 import { useAltitudeContext } from './modal-state';
@@ -121,7 +121,7 @@ const SearchIcon = () => (
     <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
   </svg>
 );
-const ms = (cs: CSSStyleDeclaration, name: string, fallback: number) => parseFloat(cs.getPropertyValue(name)) || fallback;
+const ms = cssMs;
 
 type Row = { key: string; item: CommandItem; group: CommandGroup; predicted: boolean };
 

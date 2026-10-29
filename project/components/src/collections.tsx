@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEffect } from './core';
+import { cssMs, cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEffect } from './core';
 import { Badge, Button, Checkbox, Input } from './controls';
 import { EditRegion, EditRegionBinder, EditRegionForm, EditRegionSaveResult } from './edit-region';
 import { Pile } from './pile';
@@ -9,7 +9,7 @@ import { Arrive, Await, hint, isPromise, Promised, readPromised, SkeletonOption,
 
 /** Positions recorded at the moment of a drop (where things visibly were), used instead of the last layout's. */
 const dropSnapshots = new WeakMap<HTMLElement, Map<string, { x: number; y: number }>>();
-const ms = (cs: CSSStyleDeclaration, name: string, fallback: number) => parseFloat(cs.getPropertyValue(name)) || fallback;
+const ms = cssMs;
 
 /**
  * Where an element sits in the page, from layout offsets: transforms (a lift, a drag, a running animation) don't count,

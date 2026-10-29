@@ -10,6 +10,13 @@ export const useIsoLayoutEffect = typeof window === 'undefined' ? React.useEffec
 
 export const cx = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
 
+/** A duration token in milliseconds. Minifiers rewrite `220ms` as `.22s`, so the unit is read, not assumed. */
+export const cssMs = (cs: CSSStyleDeclaration | null | undefined, name: string, fallback: number) => {
+  const raw = cs?.getPropertyValue(name).trim() ?? '', v = parseFloat(raw);
+  if (!isFinite(v)) return fallback;
+  return /\ds$/.test(raw) && !/ms$/.test(raw) ? v * 1000 : v;
+};
+
 /**
  * Mount/unmount with an exit animation. Returns `mounted` (render or not) and
  * `state` ("open" | "closed") for the data-state attribute. The element first
