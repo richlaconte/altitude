@@ -929,6 +929,21 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 
 .alt-hold[data-final] .alt-hold-fill { opacity: 0; }
 
+/* ── Separator: a divider is part of the page, so it's 1px of line on the ground: no shadow, no wall, never
+   line-control (that's for the edges of controls). A vertical one stretches to its row. A labelled one ("or") is the
+   word in ink-muted between two lines; its lines are drawn, so only the word is read. ── */
+.alt-sep { flex: none; margin: 0; border: 0; background: var(--line); }
+.alt-sep[data-orientation="horizontal"] { width: 100%; height: 1px; }
+.alt-sep[data-orientation="vertical"] { display: inline-block; width: 1px; min-height: 1em; align-self: stretch; vertical-align: middle; }
+/* A card's header has no bottom padding (its content brings the gap), so a separator under it brings the same gap. */
+.alt-card-header + .alt-sep { margin-top: var(--space-4); }
+.alt-sep-labelled, .alt-sep-labelled[data-orientation] { display: flex; align-items: center; gap: var(--space-3); width: auto; height: auto; background: none; font: 500 12.5px/17px var(--font-sans); letter-spacing: 0.005em; color: var(--ink-muted); }
+.alt-sep-labelled[data-orientation="vertical"] { flex-direction: column; min-height: 4em; }
+.alt-sep-labelled::before, .alt-sep-labelled::after { content: ""; flex: 1; min-width: 1px; min-height: 1px; background: var(--line); }
+@media (prefers-contrast: more) { .alt-sep:not(.alt-sep-labelled), .alt-sep-labelled::before, .alt-sep-labelled::after { background: var(--line-control); } }
+[data-contrast="more"] .alt-sep:not(.alt-sep-labelled), [data-contrast="more"] .alt-sep-labelled::before, [data-contrast="more"] .alt-sep-labelled::after { background: var(--line-control); }
+@media (forced-colors: active) { .alt-sep:not(.alt-sep-labelled), .alt-sep-labelled::before, .alt-sep-labelled::after { background: CanvasText; forced-color-adjust: none; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

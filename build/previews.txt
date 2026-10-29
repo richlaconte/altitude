@@ -1920,6 +1920,39 @@ function App() {
   );
 }
 
+=== Separator | <!-- @dsCard group="Layout" height=330 subtitle="A divider is 1px of line on the ground; a word between two lines when it says something" -->
+--- css
+.sp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sp .bar { display: flex; align-items: center; gap: 8px; }
+.sp .signin { display: flex; flex-direction: column; gap: 12px; }
+@media (max-width: 720px) { .sp { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+function App() {
+  return (
+    <div className="sp">
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Workspace</A.CardTitle><A.CardDescription>Name, URL and region</A.CardDescription></A.CardHeader>
+        <A.Separator />
+        <A.CardContent><p className="cap">Sections in a card are parted by a horizontal separator: role="separator", 1px of line.</p></A.CardContent>
+      </A.Card>
+      <div className="col">
+        <div className="bar">
+          <A.Button size="sm" variant="ghost">Bold</A.Button>
+          <A.Button size="sm" variant="ghost">Italic</A.Button>
+          <A.Separator orientation="vertical" decorative />
+          <A.Button size="sm" variant="ghost">Link</A.Button>
+        </div>
+        <div className="signin">
+          <A.Button variant="secondary">Continue with SSO</A.Button>
+          <A.Separator label="or" />
+          <A.Input placeholder="Email address" aria-label="Email address" />
+        </div>
+        <p className="cap">A vertical one between groups of buttons is decorative. "or" is read as a word; its lines are drawn.</p>
+      </div>
+    </div>
+  );
+}
+
 === ScrollArea | <!-- @dsCard group="Layout" height=330 subtitle="Edges curve away where content continues" -->
 --- css
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 760px; }

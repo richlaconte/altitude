@@ -654,6 +654,16 @@ A design review and a set of measurements, prototyped on a lab page ([#114](http
 - **Status is announced, never shown,** and clears itself after `dur-linger`. The afterglow is the visible confirmation.
 - **Ways to open, and a sign at rest.** A pencil on hover and the field drawn on hover both move nothing (IP-06, IP-10); the field puts the caret where the click landed. Hover-only triggers need a resting sign, or people don't know to point. `hint="seam"` is drawn from the well's own edge: a hairline cut in `line-control` over the well's light lip, where the well will open. An underline would read as a link (followed, not opened), and a dashed underline as an abbreviation or a tooltip.
 
+### E53 · What should a separator say?
+
+A design review: `Separator` was rendered as a section divider in a card, between groups of toolbar buttons and as "or" between two ways to sign in, in all four schemes at 960px, under forced colours and with `contrast="more"`. `checks/separator.mjs` measures it.
+
+- **Only `line`.** A divider is decorative ink on the ground, so it's 1px of `line` with no shadow. `line-control` (the edge of a control) made a toolbar's separator read as the side of a button; it's used only under `contrast="more"`.
+- **A labelled separator isn't `role="separator"`.** A separator's children are presentational ([WAI-ARIA 1.2, separator](https://www.w3.org/TR/wai-aria-1.2/#separator)), so "or" inside one is not reliably read. The word is plain text and the lines are pseudo-elements, so "Continue with SSO, or, Email address" reads in order.
+- **Decorative is opt-in.** A screen reader announcing every divider is noise, but a divider that parts unrelated content is information. Defaulting to `role="separator"` keeps the information, and `decorative` is one prop for the toolbar case.
+
+Not yet tested with people: whether a labelled "or" is clearer than a heading above the second option.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
