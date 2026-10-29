@@ -35,6 +35,7 @@ export { Pagination, pageRange } from './pagination';
 export { PageHeader, PageHeaderTitle, PageHeaderDescription } from './page-header';
 export { AppShell, SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge, SidebarFooter, SidebarTrigger, SidebarInset, useSidebar } from './app-shell';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';
+export { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './resizable';
 export { CommandPalette, commandScore } from './command';
 export { Select, SelectItem, Combobox } from './select';
 export { Stepper } from './stepper';

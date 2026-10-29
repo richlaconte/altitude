@@ -1,0 +1,34 @@
+<!-- @dsCard group="Layout" height=400 subtitle="Panes side by side on the ground; the grip floats while you hold it" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resizable — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.rz { height: 360px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.rz ul { list-style: none; margin: 0; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.rz li button { width: 100%; padding: 10px 12px; border: 0; border-radius: var(--radius-sm); background: none; text-align: left; font: 500 14px/20px var(--font-sans); color: var(--ink); cursor: pointer; }
+.rz li button[aria-current] { background: var(--surface-raised); box-shadow: var(--elev-1); }
+.rz .detail { padding: 20px; }
+.rz .detail h2 { margin: 0 0 6px; font: 600 18px/24px var(--font-sans); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const threads = ["Invoice INV-0042 failed", "Welcome to the beta", "Your export is ready", "Q4 planning notes", "Security alert: new sign-in"];
+function App() {
+  const [open, setOpen] = React.useState(0);
+  return /* @__PURE__ */ React.createElement("div", { className: "rz" }, /* @__PURE__ */ React.createElement(A.ResizablePanelGroup, { direction: "horizontal" }, /* @__PURE__ */ React.createElement(A.ResizablePanel, { defaultSize: 35, minSize: 20, maxSize: 60, collapsible: true, "aria-label": "Conversations" }, /* @__PURE__ */ React.createElement("ul", null, threads.map((t, i) => /* @__PURE__ */ React.createElement("li", { key: t }, /* @__PURE__ */ React.createElement("button", { "aria-current": i === open || void 0, onClick: () => setOpen(i) }, t))))), /* @__PURE__ */ React.createElement(A.ResizableHandle, null), /* @__PURE__ */ React.createElement(A.ResizablePanel, { "aria-label": "Conversation" }, /* @__PURE__ */ React.createElement("div", { className: "detail" }, /* @__PURE__ */ React.createElement("h2", null, threads[open]), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Drag the grip, or focus it and use the arrow keys; Enter collapses the list. The panes stay on the ground; only the grip lifts, and floats while held.")))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

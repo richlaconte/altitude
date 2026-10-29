@@ -861,6 +861,17 @@ A design review: `AppShell` was rendered with a workspace switcher, two groups (
 
 Not yet tested with people: whether a rail of icons with tooltips is learnable without the expanded labels.
 
+### E72 · Should a detail pane lift?
+
+A design review: `Resizable` was rendered as a list and detail at 35/65, dragged, resized by keyboard and collapsed, in all four schemes at 960px and under forced colours. `checks/resizable.mjs` measures it.
+
+- **Panes stay on the ground.** A detail pane is often drawn as a raised panel. A pane that's always there beside its list is part of the page, and raising it would make it read as a Sheet (a task laid over the page) or a card. Only the grip, which you pick up, uses height.
+- **The grip floats while held.** "Whatever is in a hand floats at level 3" applies to a divider you carry, so the grip rises from 1 to 3 on press, as a sortable item does.
+- **Enter collapses.** The APG window splitter puts collapse on Enter. A collapsed pane is inert and the handle says so in words, so keyboard users can't tab into content they can't see.
+- **Percent sizes.** Sizes are percentages of the group, so a layout saved at one window width still fits another.
+
+Not yet tested with people: whether an 8px-wide grip is found without a hover.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
