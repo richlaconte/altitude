@@ -795,6 +795,17 @@ A design review: `SecretField` was rendered as a just-created API key in a card 
 
 Not yet tested with people: whether the sunk well alone, without the checkbox, makes people copy the key before leaving.
 
+### E66 · Is a code block a card?
+
+A design review: `CodeBlock` was rendered as an install command in three forms, a JSON payload with two highlighted lines, line numbers and a scroll, and code streaming in with a stand-in highlighter, in all four schemes at 960px and under forced colours. `checks/code-block.mjs` measures it.
+
+- **Flush, not raised.** Code blocks are often drawn as dark raised cards. A card is a live surface, and code you read and copy is part of the record, so it lies flush with a `line` rim. The copy button and the form switch are the only live parts.
+- **Bring your own highlighter.** Bundling one (Shiki is several hundred KB with grammars) would dwarf the rest of the package. `syntax` takes any function, and the default token colours stay within ink and the accent, because the data palette means series.
+- **A region only when it scrolls.** A tab stop on every code block costs keyboard users in a docs page. The scroll area becomes focusable and named only when it overflows ([WCAG 2.1.1](https://www.w3.org/WAI/WCAG22/Understanding/keyboard)).
+- **Not copyable while writing.** Copying half a command an agent is still writing is worse than waiting, so copy is disabled while `streaming`.
+
+Not yet tested with people: whether a dashed left rule reads as "still arriving" without the caption.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

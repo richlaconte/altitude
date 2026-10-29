@@ -1,0 +1,51 @@
+<!-- @dsCard group="Display" height=560 subtitle="Code to read and copy lies flush on the ground; forms switch, lines highlight" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CodeBlock — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cbk { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.cbk > :first-child { grid-column: 1 / -1; }
+@media (max-width: 720px) { .cbk { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const payload = `{
+  "id": "evt_1Q8xZ2",
+  "type": "invoice.paid",
+  "created": 1793304000,
+  "data": {
+    "invoice": "INV-0042",
+    "amount": 4900,
+    "currency": "eur"
+  }
+}`;
+const tiny = (code) => code.split(/(\/\/.*$|\b(?:const|await|import|from)\b)/m).map((part, i) => part.startsWith("//") ? /* @__PURE__ */ React.createElement("span", { key: i, className: "tok-comment" }, part) : /^(const|await|import|from)$/.test(part) ? /* @__PURE__ */ React.createElement("span", { key: i, className: "tok-keyword" }, part) : part);
+function App() {
+  const [streamed, setStreamed] = React.useState("");
+  const full = "import { Altitude } from 'altitude-design';\n// Verify the signature before trusting the event\nconst event = await verify(request, secret);";
+  React.useEffect(() => {
+    let i = 0;
+    const t = setInterval(() => {
+      i = Math.min(full.length, i + 3);
+      setStreamed(full.slice(0, i));
+      if (i >= full.length) clearInterval(t);
+    }, 60);
+    return () => clearInterval(t);
+  }, []);
+  return /* @__PURE__ */ React.createElement("div", { className: "cbk" }, /* @__PURE__ */ React.createElement(A.CodeBlock, { title: "Install", tabs: [{ label: "npm", language: "sh", code: "npm install altitude-design" }, { label: "pnpm", language: "sh", code: "pnpm add altitude-design" }, { label: "yarn", language: "sh", code: "yarn add altitude-design" }] }), /* @__PURE__ */ React.createElement(A.CodeBlock, { title: "invoice.paid", language: "json", code: payload, highlight: [3, 7], lineNumbers: true, maxHeight: 220 }), /* @__PURE__ */ React.createElement(A.CodeBlock, { title: "webhook.ts", language: "ts", code: streamed, syntax: tiny, streaming: streamed.length < full.length }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

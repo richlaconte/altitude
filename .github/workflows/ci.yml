@@ -95,6 +95,7 @@ jobs:
           node ../scripts/record-check.mjs react18-time-input node checks/time-input.mjs
           node ../scripts/record-check.mjs react18-password-input node checks/password-input.mjs
           node ../scripts/record-check.mjs react18-secret-field node checks/secret-field.mjs
+          node ../scripts/record-check.mjs react18-code-block node checks/code-block.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs

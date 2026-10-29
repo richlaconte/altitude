@@ -2412,6 +2412,35 @@ export interface SecretFieldProps {
 /** A key or token shown once when created (an opening until acknowledged), masked to its tail afterwards. */
 export declare function SecretField(props: SecretFieldProps): React.ReactElement;
 
+export interface CodeBlockTab {
+  label: string;
+  code: string;
+  language?: string;
+}
+export interface CodeBlockProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  /** The code, for a single block. */
+  code?: string;
+  language?: string;
+  /** A filename or what the code is ("Install"). Shown in the header; names the block. */
+  title?: React.ReactNode;
+  /** The same thing in several forms: a segmented switch in the header. */
+  tabs?: CodeBlockTab[];
+  /** Lines to highlight, counted from 1. */
+  highlight?: number[];
+  /** Your highlighter (Shiki, Prism): returns the code coloured. Altitude ships none. */
+  syntax?: (code: string, language?: string) => React.ReactNode;
+  /** Line numbers in a gutter (hidden from assistive technology). Default false. */
+  lineNumbers?: boolean;
+  /** The code is still arriving: a dashed rule and "Writing…", aria-busy. */
+  streaming?: boolean;
+  /** Taller code scrolls. Default 360. */
+  maxHeight?: number | string;
+  /** Default true. */
+  copyable?: boolean;
+}
+/** Code to read and copy, flush on the ground with a line rim; forms switch with segmented Tabs; copy is a CopyButton. */
+export declare function CodeBlock(props: CodeBlockProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2431,6 +2460,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      CodeBlock: typeof CodeBlock;
       SecretField: typeof SecretField;
       PasswordInput: typeof PasswordInput;
       TimeInput: typeof TimeInput;
