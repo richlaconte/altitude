@@ -16,6 +16,7 @@ export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';
 export { Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarButton, ToolbarToggle } from './toolbar';
+export { SplitButton } from './split-button';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';

@@ -729,6 +729,17 @@ A design review: `Toolbar` was rendered as a seven-tool formatting bar (a Toggle
 
 Not yet tested with people: whether "More tools" is found as readily as a wrapped second row.
 
+### E60 · One slab or two?
+
+A design review: `SplitButton` was rendered as a primary "Save changes", a secondary "Merge" and a secondary "Deploy" that loads, in all four schemes at 960px and under forced colours, and hovered face by face. `checks/split-button.mjs` measures it.
+
+- **One wall, two faces.** A `Button` and a chevron `Button` placed side by side have two walls and two rounded ends, and read as two actions of equal weight. Squaring the inner corners and running one wall under both faces makes one object with a notch.
+- **Each face lifts alone.** The faces do different things (act, open a menu), so "hover is a promise" applies to each. Lifting both together would promise that pointing at the chevron saves.
+- **The notch on an accent slab.** `line-control` is tuned for neutral surfaces and nearly vanishes on a saturated accent, so the notch on a primary slab mixes `on-accent` into the accent. That's derived from the scheme's tokens, not a new colour.
+- **Loading doesn't take the menu.** A held-pressed action face keeps its label, and the chevron stays usable, so "Deploy to production" is still reachable while staging deploys.
+
+Not yet tested with people: whether Alt+Down on the action is discovered without being taught.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -80,6 +80,7 @@ Rules that follow:
 | **Feedforward** | hovering shows what a click will do before it does it: the ghost of the check a box would get, the radio thumb where it would land, a tab's sheet peeking up, a closed lid's ghost | `Checkbox`, `RadioGroup`, `Tabs`, `Accordion` |
 | **A press that confirms** | copying presses the button to the ground for `dur-linger` with a check and "Copied", announced politely while it keeps its name; no rise and no afterglow, since nothing new arrived on the page | `CopyButton` |
 | **A row of tools** | a toolbar lies on the ground and its tools are ghosts that lift when pointed at; latched tools are Toggles; what doesn't fit moves into a floating "More tools" menu, where toggles stay checkable | `Toolbar` |
+| **An action with alternatives** | one slab with two faces sharing one wall, parted by a 1px notch; each face lifts on its own because each does something different; the alternatives float in a menu | `SplitButton` |
 | **Consequence** | a destructive action is pushed *through* the ground: hold until it sinks to a trench; once done it lies flat and can't be pressed again | `HoldButton` |
 | **Prediction** | likely menu items arrive first; the rest fade in over `dur-onset` | `predicted` on `DropdownMenu` items |
 | **Recency of messages** | toasts sink one level per newer toast behind them | `Toaster` |

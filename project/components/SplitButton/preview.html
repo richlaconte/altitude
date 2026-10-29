@@ -1,0 +1,64 @@
+<!-- @dsCard group="Actions" height=300 subtitle="One action and its alternatives: two faces on one slab" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SplitButton — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [said, setSaid] = React.useState("");
+  const [deploying, setDeploying] = React.useState(false);
+  const deploy = (where) => {
+    setSaid(`Deploying to ${where}\u2026`);
+    setDeploying(true);
+    setTimeout(() => {
+      setDeploying(false);
+      setSaid(`Deployed to ${where}.`);
+    }, 1600);
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(
+    A.SplitButton,
+    {
+      label: "Save changes",
+      menuLabel: "More save options",
+      onClick: () => setSaid("Saved."),
+      items: [{ label: "Save as draft", onSelect: () => setSaid("Saved as a draft.") }, { label: "Save and close", onSelect: () => setSaid("Saved and closed.") }]
+    }
+  ), /* @__PURE__ */ React.createElement(
+    A.SplitButton,
+    {
+      variant: "secondary",
+      label: "Merge",
+      menuLabel: "More merge options",
+      onClick: () => setSaid("Merged."),
+      items: [{ label: "Squash and merge", onSelect: () => setSaid("Squashed and merged.") }, { label: "Rebase and merge", onSelect: () => setSaid("Rebased and merged.") }]
+    }
+  ), /* @__PURE__ */ React.createElement(
+    A.SplitButton,
+    {
+      variant: "secondary",
+      label: "Deploy",
+      menuLabel: "More deploy options",
+      loading: deploying,
+      onClick: () => deploy("staging"),
+      items: [{ label: "Deploy to staging", onSelect: () => deploy("staging") }, { label: "Deploy to production", onSelect: () => deploy("production"), tone: "critical" }]
+    }
+  )), /* @__PURE__ */ React.createElement("p", { className: "cap", role: "status" }, said || "Each face lifts on its own. Alt+Down on an action opens its menu. While Deploy is loading, its chevron still works."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
