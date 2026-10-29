@@ -467,9 +467,11 @@ function App() {
   );
 }
 
-=== Alert | <!-- @dsCard group="Display" height=470 subtitle="Sheets laid on the page; a stack when there are several" -->
+=== Alert | <!-- @dsCard group="Display" height=640 subtitle="Sheets laid on the page; a stack when there are several; a banner across the top" -->
 --- css
 .wrap { max-width: 580px; }
+.frame { --alt-page-pad: 20px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.frame main { display: block; padding: 16px 20px; outline: none; }
 --- jsx
 const queue = [
   { id: 'b', tone: 'critical', title: 'Build failed', body: 'Missing environment variable DATABASE_URL.' },
@@ -479,7 +481,15 @@ const queue = [
 function App() {
   const [items, setItems] = React.useState(queue);
   React.useEffect(() => { if (!items.length) { const t = setTimeout(() => setItems(queue), 900); return () => clearTimeout(t); } }, [items]);
+  const [trial, setTrial] = React.useState(true);
   return (
+    <div className="col">
+      <div className="frame">
+        {trial && <A.Alert placement="page" tone="caution" variant="raised" title="Your trial ends in 3 days" action={<A.Button variant="primary" size="sm">Choose a plan</A.Button>}
+          onDismiss={() => setTrial(false)} dismissLabel="Remind me tomorrow" />}
+        <A.Alert placement="page" title="We're seeing delays in email delivery">Messages may take up to 15 minutes to arrive.</A.Alert>
+        <main tabIndex={-1}><p className="cap">Page banners lie edge to edge across the top. One that asks for action is raised; one that informs is a flat sheet.</p></main>
+      </div>
     <div className="col wrap">
       <A.Alert title="Scheduled maintenance">The API will be read-only on Sunday from 02:00 to 02:30 UTC.</A.Alert>
       <A.Alert tone="positive" title="Domain verified">acme.dev now points at this project.</A.Alert>
@@ -487,6 +497,7 @@ function App() {
       <A.AlertStack>
         {items.map((a) => <A.Alert key={a.id} tone={a.tone} title={a.title} onDismiss={() => setItems((xs) => xs.filter((x) => x.id !== a.id))}>{a.body}</A.Alert>)}
       </A.AlertStack>
+    </div>
     </div>
   );
 }

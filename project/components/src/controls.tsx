@@ -731,15 +731,28 @@ export interface AlertProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   title?: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode;
   /** Shows a dismiss button; the sheet lifts off the page and the gap closes, then this is called. */
   onDismiss?: () => void;
+  /** The dismiss button's words ("Remind me tomorrow"). Default: an × named "Dismiss". */
+  dismissLabel?: string;
+  /** 'page': a banner for the whole app or page, edge to edge with no side rounding, in a labelled region. Default 'inline'. */
+  placement?: 'inline' | 'page';
+  /** With placement="page": stays at the top while the page scrolls. */
+  sticky?: boolean;
 }
 /** Status as a sheet laid on the page: it rests on the ground (you can see its edge and its contact shadow) and never floats. When it asks the person to act it becomes a raised card. */
-export function Alert({ tone = 'neutral', variant = 'flat', title, action, icon, onDismiss, settle, className, style, children, ...rest }: AlertProps) {
+export function Alert({ tone = 'neutral', variant = 'flat', title, action, icon, onDismiss, dismissLabel, placement = 'inline', sticky, settle, className, style, children, ...rest }: AlertProps) {
   const I = toneIcon[tone];
   const [closing, setClosing] = React.useState(false);
   const { style: depthStyle, ...depth } = useDepth({ settle });
-  const dismiss = () => { setClosing(true); window.setTimeout(() => onDismiss?.(), 400); };
-  return (
+  const page = placement === 'page';
+  const dismiss = () => {
+    setClosing(true);
+    // A page banner's button disappears with it, so focus goes to the page's main content.
+    if (page) window.setTimeout(() => document.querySelector<HTMLElement>('#alt-main, main')?.focus({ preventScroll: true }), 0);
+    window.setTimeout(() => onDismiss?.(), 400);
+  };
+  const alert = (
     <div role={tone === 'critical' ? 'alert' : 'status'} className={cx('alt-alert', className)} data-tone={tone} data-variant={variant}
+      data-placement={page ? 'page' : undefined} data-sticky={page && sticky ? '' : undefined}
       data-closing={closing ? '' : undefined} {...depth} style={{ ...depthStyle, ...style }} {...rest}>
       <div className="alt-alert-inner">
         <span className="alt-alert-icon" aria-hidden="true">{icon ?? <I size={18} />}</span>
@@ -748,10 +761,14 @@ export function Alert({ tone = 'neutral', variant = 'flat', title, action, icon,
           {children && <div className="alt-alert-text">{children}</div>}
         </div>
         {action && <div className="alt-alert-action">{action}</div>}
-        {onDismiss && <button type="button" className="alt-alert-close" aria-label="Dismiss" onClick={dismiss}><Icons.X size={14} /></button>}
+        {onDismiss && (dismissLabel
+          ? <button type="button" className="alt-alert-close" data-labelled="" onClick={dismiss}>{dismissLabel}</button>
+          : <button type="button" className="alt-alert-close" aria-label="Dismiss" onClick={dismiss}><Icons.X size={14} /></button>)}
       </div>
     </div>
   );
+  // A page banner is a labelled region, so it can be found and skipped.
+  return page ? <section className="alt-banner" aria-label={typeof title === 'string' ? title : 'Notice'} data-sticky={sticky ? '' : undefined}>{alert}</section> : alert;
 }
 
 export interface AlertStackProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -764,12 +781,14 @@ export interface AlertStackProps extends React.HTMLAttributes<HTMLDivElement> {
   moreLabel?: (hidden: number) => React.ReactNode;
   /** Label for collapsing. Default "Show less". */
   lessLabel?: React.ReactNode;
+  /** 'page': a stack of page banners, edge to edge. Give each Alert placement="page" too. */
+  placement?: 'inline' | 'page';
 }
 /**
  * Several alerts as a stack of sheets: the first lies on top and the others peek out beneath it, each tinted by its
  * own tone, with a count. Opening the stack fans them out; dismissing the top one lifts it off and the next comes up.
  */
-export function AlertStack({ children, expanded, defaultExpanded = false, onExpandedChange, moreLabel = (n) => `+${n} more`, lessLabel = 'Show less', className, ...rest }: AlertStackProps) {
+export function AlertStack({ children, expanded, defaultExpanded = false, onExpandedChange, moreLabel = (n) => `+${n} more`, lessLabel = 'Show less', placement = 'inline', className, ...rest }: AlertStackProps) {
   const list = React.Children.toArray(children).filter(React.isValidElement) as React.ReactElement<AlertProps>[];
   const [open, setOpen] = useControllable(expanded, defaultExpanded, onExpandedChange);
   const topKey = list[0]?.key;
@@ -779,7 +798,7 @@ export function AlertStack({ children, expanded, defaultExpanded = false, onExpa
   const hidden = list.length - 1;
   const all = open || hidden < 1;
   return (
-    <div className={cx('alt-alert-stack', className)} data-expanded={all ? '' : undefined} data-sheets={all ? undefined : Math.min(hidden, 2)} {...rest}>
+    <div className={cx('alt-alert-stack', className)} data-placement={placement === 'page' ? 'page' : undefined} data-expanded={all ? '' : undefined} data-sheets={all ? undefined : Math.min(hidden, 2)} {...rest}>
       {all ? list.map((el, i) => <div key={el.key} className="alt-alert-stack-item" style={{ ['--i' as any]: i }}>{el}</div>) : (
         <>
           {list.slice(1, 3).map((el, i) => <span key={el.key} className="alt-alert-sheet" aria-hidden="true" data-tone={el.props.tone ?? 'neutral'} style={{ ['--i' as any]: i + 1 }} />)}

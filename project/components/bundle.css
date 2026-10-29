@@ -633,6 +633,16 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 .alt-alert-close:hover { background: color-mix(in oklab, var(--ink) 8%, transparent); color: var(--ink); }
 .alt-alert-close:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-alert-close[data-labelled] { width: auto; height: auto; padding: 4px 8px; font: 500 13px/18px var(--font-sans); white-space: nowrap; align-self: center; }
+/* A page banner: the same sheet, laid edge to edge across the top of the app or page, so it has no side rounding and
+   no side edges, only its bottom edge and contact shadow. It informs (flat, ground) or asks for action (raised), as
+   any Alert does. Sticky, it stays at the top while the page scrolls. Its text wraps; its padding follows the page's. */
+.alt-banner[data-sticky] { position: sticky; top: 0; z-index: 30; }
+.alt-alert[data-placement="page"] { border-radius: 0; box-shadow: 0 1px 0 0 color-mix(in oklab, var(--a-fg) 22%, transparent), 0 1.5px 3px -0.5px var(--alt-cast); }
+.alt-alert[data-placement="page"][data-variant="raised"] { box-shadow: var(--elev-1); }
+.alt-alert[data-placement="page"] .alt-alert-inner { flex-wrap: wrap; padding: var(--space-3) var(--alt-page-pad, var(--space-4)); }
+.alt-alert[data-placement="page"] .alt-alert-body { min-width: min(100%, 240px); }
+.alt-alert-stack[data-placement="page"] .alt-alert-sheet { border-radius: 0; left: 0; right: 0; }
 
 /* ── RemovalReceipt. Left in place, then closed: the result shows in the item's slot, at its height, on the ground
    (a trace of what happened, not a live surface). It lifts off as an Alert does, and only then does the gap glide shut. ── */
