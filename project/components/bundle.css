@@ -1372,6 +1372,23 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 [data-context-open] { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 @media (forced-colors: active) { [data-context-open] { outline-color: Highlight; } }
 
+/* ── App mode (AltitudeProvider mode): test mode, viewing as a customer, read-only, a preview. The page is the ground,
+   so height can't say "this whole ground is different"; the mode is said in words and a border (law 7 as the primary
+   channel): a flush strip on the tone's soft colour naming it at the top, a 2px inset frame around the viewport in its
+   tone that stays while scrolling and above dialogs and sheets, and a plate in their headers. Nothing moves. ── */
+.alt-mode-strip { --m: var(--caution); --m-soft: var(--caution-soft); display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--space-3); padding: 6px var(--space-4); background: var(--m-soft); border-bottom: 1px solid color-mix(in oklab, var(--m) 35%, transparent); font: 400 13px/18px var(--font-sans); color: var(--ink); }
+.alt-mode-strip[data-tone="accent"], .alt-mode-frame[data-tone="accent"] { --m: var(--accent); --m-soft: var(--accent-soft); }
+.alt-mode-strip[data-tone="critical"], .alt-mode-frame[data-tone="critical"] { --m: var(--critical); --m-soft: var(--critical-soft); }
+.alt-mode-strip[data-tone="neutral"], .alt-mode-frame[data-tone="neutral"] { --m: var(--ink-muted); --m-soft: var(--surface-well); }
+.alt-mode-label { font-weight: 600; }
+.alt-mode-desc { color: var(--ink); }
+.alt-mode-action { margin-left: auto; }
+.alt-mode-frame { --m: var(--caution); position: fixed; inset: 0; z-index: 2147483000; border: 2px solid var(--m); pointer-events: none; }
+.alt-mode-plate { margin-bottom: var(--space-1); align-self: flex-start; }
+@media (prefers-contrast: more) { .alt-mode-frame { border-width: 3px; } }
+[data-contrast="more"] .alt-mode-frame { border-width: 3px; }
+@media (forced-colors: active) { .alt-mode-frame { border: 4px double CanvasText; } .alt-mode-strip { border-bottom: 1px solid CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

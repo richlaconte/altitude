@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Layer, useControllable, useIsoLayoutEffect, useOutside, usePresence } from './core';
+import { cx, Icons, Layer, ModePlate, useControllable, useIsoLayoutEffect, useOutside, usePresence } from './core';
 import { Button } from './controls';
 import { ModalOwner, modalDocument, tabbables, useAltitudeContext } from './modal-state';
 
@@ -378,6 +378,7 @@ export function Dialog({ open, defaultOpen = false, onOpenChange, trigger, title
             <div ref={panel} role="dialog" aria-labelledby={`${id}-t`} aria-describedby={description ? `${id}-d` : undefined}
               tabIndex={-1} className={cx('alt-dialog', className)} data-size={size}>
               <div className="alt-dialog-head">
+                <ModePlate />
                 <h2 className="alt-dialog-title" id={`${id}-t`} tabIndex={initialFocus === 'title' ? -1 : undefined}>{title}</h2>
                 {description && <p className="alt-dialog-desc" id={`${id}-d`}>{description}</p>}
               </div>

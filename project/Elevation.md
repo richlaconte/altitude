@@ -117,6 +117,7 @@ Rules that follow:
 - **One summit.** Only one thing sits at level 5: a Dialog or the CommandPalette. Never open a dialog from a dialog, and never open a sheet from either (a sheet paints beneath the summit). (Apple's Liquid Glass guidance, "avoid glass on glass", is the same rule.)
 - **Don't stack floating on floating.** A menu inside a popover inside a sheet loses the reading of height; flatten the inner one.
 - **Spend rises carefully.** A rising onset grabs attention. Things that merely changed state cross-fade; things that need noticing rise. Altitude staggers afterglows so no more than four begin at once.
+- **A mode isn't a height.** When the whole app is in a mode (test mode, viewing as a customer, read-only), the ground itself is different, which height can't say. It's said in words and a border: a flush strip naming it, a frame around the viewport, and a plate in every dialog and sheet (`AltitudeProvider mode`).
 - **Height never travels alone.** Every signal above also has a word, an icon, an ARIA state or a border, so it survives a screen reader, forced colors and low vision.
 
 ## Accessible elevation

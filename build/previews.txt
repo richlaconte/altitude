@@ -834,6 +834,28 @@ function App() {
   );
 }
 
+=== AppMode | <!-- @dsCard group="Foundations" height=420 subtitle="A mode the whole app is in, said in words and a border: test mode, viewing as a customer, read-only" -->
+--- css
+.md { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+--- jsx
+function App() {
+  const [test, setTest] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
+  return (
+    <A.AltitudeProvider mode={test ? { tone: 'caution', label: 'Test mode', description: 'Payments are simulated; nothing is charged.', action: <A.Button size="sm" onClick={() => setTest(false)}>Leave test mode</A.Button> } : undefined}>
+      <div className="md">
+        <A.Stat label="Revenue this month" value={12840} format={(n) => '€' + n.toLocaleString('en')} />
+        <div className="row">
+          <A.Button variant="primary" onClick={() => setOpen(true)}>Refund a payment</A.Button>
+          {!test && <A.Button onClick={() => setTest(true)}>Enter test mode</A.Button>}
+        </div>
+        <p className="cap">The mode is a flush strip with its name, and a 2px frame around the whole window that stays while you scroll and over dialogs, which name it too. Nothing rises: the whole ground is different, and height can't say that.</p>
+      </div>
+      <A.Dialog open={open} onOpenChange={setOpen} title="Refund this payment?" description="€49.00 to Maya Chen." footer={<A.Button variant="primary" onClick={() => setOpen(false)}>Refund</A.Button>} />
+    </A.AltitudeProvider>
+  );
+}
+
 === Signals | <!-- @dsCard group="Foundations" height=560 page subtitle="What height can tell you beyond hierarchy" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 24px; }

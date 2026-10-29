@@ -1,0 +1,29 @@
+<!-- @dsCard group="Foundations" height=420 subtitle="A mode the whole app is in, said in words and a border: test mode, viewing as a customer, read-only" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AppMode — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.md { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [test, setTest] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
+  return /* @__PURE__ */ React.createElement(A.AltitudeProvider, { mode: test ? { tone: "caution", label: "Test mode", description: "Payments are simulated; nothing is charged.", action: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setTest(false) }, "Leave test mode") } : void 0 }, /* @__PURE__ */ React.createElement("div", { className: "md" }, /* @__PURE__ */ React.createElement(A.Stat, { label: "Revenue this month", value: 12840, format: (n) => "\u20AC" + n.toLocaleString("en") }), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setOpen(true) }, "Refund a payment"), !test && /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setTest(true) }, "Enter test mode")), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "The mode is a flush strip with its name, and a 2px frame around the whole window that stays while you scroll and over dialogs, which name it too. Nothing rises: the whole ground is different, and height can't say that.")), /* @__PURE__ */ React.createElement(A.Dialog, { open, onOpenChange: setOpen, title: "Refund this payment?", description: "\u20AC49.00 to Maya Chen.", footer: /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setOpen(false) }, "Refund") }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
