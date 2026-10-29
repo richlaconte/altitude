@@ -2609,6 +2609,29 @@ function App() {
     </div>
   </div>;
 }
+=== TimeInput | <!-- @dsCard group="Inputs" height=360 subtitle="A time of day typed by segment; it fills only when the whole time is there" -->
+--- css
+.ti { display: grid; grid-template-columns: repeat(2, minmax(0, 240px)); gap: 16px 24px; align-items: start; }
+@media (max-width: 560px) { .ti { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+function App() {
+  const [report, setReport] = React.useState('09:30');
+  const [quiet, setQuiet] = React.useState(null);
+  const [open, setOpen] = React.useState('08:00');
+  return (
+    <div className="col">
+      <div className="ti">
+        <A.Field label="Send the report at" hint={report ? `Stored as ${report}` : 'Not set'}><A.TimeInput value={report} onValueChange={setReport} step={15} hourCycle="h12" locale="en-US" timeZone="Europe/Berlin" /></A.Field>
+        <A.Field label="Quiet hours start" hint="24-hour clock"><A.TimeInput value={quiet} onValueChange={setQuiet} hourCycle="h23" /></A.Field>
+        <A.Field label="Opens at" hint="Between 06:00 and 12:00" error={open && (open < '06:00' || open > '12:00') ? 'Choose a time between 06:00 and 12:00.' : undefined}>
+          <A.TimeInput value={open} onValueChange={setOpen} min="06:00" max="12:00" hourCycle="h23" />
+        </A.Field>
+      </div>
+      <p className="cap">Type digits (they move on by themselves), or use Up and Down; minutes step by 15 in the first field. "a" or "p" sets AM or PM. The field fills only once the whole time is there.</p>
+    </div>
+  );
+}
+
 === Stepper | <!-- @dsCard group="Navigation" height=420 subtitle="Done steps settle into the record; the next rises out of its imprint" -->
 --- css
 .wrap { display: flex; flex-direction: column; gap: 18px; max-width: 820px; }

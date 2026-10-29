@@ -2336,6 +2336,36 @@ export declare function InputOTPSlot(props: { index: number; className?: string 
 /** A decorative dash between groups. */
 export declare function InputOTPSeparator(props: { className?: string }): React.ReactElement;
 
+export interface TimeInputProps {
+  /** A time of day, "HH:mm" on a 24-hour clock, or null. It's only set once every segment holds a value. */
+  value?: string | null;
+  defaultValue?: string | null;
+  onValueChange?: (value: string | null) => void;
+  /** The arrow keys move the minutes by this much. Default 1. */
+  step?: number;
+  /** "auto" (default) follows the locale; "h12" shows AM/PM; "h23" a 24-hour clock. */
+  hourCycle?: 'auto' | 'h12' | 'h23';
+  /** Earliest and latest allowed times ("09:00", "17:30"). A time outside them is invalid. */
+  min?: string;
+  max?: string;
+  /** An IANA time zone. Its short name is shown after the time and spoken with it. The value isn't converted. */
+  timeZone?: string;
+  locale?: string;
+  invalid?: boolean;
+  disabled?: boolean;
+  required?: boolean;
+  size?: 'sm' | 'md';
+  /** Submits the value with a form, in a hidden input. */
+  name?: string;
+  id?: string;
+  className?: string;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+}
+/** A time of day typed by segment; an opening that fills only when every segment holds a value. */
+export declare function TimeInput(props: TimeInputProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2355,6 +2385,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      TimeInput: typeof TimeInput;
       InputOTP: typeof InputOTP; InputOTPGroup: typeof InputOTPGroup; InputOTPSlot: typeof InputOTPSlot; InputOTPSeparator: typeof InputOTPSeparator;
       NumberInput: typeof NumberInput; parseNumber: typeof parseNumber;
       SplitButton: typeof SplitButton;
