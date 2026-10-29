@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, DepthProps, Icons, Spinner, useDepth, useIsoLayoutEffect } from './core';
+import { cssMs, cx, DepthProps, Icons, Spinner, useDepth, useIsoLayoutEffect } from './core';
 import { modalDocument, tabbables } from './modal-state';
 
 /*
@@ -9,7 +9,7 @@ import { modalDocument, tabbables } from './modal-state';
  * glided closed. Receipts that come due within the attention-budget window close together, as one change.
  */
 
-const ms = (cs: CSSStyleDeclaration, name: string, fallback: number) => parseFloat(cs.getPropertyValue(name)) || fallback;
+const ms = cssMs;
 const BATCH = 250;
 const TICK = 100;
 interface Live { remaining: () => number | null; close: () => void }

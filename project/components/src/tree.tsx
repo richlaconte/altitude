@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, useIsoLayoutEffect } from './core';
+import { cssMs, cx, Icons, useIsoLayoutEffect } from './core';
 
 export type TreeResult = { ok: true } | { ok: false; error: string };
 export type TreeCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -52,7 +52,7 @@ export interface TreeProps<T> {
 type Row<T> = { item: T; key: string; level: number; parentKey: string | null; index: number; setsize: number; branch: boolean; expanded: boolean; loading: boolean };
 type Busy = { key: string; kind: 'rename' | 'move' | 'create'; label: string };
 const SAVE_ERROR = 'That change couldn’t be saved. Try again.';
-const ms = (cs: CSSStyleDeclaration, name: string, fallback: number) => parseFloat(cs.getPropertyValue(name)) || fallback;
+const ms = cssMs;
 
 /**
  * A hierarchy you see all at once and change in place. Nodes are the record, flush on the ground, indented by depth;

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
+import { cssMs, cx, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
 import { Button, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
 import { useDrilldown } from './nav';
 import { DataTable } from './collections';
@@ -717,7 +717,7 @@ function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObj
     }
     lastKey.current = changeKey;
     const cs = plotRef.current ? getComputedStyle(plotRef.current) : null;
-    const ms = (name: string, fallback: number) => { const v = parseFloat(cs?.getPropertyValue(name) ?? ''); return isFinite(v) ? v : fallback; };
+    const ms = (name: string, fallback: number) => cssMs(cs, name, fallback);
     const reduced = cs ? parseFloat(cs.getPropertyValue('--alt-travel')) === 0 : false;
     const now = performance.now();
     if (first) motion.current = { from: null, to: target, start: now, mode: 'fade', d1: 0, d2: ms('--dur-travel-1', 140) };
@@ -998,7 +998,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const [said, setSaid] = React.useState('');
   const prevRows = React.useRef<{ map: Map<string, ChartDatum>; rows: ChartDatum[] } | null>(null);
   const glowGen = React.useRef(0);
-  const settleMs = () => { const v = parseFloat(plotRef.current ? getComputedStyle(plotRef.current).getPropertyValue('--dur-settle') : ''); return isFinite(v) ? v : 8000; };
+  const settleMs = () => cssMs(plotRef.current ? getComputedStyle(plotRef.current) : null, '--dur-settle', 8000);
   React.useEffect(() => {
     if (!live) return;
     const now = Date.now();

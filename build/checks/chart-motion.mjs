@@ -1,6 +1,6 @@
 // Chart motion, sampled frame by frame (as E5 did for levels): a rescale comes before the values and the two never move
 // at once, re-sorted bands are carried, an interruption starts from where the marks are, reduced motion only
-// cross-fades, and resizing never animates. Run after a render of every preview (it opens
+// cross-fades, resizing never animates, and durations written in seconds by a minifier are read as seconds. Run after a render of every preview (it opens
 // test/p-ChartMotion-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
@@ -129,6 +129,18 @@ const tickYs = (f) => f.layers[0].ticks.filter((t) => t.a == null).map((t) => `$
     requestAnimationFrame(tick);
   }));
   expect(stages.every((s) => s === 'idle'), 'a resize never animates: ' + [...new Set(stages)].join(','));
+}
+
+// 7. Minified CSS writes durations in seconds (220ms becomes .22s, as in Storybook's build): the glide keeps its length (#117).
+{
+  await page.evaluate(() => { window.__motion('full'); window.__set([{ k: 'A', v: 42 }, { k: 'B', v: 35 }, { k: 'C', v: 28 }]); });
+  await page.waitForTimeout(800);
+  await page.evaluate(() => { const s = document.documentElement.style; s.setProperty('--dur-travel-2', '.18s'); s.setProperty('--dur-travel-3', '.22s'); });
+  const frames = await sample([{ k: 'A', v: 88 }, { k: 'B', v: 64 }, { k: 'C', v: 71 }]);
+  await page.evaluate(() => { const s = document.documentElement.style; s.removeProperty('--dur-travel-2'); s.removeProperty('--dur-travel-3'); });
+  const moving = frames.filter((f) => f.stage === 'rescale' || f.stage === 'values');
+  const ms = moving.length ? moving[moving.length - 1].t - moving[0].t : 0;
+  expect(ms > 300 && ms < 900, `durations in seconds are read as seconds: rescale then values take ${Math.round(ms)}ms`);
 }
 
 console.log(`${pass} passed, ${fail} failed`);
