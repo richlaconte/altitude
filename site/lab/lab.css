@@ -1,0 +1,100 @@
+/* Edit in place lab. Loaded after site.css; every colour is an Altitude token. */
+
+.lab-hero { padding-block: clamp(32px, 6vw, 64px) var(--space-6); }
+.lab-hero .wrap { display: grid; gap: var(--space-4); }
+.lab-hero .lede strong { color: var(--page-ink); font-weight: 600; }
+.page a.lab-back { width: fit-content; font: 500 14px/20px var(--font-display); text-decoration: none; }
+
+.lab-controls { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface-ground); box-shadow: 0 1px 0 var(--page-rule), inset 0 1px 0 var(--page-rule); }
+.lab-controls-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-6); padding-block: var(--space-3); }
+.lab-controls-row > .alt-btn { margin-inline-start: auto; }
+
+.lab-section { padding-block: clamp(32px, 5vw, 56px); }
+.lab-section + .lab-section { box-shadow: inset 0 1px 0 var(--page-rule); }
+.lab-section .wrap { display: grid; gap: var(--space-3); }
+.lab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: var(--space-5); margin-top: var(--space-3); align-items: start; }
+.lab-grid-one { grid-template-columns: minmax(0, 640px); }
+
+/* A panel is a bordered patch of ground, so level-0 surfaces inside it match their background. */
+.lab-panel { min-width: 0; display: grid; gap: var(--space-5); padding: clamp(24px, 4vw, 32px); border: 1px solid var(--page-rule); border-radius: var(--radius-lg); background: var(--surface-ground); }
+.lab-panel-head { display: flex; align-items: center; gap: var(--space-3); }
+.lab-panel-title { font: 600 15px/22px var(--font-display); }
+.lab-tag { padding: 2px 8px; border-radius: 999px; font: 600 11px/16px var(--font-display); letter-spacing: 0.05em; text-transform: uppercase; background: var(--surface-well); color: var(--ink-muted); }
+.lab-tag[data-kind="proposed"] { background: var(--accent-soft); color: var(--accent-ink); }
+.lab-stage { min-width: 0; }
+.lab-reading { display: flex; gap: var(--space-2); align-items: flex-start; margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--surface-well); font: 400 13px/19px var(--font-sans); color: var(--ink); }
+.lab-reading svg { flex: none; margin-top: 2px; color: var(--ink-muted); }
+.lab-notes ul { margin: 0; padding-inline-start: 1.1em; display: grid; gap: var(--space-1); font: 400 13px/19px var(--font-display); color: var(--page-muted); }
+
+/* Shared demo content */
+.lab-task { display: grid; gap: var(--space-2); }
+.lab-title { font: 600 19px/26px var(--font-sans); --slot-h: 46px; }
+.lab-title .alt-inline-edit-value { font: 600 19px/26px var(--font-sans); }
+.lab-muted { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+.lab-body { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink); }
+.lab-people { list-style: none; margin: 0; padding: 0; }
+.lab-people > li { padding: var(--space-3) 0; box-shadow: inset 0 -1px 0 var(--line); }
+.lab-cur-name { display: block; font: 500 15px/22px var(--font-sans); }
+.lab-cur-meta { display: block; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+.lab-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3); }
+.lab-h4 { margin: 0; font: 600 15px/22px var(--font-sans); }
+.lab-error { display: flex; gap: 6px; align-items: flex-start; margin: var(--space-2) 0 0; font: 400 13px/18px var(--font-sans); color: var(--critical); }
+.lab-error svg { flex: none; margin-top: 2px; }
+
+/* ── The proposal ──
+   A slot is a value's place. Read mode draws the value's text with exactly the control's inset (12px padding and a
+   transparent 1px border, as .alt-input and .alt-select-trigger have), so when the control replaces it, the text is
+   where it was. Controls in a slot take the slot's font. */
+.lab-inplace { --inset: 13px; }
+.lab-slot { box-sizing: border-box; display: flex; align-items: center; min-width: 0; min-height: var(--slot-h, 40px); padding: 0 12px; border: 1px solid transparent; border-radius: var(--radius-md); }
+.lab-slot-text { min-width: 0; overflow-wrap: anywhere; }
+.lab-unset { color: var(--ink-muted); }
+.lab-slot-box { min-width: 0; }
+.lab-slot-box > .alt-input, .lab-slot-box .alt-select > .alt-input { height: var(--slot-h, 40px); }
+.lab-inplace .lab-slot-box .alt-input input, .lab-inplace .lab-slot-box .alt-select-trigger { font: inherit; }
+.lab-inplace .lab-slot-box .alt-switch-row { font: inherit; }
+/* The well opens under text that stays put: only its floor, walls and border fade in. */
+.lab-slot-box > .alt-input, .lab-slot-box .alt-select > .alt-input { animation: lab-well-open var(--dur-travel-2) var(--ease-sink); }
+@keyframes lab-well-open { from { background-color: transparent; border-color: transparent; box-shadow: none; } }
+
+.lab-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); margin-inline-start: auto; }
+
+/* One value: the row bleeds by the inset, so the text lines up with the column and the well reaches into the gutter. */
+.lab-ip-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-inline: calc(-1 * var(--inset)); }
+.lab-ip-line > [data-slot] { flex: 0 1 auto; }
+.lab-ip[data-editing] .lab-ip-line > [data-slot] { flex: 1 1 14rem; }
+
+/* A record: the surface always has its padding and a border, and a negative margin of the same size, so lifting
+   changes colour and shadow but never position. The afterglow fills that padded box. */
+.lab-surface {
+  margin: -9px calc(-9px - var(--inset)); padding: 8px calc(8px + var(--inset)); border: 1px solid transparent; border-radius: var(--radius-lg);
+  transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), border-color var(--dur-travel-1) var(--ease-rise);
+}
+.lab-surface[data-editing] { background: var(--surface-raised); box-shadow: var(--elev-1); border-color: var(--line-control); }
+.lab-rec { display: grid; }
+.lab-rec[data-editing] { gap: var(--space-2); }
+.lab-line { display: flex; flex-wrap: wrap; align-items: center; min-width: 0; }
+.lab-name { font: 500 15px/22px var(--font-sans); }
+.lab-meta { font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+.lab-edit { margin-inline-start: auto; }
+/* Read: slots are as tall as their text and bleed by the inset, so the line reads as ordinary text. */
+.lab-rec:not([data-editing]) .lab-slot { min-height: 0; border-block-width: 0; }
+.lab-rec:not([data-editing]) .lab-line > [data-slot] { margin-inline: calc(-1 * var(--inset)); }
+.lab-sep { padding-inline: 6px; }
+/* Edit: the line bleeds instead, and the wells sit side by side. */
+.lab-rec[data-editing] .lab-line { gap: var(--space-2); margin-inline: calc(-1 * var(--inset)); color: var(--ink); }
+.lab-rec[data-editing] .lab-sep { display: none; }
+.lab-rec[data-editing] [data-slot="name"] { flex: 1 1 16rem; }
+.lab-rec[data-editing] [data-slot="email"] { flex: 2 1 14rem; }
+.lab-rec[data-editing] [data-slot="role"] { flex: 1 1 8rem; }
+.lab-rec[data-editing] [data-slot="notify"] { flex: none; padding-inline: 4px; }
+.lab-rec-actions, .lab-sheet-actions { margin-inline: calc(-1 * var(--inset)); }
+.lab-rec .lab-error, .lab-sheet .lab-error { margin: 0; }
+
+/* A sheet: read rows already have the controls' height, so nothing but the actions row is added. */
+.lab-sheet { display: grid; gap: var(--space-2); }
+.lab-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 30px; }
+.lab-sheet-grid { display: grid; grid-template-columns: minmax(5rem, 8rem) minmax(0, 1fr); gap: var(--space-1) var(--space-4); margin: 0; font: 400 14px/20px var(--font-sans); }
+.lab-sheet-grid dt { align-self: center; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+.lab-sheet-grid dd { min-width: 0; margin: 0 calc(-1 * var(--inset)); }
+@media (max-width: 420px) { .lab-sheet-grid { grid-template-columns: minmax(0, 1fr); } .lab-sheet-grid dt { margin-top: var(--space-2); } }
