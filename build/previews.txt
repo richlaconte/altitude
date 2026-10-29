@@ -2219,6 +2219,33 @@ function App() {
   );
 }
 
+=== Resizable | <!-- @dsCard group="Layout" height=400 subtitle="Panes side by side on the ground; the grip floats while you hold it" -->
+--- css
+.rz { height: 360px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.rz ul { list-style: none; margin: 0; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.rz li button { width: 100%; padding: 10px 12px; border: 0; border-radius: var(--radius-sm); background: none; text-align: left; font: 500 14px/20px var(--font-sans); color: var(--ink); cursor: pointer; }
+.rz li button[aria-current] { background: var(--surface-raised); box-shadow: var(--elev-1); }
+.rz .detail { padding: 20px; }
+.rz .detail h2 { margin: 0 0 6px; font: 600 18px/24px var(--font-sans); }
+--- jsx
+const threads = ['Invoice INV-0042 failed', 'Welcome to the beta', 'Your export is ready', 'Q4 planning notes', 'Security alert: new sign-in'];
+function App() {
+  const [open, setOpen] = React.useState(0);
+  return (
+    <div className="rz">
+      <A.ResizablePanelGroup direction="horizontal">
+        <A.ResizablePanel defaultSize={35} minSize={20} maxSize={60} collapsible aria-label="Conversations">
+          <ul>{threads.map((t, i) => <li key={t}><button aria-current={i === open || undefined} onClick={() => setOpen(i)}>{t}</button></li>)}</ul>
+        </A.ResizablePanel>
+        <A.ResizableHandle />
+        <A.ResizablePanel aria-label="Conversation">
+          <div className="detail"><h2>{threads[open]}</h2><p className="cap">Drag the grip, or focus it and use the arrow keys; Enter collapses the list. The panes stay on the ground; only the grip lifts, and floats while held.</p></div>
+        </A.ResizablePanel>
+      </A.ResizablePanelGroup>
+    </div>
+  );
+}
+
 === ScrollArea | <!-- @dsCard group="Layout" height=330 subtitle="Edges curve away where content continues" -->
 --- css
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 760px; }

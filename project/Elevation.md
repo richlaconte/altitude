@@ -72,7 +72,7 @@ Rules that follow:
 | **Properties of a record** | a record's properties lie on the ground; an editable value is one plate that lifts when pointed at, a read-only one never does, and an unset value is a small opening naming what to add | `PropertyList` |
 | **Recency** | new or changed content arrives tinted and lifted, then settles to rest over `dur-settle` (afterglow) | `settle` on `Surface`, `Card` |
 | **Commitment** | a pending write hovers (after `dur-grace`), a confirmed one lands, a failed one drops into a trench | `status` on `Surface`, `Card` |
-| **Possession** | whatever is in a hand floats at level 3, tilted; a collaborator's hold wears their `presence-*` colour and name | `heldBy`, `SortableList`, `BoardCard heldBy` |
+| **Possession** | whatever is in a hand floats at level 3, tilted; a collaborator's hold wears their `presence-*` colour and name | `heldBy`, `SortableList`, `BoardCard heldBy`, a held `ResizableHandle` grip |
 | **Readiness to receive** | receptacles open (sink) only while something could be dropped into them, and deepen under the pointer | `DropZone`, the slot in `SortableList`, a slot or a node to drop into in `Tree` |
 | **Emptiness** | a region with nothing in it yet is an opening, a well with a dashed rim that the first record will fill; pointing at its action deepens it to a trench | `EmptyState` |
 | **Relevance** | filtering lifts matches and sinks misses instead of removing them, so positions survive | `relevance` on `Surface`, `Card`, `TableRow`, driven by `FilterBar` |
@@ -102,6 +102,7 @@ Rules that follow:
 | **Read against** | references and annotations lie on the ground with the marks: a reference is a 1px solid `ink-muted` line (or `caution` / `critical` with its icon), a band a flat `line` fill under the marks, an annotation a `Badge` plate flush at the top of the plot with a 1px `line-control` leader. Only an annotation that acts lifts, one level, as a button | `ChartReference`, `ChartAnnotation` |
 | **Not yet the record** | projected and incomplete data lies on the ground with the record, never raised (a pending write hovers, but a hovering bar misstates its value): bars are their colour hatched at 45° on the plot's own with no solid fill, a projection keeping its outline; lines are dashed with hollow points; areas are hatched; an uncertainty band is a flat low-opacity fill. A 1px `line-control` rule named "Today" marks where the record ends, and every mark says "So far" or "Projected" in its name, readout and table row. Under forced colours the outline is dotted, as a pending write's is | `status` on `BarChart`, `LineChart` and `AreaChart`; `band` on `LineChart` |
 | **A window on the record** | an overview in a trench, the series a flat line in it; the chosen window a raised lens (level 1, `accent` rim, clear face) whose grips are a range Slider's thumbs, level 2 on hover and 3 held; outside it the overview recedes | `ChartBrush` |
+| **Panes beside each other** | panes lie on the ground, parted by 1px of `line`; only the grip is live: flush at rest, lifting when pointed at, floating at level 3 while held; collapsing changes size, not level | `ResizablePanelGroup` |
 | **A task beside the page** | a sheet is laid over the page at level 4, anchored to an edge: above menus, below the summit; it rises at its edge and is lifted off when you're done | `Sheet` |
 
 ## Rules

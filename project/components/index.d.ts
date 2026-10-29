@@ -2612,6 +2612,37 @@ export interface AppShellProps extends Omit<SidebarProviderProps, 'children'> {
 /** The frame of an app on the ground: a sidebar, a top bar that rises when content passes under it, and the page. */
 export declare function AppShell(props: AppShellProps): React.ReactElement;
 
+export interface ResizablePanelGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** horizontal (default): panes side by side; vertical: stacked. */
+  direction?: 'horizontal' | 'vertical';
+  /** Remembers the sizes in this browser under this name. */
+  autoSaveId?: string;
+  onLayout?: (sizes: number[]) => void;
+}
+/** Panes beside each other on the ground, parted by dividers you can drag. */
+export declare function ResizablePanelGroup(props: ResizablePanelGroupProps): React.ReactElement;
+export interface ResizablePanelProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Percent of the group. Panels without one share what's left. */
+  defaultSize?: number;
+  /** Percent. Default 10. */
+  minSize?: number;
+  /** Percent. Default 90. */
+  maxSize?: number;
+  /** Enter on the handle before it collapses it to nothing, and restores it. */
+  collapsible?: boolean;
+  /** Names the pane, and the handle that resizes it. */
+  'aria-label'?: string;
+}
+export declare function ResizablePanel(props: ResizablePanelProps): React.ReactElement;
+export interface ResizableHandleProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Show the grip plate. Default true. */
+  withGrip?: boolean;
+  /** Its name. Default "Resize {the pane before it}". */
+  label?: string;
+}
+/** The divider: a window splitter whose grip floats at level 3 while held. */
+export declare function ResizableHandle(props: ResizableHandleProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2631,6 +2662,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      ResizablePanelGroup: typeof ResizablePanelGroup; ResizablePanel: typeof ResizablePanel; ResizableHandle: typeof ResizableHandle;
       AppShell: typeof AppShell; SidebarProvider: typeof SidebarProvider; Sidebar: typeof Sidebar; SidebarHeader: typeof SidebarHeader; SidebarContent: typeof SidebarContent; SidebarGroup: typeof SidebarGroup; SidebarGroupLabel: typeof SidebarGroupLabel; SidebarMenu: typeof SidebarMenu; SidebarMenuItem: typeof SidebarMenuItem; SidebarMenuButton: typeof SidebarMenuButton; SidebarMenuBadge: typeof SidebarMenuBadge; SidebarFooter: typeof SidebarFooter; SidebarTrigger: typeof SidebarTrigger; SidebarInset: typeof SidebarInset; useSidebar: typeof useSidebar;
       PageHeader: typeof PageHeader; PageHeaderTitle: typeof PageHeaderTitle; PageHeaderDescription: typeof PageHeaderDescription;
       Pagination: typeof Pagination; pageRange: typeof pageRange;
