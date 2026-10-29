@@ -103,6 +103,8 @@ Every chart also offers a table view of its data, built with `Table`.
 
 Charts already built with shadcn/ui or Recharts can take Altitude's palette and most of these rules: **Theming** ("With shadcn/ui", "Charts") maps the colours and lists the props that carry each rule, and what doesn't carry over.
 
+For what Altitude's SVG charts don't draw (tens of thousands of points, maps, sankeys, treemaps), `altitude-design/chart-themes` themes ECharts and Chart.js from the active scheme's tokens: **Theming** ("Charts Altitude doesn't draw"). The rules above still apply; a theme can't keep them for you.
+
 ## Don't
 
 - Don't give a mark a shadow, a wall, a sheen, a gradient or a glow, "because Altitude is about height".
