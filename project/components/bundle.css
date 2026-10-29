@@ -906,7 +906,11 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 /* ── HoldButton: holding pushes it through the ground; the fuse along the bottom shows how far. ── */
 .alt-hold { overflow: visible; }
 .alt-hold .alt-btn-label { position: static; }
-.alt-hold-text { position: relative; }
+/* All of its labels share one grid cell and only the current one is visible, so the button keeps the width of its
+   longest label: holding and completing never change its size or move what's beside it. */
+.alt-hold-text { position: relative; display: inline-grid; justify-items: center; }
+.alt-hold-label { grid-area: 1 / 1; display: inline-flex; align-items: center; gap: var(--space-2); white-space: nowrap; }
+.alt-hold-label:not([data-shown]) { visibility: hidden; }
 .alt-hold-fill {
   position: absolute; left: 8px; right: 8px; bottom: 3px; height: 2px; border-radius: var(--radius-full); background: currentColor; opacity: 0.9;
   transform: scaleX(0); transform-origin: left; transition: transform var(--dur-travel-2) var(--ease-sink);

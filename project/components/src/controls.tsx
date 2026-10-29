@@ -856,7 +856,11 @@ export function HoldButton({ onConfirm, duration = 1000, variant = 'danger', hol
   };
   const cancel = () => { if (state !== 'holding') return; window.clearTimeout(timer.current); setState('idle'); };
   React.useEffect(() => () => window.clearTimeout(timer.current), []);
-  const label = done ? doneLabel ?? children : state === 'holding' ? holdingLabel ?? children : children;
+  // Every label is laid out in the same cell, so the button is as wide as its longest and never changes width.
+  const labels: [string, React.ReactNode][] = [['idle', children]];
+  if (holdingLabel != null) labels.push(['holding', holdingLabel]);
+  if (doneLabel != null) labels.push(['done', doneLabel]);
+  const shown = labels.some(([k]) => k === state) ? state : 'idle';
   return (
     <Button {...rest} disabled={disabled} variant={variant} className={cx('alt-hold', className)} data-hold={state}
       data-final={done && !repeatable ? '' : undefined} aria-disabled={(done && !repeatable) || undefined}
@@ -867,7 +871,9 @@ export function HoldButton({ onConfirm, duration = 1000, variant = 'danger', hol
       onKeyUp={(e) => { if (e.key === ' ' || e.key === 'Enter') cancel(); }}
       onContextMenu={(e) => e.preventDefault()}>
       <span className="alt-hold-fill" aria-hidden="true" />
-      <span className="alt-hold-text">{label}</span>
+      <span className="alt-hold-text">
+        {labels.map(([k, l]) => <span key={k} className="alt-hold-label" data-shown={k === shown ? '' : undefined} aria-hidden={k === shown ? undefined : true}>{l}</span>)}
+      </span>
       <span className="alt-sr" aria-live="polite">{state === 'holding' ? 'Keep holding to confirm' : done ? 'Confirmed' : ''}</span>
     </Button>
   );
