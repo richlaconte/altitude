@@ -3081,6 +3081,15 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    live, so it rises: the row and its region become one raised slab (elev-1, drawn by the first cell as for selected
    rows), holding a static EditRegion; the cells above keep the record identified. Sorting and reordering wait. ── */
 .alt-td-expand, .alt-th-expand { width: 40px; padding-inline: 6px; }
+/* Density: compact rows keep every target at least 24px tall (WCAG 2.5.8). Showing, hiding or reordering a column is a
+   change of layout, not of the record, so the table doesn't animate it. */
+.alt-table[data-density="compact"] .alt-td { padding-block: 4px; }
+.alt-table[data-density="compact"] .alt-th { padding-block: 6px; }
+.alt-table-hidden { color: var(--ink-muted); font-weight: 400; }
+.alt-table-columns { display: flex; flex-direction: column; gap: var(--space-2); width: 240px; max-width: 100%; }
+.alt-table-columns-title { margin: 0; font: 600 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-table-columns-title + * { margin-bottom: var(--space-2); }
+.alt-table-columns .alt-sort-item { padding: 6px 8px; }
 .alt-td-edit, .alt-th-edit { width: 1%; white-space: nowrap; }
 .alt-table-disclose { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1); }
 .alt-table-disclose:hover { background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink); }
