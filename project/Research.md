@@ -806,6 +806,17 @@ A design review: `CodeBlock` was rendered as an install command in three forms, 
 
 Not yet tested with people: whether a dashed left rule reads as "still arriving" without the caption.
 
+### E67 · How should a colour be chosen, and checked?
+
+A design review: `ColorPicker` was rendered with six brand swatches, a hex field, the full picker open and the contrast check, and with four label swatches beside a primary button in the chosen accent, in all four schemes at 960px and under forced colours. `checks/color-picker.mjs` measures it.
+
+- **Swatches are radios.** A palette is one choice among several, so it's RadioGroup's build: trenches the colour pours into, one raised white mark that travels. The issue proposed this, and it keeps "choices are switches" true for colour too.
+- **Two verdicts, not one.** The issue's single "Text passes 4.5:1" check almost never fails: for any colour, either white or black text reaches about 4.6:1. What a brand owner needs to know is which text works, so each gets its own plate. The issue's teal, for example, fails with white text (4.3:1) and passes with dark text (4.8:1).
+- **Names before colour.** Every swatch is named and announced. Under forced colours a swatch keeps its real colour, because the colour is the content, with a border whose weight marks the chosen one.
+- **A hex field that fills only when whole.** "0f8a" isn't a colour, so the field stays an opening (as TimeInput and DatePicker do) and reverts to the last colour on blur.
+
+Not yet tested with people: whether the 2D area is needed at all, or the hex field and swatches cover brand use.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

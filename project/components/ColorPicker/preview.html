@@ -1,0 +1,40 @@
+<!-- @dsCard group="Inputs" height=420 subtitle="Swatches as choices with one travelling mark, a hex field, and a contrast check in words" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ColorPicker — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cpk { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.cpk .demo { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 720px) { .cpk { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const brand = [
+  { value: "#0f8a6b", name: "Teal" },
+  { value: "#2563eb", name: "Blue" },
+  { value: "#7c3aed", name: "Violet" },
+  { value: "#db2777", name: "Pink" },
+  { value: "#ea580c", name: "Orange" },
+  { value: "#facc15", name: "Yellow" }
+];
+const labels = [{ value: "#64748b", name: "Slate" }, { value: "#16a34a", name: "Green" }, { value: "#dc2626", name: "Red" }, { value: "#0891b2", name: "Cyan" }];
+function App() {
+  const [color, setColor] = React.useState("#0f8a6b");
+  const [tag, setTag] = React.useState("#16a34a");
+  return /* @__PURE__ */ React.createElement("div", { className: "cpk" }, /* @__PURE__ */ React.createElement(A.ColorPicker, { label: "Brand colour", value: color, onValueChange: setColor, swatches: brand, allowCustom: true, checkContrast: true }), /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.ColorPicker, { label: "Label colour", value: tag, onValueChange: setTag, swatches: labels }), /* @__PURE__ */ React.createElement("div", { className: "demo" }, /* @__PURE__ */ React.createElement("span", { className: "cap" }, "Preview:"), /* @__PURE__ */ React.createElement(A.AltitudeProvider, { accent: color }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Upgrade plan"))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "The check says, for white text and for dark text, whether it reaches 4.5:1 on the colour. Arrow keys move the mark between swatches; Custom\u2026 opens a full picker.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
