@@ -6,4 +6,5 @@ It opens after `delay` (450ms) on hover or immediately on keyboard focus, rising
 
 **You provide:** `content` (a few words, optionally a shortcut), one focusable child, optionally `side="bottom"`.
 
+- Do use `side="right"` for a rail of icons (a collapsed `Sidebar`), where a tooltip above would cover the next icon.
 - Don't put anything interactive in a tooltip, and don't hide essential information in one.

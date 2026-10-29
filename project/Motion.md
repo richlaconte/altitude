@@ -123,6 +123,10 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
+## The frame
+
+**The current destination's pill glides.** In a `Sidebar`, the raised pill under the current destination glides to the new one over `dur-travel-3` on `ease-glide`, as segmented `Tabs`' pill does. Collapsing to a rail changes the sidebar's width over `dur-travel-3` on `ease-glide`, with no change of level. The top bar rises over `dur-travel-1` while content passes under it. Under reduced motion the pill appears in place and the width changes at once. Nothing rises on a route change, except the new content's own afterglow.
+
 ## Pages
 
 **The page thumb travels.** A `Pagination`'s thumb glides to the new page over `dur-travel-1` on `ease-glide`, and is held pressed (flat, no sheen) while the next page loads. Under reduced motion it appears in place.

@@ -754,6 +754,8 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-tip[data-side="bottom"] { bottom: auto; top: calc(100% + 8px); transform-origin: 50% 0; }
 .alt-tip[data-state="closed"] { transform: translateY(calc(4px * var(--alt-travel))) scale(calc(1 - 0.04 * var(--alt-travel))); }
 .alt-tip[data-side="bottom"][data-state="closed"] { transform: translateY(calc(-4px * var(--alt-travel))) scale(calc(1 - 0.04 * var(--alt-travel))); }
+.alt-tip[data-side="right"] { left: calc(100% + 8px); bottom: auto; top: 50%; translate: 0 -50%; transform-origin: 0 50%; }
+.alt-tip[data-side="right"][data-state="closed"] { transform: translateX(calc(-4px * var(--alt-travel))) scale(calc(1 - 0.04 * var(--alt-travel))); }
 .alt-tip[data-warm] { transition-duration: var(--dur-travel-1); }
 
 .alt-pop {
@@ -1267,6 +1269,63 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-page-head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .alt-page-head-tabs .alt-tabs { gap: 0; }
 @media (forced-colors: active) { .alt-page-head[data-under] { border-bottom: 1px solid CanvasText; } }
+
+/* ── AppShell and Sidebar: where you are is part of the record, so the frame lies on the ground: sidebar, top bar
+   and page on surface-ground, divided by line. Only what acts is live: a destination lifts one level when pointed at,
+   and the current one sits on a raised pill (segmented Tabs' build) that glides between destinations. Only a count
+   floats. Collapsing to a rail changes width on ease-glide, not level. The top bar rises one level while content
+   passes under it. On narrow screens the sidebar is a Sheet drawer. ── */
+.alt-shell { --alt-sidebar-w: 248px; --alt-rail-w: 56px; position: relative; display: flex; height: 100%; min-height: 0; background: var(--surface-ground); color: var(--ink); }
+.alt-skip { position: absolute; left: var(--space-2); top: var(--space-2); z-index: 50; padding: 6px 12px; border-radius: var(--radius-sm); background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink); font: 500 13px/18px var(--font-sans); transform: translateY(-200%); }
+.alt-skip:focus { transform: none; outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-sidebar { display: flex; flex-direction: column; flex: none; width: var(--alt-sidebar-w); min-height: 0; border-right: 1px solid var(--line); background: var(--surface-ground); overflow: hidden; transition: width var(--dur-travel-3) var(--ease-glide); }
+.alt-sidebar[data-rail] { width: var(--alt-rail-w); }
+.alt-sidebar-drawer .alt-sidebar { width: auto; border: 0; background: none; margin-inline: calc(-1 * var(--space-2)); }
+.alt-sidebar-header, .alt-sidebar-footer { flex: none; padding: var(--space-2); }
+.alt-sidebar-header { border-bottom: 1px solid var(--line); }
+.alt-sidebar-footer { border-top: 1px solid var(--line); }
+.alt-sidebar-content { position: relative; flex: 1; min-height: 0; overflow: auto; padding: var(--space-2); }
+.alt-sidebar-pill { position: absolute; left: 0; top: 0; border-radius: var(--radius-sm); background: var(--surface-raised); background-image: var(--alt-sheen); box-shadow: var(--elev-1); pointer-events: none; }
+.alt-sidebar-pill[data-ready] { transition: transform var(--dur-travel-3) var(--ease-glide), width var(--dur-travel-3) var(--ease-glide), height var(--dur-travel-3) var(--ease-glide), opacity var(--dur-travel-1); }
+.alt-sidebar-group + .alt-sidebar-group { margin-top: var(--space-3); }
+.alt-sidebar-label { display: flex; align-items: center; gap: 4px; width: 100%; height: 28px; padding: 0 var(--space-2); border: 0; background: none; font: 500 12px/16px var(--font-sans); letter-spacing: 0.01em; color: var(--ink-muted); text-align: left; white-space: nowrap; }
+button.alt-sidebar-label { cursor: pointer; border-radius: var(--radius-sm); }
+button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-sidebar-chev { margin-left: auto; transition: transform var(--dur-travel-2) var(--ease-settle); }
+.alt-sidebar-label[aria-expanded="false"] .alt-sidebar-chev { transform: rotate(-90deg); }
+.alt-sidebar[data-rail] .alt-sidebar-label { visibility: hidden; height: 12px; }
+.alt-sidebar-menu { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.alt-sidebar-item { position: relative; display: flex; align-items: center; }
+.alt-sidebar-button {
+  position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; height: 34px; padding: 0 var(--space-2); border-radius: var(--radius-sm);
+  font: 500 14px/20px var(--font-sans); color: var(--ink-muted); text-decoration: none; white-space: nowrap; cursor: pointer;
+  transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), color var(--dur-travel-1);
+}
+.alt-sidebar-button:hover:not([aria-current]) { background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink); }
+.alt-sidebar-button[aria-current] { color: var(--ink); font-weight: 600; }
+.alt-sidebar-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-sidebar-icon { display: inline-flex; flex: none; width: 20px; justify-content: center; }
+.alt-sidebar-text { overflow: hidden; text-overflow: ellipsis; transition: opacity var(--dur-travel-2) var(--ease-rise); }
+/* In the rail only icons show: each destination is a square, and the rail lets its tooltips out to the right. */
+.alt-sidebar[data-rail], .alt-sidebar[data-rail] .alt-sidebar-content { overflow: visible; }
+.alt-sidebar[data-rail] .alt-sidebar-item .alt-tip-anchor { display: flex; flex: 1; }
+.alt-sidebar[data-rail] .alt-sidebar-button { justify-content: center; padding: 0; }
+.alt-sidebar[data-rail] .alt-sidebar-text { display: none; }
+.alt-sidebar[data-rail] .alt-sidebar-header .alt-sidebar-text { display: none; }
+.alt-sidebar-badge { position: absolute; right: var(--space-2); z-index: 2; pointer-events: none; }
+.alt-sidebar[data-rail] .alt-sidebar-badge { right: 2px; top: 0; transform: scale(0.8); }
+.alt-shell-page { position: relative; flex: 1; min-width: 0; min-height: 0; overflow: auto; }
+.alt-topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: var(--space-2); height: 52px; padding: 0 var(--space-4); border-bottom: 1px solid var(--line); background: var(--surface-ground); transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
+.alt-topbar[data-under] { background: var(--surface-raised); box-shadow: var(--elev-1); }
+.alt-shell-sentinel { display: block; height: 1px; margin-bottom: -1px; }
+.alt-inset { --alt-page-pad: var(--space-6); display: block; padding: 0 var(--alt-page-pad) var(--space-6); outline: none; }
+@media (prefers-reduced-motion: reduce) { .alt-sidebar { transition: none; } .alt-sidebar-pill[data-ready] { transition: opacity var(--dur-travel-1); } }
+[data-motion="reduced"] .alt-sidebar { transition: none; }
+[data-motion="reduced"] .alt-sidebar-pill[data-ready] { transition: opacity var(--dur-travel-1); }
+@media (prefers-contrast: more) { .alt-sidebar, .alt-sidebar-header, .alt-sidebar-footer, .alt-topbar { border-color: var(--line-control); } }
+[data-contrast="more"] .alt-sidebar, [data-contrast="more"] .alt-sidebar-header, [data-contrast="more"] .alt-sidebar-footer, [data-contrast="more"] .alt-topbar { border-color: var(--line-control); }
+[data-contrast="more"] .alt-sidebar-pill { box-shadow: 0 2px 0 0 var(--ink), var(--elev-1); }
+@media (forced-colors: active) { .alt-sidebar-pill { border: 1px solid CanvasText; } .alt-sidebar-button:hover:not([aria-current]) { border: 1px solid CanvasText; } }
 
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,

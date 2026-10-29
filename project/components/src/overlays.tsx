@@ -17,7 +17,8 @@ let openCard: (() => void) | null = null; // the HoverCard currently open, if an
 
 export interface TooltipProps {
   content: React.ReactNode;
-  side?: 'top' | 'bottom';
+  /** Default 'top'. 'right' is for a rail of icons, where above would cover the next one. */
+  side?: 'top' | 'bottom' | 'right';
   delay?: number;
   defaultOpen?: boolean;
   children: React.ReactElement<any>;
