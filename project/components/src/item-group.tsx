@@ -1,14 +1,17 @@
 import * as React from 'react';
-import { cx } from './core';
+import { cx, inert } from './core';
 import { Alert, Button } from './controls';
-import { Dialog } from './overlays';
+import { Dialog, toast } from './overlays';
+import { glideShut, RemovalReceipt } from './removal-receipt';
 import { EditRegion, EditRegionBinder, EditRegionForm, EditRegionSaveResult } from './edit-region';
 
 export type ItemGroupResult = { ok: true } | { ok: false; error: string };
 export type ItemGroupCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
 /**
  * How removal is recovered. There's no default: say whether the application can reverse it (immediate, with Undo)
- * or needs confirmation first. A danger button doesn't imply irreversibility.
+ * or needs confirmation first. A danger button doesn't imply irreversibility. A recoverable removal leaves a
+ * RemovalReceipt with Undo in the slat's place for dur-linger, then closes the gap and offers Undo in a toast (render
+ * a Toaster); a confirmed one glides the slat shut.
  */
 export type ItemGroupRemoval<T> =
   | { kind: 'recoverable'; undo: (item: T) => void | Promise<unknown> }
@@ -66,7 +69,11 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
   const [adding, setAdding] = React.useState(false);
   const [carry, setCarry] = React.useState<{ key: string; index: number; from: number } | null>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
-  const [removed, setRemoved] = React.useState<{ item: T; label: string } | null>(null);
+  // Items removed from `items` whose slot is still shown: a receipt held in place (recoverable), or a slat gliding
+  // shut (confirmed). `after` is the key it followed, so it keeps its place among the slats that remain.
+  const [gone, setGone] = React.useState<Gone<T>[]>([]);
+  const [arriving, setArriving] = React.useState<ReadonlySet<string>>(() => new Set());
+  const toasts = React.useRef(new Map<string, number>());
   const [confirming, setConfirming] = React.useState<T | null>(null);
   const [failure, setFailure] = React.useState<string | null>(null);
   const [settled, setSettled] = React.useState<string | null>(null);
@@ -82,6 +89,8 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
   if (!adding) fresh.current = null;
   React.useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const say = (text: string) => { setAssertive(''); requestAnimationFrame(() => mounted.current && setAssertive(text)); };
+  // The same words twice (restored, removed again, restored) are still news.
+  const tell = (text: string) => { setPolite(''); requestAnimationFrame(() => mounted.current && setPolite(text)); };
   const settle = (key: string) => { setSettled(key); setTimeout(() => mounted.current && setSettled((s) => (s === key ? null : s)), 1200); };
 
   // Focus goes to a named control inside a slat: `${key}|edit`, `${key}|remove`, `${key}|grip`, '|add' or '|group'.
@@ -99,7 +108,19 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
     target?.focus();
   });
 
-  const display = carry ? (() => { const list = items.filter((x) => getKey(x) !== carry.key); list.splice(carry.index, 0, items.find((x) => getKey(x) === carry.key)!); return list; })() : items;
+  const ordered = carry ? (() => { const list = items.filter((x) => getKey(x) !== carry.key); list.splice(carry.index, 0, items.find((x) => getKey(x) === carry.key)!); return list; })() : items;
+  const display = gone.reduce((list, g) => {
+    if (list.some((x) => getKey(x) === getKey(g.item))) return list;
+    const at = g.after === null ? 0 : list.findIndex((x) => getKey(x) === g.after) + 1 || Math.min(g.index, list.length);
+    return [...list.slice(0, at), g.item, ...list.slice(at)];
+  }, ordered);
+  const goneOf = (key: string) => gone.find((g) => getKey(g.item) === key);
+  const forget = (key: string) => setGone((list) => list.filter((g) => getKey(g.item) !== key));
+
+  // A toast's Undo is withdrawn once the item is back by any route.
+  React.useEffect(() => {
+    for (const [key, id] of toasts.current) if (items.some((x) => getKey(x) === key)) { toast.dismiss(id); toasts.current.delete(key); }
+  }, [items]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const edit = (item: T) => {
     const key = getKey(item);
@@ -116,6 +137,8 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
     const key = getKey(item), label = getLabel(item);
     const i = items.findIndex((x) => getKey(x) === key);
     const next = items[i + 1] ?? items[i - 1];
+    const shown = display.findIndex((x) => getKey(x) === key);
+    const after = shown > 0 ? getKey(display[shown - 1]) : null;
     setBusy(key); setFailure(null);
     let result: ItemGroupResult;
     try { result = asResult(await onRemove(item)); } catch { result = { ok: false, error: SAVE_ERROR }; }
@@ -124,20 +147,41 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
     if (!result.ok) { setFailure(result.error); setPolite(result.error); wantFocus.current = `${key}|remove`; return; }
     // Focus repair: the next item's Remove, else the previous one's, else the group.
     wantFocus.current = next ? `${getKey(next)}|remove` : onCreate ? '|add' : '|group';
-    if (removal?.kind === 'recoverable') { setRemoved({ item, label }); setPolite(`${label} is removed. Undo is available.`); }
-    else setPolite(`${label} removed.`);
+    // The slot stays where it was: a receipt with Undo, held, then closed; or, once confirmed, the slat glides shut.
+    // The receipt announces itself, so the group's status doesn't say it again.
+    const recoverable = removal?.kind === 'recoverable';
+    setGone((list) => [...list.filter((g) => getKey(g.item) !== key), { item, label, after, index: shown, kind: recoverable ? 'receipt' : 'closing' }]);
+    if (!recoverable) tell(`${label} removed.`);
   };
   const remove = (item: T) => {
     if (!removal || removal.kind === 'recoverable') void doRemove(item);
     else setConfirming(item);
   };
-  const undo = async () => {
-    if (!removed || removal?.kind !== 'recoverable') return;
-    const { item, label } = removed;
-    setRemoved(null);
-    await removal.undo(item);
+  // Undo while the receipt holds: the slat cross-fades back in place and settles. Nothing moves.
+  const undo = async (key: string) => {
+    const g = goneOf(key);
+    if (!g || g.undoing || removal?.kind !== 'recoverable') return;
+    setGone((list) => list.map((x) => (getKey(x.item) === key ? { ...x, undoing: true } : x)));
+    try { await removal.undo(g.item); } catch { if (mounted.current) { setGone((list) => list.map((x) => (getKey(x.item) === key ? { ...x, undoing: false } : x))); setFailure(SAVE_ERROR); setPolite(SAVE_ERROR); } return; }
     if (!mounted.current) return;
-    settle(getKey(item)); wantFocus.current = `${getKey(item)}|remove`; setPolite(`${label} restored.`);
+    forget(key); wantFocus.current = `${key}|remove`; tell(`${g.label} restored.`);
+  };
+  // The receipt has closed: the slot is gone, and Undo moves to a toast. The receipt already announced the removal.
+  const closed = (key: string) => {
+    const g = goneOf(key);
+    forget(key);
+    if (!g || g.kind !== 'receipt' || removal?.kind !== 'recoverable') return;
+    const undoLater = removal.undo;
+    const id = toast({ title: `${g.label} is removed.`, announce: false, action: { label: 'Undo', onClick: () => {
+      toasts.current.delete(key);
+      // It comes back by gliding its slot open, then settles.
+      setArriving((s) => new Set(s).add(key));
+      void Promise.resolve(undoLater(g.item)).then(() => {
+        if (!mounted.current) return;
+        wantFocus.current = `${key}|remove`; tell(`${g.label} restored.`);
+      }, () => { if (mounted.current) { setArriving((s) => { const n = new Set(s); n.delete(key); return n; }); setFailure(SAVE_ERROR); setPolite(SAVE_ERROR); } });
+    } } });
+    toasts.current.set(key, id);
   };
 
   const pick = (item: T) => {
@@ -150,7 +194,7 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
     if (!carry || !onReorder) return;
     const c = carry, item = items.find((x) => getKey(x) === c.key)!;
     if (c.index === c.from) { setCarry(null); wantFocus.current = `${c.key}|grip`; say(`${getLabel(item)} dropped in place.`); return; }
-    const next = display;
+    const next = ordered;
     setBusy(c.key);
     let result: ItemGroupResult;
     try { result = asResult(await onReorder(next)); } catch { result = { ok: false, error: SAVE_ERROR }; }
@@ -199,8 +243,18 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
       {display.map((item, i) => {
         const key = getKey(item);
         const isEditing = editing === key;
-        return <li key={key} className="alt-item-slat" data-item={key} data-editing={isEditing ? '' : undefined} data-carried={carry?.key === key ? '' : undefined}
-          data-status={busy === key ? 'pending' : undefined} data-settle={settled === key ? '' : undefined} aria-busy={busy === key || undefined}>
+        const g = goneOf(key);
+        const present = items.some((x) => getKey(x) === key);
+        if (g?.kind === 'closing' && !present) return <ClosingSlat key={key} onClosed={() => forget(key)}>{renderItem(item, inertActions)}</ClosingSlat>;
+        const held = !!g && !present;
+        const label = getLabel(item);
+        // Only what ItemGroup itself says; the receipt's own pending, afterglow and busy state come through otherwise.
+        const own = { ...(busy === key ? { 'data-status': 'pending', 'aria-busy': true } : null), ...(settled === key ? { 'data-settle': '' } : null) };
+        return <RemovalReceipt as="li" key={key} className="alt-item-slat" data-item={key} data-editing={isEditing ? '' : undefined} data-carried={carry?.key === key ? '' : undefined}
+          {...own} removed={held} pending={held && g?.undoing} arrive={arriving.has(key)}
+          title={<>{label} is removed.<span className="alt-item-sr"> Undo is available.</span></>}
+          action={removal?.kind === 'recoverable' && <Button size="sm" aria-label={`Undo removal of ${label}`} onClick={() => { void undo(key); }}>Undo</Button>}
+          onClosed={() => closed(key)} focusFallback={() => addRef.current ?? root.current?.querySelector<HTMLElement>('.alt-item-list') ?? null}>
           {onReorder && !isEditing && <button type="button" className="alt-item-grip" aria-label={`Move ${getLabel(item)}`} aria-pressed={carry?.key === key}
             aria-describedby={undefined} onKeyDown={onGripKey(item)} onClick={() => { if (!carry) pick(item); }}
             ><Grip /></button>}
@@ -212,7 +266,7 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
             })}
           </div>
           {carry?.key === key && i !== carry.from && <span className="alt-item-slot" aria-hidden="true" />}
-        </li>;
+        </RemovalReceipt>;
       })}
     </ul> : !adding && empty}
     {onCreate && newItem && (adding
@@ -220,9 +274,7 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
       : <button ref={addRef} type="button" className="alt-item-add" data-action="add" onClick={() => { if (editing) { edit(items.find((x) => getKey(x) === editing)!); return; } setAdding(true); wantFocus.current = '__new|field'; }}>
           <span className="alt-item-plus" aria-hidden="true">+</span>{addLabel}
         </button>)}
-    {removed && <Alert className="alt-item-undo" variant="raised" tone="neutral" onDismiss={() => setRemoved(null)}
-      action={<Button size="sm" onClick={() => { void undo(); }}>Undo</Button>}>{removed.label} is removed.</Alert>}
-    {failure && <Alert className="alt-item-undo" tone="critical" onDismiss={() => setFailure(null)}>{failure}</Alert>}
+    {failure && <Alert className="alt-item-failure" tone="critical" onDismiss={() => setFailure(null)}>{failure}</Alert>}
     {confirming && removal?.kind === 'confirm' && <Dialog open size="sm" background="stationary" title={removal.title(confirming)} description={removal.description?.(confirming)}
       onOpenChange={(open) => { if (!open) { const k = getKey(confirming); setConfirming(null); wantFocus.current = `${k}|remove`; } }}
       footer={<>
@@ -232,6 +284,23 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
     <span className="alt-item-sr" role="status" aria-live="polite" aria-atomic="true">{polite}</span>
     <span className="alt-item-sr" aria-live="assertive" aria-atomic="true">{assertive}</span>
   </div>;
+}
+
+type Gone<T> = { item: T; label: string; after: string | null; index: number; kind: 'receipt' | 'closing'; undoing?: boolean };
+const noop = () => {};
+const inertActions: ItemActionsApi = {
+  edit: noop, remove: noop,
+  editProps: { onClick: noop, 'aria-label': '', 'data-action': 'edit' },
+  removeProps: { onClick: noop, 'aria-label': '', 'data-action': 'remove' },
+};
+
+/** A confirmed removal: the slat, already gone from the record, glides shut where it was instead of vanishing. */
+function ClosingSlat({ children, onClosed }: { children: React.ReactNode; onClosed: () => void }) {
+  const ref = React.useRef<HTMLLIElement>(null);
+  const done = React.useRef(onClosed);
+  done.current = onClosed;
+  React.useLayoutEffect(() => (ref.current ? glideShut(ref.current, () => done.current()) : undefined), []);
+  return <li ref={ref} className="alt-item-slat" data-closing="" aria-hidden="true" {...inert}><div className="alt-item-body">{children}</div></li>;
 }
 
 const Grip = () => <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">{[4, 8, 12].flatMap((y) => [6, 10].map((x) => <circle key={`${x}${y}`} cx={x} cy={y} r="1.2" />))}</svg>;

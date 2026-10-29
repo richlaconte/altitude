@@ -3501,7 +3501,7 @@ function App() {
   );
 }
 
-=== ItemGroup | <!-- @dsCard group="Display" height=760 subtitle="A list changed in the list: edit a slat in place, add, reorder, remove with Undo" -->
+=== ItemGroup | <!-- @dsCard group="Display" height=760 subtitle="A list changed in the list: edit a slat in place, add, reorder, remove with Undo where it was" -->
 --- css
 .ig-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 32px; max-width: 900px; }
 .ig-demo h3 { margin: 0 0 8px; font: 600 15px/22px var(--font-sans); color: var(--ink); }
@@ -3547,6 +3547,7 @@ function App() {
         onReorder={async next => { await igWait(200); setHooks(next); }}
         onRemove={async h => { await igWait(200); trash.current.set(h.id, hooks.indexOf(h)); setHooks(list => list.filter(x => x.id !== h.id)); }}
         removal={{ kind: 'recoverable', undo: h => setHooks(list => { const next = [...list]; next.splice(trash.current.get(h.id) ?? next.length, 0, h); return next; }) }} />
+      <A.Toaster />
     </section>
     <section>
       <h3 id="ig-options">Answer options</h3>

@@ -23,6 +23,23 @@ const watchPointer = (doc: Document) => {
   doc.addEventListener('pointermove', (e) => { lastPointer = e.pointerType; }, true);
 };
 
+/**
+ * Glides a slot shut: its height, padding, margins and borders to nothing over `duration` (a token, default
+ * dur-travel-3) on ease-glide, then calls done. Under reduced motion it calls done at once. Returns a cancel.
+ */
+export function glideShut(el: HTMLElement, done: () => void, duration = '--dur-travel-3'): () => void {
+  const cs = getComputedStyle(el);
+  if (parseFloat(cs.getPropertyValue('--alt-travel')) === 0) { done(); return () => {}; }
+  const glide = el.animate([box(el, cs), NOTHING], { duration: ms(cs, duration, 220), easing: cs.getPropertyValue('--ease-glide').trim() || 'ease', fill: 'forwards' });
+  glide.onfinish = done;
+  return () => glide.cancel();
+}
+// A slot's whole height, and nothing: padding, margins and borders travel with it, so it neither jumps nor leaves a sliver.
+const box = (el: HTMLElement, cs: CSSStyleDeclaration) => ({ height: el.offsetHeight - parseFloat(cs.borderTopWidth) - parseFloat(cs.borderBottomWidth) - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) + 'px',
+  minHeight: '0px', paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, marginTop: cs.marginTop, marginBottom: cs.marginBottom,
+  borderTopWidth: cs.borderTopWidth, borderBottomWidth: cs.borderBottomWidth, overflow: 'hidden', boxSizing: 'content-box' });
+const NOTHING = { height: '0px', minHeight: '0px', paddingTop: '0px', paddingBottom: '0px', marginTop: '0px', marginBottom: '0px', borderTopWidth: '0px', borderBottomWidth: '0px', overflow: 'hidden', boxSizing: 'content-box' };
+
 export interface RemovalReceiptProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'>, Pick<DepthProps, 'settle'> {
   /** The slot's element. Use `li` inside a list. Default `div`. */
   as?: 'div' | 'li' | 'section' | 'article';
@@ -78,10 +95,11 @@ export function RemovalReceipt({ as = 'div', removed, pending = false, title, ac
     setRestored((n) => n + 1);
     const cs = getComputedStyle(el);
     if (parseFloat(cs.getPropertyValue('--alt-travel')) === 0) return;
-    const to = el.offsetHeight;
-    el.animate([{ height: '0px', overflow: 'hidden', opacity: 0 }, { height: to + 'px', overflow: 'hidden', opacity: 1 }],
+    const open = el.animate([{ ...NOTHING, opacity: 0 }, { ...box(el, cs), opacity: 1 }],
       { duration: ms(cs, '--dur-travel-3', 220), easing: cs.getPropertyValue('--ease-glide').trim() || 'ease' });
-    // Only on mount: arriving is how the slot came to be, not a state it returns to.
+    // StrictMode runs this twice: the second run must measure the slot, not the first run's opening frame.
+    return () => open.cancel();
+  // Only on mount: arriving is how the slot came to be, not a state it returns to.
   }, []);
 
   // Hold, then close.
@@ -131,20 +149,10 @@ export function RemovalReceipt({ as = 'div', removed, pending = false, title, ac
       const near = [el.nextElementSibling, el.previousElementSibling].map((s) => (s instanceof HTMLElement ? tabbables(s)[0] : undefined)).find(Boolean);
       (near ?? fallback.current?.() ?? null)?.focus({ preventScroll: true });
     }
-    const cs = getComputedStyle(el);
-    const travel = parseFloat(cs.getPropertyValue('--alt-travel')) !== 0;
-    const lift = ms(cs, '--dur-travel-3', 220) * 0.7;
-    let glide: Animation | undefined;
-    const timer = window.setTimeout(() => {
-      if (!travel) { closed.current?.(); return; }
-      const box = getComputedStyle(el);
-      const from = { height: el.offsetHeight + 'px', minHeight: '0px', paddingTop: box.paddingTop, paddingBottom: box.paddingBottom, marginTop: box.marginTop,
-        marginBottom: box.marginBottom, borderTopWidth: box.borderTopWidth, borderBottomWidth: box.borderBottomWidth, overflow: 'hidden' };
-      const to = { height: '0px', minHeight: '0px', paddingTop: '0px', paddingBottom: '0px', marginTop: '0px', marginBottom: '0px', borderTopWidth: '0px', borderBottomWidth: '0px', overflow: 'hidden' };
-      glide = el.animate([from, to], { duration: ms(cs, '--dur-travel-3', 220), easing: cs.getPropertyValue('--ease-glide').trim() || 'ease', fill: 'forwards' });
-      glide.onfinish = () => closed.current?.();
-    }, lift);
-    return () => { window.clearTimeout(timer); glide?.cancel(); };
+    const lift = ms(getComputedStyle(el), '--dur-travel-3', 220) * 0.7;
+    let cancel: (() => void) | undefined;
+    const timer = window.setTimeout(() => { cancel = glideShut(el, () => closed.current?.()); }, lift);
+    return () => { window.clearTimeout(timer); cancel?.(); };
   }, [phase]);
 
   const showing = removed;

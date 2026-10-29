@@ -781,7 +781,9 @@ export type ItemGroupResult = { ok: true } | { ok: false; error: string };
 export type ItemGroupCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
 /**
  * How removal is recovered. There's no default: say whether the application can reverse it (immediate, with Undo)
- * or needs confirmation first. A danger button doesn't imply irreversibility.
+ * or needs confirmation first. A danger button doesn't imply irreversibility. A recoverable removal leaves a
+ * RemovalReceipt with Undo in the slat's place for dur-linger, then closes the gap and offers Undo in a toast (render
+ * a Toaster); a confirmed one glides the slat shut.
  */
 export type ItemGroupRemoval<T> =
   | { kind: 'recoverable'; undo: (item: T) => void | Promise<unknown> }
@@ -1007,6 +1009,8 @@ export interface ToastOptions {
   /** Milliseconds; 0 keeps it until dismissed. Default 5000. Paused while the stack is hovered or focused. */
   duration?: number;
   action?: { label: string; onClick: () => void };
+  /** false: shown but not announced, because what it says was already announced where it happened. Default true. */
+  announce?: boolean;
 }
 /** Render once, inside AltitudeProvider. */
 export declare function Toaster(props: { className?: string }): React.ReactElement;
