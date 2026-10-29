@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Layer, useApproach, useControllable, useIsoLayoutEffect } from './core';
+import { cx, Icons, Layer, ModePlate, useApproach, useControllable, useIsoLayoutEffect } from './core';
 import { Button } from './controls';
 import { useModal } from './overlays';
 
@@ -126,8 +126,8 @@ export function Sheet({ open, defaultOpen = false, onOpenChange, trigger, side =
 }
 
 /** The title block. It stays at the top while the sheet scrolls, and rises once content passes under it. */
-export function SheetHeader({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cx('alt-sheet-header', className)} {...p} />;
+export function SheetHeader({ className, children, ...p }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cx('alt-sheet-header', className)} {...p}><ModePlate />{children}</div>;
 }
 export function SheetTitle({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) {
   const c = React.useContext(SheetCtx);

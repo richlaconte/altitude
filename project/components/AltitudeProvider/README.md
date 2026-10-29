@@ -20,3 +20,23 @@ It runs the **approach** tracker too, which lets openings react to a pointer bef
 Modal ownership is coordinated privately per document. A nested themed Dialog keeps the nearest provider's portal host and blocks background branches throughout the document. Ancestors containing that portal are never transformed or made inert as a whole. Each provider's own `recede` setting remains independent. A stationary Dialog suppresses recession and blur on participating lower modal layers until it finishes closing.
 
 Isolation preserves application-owned inertness and restores the original inline scroll style after the last modal exits. Reopening during exit retains the same ownership; route/provider unmount releases it immediately. Applications do not need a competing inert wrapper. The legacy `useAltitude().pushLayer()` helper remains compatible as a visual recession vote with an idempotent release. It does not acquire modal isolation or focus ownership; use Dialog and modal Sheet for those behaviors. `useAltitude()` supplies the nearest portal `host`, and the ownership registry remains private.
+
+## App modes
+
+`mode` marks the whole app as being in a state people must never mistake for the normal app: Stripe-style **test mode**, a support agent **viewing as a customer**, a **read-only** workspace, a **preview** of unpublished content.
+
+```tsx
+<AltitudeProvider mode={{ tone: 'caution', label: 'Test mode', description: 'Payments are simulated.',
+  action: <Button size="sm" onClick={exit}>Leave test mode</Button> }}>
+```
+
+**Elevation: a word and a border.** The page is the ground, so height can't say "this whole ground is different". The mode is carried by the non-height cues instead (law 7 as the primary channel):
+- **A flush strip** at the top, on the tone's soft colour, naming the mode, with your way out. It can't be dismissed.
+- **A 2px frame around the viewport** in the mode's tone. It stays while scrolling, and above dialogs and sheets.
+- **A plate in every `Dialog` and `Sheet` header** naming the mode, so a refund confirmed in test mode says so.
+
+Nothing moves: a mode is there from load. Entering it is announced once, politely ("Test mode on"). The strip is a region named by the mode, first in the tab order. Under forced colours the frame is a 4px double `CanvasText` border. Under `contrast="more"` it's 3px. `ModeContext` gives your own floating parts the mode.
+
+- Do use a mode for anything that changes what actions do (simulated payments, acting as someone else).
+- Don't use a page banner for a mode; a banner can be dismissed and scrolls away.
+

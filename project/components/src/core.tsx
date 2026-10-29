@@ -380,9 +380,30 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   recede?: boolean;
   /** Openings deepen as the pointer approaches (empty fields, a sheet's finger pull). Default true; reduced motion turns it off regardless. */
   approach?: boolean;
+  /**
+   * The whole app is in a mode people must never mistake for the normal app: test mode, viewing as a customer,
+   * read-only, a preview. Height can't say "this whole ground is different", so it's said in words and a border: a
+   * flush strip naming the mode at the top, a 2px frame around the viewport, and a plate in every Dialog and Sheet.
+   */
+  mode?: AppMode;
+}
+export interface AppMode {
+  label: string;
+  description?: React.ReactNode;
+  /** Default 'caution'. */
+  tone?: 'caution' | 'accent' | 'critical' | 'neutral';
+  /** A way out ("Leave test mode"). The strip can't be dismissed. */
+  action?: React.ReactNode;
+}
+/** The app's mode, for Dialog and Sheet to name it in their headers. */
+export const ModeContext = React.createContext<AppMode | null>(null);
+/** The mode's name as a plate, for headers of things that float above the page (Dialog, Sheet). */
+export function ModePlate() {
+  const mode = React.useContext(ModeContext);
+  return mode ? <span className="alt-badge alt-mode-plate" data-tone={mode.tone ?? 'caution'} data-variant="plate">{mode.label}</span> : null;
 }
 
-export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', recede = true, approach = true, className, style, children, ...rest }: AltitudeProviderProps) {
+export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', recede = true, approach = true, mode, className, style, children, ...rest }: AltitudeProviderProps) {
   const rootRef = React.useRef<HTMLDivElement>(null);
   const [host, setHost] = React.useState<HTMLElement | null>(null);
   const parent = useAltitudeContext();
@@ -434,6 +455,9 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
     host,
     provider,
   }), [host]);
+  // Entering a mode is said once, politely; being in it isn't repeated.
+  const [modeSaid, setModeSaid] = React.useState('');
+  React.useEffect(() => { setModeSaid(mode ? `${mode.label} on` : ''); }, [mode?.label]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AltitudeContext.Provider value={api}>
@@ -442,8 +466,19 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
         data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined}
         data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>
         {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
-        <div className="alt-stage" ref={(el) => { provider.stage = el; }}>{children}</div>
-        <div className="alt-layers" ref={setHost} />
+        <ModeContext.Provider value={mode ?? null}>
+          {mode && (
+            <section className="alt-mode-strip" data-tone={mode.tone ?? 'caution'} aria-label={mode.label}>
+              <strong className="alt-mode-label">{mode.label}</strong>
+              {mode.description && <span className="alt-mode-desc">{mode.description}</span>}
+              {mode.action && <span className="alt-mode-action">{mode.action}</span>}
+            </section>
+          )}
+          <div className="alt-stage" ref={(el) => { provider.stage = el; }}>{children}</div>
+          <div className="alt-layers" ref={setHost} />
+          {mode && <div className="alt-mode-frame" data-tone={mode.tone ?? 'caution'} aria-hidden="true" />}
+          {mode && <span className="alt-sr" aria-live="polite">{modeSaid}</span>}
+        </ModeContext.Provider>
       </div>
     </AltitudeContext.Provider>
   );

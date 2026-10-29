@@ -894,6 +894,17 @@ A design review: `Alert placement="page"` was rendered as a raised "trial ends" 
 
 Not yet tested with people: whether a raised banner is read as more urgent than a flat one at the very top of an app.
 
+### E75 · How do you mark a whole app as different?
+
+A design review: `AltitudeProvider mode` was rendered as test mode over a dashboard, with a Dialog open, in all four schemes at 960px, under forced colours and with `contrast="more"`. `checks/app-mode.mjs` measures it.
+
+- **Words and a border, as the issue proposed.** Height means "this matters now" relative to the page, and a mode changes the page itself, so there's no ground left to rise from. The ruling: a mode is the one state carried primarily by the non-height cues (law 7), and Elevation.md states it as a rule.
+- **A frame that can't scroll away.** Coloured strips at the top of an app scroll away and get ignored. The 2px frame is fixed to the viewport and sits above dialogs and sheets, so the mode is in view at the moment of a consequential action.
+- **The dialog names it too.** A confirmation in test mode ("Refund this payment?") carries a "Test mode" plate, because the dialog's scrim dims the strip.
+- **Not dismissable.** A mode you can hide is a mode you can forget, so the strip has only your way out (`action`).
+
+Not yet tested with people: whether the frame alone, without the strip in view, is recognised as "test mode" by people new to the app.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

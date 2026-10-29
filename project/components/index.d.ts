@@ -37,7 +37,19 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   recede?: boolean;
   /** Openings react as a mouse or pen approaches: empty fields deepen, a sheet's finger pull opens. Raised things never move before the pointer is on them. Never for touch; off under reduced motion. Default true. */
   approach?: boolean;
+  /** The whole app is in a mode (test mode, viewing as a customer, read-only): a flush strip naming it, a 2px viewport frame, and a plate in every Dialog and Sheet. */
+  mode?: AppMode;
+}export interface AppMode {
+  label: string;
+  description?: React.ReactNode;
+  /** Default 'caution'. */
+  tone?: 'caution' | 'accent' | 'critical' | 'neutral';
+  /** A way out ("Leave test mode"). The strip can't be dismissed. */
+  action?: React.ReactNode;
 }
+/** The app's mode, if any. */
+export declare const ModeContext: React.Context<AppMode | null>;
+
 /** Sets the scheme, accent and motion for everything inside it, and hosts dialogs and toasts. Wrap your app once. */
 export declare function AltitudeProvider(props: AltitudeProviderProps): React.ReactElement;
 
@@ -2663,6 +2675,8 @@ export interface ContextMenuProps {
 /** Actions on a thing, opened where you right-click or long-press it, or with Shift+F10: DropdownMenu's menu at the pointer. */
 export declare function ContextMenu(props: ContextMenuProps): React.ReactElement;
 
+
+
 declare global {
   interface Window {
     Altitude: {
@@ -2682,6 +2696,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      ModeContext: typeof ModeContext;
       ContextMenu: typeof ContextMenu;
       ResizablePanelGroup: typeof ResizablePanelGroup; ResizablePanel: typeof ResizablePanel; ResizableHandle: typeof ResizableHandle;
       AppShell: typeof AppShell; SidebarProvider: typeof SidebarProvider; Sidebar: typeof Sidebar; SidebarHeader: typeof SidebarHeader; SidebarContent: typeof SidebarContent; SidebarGroup: typeof SidebarGroup; SidebarGroupLabel: typeof SidebarGroupLabel; SidebarMenu: typeof SidebarMenu; SidebarMenuItem: typeof SidebarMenuItem; SidebarMenuButton: typeof SidebarMenuButton; SidebarMenuBadge: typeof SidebarMenuBadge; SidebarFooter: typeof SidebarFooter; SidebarTrigger: typeof SidebarTrigger; SidebarInset: typeof SidebarInset; useSidebar: typeof useSidebar;
