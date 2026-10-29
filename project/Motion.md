@@ -123,6 +123,10 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
+## Pages
+
+**The page thumb travels.** A `Pagination`'s thumb glides to the new page over `dur-travel-1` on `ease-glide`, and is held pressed (flat, no sheen) while the next page loads. Under reduced motion it appears in place.
+
 ## Colours
 
 **The mark travels between swatches.** A `ColorPicker`'s white mark glides to the chosen swatch over `dur-travel-3` on `ease-glide`, as `RadioGroup`'s thumb does. Under reduced motion it appears in place.

@@ -31,6 +31,7 @@ export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } fro
 export { Drilldown, useDrilldown } from './nav';
 export { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbEllipsis } from './breadcrumb';
 export type { BreadcrumbEntry } from './breadcrumb';
+export { Pagination, pageRange } from './pagination';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';
 export { CommandPalette, commandScore } from './command';
 export { Select, SelectItem, Combobox } from './select';

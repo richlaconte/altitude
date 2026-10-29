@@ -1,0 +1,35 @@
+<!-- @dsCard group="Navigation" height=300 subtitle="One raised thumb travels along the pages, as a RadioGroup's does" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagination — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [page, setPage] = React.useState(3);
+  const [loading, setLoading] = React.useState(false);
+  const [cursor, setCursor] = React.useState(1);
+  const go = (p) => {
+    setPage(p);
+    setLoading(true);
+    setTimeout(() => setLoading(false), 500);
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Pagination, { page, pageCount: 11, onPageChange: go, total: 214, pageSize: 20, noun: "invoices", loading }), /* @__PURE__ */ React.createElement(A.Pagination, { page: cursor, onPageChange: setCursor, hasNext: cursor < 4, "aria-label": "Audit log pages" }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, `The current page is a raised thumb in the trench; it's held pressed while the next page loads. Without a page count it's Previous, Next and "Page 3".`));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

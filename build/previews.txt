@@ -2356,6 +2356,22 @@ function App() {
   );
 }
 
+=== Pagination | <!-- @dsCard group="Navigation" height=300 subtitle="One raised thumb travels along the pages, as a RadioGroup's does" -->
+--- jsx
+function App() {
+  const [page, setPage] = React.useState(3);
+  const [loading, setLoading] = React.useState(false);
+  const [cursor, setCursor] = React.useState(1);
+  const go = (p) => { setPage(p); setLoading(true); setTimeout(() => setLoading(false), 500); };
+  return (
+    <div className="col">
+      <A.Pagination page={page} pageCount={11} onPageChange={go} total={214} pageSize={20} noun="invoices" loading={loading} />
+      <A.Pagination page={cursor} onPageChange={setCursor} hasNext={cursor < 4} aria-label="Audit log pages" />
+      <p className="cap">The current page is a raised thumb in the trench; it's held pressed while the next page loads. Without a page count it's Previous, Next and "Page 3".</p>
+    </div>
+  );
+}
+
 === Drilldown | <!-- @dsCard group="Navigation" height=330 subtitle="Descend into children, ascend back" -->
 --- css
 .wrap { max-width: 460px; }
