@@ -2125,6 +2125,17 @@ export interface SeparatorProps extends Omit<React.HTMLAttributes<HTMLDivElement
 /** A divider on the ground: 1px of `line`, never `line-control` and never a shadow. role="separator" unless decorative. */
 export declare const Separator: React.ForwardRefExoticComponent<SeparatorProps & React.RefAttributes<HTMLDivElement>>;
 
+export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  /** Leaves the app: opens in a new tab (rel="noopener noreferrer"), with an icon and "(opens in a new tab)" for screen readers. */
+  external?: boolean;
+  /** Styles your own link element (a router's Link) instead of rendering an <a>. Pass exactly one element. */
+  asChild?: boolean;
+  /** Mark links already followed: their underline turns ink-muted. Off by default; use it in long lists of documents. */
+  visited?: boolean;
+}
+/** Navigation in accent-ink with an underline. A link is text in the record, so it never lifts: hover thickens the underline. */
+export declare const Link: React.ForwardRefExoticComponent<LinkProps & React.RefAttributes<HTMLAnchorElement>>;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2144,6 +2155,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Link: typeof Link;
       Separator: typeof Separator;
     };
   }

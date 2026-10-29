@@ -8,6 +8,7 @@ export {
 } from './controls';
 export { Pile } from './pile';
 export { Separator } from './separator';
+export { Link } from './link';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';

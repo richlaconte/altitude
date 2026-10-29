@@ -119,6 +119,10 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
+## Links
+
+**A link doesn't move.** Hovering a `Link` thickens its underline from 1px to 2px over `dur-travel-1` on `ease-rise`. Nothing travels, so reduced motion changes nothing.
+
 ## Approach
 
 Openings respond to the pointer *before* it arrives; nothing else does. One shared tracker (started by any component that uses it) follows a mouse or pen, never touch, and writes `--near` (0 at the edge of the element's radius, 1 when touching, smoothstepped) and, while hovered, `--mx`/`--my` (where the pointer is on the element, −1…1).

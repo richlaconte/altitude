@@ -1,0 +1,30 @@
+<!-- @dsCard group="Navigation" height=300 subtitle="Navigation in accent-ink with an underline; a link in text never lifts" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.lk { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.lk p { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+@media (max-width: 720px) { .lk { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const RouterLink = React.forwardRef(({ to, ...rest }, ref) => /* @__PURE__ */ React.createElement("a", { ref, href: "#" + to, ...rest }));
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "lk" }, /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("p", null, "Webhooks send a signed POST for each event. ", /* @__PURE__ */ React.createElement(A.Link, { href: "#webhooks" }, "Read about webhooks"), " before you add an endpoint, or check the ", /* @__PURE__ */ React.createElement(A.Link, { href: "https://status.example.com", external: true }, "status page"), " if deliveries stop."), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "In prose, the underline thickens on hover. Nothing lifts, so the line of text stays put.")), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Invoices"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Your last three invoices")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("span", null, "INV-0042 \xB7 \u20AC49.00 \xB7 Paid"), /* @__PURE__ */ React.createElement(A.Link, { asChild: true }, /* @__PURE__ */ React.createElement(RouterLink, { to: "/billing/invoices" }, "View all invoices \u2192"))))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
