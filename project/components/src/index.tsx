@@ -25,6 +25,8 @@ export type { PasswordRequirement } from './password-input';
 export { SecretField } from './secret-field';
 export { CodeBlock } from './code-block';
 export type { CodeBlockTab } from './code-block';
+export { ColorPicker, ColorSwatchPicker } from './color-picker';
+export type { ColorSwatch } from './color-picker';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';

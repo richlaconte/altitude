@@ -2587,6 +2587,32 @@ function App() {
   );
 }
 
+=== ColorPicker | <!-- @dsCard group="Inputs" height=420 subtitle="Swatches as choices with one travelling mark, a hex field, and a contrast check in words" -->
+--- css
+.cpk { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.cpk .demo { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 720px) { .cpk { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const brand = [
+  { value: '#0f8a6b', name: 'Teal' }, { value: '#2563eb', name: 'Blue' }, { value: '#7c3aed', name: 'Violet' },
+  { value: '#db2777', name: 'Pink' }, { value: '#ea580c', name: 'Orange' }, { value: '#facc15', name: 'Yellow' },
+];
+const labels = [{ value: '#64748b', name: 'Slate' }, { value: '#16a34a', name: 'Green' }, { value: '#dc2626', name: 'Red' }, { value: '#0891b2', name: 'Cyan' }];
+function App() {
+  const [color, setColor] = React.useState('#0f8a6b');
+  const [tag, setTag] = React.useState('#16a34a');
+  return (
+    <div className="cpk">
+      <A.ColorPicker label="Brand colour" value={color} onValueChange={setColor} swatches={brand} allowCustom checkContrast />
+      <div className="col">
+        <A.ColorPicker label="Label colour" value={tag} onValueChange={setTag} swatches={labels} />
+        <div className="demo"><span className="cap">Preview:</span><A.AltitudeProvider accent={color}><A.Button variant="primary">Upgrade plan</A.Button></A.AltitudeProvider></div>
+        <p className="cap">The check says, for white text and for dark text, whether it reaches 4.5:1 on the colour. Arrow keys move the mark between swatches; Custom… opens a full picker.</p>
+      </div>
+    </div>
+  );
+}
+
 === Select | <!-- @dsCard group="Inputs" height=380 subtitle="An opening you fill by choosing; the list rises at level 3" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 24px; max-width: 900px; align-items: start; }

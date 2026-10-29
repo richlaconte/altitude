@@ -2441,6 +2441,37 @@ export interface CodeBlockProps extends Omit<React.HTMLAttributes<HTMLElement>, 
 /** Code to read and copy, flush on the ground with a line rim; forms switch with segmented Tabs; copy is a CopyButton. */
 export declare function CodeBlock(props: CodeBlockProps): React.ReactElement;
 
+export interface ColorSwatch {
+  value: string;
+  /** Every swatch has a name: colour is never the only way to tell them apart. */
+  name: string;
+}
+export interface ColorSwatchPickerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'> {
+  swatches: ColorSwatch[];
+  value?: string | null;
+  defaultValue?: string | null;
+  onValueChange?: (value: string) => void;
+  'aria-label'?: string;
+}
+/** Colours as choices: trenches the colour pours into, one raised white mark that travels. A radio group. */
+export declare function ColorSwatchPicker(props: ColorSwatchPickerProps): React.ReactElement;
+export interface ColorPickerProps {
+  /** What the colour is for ("Brand colour"). It names the swatches. */
+  label: string;
+  value?: string;
+  defaultValue?: string;
+  /** Called with a lower-case "#rrggbb". */
+  onValueChange?: (value: string) => void;
+  swatches?: ColorSwatch[];
+  /** A hex field and a full picker (area and hue) for any colour. Default false. */
+  allowCustom?: boolean;
+  /** Says in words whether white text and dark text on the colour reach 4.5:1. Default false. */
+  checkContrast?: boolean;
+  className?: string;
+}
+/** A brand or label colour: swatches, an optional hex field and full picker, and a contrast check in words. */
+export declare function ColorPicker(props: ColorPickerProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2460,6 +2491,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      ColorPicker: typeof ColorPicker; ColorSwatchPicker: typeof ColorSwatchPicker;
       CodeBlock: typeof CodeBlock;
       SecretField: typeof SecretField;
       PasswordInput: typeof PasswordInput;
