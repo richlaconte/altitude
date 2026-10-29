@@ -123,6 +123,10 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 `checks/chart-motion.mjs` samples every frame of these changes and fails if the axis and the marks move at once.
 
+## Confirming a press
+
+**A copy stays pressed for a moment.** A `CopyButton` presses to the ground on `dur-press` like any button, then stays there for `dur-linger` while its icon and words cross-fade (`dur-travel-1`) to a check and "Copied". Then it springs back on `ease-settle`. Nothing rises, so reduced motion changes only the cross-fade's travel, which is none.
+
 ## Links
 
 **A link doesn't move.** Hovering a `Link` thickens its underline from 1px to 2px over `dur-travel-1` on `ease-rise`. Nothing travels, so reduced motion changes nothing.

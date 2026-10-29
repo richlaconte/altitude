@@ -13,6 +13,7 @@ export { FormattedNumber, formatNumber, describeNumber } from './formatted-numbe
 export type { FormatNumberOptions, NumberFormatPreset, DurationUnit } from './formatted-number';
 export { RelativeTime, formatRelativeTime } from './relative-time';
 export type { RelativeTimeOptions } from './relative-time';
+export { CopyButton } from './copy-button';
 export { Tooltip, HoverCard, Popover, DropdownMenu, Dialog, Toaster, toast } from './overlays';
 export { Drilldown, useDrilldown } from './nav';
 export { Sheet, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from './sheet';

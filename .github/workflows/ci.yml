@@ -86,6 +86,7 @@ jobs:
           node ../scripts/record-check.mjs react18-link node checks/link.mjs
           node ../scripts/record-check.mjs react18-formatted-number node checks/formatted-number.mjs
           node ../scripts/record-check.mjs react18-relative-time node checks/relative-time.mjs
+          node ../scripts/record-check.mjs react18-copy-button node checks/copy-button.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
