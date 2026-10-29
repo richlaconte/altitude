@@ -2136,6 +2136,37 @@ export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
 /** Navigation in accent-ink with an underline. A link is text in the record, so it never lifts: hover thickens the underline. */
 export declare const Link: React.ForwardRefExoticComponent<LinkProps & React.RefAttributes<HTMLAnchorElement>>;
 
+export type NumberFormatPreset = 'number' | 'currency' | 'bytes' | 'duration' | 'percent' | 'compact';
+export type DurationUnit = 'millisecond' | 'second' | 'minute' | 'hour' | 'day';
+export interface FormatNumberOptions extends Omit<Intl.NumberFormatOptions, 'style' | 'unit' | 'notation'> {
+  /** Default 'number'. */
+  format?: NumberFormatPreset;
+  /** Default: the browser's. */
+  locale?: string;
+  /** currency: an ISO 4217 code. Default 'USD'. */
+  currency?: string;
+  /** currency: the value is in minor units (cents), as payment APIs send it, so 4900 is €49.00. Default true. */
+  minorUnits?: boolean;
+  /** duration: the unit the value is in. Default 'millisecond'. It's shown in the largest unit that keeps it at 1 or more. */
+  unit?: DurationUnit;
+  /** bytes: 1000 (kB, MB, GB; the default) or 1024 (KiB, MiB, GiB). */
+  base?: 1000 | 1024;
+}
+/** The text, the exact value (when the text rounds or abbreviates it) and the words for a symbol that's ambiguous read aloud. */
+export declare function describeNumber(value: number, options?: FormatNumberOptions): { text: string; full?: string; spoken?: string };
+/** Formats a number once, the way FormattedNumber does: for DataTable columns, chart formatters and plain strings. */
+export declare function formatNumber(value: number, options?: FormatNumberOptions): string;
+export interface FormattedNumberProps extends FormatNumberOptions {
+  value: number;
+  className?: string;
+  style?: React.CSSProperties;
+  id?: string;
+  /** Default: the exact value, when the text rounds or abbreviates it. */
+  title?: string;
+}
+/** A number is the record: flush, tabular, its exact value on hand; a changed value cross-fades and settles, never counts. */
+export declare function FormattedNumber(props: FormattedNumberProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2155,6 +2186,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      FormattedNumber: typeof FormattedNumber; formatNumber: typeof formatNumber; describeNumber: typeof describeNumber;
       Link: typeof Link;
       Separator: typeof Separator;
     };
