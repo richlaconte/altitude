@@ -34,7 +34,10 @@ try {
     check(await grid.locator('button[tabindex="0"]').count() === 1, 'DP-02 only one day is in the Tab sequence');
     const mark = await page.evaluate(() => { const m = document.querySelector('.alt-cal-mark'), d = document.querySelector('.alt-cal-day[data-chosen]'); const a = m.getBoundingClientRect(), b = d.getBoundingClientRect(); return Math.abs(a.left - b.left) < 2 && Math.abs(a.top - b.top) < 2 && getComputedStyle(m).opacity === '1'; });
     check(mark, 'DP-03 the raised mark sits on the chosen day');
-    const name = await page.locator(`[data-date="${today}"]`).getAttribute('aria-label');
+    // Near a month's end the chosen day (today + 3) opens the next month, so read today's name from a second page turned back one month.
+    let name;
+    if (await page.locator(`[data-date="${today}"]`).count()) name = await page.locator(`[data-date="${today}"]`).getAttribute('aria-label');
+    else { const back = await open(); await back.keyboard.press('PageUp'); name = await back.locator(`[data-date="${today}"]`).getAttribute('aria-label'); await back.close(); }
     check(/, today/.test(name) && /\d{4}/.test(name), `DP-04 a day's name is the full date and says today (${name})`);
     await page.keyboard.press('ArrowRight'); check(await focusedDate(page) === shift(due, 1), 'DP-05 → moves one day');
     await page.keyboard.press('ArrowDown'); check(await focusedDate(page) === shift(due, 8), 'DP-06 ↓ moves one week');
