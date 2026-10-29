@@ -1180,6 +1180,43 @@ function App() {
   );
 }
 
+=== RelativeTime | <!-- @dsCard group="Display" height=380 subtitle="A moment as \"3 minutes ago\", refreshed on one timer, its exact time on hover and focus" -->
+--- css
+.rt { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.rt ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font: 400 15px/23px var(--font-sans); }
+.rt li { display: flex; justify-content: space-between; gap: 12px; }
+.rt li > :last-child { color: var(--ink-muted); }
+.rt p { margin: 0; font: 400 15px/23px var(--font-sans); }
+@media (max-width: 720px) { .rt { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const ago = (ms) => new Date(Date.now() - ms);
+const events = [
+  ['Deploy #482 finished', ago(20_000)],
+  ['Maya invited Theo', ago(3 * 60_000)],
+  ['Invoice INV-0042 paid', ago(5 * 3_600_000)],
+  ['API key rotated', ago(26 * 3_600_000)],
+  ['Workspace created', ago(40 * 86_400_000)],
+];
+function App() {
+  const [edited, setEdited] = React.useState(() => ago(12 * 60_000));
+  return (
+    <div className="rt">
+      <ul aria-label="Activity">
+        {events.map(([what, when]) => <li key={what}><span>{what}</span><A.RelativeTime date={when} format="auto" /></li>)}
+      </ul>
+      <A.Card>
+        <A.CardHeader><A.CardTitle>Q3 board deck</A.CardTitle><A.CardDescription>Last edited <A.RelativeTime date={edited} /></A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <div className="col">
+            <div className="row"><A.Button size="sm" onClick={() => setEdited(new Date())}>Edit again</A.Button></div>
+            <p className="cap">Time passing changes the words with nothing else. A new moment (an edit) settles with a tint. Point at or tab to a time for its exact date, time and zone. Past a week, the feed shows a date.</p>
+          </div>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === Stat | <!-- @dsCard group="Charts" height=560 subtitle="A headline number, its change in words, and colour only when you say which way is good" -->
 --- css
 .st { display: grid; gap: 20px; max-width: 960px; }

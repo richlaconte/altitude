@@ -1,0 +1,41 @@
+<!-- @dsCard group="Display" height=380 subtitle="A moment as \"3 minutes ago\", refreshed on one timer, its exact time on hover and focus" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RelativeTime — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.rt { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.rt ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font: 400 15px/23px var(--font-sans); }
+.rt li { display: flex; justify-content: space-between; gap: 12px; }
+.rt li > :last-child { color: var(--ink-muted); }
+.rt p { margin: 0; font: 400 15px/23px var(--font-sans); }
+@media (max-width: 720px) { .rt { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const ago = (ms) => new Date(Date.now() - ms);
+const events = [
+  ["Deploy #482 finished", ago(2e4)],
+  ["Maya invited Theo", ago(3 * 6e4)],
+  ["Invoice INV-0042 paid", ago(5 * 36e5)],
+  ["API key rotated", ago(26 * 36e5)],
+  ["Workspace created", ago(40 * 864e5)]
+];
+function App() {
+  const [edited, setEdited] = React.useState(() => ago(12 * 6e4));
+  return /* @__PURE__ */ React.createElement("div", { className: "rt" }, /* @__PURE__ */ React.createElement("ul", { "aria-label": "Activity" }, events.map(([what, when]) => /* @__PURE__ */ React.createElement("li", { key: what }, /* @__PURE__ */ React.createElement("span", null, what), /* @__PURE__ */ React.createElement(A.RelativeTime, { date: when, format: "auto" })))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Q3 board deck"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Last edited ", /* @__PURE__ */ React.createElement(A.RelativeTime, { date: edited }))), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setEdited(/* @__PURE__ */ new Date()) }, "Edit again")), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Time passing changes the words with nothing else. A new moment (an edit) settles with a tint. Point at or tab to a time for its exact date, time and zone. Past a week, the feed shows a date.")))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
