@@ -36,7 +36,7 @@ export { Tour } from './tour';
 export type { TourStep } from './tour';
 export { PromptInput, PromptInputTextarea, PromptInputAttachments, PromptInputToolbar, PromptInputAttach, PromptInputSubmit } from './prompt-input';
 export type { PromptStatus, PromptAttachment, PromptMessage } from './prompt-input';
-export { Conversation, ConversationContent, ConversationScrollButton, Message, MessageContent, MessageActions, MessageAttachments, ConversationQueue } from './conversation';
+export { Conversation, ConversationContent, ConversationScrollButton, Message, MessageContent, MessageActions, MessageAttachments, ConversationQueue, ConversationCheckpoint } from './conversation';
 export type { MessageStatus } from './conversation';
 export { Confirmation } from './confirmation';
 export type { ConfirmationState } from './confirmation';

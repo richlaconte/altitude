@@ -21,6 +21,8 @@ The thread between a person and an assistant: their messages, the assistant's an
 
 **The queue.** `ConversationQueue` (`items`, `onSendNow`, `onEdit`, `onRemove`) goes between the thread and the composer and lists messages queued while the agent works (`PromptInput onQueue`), in order, each with Send now (stop the turn and send it), Edit (in place) and Remove. A queued message is written but not dispatched, so it doesn't hover: it's the person's sheet, flush, with a dashed rim and "Queued · 1 of 2". When the turn ends, send the first; it becomes an ordinary message in the log.
 
+**Checkpoints.** `ConversationCheckpoint` (`label`, `at`, `consequence`, `onRestore`, `onReturn`) marks a point between messages to go back to: a divider reading "Checkpoint · Before editing 6 files · 2:14 PM" with Restore, described by the consequence. It follows the consequential-action contract: with `onReturn` (real recovery), Restore runs at once and leaves "Return to where you were"; without it, Restore asks in a Dialog. Restoring hovers as pending, settles once when done, and sinks into a trench with Retry if it fails; the outcome is announced. Set the later turns aside as a branch rather than deleting them.
+
 **You provide:** the messages and their status as your stream reports it. Code inside an answer goes in `CodeBlock`.
 
 ```tsx

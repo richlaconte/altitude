@@ -183,6 +183,10 @@ On touch a thing is picked up by a press-and-hold: 400ms without moving more tha
 
 A queued message appears in place, with no rise: it's the person's own act, and nothing has arrived in the record. When it's sent it leaves the queue and joins the log as a person's message.
 
+## Checkpoints
+
+Restoring a checkpoint is a write: its label hovers as pending after `dur-grace`, then lands with one afterglow, or drops into a trench if it fails. The turns set aside leave without travel; the app removes them (and brings them back on "Return to where you were").
+
 ## Answers in Markdown
 
 `Markdown` has no motion of its own: text arrives without per-word animation (Conversation's rule), and a table row that completes appears in place rather than rising. An image rises out of its imprint over `dur-travel-1` with `ease-rise` (2px of travel and its opacity); under reduced motion it appears in place.

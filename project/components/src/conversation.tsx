@@ -4,7 +4,8 @@ import { Button, Textarea } from './controls';
 import { CopyButton } from './copy-button';
 import { FormattedNumber } from './formatted-number';
 import { ToggleGroup, ToggleGroupItem } from './toggle';
-import { Tooltip } from './overlays';
+import { Dialog, Tooltip } from './overlays';
+import { useConsequentialAction } from './pattern-consequential-action';
 
 /* ───────────────────────── Conversation ───────────────────────── */
 
@@ -226,6 +227,78 @@ function MessageEditor({ initial, onDone, action = 'Send edit' }: { initial: str
         <Button size="sm" variant="ghost" onClick={() => onDone()}>Cancel</Button>
         <Button size="sm" variant="secondary" disabled={!changed} onClick={() => onDone(value.trim())}>{action}</Button>
       </div>
+    </div>
+  );
+}
+
+export interface ConversationCheckpointProps {
+  /** What the point is before: "Before editing 6 files". */
+  label: string;
+  /** When it was made. */
+  at?: Date | string | number;
+  /** What restoring does, in words: "The 4 messages after this and the changes to 6 files will be set aside. You can return to them." */
+  consequence: string;
+  /** Restore: resolve when done, reject (with a message) when it couldn't. */
+  onRestore: () => void | Promise<unknown>;
+  /**
+   * Real recovery: bring back what restoring set aside. With it, Restore runs at once and leaves "Return to where you
+   * were"; without it, Restore asks first in a Dialog.
+   */
+  onReturn?: () => void | Promise<unknown>;
+  locale?: string;
+  className?: string;
+}
+const settled = async (run: () => void | Promise<unknown>, failed: string) => {
+  try { await run(); return { ok: true as const, value: true }; } catch (e) { return { ok: false as const, error: e instanceof Error && e.message ? e.message : failed }; }
+};
+/**
+ * A point in the conversation to go back to (#277): a divider with a word between its lines ("Checkpoint · Before
+ * editing 6 files · 2:14 PM") and Restore. Restoring follows the consequential-action contract: with onReturn it runs at
+ * once and leaves "Return to where you were"; without, it asks in a stationary Dialog. While restoring the label hovers
+ * as pending; restored, it settles once; failed, it sinks into a trench with Retry. Set the later turns aside as a
+ * branch (the next message's versions) rather than deleting them.
+ */
+export function ConversationCheckpoint({ label, at, consequence, onRestore, onReturn, locale, className }: ConversationCheckpointProps) {
+  const c = React.useContext(ConversationCtx);
+  const id = React.useId();
+  const time = at !== undefined ? new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(new Date(at)) : undefined;
+  const action = useConsequentialAction<boolean>(onReturn
+    ? { target: label, consequence, requiresConfirmation: false, execute: () => settled(onRestore, "Couldn't restore."), undo: async () => { const r = await settled(onReturn, "Couldn't return."); return r.ok ? { ok: true } : r; },
+      messages: { pending: 'Restoring…', succeeded: `Restored to ${label}`, failed: "Couldn't restore.", undoing: 'Returning…', undone: 'Returned to where you were' } }
+    : { target: label, consequence, requiresConfirmation: true, execute: () => settled(onRestore, "Couldn't restore."),
+      messages: { pending: 'Restoring…', succeeded: `Restored to ${label}`, failed: "Couldn't restore." } });
+  const { phase } = action;
+  const busy = phase === 'pending' || phase === 'undoing';
+  const [glow, setGlow] = React.useState(0);
+  const last = React.useRef(phase);
+  React.useEffect(() => {
+    if (last.current !== phase) {
+      if (phase === 'succeeded' || phase === 'undone') setGlow((n) => n + 1);
+      if (['succeeded', 'undone', 'failed'].includes(phase)) c?.announce(action.status, phase === 'failed');
+    }
+    last.current = phase;
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { style, ...depth } = useDepth({ status: busy ? 'pending' : phase === 'failed' ? 'failed' : undefined, settle: glow || undefined });
+  const word = busy ? (phase === 'undoing' ? 'Returning…' : 'Restoring…') : phase === 'succeeded' ? 'Restored' : phase === 'failed' ? (action.error || "Couldn't restore.") : 'Checkpoint';
+  return (
+    <div className={cx('alt-checkpoint', className)} role="group" aria-label={`Checkpoint: ${label}${time ? `, ${time}` : ''}`} data-phase={phase}>
+      <span className="alt-checkpoint-line" aria-hidden="true" />
+      <span className="alt-checkpoint-label" style={style} {...depth}>
+        <span className="alt-checkpoint-word">{word}</span>
+        <span className="alt-checkpoint-name">{label}</span>
+        {time && <time dateTime={new Date(at!).toISOString()}>{time}</time>}
+      </span>
+      <span className="alt-checkpoint-actions">
+        {(phase === 'idle' || phase === 'undone' || phase === 'confirming') && <Button size="sm" variant="ghost" aria-label="Restore to this checkpoint" aria-describedby={`${id}-c`} onClick={action.request}>Restore</Button>}
+        {phase === 'succeeded' && action.canUndo && <Button size="sm" variant="ghost" onClick={action.undo}>Return to where you were</Button>}
+        {phase === 'failed' && <Button size="sm" variant="ghost" onClick={action.retry}>Retry</Button>}
+      </span>
+      <span className="alt-checkpoint-line" aria-hidden="true" />
+      <span id={`${id}-c`} className="alt-sr">{consequence}</span>
+      {!onReturn && (
+        <Dialog open={phase === 'confirming'} onOpenChange={(o) => { if (!o) action.cancel(); }} size="sm" title={`Restore to "${label}"?`} description={consequence}
+          footer={<><Button variant="ghost" onClick={action.cancel}>Cancel</Button><Button variant="primary" onClick={action.confirm}>Restore</Button></>} />
+      )}
     </div>
   );
 }
