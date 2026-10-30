@@ -92,6 +92,23 @@ Six is a measured limit, not a choice: past it, series fold into `data-other` or
 
 A custom scheme that sets its own surfaces or status colours should set the `data-*` tokens too, and check them with `checkScheme(tokens, { include: ['data'] })`. A custom accent re-leads the palette (see **Custom accent**).
 
+## Density and target size
+
+Controls take their heights from the `size-*` tokens, so one setting can make them fit a finger without making a desktop sparse:
+
+| Token | With a mouse | Under a coarse pointer | Used by |
+|---|---|---|---|
+| `size-target-min` | 24px | 44px | the hit area every control reaches (WCAG 2.5.8, and 2.5.5 on touch) |
+| `size-control-sm` | 30px | 40px | small buttons, tab triggers, breadcrumb steps |
+| `size-control-md` | 36px | 44px | buttons, menu items (−2px), sidebar items (−2px), folder tabs (+2px) |
+| `size-field-sm` | 34px | 44px | small inputs |
+| `size-field-md` | 40px | 48px | inputs, select triggers, command palette rows |
+| `size-row-md` | 32px | 44px | tree, list and filter rows |
+
+Under `(pointer: coarse)` the faces step up on their own. `<AltitudeProvider density>` overrides that: `'comfortable'` uses the larger sizes everywhere (a kiosk, an accessibility setting), `'compact'` keeps the mouse sizes even on touch. The hit-area minimum follows the pointer alone, so a compact face on a phone is still 44px to hit. Walls and sheens scale with the face, as they do between `sm` and `lg`; no tier or level changes.
+
+Two breakpoints are the only widths a layout switches at: `breakpoint-narrow` (480px), for a component's own narrow layout, and `breakpoint-compact` (640px), for page chrome (the sidebar becomes a drawer, a panel becomes a sheet). CSS can't read a token in a media query, so they're written as numbers, and `checks/density.mjs` fails on any other.
+
 ## Your own fonts
 
 `altitude.css` loads Instrument Sans and JetBrains Mono from Google Fonts. To make no third-party request, import `altitude-design/altitude.no-fonts.css` instead (the same tokens and styles without the `@import`) and either self-host those two families or point the type at your own:

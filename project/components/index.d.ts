@@ -33,6 +33,12 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   motion?: 'system' | 'full' | 'reduced';
   /** 'more' renders elevation as hard ink slabs whose thickness is the height. 'system' follows prefers-contrast. Default 'system'. */
   contrast?: 'system' | 'more';
+  /**
+   * How large controls are (#245). 'auto' (default): today's sizes for a mouse, a step up under a coarse pointer (a
+   * finger), so they're big enough to hit. 'comfortable': the larger sizes everywhere (a kiosk, an accessibility
+   * setting). 'compact': today's sizes even on touch. Hit areas reach 44px under a coarse pointer either way.
+   */
+  density?: 'auto' | 'compact' | 'comfortable';
   /** The page scales back 1.5% and desaturates while a dialog is open. Default true. */
   recede?: boolean;
   /** Openings react as a mouse or pen approaches: empty fields deepen, a sheet's finger pull opens. Raised things never move before the pointer is on them. Never for touch; off under reduced motion. Default true. */
@@ -2657,7 +2663,7 @@ export interface SidebarProviderProps {
   collapsed?: boolean;
   defaultCollapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
-  /** Below this width the sidebar becomes a drawer. Default 768. */
+  /** Below this width the sidebar becomes a drawer. Default 640, the compact breakpoint (`breakpoint-compact`). */
   mobileBreakpoint?: number;
   children: React.ReactNode;
 }

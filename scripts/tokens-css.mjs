@@ -25,5 +25,12 @@ export function tokensCss(tokensPath) {
   }
   for (const [k, v] of Object.entries(t.type.families)) root.push(`  --font-${k}: ${v};`);
   out.push(':root {\n' + root.join('\n') + '\n}');
+  // Sizes that step up under a coarse pointer (#245); density pins or forces them, except the hit-area minimum.
+  const stepped = Object.entries(t).filter(([fam]) => !['color', 'shadow', 'type', 'name', 'version'].includes(fam)).flatMap(([, body]) => body.tokens).filter((x) => 'coarse' in x);
+  if (stepped.length) {
+    out.push('@media (pointer: coarse) {\n  :root {\n' + stepped.map((x) => `    --${x.name}: ${x.coarse};`).join('\n') + '\n  }\n}');
+    out.push('[data-density="comfortable"] {\n' + stepped.map((x) => `  --${x.name}: ${x.coarse};`).join('\n') + '\n}');
+    out.push('[data-density="compact"] {\n' + stepped.filter((x) => x.density ?? true).map((x) => `  --${x.name}: ${x.value};`).join('\n') + '\n}');
+  }
   return out.join('\n') + '\n';
 }

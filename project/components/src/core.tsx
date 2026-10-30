@@ -387,6 +387,12 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   motion?: 'system' | 'full' | 'reduced';
   /** 'more' renders elevation as hard, high-contrast slabs (offset = height). 'system' follows prefers-contrast. */
   contrast?: 'system' | 'more';
+  /**
+   * How large controls are (#245). 'auto' (default): today's sizes for a mouse, a step up under a coarse pointer (a
+   * finger), so they're big enough to hit. 'comfortable': the larger sizes everywhere (a kiosk, an accessibility
+   * setting). 'compact': today's sizes even on touch. Hit areas reach 44px under a coarse pointer either way.
+   */
+  density?: 'auto' | 'compact' | 'comfortable';
   recede?: boolean;
   /** Openings deepen as the pointer approaches (empty fields, a sheet's finger pull). Default true; reduced motion turns it off regardless. */
   approach?: boolean;
@@ -457,7 +463,7 @@ export function ModePlate() {
   return mode ? <span className="alt-badge alt-mode-plate" data-tone={mode.tone ?? 'caution'} data-variant="plate">{mode.label}</span> : null;
 }
 
-export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', recede = true, approach = true, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
+export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', density = 'auto', recede = true, approach = true, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
   const checks = devChecks ?? (typeof process !== 'undefined' && process?.env.NODE_ENV !== 'production');
   const pageScope = useScopeValue('page', checks);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -519,7 +525,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
     <AltitudeContext.Provider value={api}>
       <div ref={rootRef} className={cx('alt-root', className)} data-theme={custom ? custom.base ?? 'daylight' : scheme}
         data-scheme={custom?.name} data-scheme-id={custom ? scope : undefined}
-        data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined}
+        data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined} data-density={density === 'auto' ? undefined : density}
         data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>
         {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
         <PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
