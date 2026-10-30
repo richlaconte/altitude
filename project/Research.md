@@ -1339,6 +1339,14 @@ A measurement (#261): at 375 CSS px the phone check found 167 targets under WCAG
 
 After: 16 left, all either a `Schedule` event (#257) or a target the check finds covered by an open layer.
 
+### E114 · Should a phone show keyboard shortcuts?
+
+A review (#262): at 375px, menus showed "⌘D" beside "Duplicate", and CommandPalette's footer said "↑↓ Move · ↵ Choose · esc Close", on a device with no keyboard. That's noise that takes width from the labels.
+
+- **Likely a keyboard, not definitely.** `useKeyboardLikely()` is false only on a touch-only device (`(hover: none) and (pointer: coarse)`) where no key has been pressed this session. A tablet with a keyboard flips it on with the first key press, for the rest of the session.
+- **Hints hide; shortcuts don't.** Menu shortcuts, CommandPalette's footer, chips and esc, and InlineEdit's "⌘+Enter to save" (which becomes "Save to keep it") follow it. The keys still work.
+- **An app's own `Kbd` stays** unless `hideOnTouch` is set, because it may be documenting shortcuts on purpose.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

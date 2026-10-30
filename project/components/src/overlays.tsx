@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Layer, ModePlate, PrimaryScope, useControllable, useIsoLayoutEffect, useOutside, usePresence } from './core';
+import { cx, Icons, Layer, ModePlate, PrimaryScope, useControllable, useIsoLayoutEffect, useKeyboardLikely, useOutside, usePresence } from './core';
 import { Button } from './controls';
 import { ModalOwner, modalDocument, tabbables, useAltitudeContext } from './modal-state';
 
@@ -117,6 +117,8 @@ export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', 
 }) {
   const enabled = items.map((it, i) => (!it.type || it.type === 'item') && !(it as any).disabled ? i : -1).filter((i) => i >= 0);
   const [active, setActive] = React.useState(startFirst ? enabled[0] ?? -1 : -1);
+  // Shortcut hints only where there's likely a keyboard (#262); the shortcuts still work.
+  const keyboard = useKeyboardLikely();
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   const menu = React.useRef<HTMLDivElement>(null);
   const refs = React.useRef<(HTMLDivElement | null)[]>([]);
@@ -161,7 +163,7 @@ export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', 
             onPointerMove={() => !item.disabled && active !== i && setActive(i)} onClick={() => choose(i)}>
             {(item.icon || checks) && <span className="alt-menu-icon">{item.checked ? <Icons.Check /> : item.icon}</span>}
             <span className="alt-menu-text">{item.label}</span>
-            {item.shortcut && <span className="alt-menu-shortcut">{item.shortcut}</span>}
+            {item.shortcut && keyboard && <span className="alt-menu-shortcut">{item.shortcut}</span>}
           </div>
         );
       })}
