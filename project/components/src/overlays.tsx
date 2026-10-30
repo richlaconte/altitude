@@ -460,6 +460,35 @@ export function Toaster({ className }: { className?: string }) {
     React.useCallback(() => documentState?.active ?? null, [documentState]), () => null);
   const blocked = !!activeModal;
   React.useEffect(() => { subs.add(force); return () => { subs.delete(force); }; }, []);
+  // On touch (#253) a tap opens the stack and pauses it, a tap outside folds it; hover is a mouse's.
+  const [tapped, setTapped] = React.useState(false);
+  React.useEffect(() => {
+    if (!tapped || !element) return;
+    const away = (e: PointerEvent) => { if (!element.contains(e.target as Node)) { setTapped(false); setExpanded(false); } };
+    element.ownerDocument.addEventListener('pointerdown', away);
+    return () => element.ownerDocument.removeEventListener('pointerdown', away);
+  }, [tapped, element]);
+  // A horizontal swipe on a toast dismisses it; it follows the finger until it's let go.
+  const swipe = React.useRef<{ id: number; x: number; y: number; dx: number; el: HTMLElement; moved: boolean } | null>(null);
+  const swipeStart = (id: number) => (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== 'touch' || (e.target as HTMLElement).closest('button, a')) return;
+    swipe.current = { id, x: e.clientX, y: e.clientY, dx: 0, el: e.currentTarget, moved: false };
+  };
+  const swipeMove = (e: React.PointerEvent<HTMLElement>) => {
+    const sw = swipe.current;
+    if (!sw) return;
+    sw.dx = e.clientX - sw.x;
+    if (!sw.moved && Math.abs(sw.dx) > 8 && Math.abs(sw.dx) > Math.abs(e.clientY - sw.y)) { sw.moved = true; try { sw.el.setPointerCapture(e.pointerId); } catch { /* gone */ } }
+    if (sw.moved) { sw.el.style.translate = `${sw.dx}px 0`; sw.el.style.opacity = String(Math.max(0, 1 - Math.abs(sw.dx) / 160)); }
+  };
+  const swipeEnd = () => {
+    const sw = swipe.current;
+    swipe.current = null;
+    if (!sw) return false;
+    if (sw.moved && Math.abs(sw.dx) > 64) { toast.dismiss(sw.id); return true; }
+    sw.el.style.translate = ''; sw.el.style.opacity = '';
+    return sw.moved;
+  };
 
   // Keep the remaining lifetime, including while a modal owns the document.
   React.useEffect(() => {
@@ -493,7 +522,13 @@ export function Toaster({ className }: { className?: string }) {
     <Layer>
       <section ref={setElement} aria-label="Notifications" aria-live={blocked ? "off" : "polite"} className={cx('alt-toaster', className)}
         style={{ height: expanded ? total : frontH }}
-        onPointerEnter={() => setExpanded(true)} onPointerLeave={() => setExpanded(false)}
+        onPointerEnter={(e) => { if (e.pointerType !== 'touch') setExpanded(true); }} onPointerLeave={(e) => { if (e.pointerType !== 'touch' && !tapped) setExpanded(false); }}
+        onPointerUp={(e) => {
+          if (e.pointerType !== 'touch') return;
+          if (swipeEnd() || (e.target as HTMLElement).closest('button, a')) return;
+          const open = !expanded; setExpanded(open); setTapped(open);
+        }}
+        onPointerCancel={() => swipeEnd()}
         onFocus={() => setExpanded(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setExpanded(false); }}>
         {toasts.map((t) => {
           const i = live.indexOf(t);
@@ -506,7 +541,7 @@ export function Toaster({ className }: { className?: string }) {
           if (!t.leaving && i >= 0) offset += h + GAP;
           const I = toastIcon[t.tone || 'neutral'];
           return (
-            <div key={t.id} className="alt-toast" data-toast-id={t.id} data-tone={t.tone} data-behind={behind ? '' : undefined} role={blocked || t.announce === false ? undefined : t.tone === 'critical' ? 'alert' : 'status'}
+            <div key={t.id} className="alt-toast" data-toast-id={t.id} onPointerDown={swipeStart(t.id)} onPointerMove={swipeMove} data-tone={t.tone} data-behind={behind ? '' : undefined} role={blocked || t.announce === false ? undefined : t.tone === 'critical' ? 'alert' : 'status'}
               aria-live={t.announce === false ? 'off' : undefined}
               ref={(el) => { if (el) { const nh = el.offsetHeight; if (heights.current.get(t.id) !== nh && !behind) { heights.current.set(t.id, nh); } } }}
               style={{ transform: `translateY(${y}) scale(${s})`, opacity: o, boxShadow: sh, zIndex: 100 - Math.max(i, 0), height: behind ? frontH : undefined, pointerEvents: o ? undefined : 'none' }}>

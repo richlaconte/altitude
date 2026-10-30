@@ -1373,6 +1373,15 @@ A measurement (#248): at 375 CSS px, DropdownMenu's "Predicted" menu pushed the 
 
 `checks/float-fit.mjs` opens each panel against a 360px screen's edges.
 
+### E118 · Can a toast be read on a phone?
+
+A source audit (#253): the stack fanned out and paused its timers on `pointerenter` and folded on `pointerleave`. Touch fires both around a tap, so on a phone the stack opened and folded with one tap and the timers never paused: WCAG 2.2.1 and 1.4.13 both ask for content a reader can hold.
+
+- **A tap holds it.** On touch, a tap on the stack fans it out and pauses every timer until a tap outside; lifting the finger changes nothing. Hover still does this for a mouse, and focus for the keyboard.
+- **A swipe dismisses.** A horizontal swipe on a toast follows the finger and dismisses it past 64px; the toast is `touch-action: pan-y`, so vertical scrolling still passes through.
+
+`checks/toaster-touch.mjs` drives it with touch events.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
