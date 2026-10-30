@@ -1288,6 +1288,18 @@ Not decided: whether `since` should advance with `live` as the person acknowledg
 
 Not yet tested with people: whether the rings are found without the switch.
 
+### E109 · How should a chart compare values that don't start at zero?
+
+A prototype review of `DotPlot` (#192): eight services' p95 with the 10th–90th percentile, sorted, and five teams' scores from Q2 to Q3 as a dumbbell, in all four schemes at 960px and 360px, under forced colours, with reduced motion and with `contrast="more"`. `checks/dot-plot.mjs` measures it.
+
+- **Bars must stand on zero.** Rule 2 is right, so a few percent between 180 and 240 ms became eight identical bars. A dot is position, so its axis can start where the data does (Cleveland & McGill's position judgements are the most accurate). With no zero, there's no ground line.
+- **Bars of averages mislead.** Readers judge values inside a bar likelier than values as far outside it (Newman & Scholl, 2012); dot plots reduced that error (Okan et al., 2018). The spread is the band `LineChart` already uses, after Correll & Gleicher, not error bars.
+- **Built from relatives.** The dots are ScatterChart's (8px, ringed in the plot's colour); the rows and label budget are horizontal BarChart's; the spread's words come from the container's band, the dumbbell's from `compare` (E106). Nothing new is invented for it.
+- **The dumbbell is a mode (open question 1).** It shares the rows, the keyboard path and the spread, so it's `from`/`to` on `DotPlot`, not a component.
+- **A hollow dot means projected elsewhere (open question 2).** A projected `LineChart` point is hollow too (E37). A `DotPlot` takes no `status`, so a dumbbell never has a projection to confuse with its "from" dot, and the link, the description and the names say which end is which. The risk stays for a reader who has just looked at a projected line; noted for testing.
+
+Not yet tested with people: whether readers take a dumbbell's direction from the filled end without the words.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

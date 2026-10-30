@@ -171,6 +171,7 @@ jobs:
           node ../scripts/record-check.mjs react18-bar-list node checks/bar-list.mjs
           node ../scripts/record-check.mjs react18-heatmap node checks/heatmap.mjs
           node ../scripts/record-check.mjs react18-scatter-chart node checks/scatter-chart.mjs
+          node ../scripts/record-check.mjs react18-dot-plot node checks/dot-plot.mjs
           node ../scripts/record-check.mjs react18-range-slider node checks/range-slider.mjs
           node ../scripts/record-check.mjs react18-chart-brush node checks/chart-brush.mjs
           node ../scripts/record-check.mjs chart-themes node checks/chart-themes.mjs
