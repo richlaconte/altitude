@@ -704,6 +704,65 @@ export const Surface = React.forwardRef<HTMLElement, SurfaceProps>(function Surf
 
 });
 
+/* ───────────────────────── floating panels on screen ───────────────────────── */
+
+/**
+ * Keep an anchored floating panel (a tooltip, popover, menu, hover card, list) inside the viewport (#248): when it
+ * opens, and when the window resizes, it's measured and shifted sideways so it stays 8px clear of the screen's edges,
+ * on top of whatever translate its own placement uses. Its CSS caps its width at the viewport's.
+ */
+export function useFitFloating(ref: React.RefObject<HTMLElement | null>, open: boolean) {
+  useIsoLayoutEffect(() => {
+    const el = ref.current;
+    if (!open || !el) return;
+    const fit = () => {
+      el.style.translate = '';
+      // The visible width: a phone zooms out to fit overflowing content, which stretches clientWidth with it.
+      const vv = el.ownerDocument.defaultView?.visualViewport;
+      const view = Math.min(el.ownerDocument.documentElement.clientWidth, vv ? vv.width + vv.offsetLeft : Infinity), r = el.getBoundingClientRect(), m = 8;
+      let dx = 0;
+      if (r.right > view - m) dx = view - m - r.right;
+      if (r.left + dx < m) dx = m - r.left;
+      if (!dx) return;
+      const [tx = '0px', ty = '0px'] = (getComputedStyle(el).translate === 'none' ? '' : getComputedStyle(el).translate).split(' ').filter(Boolean);
+      el.style.translate = `calc(${tx} + ${dx}px) ${ty}`;
+    };
+    fit();
+    const win = el.ownerDocument.defaultView;
+    win?.addEventListener('resize', fit);
+    return () => win?.removeEventListener('resize', fit);
+  }, [open]);
+}
+
+/** How a menu or list presents itself (#249): anchored to its trigger, or as a sheet at the bottom edge. */
+export type Presentation = 'auto' | 'anchored' | 'sheet';
+const sheetQuery = '(max-width: 639.98px) and (pointer: coarse)';
+/**
+ * Whether a menu or list opens as a bottom sheet: always for 'sheet', never for 'anchored', and for 'auto' on a narrow
+ * touch screen (under breakpoint-compact, with a coarse pointer), where the thumb is at the bottom of the screen.
+ */
+export function useSheetPresentation(presentation: Presentation = 'auto'): boolean {
+  const [narrowTouch, setNarrowTouch] = React.useState(false);
+  React.useEffect(() => {
+    if (presentation !== 'auto') return;
+    const mq = window.matchMedia?.(sheetQuery);
+    if (!mq) return;
+    const sync = () => setNarrowTouch(mq.matches);
+    sync(); mq.addEventListener?.('change', sync);
+    return () => mq.removeEventListener?.('change', sync);
+  }, [presentation]);
+  return presentation === 'sheet' || (presentation === 'auto' && narrowTouch);
+}
+/** A sheet-presented menu's head: its title, and a way to close it that doesn't need a tap outside. */
+export function SheetHead({ title, onClose }: { title?: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="alt-menu-sheet-head">
+      <span className="alt-menu-sheet-title">{title}</span>
+      <button type="button" className="alt-btn alt-menu-sheet-close" data-variant="ghost" data-size="sm" onClick={onClose}>Close</button>
+    </div>
+  );
+}
+
 /* ───────────────────────── Kbd ───────────────────────── */
 
 // Whether a keyboard is likely (#262): not on a touch-only device until a key is pressed, after which it is for the

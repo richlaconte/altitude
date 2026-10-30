@@ -312,7 +312,18 @@ export function ItemMedia({ variant = 'icon', className, ...rest }: React.HTMLAt
 }
 export function ItemContent({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) { return <div className={cx('alt-item-content', className)} {...rest} />; }
 export function ItemTitle({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) { return <div className={cx('alt-item-title', className)} {...rest} />; }
-export function ItemDescription({ className, ...rest }: React.HTMLAttributes<HTMLParagraphElement>) { return <p className={cx('alt-item-description', className)} {...rest} />; }
+/** The item's secondary line. `truncate` clamps it to that many lines (true: one), so a long one never pushes the row. */
+export function ItemDescription({ className, truncate, style, ...rest }: React.HTMLAttributes<HTMLParagraphElement> & { truncate?: boolean | number }) {
+  const lines = truncate === true ? 1 : truncate || 0;
+  return <p className={cx('alt-item-description', className)} data-truncate={lines ? '' : undefined} style={lines ? { ...style, ['--lines' as string]: lines } : style} {...rest} />;
+}
 /** Visible actions (not hover-only). Give the item's Edit and Remove buttons data-action="edit" and "remove" for focus repair. */
-export function ItemActions({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) { return <div className={cx('alt-item-actions', className)} {...rest} />; }
+/**
+ * Visible actions (not hover-only). Give the item's Edit and Remove buttons data-action="edit" and "remove" for focus
+ * repair. `narrow` (#267): 'below' (default) moves them to their own row under the content when the group is narrow
+ * (under 480px), so they never squeeze the title; 'inline' keeps them beside it.
+ */
+export function ItemActions({ className, narrow = 'below', ...rest }: React.HTMLAttributes<HTMLDivElement> & { narrow?: 'below' | 'inline' }) {
+  return <div className={cx('alt-item-actions', className)} data-narrow={narrow} {...rest} />;
+}
 export function ItemSeparator({ className, ...rest }: React.HTMLAttributes<HTMLHRElement>) { return <hr className={cx('alt-item-separator', className)} {...rest} />; }

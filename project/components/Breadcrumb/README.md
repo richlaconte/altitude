@@ -17,6 +17,8 @@ Where you are in an app with routes: Settings › Members › Jane Doe, or Proje
 - `onNavigate(item)` for steps chosen from the "…" menu (default: follow `href`).
 - **Composable parts:** `BreadcrumbList`, `BreadcrumbItem`, `BreadcrumbLink`, `BreadcrumbPage` and `BreadcrumbEllipsis` mirror shadcn/ui's for full control.
 
+**Fitting the width.** `fit="collapse"` (the default) keeps the trail on one line: when it doesn't fit, steps from the second onward move behind "…" until it does, keeping the first step and the current page, and they come back when there's room. `fit="wrap"` lets it wrap instead. `maxItems` still caps it by count.
+
 **You provide:** the path, from the top of the app to here.
 
 ```tsx

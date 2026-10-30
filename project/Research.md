@@ -1347,6 +1347,7 @@ A review (#262): at 375px, menus showed "⌘D" beside "Duplicate", and CommandPa
 - **Hints hide; shortcuts don't.** Menu shortcuts, CommandPalette's footer, chips and esc, and InlineEdit's "⌘+Enter to save" (which becomes "Save to keep it") follow it. The keys still work.
 - **An app's own `Kbd` stays** unless `hideOnTouch` is set, because it may be documenting shortcuts on purpose.
 
+<<<<<<< HEAD
 ### E115 · Can an imprint wait without moving the light?
 
 A design review (#343): three rounds of standalone prototypes, built from Altitude's tokens, compared ways for an imprint to show it's waiting and ways for content to land. `checks/loading-breath.mjs` drives the result: imprints waiting, a card from one request, a card whose parts arrive apart, a summary before its detail, a list, a later arrival, a ten-second wait, Nightfall, reduced motion, a chart, and the default left alone.
@@ -1360,6 +1361,76 @@ A design review (#343): three rounds of standalone prototypes, built from Altitu
 - **Optional parts don't wait.** A card's undefined optional parts (description, body text) still render empty once its required parts land, so "a card's parts land together" holds for required parts and for anything that suspends.
 
 Not yet tested with people: whether breath reads as loading, how long the wait feels compared with the sweep, comfort for people who report motion sensitivity, and whether arrivals are noticed. Until then it's opt-in.
+=======
+### E115 · Is a dialog's button under the keyboard?
+
+A source audit (#251): Dialog, Sheet and CommandPalette sized themselves with `vh` and `position: fixed; inset: 0`, which on a phone means the largest viewport. With the on-screen keyboard open, a dialog's footer (its primary action) could sit under the keyboard. Nothing read `window.visualViewport`.
+
+- **The visible viewport.** While a modal is open, `useModal` follows `visualViewport` (resize and scroll) into `--alt-vvh` and `--alt-vv-top` on its root. The roots cover just the visible area, and the dialog's height, the palette's top padding and list height derive from it, with `dvh` and then `vh` as fallbacks.
+- **A claim you can answer.** A dialog is level 5 and claims you (Elevation); its answer must stay in reach.
+- Not observed on a device: Playwright can't open a keyboard, so `checks/visible-viewport.mjs` shrinks the viewport under an open Dialog and CommandPalette and checks the root follows and the panel stays inside.
+
+### E116 · Does a toast sit under the home indicator?
+
+A CSS audit (#252): no rule in `bundle.css` used `safe-area-inset`. In an edge-to-edge page (`viewport-fit=cover`, any installed PWA) the Toaster, SaveBar and Sheet sat under the notch, the rounded corners or the home indicator, where a swipe goes home instead of pressing.
+
+- **Offset by the inset.** Every layer fixed to an edge adds `env(safe-area-inset-*)` to its offset: Toaster, SaveBar, each side of a Sheet, and the Dialog root's padding. Without `viewport-fit=cover`, `env()` is 0 and nothing moves.
+- **The mode frame stays at the edge.** It frames the whole screen, so it isn't inset.
+- Not observed on a device (Chromium has no notch to emulate). `checks/safe-area.mjs` checks the rules, and that nothing moves without an inset.
+
+### E117 · Does a menu leave the screen?
+
+A measurement (#248): at 375 CSS px, DropdownMenu's "Predicted" menu pushed the page 86px sideways and HoverCard's card 26px; a tooltip at the left edge would have clipped. Panels were placed by CSS relative to their anchor, and nothing measured them. ContextMenu and Tour already clamped themselves.
+
+- **Measured, then shifted.** `useFitFloating` measures a panel when it opens (and on resize) and shifts it sideways to stay 8px clear of the visible viewport's edges, composed with its own placement's `translate`. It's on Tooltip, Popover, DropdownMenu's panel, HoverCard and the Select and Combobox lists.
+- **Capped.** Panels are at most the viewport's width less 16px; a tooltip wraps at 320px rather than running off the screen.
+- **The visible width.** A phone zooms out to fit overflowing content, which stretches `clientWidth` with it, so the fit uses the visual viewport's width.
+
+`checks/float-fit.mjs` opens each panel against a 360px screen's edges.
+
+### E118 · Can a toast be read on a phone?
+
+A source audit (#253): the stack fanned out and paused its timers on `pointerenter` and folded on `pointerleave`. Touch fires both around a tap, so on a phone the stack opened and folded with one tap and the timers never paused: WCAG 2.2.1 and 1.4.13 both ask for content a reader can hold.
+
+- **A tap holds it.** On touch, a tap on the stack fans it out and pauses every timer until a tap outside; lifting the finger changes nothing. Hover still does this for a mouse, and focus for the keyboard.
+- **A swipe dismisses.** A horizontal swipe on a toast follows the finger and dismisses it past 64px; the toast is `touch-action: pan-y`, so vertical scrolling still passes through.
+
+`checks/toaster-touch.mjs` drives it with touch events.
+
+### E119 · Where should a menu open on a phone?
+
+A review (#249): at 375px a Select opened a 280px list under its trigger, with 30–36px rows, possibly off the bottom of the screen; the thumb is at the bottom, the list wherever the trigger was. Native pickers open at the bottom for this reason, and AppShell and NotificationCenter already become sheets when narrow.
+
+- **At the bottom edge.** `presentation="auto"` opens DropdownMenu and Select as a sheet under 640px with a coarse pointer: full width less 8px, clear of the safe areas (#252), at most 70% of the visible height (#251), 44px rows, a head with the title and Close. Close sits outside the `menu`/`listbox` role, which only holds its options.
+- **Still a menu (the open question).** Moving to the bottom edge doesn't make it a different choice, so it stays at level 3, the menu's, not a sheet's level 4.
+- **Combobox stays put.** You type into it, so its list stays under the field rather than at a bottom edge the keyboard covers; `presentation="sheet"` opts in.
+
+`checks/menu-sheet.mjs` drives each by touch, and with a mouse.
+
+### E120 · Does a backup code fit a phone?
+
+A measurement (#266): eight 40px slots with 6px gaps are 362px, so at 375 CSS px the preview's backup code ran past the edge. Slots now give way from 40px to 28px and the gaps tighten (3–6px), so eight characters fit a 320px screen; six-digit codes keep their full size. The phone check (#247) shows no overflow.
+
+### E121 · What happens to tabs that don't fit?
+
+A measurement (#259): at 375 CSS px the Tabs preview was 47px wider than the screen and SavedViews 26px, so the page scrolled sideways (WCAG 1.4.10). A tab list now scrolls within itself, with no scrollbar: the chosen tab is kept in view, and an edge with more tabs past it fades out, so you can see there's more. A "More" menu (as Toolbar has) was the alternative; scrolling keeps every tab one swipe away and in its place. The folder tabs' shadow and their reach into the panel sit in the list's padding, so scrolling doesn't clip them. `checks/tabs-narrow.mjs`.
+
+### E122 · Should a breadcrumb wrap?
+
+A review (#263): `maxItems` collapsed the middle of a path only by count, and the trail wrapped onto more lines when narrow, so the staircase of steps broke over lines. `fit="collapse"` (default) measures the trail against its container and moves steps from the second onward behind the existing "…" menu until it fits on one line, always keeping the first step and the current page; with room again, every step comes back. Changes of width don't animate: it's layout, not a change in the record. `fit="wrap"` keeps the old behaviour. `checks/breadcrumb-fit.mjs`.
+
+### E123 · What does a five-step stepper do on a phone?
+
+A review (#264): at 375 CSS px the horizontal Stepper wrapped onto three lines, each ending in a connector that led nowhere, saying the opposite of the order. `orientation="auto"` lays the steps out in a row when every step fits on one line in its container, and vertically when not, measured at each width. The switch doesn't animate (resizing never does), and the list's semantics are the same either way. The default stays `horizontal`; the README recommends `auto`. `checks/stepper-auto.mjs`.
+
+### E124 · Does a proposed change fit a phone?
+
+A measurement (#258): at 375 CSS px a PropertyList row with a proposal kept three columns (label, change, actions), leaving the change about 35px, so "Qualified" broke as "Quali/fied" and "Proposed by…" took eleven lines. The list is now a container, and under the narrow breakpoint (480px) an inline list stacks each label over its value, and a proposal stacks its change, who proposed it and its actions. The plain list was already fine; nothing changes on wider screens.
+
+### E125 · Who gives way in a row with actions?
+
+A review (#267): an ItemGroup row's actions never yielded width, so at phone width Edit and Remove squeezed the title into a narrow column. The group is now a container, and under 480px of its own width the actions take their own row, lined up with the content after the media; `narrow="inline"` keeps them beside it. `ItemDescription truncate` clamps a long secondary line. The issue's third form, collapsing actions into a "…" menu, is deferred: an app's action children aren't menu items, so it needs an explicit API rather than a guess. `checks/narrow-rows.mjs` (with #258).
+>>>>>>> origin/main
 
 ## What was rejected
 
