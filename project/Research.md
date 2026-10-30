@@ -1404,6 +1404,10 @@ A measurement (#259): at 375 CSS px the Tabs preview was 47px wider than the scr
 
 A review (#263): `maxItems` collapsed the middle of a path only by count, and the trail wrapped onto more lines when narrow, so the staircase of steps broke over lines. `fit="collapse"` (default) measures the trail against its container and moves steps from the second onward behind the existing "…" menu until it fits on one line, always keeping the first step and the current page; with room again, every step comes back. Changes of width don't animate: it's layout, not a change in the record. `fit="wrap"` keeps the old behaviour. `checks/breadcrumb-fit.mjs`.
 
+### E123 · What does a five-step stepper do on a phone?
+
+A review (#264): at 375 CSS px the horizontal Stepper wrapped onto three lines, each ending in a connector that led nowhere, saying the opposite of the order. `orientation="auto"` lays the steps out in a row when every step fits on one line in its container, and vertically when not, measured at each width. The switch doesn't animate (resizing never does), and the list's semantics are the same either way. The default stays `horizontal`; the README recommends `auto`. `checks/stepper-auto.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

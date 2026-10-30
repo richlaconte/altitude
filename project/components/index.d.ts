@@ -1554,7 +1554,7 @@ export interface StepperProps extends Omit<React.OlHTMLAttributes<HTMLOListEleme
   /** Makes completed steps buttons that go back to them. */
   onStepChange?: (index: number) => void;
   /** Default 'horizontal'. */
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: 'horizontal' | 'vertical' | 'auto';
   /** Default "Progress". */
   'aria-label'?: string;
 }
