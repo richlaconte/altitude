@@ -1135,14 +1135,15 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    goes into is held (floor lit, the depth approach would preview, the neutral rim when reached by keyboard) with a
    caret; once its character lands its floor rises flush. A pasted or autofilled code fills left to right, staggered
    35ms a slot. A rejected code drops the whole row to a trench on critical-soft. ── */
-.alt-otp { position: relative; display: inline-flex; align-items: center; gap: var(--space-2); max-width: 100%; }
+.alt-otp { position: relative; display: inline-flex; align-items: center; gap: clamp(4px, 2vw, var(--space-2)); max-width: 100%; min-width: 0; }
 .alt-otp-input {
   position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; outline: 0; opacity: 0;
   background: transparent; color: transparent; caret-color: transparent; font-size: 16px; cursor: text;
 }
 .alt-otp-input:disabled { cursor: not-allowed; }
-.alt-otp-group { display: inline-flex; gap: 6px; }
-.alt-otp-slot { justify-content: center; width: 40px; height: 48px; padding: 0; font: 600 20px/1 var(--font-mono); cursor: text; }
+/* Narrow (#266): slots give way from 40px to 28px, and gaps tighten, so an eight-character code fits a 320px screen. */
+.alt-otp-group { display: inline-flex; gap: clamp(3px, 1.6vw, 6px); min-width: 0; }
+.alt-otp-slot { justify-content: center; flex: 0 1 40px; width: 40px; min-width: 28px; height: 48px; padding: 0; font: 600 20px/1 var(--font-mono); cursor: text; }
 .alt-otp-slot[data-filled]:not([data-invalid]):not([data-disabled]) { --w: 0px; --n: 0; background: var(--surface-raised); }
 .alt-otp-slot[data-active]:not([data-invalid]) { background: var(--surface-raised); --n: var(--alt-travel); }
 .alt-otp[data-key-focus] .alt-otp-slot[data-active] { border-color: var(--alt-rim-held); outline-color: var(--alt-rim-held); }
