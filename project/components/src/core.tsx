@@ -318,8 +318,8 @@ export interface CustomScheme {
   /** Stamped as data-scheme on the provider's root. */
   name: string;
   /** The built-in scheme your tokens are laid over: any token you leave out comes from it, and so does light or dark
-   *  handling (casts, rims, walls). Use nightfall or alpine for a dark scheme. Default 'daylight'. */
-  base?: BuiltInScheme;
+   *  handling (casts, rims, walls). Use nightfall for a dark scheme. Default 'daylight'. */
+  base?: BuiltInScheme | RetiredScheme;
   /** Colour and shadow tokens by name, without `--`. */
   tokens: Partial<Record<SchemeColorToken | SchemeShadowToken, string>>;
 }
@@ -366,7 +366,12 @@ function schemeCss(sel: string, tokens: CustomScheme['tokens']) {
 
 /* ───────────────────────── provider ───────────────────────── */
 
-export type BuiltInScheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
+export type BuiltInScheme = 'daylight' | 'nightfall';
+/** @deprecated Mesa and Alpine were retired because they matched generated-UI palette defaults (#324). They resolve
+ *  to daylight and nightfall, with a warning in development. */
+export type RetiredScheme = 'mesa' | 'alpine';
+const RETIRED: Record<RetiredScheme, BuiltInScheme> = { mesa: 'daylight', alpine: 'nightfall' };
+const current = (s: string | undefined): string | undefined => (s && s in RETIRED ? RETIRED[s as RetiredScheme] : s);
 /** A built-in scheme, the name of your own [data-theme="…"] block, or a CustomScheme. */
 export type Scheme = BuiltInScheme | (string & {});
 type Ctx = { host: HTMLElement | null; provider: ModalProvider };
@@ -474,9 +479,16 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
   useIsoLayoutEffect(() => { if (provider.stage && provider.owners.size) modalDocument(provider.stage.ownerDocument).reconcile(); });
   const [accentVars, setAccentVars] = React.useState<React.CSSProperties | null>(null);
   const custom = scheme && typeof scheme === 'object' ? scheme : null;
-  const schemeKey = custom ? JSON.stringify(custom) : (scheme as string | undefined);
+  const named = custom ? custom.base : (scheme as string | undefined);
+  const theme = current(named);
+  const schemeKey = custom ? JSON.stringify(custom) : theme;
   const scope = React.useId();
   const schemeSel = `.alt-root[data-scheme-id="${scope}"]`;
+
+  // A retired scheme still renders, as its replacement, and says so once.
+  React.useEffect(() => {
+    if (checks && named && named !== theme) console.warn(`Altitude: the "${named}" scheme was retired (#324) and now renders as "${theme}". Use scheme="${theme}", or your own accent.`);
+  }, [checks, named, theme]);
 
   // A custom scheme that breaks the invariants says so, once per version of it.
   const warned = React.useRef('');
@@ -518,7 +530,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
 
   return (
     <AltitudeContext.Provider value={api}>
-      <div ref={rootRef} className={cx('alt-root', className)} data-theme={custom ? custom.base ?? 'daylight' : scheme}
+      <div ref={rootRef} className={cx('alt-root', className)} data-theme={custom ? theme ?? 'daylight' : theme}
         data-scheme={custom?.name} data-scheme-id={custom ? scope : undefined}
         data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined}
         data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>

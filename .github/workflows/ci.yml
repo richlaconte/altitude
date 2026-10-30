@@ -64,7 +64,7 @@ jobs:
           mkdir -p test
           cp node_modules/react/umd/react.production.min.js node_modules/react-dom/umd/react-dom.production.min.js test/
           python3 tokcss.py ../project/tokens.json test/tokens.css
-          node shoot.mjs "" daylight,nightfall,mesa,alpine 960
+          node shoot.mjs "" daylight,nightfall 960
           node checks/approach-and-lamps.mjs
           node checks/field-focus.mjs
           node checks/avatar.mjs
@@ -181,7 +181,7 @@ jobs:
           node ../scripts/record-check.mjs react18-chart-brush node checks/chart-brush.mjs
           node ../scripts/record-check.mjs chart-themes node checks/chart-themes.mjs
           DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,AreaChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,ChartStatus,ChartReference,ChartLive,ChartSince,ChartFilter,ChartSelect,ChartBrush,Sparkline,Stat,Meter,BarList daylight 960
-          DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
+          DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall 320
           DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
 
       - name: React 19 runtime and StrictMode regressions

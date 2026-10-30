@@ -1,7 +1,7 @@
 // BarList: a ranked ol whose rows read "1. /pricing, 4,210, 23%", flat bars sized against the largest with ink holding
 // 4.5:1 over them in every scheme, only rows that act lifting on hover, "Other" and "Show all", re-ranked rows carried
 // (and not under reduced motion), filtering in place, an imprint while loading, and forced colours. Run after a render
-// of every preview in all four schemes (it opens test/p-BarList-<scheme>.html); exits non-zero on a failure.
+// of every preview in both schemes (it opens test/p-BarList-<scheme>.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
 import { existsSync } from 'fs';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
@@ -26,7 +26,7 @@ const lists = (page) => page.evaluate(() => [...document.querySelectorAll('ol.al
 })));
 
 // Ink over a bar, composited on its card, in every scheme rendered.
-for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) {
+for (const scheme of ['daylight', 'nightfall']) {
   if (!existsSync(`${T}p-BarList-${scheme}.html`)) continue;
   const page = await open(scheme);
   const worst = await page.evaluate(() => {

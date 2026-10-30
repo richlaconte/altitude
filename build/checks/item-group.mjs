@@ -170,7 +170,7 @@ try {
     check(await focusedName(page) === 'Remove No', 'IG-RR-16 focus moves to the next slat’s Remove');
     await page.close(); }
 
-  for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
+  for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
       await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });

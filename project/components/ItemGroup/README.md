@@ -88,4 +88,4 @@ The `ItemGroup` section of `build/previews.txt` shows webhooks (edit, add, reord
 - the toast's unannounced Undo gliding the slot back open;
 - the hold pausing on focus, several removals closing together, reduced motion, and a confirmed slat gliding shut.
 
-It also renders and 320/960px layouts in four schemes under reduced motion, forced colours and `contrast="more"`.
+It also renders and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.

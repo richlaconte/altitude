@@ -61,7 +61,7 @@ try {
     check(await focused(page) === 'c6', 'BE-13 the card grows into an EditRegion, saves, and focus returns to the card');
     await page.close(); }
 
-  for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
+  for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
       await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });

@@ -31,7 +31,7 @@ const read = (cases) => page.evaluate(([cases, m]) => new Promise((done) => {
   })), 400);
 }), [cases, mounts++]);
 
-const schemes = ['daylight', 'nightfall', 'mesa', 'alpine'];
+const schemes = ['daylight', 'nightfall'];
 const plain = await read(schemes.map((s) => [s]));
 plain.forEach((r, i) => {
   expect(r.data.length === 0, `${schemes[i]} passes the data gates: ${r.data.join(' / ')}`);

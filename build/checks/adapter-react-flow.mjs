@@ -1,4 +1,4 @@
-// altitude-design/adapters/react-flow.css with a real React Flow canvas: in all four schemes it renders with no page or
+// altitude-design/adapters/react-flow.css with a real React Flow canvas: in both schemes it renders with no page or
 // console errors and the canvas is the scheme's ground with a dot grid in line; nodes are raised cards at level 1 that
 // lift when pointed at and float at level 3 while dragged; a selected node gets a rim, not height; a running node hovers
 // and a failed one lies in a trench; ports are openings that sink to a trench with the accent rim under an edge being
@@ -11,7 +11,7 @@ const { open, close } = await adapterPages('.storybook/adapters/react-flow-examp
 const colour = (page, v) => page.evaluate((v) => { const d = document.createElement('div'); d.style.background = `var(--${v})`; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; }, v);
 const node = (page, id) => page.evaluate((id) => { const n = document.querySelector(`.react-flow__node[data-id="${id}"]`), cs = getComputedStyle(n); return { bg: cs.backgroundColor, shadow: cs.boxShadow, anim: cs.animationName, border: cs.borderTopStyle }; }, id);
 
-for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) {
+for (const scheme of ['daylight', 'nightfall']) {
   const { page, errors } = await open({ scheme });
   const bg = await page.evaluate(() => getComputedStyle(document.querySelector('.react-flow')).backgroundColor);
   expect(errors.length === 0 && await page.locator('.react-flow__node').count() === 4, `${scheme}: renders with no errors (${errors.join('; ')})`);

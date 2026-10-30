@@ -41,7 +41,7 @@ try{
   }else{
    await page.getByRole('button',{name:'Review request'}).click();await scan('invalid');await page.getByRole('textbox',{name:'Request name'}).fill('Localized planning request with a deliberately long title');await page.getByRole('button',{name:'Review request'}).click();await scan('review');await page.getByRole('button',{name:'Send request',exact:true}).click();await page.getByRole('heading',{name:'Request received'}).waitFor();await scan('complete');
   }
-  for(const scheme of ['daylight','nightfall','mesa','alpine']){
+  for(const scheme of ['daylight','nightfall']){
    await page.setViewportSize({width:320,height:900});await page.evaluate(scheme=>{document.documentElement.setAttribute('data-theme',scheme);document.documentElement.dir='rtl';},scheme);
    await page.emulateMedia({reducedMotion:'reduce',forcedColors:scheme==='daylight'?'active':'none'});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${name}/${scheme} 320px RTL overflow`);

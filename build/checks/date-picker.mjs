@@ -107,7 +107,7 @@ try {
     check(segsText[0] === sd && segsText[1] === sm && segsText[3] === ed && segsText[4] === em, 'DP-31 two choices fill the start and end');
     await page.close(); }
 
-  for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
+  for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
       await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });

@@ -2,16 +2,16 @@
 
 ## Schemes
 
-Altitude ships four schemes. Each is a complete set of the same tokens, so every component works in all of them unchanged.
+Altitude ships two schemes, one light and one dark. Each is a complete set of the same tokens, so every component works in all of them unchanged.
 
 | Scheme | Ground | Accent | Character |
 |---|---|---|---|
 | `daylight` | cool off-white | cobalt | The default. Neutral, crisp, shadow-led. |
 | `nightfall` | blue-black | periwinkle | Dark, tonal elevation: higher is lighter. |
-| `mesa` | warm sand | terracotta | Light and warm, for editorial and consumer products. |
-| `alpine` | deep spruce | glacier mint | Dark and cool, for focused tools and dashboards. |
 
-Set a scheme with `<AltitudeProvider scheme="mesa">`, or with `data-theme="mesa"` on any element. Schemes nest: a `nightfall` panel inside a `daylight` page is just a provider (or a `data-theme`) around that panel.
+Set a scheme with `<AltitudeProvider scheme="nightfall">`, or with `data-theme="nightfall"` on any element. Schemes nest: a `nightfall` panel inside a `daylight` page is just a provider (or a `data-theme`) around that panel.
+
+`mesa` and `alpine` were retired because they matched the palettes generated interfaces now default to: terracotta on cream, and one mint accent on near-black ([Distinctiveness](Distinctiveness.md), #324). Their names still work, as `daylight` and `nightfall`, and the provider warns once in development. Give your product its own colour with `accent`, or its own grounds with a custom scheme.
 
 ## Custom accent
 
@@ -33,17 +33,17 @@ When a brand needs more than an accent (its own grounds, ink and status colours)
 ```tsx
 <AltitudeProvider scheme={{
   name: 'paper',
-  base: 'mesa',            // light or dark handling, and every token you leave out
+  base: 'daylight',        // light or dark handling, and every token you leave out
   tokens: {
     'surface-trench': '#e5e1d2', 'surface-well': '#edeadf', 'surface-ground': '#f5f3ea', 'surface-raised': '#fffdf7',
     'surface-lifted': '#fffdf8', 'surface-floating': '#fffefa', 'surface-overlay': '#fffefb', 'surface-modal': '#fffefc',
     ink: '#1f3329', 'ink-muted': '#4b5d53', line: '#e2ded0', 'line-control': '#76806f',
-    accent: '#284d39', 'on-accent': '#ffffff', 'accent-ink': '#284d39', 'accent-soft': '#e1e9dc',
+    accent: '#284d39', 'on-accent': '#ffffff', 'accent-ink': '#284d39', 'accent-soft': '#e1e9dc', positive: '#2c6e3f',
   },
 }}>
 ```
 
-Token names are the ones in `tokens.json`, without `--`; any colour or shadow token can be set. `base` must be `nightfall` or `alpine` for a dark scheme, since casts, rims and the inside walls of openings are drawn differently on dark grounds. The provider scopes the tokens to its own root, so a custom scheme nests like a built-in one; `accent` still works on top of it (derived against your surfaces); and shadows and `line` give way to high contrast as the built-in ones do. Forced colours replaces every colour with the system's, as it does for any scheme.
+Token names are the ones in `tokens.json`, without `--`; any colour or shadow token can be set. `base` must be `nightfall` for a dark scheme, since casts, rims and the inside walls of openings are drawn differently on dark grounds. The provider scopes the tokens to its own root, so a custom scheme nests like a built-in one; `accent` still works on top of it (derived against your surfaces); and shadows and `line` give way to high contrast as the built-in ones do. Forced colours replaces every colour with the system's, as it does for any scheme.
 
 A custom scheme has to keep the invariants below, or the elevation language and its contrast quietly break. The provider checks them when the scheme is applied and warns in the console with one line per problem. Check them in your own tests too: `checkScheme` takes the colour tokens by name (merge your tokens over the base's from `altitude-design/tokens.json`) or an element to read them from, and returns the problems, `[]` if there are none.
 
@@ -51,7 +51,7 @@ A custom scheme has to keep the invariants below, or the elevation language and 
 import { checkScheme } from 'altitude-design';
 import tokens from 'altitude-design/tokens.json';
 
-const base = Object.fromEntries(tokens.color.tokens.map((t) => [t.name, typeof t.value === 'string' ? t.value : t.value.mesa]));
+const base = Object.fromEntries(tokens.color.tokens.map((t) => [t.name, typeof t.value === 'string' ? t.value : t.value.daylight]));
 expect(checkScheme({ ...base, ...paper.tokens })).toEqual([]);
 ```
 
@@ -74,7 +74,7 @@ Charts get their own colours, so a series never borrows a meaning (see [Charts](
 
 | Tokens | Job | How it's built |
 |---|---|---|
-| `data-1` … `data-6` | identity: which series | six hues in a fixed order. `data-1` is in the accent's hue where a slot can be, at a different lightness from the accent; in mesa, where terracotta sits between `critical` and `caution`, it's the nearest hue that clears them |
+| `data-1` … `data-6` | identity: which series | six hues in a fixed order. `data-1` is in the accent's hue where a slot can be, at a different lightness from the accent; where the accent's hue sits too near `critical` or `caution`, it's the nearest hue that clears them |
 | `data-other` | the seventh and later series, folded | a neutral in the ground's hue |
 | `data-context` | what a chart isn't about: the series or records outside its `focus` | a neutral in the ground's hue, as receding as 3:1 allows |
 | `data-seq-1` … `data-seq-7` | magnitude: how much | `data-1`'s hue, lightness in even steps; light schemes darken from near-white, dark schemes climb from near their ground |
@@ -146,7 +146,7 @@ That gets shadcn's components onto Altitude's colors and shadows. The elevation 
 
 ### Charts
 
-shadcn/ui's `Chart` is Recharts underneath (Tremor wraps Recharts too), so charts already built with it can take Altitude's colours and most of its chart rules without being rewritten. What they can't take is listed at the end. [`examples/shadcn-chart`](../examples/shadcn-chart) is this setup, checked in all four schemes by `build/checks/shadcn-chart.mjs`.
+shadcn/ui's `Chart` is Recharts underneath (Tremor wraps Recharts too), so charts already built with it can take Altitude's colours and most of its chart rules without being rewritten. What they can't take is listed at the end. [`examples/shadcn-chart`](../examples/shadcn-chart) is this setup, checked in both schemes by `build/checks/shadcn-chart.mjs`.
 
 **Map the palette.** Add the chart lines to the `@theme inline` block above, so Tailwind's `fill-chart-1` and the like are Altitude's slots:
 
@@ -274,7 +274,7 @@ const config = {
 
 ## Rich text, code and canvases
 
-Altitude doesn't own a rich text editor, a code editor or a node canvas: each is a large engine of its own. It ships **adapters** instead, so the one part of the screen drawn by another library still follows the elevation model. Each adapter reads the active scheme's custom properties, so all four schemes, custom accents and `contrast="more"` work. The library is an optional peer dependency your app installs; the adapters import nothing else, and they leave the library's own keyboard support and ARIA alone. Import a CSS adapter after `altitude.css`.
+Altitude doesn't own a rich text editor, a code editor or a node canvas: each is a large engine of its own. It ships **adapters** instead, so the one part of the screen drawn by another library still follows the elevation model. Each adapter reads the active scheme's custom properties, so both schemes, custom accents and `contrast="more"` work. The library is an optional peer dependency your app installs; the adapters import nothing else, and they leave the library's own keyboard support and ARIA alone. Import a CSS adapter after `altitude.css`.
 
 ### Tiptap
 

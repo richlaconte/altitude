@@ -2,7 +2,9 @@ import type * as React from 'react';
 
 /** The eight rungs of the elevation ladder. Negative = sunk into the ground, positive = raised above it. */
 export type Level = -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5;
-export type BuiltInScheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
+export type BuiltInScheme = 'daylight' | 'nightfall';
+/** @deprecated Mesa and Alpine were retired because they matched generated-UI palette defaults (#324). They resolve to daylight and nightfall, with a warning in development. */
+export type RetiredScheme = 'mesa' | 'alpine';
 /** A built-in scheme, or the name of your own [data-theme="…"] block. */
 export type Scheme = BuiltInScheme | (string & {});
 export type SchemeColorToken = 'surface-trench' | 'surface-well' | 'surface-ground' | 'surface-raised' | 'surface-lifted' | 'surface-floating' | 'surface-overlay' | 'surface-modal'
@@ -17,8 +19,8 @@ export type SchemeShadowToken = 'trench' | 'well' | 'elev-0' | 'elev-1' | 'elev-
 export interface CustomScheme {
   /** Stamped as data-scheme on the provider's root. */
   name: string;
-  /** The built-in scheme under your tokens: tokens you leave out, and light or dark handling, come from it. nightfall or alpine for a dark scheme. Default 'daylight'. */
-  base?: BuiltInScheme;
+  /** The built-in scheme under your tokens: tokens you leave out, and light or dark handling, come from it. nightfall for a dark scheme. Default 'daylight'. */
+  base?: BuiltInScheme | RetiredScheme;
   /** Colour and shadow tokens by name, without `--`. Shadows keep the four-layer structure; under high contrast they give way to slabs as the built-in ones do. */
   tokens: Partial<Record<SchemeColorToken | SchemeShadowToken, string>>;
 }

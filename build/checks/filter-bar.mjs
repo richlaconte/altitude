@@ -76,7 +76,7 @@ try {
     check(relevant.filter(r => r === 'match').length === 2 && relevant.filter(r => r === 'miss').length === 3, 'FB-21 the paired table filters in place: matches rise, misses sink');
     await page.close(); }
 
-  for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
+  for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
       await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });

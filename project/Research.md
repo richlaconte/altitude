@@ -1316,12 +1316,16 @@ Not yet tested with people: whether readers take a dumbbell's direction from the
 An audit against the 47 tells catalogued in `tells.json` (#319), reading `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`. A regex prototype covered the `lint` tells; the rest were read by hand. Nothing was rendered, so `render` and `measure` tells are judged from source or left unchecked.
 
 - **The library is clear of the code-level tells.** No purple hues, gradient text, glows, coloured edge stripes, bounce, count-ups, emoji, sparkles, marketese or placeholder strings. The one violet is a ColorPicker swatch. `ease-settle`'s 2–3% overshoot is a settle, not a bounce. Earlier decisions did most of this work: light glows rejected, severity bars rejected (E8), no emoji, no "Oops", no decorative chart motion.
-- **Two schemes sit on the second-order palette defaults.** Mesa is terracotta on cream (`#b4441b` on `#f6f1ea`) and Alpine is mint on near-black (`#5fd6b2` on `#0f1513`). Nightfall's periwinkle on dark and Daylight's blue, near Tailwind's blue-600, are close. Open in #324.
+- **Two schemes sat on the second-order palette defaults.** Mesa was terracotta on cream (`#b4441b` on `#f6f1ea`) and Alpine mint on near-black (`#5fd6b2` on `#0f1513`). Nightfall's periwinkle on dark and Daylight's blue, near Tailwind's blue-600, are close.
 - **The landing page has the all-caps kicker.** `.kicker` sits above every heading, with `.panel-label` and `.rung-tier`, all uppercase and letter-spaced. The library itself has none.
 - **The app skeleton is the generated dashboard.** Sidebar, top bar, table: the structure that converges most. Agents copy it whatever the task. Open in #323.
 - **Type and icons are close.** Instrument Sans is Instrument Serif's sibling, and Lucide is the generators' default set. Open in #325.
 
-Result: 29 clear, 11 to watch, 3 unchecked, 4 exposed. Not yet tested with people: whether Altitude screens read as generated (#326).
+Result: 29 clear, 11 to watch, 3 unchecked, 4 exposed.
+
+**Decision (#324): Mesa and Alpine are retired**, on the side of caution, rather than retuned. Daylight and Nightfall remain as the light and dark schemes, and stay on watch. The old names still resolve to them: as `[data-theme]` aliases in the token CSS, and in the provider, which warns once in development. The Mesa and Alpine figures in earlier experiments (E23 among them) are kept as the record of what was measured. With the schemes gone, CO4 and CO5 are clear: 31 clear, 2 exposed.
+
+Not yet tested with people: whether Altitude screens read as generated (#326).
 
 ## What was rejected
 

@@ -64,4 +64,4 @@ The value and the rules (limits, unavailable days). Time of day isn't covered (t
 
 ## Demo and verification
 
-The `DatePicker` section of `build/previews.txt` shows a due date (from today, weekends unavailable, en-GB, open), a trip range and an en-US date. `node checks/date-picker.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG grid keys, RTL arrows, unavailable days, Escape, focus return, segment typing and stepping, impossible dates, Alt+↓, the range flow with its preview, and 320/960px layouts in four schemes under reduced motion, forced colours and `contrast="more"`.
+The `DatePicker` section of `build/previews.txt` shows a due date (from today, weekends unavailable, en-GB, open), a trip range and an en-US date. `node checks/date-picker.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG grid keys, RTL arrows, unavailable days, Escape, focus return, segment typing and stepping, impossible dates, Alt+↓, the range flow with its preview, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.

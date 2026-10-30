@@ -1,7 +1,7 @@
 {
   "name": "altitude-example-shadcn-chart",
   "private": true,
-  "description": "A shadcn/ui chart (Recharts) on Altitude's tokens, in all four schemes. Not part of the package.",
+  "description": "A shadcn/ui chart (Recharts) on Altitude's tokens, in both schemes. Not part of the package.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs"
