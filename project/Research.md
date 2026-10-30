@@ -1069,6 +1069,17 @@ A design review: `FeatureGate` was rendered on a secondary and a ghost button, o
 
 Not yet tested with people: whether locked features in a toolbar feel like advertising.
 
+### E91 · What happens to a resolved thread?
+
+A design review: `CommentThread` was rendered with two comments (one mentioning), someone typing, a comment posting, landing and failing, a comment deleted and restored, and the thread resolved and reopened, in all four schemes. `checks/comment-thread.mjs` drives it.
+
+- **Stamped, not gone.** Resolved threads often vanish, which loses the record of a decision. A resolved thread is stamped like a done Checklist item: muted, collapsed to one line that says who resolved it, and kept where it was.
+- **Posting is a write.** A comment you post hovers as pending until the server confirms it, and a failure keeps its text in a trench with Retry, so a failed post is never mistaken for a sent one.
+- **Plain text, real listbox.** Mentions use a listbox with `aria-activedescendant` on the textarea, the combobox pattern; the body stays plain text with "@Name" plates, so it can be stored anywhere.
+- **Presence only for people.** The typing indicator is the one place presence colours belong: other people, live. It isn't announced.
+
+Not yet tested with people: whether a collapsed resolved thread is reopened when it should be.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
