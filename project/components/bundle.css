@@ -615,6 +615,75 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-await-lines > .alt-skeleton { flex: none; height: 0.6em; }
 .alt-await-card { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
 .alt-await-card-body { font: 400 15px/23px var(--font-sans); }
+
+/* ── Breath (AltitudeProvider loading="breath", #343). Instead of light sweeping over it, the imprint breathes: its floor
+   deepens from well to trench over 40% of dur-breath and releases over the rest, slower and less even than a pending
+   write's breath. In Nightfall, where well and trench are nearly one tone, the back wall (lip-top) breathes instead.
+   Every imprint takes its phase from one page clock, lagged by its height in the view (--alt-breath-delay, set by
+   useBreath), so they change in step and a swell crosses the view in dur-wave. Ten seconds in, it calms to a shallow,
+   slower breath. Depth and tone only: nothing travels. Charts, stats and meters hold still (their imprints stand for
+   amounts). When content lands: raised content (settle="raised") rises 8px to level 2 and settles to its rest over
+   dur-arrive; flush content fills past the ground (its floor passes just above it, then fills in flush); content that
+   arrives into a view already showing gets a plate that dissolves over dur-plate, no tint, so it isn't an afterglow. ── */
+[data-loading="breath"] .alt-skeleton::after { content: none; }
+[data-loading="breath"] .alt-skeleton { animation: alt-breath var(--dur-breath) linear var(--alt-breath-delay, 0ms) infinite; }
+[data-loading="breath"][data-theme="nightfall"] .alt-skeleton, [data-theme="nightfall"] [data-loading="breath"] .alt-skeleton { animation-name: alt-breath-wall; }
+[data-loading="breath"] :is([data-calm] .alt-skeleton, .alt-skeleton[data-calm]) { animation: alt-breath-calm calc(var(--dur-breath) * 0.75) ease-in-out infinite alternate; }
+[data-loading="breath"] :is(.alt-chart-imprint .alt-skeleton, .alt-stat-imprint, .alt-sparkline-imprint, .alt-meter-imprint) { animation: none; }
+@keyframes alt-breath {
+  0% { background-color: var(--surface-well); box-shadow: var(--well); animation-timing-function: ease-in-out; }
+  40% { background-color: var(--surface-trench); box-shadow: var(--trench); animation-timing-function: ease-in-out; }
+  100% { background-color: var(--surface-well); box-shadow: var(--well); }
+}
+@keyframes alt-breath-wall {
+  0% { box-shadow: var(--well), inset 0 0 0 0 transparent; animation-timing-function: ease-in-out; }
+  40% { box-shadow: var(--well), var(--lip-top); animation-timing-function: ease-in-out; }
+  100% { box-shadow: var(--well), inset 0 0 0 0 transparent; }
+}
+@keyframes alt-breath-calm { to { background-color: color-mix(in oklab, var(--surface-well), var(--surface-trench) 45%); } }
+[data-loading="breath"] .alt-await[data-phase="reveal"] > .alt-await-face { position: relative; animation: alt-fill-ride calc(var(--dur-travel-3) * 2) linear var(--alt-rise-delay, 0ms) backwards; }
+[data-loading="breath"] .alt-await[data-phase="reveal"] > .alt-await-imprint { animation: alt-fill-past calc(var(--dur-travel-3) * 2) linear var(--alt-rise-delay, 0ms) forwards; }
+[data-loading="breath"] .alt-await[data-phase="reveal"][data-arrival="late"] > .alt-await-imprint { animation: alt-await-fill var(--dur-travel-1) linear var(--alt-rise-delay, 0ms) forwards; }
+[data-loading="breath"] .alt-await[data-phase="reveal"][data-arrival="late"]:not([data-rest="raised"]) > .alt-await-face::before {
+  content: ""; position: absolute; inset: -3px -6px; z-index: -1; border-radius: var(--radius-sm); pointer-events: none;
+  background: var(--surface-raised); box-shadow: var(--elev-1); animation: alt-plate var(--dur-plate) linear var(--alt-rise-delay, 0ms) both;
+}
+[data-loading="breath"] .alt-await[data-phase="reveal"][data-rest="raised"] > .alt-await-face { animation: alt-arrive var(--dur-arrive) linear var(--alt-rise-delay, 0ms) backwards; }
+[data-loading="breath"] .alt-await[data-phase="reveal"][data-rest="raised"] > .alt-await-face::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: var(--alt-await-radius, var(--radius-lg)); pointer-events: none;
+  box-shadow: var(--elev-2); animation: alt-plate var(--dur-arrive) linear var(--alt-rise-delay, 0ms) both;
+}
+[data-loading="breath"] .alt-await[data-phase="reveal"][data-rest="raised"] > .alt-await-imprint { animation: alt-await-fill var(--dur-travel-3) linear var(--alt-rise-delay, 0ms) forwards; }
+[data-loading="breath"] .alt-reveal[data-reveal] { animation: alt-reveal-past calc(var(--dur-travel-3) * 2) linear var(--alt-rise-delay, 0ms) backwards; }
+/* A chart's marks still fade in place (Charts: "fade, don't rise"), under breath too. */
+[data-loading="breath"] .alt-await.alt-chart-await[data-phase="reveal"] > .alt-await-face { animation: alt-emerge var(--dur-travel-3) var(--ease-rise) var(--alt-rise-delay, 0ms) backwards; }
+[data-loading="breath"] .alt-await.alt-chart-await[data-phase="reveal"] > .alt-await-imprint { animation: alt-await-fill var(--dur-travel-3) linear var(--alt-rise-delay, 0ms) forwards; }
+[data-loading="breath"] .alt-reveal[data-reveal] > .alt-reveal-inner { animation: alt-fill-ride calc(var(--dur-travel-3) * 2) linear var(--alt-rise-delay, 0ms) backwards; }
+@keyframes alt-fill-ride {
+  0% { opacity: 0; transform: translateY(calc(3px * var(--alt-travel))); animation-timing-function: var(--ease-rise); }
+  50% { opacity: 1; transform: translateY(calc(-1.5px * var(--alt-travel))); animation-timing-function: var(--ease-decay); }
+  100% { transform: none; }
+}
+@keyframes alt-fill-past {
+  0% { background-color: var(--surface-well); box-shadow: var(--well); animation-timing-function: var(--ease-rise); }
+  50% { opacity: 1; background-color: var(--surface-raised); box-shadow: var(--elev-1); animation-timing-function: var(--ease-decay); }
+  100% { opacity: 0; background-color: var(--surface-ground); box-shadow: var(--elev-0); }
+}
+@keyframes alt-reveal-past {
+  0% { background-color: var(--surface-well); box-shadow: var(--well); animation-timing-function: var(--ease-rise); }
+  50% { background-color: var(--surface-raised); box-shadow: var(--elev-1); animation-timing-function: var(--ease-decay); }
+  100% { background-color: transparent; box-shadow: var(--elev-0); }
+}
+@keyframes alt-arrive {
+  0% { opacity: 0; transform: translateY(calc(8px * var(--alt-travel))); animation-timing-function: var(--ease-rise); }
+  20% { opacity: 1; transform: translateY(calc(-3px * var(--alt-travel))); animation-timing-function: var(--ease-decay); }
+  100% { transform: none; }
+}
+@keyframes alt-plate { 0% { opacity: 0; } 20% { opacity: 1; animation-timing-function: var(--ease-decay); } 100% { opacity: 0; } }
+/* Reduced motion and forced colours: the breath stops, as a pending write's does; the imprint holds still at well depth. */
+@media (prefers-reduced-motion: reduce) { [data-loading="breath"] :is(.alt-skeleton, [data-calm] .alt-skeleton, .alt-skeleton[data-calm]) { animation: none; } }
+[data-motion="reduced"] :is(.alt-skeleton, [data-calm] .alt-skeleton, .alt-skeleton[data-calm]) { animation: none; }
+@media (forced-colors: active) { [data-loading="breath"] :is(.alt-skeleton, [data-calm] .alt-skeleton, .alt-skeleton[data-calm]) { animation: none; } }
 .alt-avatar-imprint { display: inline-block; vertical-align: middle; }
 .alt-badge-imprint { display: inline-block; vertical-align: middle; width: 64px; height: 22px; }
 .alt-badge-imprint[data-variant="count"] { width: 22px; border-radius: var(--radius-full); }
