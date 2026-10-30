@@ -3051,6 +3051,9 @@ export declare function SyncIndicator(props: SyncIndicatorProps): React.ReactEle
 /** Line operations for two texts. */
 export declare function diffLines(before: string, after: string): { kind: 'same' | 'add' | 'del'; text: string }[];
 export interface DiffField { key: string; label: string; format?: (value: unknown) => React.ReactNode }
+export type DiffDecision = 'accept' | 'reject';
+/** The changes in a list of line operations, with their ids ("change-1") and lines. */
+export declare function diffChanges(ops: { kind: 'same' | 'add' | 'del'; text: string }[]): { id: string; n: number; from: number; to: number; label: string }[];
 export interface DiffViewProps {
   /** 'text' (default): lines of two texts. 'properties': fields of two records. */
   mode?: 'text' | 'properties';
@@ -3064,6 +3067,12 @@ export interface DiffViewProps {
   caption?: React.ReactNode;
   /** Precomputed line operations, for large inputs. */
   hunks?: { kind: 'same' | 'add' | 'del'; text: string }[];
+  /** Review each change (text mode): raised while undecided with Accept and Reject; header Accept all, Reject all and a count; n/p move between undecided. */
+  review?: boolean;
+  /** Decisions by change id ("change-1", in order). */
+  decisions?: Record<string, DiffDecision>;
+  onDecide?: (changeId: string, decision: DiffDecision) => void;
+  onDecideAll?: (decision: DiffDecision) => void;
   className?: string;
 }
 /** What changed between two versions, in signs and words; flush on the ground, never colour alone. */
@@ -3630,7 +3639,7 @@ declare global {
       PlanPicker: typeof PlanPicker;
       PermissionMatrix: typeof PermissionMatrix;
       SaveBar: typeof SaveBar;
-      DiffView: typeof DiffView; diffLines: typeof diffLines;
+      DiffView: typeof DiffView; diffChanges: typeof diffChanges; diffLines: typeof diffLines;
       SyncIndicator: typeof SyncIndicator;
       NotificationCenter: typeof NotificationCenter; NotificationList: typeof NotificationList;
       Timeline: typeof Timeline; TimelineItem: typeof TimelineItem;

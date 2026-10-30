@@ -15,6 +15,8 @@ What changed between two versions: version history, audit-log detail ("Plan: Pro
 
 **Props:** `mode` (`'text' | 'properties'`); `before`, `after` (texts, or records); `fields` (`{ key, label, format? }[]`, for properties); `context` (default 3); `caption`; `hunks` (precomputed line operations for large inputs; `diffLines(before, after)` makes them).
 
+**Reviewing a proposed change.** With `review` (text mode), each change is a labelled group ("Change 3 of 7, lines 40 to 52") raised as a proposal, with Accept and Reject; the header counts "3 of 7 changes reviewed" and offers Accept all and Reject all; n and p (or ] and [) move between undecided changes. `decisions` is yours (by id, `change-1` in order; `diffChanges` lists them), as is applying them. Accepted lands flush with one afterglow; rejected is muted and collapses to "Rejected · show" after `dur-linger`. Decisions are announced ("Change 3 accepted. 4 left."). Property diffs aren't reviewable yet.
+
 **You provide:** the two versions and a caption that names them.
 
 ```tsx
