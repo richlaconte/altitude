@@ -132,6 +132,7 @@ jobs:
           node ../scripts/record-check.mjs react18-inline-citation node checks/inline-citation.mjs
           node ../scripts/record-check.mjs react18-settings-pattern node checks/settings-pattern.mjs
           node ../scripts/record-check.mjs react18-members-pattern node checks/members-pattern.mjs
+          node ../scripts/record-check.mjs react18-billing-pattern node checks/billing-pattern.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
