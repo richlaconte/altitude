@@ -50,11 +50,11 @@ function App() {
     {
       id: "a2",
       title: "Accounts by plan",
-      sub: 'stack="expand": shares of 100%',
+      sub: 'stack="expand", focus on Team',
       config: { free: { label: "Free" }, team: { label: "Team" }, business: { label: "Business" }, enterprise: { label: "Enterprise" } },
       aspect: 1.7
     },
-    /* @__PURE__ */ React.createElement(A.AreaChart, { data: plans, x: "month", stack: "expand" })
+    /* @__PURE__ */ React.createElement(A.AreaChart, { data: plans, x: "month", stack: "expand", focus: ["team"] })
   ), /* @__PURE__ */ React.createElement(
     Chart,
     {

@@ -91,7 +91,7 @@ A push to `main` then also:
 
 ## Found a bug, or need something it doesn't do?
 
-Open an issue: **https://github.com/richlaconte/altitude/issues/new/choose**. There are templates for a bug, a new feature for an existing component, and a new component, and [CONTRIBUTING.md](https://github.com/richlaconte/altitude/blob/main/CONTRIBUTING.md) says what makes each one useful.
+Open an issue: **https://github.com/richlaconte/altitude/issues/new/choose**. There are templates for a bug, a new feature for an existing component, and a new component, and [CONTRIBUTING.md](https://github.com/richlaconte/altitude/blob/main/CONTRIBUTING.md) says what makes each one useful, and how work is organised (milestones, priorities, the `ready` label and claiming an issue with a draft pull request).
 
 **If you're an agent using this package** in someone else's project, you're welcome to report problems with it here:
 

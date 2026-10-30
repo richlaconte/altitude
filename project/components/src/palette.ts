@@ -104,6 +104,9 @@ export const DATA_GATES = {
   band: { light: [0.43, 0.77], dark: [0.48, 0.67] } as Record<'light' | 'dark', [number, number]>,
   rampStep: 0.06,   // smallest lightness step in the sequential and diverging ramps
   pole: 15,         // diverging poles from positive and critical
+  // data-context (#188): the colour of what a chart isn't about. Neutral, at 3:1, apart from gridlines and data-other;
+  // exempt from the slot distance, because a context series is never told apart by its colour (Research, E105).
+  context: { chroma: 0.02, line: 15, other: 10 },
 };
 
 export const DATA_SLOTS = ['data-1', 'data-2', 'data-3', 'data-4', 'data-5', 'data-6'] as const;
@@ -112,7 +115,7 @@ export const DATA_SEQ = ['data-seq-1', 'data-seq-2', 'data-seq-3', 'data-seq-4',
 export const DATA_DIV_NEG = ['data-div-mid', 'data-div-neg-1', 'data-div-neg-2', 'data-div-neg-3'] as const;
 export const DATA_DIV_POS = ['data-div-mid', 'data-div-pos-1', 'data-div-pos-2', 'data-div-pos-3'] as const;
 /** Every data-* token, in tokens.json order. */
-export const DATA_TOKENS = [...DATA_SLOTS, 'data-other', ...DATA_SEQ, 'data-div-neg-3', 'data-div-neg-2', 'data-div-neg-1', 'data-div-mid',
+export const DATA_TOKENS = [...DATA_SLOTS, 'data-other', 'data-context', ...DATA_SEQ, 'data-div-neg-3', 'data-div-neg-2', 'data-div-neg-1', 'data-div-mid',
   'data-div-pos-1', 'data-div-pos-2', 'data-div-pos-3'] as const;
 
 /** Magnitude, low to high, in one hue: light schemes darken from near-white; dark schemes start near their ground and climb. */
@@ -165,6 +168,17 @@ export function checkDataPalette(get: (name: string) => string): string[] {
   for (const s of ['surface-ground', 'surface-raised']) {
     const r = contrastRatio(other, get(s));
     if (r < DATA_GATES.contrast) out.push(`data-other ${other} on ${s} is ${r.toFixed(2)}:1; marks need 3:1.`);
+  }
+  const ctx = get('data-context');
+  if (ctx) {
+    for (const s of ['surface-ground', 'surface-raised']) {
+      const r = contrastRatio(ctx, get(s));
+      if (r < DATA_GATES.contrast) out.push(`data-context ${ctx} on ${s} is ${r.toFixed(2)}:1; marks need 3:1.`);
+    }
+    if (oklch(ctx)[1] > DATA_GATES.context.chroma) out.push(`data-context ${ctx}: chroma ${oklch(ctx)[1].toFixed(3)}, over ${DATA_GATES.context.chroma}; context must be neutral, never read as a series.`);
+    const dl = deltaE(ctx, get('line')), dot = deltaE(ctx, other);
+    if (dl < DATA_GATES.context.line) out.push(`data-context ${ctx} and line ${get('line')}: ΔE ${fmt(dl)}, under ${DATA_GATES.context.line}; context marks must not read as gridlines.`);
+    if (dot < DATA_GATES.context.other) out.push(`data-context ${ctx} and data-other ${other}: ΔE ${fmt(dot)}, under ${DATA_GATES.context.other}.`);
   }
   for (const [name, ramp] of [['data-seq', DATA_SEQ], ['data-div-neg', DATA_DIV_NEG], ['data-div-pos', DATA_DIV_POS]] as const) {
     const Ls = ramp.map((n) => oklch(get(n))[0]);

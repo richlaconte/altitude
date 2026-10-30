@@ -1705,7 +1705,7 @@ export interface ChartContextValue {
   /** Put the readout on a record by its index in `data`, or take it away with null: for keyboard paths. */
   setActive: (index: number | null) => void;
   /** How to draw a series so it's told apart without colour: fill (a hatch while patterns are on), stroke, dash, marker, edge. */
-  encode: (seriesKey: string) => ChartEncoding;
+  encode: (seriesKey: string, d?: ChartDatum) => ChartEncoding;
   /** Patterns are on: the `patterns` prop, forced colours or print. */
   patterns: boolean;
   /** Label series directly at their marks: on under forced colours and in print. */
@@ -1725,10 +1725,14 @@ export interface ChartContextValue {
   hasRelevance: boolean;
   /** For lines and areas: each record's stretch of x (to the midpoints with its neighbours), and whether it misses. */
   relevanceRegions: Array<{ key: string; x0: number; x1: number; miss: boolean }>;
+  /** Changed since a snapshot: a mark's old value where it changed (null if it didn't, or is new), or null without `since`. */
+  sinceOld: ((d: ChartDatum, seriesKey: string) => number | null) | null;
 }
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
 export interface ChartEncoding {
   slot: ChartSlot;
+  /** Outside the chart's focus: drawn in data-context (GrayText under forced colours), its label in ink-muted. */
+  context: boolean;
   /** For bars and areas: the series colour, a hatch of it, or CanvasText under forced colours. */
   fill: string;
   /** For lines and outlines. */
@@ -1759,8 +1763,11 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   x?: string;
   /** How x is placed. Default: time for ISO dates, epoch numbers or Dates; linear for other numbers; band otherwise. */
   xScale?: 'band' | 'time' | 'linear';
-  /** Width ÷ height of the plot. Default 2, unless `height` is set. */
-  aspect?: number;
+  /**
+   * Width ÷ height of the plot. Default 2, unless `height` is set. 'banked': a line chart's segments set it, banked to
+   * an average of 45° so slopes read accurately, between 1 and 4 for the data area.
+   */
+  aspect?: number | 'banked';
   /** The plot's height in px, instead of an aspect ratio. */
   height?: number;
   /** A visible name, inside the figure. Leave it out when a CardTitle names the chart, and pass `aria-labelledby`. */
@@ -1786,6 +1793,12 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   bandPadding?: number;
   /** Turns the axes off, for a chart that labels its marks directly. Gridlines and the ground line stay. */
   axes?: boolean;
+  /**
+   * Where the value axis's labels go. 'gutter' (default): a column at the plot's left. 'inline': each label just above
+   * its gridline at the plot's left, on a halo, so the plot runs the full width; the top label carries the unit, a label
+   * that would cover a mark is left out, and the ground line goes unlabelled. Vertical cartesian charts only.
+   */
+  yLabels?: 'gutter' | 'inline';
   /** The locale for numbers and dates. Default: the reader's. */
   locale?: string;
   /** Tell series apart by a hatch, dash and marker per slot as well as colour. Always on under forced colours and in print. */
@@ -1807,6 +1820,12 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   live?: boolean;
   /** With live: a "Pause updates" switch in the frame (WCAG 2.2.2). */
   pausable?: boolean;
+  /**
+   * What changed since a snapshot: the records as they were (matched by x or the chart's id) and when, in words
+   * ("since Tuesday 09:00"). Changed bars carry a tick at the old value, changed line points a hollow ring; the frame
+   * says how many changed in a switch that filters to them; up to four changed marks glow on arrival.
+   */
+  since?: { data: ChartDatum[]; label: string };
   /** Updates are paused, controlled. */
   paused?: boolean;
   onPausedChange?: (paused: boolean) => void;
@@ -1835,7 +1854,13 @@ export interface ChartTooltipContentProps {
 }
 /** The readout's rows: value first, series name second, keyed by the series colour. */
 export declare function ChartTooltipContent(props: ChartTooltipContentProps): React.ReactElement;
-export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; }
+/**
+ * The record before, to read each value against: a field on the same record (`key`), or records matched by x position
+ * (`data`), named by `label` ("August", "Last week"). `series` is the one compared, by default the first; a stack is
+ * compared by its total.
+ */
+export interface ChartCompare { key?: string; data?: ChartDatum[]; label: string; series?: string }
+export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; /** Outside the chart's focus: its label recedes. */ context?: boolean; /** In the chart's focus: said as "highlighted". */ highlighted?: boolean; }
 export interface ChartLegendContentProps {
   /** Let people hide and show series: each key becomes an aria-pressed button in a toolbar. Default false. */
   toggle?: boolean;
@@ -1916,6 +1941,24 @@ export interface BarChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * Read each value against the record before: `{ key: 'lastMonth', label: 'August' }` or `{ data: lastWeek, label: 'Last week' }`.
+   * The earlier value is a 2px ink tick across the bar; a stack is compared by its total.
+   */
+  compare?: ChartCompare;
+  /**
+   * Let people pin a reading to the plot: a click (or P on the keyboard path, or a tap while the touch readout is open)
+   * sets it down as a plate. true allows two, which compare in words; a number allows that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled; and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
+  /**
+   * What the chart is about: series keys that keep their colours while the rest take data-context, or a test for the
+   * records that keep theirs. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[] | ((d: ChartDatum) => boolean);
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
@@ -1954,6 +1997,24 @@ export interface LineChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * Read each value against the record before: `{ data: lastWeek, label: 'Last week' }` or `{ key, label }`. The earlier
+   * period is a 1.5px solid ink-muted trace under the compared series, named at its end.
+   */
+  compare?: ChartCompare;
+  /**
+   * Let people pin a reading to the plot: a click (or P on the keyboard path, or a tap while the touch readout is open)
+   * sets it down as a plate. true allows two, which compare in words; a number allows that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled; and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
+  /**
+   * What the chart is about: these series keep their colours and the rest are drawn in data-context, their labels in
+   * ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[];
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
@@ -1972,6 +2033,11 @@ export interface LineChartProps {
   band?: { low: string; high: string; series?: string; label?: string };
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
+  /**
+   * 'banked': the plot takes the proportions that bank the lines' segments to 45° on average, between 1 and 4 for the
+   * data area; the width is the card's. Use a fixed aspect in a grid of equal cards.
+   */
+  aspect?: 'banked';
 }
 /** Change over time for one to four series: 2px lines named at their ends, gaps left as gaps. Renders inside a ChartContainer. */
 export declare function LineChart(props: LineChartProps): React.ReactElement;
@@ -1998,6 +2064,19 @@ export interface AreaChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * Let people pin a reading to the plot: a click (or P on the keyboard path, or a tap while the touch readout is open)
+   * sets it down as a plate. true allows two, which compare in words; a number allows that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled; and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
+  /**
+   * What the chart is about: these series keep their colours and the rest are drawn in data-context, their labels in
+   * ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[];
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
@@ -2076,6 +2155,11 @@ export interface ScatterChartProps {
   size?: number;
   /** The readout. Default true. */
   tooltip?: boolean;
+  /**
+   * What the chart is about: groups that keep their colours while the rest take data-context, or a test for the
+   * records that keep theirs. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[] | ((d: ChartDatum) => boolean);
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit y to the matches. Default false: the axes hold. */
@@ -2091,6 +2175,42 @@ export interface ScatterChartProps {
 }
 /** Two measures per record, to see how they relate: flat dots ringed apart, a shape per group, outliers named. Renders inside a ChartContainer. */
 export declare function ScatterChart(props: ScatterChartProps): React.ReactElement;
+/** The props of a DotPlot. */
+export interface DotPlotProps {
+  /** The records: one per category. undefined or a promise while they load; null or [] when there are none. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** What the plot says when there's no data. */
+  empty?: ChartEmpty;
+  /** The key of each record's category, down the side. */
+  x: string;
+  /** Order the categories by value ('desc': the largest first): the first series', or `to`'s. */
+  sort?: 'asc' | 'desc';
+  /** A spread around each value, as the keys of its low and high: a flat band behind the dot. Never error bars. */
+  range?: [string, string];
+  /** What the spread is, in words. Default "Range". */
+  rangeLabel?: string;
+  /** The series the spread belongs to. Default the first. */
+  rangeSeries?: string;
+  /** Before and after per category (a dumbbell): the earlier dot hollow, the later filled, joined by a 2px ink-muted link. */
+  from?: string;
+  to?: string;
+  /** Force zero onto the axis. Default false. */
+  zero?: boolean;
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  rescale?: boolean;
+  selected?: unknown;
+  onSelect?: (d: ChartDatum | null) => void;
+  drill?: (d: ChartDatum) => string | null | undefined;
+  tooltip?: boolean;
+  /** Series keys that keep their colours while the rest take data-context. */
+  focus?: string[];
+  children?: React.ReactNode;
+}
+/**
+ * Values compared across categories where zero isn't part of the story, averages with their spread, or before and
+ * after per category. Dots lie flat on the ground, ringed in the plot's colour; with no zero there's no ground line.
+ */
+export declare function DotPlot(props: DotPlotProps): React.ReactElement;
 /** A sliding window over x: a span of time, or the last N records. */
 export interface ChartWindow {
   minutes?: number; hours?: number; days?: number; points?: number;
@@ -3254,7 +3374,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; DotPlot: typeof DotPlot; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; filterSentence: typeof filterSentence; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

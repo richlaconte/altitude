@@ -1,0 +1,30 @@
+<!-- @dsCard group="Charts" height=560 subtitle="Values where zero isn't the story, with their spread; before and after per category" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DotPlot — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.dp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .dp { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const services = [["Checkout", 212, 180, 240], ["Search", 188, 170, 205], ["Billing", 236, 190, 320], ["Accounts", 199, 182, 214], ["Media", 228, 196, 268], ["Auth", 184, 176, 193], ["Exports", 221, 187, 262], ["Email", 193, 179, 209]].map(([service, p95, p10, p90]) => ({ service, p95, p10, p90 }));
+const teams = [["Atlas", 71, 78], ["Birch", 64, 62], ["Cedar", 80, 86], ["Delta", 58, 69], ["Ember", 75, 77]].map(([team, q2, q3]) => ({ team, q2, q3 }));
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "dp" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "d1" }, "p95 latency by service"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "All between 180 and 240 ms; the band is the 10th\u201390th percentile")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "d1", aspect: 1.5, config: { p95: { label: "p95", format: (v) => `${v} ms` } } }, /* @__PURE__ */ React.createElement(A.DotPlot, { data: services, x: "service", range: ["p10", "p90"], rangeLabel: "10th\u201390th percentile", sort: "desc" })))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "d2" }, "Accessibility score, Q2 to Q3"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "A dumbbell: the hollow dot is Q2, the filled one Q3")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "d2", aspect: 1.5, config: { q2: { label: "Q2" }, q3: { label: "Q3" } } }, /* @__PURE__ */ React.createElement(A.DotPlot, { data: teams, x: "team", from: "q2", to: "q3", sort: "desc" })))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
