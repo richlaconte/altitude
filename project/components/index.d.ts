@@ -1759,6 +1759,12 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   height?: number;
   /** A visible name, inside the figure. Leave it out when a CardTitle names the chart, and pass `aria-labelledby`. */
   title?: React.ReactNode;
+  /**
+   * The one thing the chart says, as its heading: "Cedar shipped twice as often as Delta in March". The title then sits
+   * above it as a small label; screen readers hear the title, then this, then the summary. Write it from the data
+   * shown; it's never generated.
+   */
+  takeaway?: React.ReactNode;
   description?: React.ReactNode;
   /** What the chart shows, in a sentence or two. Shown under the plot. Without it a summary is generated for screen readers. */
   summary?: React.ReactNode;

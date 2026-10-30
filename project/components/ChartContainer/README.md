@@ -26,6 +26,15 @@ With `contrast="more"`, lines are 3px, adjacent marks are 3px apart, fills get a
 
 **Accessibility.** It's a `figure`, named by its `title` or by `aria-labelledby` (point it at the `CardTitle`), and described by its description and a summary. Pass `summary` with what the chart shows ("Revenue rose 44% while costs held flat."): it's shown under the plot. Without it a summary is generated for screen readers: the chart's kind, its series, the x range, and each series' lowest and highest values with where they fall. The plot is a `group` with `aria-roledescription="chart"`, and its SVG is hidden from assistive technology.
 
+**Say one thing first.** `takeaway` is the one thing the chart says, set as its heading in `text-heading` ink ("Cedar deployed nearly three times as often as Delta"). The `title` then sits above it as a caption-sized `ink-muted` label, so the chart is still named: the figure's accessible name stays the title, and its description is the takeaway, then the summary. When the takeaway's words change with the data they cross-fade over `dur-travel-2`, without the afterglow. Write it yourself, from the data shown; nothing generates one, because a slanted or trivial headline is worse than none. In a `Card`, name the chart with the figure's `title` rather than a `CardTitle`, so the takeaway isn't a second heading under the card's. See [Charts](../../Charts.md), rule 9.
+
+```tsx
+<ChartContainer config={config} title="Deploys by team" takeaway="Cedar deployed nearly three times as often as Delta"
+  summary="Cedar deployed most, 51 times; Delta least, 19.">
+  <BarChart data={deploys} x="team" sort="desc" />
+</ChartContainer>
+```
+
 **The keyboard path.** The plot is one Tab stop: a layer of focusable nodes over the SVG, one level at a time, with a roving tabindex. After Olli and Data Navigator, it goes from the summary to the series to the data:
 
 | Key | On the summary | On a series | On a point |
@@ -127,7 +136,7 @@ function Target({ value }) {
 }
 ```
 
-**You provide:** `config` (each data key: `label`, optionally `format` and `color`), the `data` and its `x` key (or a chart type inside that takes them), and a size: `aspect` (width ÷ height, default 2) or `height` in px. Usually a `summary`, and `aria-labelledby` or `title`.
+**You provide:** `config` (each data key: `label`, optionally `format` and `color`), the `data` and its `x` key (or a chart type inside that takes them), and a size: `aspect` (width ÷ height, default 2) or `height` in px. Usually a `summary`, and `aria-labelledby` or `title`; a `takeaway` when the chart makes a point.
 
 - Do give every chart a summary that says what it shows, not what it is.
 - Do put a chart on a dashboard in a `Card`: the card is raised because it's something you work with, not because its data is.

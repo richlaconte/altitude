@@ -1192,6 +1192,17 @@ An audit of the `ChartReference` preview (#184) found five words over marks: the
 
 Not yet tested with people: whether a label that moves to the left end is still read as belonging to its line.
 
+### E102 · Should a chart say its point before it's read?
+
+A design review of `takeaway` (#187): the BarChart and LineChart previews now lead with one, in a card at 960px and 360px, in all four schemes and under forced colours. `checks/chart-takeaway.mjs` measures it.
+
+- **Words at the top are what's remembered.** Titles that state the message are fixated on and recalled more, and more so at the top (Borkin et al., 2016); a headline stating the pattern shaped which pattern people remembered (Ajani et al., 2021). Before this, the only sentence with a finding was `summary`, under the plot in 13px `ink-muted`.
+- **Authored, never generated.** A title's slant changes what people take away, even against the chart (Kong et al., 2018). The generated screen-reader summary still says the range and trend; the takeaway sits beside it, never in place of it.
+- **The title becomes a label.** With a takeaway the chart is still named: the title steps down to a caption in `ink-muted`, and stays the figure's accessible name. A screen reader hears the name, then the finding, then the summary.
+- **Cross-faded, not glowing.** A takeaway that changes with the data fades in place like a `Stat`'s value. It doesn't take the afterglow, because the marks' changes already spend the attention budget.
+
+Not yet tested with people: whether readers check a takeaway against the marks, or take it on trust.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -2427,6 +2427,14 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-chart-head { display: flex; flex-direction: column; gap: 2px; }
 .alt-chart-title { font: 600 15px/22px var(--font-sans); color: var(--ink); }
 .alt-chart-desc { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+/* A takeaway (#187) is the chart's heading: text-heading in ink. The title over it becomes a label, caption-sized
+   ink-muted, so the chart stays named. A changed takeaway cross-fades in place, like a Stat's value. */
+.alt-chart-takeaway { display: grid; margin: 0; font: 600 19px/26px var(--font-sans); letter-spacing: -0.01em; color: var(--ink); text-wrap: balance; }
+.alt-chart-head[data-takeaway] .alt-chart-title { font: 500 12.5px/17px var(--font-sans); letter-spacing: 0.005em; color: var(--ink-muted); }
+.alt-chart-head[data-takeaway] .alt-chart-desc { margin-top: 2px; }
+.alt-chart-takeaway-text { grid-area: 1 / 1; }
+.alt-chart-takeaway-text[data-in] { animation: alt-stat-in var(--dur-travel-2) var(--ease-glide) both; }
+.alt-chart-takeaway-text[data-out] { animation: alt-stat-out var(--dur-travel-2) var(--ease-glide) both; }
 .alt-chart-plot { position: relative; width: 100%; min-width: 0; }
 .alt-chart-svg { position: absolute; inset: 0; display: block; overflow: visible; }
 .alt-chart-grid line { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }

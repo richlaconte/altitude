@@ -829,6 +829,12 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   height?: number;
   /** A visible name, inside the figure. Leave it out when a CardTitle names the chart, and pass `aria-labelledby`. */
   title?: React.ReactNode;
+  /**
+   * The one thing the chart says, as its heading: "Cedar shipped twice as often as Delta in March" (#187). The title
+   * then sits above it as a small label, so the chart is still named; screen readers hear the title, then this, then
+   * the summary. Write it from the data shown, a trend or a comparison rather than the encoding. It's never generated.
+   */
+  takeaway?: React.ReactNode;
   description?: React.ReactNode;
   /** What the chart shows, in a sentence or two: "Revenue rose 18% while costs held flat." Shown under the plot. Without it a summary is generated for screen readers. */
   summary?: React.ReactNode;
@@ -907,7 +913,7 @@ const TOP_GAP = 8;
  * chart. It's the record drawn as a shape, so all of it lies flush on whatever it sits on: no level, no shadow. When
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
-function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, description, summary,
+function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
   zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
   live = false, pausable = false, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const id = React.useId();
@@ -1385,7 +1391,15 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const labelOf = (d: ChartDatum) => (info.label ? info.label(d) : formatX(d[xKey]));
   const selectedRecord = selecting ? data.find(isSelected) : undefined;
   const selectedWords = selectedRecord ? labelOf(selectedRecord) : hasSelection ? formatX(info.selected) : '';
-  const titleId = title ? `${id}-t` : undefined, descId = description ? `${id}-d` : undefined, sumId = `${id}-s`;
+  const titleId = title ? `${id}-t` : undefined, takeId = takeaway ? `${id}-k` : undefined, descId = description ? `${id}-d` : undefined, sumId = `${id}-s`;
+  // The head: a title, or with a takeaway, the title as a label over the takeaway as the heading; then the description.
+  const head = (title || takeaway || description) ? (
+    <div className="alt-chart-head" data-takeaway={takeaway ? '' : undefined}>
+      {title && <div id={titleId} className="alt-chart-title">{title}</div>}
+      {takeaway && <ChartTakeaway id={takeId!}>{takeaway}</ChartTakeaway>}
+      {description && <p id={descId} className="alt-chart-desc">{description}</p>}
+    </div>
+  ) : null;
   const labelledBy = (rest['aria-labelledby'] as string | undefined) ?? titleId;
   const vars: Record<string, string> = {};
   for (const s of series) vars[`--color-${cssKey(s.key)}`] = s.color;
@@ -1460,10 +1474,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const wrapViews = (plot: React.ReactElement) => !viewsOn ? plot : (
     <Tabs variant="segmented" value={view} onValueChange={setView} className="alt-chart-tabs">
       <div className="alt-chart-bar">
-        <div className="alt-chart-head">
-          {title && <div id={titleId} className="alt-chart-title">{title}</div>}
-          {description && <p id={descId} className="alt-chart-desc">{description}</p>}
-        </div>
+        {head ?? <div className="alt-chart-head" />}
         <TabsList aria-label="View">
           <TabsTrigger value="chart">Chart</TabsTrigger>
           <TabsTrigger value="table">Table</TabsTrigger>
@@ -1687,13 +1698,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   return (
     <ChartContext.Provider value={top.ctx}>
       <figure className={cx('alt-chart', className)} style={{ ...vars, ...style }} aria-labelledby={labelledBy}
-        aria-describedby={[descId, sumId].filter(Boolean).join(' ')} {...rest}>
-        {!viewsOn && (title || description) && (
-          <div className="alt-chart-head">
-            {title && <div id={titleId} className="alt-chart-title">{title}</div>}
-            {description && <p id={descId} className="alt-chart-desc">{description}</p>}
-          </div>
-        )}
+        aria-describedby={[takeId, descId, sumId].filter(Boolean).join(' ')} {...rest}>
+        {!viewsOn && head}
         {wrapViews(<div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
           data-stage={stage} data-patterns={patterns ? '' : undefined} data-refreshing={refreshing ? '' : undefined} aria-busy={refreshing || undefined} style={height != null ? { height } : fitHeight != null ? { height: fitHeight } : { aspectRatio: String(aspect) }}
           onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { if (holdTouch.current) { window.clearTimeout(holdTouch.current.timer); holdTouch.current = null; } }} onClick={onClick} onPointerLeave={onPointerLeave} onPointerEnter={onPointerEnter}
@@ -1985,6 +1991,31 @@ function ChartLanded({ raw, render, refetch, last }: { raw: unknown; render: (d:
 
 const IMPRINT_BARS = [0.55, 0.8, 0.62, 0.9, 0.7, 0.48, 0.75];
 const IMPRINT_DOTS = [[8, 74], [15, 62], [21, 78], [28, 55], [35, 66], [42, 48], [49, 60], [56, 40], [62, 52], [69, 34], [76, 45], [83, 26], [26, 36], [71, 70], [90, 18]];
+/**
+ * A takeaway, as the chart's heading. When its words change with the data it cross-fades (dur-travel-2), as a Stat's
+ * value does, without the afterglow: the marks' changes already spend the attention.
+ */
+function ChartTakeaway({ id, children }: { id: string; children: React.ReactNode }) {
+  const text = typeof children === 'string' ? children : null;
+  const [prev, setPrev] = React.useState<{ text: string; key: number } | null>(null);
+  const shown = React.useRef(text);
+  React.useEffect(() => {
+    if (shown.current !== null && text !== null && shown.current !== text) setPrev((p) => ({ text: shown.current!, key: (p?.key ?? 0) + 1 }));
+    shown.current = text;
+  }, [text]);
+  React.useEffect(() => {
+    if (!prev) return;
+    const t = setTimeout(() => setPrev(null), 400);
+    return () => clearTimeout(t);
+  }, [prev]);
+  return (
+    <p id={id} className="alt-chart-takeaway">
+      <span className="alt-chart-takeaway-text" key={prev?.key ?? 0} data-in={prev ? '' : undefined}>{children}</span>
+      {prev && <span className="alt-chart-takeaway-text" key={`out${prev.key}`} data-out="" aria-hidden="true">{prev.text}</span>}
+    </p>
+  );
+}
+
 /**
  * The chart's imprint: the frame (title, description, legend keys from config) with the plot pressed into the page in
  * the chart's shape, `surface-well` with no labels, so it can't be taken for data.

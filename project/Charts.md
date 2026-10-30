@@ -20,6 +20,7 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
 6. **One axis.** No dual-axis charts: two scales on one plot invite a correlation the data never made. Two measures of different scale are two charts, small multiples, or indexed to a common base.
 7. **Spend changes carefully.** Data that changes glides to its new value at one level, as a re-sort does: it's one change. New data gets an afterglow within the attention budget. Nothing grows from the baseline on first render for decoration; the chart is simply there.
 8. **A chart never travels alone.** As height never travels alone: every chart has a written summary, a keyboard path through its data, a table view, and direct labels or patterns so no series is told apart by colour alone.
+9. **Say one thing first.** A chart that makes a point leads with it: a `takeaway` is the chart's heading ("Cedar deployed nearly three times as often as Delta"), and its title becomes the small label above. Readers fixate on and recall the words at the top, and take away what they say, even against the chart (E102). So the takeaway is authored, never generated: write it from the data shown, as a trend or a comparison rather than a restatement of the encoding ("Deploys by team" is a title, not a takeaway). The application owns its truth, as it owns persistence. A row of equal dashboard cards can do without one; a chart in a report rarely should.
 
 ## Choosing a form
 
