@@ -2720,6 +2720,8 @@ export interface BreadcrumbEntry {
   onClick?: (e: React.MouseEvent) => void;
 }
 export interface BreadcrumbProps extends Omit<React.HTMLAttributes<HTMLElement>, 'children'> {
+  /** 'collapse' (default): steps from the second onward move behind "…" until the trail fits on one line. 'wrap': it wraps. */
+  fit?: 'collapse' | 'wrap';
   items?: BreadcrumbEntry[];
   /** Deeper paths keep the first step and the last (maxItems − 1), with the middle in a menu behind "…". */
   maxItems?: number;
