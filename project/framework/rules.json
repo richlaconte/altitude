@@ -328,6 +328,29 @@
       "criteria": [],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-MEMBERS-001",
+      "title": "Invitations are settled records, and guards are said where the action would be",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Member lists with invitations, roles and removal.",
+      "exceptions": [
+        "Products without invitations or roles apply only the guard requirement."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation",
+        "task-review"
+      ],
+      "repair": "Draw an invitation awaiting acceptance on the ground with an Invited plate, its role and sent date; hover only while sending. Replace an action a person may not take (removing the last owner, demoting yourself out of the last admin role) with the reason in words, and enforce the same guard on the server.",
+      "verification": [
+        "build/checks/members-pattern.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }
