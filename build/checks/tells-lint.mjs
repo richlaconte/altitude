@@ -38,8 +38,15 @@ const KIT_CLASS = /\b(?:bg|text|border|from|via|to|ring|fill|stroke)-(?:slate|gr
 
 /* ── font helpers ── */
 const familyDecl = /(?:font-family:|--font-[\w-]+:|"(?:sans|mono|display)":)\s*([^;}\n]+)/;
-const firstFamily = (line) => { const m = line.match(familyDecl); return m ? m[1].split(',')[0].replace(/["']/g, '').trim().toLowerCase() : null; };
+const firstFamily = (line) => { const m = line.match(familyDecl); return m ? m[1].split(',')[0].replace(/[\\"']/g, '').trim().toLowerCase() : null; };
 const DEFAULT_FONTS = ['inter', 'roboto', 'arial', 'helvetica', 'helvetica neue'];
+// TY5: a family is loaded if a Google Fonts import or an @font-face in the scanned files names it, or it's a system or
+// generic family. Filled in once the files are known (below).
+const LOADED = new Set(['system-ui', '-apple-system', 'blinkmacsystemfont', 'segoe ui', 'ui-sans-serif', 'ui-serif', 'ui-monospace', 'sf mono', 'sfmono-regular',
+  'menlo', 'consolas', 'monaco', 'sans-serif', 'serif', 'monospace', 'cursive', 'inherit', 'initial', 'unset', 'currentcolor']);
+const loaders = (text) => [...[...text.matchAll(/fonts\.googleapis\.com\/css2?\?[^'")\s]*/g)].flatMap((m) => [...m[0].matchAll(/family=([^:&]+)/g)].map((f) => decodeURIComponent(f[1]).replace(/\+/g, ' ').toLowerCase())),
+  ...[...text.matchAll(/@font-face\s*{[^}]*font-family:\s*["']?([^;"']+)/g)].map((m) => m[1].trim().toLowerCase())];
+const unloaded = (l) => { const f = firstFamily(l); return !!f && !f.startsWith('var(') && !LOADED.has(f); };
 const TASTEFUL_FONTS = ['space grotesk', 'geist', 'instrument serif', 'fraunces'];
 
 /* ── shadow and border helpers ── */
@@ -73,6 +80,7 @@ const rules = [
   { id: 'CO8', files: ALL, test: (l) => KIT_CLASS.test(l) || KIT_HEX.some((h) => l.toLowerCase().includes(h)), bad: "{ hex: '#c2410c' }", good: "{ hex: '#2a6f9e' }" },
   { id: 'TY1', files: ALL, test: (l) => DEFAULT_FONTS.includes(firstFamily(l)), bad: 'font-family: Inter, system-ui, sans-serif;', good: 'font-family: var(--font-sans);' },
   { id: 'TY2', files: ALL, test: (l) => TASTEFUL_FONTS.includes(firstFamily(l)), bad: '--font-display: "Space Grotesk", sans-serif;', good: '--font-display: "Instrument Sans", sans-serif;' },
+  { id: 'TY5', files: ALL, test: unloaded, bad: '--font-display: "Recoleta", serif;', good: '--font-sans: "Instrument Sans", system-ui, sans-serif;' },
   { id: 'TY4', files: CSS, test: (l) => /text-transform:\s*uppercase/.test(l), bad: '.kicker { text-transform: uppercase; letter-spacing: 0.06em; }', good: '.label { text-transform: none; }' },
   { id: 'LA8', files: MARKUP, test: (l) => /<(?:span|p|div|small|strong)\b[^>]*>\s*0[1-9]\.?\s*<\//.test(l), bad: '<span className="step">02</span>', good: '<span className="step">Two</span>' },
   { id: 'CM2', files: CSS, test: (l) => /backdrop-filter:(?!\s*none)/.test(l), bad: '.panel { backdrop-filter: blur(12px); }', good: '.panel { backdrop-filter: none; }' },
@@ -104,11 +112,13 @@ const files = [
   ...walk('project/components/src', /\.(ts|tsx)$/), ...walk('site', /\.(ts|tsx|css)$/),
 ];
 
+for (const f of files) for (const name of loaders(readFileSync(join(root, f), 'utf8'))) LOADED.add(name);
+
 function scan(file, text) {
   const lines = text.split('\n'), found = [];
   lines.forEach((line, i) => {
     for (const rule of rules) {
-      if (!rule.files.test(file) && !(file.endsWith('.json') && /^(MO2|TY1|TY2)$/.test(rule.id))) continue;
+      if (!rule.files.test(file) && !(file.endsWith('.json') && /^(MO2|TY1|TY2|TY5)$/.test(rule.id))) continue;
       if (!rule.test(line)) continue;
       const ignored = (s) => new RegExp(`tells-ignore:\\s*(?:[A-Z]{2}\\d+,\\s*)*${rule.id}\\s+[A-Za-z]`).test(s ?? '');
       if (ignored(line) || ignored(lines[i - 1])) continue;
