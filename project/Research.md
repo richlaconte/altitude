@@ -1424,6 +1424,10 @@ A measurement (#265): at 375 CSS px the Resizable preview's list pane got about 
 
 A measurement (#257): at 375 CSS px the work week drew five 55px columns, so events read "Sta…" and "D", and the 55×11px slots were far under 24px. Under 480px of its own width, `narrowView="day"` (default) shows one day at a time, paged by the header's previous and next day; `narrowView={false}` keeps the view. Under a coarse pointer an hour is 96px unless `hourHeight` is set, so a 15-minute slot or event is 24px and still in proportion to its time. On touch a tap opens an event (double-click isn't reliably delivered there). A day strip, tap-to-create and press-and-hold to move are left for the touch-drag phase (#254–#256). `checks/schedule-narrow.mjs`.
 
+### E128 · Squeeze a table, or let it scroll?
+
+A measurement (#260): at 375 CSS px the DataGrid's five columns were each about 65px (its table is `table-layout: fixed` at 100%, which ignores a cell's minimum), so names read "Des…" and status badges "Acti"; DataTable's owners wrapped and clipped. The frame could already scroll; the columns never asked for the width. Under 480px of the frame's width (a container query), the table lays out by content at least as wide as its frame, every column keeps at least 6rem (checkbox, grip, expand and edit columns excepted), and the table scrolls inside its frame, the edge with more columns fading. Columns take `minWidth` and `sticky` (opaque ground surface over a flush 1px edge, no shadow, since a sticky column isn't live; the start fade is dropped when one marks the edge). Wide, nothing changes. The issue's `narrow="stack"` (rows as records) and `priority` are deferred: scrolling keeps the table's semantics and DataGrid's cell navigation intact, and stacking needs its own design for editing. `checks/table-narrow.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

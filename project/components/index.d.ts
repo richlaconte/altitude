@@ -1160,6 +1160,10 @@ export interface DataTableColumn<T> {
   sortValue?: (row: T) => string | number;
   align?: 'start' | 'end';
   width?: number | string;
+  /** The narrowest the column gets; on a phone the table scrolls rather than squeezing it. Default: 6rem when narrow. */
+  minWidth?: number | string;
+  /** Keep this column in view while the table scrolls sideways, over a flush 1px edge. */
+  sticky?: boolean;
 }
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
 export interface FilterOption { value: string; label: string }
@@ -1234,6 +1238,10 @@ export interface DataGridColumn<T> {
   /** A custom editor (a Select): it commits as soon as a value is chosen. */
   editor?: (control: DataGridEditorControl) => React.ReactNode;
   width?: number | string;
+  /** The narrowest the column gets; on a phone the table scrolls rather than squeezing it. Default: 6rem when narrow. */
+  minWidth?: number | string;
+  /** Keep this column in view while the table scrolls sideways, over a flush 1px edge. */
+  sticky?: boolean;
 }
 export interface DataGridProps<T> {
   'aria-label'?: string;
