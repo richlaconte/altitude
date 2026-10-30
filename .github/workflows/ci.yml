@@ -1,6 +1,10 @@
-# One pipeline for everything.
-#   Every push and pull request: check the design system is in sync with its sources, render every preview in every
-#   scheme, run the interaction checks, and build the package and Storybook.
+# One pipeline for everything, in parallel jobs; the ci job at the end passes only when every one of them did.
+#   build:      the design system is in sync with its sources; type-check; the package and its declarations; the
+#               shadcn/ui example; Storybook and the landing page.
+#   framework:  framework contracts and the installed consumer.
+#   checks:     every preview rendered in every scheme and every interaction check (React 18, React 19, StrictMode),
+#               split into shards of about equal time by scripts/ci-checks.mjs from build/checks/ci.json. Each shard
+#               runs its share one after another, exactly as the single job used to, on a runner of its own.
 #   Pushes to main then also: deploy the landing page and Storybook (under /storybook/) to GitHub Pages, and publish to npm if package.json has a new version.
 name: CI
 
@@ -22,7 +26,8 @@ env:
   STORYBOOK_DISABLE_TELEMETRY: 1
 
 jobs:
-  check:
+  build:
+    name: Sync, package and site
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -40,6 +45,10 @@ jobs:
           npm ci
           npm ci --prefix build
 
+      # build/checks/ci.json says what the checks jobs run; a check that runs nowhere fails here, before anything else.
+      - name: Every check in build/checks runs in CI
+        run: node scripts/ci-checks.mjs --check
+
       # build/ is the kit that produces the design system's bundle and previews (see build/SETUP.md). Rebuilding must
       # change nothing: if it does, someone edited the sources without rebuilding, and project/ is out of date.
       - name: Design system is in sync with its sources
@@ -51,171 +60,6 @@ jobs:
           node previews.mjs
           test -z "$(git ls-files --others --exclude-standard -- ../project)" || { echo "::error::Generated project files must be tracked."; exit 1; }
           git diff --exit-code -- ../project || { echo "::error::project/ is out of date: run 'node build.mjs && node previews.mjs' in build/ and commit the result."; exit 1; }
-
-      - name: Render every preview in every scheme, and run the interaction checks
-        working-directory: build
-        run: |
-          npx playwright-core install --with-deps chromium
-          mkdir -p test
-          cp node_modules/react/umd/react.production.min.js node_modules/react-dom/umd/react-dom.production.min.js test/
-          python3 tokcss.py ../project/tokens.json test/tokens.css
-          node shoot.mjs "" daylight,nightfall,mesa,alpine 960
-          # Every preview as a phone (320 and 375, touch): overflow, target size, field text. PHONE_FAIL lists what fails.
-          PHONE_FAIL= node ../scripts/record-check.mjs phone node checks/phone.mjs
-          node ../scripts/record-check.mjs density node checks/density.mjs
-          node checks/approach-and-lamps.mjs
-          node checks/field-focus.mjs
-          node checks/avatar.mjs
-          node ../scripts/record-check.mjs react18-modal node checks/modal-lifecycle.mjs
-          node ../scripts/record-check.mjs react18-inline node checks/inline-edit.mjs
-          node ../scripts/record-check.mjs react18-actions node checks/actions-in-place.mjs
-          node ../scripts/record-check.mjs react18-item-group node checks/item-group.mjs
-          node ../scripts/record-check.mjs react18-board-edit node checks/board-edit.mjs
-          node ../scripts/record-check.mjs react18-table-editing node checks/table-editing.mjs
-          node ../scripts/record-check.mjs react18-property-list node checks/property-list.mjs
-          node ../scripts/record-check.mjs react18-edit-region node checks/edit-region.mjs
-          node ../scripts/record-check.mjs react18-tag-input node checks/tag-input.mjs
-          node ../scripts/record-check.mjs react18-date-picker node checks/date-picker.mjs
-          node ../scripts/record-check.mjs react18-date-presets node checks/date-presets.mjs
-          node ../scripts/record-check.mjs react18-tree node checks/tree.mjs
-          node ../scripts/record-check.mjs react18-checklist node checks/checklist.mjs
-          node ../scripts/record-check.mjs react18-filter-bar node checks/filter-bar.mjs
-          node ../scripts/record-check.mjs react18-schedule node checks/schedule.mjs
-          node ../scripts/record-check.mjs react18-data-grid node checks/data-grid.mjs
-          node ../scripts/record-check.mjs react18-data-palette node checks/data-palette.mjs
-          node ../scripts/record-check.mjs react18-chart-motion node checks/chart-motion.mjs
-          node ../scripts/record-check.mjs react18-hold-button node checks/hold-button.mjs
-          node ../scripts/record-check.mjs react18-separator node checks/separator.mjs
-          node ../scripts/record-check.mjs react18-link node checks/link.mjs
-          node ../scripts/record-check.mjs react18-formatted-number node checks/formatted-number.mjs
-          node ../scripts/record-check.mjs react18-relative-time node checks/relative-time.mjs
-          node ../scripts/record-check.mjs react18-copy-button node checks/copy-button.mjs
-          node ../scripts/record-check.mjs react18-toggle node checks/toggle.mjs
-          node ../scripts/record-check.mjs react18-toolbar node checks/toolbar.mjs
-          node ../scripts/record-check.mjs react18-split-button node checks/split-button.mjs
-          node ../scripts/record-check.mjs react18-number-input node checks/number-input.mjs
-          node ../scripts/record-check.mjs react18-input-otp node checks/input-otp.mjs
-          node ../scripts/record-check.mjs react18-time-input node checks/time-input.mjs
-          node ../scripts/record-check.mjs react18-password-input node checks/password-input.mjs
-          node ../scripts/record-check.mjs react18-secret-field node checks/secret-field.mjs
-          node ../scripts/record-check.mjs react18-code-block node checks/code-block.mjs
-          node ../scripts/record-check.mjs react18-color-picker node checks/color-picker.mjs
-          node ../scripts/record-check.mjs react18-breadcrumb node checks/breadcrumb.mjs
-          node ../scripts/record-check.mjs react18-pagination node checks/pagination.mjs
-          node ../scripts/record-check.mjs react18-page-header node checks/page-header.mjs
-          node ../scripts/record-check.mjs react18-app-shell node checks/app-shell.mjs
-          node ../scripts/record-check.mjs react18-resizable node checks/resizable.mjs
-          node ../scripts/record-check.mjs react18-context-menu node checks/context-menu.mjs
-          node ../scripts/record-check.mjs react18-alert-banner node checks/alert-banner.mjs
-          node ../scripts/record-check.mjs react18-app-mode node checks/app-mode.mjs
-          node ../scripts/record-check.mjs react18-primary-scope node checks/primary-scope.mjs
-          node ../scripts/record-check.mjs react18-table-columns node checks/table-columns.mjs
-          node ../scripts/record-check.mjs react18-table-paging node checks/table-paging.mjs
-          node ../scripts/record-check.mjs react18-table-bulk node checks/table-bulk.mjs
-          node ../scripts/record-check.mjs react18-saved-views node checks/saved-views.mjs
-          node ../scripts/record-check.mjs react18-dropzone-queue node checks/dropzone-queue.mjs
-          node ../scripts/record-check.mjs react18-filter-groups node checks/filter-groups.mjs
-          node ../scripts/record-check.mjs react18-timeline node checks/timeline.mjs
-          node ../scripts/record-check.mjs react18-notifications node checks/notifications.mjs
-          node ../scripts/record-check.mjs react18-sync-indicator node checks/sync-indicator.mjs
-          node ../scripts/record-check.mjs react18-diff-view node checks/diff-view.mjs
-          node ../scripts/record-check.mjs react18-save-bar node checks/save-bar.mjs
-          node ../scripts/record-check.mjs react18-permission-matrix node checks/permission-matrix.mjs
-          node ../scripts/record-check.mjs react18-plan-picker node checks/plan-picker.mjs
-          node ../scripts/record-check.mjs react18-feature-gate node checks/feature-gate.mjs
-          node ../scripts/record-check.mjs react18-comment-thread node checks/comment-thread.mjs
-          node ../scripts/record-check.mjs react18-tour node checks/tour.mjs
-          node ../scripts/record-check.mjs react18-prompt-input node checks/prompt-input.mjs
-          node ../scripts/record-check.mjs react18-conversation node checks/conversation.mjs
-          node ../scripts/record-check.mjs react18-confirmation node checks/confirmation.mjs
-          node ../scripts/record-check.mjs react18-trace node checks/trace.mjs
-          node ../scripts/record-check.mjs react18-input-suggestion node checks/input-suggestion.mjs
-          node ../scripts/record-check.mjs react18-property-proposals node checks/property-proposals.mjs
-          node ../scripts/record-check.mjs react18-ai-label node checks/ai-label.mjs
-          node ../scripts/record-check.mjs react18-inline-citation node checks/inline-citation.mjs
-          node ../scripts/record-check.mjs react18-settings-pattern node checks/settings-pattern.mjs
-          node ../scripts/record-check.mjs react18-members-pattern node checks/members-pattern.mjs
-          node ../scripts/record-check.mjs react18-billing-pattern node checks/billing-pattern.mjs
-          node ../scripts/record-check.mjs react18-auth-pattern node checks/auth-pattern.mjs
-          node ../scripts/record-check.mjs react18-audit-log-pattern node checks/audit-log-pattern.mjs
-          node ../scripts/record-check.mjs react18-import-pattern node checks/import-pattern.mjs
-          node ../scripts/record-check.mjs react18-sync-pattern node checks/sync-pattern.mjs
-          node ../scripts/record-check.mjs react18-developer-settings-pattern node checks/developer-settings-pattern.mjs
-          node ../scripts/record-check.mjs react18-agent-action-pattern node checks/agent-action-pattern.mjs
-          node ../scripts/record-check.mjs react18-onboarding-pattern node checks/onboarding-pattern.mjs
-          node ../scripts/record-check.mjs react18-app-skeleton node checks/app-skeleton.mjs
-          node ../scripts/record-check.mjs react18-adapter-tiptap node checks/adapter-tiptap.mjs
-          node ../scripts/record-check.mjs react18-adapter-codemirror node checks/adapter-codemirror.mjs
-          node ../scripts/record-check.mjs react18-adapter-react-flow node checks/adapter-react-flow.mjs
-          node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
-          node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
-          node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
-          node ../scripts/record-check.mjs react18-area-chart node checks/area-chart.mjs
-          node ../scripts/record-check.mjs react18-chart-tooltip node checks/chart-tooltip.mjs
-          node ../scripts/record-check.mjs react18-chart-legend node checks/chart-legend.mjs
-          node ../scripts/record-check.mjs react18-chart-keyboard node checks/chart-keyboard.mjs
-          node ../scripts/record-check.mjs react18-chart-table node checks/chart-table.mjs
-          node ../scripts/record-check.mjs react18-chart-loading node checks/chart-loading.mjs
-          node ../scripts/record-check.mjs react18-chart-status node checks/chart-status.mjs
-          node ../scripts/record-check.mjs react18-chart-reference node checks/chart-reference.mjs
-          node ../scripts/record-check.mjs react18-chart-takeaway node checks/chart-takeaway.mjs
-          node ../scripts/record-check.mjs react18-chart-axis-text node checks/chart-axis-text.mjs
-          node ../scripts/record-check.mjs react18-chart-banking node checks/chart-banking.mjs
-          node ../scripts/record-check.mjs react18-chart-focus node checks/chart-focus.mjs
-          node ../scripts/record-check.mjs react18-chart-compare node checks/chart-compare.mjs
-          node ../scripts/record-check.mjs react18-chart-pins node checks/chart-pins.mjs
-          node ../scripts/record-check.mjs react18-chart-since node checks/chart-since.mjs
-          node ../scripts/record-check.mjs react18-chart-live node checks/chart-live.mjs
-          node ../scripts/record-check.mjs react18-chart-filter node checks/chart-filter.mjs
-          node ../scripts/record-check.mjs react18-chart-select node checks/chart-select.mjs
-          node ../scripts/record-check.mjs react18-sparkline node checks/sparkline.mjs
-          node ../scripts/record-check.mjs react18-stat node checks/stat.mjs
-          node ../scripts/record-check.mjs react18-meter node checks/meter.mjs
-          node ../scripts/record-check.mjs react18-bar-list node checks/bar-list.mjs
-          node ../scripts/record-check.mjs react18-heatmap node checks/heatmap.mjs
-          node ../scripts/record-check.mjs react18-scatter-chart node checks/scatter-chart.mjs
-          node ../scripts/record-check.mjs react18-dot-plot node checks/dot-plot.mjs
-          node ../scripts/record-check.mjs react18-range-slider node checks/range-slider.mjs
-          node ../scripts/record-check.mjs react18-chart-brush node checks/chart-brush.mjs
-          node ../scripts/record-check.mjs chart-themes node checks/chart-themes.mjs
-          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,AreaChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,ChartStatus,ChartReference,ChartLive,ChartSince,ChartFilter,ChartSelect,ChartBrush,Sparkline,Stat,Meter,BarList daylight 960
-          DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
-          DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
-
-      - name: React 19 runtime and StrictMode regressions
-        run: |
-          node scripts/build-check-fixtures.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-modal node build/checks/modal-lifecycle.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-inline node build/checks/inline-edit.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-actions node build/checks/actions-in-place.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-item-group node build/checks/item-group.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-board-edit node build/checks/board-edit.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-table-editing node build/checks/table-editing.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-property-list node build/checks/property-list.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-edit-region node build/checks/edit-region.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-tag-input node build/checks/tag-input.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-date-picker node build/checks/date-picker.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-tree node build/checks/tree.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-checklist node build/checks/checklist.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-filter-bar node build/checks/filter-bar.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-schedule node build/checks/schedule.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19" node scripts/record-check.mjs react19-data-grid node build/checks/data-grid.mjs
-          ALT_CHECK_STRICT=1 node scripts/build-check-fixtures.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-modal node build/checks/modal-lifecycle.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-inline node build/checks/inline-edit.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-item-group node build/checks/item-group.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-board-edit node build/checks/board-edit.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-table-editing node build/checks/table-editing.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-property-list node build/checks/property-list.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-edit-region node build/checks/edit-region.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-tag-input node build/checks/tag-input.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-date-picker node build/checks/date-picker.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-tree node build/checks/tree.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-checklist node build/checks/checklist.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-filter-bar node build/checks/filter-bar.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-schedule node build/checks/schedule.mjs
-          ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict" node scripts/record-check.mjs strict-data-grid node build/checks/data-grid.mjs
-
 
       - name: Type-check against React 19
         run: npm run typecheck
@@ -229,12 +73,10 @@ jobs:
       - name: shadcn/ui chart on Altitude's tokens
         working-directory: build
         run: |
+          npx playwright-core install --with-deps chromium
           npm ci --prefix ../examples/shadcn-chart
           node ../examples/shadcn-chart/build.mjs
           node ../scripts/record-check.mjs shadcn-chart node checks/shadcn-chart.mjs
-
-      - name: Framework contracts and installed consumer
-        run: npm run check:framework
 
       - name: Build Storybook
         run: npm run build-storybook
@@ -245,17 +87,54 @@ jobs:
           npm run build-site
           cp -r storybook-static site-dist/storybook
 
-      - name: Keep Actions in place acceptance evidence
+      - name: Hand this job's evidence to the ci job
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: actions-in-place-evidence
-          path: |
-            build/test/alt-05/
-            build/test/shot-InlineEdit-*.png
-            build/test/shot-Dialog-*.png
-            build/test/shot-ActionsInPlace-*.png
-          if-no-files-found: warn
+          name: alt-05-build
+          path: build/test/alt-05/
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - name: Keep the screenshots of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: preview-screenshots-build
+          path: build/test/shot-*.png
+          if-no-files-found: ignore
+
+      # Deployed by the pages job, which waits for the ci job: nothing is deployed unless every check passed.
+      - name: Hand the site to the Pages deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site-dist
+
+  framework:
+    name: Framework contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            build/package-lock.json
+            examples/shadcn-chart/package-lock.json
+
+      - name: Install
+        run: |
+          npm ci
+          npm ci --prefix build
+
+      - name: Framework contracts and installed consumer
+        run: |
+          npx --prefix build playwright-core install --with-deps chromium
+          npm run build
+          npm run check:framework
 
       - name: Keep framework contract evidence
         if: always()
@@ -268,23 +147,142 @@ jobs:
             build/test/framework-sizes.json
           if-no-files-found: warn
 
+  checks:
+    name: Checks ${{ matrix.shard }}/${{ strategy.job-total }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Every shard runs to the end, so one run reports every failure. More shards: add a number here; the split follows.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            build/package-lock.json
+            examples/shadcn-chart/package-lock.json
+
+      - name: Install
+        run: |
+          npm ci
+          npm ci --prefix build
+
+      - name: Set up the render kit (build/SETUP.md, "One-time setup")
+        working-directory: build
+        run: |
+          npx playwright-core install --with-deps chromium
+          mkdir -p test
+          cp node_modules/react/umd/react.production.min.js node_modules/react-dom/umd/react-dom.production.min.js test/
+          python3 tokcss.py ../project/tokens.json test/tokens.css
+
+      # node scripts/ci-checks.mjs --plan 1/6 prints what each shard runs.
+      - name: Render previews and run the interaction checks
+        run: node scripts/ci-checks.mjs ${{ matrix.shard }}/${{ strategy.job-total }}
+
+      - name: Hand this shard's evidence to the ci job
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: alt-05-checks-${{ matrix.shard }}
+          path: build/test/alt-05/
+          retention-days: 1
+          if-no-files-found: ignore
+
+      # Only the shard that ran the focused renders has these.
+      - name: Hand the focused renders' screenshots to the ci job
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: renders-evidence-shots
+          path: build/test/evidence-shots/
+          retention-days: 1
+          if-no-files-found: ignore
+
       - name: Keep the screenshots of a failed run
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: preview-screenshots
+          name: preview-screenshots-${{ matrix.shard }}
           path: build/test/shot-*.png
           if-no-files-found: ignore
 
-      - name: Hand the site to the Pages deploy
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v5
+  # The one status to wait for. It also puts the jobs' evidence back together as the single artifact it always was.
+  ci:
+    if: ${{ !cancelled() }}
+    needs: [build, framework, checks]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read   # to download this run's artifacts
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          path: site-dist
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            build/package-lock.json
+            examples/shadcn-chart/package-lock.json
+
+      - name: Install
+        run: |
+          npm ci
+          npm ci --prefix build
+
+      # One artifact at a time, each tried three times. Anything still missing fails "The evidence is complete" below.
+      - name: Collect the jobs' evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for name in $(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" --jq '.artifacts[].name | select(startswith("alt-05-") or . == "renders-evidence-shots")'); do
+            for attempt in 1 2 3; do
+              rm -rf "parts/$name"
+              gh run download "$GITHUB_RUN_ID" -n "$name" -D "parts/$name" && break
+              echo "::warning::Couldn't download $name (attempt $attempt of 3)"
+              sleep $((attempt * 5))
+            done
+          done
+          mkdir -p build/test
+          cp parts/renders-evidence-shots/*.png build/test/ || echo "::warning::No screenshots from the focused renders"
+
+      - name: One record of the evidence, in the order the checks ran
+        run: node scripts/record-check.mjs --merge parts/alt-05-*
+
+      - name: Keep Actions in place acceptance evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: actions-in-place-evidence
+          path: |
+            build/test/alt-05/
+            build/test/shot-InlineEdit-*.png
+            build/test/shot-Dialog-*.png
+            build/test/shot-ActionsInPlace-*.png
+          if-no-files-found: warn
+
+      - name: Every job passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+
+      # Every labelled check the shards run, and the build job's two, kept their command, exit status and log.
+      - name: The evidence is complete
+        run: |
+          { node scripts/ci-checks.mjs --labels; echo package-api; echo shadcn-chart; } | sort > expected.txt
+          jq -r '.checks[].label' build/test/alt-05/results.json | sort > recorded.txt
+          missing=$(comm -23 expected.txt recorded.txt)
+          [ -z "$missing" ] || { echo "::error::The evidence has no record of: $(echo $missing)"; exit 1; }
+          echo "All $(wc -l < expected.txt) checks are on record."
 
   pages:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: check
+    needs: ci
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -298,7 +296,7 @@ jobs:
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: check
+    needs: ci
     runs-on: ubuntu-latest
     permissions:
       contents: write   # to push the version tag
