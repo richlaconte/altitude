@@ -1314,7 +1314,7 @@ function Chart({ id, title, sub, children, ...props }) {
 function App() {
   return (
     <div className="lc">
-      <Chart id="l1" title="Response time" sub="14 Mar, every 30 minutes" config={{ p50: { label: 'p50' }, p95: { label: 'p95' } }}>
+      <Chart id="l1" title="Response time" sub='14 Mar, every 30 minutes; yLabels="inline"' yLabels="inline" config={{ p50: { label: 'p50' }, p95: { label: 'p95' } }}>
         <A.LineChart data={latency} x="t" y={{ format: (ms) => `${ms} ms` }} />
       </Chart>
       <Chart id="l2" title="Monthly revenue" takeaway="Revenue rose 70% over the year" sub='curve="monotone": no overshoot' config={{ revenue: { label: 'Revenue', format: usd.format } }} summary="Revenue rose 70% over the year, with small dips in September, December and March.">

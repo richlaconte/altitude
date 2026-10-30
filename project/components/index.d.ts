@@ -1780,6 +1780,12 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   bandPadding?: number;
   /** Turns the axes off, for a chart that labels its marks directly. Gridlines and the ground line stay. */
   axes?: boolean;
+  /**
+   * Where the value axis's labels go. 'gutter' (default): a column at the plot's left. 'inline': each label just above
+   * its gridline at the plot's left, on a halo, so the plot runs the full width; the top label carries the unit, a label
+   * that would cover a mark is left out, and the ground line goes unlabelled. Vertical cartesian charts only.
+   */
+  yLabels?: 'gutter' | 'inline';
   /** The locale for numbers and dates. Default: the reader's. */
   locale?: string;
   /** Tell series apart by a hatch, dash and marker per slot as well as colour. Always on under forced colours and in print. */

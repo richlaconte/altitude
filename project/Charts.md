@@ -44,7 +44,7 @@ Choose by the job the data does, not by what looks rich.
 
 | Part | Tier | Built like |
 |---|---|---|
-| The plot, gridlines and axes | ground | flat; gridlines are `line`, axis text `ink-muted` |
+| The plot, gridlines and axes | ground | flat; gridlines are `line`; axis text a 13px caption in weight 400, `ink-muted` and tabular, lighter than a label on a control; y labels in a gutter, or inline just above their gridlines on a halo |
 | The zero baseline | ground | the ground line: 1px `ink-muted`, as under `Stepper` and `Drilldown` |
 | Marks (bars, lines, points, cells) | ground | flat ink in a series colour, no shadow, no wall, no sheen |
 | A scatter's dots | ground | flat `data-*` with a marker shape per group, ringed 2px in the plot's colour so overlaps stay apart; outliers named in `ink` with a 1px leader; no word, the trend's included, covers a dot |

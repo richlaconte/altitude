@@ -2440,7 +2440,10 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-chart-grid line { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
 .alt-chart-ground { stroke: var(--ink-muted); stroke-width: 1; shape-rendering: crispEdges; }
 .alt-chart-floor { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
-.alt-chart-axis text { fill: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: 0.005em; }
+/* Axis text is a caption in weight 400 (#193): the frame's words rank below the marks, the ground line and references.
+   Inline y labels sit just above their gridlines on a halo of the plot's colour, as reference labels do. */
+.alt-chart-axis text { fill: var(--ink-muted); font: 400 13px/19px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-chart-axis[data-inline] text { stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; }
 .alt-chart-summary { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); text-wrap: pretty; }
 /* ── BarChart: amounts as lengths standing on the ground line. Bars are the record, so they're flat data-* fills,
    square where they meet the ground and rounded (radius-xs) only at the data end; neighbours and stacked segments
@@ -2914,6 +2917,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 [data-contrast="more"] .alt-chart-ground { stroke: var(--ink); }
 @media (forced-colors: active) {
   .alt-chart-axis text { fill: CanvasText; }
+  .alt-chart-axis[data-inline] text { stroke: Canvas; }
   .alt-chart-grid line, .alt-chart-floor { stroke: GrayText; }
   .alt-chart-ground { stroke: CanvasText; }
 }

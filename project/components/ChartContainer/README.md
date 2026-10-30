@@ -35,6 +35,8 @@ With `contrast="more"`, lines are 3px, adjacent marks are 3px apart, fills get a
 </ChartContainer>
 ```
 
+**Axis text.** Tick labels are captions: 13px, weight 400, `ink-muted`, tabular figures. Weight 500 is for labels on controls, so axis text is lighter, and the frame's words rank below the marks, the ground line and the references. (This changed from 500 12.5px in #193, with no API change.) `yLabels="inline"` sets each y label just above its gridline at the plot's left, on a halo of the plot's colour, so the plot runs the card's full width: 56px more in a 440px card, about a fifth of the plot at phone width. The top label carries the unit ("250 ms"), the rest only the number. A label that would sit on a line, an area or a bar is left out, and its gridline stays. The ground line goes unlabelled, because it's zero. It's for vertical cartesian charts; the default stays `'gutter'`.
+
 **The keyboard path.** The plot is one Tab stop: a layer of focusable nodes over the SVG, one level at a time, with a roving tabindex. After Olli and Data Navigator, it goes from the summary to the series to the data:
 
 | Key | On the summary | On a series | On a point |
