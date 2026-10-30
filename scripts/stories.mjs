@@ -15,7 +15,7 @@ mkdirSync(out, { recursive: true });
 writeFileSync(`${out}/tokens.css`, tokensCss('project/tokens.json'));
 
 const rel = (p) => '../../' + p; // from .storybook/generated to the repo root
-const guides = [['Introduction', 'README.md'], ['Elevation', 'Elevation.md'], ['Motion', 'Motion.md'], ['Charts', 'Charts.md'], ['Theming', 'Theming.md'], ['Research', 'Research.md'], ['Actions in place', 'ActionsInPlace.md'], ['Framework', 'framework/README.md'], ['Edit record', 'framework/patterns/edit-record.md'], ['Async collection', 'framework/patterns/async-collection.md'], ['Consequential action', 'framework/patterns/consequential-action.md'], ['Review and submit', 'framework/patterns/review-submit.md'], ['Settings', 'framework/patterns/settings.md'], ['Members', 'framework/patterns/members.md'], ['Billing', 'framework/patterns/billing.md']];
+const guides = [['Introduction', 'README.md'], ['Elevation', 'Elevation.md'], ['Motion', 'Motion.md'], ['Charts', 'Charts.md'], ['Theming', 'Theming.md'], ['Research', 'Research.md'], ['Actions in place', 'ActionsInPlace.md'], ['Framework', 'framework/README.md'], ['Edit record', 'framework/patterns/edit-record.md'], ['Async collection', 'framework/patterns/async-collection.md'], ['Consequential action', 'framework/patterns/consequential-action.md'], ['Review and submit', 'framework/patterns/review-submit.md'], ['Settings', 'framework/patterns/settings.md'], ['Members', 'framework/patterns/members.md'], ['Billing', 'framework/patterns/billing.md'], ['Auth', 'framework/patterns/auth.md']];
 for (const [title, file] of guides) {
   writeFileSync(`${out}/guide-${title}.mdx`, `import { Meta, Markdown } from '@storybook/addon-docs/blocks';
 import md from '${rel('project/' + file)}?raw';
@@ -26,7 +26,7 @@ import md from '${rel('project/' + file)}?raw';
 `);
 }
 
-const pageDocs = { Elevation: 'project/Elevation.md', Motion: 'project/Motion.md', ActionsInPlace: 'project/ActionsInPlace.md', EditRecord: 'project/framework/patterns/edit-record.md', AsyncCollection: 'project/framework/patterns/async-collection.md', ConsequentialAction: 'project/framework/patterns/consequential-action.md', ReviewSubmit: 'project/framework/patterns/review-submit.md', SettingsPattern: 'project/framework/patterns/settings.md', MembersPattern: 'project/framework/patterns/members.md', BillingPattern: 'project/framework/patterns/billing.md' };
+const pageDocs = { Elevation: 'project/Elevation.md', Motion: 'project/Motion.md', ActionsInPlace: 'project/ActionsInPlace.md', EditRecord: 'project/framework/patterns/edit-record.md', AsyncCollection: 'project/framework/patterns/async-collection.md', ConsequentialAction: 'project/framework/patterns/consequential-action.md', ReviewSubmit: 'project/framework/patterns/review-submit.md', SettingsPattern: 'project/framework/patterns/settings.md', MembersPattern: 'project/framework/patterns/members.md', BillingPattern: 'project/framework/patterns/billing.md', AuthPattern: 'project/framework/patterns/auth.md' };
 const src = readFileSync('build/previews.txt', 'utf8');
 const names = [];
 for (const sec of src.split(/^=== /m).filter((s) => s.trim())) {
