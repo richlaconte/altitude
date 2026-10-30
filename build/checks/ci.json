@@ -1,7 +1,7 @@
 {
   "about": "What CI's checks jobs run, split into shards of about equal time by scripts/ci-checks.mjs. Every .mjs in build/checks runs as a React 18 check unless it is listed under elsewhere, so a new check needs no entry here. seconds only balances the shards; a check without one counts as 10. The seconds are each check's startedAt to finishedAt in a CI run's evidence (alt-05/results.json).",
   "previews": {
-    "schemes": ["daylight", "nightfall", "mesa", "alpine"],
+    "schemes": ["daylight", "nightfall"],
     "width": 960
   },
   "renders": {
@@ -12,7 +12,7 @@
       },
       {
         "env": {"DPR": "2"},
-        "args": ["InlineEdit,Dialog,ActionsInPlace", "daylight,nightfall,mesa,alpine", "320"]
+        "args": ["InlineEdit,Dialog,ActionsInPlace", "daylight,nightfall", "320"]
       },
       {
         "env": {"DPR": "2", "FORCED": "1"},
@@ -48,9 +48,7 @@
   },
   "seconds": {
     "chart-themes": 1,
-    "previews-alpine": 154,
     "previews-daylight": 154,
-    "previews-mesa": 154,
     "previews-nightfall": 154,
     "react18-actions": 91,
     "react18-adapter-codemirror": 7,

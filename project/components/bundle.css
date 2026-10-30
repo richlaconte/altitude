@@ -24,7 +24,7 @@
      in use stays calm. 80% ink keeps a 3:1 change from line-control in every scheme. */
   --alt-rim-held: color-mix(in oklab, var(--ink) 80%, var(--line-control));
 }
-[data-theme="mesa"] { --alt-cast: rgb(42 26 12 / 0.22); --alt-cast-deep: rgb(42 26 12 / 0.36); }
+/* alpine is a retired name for nightfall (#324). */
 [data-theme="nightfall"], [data-theme="alpine"] {
   --alt-ring: color-mix(in oklab, var(--ink) 9%, transparent); --alt-cast: rgb(0 0 0 / 0.8); --alt-cast-deep: rgb(0 0 0 / 1);
   --alt-wall-in: color-mix(in oklab, var(--surface-trench), #000 55%); --alt-lip: rgb(255 255 255 / 0.035);

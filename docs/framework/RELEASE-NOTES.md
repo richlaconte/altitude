@@ -10,6 +10,10 @@ No package version bump, npm publish or deployment is part of this change. The e
 - Clean packed consumer checks for runtime exports, resources and ESM/CommonJS/Bundler/NodeNext declarations; meaningful-state accessibility and responsive tests.
 - Reproducible three-condition agent evaluation harness and separate manual validation protocol.
 
+## Changed
+
+- **Mesa and Alpine are retired (#324).** They matched the palettes generated interfaces default to (terracotta on cream; one mint accent on near-black), so Altitude now ships Daylight and Nightfall only. `scheme="mesa"` and `"alpine"`, `base: 'mesa' | 'alpine'` and `data-theme="mesa"` / `"alpine"` keep working and render as Daylight and Nightfall; the provider warns once in development. Apps that relied on their look should set `accent`, or a custom scheme. The `RetiredScheme` type is deprecated and the aliases are due to be removed in the next major version.
+
 ## Repairs and compatibility
 
 Existing runtime imports and CSS/font/token/IIFE entry points remain. New APIs are additive on the existing runtime entry; no new provider, router, form library or backend is required. New hooks use explicit result objects and required validation/selection policies. A malformed JavaScript adapter response becomes failure, never success.

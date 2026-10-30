@@ -235,7 +235,7 @@ for (const fixture of ['interrupted-before-save', 'interrupted-after-save']) awa
   await pause(page, 750);
   expect((await page.locator('[data-file="file-brand"]').count() === 0) === (fixture === 'interrupted-after-save'), 'CON-08 reconciliation matches authoritative record');
 });
-for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) await scene('MOD-01/02 ' + scheme, async page => {
+for (const scheme of ['daylight', 'nightfall']) await scene('MOD-01/02 ' + scheme, async page => {
   await act(page, 'setBackground', 'recede'); await page.locator('[data-file="file-brand"]').click(); await pause(page, 450);
   expect(await page.locator('[data-receded]').count() === 1, 'MOD-01 default stage recession ' + scheme);
   expect(await page.locator('.alt-dialog-root > .alt-scrim').evaluate(el => getComputedStyle(el).backdropFilter !== 'none'), 'MOD-01 default scrim blur ' + scheme);

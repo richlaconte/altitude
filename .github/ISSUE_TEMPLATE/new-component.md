@@ -59,7 +59,7 @@ labels: enhancement, needs-design
 - [ ] `project/components/<Name>/README.md` in the existing format (what it is, elevation, props, "You provide", do and don't)
 - [ ] A section in `build/previews.txt` with an honest `@dsCard` group and subtitle
 - [ ] A row in the signals table in `Elevation.md`; new choreography in `Motion.md`; sources and a prototype review in `Research.md`
-- [ ] `tsc` clean; `shoot.mjs` renders it in all four schemes with no page or console errors; also checked with `FORCED=1`, reduced motion and `contrast="more"`
+- [ ] `tsc` clean; `shoot.mjs` renders it in both schemes with no page or console errors; also checked with `FORCED=1`, reduced motion and `contrast="more"`
 - [ ] Keyboard paths checked with `ACT`
 - [ ] `node build.mjs && node previews.mjs` run and committed (CI fails otherwise)
 

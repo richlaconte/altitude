@@ -28,7 +28,7 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 - `positive`, `caution`, `critical` are for status and each has a `-soft` ground. `critical` also fills the danger button, with `on-critical` text.
 - `data-*` is for charts only, as `presence-*` is for people: `data-1`–`data-6` tell series apart, `data-seq-*` carries magnitude and `data-div-*` polarity. Never use them for text, surfaces or status. [Charts](Charts.md) says which job a chart's colour does.
 - `line` is for decorative dividers only. Anything that marks the edge of a control (inputs, checkboxes, radios, the switch track) uses `line-control`, which holds 3:1 against every ground.
-- Every text token clears 4.5:1 on all eight surfaces in all four schemes. Keep it that way when adding colors: test against `surface-trench` and `surface-modal`, the extremes.
+- Every text token clears 4.5:1 on all eight surfaces in both schemes. Keep it that way when adding colors: test against `surface-trench` and `surface-modal`, the extremes.
 
 ## Type
 

@@ -1,6 +1,7 @@
 import json, sys
 t = json.load(open(sys.argv[1]))
 themes = [x['id'] for x in t['color']['themes']]
+retired = {x['id']: x.get('retired', []) for x in t['color']['themes']}
 def val(v, th):
     if isinstance(v, str): return v if th == themes[0] else None
     return v.get(th)
@@ -9,7 +10,7 @@ def conv(v):
     return v
 out = []
 for i, th in enumerate(themes):
-    sel = f':root, [data-theme="{th}"]' if i == 0 else f'[data-theme="{th}"]'
+    sel = ', '.join(([':root'] if i == 0 else []) + [f'[data-theme="{n}"]' for n in [th] + retired[th]])
     lines = []
     for fam in ('color', 'shadow'):
         for tok in t[fam]['tokens']:

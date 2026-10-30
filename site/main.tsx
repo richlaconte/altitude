@@ -280,7 +280,7 @@ function Laws() {
 /* ───────────── theming: drives the whole page ───────────── */
 
 const SCHEMES: { id: BuiltInScheme; label: string }[] = [
-  { id: 'daylight', label: 'Daylight' }, { id: 'nightfall', label: 'Nightfall' }, { id: 'mesa', label: 'Mesa' }, { id: 'alpine', label: 'Alpine' },
+  { id: 'daylight', label: 'Daylight' }, { id: 'nightfall', label: 'Nightfall' },
 ];
 const ACCENTS: { id: string; label: string; hex: string | undefined }[] = [
   { id: 'scheme', label: 'Scheme default', hex: undefined },
@@ -456,7 +456,7 @@ function Page() {
           <div className="wrap">
             <div className="section-head">
               <p className="kicker">Theming</p>
-              <h2 className="h2" id="theming-title">Four schemes, one ladder.</h2>
+              <h2 className="h2" id="theming-title">Two schemes, one ladder.</h2>
               <p className="lede">Swap the scheme, bring your own accent, or turn on reduced motion and more contrast. The elevation language holds in all of them.</p>
             </div>
             <Theming look={look} setLook={setLook} />

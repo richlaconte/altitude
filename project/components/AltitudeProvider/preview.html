@@ -30,7 +30,7 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 <div id="root"></div>
 <script>
 var A = window.Altitude;
-const paper = { name: "paper", base: "mesa", tokens: {
+const paper = { name: "paper", base: "daylight", tokens: {
   "surface-trench": "#e5e1d2",
   "surface-well": "#edeadf",
   "surface-ground": "#f5f3ea",
@@ -47,9 +47,10 @@ const paper = { name: "paper", base: "mesa", tokens: {
   accent: "#284d39",
   "on-accent": "#ffffff",
   "accent-ink": "#284d39",
-  "accent-soft": "#e1e9dc"
+  "accent-soft": "#e1e9dc",
+  positive: "#2c6e3f"
 } };
-const list = [["daylight"], ["nightfall"], ["mesa"], ["alpine"], ["daylight", "#0f8a6b"], [paper]];
+const list = [["daylight"], ["nightfall"], ["daylight", "#0f8a6b"], [paper]];
 function App() {
   return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "schemes" }, list.map(([s, accent], i) => /* @__PURE__ */ React.createElement(A.AltitudeProvider, { key: i, scheme: s, accent, className: "shell" }, /* @__PURE__ */ React.createElement("div", { className: "scheme" }, /* @__PURE__ */ React.createElement("h4", null, typeof s === "string" ? s[0].toUpperCase() + s.slice(1) : "Custom"), /* @__PURE__ */ React.createElement("small", null, accent ? 'accent="' + accent + '"' : typeof s === "string" ? 'scheme="' + s + '"' : "scheme={paper}"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", size: "sm" }, "Publish"), /* @__PURE__ */ React.createElement(A.Input, { size: "sm", placeholder: "Search" }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, alignItems: "center" } }, /* @__PURE__ */ React.createElement(A.Switch, { defaultChecked: true, "aria-label": "Enabled" }), /* @__PURE__ */ React.createElement(A.Badge, { tone: "accent" }, "Beta")), /* @__PURE__ */ React.createElement("div", { className: "series" }, [1, 2, 3, 4, 5, 6].map((n) => /* @__PURE__ */ React.createElement("span", { key: n, style: { background: `var(--data-${n})` } })), /* @__PURE__ */ React.createElement("small", null, accent ? "data-1\u20266, led by the accent" : "data-1\u20266")))))), /* @__PURE__ */ React.createElement("div", { className: "density" }, ["compact", "comfortable"].map((d) => /* @__PURE__ */ React.createElement(A.AltitudeProvider, { key: d, density: d, className: "shell" }, /* @__PURE__ */ React.createElement("div", { className: "scheme" }, /* @__PURE__ */ React.createElement("h4", null, d === "compact" ? "Compact" : "Comfortable"), /* @__PURE__ */ React.createElement("small", null, 'density="', d, '"'), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Save"), /* @__PURE__ */ React.createElement(A.Button, null, "Cancel")), /* @__PURE__ */ React.createElement(A.Input, { placeholder: "Search" }), /* @__PURE__ */ React.createElement(A.Tabs, { defaultValue: "a" }, /* @__PURE__ */ React.createElement(A.TabsList, { "aria-label": "Sections, " + d }, /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "a" }, "General"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "b" }, "Members"))))))));
 }

@@ -5,7 +5,7 @@ import './generated/tokens.css';
 import '../project/components/bundle.css';
 import './preview.css';
 
-type Scheme = 'daylight' | 'nightfall' | 'mesa' | 'alpine';
+type Scheme = 'daylight' | 'nightfall';
 
 /** Puts the chosen scheme on the whole frame too, so the page behind a story matches it. */
 function Frame({ scheme, motion, contrast, children }: { scheme: Scheme; motion: 'system' | 'full' | 'reduced'; contrast: 'system' | 'more'; children: React.ReactNode }) {
@@ -16,7 +16,7 @@ function Frame({ scheme, motion, contrast, children }: { scheme: Scheme; motion:
 const preview: Preview = {
   globalTypes: {
     scheme: { description: 'Colour scheme', toolbar: { title: 'Scheme', icon: 'paintbrush', dynamicTitle: true, items: [
-      { value: 'daylight', title: 'Daylight' }, { value: 'nightfall', title: 'Nightfall' }, { value: 'mesa', title: 'Mesa' }, { value: 'alpine', title: 'Alpine' }] } },
+      { value: 'daylight', title: 'Daylight' }, { value: 'nightfall', title: 'Nightfall' }] } },
     motion: { description: 'Motion', toolbar: { title: 'Motion', icon: 'transfer', dynamicTitle: true, items: [
       { value: 'system', title: 'Motion: system' }, { value: 'full', title: 'Motion: full' }, { value: 'reduced', title: 'Motion: reduced' }] } },
     contrast: { description: 'Contrast', toolbar: { title: 'Contrast', icon: 'contrast', dynamicTitle: true, items: [

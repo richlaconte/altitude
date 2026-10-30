@@ -31,7 +31,7 @@ Rules that follow:
 
 - **Cast shadow.** Each level is four layers: a top rim, a hairline ring, a key shadow and an ambient shadow. Offset and blur grow with height, because displacement is what reads as height. The structure never changes, so any level animates into any other.
 - **The hairline fades as you climb**; the cast shadow takes over the separating.
-- **Tonal lift in dark schemes.** Shadows barely show on dark grounds, so in Nightfall and Alpine each level is also a step lighter. Shadows are always darker than the ground; height is never drawn with a light glow.
+- **Tonal lift in dark schemes.** Shadows barely show on dark grounds, so in Nightfall each level is also a step lighter. Shadows are always darker than the ground; height is never drawn with a light glow.
 - **One camera.** Everything is seen from slightly in front of and above the page. Under a raised face you see its front wall; inside an opening you see its back wall, just below the top edge. Buttons and steps show the first; empty fields and the accordion's compartment show the second.
 - **Visible thickness.** Pressable things (buttons, keys, breadcrumb steps) show their height as a wall under the face: `wall-1` (2px) at level 1, `wall-2` (4px) at level 2, 1px more on hover, none when pressed. It's the same cue as the cast shadow, displacement read as height, made solid.
 - **Shading polarity.** Pressable things carry `--alt-sheen`, a 2–5 L* light-to-dark face gradient (convex), and wells carry a dark top edge (concave). That polarity is the cue the visual system reads before attention; pressing flattens the sheen.
