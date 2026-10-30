@@ -16,6 +16,8 @@ Where a person writes to an assistant or agent: a textarea that grows, attachmen
 
 **Queueing.** With `onQueue`, Enter while the agent works queues the message instead of doing nothing: the button stays Stop, the composer empties and keeps focus, and "Message queued. It will be sent when the assistant finishes." is announced. Show the queue with `ConversationQueue`, and send the first one when the turn ends.
 
+**Context and commands.** With `mentionable(query)`, typing @ opens a list of matches above the composer, grouped by kind (Files, Records, People), ranked as you return them; a promise shows "Searching…". Choosing one puts "@label" in the text and a plate in the composer's context row; Backspace right after it removes it whole, and its plate's remove button does the same. With `commands`, / at the start of an empty composer lists them (best match first). `onSubmit` gets `mentions` and `command` separately; the command is taken out of `text`. The text is a combobox (arrows, Enter or Tab to choose); while generating, the first Escape closes the list and only a second one stops. IME composition never opens or drives it.
+
 **You provide:** sending, stopping, uploading, and the `status` of the response. Leave out `accept` and there are no attachments.
 
 ```tsx
