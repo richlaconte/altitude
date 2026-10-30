@@ -3414,6 +3414,23 @@ export declare function InlineCitation(props: InlineCitationProps): React.ReactE
 export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
+export interface SuggestionsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChoose'> {
+  'aria-label': string;
+  /** 'fill' (default) puts the text in the composer; 'send' sends it at once. */
+  mode?: 'fill' | 'send';
+  onChoose: (value: string) => void;
+  /** Follow-ups cross-fade in. Default true inside a Message. */
+  arrive?: boolean;
+  children: React.ReactNode;
+}
+export interface SuggestionItemProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'value'> {
+  /** Filled or sent instead of the label. */
+  value?: string;
+  children: React.ReactNode;
+}
+/** Prompts to start from or follow up with: small secondary buttons in a labelled group (a toolbar past four). */
+export declare function Suggestions(props: SuggestionsProps): React.ReactElement;
+export declare function Suggestion(props: SuggestionItemProps): React.ReactElement;
 /** The elements a Markdown caller can replace. `pre` gets the fenced code's parts rather than children. */
 export interface MarkdownComponents {
   a?: React.ComponentType<React.AnchorHTMLAttributes<HTMLAnchorElement>>;
@@ -3506,6 +3523,7 @@ declare global {
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
+      Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;

@@ -40,6 +40,8 @@ await page.click('text=Select all 2,341 matching');
 r = await read();
 expect(r.tools?.includes('All 2,341 matching') && r.said.startsWith('All 2,341 matching'), `"all matching" is said in words (${r.tools})`);
 await page.click('[aria-label="Select Ada Obi 3"]', { force: true });
+// Under load the selection bar can take a frame or two to re-render after the click.
+await page.waitForFunction(() => /except 1/.test(document.querySelector('.alt-data-table .alt-table-tools .alt-table-selection')?.textContent ?? ''), null, { timeout: 3000 }).catch(() => {});
 r = await read();
 expect(r.tools?.includes('All 2,341 matching, except 1') && r.tools.includes('2,340') && r.checked === 24, `unchecking a row makes an exception (${r.tools})`);
 

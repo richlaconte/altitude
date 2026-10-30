@@ -1,0 +1,36 @@
+<!-- @dsCard group="Inputs" height=640 subtitle="Prompts to start from, or follow up with: small raised buttons that fill the composer or send" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suggestions — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.sg { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 32px; max-width: 900px; align-items: start; }
+.sg .lbl { margin: 0 0 10px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.sg .col { gap: 12px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [draft, setDraft] = React.useState("");
+  const [sent, setSent] = React.useState([]);
+  return /* @__PURE__ */ React.createElement("div", { className: "sg" }, /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("p", { className: "lbl" }, "Starters in an empty conversation (fill the composer)"), /* @__PURE__ */ React.createElement(A.EmptyState, { title: "Ask about this workspace", description: "Pick a starting point, or write your own.", size: "sm" }, /* @__PURE__ */ React.createElement(A.Suggestions, { "aria-label": "Start with", onChoose: setDraft }, /* @__PURE__ */ React.createElement(A.Suggestion, null, "Summarise last week's incidents"), /* @__PURE__ */ React.createElement(A.Suggestion, null, "Draft a release note"), /* @__PURE__ */ React.createElement(A.Suggestion, { value: "Which of my open pull requests are blocked, and by whom?" }, "What's blocked?"))), /* @__PURE__ */ React.createElement(A.PromptInput, { onSubmit: ({ text }) => {
+    setSent((s) => [...s, text]);
+    setDraft("");
+  }, value: draft, onValueChange: setDraft }, /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask anything" }), /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null)))), /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("p", { className: "lbl" }, "Follow-ups under an answer (send at once)"), /* @__PURE__ */ React.createElement(A.Message, { from: "assistant" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, "Revenue grew 12% in Q3, led by the annual plan. Churn held at 2.1%."), /* @__PURE__ */ React.createElement(A.Suggestions, { "aria-label": "Suggested follow-ups", mode: "send", onChoose: (t) => setSent((s) => [...s, t]) }, /* @__PURE__ */ React.createElement(A.Suggestion, null, "Compare with Q2"), /* @__PURE__ */ React.createElement(A.Suggestion, null, "Make it shorter"), /* @__PURE__ */ React.createElement(A.Suggestion, { value: "List the three biggest risks, with owners" }, "Biggest risks"))), sent.length > 0 && /* @__PURE__ */ React.createElement("p", { className: "lbl" }, "Sent: ", sent[sent.length - 1])));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
