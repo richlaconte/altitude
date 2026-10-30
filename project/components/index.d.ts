@@ -1378,6 +1378,8 @@ export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
 export interface ScheduleProps<T> {
   /** Default 'week'. */
   view?: 'day' | 'week' | 'workweek';
+  /** Under 480px of its own width: 'day' (default) shows one day at a time; false keeps the view. */
+  narrowView?: 'day' | false;
   /** Any day in the period shown, 'YYYY-MM-DD'. */
   date: string;
   onDateChange?: (date: string) => void;
@@ -1391,7 +1393,7 @@ export interface ScheduleProps<T> {
   /** Default '08:00' and '19:00'. */
   dayStart?: string;
   dayEnd?: string;
-  /** Pixels per hour. Default 48. */
+  /** Pixels per hour. Default 48, or 96 under a coarse pointer so a 15-minute slot is 24px tall. */
   hourHeight?: number;
   /** 0 Sunday … 6 Saturday. Default 1. */
   weekStartsOn?: number;

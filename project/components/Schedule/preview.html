@@ -49,7 +49,6 @@ function App() {
       getLabel: (e) => e.title,
       dayStart: "08:00",
       dayEnd: "18:00",
-      hourHeight: 44,
       renderEvent: (e) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, e.title), /* @__PURE__ */ React.createElement("small", { className: "sch-room" }, e.start.slice(11), "\u2013", e.end.slice(11), " \xB7 ", e.room)),
       heldBy: (e) => e.id === "e6" ? { name: "Ana", presence: 2 } : null,
       isUnavailable: ({ start, end }) => start.slice(0, 10) === "2026-10-30" && end.slice(11) > "17:00",

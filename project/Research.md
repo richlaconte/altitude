@@ -1420,6 +1420,10 @@ A review (#267): an ItemGroup row's actions never yielded width, so at phone wid
 
 A measurement (#265): at 375 CSS px the Resizable preview's list pane got about 80px, so "Invoice / INV-0042 / failed" took three lines, and the 1px handle had to be found with a finger. Under 480px of its own width, `narrow="stack"` (default) shows one pane at a time, the list-and-detail pattern on phones, with `narrowPanel` choosing which and `onNarrowChange` telling the app when to offer its way back; `narrow="vertical"` stacks the panes with a horizontal grip; `narrow={false}` keeps today's layout. The handle's hit area already spans the target size (#261); an older rule that shrank the vertical grip's area is gone. Pixel `minSize` is left for later. `checks/resizable-narrow.mjs`.
 
+### E127 · Can a week be read on a phone?
+
+A measurement (#257): at 375 CSS px the work week drew five 55px columns, so events read "Sta…" and "D", and the 55×11px slots were far under 24px. Under 480px of its own width, `narrowView="day"` (default) shows one day at a time, paged by the header's previous and next day; `narrowView={false}` keeps the view. Under a coarse pointer an hour is 96px unless `hourHeight` is set, so a 15-minute slot or event is 24px and still in proportion to its time. On touch a tap opens an event (double-click isn't reliably delivered there). A day strip, tap-to-create and press-and-hold to move are left for the touch-drag phase (#254–#256). `checks/schedule-narrow.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

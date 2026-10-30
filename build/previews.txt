@@ -3966,7 +3966,7 @@ function App() {
   return <div className="sch-demo">
     <A.Schedule aria-label="Room bookings" view="workweek" date={date} onDateChange={setDate} now="2026-10-27T10:20"
       events={events} getKey={e => e.id} getStart={e => e.start} getEnd={e => e.end} getLabel={e => e.title}
-      dayStart="08:00" dayEnd="18:00" hourHeight={44}
+      dayStart="08:00" dayEnd="18:00"
       renderEvent={e => <><strong>{e.title}</strong><small className="sch-room">{e.start.slice(11)}–{e.end.slice(11)} · {e.room}</small></>}
       heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
       // Rooms close at 17:00 on Fridays.
