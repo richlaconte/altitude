@@ -3032,6 +3032,36 @@ function App() {
   );
 }
 
+=== PromptInput | <!-- @dsCard group="Inputs" height=420 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
+--- css
+.pi { max-width: 640px; }
+--- jsx
+function App() {
+  const [status, setStatus] = React.useState('ready');
+  const [last, setLast] = React.useState('');
+  const timer = React.useRef();
+  const send = ({ text, files }) => {
+    setLast(`Sent “${text}”${files.length ? ` with ${files.length} file${files.length > 1 ? 's' : ''}` : ''}.`);
+    setStatus('submitted');
+    timer.current = setTimeout(() => { setStatus('streaming'); timer.current = setTimeout(() => setStatus('ready'), 2500); }, 600);
+  };
+  return (
+    <div className="col pi">
+      <A.PromptInput onSubmit={send} status={status} onStop={() => { clearTimeout(timer.current); setStatus('ready'); }} accept="image/*,.pdf,.csv"
+        onAttach={() => new Promise((r) => setTimeout(r, 900))}>
+        <A.PromptInputAttachments />
+        <A.PromptInputTextarea placeholder="Ask about this workspace" />
+        <A.PromptInputToolbar>
+          <A.PromptInputAttach />
+          <A.Select size="sm" aria-label="Model" defaultValue="opus" items={[{ value: 'opus', label: 'Opus 5.5' }, { value: 'sonnet', label: 'Sonnet 5.5' }, { value: 'haiku', label: 'Haiku 5.5' }]} />
+          <A.PromptInputSubmit />
+        </A.PromptInputToolbar>
+      </A.PromptInput>
+      <p className="cap">{status === 'ready' ? (last || 'Enter sends, Shift+Enter adds a line. Paste or drop a file to attach it.') : status === 'submitted' ? 'Sending…' : 'Generating… Escape or Stop ends it.'}</p>
+    </div>
+  );
+}
+
 === PlanPicker | <!-- @dsCard group="Inputs" height=560 subtitle="Choose a plan: one mark travels between them; current and recommended are words, not height" -->
 --- jsx
 const plans = [
