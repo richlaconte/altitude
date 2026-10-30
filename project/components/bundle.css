@@ -825,13 +825,14 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-menu-sep { height: 1px; margin: var(--space-1) 6px; background: var(--line); }
 
 /* ── Dialog: level 5. The page recedes, the scrim veils it, the dialog rises with its shadow growing. ── */
-.alt-dialog-root { position: fixed; inset: 0; z-index: var(--z-modal); display: grid; place-items: center; padding: var(--space-6); }
+/* The modal roots cover the visible viewport (#251), not the largest one, so a footer is never under the keyboard. */
+.alt-dialog-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-modal); display: grid; place-items: center; padding: var(--space-6); }
 .alt-scrim {
   position: absolute; inset: 0; background: var(--scrim); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   transition: opacity var(--dur-travel-5) var(--ease-rise);
 }
 .alt-dialog {
-  position: relative; width: min(100%, 460px); max-height: calc(100vh - 48px); overflow: auto; outline: none;
+  position: relative; width: min(100%, 460px); max-height: calc(100vh - 48px); max-height: calc(var(--alt-vvh, 100dvh) - 48px); overflow: auto; outline: none;
   padding: var(--space-6); border-radius: var(--radius-xl); background: var(--surface-modal); box-shadow: var(--elev-5); color: var(--ink);
   transition: opacity var(--dur-travel-5) var(--ease-rise), transform var(--dur-travel-5) var(--ease-rise), box-shadow var(--dur-travel-5) var(--ease-rise);
 }
@@ -2103,7 +2104,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    change, rows that survive travel to their new places (FLIP, ease-glide) and new ones rise 4px in, at most four at a
    time (riseDelay) and only near the top; the rest cross-fade. On opening, predicted items are there at once and the
    rest fade in over dur-onset. ── */
-.alt-cmd-root { position: fixed; inset: 0; z-index: var(--z-modal); display: grid; justify-items: center; align-items: start; padding: max(var(--space-6), 12vh) var(--space-4) var(--space-6); }
+.alt-cmd-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-modal); display: grid; justify-items: center; align-items: start; padding: max(var(--space-6), calc(var(--alt-vvh, 100dvh) * 0.12)) var(--space-4) var(--space-6); }
 .alt-cmd-root[data-state="closed"] .alt-scrim { opacity: 0; transition-duration: calc(var(--dur-travel-5) * 0.7); transition-timing-function: var(--ease-sink); }
 .alt-cmd {
   position: relative; display: flex; flex-direction: column; width: min(100%, 600px); max-height: 100%; overflow: hidden; outline: none;
@@ -2118,7 +2119,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-cmd .alt-cmd-field { height: 48px; padding: 0 var(--space-3) 0 var(--space-4); gap: var(--space-3); border-radius: calc(var(--radius-xl) - var(--space-3)); }
 .alt-cmd .alt-cmd-field input { font-size: 16px; }
 .alt-cmd .alt-cmd-field:focus-within, .alt-cmd .alt-cmd-field:has(input:not(:placeholder-shown)) { background: var(--surface-modal); }
-.alt-cmd-viewport { position: relative; flex: 0 1 auto; min-height: 0; max-height: min(380px, 52vh); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.alt-cmd-viewport { position: relative; flex: 0 1 auto; min-height: 0; max-height: min(380px, 52vh); max-height: min(380px, calc(var(--alt-vvh, 100dvh) * 0.52)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .alt-cmd-viewport[data-ready] { transition: height var(--dur-travel-2) var(--ease-glide); }
 .alt-cmd-list { position: relative; padding: 0 var(--space-2) var(--space-2); outline: none; }
 .alt-cmd-group + .alt-cmd-group { margin-top: var(--space-1); }
@@ -2157,7 +2158,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    8px clear of its edge so its own edges, and the shadow it casts below them, read as height. While content scrolls
    under its header the header rises; where content continues below, the footer's top edge curves away. A bottom
    sheet has a finger pull: a small recess (an opening, like every place you put something into) to drag it down by. ── */
-.alt-sheet-root { position: fixed; inset: 0; z-index: var(--z-overlay); pointer-events: none; }
+.alt-sheet-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-overlay); pointer-events: none; }
 .alt-sheet-root > .alt-scrim { pointer-events: auto; }
 .alt-sheet-root[data-state="closed"] > .alt-scrim { opacity: 0; transition-duration: calc(var(--dur-travel-4) * 0.7); transition-timing-function: var(--ease-sink); }
 .alt-sheet {

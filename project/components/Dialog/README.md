@@ -8,6 +8,8 @@ By default the app scales back 1.5% and desaturates, the scrim fades in with a 3
 
 **Where focus returns.** Closing retains native background isolation, scroll locking and focus containment through the exit. The captured invoker receives focus afterward when it remains available. If an action removes it, supply a lazy `returnFocus={() => headingRef.current}`; the returned element must be connected, visible, non-inert and in the same document. A static heading needs `tabIndex={-1}`. The surviving provider stage is the final neutral fallback. An older close does not take focus from a newer modal or a valid application completion destination.
 
+**On a phone.** It sizes to the visible viewport, not the largest one: with the on-screen keyboard open it shrinks to the part you can see, so its footer and the focused field stay in reach.
+
 **You provide:** `title`, `description`, optional body, `footer`, `open`/`onOpenChange` or a `trigger`, and `size`. `dismissible={false}` disables Escape, scrim dismissal and the close affordance. `background` defaults to `'recede'`. `returnFocus` is optional for unchanged invokers.
 
 ```tsx
