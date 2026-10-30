@@ -210,6 +210,8 @@ interface SelectFieldProps {
   'aria-describedby'?: string;
 }
 export interface SelectProps extends SelectFieldProps {
+  /** 'auto' (default): anchored, or on a narrow touch screen a sheet at the bottom edge with a title and Close. 'anchored' or 'sheet' forces one. */
+  presentation?: 'auto' | 'anchored' | 'sheet';
   /** Visible required feedback after native validation. Localize for the application. Default "Choose an option." */
   requiredMessage?: string;
   value?: string;
@@ -229,6 +231,8 @@ export interface SelectItemProps { value: string; children: React.ReactNode; tex
 /** Declares one option of a Select; renders nothing itself. */
 export declare function SelectItem(props: SelectItemProps): React.ReactElement | null;
 export interface ComboboxProps extends SelectFieldProps {
+  /** 'auto' (default) and 'anchored' keep the list under the field you type in; 'sheet' opens it at the bottom edge. */
+  presentation?: 'auto' | 'anchored' | 'sheet';
   items: SelectOption[];
   value?: string;
   defaultValue?: string;
@@ -664,6 +668,10 @@ export type MenuEntry =
   | { type: 'separator' }
   | { type: 'label'; label: React.ReactNode };
 export interface DropdownMenuProps {
+  /** 'auto' (default): anchored, or on a narrow touch screen a sheet at the bottom edge with a title and Close. 'anchored' or 'sheet' forces one. */
+  presentation?: 'auto' | 'anchored' | 'sheet';
+  /** The sheet's title. Default: the trigger's aria-label or text. */
+  title?: string;
   trigger: React.ReactElement;
   items: MenuEntry[];
   /** Default 'start'. */
@@ -897,9 +905,11 @@ export declare function Item(props: React.HTMLAttributes<HTMLDivElement>): React
 export declare function ItemMedia(props: React.HTMLAttributes<HTMLDivElement> & { variant?: 'icon' | 'image' | 'avatar' }): React.ReactElement;
 export declare function ItemContent(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
 export declare function ItemTitle(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
-export declare function ItemDescription(props: React.HTMLAttributes<HTMLParagraphElement>): React.ReactElement;
+/** `truncate` clamps the line to that many lines (true: one). */
+export declare function ItemDescription(props: React.HTMLAttributes<HTMLParagraphElement> & { truncate?: boolean | number }): React.ReactElement;
 /** Visible actions, not hover-only. */
-export declare function ItemActions(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+/** `narrow`: 'below' (default) moves the actions under the content when the group is under 480px wide; 'inline' keeps them beside it. */
+export declare function ItemActions(props: React.HTMLAttributes<HTMLDivElement> & { narrow?: 'below' | 'inline' }): React.ReactElement;
 export declare function ItemSeparator(props: React.HTMLAttributes<HTMLHRElement>): React.ReactElement;
 
 export interface PropertyListEditAll<T extends Record<string, unknown>> {
@@ -1546,7 +1556,7 @@ export interface StepperProps extends Omit<React.OlHTMLAttributes<HTMLOListEleme
   /** Makes completed steps buttons that go back to them. */
   onStepChange?: (index: number) => void;
   /** Default 'horizontal'. */
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: 'horizontal' | 'vertical' | 'auto';
   /** Default "Progress". */
   'aria-label'?: string;
 }
@@ -2712,6 +2722,8 @@ export interface BreadcrumbEntry {
   onClick?: (e: React.MouseEvent) => void;
 }
 export interface BreadcrumbProps extends Omit<React.HTMLAttributes<HTMLElement>, 'children'> {
+  /** 'collapse' (default): steps from the second onward move behind "…" until the trail fits on one line. 'wrap': it wraps. */
+  fit?: 'collapse' | 'wrap';
   items?: BreadcrumbEntry[];
   /** Deeper paths keep the first step and the last (maxItems − 1), with the middle in a menu behind "…". */
   maxItems?: number;

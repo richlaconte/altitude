@@ -340,7 +340,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    variant="segmented": the options sit in a well and one raised pill glides between them. ── */
 .alt-tabs { display: flex; flex-direction: column; gap: var(--space-4); }
 .alt-tabs-list {
-  position: relative; display: inline-flex; align-self: flex-start; gap: 2px; padding: var(--space-1);
+  position: relative; display: inline-flex; align-self: flex-start; max-width: 100%; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; gap: 2px; padding: var(--space-1);
   border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-well); box-shadow: var(--well);
 }
 .alt-tabs-indicator {
@@ -356,13 +356,19 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-tabs-trigger[aria-selected="true"], .alt-tabs-trigger[aria-checked="true"] { color: var(--ink); }
 @media (hover: hover) { .alt-tabs-trigger:hover { color: var(--ink); } }
 @media (hover: hover) { .alt-tabs[data-variant="segmented"] .alt-tabs-trigger:hover:not([aria-selected="true"]), .alt-tgroup .alt-tabs-trigger:hover:not([aria-checked="true"]):not(:disabled) { background: color-mix(in oklab, var(--surface-raised) 40%, transparent); } }
+/* Narrow (#259): the list scrolls within itself; an edge with more tabs past it fades out, so you can see there's more. */
+.alt-tabs-list::-webkit-scrollbar { display: none; }
+.alt-tabs-list[data-more-end] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.alt-tabs-list[data-more-start] { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
+.alt-tabs-list[data-more-start][data-more-end] { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .alt-tabs-content { animation: alt-emerge var(--dur-travel-2) var(--ease-rise); border-radius: var(--radius-sm); }
 
 .alt-tabs[data-variant="folder"] { gap: 0; }
 /* The list makes no layer of its own, so each tab stacks against the panel: only the chosen tab lies over it (covering its
    hairline); the others, and a tab dropping back, sit behind the sheet. */
 .alt-tabs[data-variant="folder"] > .alt-tabs-list {
-  --r: 10px; align-self: stretch; z-index: auto; gap: var(--space-1); margin-bottom: -1px; padding: 0 var(--space-5);
+  /* It scrolls when narrow (#259), so the tab's shadow above and its 1px reach into the panel sit in its padding. */
+  --r: 10px; align-self: stretch; z-index: auto; gap: var(--space-1); margin: -6px 0 -2px; padding: 6px var(--space-5) 1px;
   border: 0; border-radius: 0; background: none; box-shadow: none;
 }
 .alt-tabs[data-variant="folder"] .alt-tabs-indicator { display: none; }
@@ -1135,14 +1141,15 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    goes into is held (floor lit, the depth approach would preview, the neutral rim when reached by keyboard) with a
    caret; once its character lands its floor rises flush. A pasted or autofilled code fills left to right, staggered
    35ms a slot. A rejected code drops the whole row to a trench on critical-soft. ── */
-.alt-otp { position: relative; display: inline-flex; align-items: center; gap: var(--space-2); max-width: 100%; }
+.alt-otp { position: relative; display: inline-flex; align-items: center; gap: clamp(4px, 2vw, var(--space-2)); max-width: 100%; min-width: 0; }
 .alt-otp-input {
   position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; outline: 0; opacity: 0;
   background: transparent; color: transparent; caret-color: transparent; font-size: 16px; cursor: text;
 }
 .alt-otp-input:disabled { cursor: not-allowed; }
-.alt-otp-group { display: inline-flex; gap: 6px; }
-.alt-otp-slot { justify-content: center; width: 40px; height: 48px; padding: 0; font: 600 20px/1 var(--font-mono); cursor: text; }
+/* Narrow (#266): slots give way from 40px to 28px, and gaps tighten, so an eight-character code fits a 320px screen. */
+.alt-otp-group { display: inline-flex; gap: clamp(3px, 1.6vw, 6px); min-width: 0; }
+.alt-otp-slot { justify-content: center; flex: 0 1 40px; width: 40px; min-width: 28px; height: 48px; padding: 0; font: 600 20px/1 var(--font-mono); cursor: text; }
 .alt-otp-slot[data-filled]:not([data-invalid]):not([data-disabled]) { --w: 0px; --n: 0; background: var(--surface-raised); }
 .alt-otp-slot[data-active]:not([data-invalid]) { background: var(--surface-raised); --n: var(--alt-travel); }
 .alt-otp[data-key-focus] .alt-otp-slot[data-active] { border-color: var(--alt-rim-held); outline-color: var(--alt-rim-held); }
@@ -3614,7 +3621,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    picked up to reorder floats at level 3, tilted, over a slot that opens as a well. A recoverable removal leaves its
    RemovalReceipt in the slat's place, then glides the gap shut; a confirmed one asks in a stationary Dialog, then
    glides the slat shut. ── */
-.alt-item-group { position: relative; display: grid; gap: var(--space-2); min-width: 0; color: var(--ink); }
+.alt-item-group { position: relative; display: grid; gap: var(--space-2); min-width: 0; color: var(--ink); container-type: inline-size; }
 .alt-item-list { margin: 0; padding: 0; list-style: none; outline: none; }
 .alt-item-slat { position: relative; display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); border-radius: 0; transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1); }
 .alt-item-slat[data-editing] { border-bottom-color: transparent; }
@@ -3634,6 +3641,14 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-item-title { font: 500 14.5px/21px var(--font-sans); overflow-wrap: anywhere; }
 .alt-item-description { margin: 2px 0 0; color: var(--ink-muted); font: 400 13px/18px var(--font-sans); overflow-wrap: anywhere; }
 .alt-item-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); flex: none; }
+.alt-item-description[data-truncate] { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--lines, 1); line-clamp: var(--lines, 1); overflow: hidden; }
+/* Narrow (#267): under 480px of the group's width, actions take their own row, lined up with the content (after the
+   media), so a row's title keeps the width; narrow="inline" keeps them beside it. */
+@container (max-width: 480px) {
+  .alt-item:has(> .alt-item-actions[data-narrow="below"]) { flex-wrap: wrap; }
+  .alt-item-actions[data-narrow="below"] { flex-basis: 100%; }
+  .alt-item:has(> .alt-item-media) > .alt-item-actions[data-narrow="below"] { padding-left: calc(36px + var(--space-3)); }
+}
 .alt-item-separator { margin: 0; border: 0; border-top: 1px solid var(--line); }
 .alt-item-add {
   display: inline-flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 44px; padding: 0 var(--space-3); border: 1px dashed var(--line-control); border-radius: var(--radius-md);
@@ -3748,7 +3763,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    never lift, so editability shows without a pencil per row. An unset value is a small opening: a dashed well, the
    empty field's treatment at plate size, so a half-filled record reads at a glance. Edit all lifts the list into one
    raised EditRegion. ── */
-.alt-property-list { position: relative; min-width: 0; color: var(--ink); }
+.alt-property-list { position: relative; min-width: 0; color: var(--ink); container-type: inline-size; }
 .alt-property-tools { display: flex; justify-content: flex-end; margin-bottom: var(--space-1); }
 .alt-property-dl { display: grid; gap: var(--space-3); margin: 0; }
 .alt-property { display: grid; gap: 2px; min-width: 0; }
@@ -3773,6 +3788,14 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-property-proposal-error { display: inline-flex; align-items: center; gap: 4px; color: var(--critical); }
 .alt-property-proposal-by { grid-column: 1; }
 .alt-property-proposal-actions { display: inline-flex; gap: 4px; grid-column: 2; grid-row: 1 / span 2; }
+/* Narrow (#258): under the narrow breakpoint, an inline list stacks each label over its value, and a proposal stacks its
+   change, who proposed it and its actions, so the values are never squeezed into a column a few letters wide. */
+@container (max-width: 480px) {
+  .alt-property-list[data-layout="inline"] .alt-property { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .alt-property-list[data-layout="inline"] .alt-property[data-proposed] .alt-property-label { padding-top: 0; }
+  .alt-property-proposal { grid-template-columns: minmax(0, 1fr); }
+  .alt-property-proposal-actions { grid-column: 1; grid-row: auto; margin-top: var(--space-1); }
+}
 @media (forced-colors: active) { .alt-property[data-proposed], .alt-property-proposals { border: 1px solid CanvasText; } }
 .alt-inline-edit-plate {
   display: inline-flex; align-items: center; min-height: 30px; max-width: 100%; padding: 2px 12px; border: 1px solid transparent; border-radius: var(--radius-sm);
@@ -3819,3 +3842,23 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 /* Links and relative times sit in rows of text: they reach 24px tall, never wider, so neighbours stay apart. */
 :is(.alt-link, .alt-reltime):not(:is(p, li, dd, td) > *)::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: max(100%, 24px); transform: translateY(-50%); }
 .alt-date-seg::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 24px); height: max(100%, 24px); transform: translate(-50%, -50%); }
+
+/* ── A menu as a sheet (#249): on a narrow touch screen DropdownMenu and Select open at the bottom edge, where the thumb
+   is, rather than wherever the trigger happened to be. It's still the menu, at level 3 (surface-floating, elev-3):
+   changing edges doesn't climb a tier. It clears the safe areas, holds at most 70% of the visible height, has a head
+   with its title and Close, rows at size-row-md, and dims the page at half the scrim's strength. It rises from the
+   edge over dur-travel-3 on ease-rise, as a Sheet does, and fades under reduced motion. ── */
+.alt-pop[data-presentation="sheet"] {
+  position: fixed; top: auto; left: calc(var(--space-2) + env(safe-area-inset-left, 0px)); right: calc(var(--space-2) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px)); translate: none; width: auto; min-width: 0; max-width: none;
+  max-height: min(70vh, 560px); max-height: min(calc(var(--alt-vvh, 100dvh) * 0.7), 560px); overflow-y: auto; overscroll-behavior: contain;
+  padding: 0 var(--space-1) var(--space-1); transform-origin: 50% 100%;
+  box-shadow: var(--elev-3), 0 0 0 100vmax color-mix(in oklab, var(--scrim) 50%, transparent);
+}
+.alt-pop[data-presentation="sheet"][data-state="closed"] { transform: translateY(calc(24px * var(--alt-travel))); }
+.alt-menu-sheet .alt-menu { position: relative; min-width: 0; padding: 0; }
+.alt-menu-sheet :is(.alt-menu-item, .alt-select-option) { min-height: var(--size-row-md); }
+.alt-menu-sheet-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  margin: 0 calc(-1 * var(--space-1)); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); background: var(--surface-floating); }
+.alt-menu-sheet-title { min-width: 0; font: 600 15px/22px var(--font-sans); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (forced-colors: active) { .alt-pop[data-presentation="sheet"] { border: 2px solid CanvasText; box-shadow: none; } }

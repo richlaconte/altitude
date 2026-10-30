@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, riseDelay } from './core';
+import { cx, riseDelay, useIsoLayoutEffect } from './core';
 
 export interface StepperStep {
   /** Stable key. Default: the step's position. */
@@ -13,8 +13,11 @@ export interface StepperProps extends Omit<React.OlHTMLAttributes<HTMLOListEleme
   current: number;
   /** Makes completed steps buttons that go back to them. */
   onStepChange?: (index: number) => void;
-  /** Default 'horizontal'. */
-  orientation?: 'horizontal' | 'vertical';
+  /**
+   * Default 'horizontal'. 'auto' (#264): horizontal when every step fits on one line in its container, vertical when
+   * not, so a phone never shows connectors that lead to the next line.
+   */
+  orientation?: 'horizontal' | 'vertical' | 'auto';
 }
 
 const Tick = () => (
@@ -30,7 +33,25 @@ const word = { done: 'completed', current: 'current', upcoming: 'not started' } 
  * pressed into the page. Advancing presses the current step down into the record, stamps its check in, then raises the
  * next one out of its imprint.
  */
-export function Stepper({ steps, current, onStepChange, orientation = 'horizontal', className, ...rest }: StepperProps) {
+export function Stepper({ steps, current, onStepChange, orientation: orientationProp = 'horizontal', className, ...rest }: StepperProps) {
+  // 'auto' (#264): try horizontal at each width; if the steps wrap, lay them out vertically. Layout, so no motion.
+  const list = React.useRef<HTMLOListElement>(null);
+  const [width, setWidth] = React.useState(0);
+  const [fits, setFits] = React.useState(true);
+  React.useEffect(() => {
+    const el = list.current?.parentElement;
+    if (orientationProp !== 'auto' || !el) return;
+    const ro = new ResizeObserver(([e]) => setWidth(Math.round(e.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [orientationProp]);
+  React.useEffect(() => { setFits(true); }, [width, steps.length]);
+  useIsoLayoutEffect(() => {
+    const items = list.current?.querySelectorAll(':scope > li');
+    if (orientationProp !== 'auto' || !fits || !items || items.length < 2) return;
+    if ((items[items.length - 1] as HTMLElement).offsetTop > (items[0] as HTMLElement).offsetTop + 2) setFits(false);
+  }, [fits, width]);
+  const orientation = orientationProp === 'auto' ? (fits ? 'horizontal' : 'vertical') : orientationProp;
   // The motion is derived in the same render that changes the states, so the rise's delay is in place before its
   // transition starts (setting it in an effect would be a frame late and the new step would rise at once).
   const [seen, setSeen] = React.useState(current);
@@ -51,7 +72,7 @@ export function Stepper({ steps, current, onStepChange, orientation = 'horizonta
 
   return (
     <>
-    <ol className={cx('alt-stepper', className)} data-orientation={orientation} aria-label={rest['aria-label'] ?? 'Progress'} {...rest}>
+    <ol ref={list} className={cx('alt-stepper', className)} data-orientation={orientation} aria-label={rest['aria-label'] ?? 'Progress'} {...rest}>
       {steps.map((s, i) => {
         const state = i < current ? 'done' : i === current ? 'current' : 'upcoming';
         const back = state === 'done' && !!onStepChange;
