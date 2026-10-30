@@ -182,7 +182,7 @@ Delete shadcn's own `--chart-*` values, in `:root` and `.dark` alike. They aren'
 | Ground line | `<ReferenceLine y={0} stroke="var(--ink-muted)" />` |
 | Flat marks, rounded only at the data end | `<Bar radius={[4, 4, 0, 0]} />`; no `<defs>` gradients on `<Area>`, a flat `fill` instead |
 | Readout at level 3 | `<ChartTooltipContent indicator="line" className="bg-popover shadow-lg" />`: `surface-floating` and `elev-3` through the mapping above |
-| Hover is a promise | `cursor={false}` on a bar chart's `<ChartTooltip>` (no band behind the category); on a line or area chart `cursor={{ style: { stroke: 'var(--ink-muted)' } }}`, the crosshair, and `activeDot={false}` on each `<Line>` and `<Area>` |
+| Hover is a promise | `cursor={false}` on a bar chart's `<ChartTooltip>` (no band behind the category); on a line or area chart `cursor={{ style: { stroke: 'var(--line-control)' } }}`, the crosshair, and `activeDot={false}` on each `<Line>` and `<Area>` |
 | Keyboard | keep `accessibilityLayer` (on by default in Recharts 3): the chart is one tab stop and the arrow keys move the readout |
 | Reduced motion | `isAnimationActive={!prefersReducedMotion}` on every mark, from a `matchMedia('(prefers-reduced-motion: reduce)')` hook of your own |
 | Text in ink | `tick={{ fill: 'var(--ink-muted)' }}` on each axis, never the series colour |
@@ -223,7 +223,7 @@ Pass the chart's own element (or anything inside an `AltitudeProvider`) to read 
 | Magnitude | `visualMap.inRange.color`: `data-seq-1` … `data-seq-7` (swap in `data-div-*` for polarity) | |
 | Text | `--font-sans`; `ink`, axis labels `ink-muted` | `--font-sans`; `ink-muted`, legend `ink` |
 | Axes and grid | axis lines `line-control`, split lines `line` | `scale.border` `line-control`, `scale.grid` `line` |
-| Readout | `surface-floating` with `extraCssText: box-shadow: <elev-3>`; an `ink-muted` crosshair | `surface-floating`, in `ink` (a canvas readout can't cast a shadow) |
+| Readout | `surface-floating` with `extraCssText: box-shadow: <elev-3>`; a `line-control` crosshair | `surface-floating`, in `ink` (a canvas readout can't cast a shadow) |
 | Accessibility | `aria.enabled`; `aria.decal.show` under forced colours or with `{ patterns: true }` | |
 | Motion | `dur-travel-3` on ease-glide's curve; 0 under reduced motion | the same; `animation: false` under reduced motion |
 

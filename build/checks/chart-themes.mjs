@@ -79,6 +79,7 @@ const open = async (media) => {
     }
     expect(e.tooltip.backgroundColor === v('surface-floating') && e.tooltip.textStyle.color === v('ink'), `${scheme}: the readout on surface-floating in ink`);
     expect(e.tooltip.extraCssText.includes(`box-shadow: ${v('elev-3')}`), `${scheme}: the readout casts elev-3`);
+    expect(e.tooltip.axisPointer.lineStyle.color === v('line-control') && e.tooltip.axisPointer.crossStyle.color === v('line-control'), `${scheme}: the crosshair is line-control, as in ChartContainer`);
     expect(same(e.visualMap.inRange.color, [1, 2, 3, 4, 5, 6, 7].map((n) => v(`data-seq-${n}`))), `${scheme}: visualMap reads the sequential ramp`);
     expect(e.aria.enabled === true && e.aria.decal.show === false, `${scheme}: aria on, decals off by default`);
     expect(e.animation === true && e.animationDuration === 220 && e.animationDurationUpdate === 220, `${scheme}: dur-travel-3 animation (${e.animationDuration})`);

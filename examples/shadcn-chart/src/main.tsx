@@ -74,7 +74,7 @@ function Panel({ scheme }: { scheme: BuiltInScheme }) {
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tick={tick}
                 tickFormatter={(value: string) => value.slice(0, 3)} />
               <YAxis tickLine={false} axisLine={false} width={32} tick={tick} />
-              <ChartTooltip cursor={{ style: { stroke: "var(--ink-muted)" } }}
+              <ChartTooltip cursor={{ style: { stroke: "var(--line-control)" } }}
                 content={<ChartTooltipContent indicator="line" className="bg-popover shadow-lg" />} />
               <ChartLegend content={<ChartLegendContent />} />
               {/* Flat fills, no <defs> gradient. The stroke is the series colour too: Recharts takes the legend's and
