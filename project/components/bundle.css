@@ -3755,7 +3755,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    never lift, so editability shows without a pencil per row. An unset value is a small opening: a dashed well, the
    empty field's treatment at plate size, so a half-filled record reads at a glance. Edit all lifts the list into one
    raised EditRegion. ── */
-.alt-property-list { position: relative; min-width: 0; color: var(--ink); }
+.alt-property-list { position: relative; min-width: 0; color: var(--ink); container-type: inline-size; }
 .alt-property-tools { display: flex; justify-content: flex-end; margin-bottom: var(--space-1); }
 .alt-property-dl { display: grid; gap: var(--space-3); margin: 0; }
 .alt-property { display: grid; gap: 2px; min-width: 0; }
@@ -3780,6 +3780,14 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-property-proposal-error { display: inline-flex; align-items: center; gap: 4px; color: var(--critical); }
 .alt-property-proposal-by { grid-column: 1; }
 .alt-property-proposal-actions { display: inline-flex; gap: 4px; grid-column: 2; grid-row: 1 / span 2; }
+/* Narrow (#258): under the narrow breakpoint, an inline list stacks each label over its value, and a proposal stacks its
+   change, who proposed it and its actions, so the values are never squeezed into a column a few letters wide. */
+@container (max-width: 480px) {
+  .alt-property-list[data-layout="inline"] .alt-property { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .alt-property-list[data-layout="inline"] .alt-property[data-proposed] .alt-property-label { padding-top: 0; }
+  .alt-property-proposal { grid-template-columns: minmax(0, 1fr); }
+  .alt-property-proposal-actions { grid-column: 1; grid-row: auto; margin-top: var(--space-1); }
+}
 @media (forced-colors: active) { .alt-property[data-proposed], .alt-property-proposals { border: 1px solid CanvasText; } }
 .alt-inline-edit-plate {
   display: inline-flex; align-items: center; min-height: 30px; max-width: 100%; padding: 2px 12px; border: 1px solid transparent; border-radius: var(--radius-sm);

@@ -1408,6 +1408,10 @@ A review (#263): `maxItems` collapsed the middle of a path only by count, and th
 
 A review (#264): at 375 CSS px the horizontal Stepper wrapped onto three lines, each ending in a connector that led nowhere, saying the opposite of the order. `orientation="auto"` lays the steps out in a row when every step fits on one line in its container, and vertically when not, measured at each width. The switch doesn't animate (resizing never does), and the list's semantics are the same either way. The default stays `horizontal`; the README recommends `auto`. `checks/stepper-auto.mjs`.
 
+### E124 · Does a proposed change fit a phone?
+
+A measurement (#258): at 375 CSS px a PropertyList row with a proposal kept three columns (label, change, actions), leaving the change about 35px, so "Qualified" broke as "Quali/fied" and "Proposed by…" took eleven lines. The list is now a container, and under the narrow breakpoint (480px) an inline list stacks each label over its value, and a proposal stacks its change, who proposed it and its actions. The plain list was already fine; nothing changes on wider screens.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
