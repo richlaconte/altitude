@@ -1672,6 +1672,30 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 [data-contrast="more"] .alt-tour { box-shadow: 0 4px 0 0 var(--ink), var(--elev-3); }
 @media (forced-colors: active) { .alt-tour { border: 2px solid CanvasText; } [data-tour-target] { outline-color: Highlight !important; } }
 
+/* ── PromptInput: where a person writes to an agent. The whole composer is the Input well (empty: its back wall shows and
+   it deepens as the pointer nears; holding text: the floor rises flush), with attachments as Tag plates above the text
+   and a toolbar below. Send is the level-2 primary; while generating it becomes Stop in the same slot and size, its icon
+   cross-fading without travel. An empty composer's Send is flush and faint but stays focusable (aria-disabled).
+   Dragging a file over drops the well to a trench, as DropZone. ── */
+.alt-prompt { position: relative; }
+.alt-prompt-well { position: relative; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-lg); }
+.alt-prompt-well .alt-prompt-text { width: 100%; min-height: 24px; resize: none; transition: height var(--dur-travel-2) var(--ease-glide); }
+.alt-prompt-files { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.alt-prompt-chip { display: inline-flex; border-radius: var(--radius-sm); }
+.alt-prompt-uploading { color: var(--ink-muted); }
+.alt-prompt-bar { display: flex; align-items: center; gap: var(--space-2); }
+.alt-prompt-send { margin-left: auto; }
+.alt-prompt-send svg { animation: alt-fade-in var(--dur-travel-1) var(--ease-rise); }
+@keyframes alt-fade-in { from { opacity: 0; } }
+.alt-prompt-send[aria-disabled], .alt-prompt-send[aria-disabled]:is(:hover, :active, :focus-visible) {
+  background: var(--surface-well); background-image: none; color: var(--ink-faint); box-shadow: 0 0 0 0 var(--wall-c), var(--elev-0); transform: none; cursor: not-allowed;
+}
+.alt-prompt-well[data-drop="over"] { background: var(--accent-soft); box-shadow: var(--trench); border-color: var(--accent-ink); }
+.alt-prompt-drop { position: absolute; inset: 0; display: grid; place-items: center; font: 500 14px/20px var(--font-sans); color: var(--accent-ink); background: color-mix(in oklab, var(--accent-soft), transparent 15%); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .alt-prompt-text { transition: none; } }
+[data-motion="reduced"] .alt-prompt-text { transition: none; }
+@media (forced-colors: active) { .alt-prompt-send[aria-disabled] { border: 1px solid GrayText; color: GrayText; } .alt-prompt-well[data-drop="over"] { border: 2px dashed CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

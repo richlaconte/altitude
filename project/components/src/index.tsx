@@ -33,6 +33,8 @@ export { CommentThread } from './comment-thread';
 export type { ThreadComment, Mentionable } from './comment-thread';
 export { Tour } from './tour';
 export type { TourStep } from './tour';
+export { PromptInput, PromptInputTextarea, PromptInputAttachments, PromptInputToolbar, PromptInputAttach, PromptInputSubmit } from './prompt-input';
+export type { PromptStatus, PromptAttachment, PromptMessage } from './prompt-input';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';

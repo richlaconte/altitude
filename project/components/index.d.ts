@@ -3027,6 +3027,35 @@ export interface TourProps {
 /** A few steps pointing at the interface: one level-3 card at a time, the target ringed; never dims, never modal. */
 export declare function Tour(props: TourProps): React.ReactElement | null;
 
+export type PromptStatus = 'ready' | 'submitted' | 'streaming' | 'error';
+export interface PromptAttachment { id: string; file: File; name: string; status?: 'pending' }
+export interface PromptMessage { text: string; files: File[] }
+export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
+  /** Called with the text and attached files when sent. */
+  onSubmit: (message: PromptMessage) => void;
+  /** 'submitted' and 'streaming' turn Send into Stop, in the same slot. Default 'ready'. */
+  status?: PromptStatus;
+  onStop?: () => void;
+  value?: string;
+  onValueChange?: (text: string) => void;
+  /** A promise holds the chip as pending until it settles; a rejection removes it. */
+  onAttach?: (files: File[]) => void | Promise<unknown>;
+  /** Accepted file types. Leave out to turn attachments off. */
+  accept?: string;
+  children: React.ReactNode;
+}
+/** Where a person writes to an agent: the composer is an Input well; Send becomes Stop in the same slot; IME-safe Enter. */
+export declare function PromptInput(props: PromptInputProps): React.ReactElement;
+export interface PromptInputTextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'> {
+  /** The tallest it grows before it scrolls. Default 200. */
+  maxHeight?: number;
+}
+export declare function PromptInputTextarea(props: PromptInputTextareaProps): React.ReactElement;
+export declare function PromptInputAttachments(props: { className?: string }): React.ReactElement | null;
+export declare function PromptInputToolbar(props: { className?: string; children?: React.ReactNode }): React.ReactElement;
+export declare function PromptInputAttach(props: { label?: string }): React.ReactElement;
+export declare function PromptInputSubmit(props: { className?: string }): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -3046,6 +3075,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;
       FeatureGate: typeof FeatureGate;

@@ -1091,6 +1091,17 @@ A design review: `Tour` was rendered with three steps on a toolbar (a ghost butt
 
 Not yet tested with people: whether an undimmed tour is noticed as quickly on a busy page.
 
+### E93 · Where does Stop go?
+
+A design review: `PromptInput` was rendered empty, with two lines, with a file uploading and attached, mid-drag, and through submitted → streaming → ready, in all four schemes and under forced colours. `checks/prompt-input.mjs` drives it, including a synthetic IME composition.
+
+- **Stop takes Send's place.** Composers that put Stop elsewhere, or swap a wide "Stop generating" button in, move the layout under the pointer just as people reach for it. Stop is the same square in the same slot, its icon cross-fading.
+- **IME Enter.** Enter during composition confirms the characters; sending then loses the message mid-word for Japanese, Chinese and Korean writers. `isComposing` (and keyCode 229 for older Safari) is checked before sending.
+- **Send stays reachable when empty.** It's flush and faint like a disabled button, but `aria-disabled` rather than `disabled`, so keyboard users find it and learn why it does nothing.
+- **An upload is a write.** A file being uploaded hovers as pending, and Send waits for it, so a message is never sent missing its attachment.
+
+Not yet tested with people: whether the faint Send reads as "write something first" without a hint.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
