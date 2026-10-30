@@ -3297,6 +3297,7 @@ function App() {
       { name: 'atlas-usage.png', type: 'image/svg+xml', url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='64'%3E%3Crect width='120' height='64' fill='%23e8edf5'/%3E%3Cpath d='M8 52 L32 36 L56 42 L80 20 L112 12' stroke='%233b6fd8' stroke-width='3' fill='none'/%3E%3C/svg%3E", onOpen: () => {} },
       { name: 'Atlas changelog.pdf', type: 'application/pdf', size: 482113, href: '#changelog' },
     ] },
+    { id: 'cp1', kind: 'checkpoint', label: 'Before the Atlas summary', at: '2026-10-30T14:14:00' },
     { id: 2, from: 'assistant', text: 'Atlas moved to the new permission model on 3 October, and its storage limit was raised to 2 TB. Three people joined: Maya, Theo and Ada.', status: 'complete' },
   ]);
   const [status, setStatus] = React.useState('ready');
@@ -3346,13 +3347,20 @@ function App() {
     stop();
     setTimeout(() => sendRef.current({ text: q.text }), 0);
   };
+  // Restoring a checkpoint sets the turns after it aside; returning brings them back.
+  const aside = React.useRef([]);
+  const restore = (id) => new Promise((done) => setTimeout(() => { setMsgs((ms) => { const i = ms.findIndex((m) => m.id === id); aside.current = ms.slice(i + 1); return ms.slice(0, i + 1); }); done(); }, 900));
+  const giveBack = () => { setMsgs((ms) => [...ms, ...aside.current]); aside.current = []; };
   const stop = () => { clearTimeout(timer.current); setStatus('ready'); setMsgs((ms) => ms.map((m) => (m.status === 'streaming' ? { ...m, status: 'stopped' } : m))); };
   sendRef.current = send;
   return (
     <div className="cv">
       <A.Conversation aria-label="Assistant">
         <A.ConversationContent>
-          {msgs.map((m) => (
+          {msgs.map((m) => m.kind === 'checkpoint' ? (
+            <A.ConversationCheckpoint key={m.id} label={m.label} at={m.at} onRestore={() => restore(m.id)} onReturn={giveBack}
+              consequence="The messages after this will be set aside. You can return to them." />
+          ) : (
             <A.Message key={m.id} from={m.from} status={m.status} edited={m.v > 0} onRetry={m.status === 'stopped' ? () => { setStatus('streaming'); stream(m.id); } : undefined}>
               {m.files && <A.MessageAttachments items={m.files} />}
               <A.MessageContent>{m.text}</A.MessageContent>

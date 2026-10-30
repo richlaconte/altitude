@@ -29,6 +29,7 @@ function App() {
       } },
       { name: "Atlas changelog.pdf", type: "application/pdf", size: 482113, href: "#changelog" }
     ] },
+    { id: "cp1", kind: "checkpoint", label: "Before the Atlas summary", at: "2026-10-30T14:14:00" },
     { id: 2, from: "assistant", text: "Atlas moved to the new permission model on 3 October, and its storage limit was raised to 2 TB. Three people joined: Maya, Theo and Ada.", status: "complete" }
   ]);
   const [status, setStatus] = React.useState("ready");
@@ -80,13 +81,36 @@ function App() {
     stop();
     setTimeout(() => sendRef.current({ text: q.text }), 0);
   };
+  const aside = React.useRef([]);
+  const restore = (id) => new Promise((done) => setTimeout(() => {
+    setMsgs((ms) => {
+      const i = ms.findIndex((m) => m.id === id);
+      aside.current = ms.slice(i + 1);
+      return ms.slice(0, i + 1);
+    });
+    done();
+  }, 900));
+  const giveBack = () => {
+    setMsgs((ms) => [...ms, ...aside.current]);
+    aside.current = [];
+  };
   const stop = () => {
     clearTimeout(timer.current);
     setStatus("ready");
     setMsgs((ms) => ms.map((m) => m.status === "streaming" ? { ...m, status: "stopped" } : m));
   };
   sendRef.current = send;
-  return /* @__PURE__ */ React.createElement("div", { className: "cv" }, /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Assistant" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, msgs.map((m) => /* @__PURE__ */ React.createElement(A.Message, { key: m.id, from: m.from, status: m.status, edited: m.v > 0, onRetry: m.status === "stopped" ? () => {
+  return /* @__PURE__ */ React.createElement("div", { className: "cv" }, /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Assistant" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, msgs.map((m) => m.kind === "checkpoint" ? /* @__PURE__ */ React.createElement(
+    A.ConversationCheckpoint,
+    {
+      key: m.id,
+      label: m.label,
+      at: m.at,
+      onRestore: () => restore(m.id),
+      onReturn: giveBack,
+      consequence: "The messages after this will be set aside. You can return to them."
+    }
+  ) : /* @__PURE__ */ React.createElement(A.Message, { key: m.id, from: m.from, status: m.status, edited: m.v > 0, onRetry: m.status === "stopped" ? () => {
     setStatus("streaming");
     stream(m.id);
   } : void 0 }, m.files && /* @__PURE__ */ React.createElement(A.MessageAttachments, { items: m.files }), /* @__PURE__ */ React.createElement(A.MessageContent, null, m.text), m.from === "assistant" ? /* @__PURE__ */ React.createElement(A.MessageActions, { onCopy: true, onRegenerate: () => {

@@ -3280,6 +3280,21 @@ export interface MessageAttachment {
 }
 /** What was sent with a message, before its content: 64px thumbnails and settled Tag plates, in a list named "2 attachments". */
 export declare function MessageAttachments(props: { items: MessageAttachment[] } & Omit<React.HTMLAttributes<HTMLUListElement>, 'children'>): React.ReactElement | null;
+export interface ConversationCheckpointProps {
+  /** What the point is before: "Before editing 6 files". */
+  label: string;
+  at?: Date | string | number;
+  /** What restoring does, in words; it describes Restore and fills the confirmation. */
+  consequence: string;
+  /** Resolve when restored; reject (with a message) when it couldn't. */
+  onRestore: () => void | Promise<unknown>;
+  /** Real recovery: with it Restore runs at once and leaves "Return to where you were"; without it Restore asks in a Dialog. */
+  onReturn?: () => void | Promise<unknown>;
+  locale?: string;
+  className?: string;
+}
+/** A point to go back to: a divider "Checkpoint · label · time" with Restore, through the consequential-action contract. */
+export declare function ConversationCheckpoint(props: ConversationCheckpointProps): React.ReactElement;
 export interface QueuedMessage { id: string; text: string }
 export interface ConversationQueueProps {
   /** Messages written while the agent worked, in the order they'll be sent. */
@@ -3495,7 +3510,7 @@ declare global {
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
-      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; MessageActions: typeof MessageActions;
+      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; ConversationCheckpoint: typeof ConversationCheckpoint; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;
