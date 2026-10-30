@@ -285,9 +285,9 @@ const SCHEMES: { id: BuiltInScheme; label: string }[] = [
 const ACCENTS: { id: string; label: string; hex: string | undefined }[] = [
   { id: 'scheme', label: 'Scheme default', hex: undefined },
   { id: 'pine', label: 'Pine', hex: '#0f8a6b' },
-  { id: 'ember', label: 'Ember', hex: '#c2410c' },
-  { id: 'cobalt', label: 'Cobalt', hex: '#1d4ed8' },
-  { id: 'rose', label: 'Rose', hex: '#be185d' },
+  { id: 'harbor', label: 'Harbor', hex: '#2a6f9e' },
+  { id: 'rosewood', label: 'Rosewood', hex: '#b13a68' },
+  { id: 'olive', label: 'Olive', hex: '#6b7d1e' },
 ];
 type Look = { scheme: BuiltInScheme; accent?: string; reduced: boolean; more: boolean };
 
@@ -376,7 +376,7 @@ function Page() {
         <section className="hero">
           <div className="wrap hero-grid">
             <div className="hero-copy">
-              <p className="kicker">Design and HCI framework · React · MIT licence</p>
+              <p className="hero-meta">Design and HCI framework · React · MIT licence</p>
               <h1 className="display">Height is the interface.</h1>
               <p className="lead">
                 Altitude is a framework for agent-built web applications with one idea: <strong>the ground is the record.</strong> Settled content sits on the
@@ -398,7 +398,6 @@ function Page() {
         <section className="band" id="workflows" aria-labelledby="workflows-title">
           <div className="wrap">
             <div className="section-head">
-              <p className="kicker">From intent to interaction</p>
               <h2 className="h2" id="workflows-title">Build the whole workflow.</h2>
               <p className="lede">Ask for settings, search, a consequential action or a request process. Altitude supplies focused design guidance, small workflow hooks and checks for the states between the first click and the actual outcome.</p>
             </div>
@@ -419,7 +418,6 @@ function Page() {
         <section className="band band-sunk" id="loading" aria-labelledby="loading-title">
           <div className="wrap">
             <div className="section-head">
-              <p className="kicker">Suspense, built in</p>
               <h2 className="h2" id="loading-title">Skeletons you don't write.</h2>
               <p className="lede">
                 Pass your data the way you already do. While it's still undefined, each component shows its own imprint at its own
@@ -445,7 +443,6 @@ function Page() {
         <section className="band" aria-labelledby="laws-title">
           <div className="wrap">
             <div className="section-head">
-              <p className="kicker">The laws</p>
               <h2 className="h2" id="laws-title">Every component speaks the same physics.</h2>
             </div>
             <Laws />
@@ -455,7 +452,6 @@ function Page() {
         <section className="band band-sunk" id="theming" aria-labelledby="theming-title">
           <div className="wrap">
             <div className="section-head">
-              <p className="kicker">Theming</p>
               <h2 className="h2" id="theming-title">Two schemes, one ladder.</h2>
               <p className="lede">Swap the scheme, bring your own accent, or turn on reduced motion and more contrast. The elevation language holds in all of them.</p>
             </div>
@@ -466,7 +462,6 @@ function Page() {
         <section className="band" aria-labelledby="start-title">
           <div className="wrap start">
             <div className="section-head">
-              <p className="kicker">Get started</p>
               <h2 className="h2" id="start-title">Install it, wrap your app once.</h2>
               <p className="lede">Render <code>AltitudeProvider</code> once around your app and import the stylesheet. The props mirror shadcn/ui, so most of it will feel familiar.</p>
               <CopyLine text={install} />

@@ -37,15 +37,16 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 
 ## Where Altitude stands
 
-As of the 2026-10-30 audit, 31 of 47 tells are clear, 11 are to watch, 3 are unchecked and 2 are exposed. The audit found 4 exposed; the two schemes among them were retired the same day. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
+As of the 2026-10-30 audit, 32 of 47 tells are clear, 11 are to watch, 3 are unchecked and 1 is exposed. The audit found 4 exposed; the two schemes and the landing page's labels were fixed the same day. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
 
 **Clear.** No purple, gradient text, coloured stripes, glows, bounce, count-ups, emoji, sparkles or marketese anywhere in the library or previews. The content rules, the forbidden light glows, the rejected severity bars (E8) and Charts' "the data is the record" already rule most of the tells out.
 
 **Retired.** Mesa was terracotta on cream (`#b4441b` on `#f6f1ea`), the most-cited replacement for purple (CO4). Alpine was near-black with one mint accent (`#5fd6b2` on `#0f1513`, CO5). Both were removed rather than retuned, on the side of caution ([#324](https://github.com/richlaconte/altitude/issues/324)). Their names render as Daylight and Nightfall. Their figures in earlier Research experiments (E23 among them) are kept as the record of what was measured.
 
+**Fixed on the landing page.** The uppercase, letter-spaced kicker above every heading is gone, and its panel labels are in sentence case (TY4). Its accent swatches, which were Tailwind's orange-700, blue-700 and pink-700, are now its own: Harbor `#2a6f9e`, Rosewood `#b13a68` and Olive `#6b7d1e`, each at least 3:1 on both grounds (a graphite swatch was dropped: 1.9:1 on Nightfall).
+
 **Exposed:**
 
-- **TY4, the landing page** puts an uppercase, letter-spaced kicker above every heading ([#320](https://github.com/richlaconte/altitude/issues/320)).
 - **LA5, the app skeleton** is the sidebar, top bar and table every generated dashboard uses, and agents copy it for every screen ([#323](https://github.com/richlaconte/altitude/issues/323)).
 
 **Watch:**
