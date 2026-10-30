@@ -76,7 +76,7 @@ const plain = (l: Line) => l.segs.map((s) => s.text).join('');
  * A command's output as it runs (#273), in CodeBlock's frame: flush on the ground with a 1px rim, mono. While it runs
  * it isn't the record yet: a dashed rule down the left, "Running", and the output follows its end until you scroll up
  * (then "Jump to latest output" rises). It finishes with one afterglow and its exit in words: "Exited with 0 · 4.2s",
- * a critical rule when non-zero, or "Stopped by you". stderr lines carry a critical mark and say "stderr".
+ * with a critical mark when non-zero (the edge stays neutral: #374), or "Stopped by you". stderr lines carry a critical mark and say "stderr".
  */
 export function Terminal({ command, output, status = 'running', exitCode, duration, onStop, stopOnEscape = false, maxLines = 400, ansi = true, copyable = true, className, ...rest }: TerminalProps) {
   const lines = React.useMemo(() => linesOf(output, ansi), [output, ansi]);

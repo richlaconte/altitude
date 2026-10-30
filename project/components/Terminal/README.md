@@ -5,7 +5,7 @@ A command's output as it runs, with how it ended. Coding agents run `npm test`, 
 **Elevation: CodeBlock's frame, with a process's states.**
 - **The frame** is flush on the ground with a 1px `line` rim, mono, no shadow, named by its command (`$ npm test`).
 - **Running** isn't the record yet: a dashed `line-control` rule down the left, "Running", and Stop (secondary, level 1).
-- **Finished**, the rule goes solid with one afterglow and the exit is said in words: "Exited with 0 · 4.2s" with a check, "Exited with 1 · 4.2s" with a critical rule and mark, or "Stopped by you".
+- **Finished**, the rule goes solid with one afterglow and the exit is said in words: "Exited with 0 · 4.2s" with a check, "Exited with 1 · 4.2s" with a critical mark (the edge stays neutral; Distinctiveness, CM3), or "Stopped by you".
 - **stderr lines** carry a critical mark in the gutter and say "stderr" to screen readers.
 - **"Jump to latest output"** floats at level 3 when you scroll up while it runs, as in `Conversation`.
 

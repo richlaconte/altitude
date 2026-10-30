@@ -25,7 +25,7 @@ export interface ArtifactProps extends Omit<React.HTMLAttributes<HTMLElement>, '
 /**
  * What an agent is making, beside the conversation (#271): a pane on the ground, named by its title. While it's
  * written it isn't the record yet (a dashed rule at the pane's edge, "Writing… version 3"); complete, the rule goes
- * solid with one afterglow; failed, a critical rule with Retry, the last whole version still there. Viewing an earlier
+ * solid with one afterglow; failed, "Couldn't finish" with a mark and Retry, the last whole version still there (no coloured edge: #374). Viewing an earlier
  * version is a mode, so it's a strip and words across the pane's top, not a lift.
  */
 export function Artifact({ title, status = 'complete', version, onRetry, id: given, className, children, ...rest }: ArtifactProps) {
