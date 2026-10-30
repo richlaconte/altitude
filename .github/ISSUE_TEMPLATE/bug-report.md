@@ -5,7 +5,7 @@ title: "<Component>: <what goes wrong>"
 labels: bug
 ---
 
-<!-- Read CONTRIBUTING.md ("Issues") before filling this in. Delete these comments and any section marked optional that you leave empty. -->
+<!-- Read CONTRIBUTING.md ("Issues") before filling this in. Delete these comments and any section marked optional that you leave empty. If this is part of a bigger issue or can't start until another lands, link it as a sub-issue or "blocked by" after filing (CONTRIBUTING.md, "How work is organised"). -->
 
 ## What goes wrong
 
