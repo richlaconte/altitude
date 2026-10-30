@@ -55,7 +55,7 @@ try {
     check(await glo.getByRole('button', { name: 'Save changes' }).isDisabled() && await glo.getByRole('textbox', { name: 'Name' }).inputValue() === 'Globex Ltd', 'TE-12 an outside change during an edit keeps the draft and blocks Save');
     await page.close(); }
 
-  for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
+  for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
       await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });

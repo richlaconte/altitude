@@ -1,6 +1,8 @@
 import json, os, sys
-THEMES = [("daylight","Daylight"),("nightfall","Nightfall"),("mesa","Mesa"),("alpine","Alpine")]
-T = ["daylight","nightfall","mesa","alpine"]
+THEMES = [("daylight","Daylight"),("nightfall","Nightfall")]
+# Schemes retired because they matched generated-UI palette defaults (#324): their names still resolve, to these.
+RETIRED = {"daylight": ["mesa"], "nightfall": ["alpine"]}
+T = ["daylight","nightfall"]
 def c(*v): return dict(zip(T, v))
 
 def data_tokens():
@@ -17,40 +19,40 @@ def data_tokens():
 
 colors = [
  # surfaces by altitude
- ("surface-trench",  c("#e1e4ea","#08090c","#e5ddd2","#060a09"), "Level -2. Deep wells: slider, switch and progress tracks. Never holds body text larger than a label."),
- ("surface-well",    c("#eaedf1","#0c0e12","#eee7dd","#0a0f0e"), "Level -1. Receptacles: inputs, textareas, the tab track. Things you put something into."),
- ("surface-ground",  c("#f3f4f7","#121419","#f6f1ea","#0f1513"), "Level 0. The page itself, and anything flush with it: badges, ghost buttons, skeletons, disabled controls."),
- ("surface-raised",  c("#ffffff","#191c23","#fffcf8","#151e1b"), "Level 1. Resting interactive and grouping surfaces: cards, buttons, the switch thumb, the active tab."),
- ("surface-lifted",  c("#ffffff","#1f232b","#fffdfa","#1a2522"), "Level 2. A raised surface under the pointer, and the primary action at rest."),
- ("surface-floating",c("#ffffff","#252a33","#ffffff","#202c28"), "Level 3. Tooltips, popovers, menus, a dragged item."),
- ("surface-overlay", c("#ffffff","#2a303a","#ffffff","#25332f"), "Level 4. Toasts and sheets."),
- ("surface-modal",   c("#ffffff","#2f3541","#ffffff","#2a3935"), "Level 5. Dialogs. The highest thing on screen, one at a time."),
+ ("surface-trench",  c("#e1e4ea","#08090c"), "Level -2. Deep wells: slider, switch and progress tracks. Never holds body text larger than a label."),
+ ("surface-well",    c("#eaedf1","#0c0e12"), "Level -1. Receptacles: inputs, textareas, the tab track. Things you put something into."),
+ ("surface-ground",  c("#f3f4f7","#121419"), "Level 0. The page itself, and anything flush with it: badges, ghost buttons, skeletons, disabled controls."),
+ ("surface-raised",  c("#ffffff","#191c23"), "Level 1. Resting interactive and grouping surfaces: cards, buttons, the switch thumb, the active tab."),
+ ("surface-lifted",  c("#ffffff","#1f232b"), "Level 2. A raised surface under the pointer, and the primary action at rest."),
+ ("surface-floating",c("#ffffff","#252a33"), "Level 3. Tooltips, popovers, menus, a dragged item."),
+ ("surface-overlay", c("#ffffff","#2a303a"), "Level 4. Toasts and sheets."),
+ ("surface-modal",   c("#ffffff","#2f3541"), "Level 5. Dialogs. The highest thing on screen, one at a time."),
  # ink
- ("ink",       c("#12161f","#eef1f6","#221b14","#eaf3ef"), "Primary text on every surface-* level and on accent-soft."),
- ("ink-muted", c("#4f5767","#a3abb9","#62564a","#9db0a9"), "Secondary text, hints, placeholders; on every surface-* level."),
- ("ink-faint", c("#8a92a0","#5f6775","#a09484","#5d6c67"), "Disabled labels only (exempt from contrast minimums). Never for content."),
- ("line",      c("#e0e3e9","#262a33","#e6ded3","#222c29"), "Decorative hairlines: dividers, the separators between flush accordion rows. Not a control boundary."),
- ("line-control", c("#737b89","#6a7280","#807467","#62736d"), "Control boundaries (input, checkbox, radio, switch track): at least 3:1 on ground, well and raised."),
+ ("ink",       c("#12161f","#eef1f6"), "Primary text on every surface-* level and on accent-soft."),
+ ("ink-muted", c("#4f5767","#a3abb9"), "Secondary text, hints, placeholders; on every surface-* level."),
+ ("ink-faint", c("#8a92a0","#5f6775"), "Disabled labels only (exempt from contrast minimums). Never for content."),
+ ("line",      c("#e0e3e9","#262a33"), "Decorative hairlines: dividers, the separators between flush accordion rows. Not a control boundary."),
+ ("line-control", c("#737b89","#6a7280"), "Control boundaries (input, checkbox, radio, switch track): at least 3:1 on ground, well and raised."),
  # accent
- ("accent",     c("#2b56d6","#86a2ff","#b4441b","#5fd6b2"), "The scheme's one hue: primary fills, checked controls, the switch and slider fill, progress."),
- ("on-accent",  c("#ffffff","#0b1022","#ffffff","#04140f"), "Text and icons on an accent fill."),
- ("accent-ink", c("#2a52c8","#93acff","#a63e17","#6fdcbc"), "Accent as text, links and the focus ring; 4.5:1 on every surface-* level."),
- ("accent-soft",c("#e3eafc","#1c2440","#f8e4d9","#13302a"), "Tinted ground behind accent-ink or ink: the accent badge, the selected menu row."),
+ ("accent",     c("#2b56d6","#86a2ff"), "The scheme's one hue: primary fills, checked controls, the switch and slider fill, progress."),
+ ("on-accent",  c("#ffffff","#0b1022"), "Text and icons on an accent fill."),
+ ("accent-ink", c("#2a52c8","#93acff"), "Accent as text, links and the focus ring; 4.5:1 on every surface-* level."),
+ ("accent-soft",c("#e3eafc","#1c2440"), "Tinted ground behind accent-ink or ink: the accent badge, the selected menu row."),
  # status
- ("positive",      c("#13734f","#56cf9f","#2c6e3f","#8ed67a"), "Success text and icons on every surface-* level and on positive-soft. Always paired with a word or icon."),
- ("positive-soft", c("#dcf2e8","#10291f","#e3efdc","#1a2e17"), "Tinted ground behind positive text: success alerts, badges, toasts."),
- ("caution",       c("#875400","#ebb550","#8a5000","#efbd5b"), "Warning text and icons on every surface-* level and on caution-soft. Always paired with a word or icon."),
- ("caution-soft",  c("#fbefd3","#2e2411","#fbeccf","#2f2712"), "Tinted ground behind caution text."),
- ("critical",      c("#b52e16","#ff8064","#b3261e","#ff8a70"), "Errors and destructive actions: text and icons on every surface-* level and on critical-soft; the danger button fill."),
- ("critical-soft", c("#fbe4de","#3a1913","#f9e1dc","#3a1a14"), "Tinted ground behind critical text; the invalid field's well."),
- ("on-critical",   c("#ffffff","#1a0905","#ffffff","#1a0905"), "Text on a critical fill (the danger button)."),
- ("presence-1", c("#b0256f","#f07ab8","#a8256a","#f07ab8"), "Collaborator presence: the ring and name tag on something another person is holding or editing. 3:1 on every surface."),
- ("presence-2", c("#0b7285","#3fc1d0","#0b7285","#5cc8e0"), "Second collaborator's presence colour."),
- ("presence-3", c("#7046c9","#b39dff","#6e44c2","#b9a3ff"), "Third collaborator's presence colour."),
- ("on-presence", c("#ffffff","#0b0d12","#ffffff","#06100d"), "Name-tag text on any presence-* fill."),
+ ("positive",      c("#13734f","#56cf9f"), "Success text and icons on every surface-* level and on positive-soft. Always paired with a word or icon."),
+ ("positive-soft", c("#dcf2e8","#10291f"), "Tinted ground behind positive text: success alerts, badges, toasts."),
+ ("caution",       c("#875400","#ebb550"), "Warning text and icons on every surface-* level and on caution-soft. Always paired with a word or icon."),
+ ("caution-soft",  c("#fbefd3","#2e2411"), "Tinted ground behind caution text."),
+ ("critical",      c("#b52e16","#ff8064"), "Errors and destructive actions: text and icons on every surface-* level and on critical-soft; the danger button fill."),
+ ("critical-soft", c("#fbe4de","#3a1913"), "Tinted ground behind critical text; the invalid field's well."),
+ ("on-critical",   c("#ffffff","#1a0905"), "Text on a critical fill (the danger button)."),
+ ("presence-1", c("#b0256f","#f07ab8"), "Collaborator presence: the ring and name tag on something another person is holding or editing. 3:1 on every surface."),
+ ("presence-2", c("#0b7285","#3fc1d0"), "Second collaborator's presence colour."),
+ ("presence-3", c("#7046c9","#b39dff"), "Third collaborator's presence colour."),
+ ("on-presence", c("#ffffff","#0b0d12"), "Name-tag text on any presence-* fill."),
  # data: charts only, as presence-* is only for people. Chosen by palette.mjs, which writes palette.json (#49)
  *data_tokens(),
- ("scrim",         c("#12161f52","#00000080","#221b144d","#00000080"), "The veil a dialog lays over everything beneath it."),
+ ("scrim",         c("#12161f52","#00000080"), "The veil a dialog lays over everything beneath it."),
 ]
 
 # shadows: every ladder entry has the SAME four-layer structure [inset rim, ring, key, ambient] so any two levels interpolate smoothly.
@@ -81,8 +83,7 @@ def ladder(s, rimc, ringc, dark):
          "lip-top": "inset 0 18px 18px -18px #000000cc",
          "lip-bottom": "inset 0 -18px 18px -18px #000000cc",
     }
-L = {"daylight": ladder("#0f1729", None, None, False), "nightfall": ladder("#000000", None, None, True),
-     "mesa": ladder("#2a1a0c", None, None, False), "alpine": ladder("#000000", None, None, True)}
+L = {"daylight": ladder("#0f1729", None, None, False), "nightfall": ladder("#000000", None, None, True)}
 shadow_usage = {
  "trench": "Level -2, inset. Slider, switch and progress tracks; the invalid field.",
  "well": "Level -1, inset. Inputs, textareas, the tab track, unchecked checkboxes and radios.",
@@ -99,7 +100,7 @@ shadows = [{"name": k, "value": {t: L[t][k] for t in T}, "usage": shadow_usage[k
 
 tokens = {
  "name": "Altitude", "version": 1,
- "color": {"themes": [{"id": i, "name": n} for i, n in THEMES],
+ "color": {"themes": [{"id": i, "name": n, "retired": RETIRED[i]} for i, n in THEMES],
    "tokens": [{"name": n, "value": v, "usage": u} for n, v, u in colors]},
  "type": {
    "fonts": [],

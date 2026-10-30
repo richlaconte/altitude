@@ -1,4 +1,4 @@
-// altitude-design/adapters/codemirror with a real CodeMirror 6 editor: in all four schemes it renders with no page or
+// altitude-design/adapters/codemirror with a real CodeMirror 6 editor: in both schemes it renders with no page or
 // console errors and takes the scheme's surfaces; the editor is a well whose floor lights when focused; the active line
 // is a tint, never a height; syntax uses ink, ink-muted and accent-ink only; a lint error sinks its gutter marker into a
 // trench on critical-soft with the message in words; CodeMirror's own keyboard still works (typing, undo); forced
@@ -10,7 +10,7 @@ const { open, close } = await adapterPages('.storybook/adapters/codemirror-examp
 const tokens = (page, names) => page.evaluate((names) => { const d = document.createElement('div'); document.body.appendChild(d);
   const out = Object.fromEntries(names.map((n) => { d.style.color = `var(--${n})`; return [n, getComputedStyle(d).color]; })); d.remove(); return out; }, names);
 
-for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) {
+for (const scheme of ['daylight', 'nightfall']) {
   const { page, errors } = await open({ scheme });
   const bg = await page.evaluate(() => getComputedStyle(document.querySelector('.cm-editor')).backgroundColor);
   const well = await page.evaluate(() => { const d = document.createElement('div'); d.style.background = 'var(--surface-well)'; document.body.appendChild(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; });

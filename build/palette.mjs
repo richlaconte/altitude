@@ -19,7 +19,7 @@ import {
 const here = (p) => new URL(p, import.meta.url);
 const tokens = JSON.parse(readFileSync(here('../project/tokens.json'), 'utf8'));
 const V = Object.fromEntries(tokens.color.tokens.map((t) => [t.name, t.value]));
-const SCHEMES = { daylight: 'light', nightfall: 'dark', mesa: 'light', alpine: 'dark' };
+const SCHEMES = { daylight: 'light', nightfall: 'dark' };
 const POLE_AVOID = ['positive', 'critical'];
 const SLOTS = 6;
 const r3 = (x) => Math.round(x * 1000) / 1000;

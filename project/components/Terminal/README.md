@@ -11,7 +11,7 @@ A command's output as it runs, with how it ended. Coding agents run `npm test`, 
 
 **Accessibility.** A `figure` with a focusable `log` region that isn't live, so output isn't read line by line; completion is announced once ("npm test exited with 1 after 4.2 seconds."). Tab reaches the output, Stop and Copy; arrows scroll; Escape in the output stops a running command when `stopOnEscape` is set.
 
-**ANSI.** With `ansi` (default), red, yellow and green map to `critical`, `caution` and `positive`, blue and cyan to `accent-ink`, dim to `ink-muted`, bold to 600; everything else is stripped. The status inks clear 4.5:1 as text on `surface-ground` in all four schemes (lowest: `positive` in daylight, 5.31). A carriage return overwrites its line, so progress bars settle on their last state.
+**ANSI.** With `ansi` (default), red, yellow and green map to `critical`, `caution` and `positive`, blue and cyan to `accent-ink`, dim to `ink-muted`, bold to 600; everything else is stripped. The status inks clear 4.5:1 as text on `surface-ground` in both schemes (lowest: `positive` in daylight, 5.31). A carriage return overwrites its line, so progress bars settle on their last state.
 
 **Props:** `command`, `output` (a string, or `{ text, stream?: 'stdout' | 'stderr' }[]`), `status` (`'running' | 'exited' | 'stopped'`), `exitCode`, `duration`, `onStop`, `stopOnEscape`, `maxLines` (default 400; earlier lines behind "Show N earlier lines"), `ansi`, `copyable`.
 

@@ -3,8 +3,8 @@
 A design and HCI framework for agent-built React web applications, with a component foundation where **height is the interface**. Its one idea: the ground is the record. Settled content sits on the ground; anything live rises above it; anything waiting to receive sinks below it.
 
 - **Site:** https://richlaconte.github.io/altitude/
-- **Storybook:** every component, with its guidelines and a live preview in all four schemes: https://richlaconte.github.io/altitude/storybook/
-- **The design guide:** [`project/README.md`](https://github.com/richlaconte/altitude/blob/main/project/README.md), then [Elevation](https://github.com/richlaconte/altitude/blob/main/project/Elevation.md), [Motion](https://github.com/richlaconte/altitude/blob/main/project/Motion.md), [Charts](https://github.com/richlaconte/altitude/blob/main/project/Charts.md), [Theming](https://github.com/richlaconte/altitude/blob/main/project/Theming.md) and [Research](https://github.com/richlaconte/altitude/blob/main/project/Research.md)
+- **Storybook:** every component, with its guidelines and a live preview in both schemes: https://richlaconte.github.io/altitude/storybook/
+- **The design guide:** [`project/README.md`](https://github.com/richlaconte/altitude/blob/main/project/README.md), then [Elevation](https://github.com/richlaconte/altitude/blob/main/project/Elevation.md), [Motion](https://github.com/richlaconte/altitude/blob/main/project/Motion.md), [Charts](https://github.com/richlaconte/altitude/blob/main/project/Charts.md), [Theming](https://github.com/richlaconte/altitude/blob/main/project/Theming.md), [Distinctiveness](https://github.com/richlaconte/altitude/blob/main/project/Distinctiveness.md) and [Research](https://github.com/richlaconte/altitude/blob/main/project/Research.md)
 
 ## Install
 
@@ -28,7 +28,7 @@ export function App() {
 }
 ```
 
-Render `AltitudeProvider` once around your app. Schemes are `daylight`, `nightfall`, `mesa` and `alpine`; `accent="#0f8a6b"` swaps in your own colour. The components are client components (`"use client"`), so they work in frameworks with server components.
+Render `AltitudeProvider` once around your app. Schemes are `daylight` and `nightfall`; `accent="#0f8a6b"` swaps in your own colour. The components are client components (`"use client"`), so they work in frameworks with server components.
 
 | Import | What it is |
 |---|---|
@@ -82,7 +82,7 @@ CI fails if `project/` doesn't match its sources, so the design system on claude
 
 ## What happens on push
 
-Every push and pull request runs the checks: the bundle and previews are rebuilt and must match what's committed, every preview is rendered in all four schemes with no errors, the interaction checks run, the sources type-check against React 19, and the package and Storybook are built.
+Every push and pull request runs the checks: the bundle and previews are rebuilt and must match what's committed, every preview is rendered in both schemes with no errors, the interaction checks run, the sources type-check against React 19, and the package and Storybook are built.
 
 A push to `main` then also:
 

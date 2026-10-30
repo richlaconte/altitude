@@ -446,7 +446,7 @@ try {
     check(await announced.textContent() === '', 'IP-13 the announcement clears itself after dur-linger');
     await page.close(); }
 
-  for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
+  for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open(); await page.setViewportSize({ width, height: 1000 });
     await page.goto(`file://${fixturePath('InlineEdit', scheme)}`);
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
