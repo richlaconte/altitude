@@ -3208,7 +3208,7 @@ function App() {
   );
 }
 
-=== Confirmation | <!-- @dsCard group="Feedback" height=900 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
+=== Confirmation | <!-- @dsCard group="Feedback" height=1120 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
 --- jsx
 function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails, scopes }) {
   const [state, setState] = React.useState('requested');
@@ -3219,6 +3219,23 @@ function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, run
     runningLabel={runningLabel} doneLabel={doneLabel} failedLabel={failedLabel} resolvedBy="you" resolvedAt={at} scopes={scopes} resolvedScope={scope}
     onApprove={approve} onReject={() => { setState('rejected'); setAt(new Date()); }} onRetry={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1000); }} />;
 }
+// Edit what's proposed before approving: the consequence and the button follow the edited values.
+function EditableProposal() {
+  const original = { subject: 'October product update', segment: 'Pro customers', n: 214 };
+  const [v, setV] = React.useState(original);
+  const [state, setState] = React.useState('requested');
+  const [at, setAt] = React.useState();
+  const counts = { 'Pro customers': 214, 'All customers': 1180, 'Trial users': 96 };
+  const edited = v.subject !== original.subject || v.segment !== original.segment;
+  return <A.Confirmation state={state} title="Send campaign email" consequence={`${v.n} ${v.segment} will receive “${v.subject}”.`}
+    approveLabel={`Send ${v.n} emails`} rejectLabel="Don't send" runningLabel="Sending…" doneLabel="Sent" resolvedBy="you" resolvedAt={at} edited={edited}
+    edit={<>
+      <A.Field label="Subject"><A.Input value={v.subject} onChange={(e) => setV({ ...v, subject: e.target.value })} /></A.Field>
+      <A.Field label="Segment"><A.Select value={v.segment} onValueChange={(segment) => setV({ ...v, segment, n: counts[segment] })} items={Object.keys(counts).map((k) => ({ value: k, label: k }))} /></A.Field>
+    </>}
+    onEditCancel={() => setV(original)}
+    onApprove={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1200); }} onReject={() => { setState('rejected'); setAt(new Date()); }} />;
+}
 function App() {
   return (
     <div className="col">
@@ -3227,6 +3244,7 @@ function App() {
       <Proposal title="Archive the Atlas workspace" consequence="12 people lose access; it can't be restored after 30 days." approveLabel="Archive workspace" rejectLabel="Don't archive" runningLabel="Archiving…" failedLabel="Couldn't archive" escalate="dialog" fails />
       <Proposal title="Run npm test" consequence="Runs the test suite in this workspace." approveLabel="Run once" rejectLabel="Don't run" runningLabel="Running…" doneLabel="Ran"
         scopes={[{ value: 'session', label: 'Allow npm test for this session' }, { value: 'always', label: 'Always allow npm test', description: 'Saved to this project’s settings' }]} />
+      <EditableProposal />
     </div>
   );
 }

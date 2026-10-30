@@ -1488,6 +1488,10 @@ Agents stop to ask ("Which environment?", "Keep the column or drop it?"), and th
 
 Approving `npm test` for the fifth time trains people to approve without reading, and never asking is unsafe; Claude Code's permission prompts and Cursor's allowlist offer a scope (#280). `Confirmation scopes` turns Approve into a `SplitButton` (an action with alternatives): the face approves once, the menu holds the wider scopes with their descriptions, and the scope is recorded in the resolved line and the announcement, because "allowed for this session" differs from "approved once". Scopes are ignored with `escalate`: whatever needs a hold or a dialog is consequential enough never to be pre-approved. No new elevation: the SplitButton and its menu keep their levels. `checks/confirm-scopes.mjs`.
 
+### E144 · Fix the subject, then approve
+
+A proposal that's nearly right ("Send campaign email" with a subject one word off) could only be approved as is or rejected and explained in the composer, which costs a turn; harnesses increasingly let the person edit the arguments and approve the edited version, telling the agent what changed (#281). `Confirmation edit` opens the fields in place inside the raised card (EditRegion's pattern: the padding is already there, so nothing jumps), focusing the first. The app keeps `consequence` and `approveLabel` following the values, so the description read with Approve is always what will happen. Escape cancels the edit, not the proposal, and Reject stays available while editing. The record says "edited and approved by you". `checks/confirm-edit.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

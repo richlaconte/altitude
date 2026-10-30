@@ -1992,6 +1992,12 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-confirm-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 .alt-confirm-who { margin-right: auto; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 [data-contrast="more"] .alt-confirm[data-state="requested"] { box-shadow: 0 3px 0 0 var(--ink), var(--elev-1); }
+/* Editing a proposal (#281): its fields open in place inside the raised card (wells), as EditRegion does; Reject and
+   Approve stay; an edited proposal carries an "Edited" plate by its title. */
+.alt-confirm-edit { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
+.alt-confirm-edit-actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+.alt-confirm-edited { display: inline-flex; align-items: center; height: 20px; margin-left: 8px; padding: 0 6px; border-radius: var(--radius-sm); vertical-align: 2px;
+  background: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 9%, transparent); font: 550 11.5px/1 var(--font-sans); color: var(--ink-muted); }
 .alt-confirm-scope { display: flex; flex-direction: column; gap: 1px; padding-block: 6px; white-space: normal; }
 .alt-menu:has(.alt-confirm-scope) { min-width: min(300px, calc(100vw - 16px)); }
 .alt-menu-item:has(.alt-confirm-scope) { height: auto; min-height: var(--size-row-md, 32px); }

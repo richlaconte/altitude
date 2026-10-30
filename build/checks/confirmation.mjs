@@ -34,7 +34,7 @@ const ink = (await card(1)).color;
 await page.click('text=Keep them');
 r = await card(1);
 expect(r.state === 'rejected' && r.line.startsWith('Rejected by you') && r.color !== ink && r.buttons.length === 0, 'rejecting leaves it muted in the record');
-expect(r.name === 'Delete 3 stale branches' && await page.locator('.alt-confirm').count() === 4, 'it stays in place');
+expect(r.name === 'Delete 3 stale branches' && await page.locator('.alt-confirm').count() === 5, 'it stays in place');
 // Hold escalation: a click alone doesn't approve.
 await page.goto(`file://${T}p-Confirmation-daylight.html`);
 await page.waitForTimeout(400);

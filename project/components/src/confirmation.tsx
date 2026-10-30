@@ -38,6 +38,15 @@ export interface ConfirmationProps {
    * approve") holds these. Ignored with `escalate`: an action that needs a hold or a dialog is never pre-approved.
    */
   scopes?: { value: string; label: string; description?: string }[];
+  /**
+   * Fields to change the proposal before approving it (#281): an Edit action opens them in place inside the card.
+   * Keep `consequence` and `approveLabel` following the edited values, so Approve names what will happen.
+   */
+  edit?: React.ReactNode;
+  /** The proposal was changed: an "Edited" plate by the title, and "edited and approved by you" once done. */
+  edited?: boolean;
+  /** Cancel edit or Escape in the fields: put the values back. */
+  onEditCancel?: () => void;
   /** The scope it was approved with ('once', or a scope's value), named in the resolved line. */
   resolvedScope?: string;
   /** Called with the scope: 'once' from the face, or a scope's value from the menu. */
@@ -53,11 +62,17 @@ export interface ConfirmationProps {
  * flush and muted, kept in the record.
  */
 export function Confirmation({ state, title, consequence, details, approveLabel = 'Approve', rejectLabel = 'Reject', runningLabel = 'Working…', doneLabel = 'Done',
-  failedLabel = "Couldn't finish", escalate, resolvedBy, resolvedAt, requestedBy = 'The assistant', scopes, resolvedScope, onApprove, onReject, onRetry, className }: ConfirmationProps) {
+  failedLabel = "Couldn't finish", escalate, resolvedBy, resolvedAt, requestedBy = 'The assistant', scopes, resolvedScope, edit, edited, onEditCancel, onApprove, onReject, onRetry, className }: ConfirmationProps) {
   // How widely it was approved, in words: "allowed for this session".
   const scoped = resolvedScope && resolvedScope !== 'once' ? (resolvedScope === 'session' ? 'allowed for this session' : resolvedScope === 'always' ? 'always allowed' : `allowed: ${scopes?.find((x) => x.value === resolvedScope)?.label ?? resolvedScope}`) : null;
   const id = React.useId();
   const [asking, setAsking] = React.useState(false);
+  const [editing, setEditing] = React.useState(false);
+  const fields = React.useRef<HTMLDivElement>(null);
+  const editBtn = React.useRef<HTMLButtonElement>(null);
+  React.useEffect(() => { if (editing) fields.current?.querySelector<HTMLElement>('input, textarea, select, button, [tabindex]:not([tabindex="-1"])')?.focus(); }, [editing]);
+  React.useEffect(() => { if (state !== 'requested') setEditing(false); }, [state]);
+  const closeEdit = (cancel: boolean) => { if (cancel) onEditCancel?.(); setEditing(false); requestAnimationFrame(() => editBtn.current?.focus()); };
   const status = state === 'approved' || state === 'running' ? 'pending' : state === 'done' ? 'committed' : state === 'failed' ? 'failed' : undefined;
   const { style, ...depth } = useDepth({ status });
   const [said, setSaid] = React.useState('');
@@ -73,7 +88,7 @@ export function Confirmation({ state, title, consequence, details, approveLabel 
   const when = resolvedAt !== undefined ? <> · <RelativeTime date={resolvedAt} /></> : null;
   const line = state === 'requested' ? <><Icons.AlertCircle size={14} aria-hidden="true" />Approval needed</>
     : status === 'pending' ? runningLabel
-    : state === 'done' ? <><Icons.CircleCheck size={14} aria-hidden="true" />{doneLabel}{scoped ? ` · ${scoped}${resolvedBy ? ` by ${resolvedBy}` : ''}` : resolvedBy && ` · approved by ${resolvedBy}`}{when}</>
+    : state === 'done' ? <><Icons.CircleCheck size={14} aria-hidden="true" />{doneLabel}{scoped ? ` · ${edited ? 'edited and ' : ''}${scoped}${resolvedBy ? ` by ${resolvedBy}` : ''}` : edited ? ` · edited and approved${resolvedBy ? ` by ${resolvedBy}` : ''}` : resolvedBy && ` · approved by ${resolvedBy}`}{when}</>
     : state === 'failed' ? <><Icons.AlertCircle size={14} aria-hidden="true" />{failedLabel}</>
     : state === 'rejected' ? <>Rejected{resolvedBy && ` by ${resolvedBy}`}{when}</>
     : 'No longer needed';
@@ -86,12 +101,23 @@ export function Confirmation({ state, title, consequence, details, approveLabel 
   return (
     <section className={cx('alt-confirm', className)} data-state={state} aria-labelledby={`${id}-t`} aria-describedby={`${id}-c`} {...depth} style={style}>
       <p className="alt-confirm-line" data-tone={state === 'failed' ? 'critical' : state === 'requested' ? 'accent' : undefined}>{line}</p>
-      <h3 className="alt-confirm-title" id={`${id}-t`}>{title}</h3>
+      <h3 className="alt-confirm-title" id={`${id}-t`}>{title}{edited && state === 'requested' && <span className="alt-confirm-edited">Edited</span>}</h3>
       <p className="alt-confirm-consequence" id={`${id}-c`}>{consequence}</p>
-      {details && state === 'requested' && <div className="alt-confirm-details">{details}</div>}
+      {details && state === 'requested' && !editing && <div className="alt-confirm-details">{details}</div>}
+      {edit && state === 'requested' && editing && (
+        <div ref={fields} className="alt-confirm-edit" role="group" aria-label={`Edit: ${typeof title === 'string' ? title : 'the proposal'}`}
+          onKeyDown={(e) => { if (e.key === 'Escape' && !e.defaultPrevented) { e.preventDefault(); e.stopPropagation(); closeEdit(true); } }}>
+          {edit}
+          <div className="alt-confirm-edit-actions">
+            <Button size="sm" variant="ghost" onClick={() => closeEdit(true)}>Cancel edit</Button>
+            <Button size="sm" variant="secondary" onClick={() => closeEdit(false)}>Done editing</Button>
+          </div>
+        </div>
+      )}
       {state === 'requested' && (
         <div className="alt-confirm-actions">
           <span className="alt-confirm-who">{requestedBy} is asking</span>
+          {edit && !editing && <Button ref={editBtn} size="sm" variant="ghost" onClick={() => setEditing(true)}><Icons.Pencil size={13} aria-hidden="true" />Edit</Button>}
           <Button size="sm" variant="secondary" onClick={onReject}>{rejectLabel}</Button>
           {approve}
         </div>

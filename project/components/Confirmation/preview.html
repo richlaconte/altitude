@@ -1,4 +1,4 @@
-<!-- @dsCard group="Feedback" height=900 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
+<!-- @dsCard group="Feedback" height=1120 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -63,6 +63,42 @@ function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, run
     }
   );
 }
+function EditableProposal() {
+  const original = { subject: "October product update", segment: "Pro customers", n: 214 };
+  const [v, setV] = React.useState(original);
+  const [state, setState] = React.useState("requested");
+  const [at, setAt] = React.useState();
+  const counts = { "Pro customers": 214, "All customers": 1180, "Trial users": 96 };
+  const edited = v.subject !== original.subject || v.segment !== original.segment;
+  return /* @__PURE__ */ React.createElement(
+    A.Confirmation,
+    {
+      state,
+      title: "Send campaign email",
+      consequence: `${v.n} ${v.segment} will receive \u201C${v.subject}\u201D.`,
+      approveLabel: `Send ${v.n} emails`,
+      rejectLabel: "Don't send",
+      runningLabel: "Sending\u2026",
+      doneLabel: "Sent",
+      resolvedBy: "you",
+      resolvedAt: at,
+      edited,
+      edit: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Field, { label: "Subject" }, /* @__PURE__ */ React.createElement(A.Input, { value: v.subject, onChange: (e) => setV({ ...v, subject: e.target.value }) })), /* @__PURE__ */ React.createElement(A.Field, { label: "Segment" }, /* @__PURE__ */ React.createElement(A.Select, { value: v.segment, onValueChange: (segment) => setV({ ...v, segment, n: counts[segment] }), items: Object.keys(counts).map((k) => ({ value: k, label: k })) }))),
+      onEditCancel: () => setV(original),
+      onApprove: () => {
+        setState("running");
+        setTimeout(() => {
+          setState("done");
+          setAt(/* @__PURE__ */ new Date());
+        }, 1200);
+      },
+      onReject: () => {
+        setState("rejected");
+        setAt(/* @__PURE__ */ new Date());
+      }
+    }
+  );
+}
 function App() {
   return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(Proposal, { title: "Send campaign email", consequence: "214 Pro customers will receive \u201COctober product update\u201D.", approveLabel: "Send 214 emails", rejectLabel: "Don't send", runningLabel: "Sending\u2026", doneLabel: "Sent", failedLabel: "Couldn't send" }), /* @__PURE__ */ React.createElement(Proposal, { title: "Delete 3 stale branches", consequence: "release/2.3, spike/maps and fix/old-auth will be deleted from the repository.", approveLabel: "Delete 3 branches", rejectLabel: "Keep them", runningLabel: "Deleting\u2026", doneLabel: "Deleted", escalate: "hold" }), /* @__PURE__ */ React.createElement(Proposal, { title: "Archive the Atlas workspace", consequence: "12 people lose access; it can't be restored after 30 days.", approveLabel: "Archive workspace", rejectLabel: "Don't archive", runningLabel: "Archiving\u2026", failedLabel: "Couldn't archive", escalate: "dialog", fails: true }), /* @__PURE__ */ React.createElement(
     Proposal,
@@ -75,7 +111,7 @@ function App() {
       doneLabel: "Ran",
       scopes: [{ value: "session", label: "Allow npm test for this session" }, { value: "always", label: "Always allow npm test", description: "Saved to this project\u2019s settings" }]
     }
-  ));
+  ), /* @__PURE__ */ React.createElement(EditableProposal, null));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>
