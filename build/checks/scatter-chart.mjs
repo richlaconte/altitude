@@ -38,7 +38,8 @@ const overlap = (a, b) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1
   const [lat, spend] = await read(page);
   const BG = await color(page, 'var(--surface-raised)');
   expect(lat.dots.length === 30 && spend.dots.length === 16, `a dot per record (${lat.dots.length}, ${spend.dots.length})`);
-  expect(lat.dots.every((d) => d.box[2] >= 8 && d.box[3] >= 8 - 0.5), 'every dot is at least 8px');
+  // A circle is exactly 8px across; measured boxes can come back a hair under at some sub-pixel offsets.
+  expect(lat.dots.every((d) => d.box[2] >= 8 - 0.01 && d.box[3] >= 8 - 0.5), `every dot is at least 8px (smallest ${Math.min(...lat.dots.map((d) => d.box[2])).toFixed(3)} × ${Math.min(...lat.dots.map((d) => d.box[3])).toFixed(3)})`);
   expect(lat.dots.every((d) => d.stroke === BG && d.sw === '4' && d.order.startsWith('stroke')), `each dot is ringed 2px in the plot's own colour (${lat.dots[0].stroke}, ${lat.dots[0].sw})`);
   const shapes = {};
   for (const d of lat.dots) shapes[d.series] = `${d.tag}:${d.fill}`;
