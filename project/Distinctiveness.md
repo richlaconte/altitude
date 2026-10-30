@@ -31,13 +31,13 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 | `detect` | What catches it |
 |---|---|
 | `lint` | Source text: hues, font families, `background-clip: text`, uppercase labels, easing, emoji, banned words. `build/checks/tells-lint.mjs` has a rule for each one, and fails if a rule and this file disagree. |
-| `render` | A rendered preview: equal-weight grids, spacing rhythm, contrast, unloaded fonts ([#321](https://github.com/richlaconte/altitude/issues/321)) |
+| `render` | A rendered preview: equal-weight grids and spacing rhythm (`build/checks/render-tells.mjs`, warnings only), and contrast (the existing checks) |
 | `measure` | The distinctiveness benchmark: how far screens sit from what default tools generate ([#322](https://github.com/richlaconte/altitude/issues/322)) |
 | `human` | Review and the study with people ([#326](https://github.com/richlaconte/altitude/issues/326)) |
 
 ## Where Altitude stands
 
-The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page's labels were fixed the same day. The tells lint (#320) then found one the audit couldn't: Artifact and Terminal, added afterwards, had a coloured failure stripe. That leaves 31 of 47 clear, 11 to watch, 3 unchecked and 2 exposed. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
+The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page's labels were fixed the same day. The tells lint (#320) then found one the audit couldn't: Artifact and Terminal, added afterwards, had a coloured failure stripe. The rendered check (#321) then cleared LA6. That leaves 32 of 47 clear, 11 to watch, 2 unchecked and 2 exposed. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
 
 **Clear.** No purple, gradient text, coloured stripes, glows, bounce, count-ups, emoji, sparkles or marketese anywhere in the library or previews. The content rules, the forbidden light glows, the rejected severity bars (E8) and Charts' "the data is the record" already rule most of the tells out.
 
@@ -63,7 +63,7 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 
 | When | What | Gates? |
 |---|---|---|
-| Every push | `checks/tells-lint.mjs` (`npm run check:tells-lint`), and the `render` checks once #321 lands | The lint fails; equal-weight grids and flat spacing will warn |
+| Every push | `checks/tells-lint.mjs` (`npm run check:tells-lint`) and `checks/render-tells.mjs` | The lint fails; equal-weight grids and flat spacing warn on the run |
 | Every push | `npm run check:tells`: is the catalog due a review or audit? | Warns |
 | Every pull request that changes how something looks | The review list below | Reviewer |
 | Each release, and quarterly | The benchmark against a rebuilt baseline (#322) | Recorded, not gated |
@@ -77,7 +77,7 @@ For a pull request that changes how something looks, the reviewer asks:
 - Are the empty, loading and failed states designed, with words that name the object?
 - Is anything decorative (a gradient, a glow, an edge stripe, an animation) doing a job, or there to look designed?
 
-An intentional exception is marked where it is, with its reason: `/* tells-ignore: CM2 the scrim recedes the page behind a dialog */` on the line or the line above. A suppression without a reason doesn't count. Use one only when the pattern does a job (the ColorPicker's hue track is the whole spectrum, purple included), and never to hide a tell that's waiting on a decision without naming the issue (`tells-ignore: CM3 pending a decision in #374`).
+An intentional exception is marked where it is, with its reason: `/* tells-ignore: CM2 the scrim recedes the page behind a dialog */` on the line or the line above. A suppression without a reason doesn't count. In a preview or a page, a rendered warning is suppressed the same way, as an attribute on the element that contains it: `data-tells-ignore="LA4 a gallery of states, to compare"`. Use one only when the pattern does a job (the ColorPicker's hue track is the whole spectrum, purple included), and never to hide a tell that's waiting on a decision without naming the issue (`tells-ignore: CM3 pending a decision in #374`).
 
 ## Keeping current
 
