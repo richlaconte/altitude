@@ -3425,6 +3425,48 @@ export declare function InlineCitation(props: InlineCitationProps): React.ReactE
 export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
+export type QuestionState = 'asking' | 'answered' | 'expired';
+export interface QuestionAnswer { values: string[]; other?: string }
+export interface QuestionOptionProps { value: string; label: React.ReactNode; description?: React.ReactNode }
+export interface QuestionProps {
+  title: string;
+  /** Default 'asking'. */
+  state?: QuestionState;
+  /** Several may be chosen (checkboxes). Default false (radios). */
+  multiple?: boolean;
+  /** A field for an answer of the person's own. */
+  allowOther?: boolean;
+  otherLabel?: string;
+  answerLabel?: string;
+  /** A ghost button that lets the run go on: "Let the assistant decide". */
+  skipLabel?: string;
+  onSkip?: () => void;
+  onAnswer?: (answer: QuestionAnswer) => void;
+  /** Shown once answered. */
+  answer?: QuestionAnswer;
+  answeredAt?: Date | string | number;
+  requestedBy?: string;
+  /** Its key in a QuestionSet. */
+  name?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+export interface QuestionSetProps {
+  'aria-label'?: string;
+  state?: QuestionState;
+  onAnswer?: (answers: Record<string, QuestionAnswer>) => void;
+  answerLabel?: string;
+  skipLabel?: string;
+  onSkip?: () => void;
+  requestedBy?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+/** An agent asks before it carries on: raised until answered (radio or checkboxes, your own answer), then one line in the record. */
+export declare function Question(props: QuestionProps): React.ReactElement;
+export declare function QuestionOption(props: QuestionOptionProps): null;
+/** Several questions answered by one button. */
+export declare function QuestionSet(props: QuestionSetProps): React.ReactElement;
 export type TerminalChunk = { text: string; stream?: 'stdout' | 'stderr' };
 export interface TerminalProps extends Omit<React.HTMLAttributes<HTMLElement>, 'children'> {
   /** The command: "npm test". It names the figure. */
@@ -3558,7 +3600,7 @@ declare global {
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
-      Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
+      Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;

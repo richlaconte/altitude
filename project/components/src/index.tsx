@@ -46,6 +46,8 @@ export type { SuggestionProps } from './controls';
 export { AILabel } from './ai-label';
 export type { AISource } from './ai-label';
 export { InlineCitation, Sources } from './inline-citation';
+export { Question, QuestionOption, QuestionSet } from './question';
+export type { QuestionProps, QuestionOptionProps, QuestionSetProps, QuestionAnswer, QuestionState } from './question';
 export { Terminal } from './terminal';
 export type { TerminalProps, TerminalChunk } from './terminal';
 export { Suggestions, Suggestion } from './suggestions';
