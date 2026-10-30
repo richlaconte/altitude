@@ -1310,6 +1310,16 @@ A measurement (#245): `checks/phone.mjs` (#247) opened every preview at 320 and 
 
 Measured with `checks/density.mjs`: buttons 36 → 44, small buttons 30 → 40, inputs 40 → 48, folder tabs 38 → 46 under a coarse pointer; unchanged with a mouse.
 
+### E111 · Does typing zoom the page?
+
+A measurement (#250): `checks/phone.mjs` found 146 text fields under 16px on touch across 68 previews: `.alt-input` text at 14px, `SecretField` at 13.5px, native selects at 12.5–13.3px. iOS Safari zooms the page when a field under 16px is focused, and leaves it zoomed.
+
+- **16px under a coarse pointer, for the text you type only.** Labels stay `text-label` (14px). The rule is `max(16px, 1em)`, so a field that inherits larger text, such as an in-place title, keeps its own size.
+- **A platform minimum wins.** Field fonts are set at many specificities (in-place editors inherit the value's font), so the minimum is `!important` inside the coarse-pointer query.
+- **Never `maximum-scale=1`.** It's the common workaround, and it stops pinch zoom, which fails WCAG 1.4.4 (Resize text).
+
+After: no field under 16px on touch in any preview.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -9,14 +9,15 @@
 //
 //   node checks/phone.mjs              every preview (after a render: it opens test/p-<Name>-daylight.html)
 //   node checks/phone.mjs Tabs,Select  just these
-//   PHONE_FAIL=M1,M2-24,M6             which findings fail the run; the rest are printed as warnings. Default: none.
+//   PHONE_FAIL=M1,M2-24,M6             which findings fail the run; the rest are printed as warnings. Default: M6.
 //   PHONE_LIST=1                       print every offender, not just the first few per preview
 import { chromium } from 'playwright-core';
 import { existsSync, readdirSync } from 'fs';
 const T = new URL('../test/', import.meta.url).pathname;
 const root = new URL('../..', import.meta.url).pathname;
 const names = process.argv[2] ? process.argv[2].split(',') : readdirSync(root + 'project/components').filter((d) => existsSync(`${root}project/components/${d}/preview.html`)).sort();
-const failOn = new Set((process.env.PHONE_FAIL ?? '').split(',').filter(Boolean));
+// What fails by default: field text under 16px on touch (fixed by #250). PHONE_FAIL overrides it; PHONE_FAIL= warns only.
+const failOn = new Set((process.env.PHONE_FAIL ?? 'M6').split(',').filter(Boolean));
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 
 // W is the phone's width: a mobile browser zooms out to fit wide content, so innerWidth grows with the overflow.

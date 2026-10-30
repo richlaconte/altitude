@@ -3735,3 +3735,14 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-error-summary a { display: inline-flex; align-items: center; min-block-size: 24px; color: var(--ink); text-decoration: underline; }
 .alt-error-summary:focus { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 @media (forced-colors: active) { .alt-error-summary { border-color: CanvasText; } .alt-error-summary a { color: LinkText; } }
+
+/* ── Field text on touch (#250): under a coarse pointer, text you type is at least 16px, the size below which iOS
+   Safari zooms the page when a field is focused (and leaves it zoomed). max(16px, 1em) keeps a field that inherits
+   larger text (an in-place title) at its own size. It's a platform minimum, so it wins over every field's own font
+   (the only !important in the stylesheet's sizing). Labels stay text-label; only the text you type grows. Never
+   maximum-scale=1 instead: that stops pinch zoom and fails WCAG 1.4.4. ── */
+@media (pointer: coarse) {
+  :is([class*="alt-"] :is(input, textarea, select), :is(input, textarea, select)[class*="alt-"]):not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"]) {
+    font-size: max(16px, 1em) !important;
+  }
+}
