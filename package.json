@@ -57,6 +57,7 @@
         "default": "./dist/adapters/codemirror.cjs"
       }
     },
+    "./adapters/react-flow.css": "./dist/adapters/react-flow.css",
     "./altitude.css": "./dist/altitude.css",
     "./altitude.no-fonts.css": "./dist/altitude.no-fonts.css",
     "./fonts.css": "./dist/fonts.css",
@@ -83,7 +84,8 @@
     "@codemirror/language": ">=6.0.0",
     "@codemirror/state": ">=6.0.0",
     "@codemirror/view": ">=6.0.0",
-    "@lezer/highlight": ">=1.0.0"
+    "@lezer/highlight": ">=1.0.0",
+    "@xyflow/react": ">=12.0.0"
   },
   "peerDependenciesMeta": {
     "@tiptap/core": {
@@ -99,6 +101,9 @@
       "optional": true
     },
     "@lezer/highlight": {
+      "optional": true
+    },
+    "@xyflow/react": {
       "optional": true
     }
   },

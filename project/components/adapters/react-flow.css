@@ -1,0 +1,102 @@
+/* altitude-design/adapters/react-flow.css: Altitude readings for a React Flow (@xyflow/react 12) node-and-edge canvas.
+   Import it after altitude.css and after React Flow's own stylesheet (base.css or style.css). It sets React Flow's
+   --xy-* properties from the active scheme and styles its elements; it imports nothing.
+   - The canvas is ground, with a dot grid in line.
+   - Nodes are Cards at level 1; a node that can be selected lifts one level when pointed at; a dragged node is in your
+     hand at level 3. Selection is a rim, never extra height.
+   - Ports (handles) are small openings that deepen under an edge being drawn, and take the accent rim where it can
+     land. The edge being drawn is a dashed line-control stroke; edges are line-control, a selected edge accent-ink.
+   - Give a node className "alt-node-pending" while its work runs (it hovers, as a pending write) or "alt-node-failed"
+     when it failed (it drops into a trench). Say the state in the node's words too.
+   - The minimap is a well with a raised lens (the ChartBrush build); controls are a raised toolbar.
+   React Flow's keyboard support and ARIA are untouched. ── */
+.react-flow {
+  --xy-background-color: var(--surface-ground);
+  --xy-background-pattern-dots-color: var(--line-control);
+  --xy-background-pattern-color: var(--line-control);
+  --xy-node-color: var(--ink);
+  --xy-node-background-color: var(--surface-raised);
+  --xy-node-border: 0;
+  --xy-node-border-radius: var(--radius-lg);
+  --xy-node-boxshadow-hover: var(--elev-2);
+  --xy-node-boxshadow-selected: var(--elev-1), 0 0 0 2px var(--accent-ink);
+  --xy-node-group-background-color: color-mix(in oklab, var(--surface-well) 60%, transparent);
+  --xy-edge-stroke: var(--line-control);
+  --xy-edge-stroke-width: 1.5;
+  --xy-edge-stroke-selected: var(--accent-ink);
+  --xy-connectionline-stroke: var(--ink-muted);
+  --xy-connectionline-stroke-width: 1.5;
+  --xy-edge-label-background-color: var(--surface-ground);
+  --xy-edge-label-color: var(--ink-muted);
+  --xy-handle-background-color: var(--surface-well);
+  --xy-handle-border-color: var(--line-control);
+  --xy-selection-background-color: color-mix(in oklab, var(--accent-soft) 50%, transparent);
+  --xy-selection-border: 1px dashed var(--accent-ink);
+  --xy-minimap-background-color: var(--surface-well);
+  --xy-minimap-mask-background-color: color-mix(in oklab, var(--surface-well) 72%, transparent);
+  --xy-minimap-mask-stroke-color: var(--line-control);
+  --xy-minimap-mask-stroke-width: 1;
+  --xy-minimap-node-background-color: var(--line-control);
+  --xy-controls-button-background-color: var(--surface-raised);
+  --xy-controls-button-background-color-hover: var(--surface-lifted);
+  --xy-controls-button-color: var(--ink);
+  --xy-controls-button-color-hover: var(--ink);
+  --xy-controls-button-border-color: var(--line);
+  --xy-controls-box-shadow: var(--elev-1);
+  --xy-attribution-background-color: transparent;
+  color: var(--ink); font-family: var(--font-sans);
+}
+
+/* Nodes: Cards at level 1. */
+.react-flow .react-flow__node-default, .react-flow .react-flow__node-input, .react-flow .react-flow__node-output, .react-flow .alt-node {
+  padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-lg); background: var(--surface-raised); color: var(--ink);
+  max-width: 220px; box-shadow: var(--elev-1); font: 500 13px/18px var(--font-sans); text-align: start; overflow-wrap: break-word;
+  transition: box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise);
+}
+.react-flow .react-flow__node.selectable:hover:not(.dragging) { box-shadow: var(--elev-2); }
+.react-flow .react-flow__node.selectable.selected, .react-flow .react-flow__node.selectable.selected:hover:not(.dragging) { box-shadow: var(--elev-1), 0 0 0 2px var(--accent-ink); }
+.react-flow .react-flow__node.selectable:focus-visible { outline: 2px solid var(--alt-rim-held); outline-offset: 2px; box-shadow: var(--elev-1); }
+/* Possession: a dragged node is in your hand. */
+.react-flow .react-flow__node.dragging { box-shadow: var(--elev-3); cursor: grabbing; }
+/* Status: running hovers as a pending write; failed drops into a trench. */
+.react-flow .react-flow__node.alt-node-pending { box-shadow: var(--elev-2); animation: alt-flow-hover var(--dur-hover) ease-in-out var(--dur-grace) infinite alternate both; cursor: progress; }
+@keyframes alt-flow-hover { from { box-shadow: var(--elev-2); } to { box-shadow: var(--elev-3); } }
+.react-flow .react-flow__node.alt-node-failed { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
+
+/* Ports: small openings that deepen to receive an edge. */
+.react-flow .react-flow__handle {
+  width: 10px; height: 10px; border: 1px solid var(--line-control); border-radius: 50%; background: var(--surface-well);
+  box-shadow: inset 0 1.5px 0 0 var(--alt-wall-in); transition: box-shadow var(--dur-travel-1) var(--ease-settle), background-color var(--dur-travel-1);
+}
+.react-flow .react-flow__handle.connectionindicator:hover, .react-flow .react-flow__handle.connectingfrom { box-shadow: inset 0 3px 0 0 var(--alt-wall-in); }
+.react-flow .react-flow__handle.connectingto { background: var(--surface-trench); box-shadow: var(--trench); }
+.react-flow .react-flow__handle.connectingto.valid { border-color: var(--accent-ink); box-shadow: var(--trench), 0 0 0 2px var(--accent-ink); }
+
+/* Edges */
+.react-flow .react-flow__connection-path { stroke-dasharray: 5 4; }
+.react-flow .react-flow__edge-text { font: 500 12px/16px var(--font-sans); fill: var(--ink-muted); }
+.react-flow .react-flow__edge-textbg { fill: var(--surface-ground); }
+.react-flow .react-flow__edge.alt-edge-failed .react-flow__edge-path { stroke: var(--critical); stroke-dasharray: 4 3; }
+
+/* Minimap: a well with a raised lens. Controls: a raised toolbar. */
+.react-flow .react-flow__minimap { border-radius: var(--radius-md); box-shadow: inset 0 2px 0 0 var(--alt-wall-in), 0 0 0 1px var(--line-control); overflow: hidden; }
+.react-flow .react-flow__controls { border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--elev-1); }
+.react-flow .react-flow__controls-button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-bottom: 1px solid var(--line); background: var(--surface-raised); color: var(--ink); cursor: pointer; }
+.react-flow .react-flow__controls-button:last-child { border-bottom: 0; }
+.react-flow .react-flow__controls-button:hover { background: var(--surface-lifted); }
+.react-flow .react-flow__controls-button svg { width: 12px; height: 12px; }
+.react-flow .react-flow__controls-button svg { fill: currentColor; }
+.react-flow .react-flow__controls-button:focus-visible { outline: 2px solid var(--alt-rim-held); outline-offset: -2px; }
+.react-flow .react-flow__attribution a { color: var(--ink-muted); }
+
+@media (prefers-reduced-motion: reduce) { .react-flow .react-flow__node, .react-flow .react-flow__handle { transition: none; } .react-flow .react-flow__node.alt-node-pending { animation: none; } }
+[data-motion="reduced"] .react-flow .react-flow__node, [data-motion="reduced"] .react-flow .react-flow__handle { transition: none; }
+[data-motion="reduced"] .react-flow .react-flow__node.alt-node-pending { animation: none; }
+@media (forced-colors: active) {
+  .react-flow .react-flow__node { border: 1px solid CanvasText; }
+  .react-flow .react-flow__node.selected { outline: 2px solid Highlight; }
+  .react-flow .react-flow__node.alt-node-pending { border-style: dotted; border-width: 2px; }
+  .react-flow .react-flow__node.alt-node-failed { border: 2px dashed CanvasText; }
+  .react-flow .react-flow__handle { border-color: CanvasText; }
+  .react-flow .react-flow__edge-path, .react-flow .react-flow__connection-path { stroke: CanvasText; }
+}
