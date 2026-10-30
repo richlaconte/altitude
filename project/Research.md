@@ -1400,6 +1400,10 @@ A measurement (#266): eight 40px slots with 6px gaps are 362px, so at 375 CSS px
 
 A measurement (#259): at 375 CSS px the Tabs preview was 47px wider than the screen and SavedViews 26px, so the page scrolled sideways (WCAG 1.4.10). A tab list now scrolls within itself, with no scrollbar: the chosen tab is kept in view, and an edge with more tabs past it fades out, so you can see there's more. A "More" menu (as Toolbar has) was the alternative; scrolling keeps every tab one swipe away and in its place. The folder tabs' shadow and their reach into the panel sit in the list's padding, so scrolling doesn't clip them. `checks/tabs-narrow.mjs`.
 
+### E122 · Should a breadcrumb wrap?
+
+A review (#263): `maxItems` collapsed the middle of a path only by count, and the trail wrapped onto more lines when narrow, so the staircase of steps broke over lines. `fit="collapse"` (default) measures the trail against its container and moves steps from the second onward behind the existing "…" menu until it fits on one line, always keeping the first step and the current page; with room again, every step comes back. Changes of width don't animate: it's layout, not a change in the record. `fit="wrap"` keeps the old behaviour. `checks/breadcrumb-fit.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
