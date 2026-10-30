@@ -745,6 +745,32 @@ function App() {
   );
 }
 
+=== Tour | <!-- @dsCard group="Overlays" height=460 subtitle="A few steps pointing at parts of the interface, without taking it over" -->
+--- css
+.tr { display: flex; flex-direction: column; gap: 16px; }
+.tr .bar { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-lg); }
+--- jsx
+function App() {
+  const [open, setOpen] = React.useState(false);
+  const [said, setSaid] = React.useState('');
+  return (
+    <div className="tr">
+      <div className="bar">
+        <A.Button variant="ghost" id="tour-projects">Projects</A.Button>
+        <A.Input size="sm" placeholder="Filter by owner" aria-label="Filter by owner" data-tour="owner" style={{ maxWidth: 220 }} />
+        <span style={{ marginLeft: 'auto' }}><A.Button variant="primary" data-tour="new">New project</A.Button></span>
+      </div>
+      <div className="row"><A.Button onClick={() => setOpen(true)}>Take the tour</A.Button></div>
+      <p className="cap">{said || 'The tour points at one thing at a time with a ring. The page isn\'t dimmed and stays usable: try typing in the filter while it\'s on that step.'}</p>
+      <A.Tour open={open} onOpenChange={setOpen} onFinish={(how) => setSaid(how === 'done' ? 'Tour finished.' : 'Tour skipped.')} steps={[
+        { target: '#tour-projects', title: 'Projects moved here', body: 'All your projects now live in one place.' },
+        { target: '[data-tour="owner"]', title: 'Filter by owner', body: 'Type a name to see only their projects.' },
+        { target: '[data-tour="new"]', title: 'Start something new', body: 'Projects can start from a template.' },
+      ]} />
+    </div>
+  );
+}
+
 === Dialog | <!-- @dsCard group="Overlays" height=620 subtitle="A focused decision; the background can stay in place" -->
 --- css
 .dialog-demo { max-width: 720px; margin: auto; display: grid; gap: 20px; }
@@ -3162,14 +3188,16 @@ function App() {
 .tl { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; align-items: start; }
 @media (max-width: 760px) { .tl { grid-template-columns: minmax(0, 1fr); } }
 --- jsx
-const ago = (m) => new Date(Date.now() - m * 60000);
+// Anchored to the calendar day, so "Today" and "Yesterday" hold at any hour (just after midnight too).
+const ago = (m) => { const start = new Date(); start.setHours(0, 0, 0, 0); return new Date(Math.max(Date.now() - m * 60000, start.getTime() + 1000)); };
+const yesterdayAt = (h) => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(h, 0, 0, 0); return d; };
 const I = ({ d }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>;
 const icons = { status: 'M5 12.5l4.5 4.5L19 7.5', comment: 'M4 5h16v11H8l-4 4z', assign: 'M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6' };
 function App() {
   const [events, setEvents] = React.useState([
     { id: 'e3', at: ago(14), icon: 'status', text: <><strong>Maya</strong> changed status to <A.Badge tone="positive">Done</A.Badge></> },
     { id: 'e2', at: ago(95), icon: 'assign', text: <><strong>Theo</strong> assigned this to <strong>Maya</strong></>, href: '#/people/maya' },
-    { id: 'e1', at: ago(60 * 26), icon: 'comment', text: <><strong>Ada</strong> commented</>, detail: <p style={{ margin: 0 }}>“Can we ship this before the release freeze on Friday?”</p> },
+    { id: 'e1', at: yesterdayAt(12), icon: 'comment', text: <><strong>Ada</strong> commented</>, detail: <p style={{ margin: 0 }}>“Can we ship this before the release freeze on Friday?”</p> },
   ]);
   const [text, setText] = React.useState('');
   const send = (fail) => {
