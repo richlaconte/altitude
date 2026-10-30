@@ -1797,6 +1797,28 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-convo-content { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-3) var(--space-1); }
 .alt-msg { display: flex; flex-direction: column; gap: 4px; max-width: 72ch; border-radius: var(--radius-md); }
 .alt-msg[data-from="user"] { align-self: flex-end; max-width: min(72ch, 85%); padding: 10px 14px; background: var(--accent-soft); color: var(--ink); }
+/* Attachments (#274): part of the record, on the ground. Images are 64px thumbnails in a 1px line rim; files are the
+   composer's Tag plates, settled. One that opens lifts a level when pointed at, as any plate that acts. */
+.alt-msg-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; padding: 0; list-style: none; }
+.alt-msg[data-from="user"] .alt-msg-attachments { justify-content: flex-end; }
+.alt-msg-attachment { display: flex; min-width: 0; }
+.alt-msg-thumb { position: relative; display: block; height: 64px; padding: 0; border: 0; border-radius: var(--radius-md); background: none; overflow: hidden; cursor: default; transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
+.alt-msg-thumb img { display: block; height: 64px; width: auto; max-width: 160px; min-width: 48px; object-fit: cover; }
+.alt-msg-thumb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--line); pointer-events: none; }
+:is(a, button).alt-msg-thumb { cursor: pointer; }
+.alt-msg-file { height: 28px; }
+.alt-msg-file .alt-tag-face { max-width: 36ch; text-decoration: none; }
+:is(a, button).alt-tag-face { cursor: pointer; }
+.alt-msg-file-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-msg-file-meta { flex: none; color: var(--ink-muted); font-weight: 450; }
+.alt-msg-file[data-unavailable] { color: var(--ink-muted); }
+@media (hover: hover) {
+  .alt-msg-file[data-acts]:hover { --t-bg: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+  :is(a, button).alt-msg-thumb:hover { box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+}
+.alt-msg-thumb:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-msg-file[data-acts]:active, :is(a, button).alt-msg-thumb:active { transform: none; box-shadow: none; transition-duration: var(--dur-press); }
+@media (forced-colors: active) { .alt-msg-thumb { border: 1px solid CanvasText; } }
 .alt-msg[data-from="assistant"] { border-radius: 0; padding: 2px 0 2px 14px; box-shadow: inset 2px 0 0 0 transparent; transition: box-shadow var(--dur-travel-2) var(--ease-rise); }
 .alt-msg[data-stream="streaming"] { box-shadow: none; background-image: linear-gradient(var(--line-control) 50%, transparent 50%); background-size: 2px 8px; background-repeat: repeat-y; background-position: left top; }
 .alt-msg[data-stream="complete"], .alt-msg[data-stream="stopped"], .alt-msg[data-stream="error"] { box-shadow: inset 2px 0 0 0 var(--line); }
