@@ -1,0 +1,33 @@
+<!-- @dsCard group="Charts" height=560 subtitle="Since your last visit: what changed, marked against where it was, and a switch to see only that" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartSince — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.cs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cs { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const queues = [["Billing", 42, 30], ["Email", 18, 18], ["Exports", 9, 9], ["Imports", 27, 33], ["Search", 12, 12], ["Sync", 31, 31], ["Webhooks", 7, 4], ["Reports", 15, 15]];
+const now = queues.map(([queue, depth]) => ({ queue, depth }));
+const then = queues.map(([queue, , depth]) => ({ queue, depth }));
+const hours = Array.from({ length: 12 }, (_, i) => ({ t: Date.UTC(2026, 9, 27, 6 + i), errors: [0.8, 0.9, 0.7, 1.1, 1, 1.4, 1.9, 2.4, 2.1, 1.8, 1.5, 1.3][i] }));
+const hoursThen = hours.map((d, i) => ({ ...d, errors: i < 6 ? d.errors : [0.8, 0.9, 0.7, 1.1, 1, 1.4, 1.2, 1.1, 1, 1.2, 1.1, 1][i] }));
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "cs" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "s1" }, "Queue depth"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Three queues moved since this morning; their old depth is the tick")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "s1", aspect: 1.9, config: { depth: { label: "Jobs waiting" } }, since: { data: then, label: "since Tuesday 09:00" } }, /* @__PURE__ */ React.createElement(A.BarChart, { data: now, x: "queue" })))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "s2" }, "Error rate"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "The afternoon rose after you looked; each old point is a ring")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "s2", aspect: 1.9, config: { errors: { label: "Errors", format: (v) => `${v}%` } }, since: { data: hoursThen, label: "since 11:00" } }, /* @__PURE__ */ React.createElement(A.LineChart, { data: hours, x: "t" })))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

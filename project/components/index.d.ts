@@ -1719,6 +1719,8 @@ export interface ChartContextValue {
   hasRelevance: boolean;
   /** For lines and areas: each record's stretch of x (to the midpoints with its neighbours), and whether it misses. */
   relevanceRegions: Array<{ key: string; x0: number; x1: number; miss: boolean }>;
+  /** Changed since a snapshot: a mark's old value where it changed (null if it didn't, or is new), or null without `since`. */
+  sinceOld: ((d: ChartDatum, seriesKey: string) => number | null) | null;
 }
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
 export interface ChartEncoding {
@@ -1812,6 +1814,12 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   live?: boolean;
   /** With live: a "Pause updates" switch in the frame (WCAG 2.2.2). */
   pausable?: boolean;
+  /**
+   * What changed since a snapshot: the records as they were (matched by x or the chart's id) and when, in words
+   * ("since Tuesday 09:00"). Changed bars carry a tick at the old value, changed line points a hollow ring; the frame
+   * says how many changed in a switch that filters to them; up to four changed marks glow on arrival.
+   */
+  since?: { data: ChartDatum[]; label: string };
   /** Updates are paused, controlled. */
   paused?: boolean;
   onPausedChange?: (paused: boolean) => void;

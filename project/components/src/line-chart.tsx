@@ -164,7 +164,7 @@ export function linePath(points: Array<[number, number] | null>, curve: 'linear'
  * end, so the legend is the lines themselves.
  */
 export function LineChart({ curve = 'linear', endLabels, band, compare }: LineChartProps) {
-  const { data, series, config, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis, status, statusRanges, hasRelevance, relevanceRegions } = useChart();
+  const { data, series, config, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis, status, statusRanges, hasRelevance, relevanceRegions, sinceOld } = useChart();
   const labelled = endLabels ?? (series.length <= 4 || directLabels);
   const lines: React.ReactNode[] = [];
   const clip = React.useId().replace(/[^\w-]/g, '');
@@ -186,6 +186,7 @@ export function LineChart({ curve = 'linear', endLabels, band, compare }: LineCh
     if (d) lines.push(<path key="band" className="alt-line-band" data-series={bandSeries.key} d={d} fill={patterns ? e.pending : e.stroke} fillOpacity={patterns ? undefined : 0.16} opacity={a < 1 ? a : undefined} />);
   }
   const ends: Array<{ key: string; label: string; x: number; y: number; a: number }> = [];
+  const rings: React.ReactNode[] = [];
   // The record before (#189): a 1.5px solid ink-muted trace under the series, without points, named at its end. Solid,
   // because dashes mean projected.
   const ckey = compare ? compare.key ?? COMPARE_KEY : null;
@@ -218,6 +219,12 @@ export function LineChart({ curve = 'linear', endLabels, band, compare }: LineCh
         {patterns && pts.map((p, i) => (p ? <ChartMarker key={i} className={hollow(i) ? 'alt-line-hollow' : undefined} stroke={hollow(i) ? e.stroke : undefined} shape={e.marker} x={p[0]} y={p[1]} size={7} color={e.stroke} /> : null))}
       </g>,
     );
+    // Changed since a snapshot (#191): each changed point's old place, a small hollow ink-muted ring, drawn once over
+    // the lines (not inside the filter's repeated, clipped copies).
+    if (sinceOld) data.forEach((d, i) => {
+      const was = sinceOld(d, s.key);
+      if (was != null) rings.push(<circle key={`${s.key}-since-${i}`} className="alt-line-since" data-series={s.key} cx={xOf(d)} cy={y(was)} r={3.5} opacity={a < 1 ? a : undefined} />);
+    });
     let last = pts.length - 1;
     while (last >= 0 && !pts[last]) last--;
     if (last >= 0) {
@@ -249,6 +256,7 @@ export function LineChart({ curve = 'linear', endLabels, band, compare }: LineCh
       {split && <defs><ChartStatusClip id={`${clip}-r`} ranges={statusRanges.record} height={height} /><ChartStatusClip id={`${clip}-p`} ranges={statusRanges.pending} height={height} /></defs>}
       {hasRelevance && <defs>{relevanceRegions.map((r, i) => <ChartStatusClip key={r.key} id={`${clip}-rel-${i}`} ranges={[[r.x0, r.x1]]} height={height} />)}</defs>}
       {body}
+      {rings}
       {hovered}
       {labelled && ends.map((p) => <text key={p.key} className="alt-line-label" data-context={p.key === COMPARE_KEY || encode(p.key).context ? '' : undefined} data-compare={p.key === COMPARE_KEY ? '' : undefined} x={p.x + 10} y={p.y} dy="0.32em" opacity={p.a < 1 ? p.a : undefined}>{p.label}</text>)}
     </g>

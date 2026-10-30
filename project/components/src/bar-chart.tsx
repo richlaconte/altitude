@@ -112,7 +112,7 @@ function barPath(horizontal: boolean, a: number, b: number, g: number, e: number
  * series, several side by side, or stacked into a total.
  */
 export function BarChart({ stack = false, labels = 'none', compare }: BarChartProps) {
-  const { data, series, x, y, ground, horizontal, alpha: presence, encode, gap, xKey, format, emphasis, status, hasStatus, relevance, hasRelevance } = useChart();
+  const { data, series, x, y, ground, horizontal, alpha: presence, encode, gap, xKey, format, emphasis, status, hasStatus, relevance, hasRelevance, sinceOld } = useChart();
   // While the keyboard is on one series, the others recede.
   const alpha: typeof presence = (d, key) => presence(d, key) * (key && emphasis && emphasis !== key ? 0.3 : 1);
   if (x.kind !== 'band') return null;
@@ -187,6 +187,14 @@ export function BarChart({ stack = false, labels = 'none', compare }: BarChartPr
         const v = num(d[s.key]);
         const a = a0 + i * (w + gap);
         if (v !== 0) bar(cat + s.key, s, cat, barPath(horizontal, a, a + w, ground, y(v), R), rowA * alpha(null, s.key), st, miss, d);
+        // Changed since a snapshot (#191): the old value as the comparison's tick.
+        const was = sinceOld?.(d, s.key);
+        if (was != null) {
+          const at = Math.round(y(was)) + (horizontal ? 0.5 : 0);
+          const tick = horizontal ? <line key={cat + s.key + '-since'} className="alt-bar-compare" data-since="" x1={at} x2={at} y1={a - 4} y2={a + w + 4} data-category={cat} />
+            : <line key={cat + s.key + '-since'} className="alt-bar-compare" data-since="" x1={a - 4} x2={a + w + 4} y1={at} y2={at} data-category={cat} />;
+          ticks.push(hasRelevance ? <ChartRelevance key={cat + s.key + '-sincer'} miss={miss}>{tick}</ChartRelevance> : tick);
+        }
         ends.push({ cat, value: v, label: format(s.key, v), at: y(v), across: a + w / 2, st, miss });
       });
     }
