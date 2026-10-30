@@ -1003,6 +1003,17 @@ A design review: `NotificationCenter` was rendered with unread and read notifica
 
 Not yet tested with people: whether the dot alone is noticed in a long list, without the tint people are used to.
 
+### E85 · How should "saved" be said?
+
+A design review: `SyncIndicator` was rendered saving, saved, offline with changes waiting (the queue open), failed and in conflict, beside an autosaving textarea, in all four schemes and under forced colours. `checks/sync-indicator.mjs` measures it.
+
+- **A label, not a light show.** The state is a label at document scope, so it's a Badge plate whose lamp relights on change. Nothing rises, because a state change isn't new content, and the words carry the meaning in every mode.
+- **One vocabulary, two scopes.** Items waiting to sync hover as pending, the commitment signal; the plate says the same thing for the whole document, so the two never disagree.
+- **Announce without chatter.** An autosave that announces "Saving… Saved" on every keystroke is noise. "Saved" is said at most every five seconds and "Saving" never; going offline and failures are said at once, because they change what people should do.
+- **The queue is a door.** Offline, the plate counts what's waiting and opens the list, so "3 changes waiting" can be checked rather than trusted.
+
+Not yet tested with people: whether "Saved · 2 minutes ago" builds more trust than "Saved" alone.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

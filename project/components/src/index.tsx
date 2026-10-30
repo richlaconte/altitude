@@ -19,6 +19,8 @@ export { RelativeTime, formatRelativeTime } from './relative-time';
 export { Timeline, TimelineItem } from './timeline';
 export { NotificationCenter, NotificationList } from './notifications';
 export type { NotificationEntry } from './notifications';
+export { SyncIndicator } from './sync-indicator';
+export type { SyncState } from './sync-indicator';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';

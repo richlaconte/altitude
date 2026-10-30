@@ -1470,6 +1470,18 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-notes-foot { padding-top: var(--space-2); border-top: 1px solid var(--line); font: 400 13px/18px var(--font-sans); }
 @media (forced-colors: active) { .alt-notes-dot { forced-color-adjust: none; background: CanvasText; } }
 
+/* ── SyncIndicator: whether work has reached the server, said on a flush Badge plate whose lamp relights when the
+   state changes (saving pulses). A label never lifts, so a change of state cross-fades; only when the plate opens the
+   queue of waiting changes does it lift when pointed at, because then it acts. ── */
+.alt-sync { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.alt-sync-button { padding: 0; border: 0; border-radius: var(--radius-sm); background: none; cursor: pointer; transition: box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise); }
+.alt-sync-button:hover { box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+.alt-sync-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-sync-time { font-weight: 400; color: var(--ink-muted); }
+.alt-sync-queue { display: flex; flex-direction: column; gap: var(--space-2); width: 280px; max-width: 100%; }
+.alt-sync-queue-title { margin: 0; font: 600 13px/18px var(--font-sans); color: var(--ink); }
+[data-contrast="more"] .alt-sync-plate { box-shadow: inset 0 0 0 1px var(--line-control); }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */
