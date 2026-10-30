@@ -3357,6 +3357,41 @@ export declare function InlineCitation(props: InlineCitationProps): React.ReactE
 export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
+/** The elements a Markdown caller can replace. `pre` gets the fenced code's parts rather than children. */
+export interface MarkdownComponents {
+  a?: React.ComponentType<React.AnchorHTMLAttributes<HTMLAnchorElement>>;
+  img?: React.ComponentType<React.ImgHTMLAttributes<HTMLImageElement>>;
+  code?: React.ComponentType<React.HTMLAttributes<HTMLElement>>;
+  pre?: React.ComponentType<{ code: string; language?: string; streaming?: boolean }>;
+  table?: React.ComponentType<React.TableHTMLAttributes<HTMLTableElement>>;
+  blockquote?: React.ComponentType<React.BlockquoteHTMLAttributes<HTMLQuoteElement>>;
+}
+export interface MarkdownProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'> {
+  /** The Markdown source: CommonMark, plus GFM tables, task lists, strikethrough and bare links. */
+  children: string;
+  /** Still arriving: an open fence is a streaming CodeBlock, a table waits for its delimiter row and never draws a half row, an unclosed ** or link shows its words without the markers. */
+  streaming?: boolean;
+  /** Sources for `[n]` markers (1-based), rendered as InlineCitation. */
+  citations?: CitationSource[];
+  /** Passed to InlineCitation, as in Sources. */
+  idPrefix?: string;
+  /** Passed to every CodeBlock. */
+  syntax?: (code: string, language?: string) => React.ReactNode;
+  /** The element level of a `#` heading. Default 3. */
+  headingLevel?: number;
+  /** Replace the element used for a kind of node, e.g. `{ a: RouterLink }`. */
+  components?: MarkdownComponents;
+  /** Render raw HTML blocks. Default false: they show as text. Only for sources you trust. */
+  allowHtml?: boolean;
+  /** Rewrite or refuse (undefined) a URL. Default refuses javascript:, vbscript:, file: and data: (except images). */
+  transformUrl?: (url: string, kind: 'link' | 'image') => string | undefined;
+}
+/** An answer's Markdown set as Altitude prose on the ground, handing code, links, citations and tables to their components. */
+export declare const Markdown: React.ForwardRefExoticComponent<MarkdownProps & React.RefAttributes<HTMLDivElement>>;
+/** The default URL rule: refuses javascript:, vbscript:, file: and non-image data: URLs. */
+export declare function safeUrl(url: string, kind: 'link' | 'image'): string | undefined;
+/** Parses Markdown into blocks (for tests and adapters). */
+export declare function parseMarkdown(source: string, options?: { streaming?: boolean; allowHtml?: boolean }): unknown[];
 
 export interface SettingsSectionProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
   /** Every section has a heading; it names the region. */
@@ -3414,6 +3449,7 @@ declare global {
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
+      Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;

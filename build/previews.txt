@@ -3270,6 +3270,74 @@ function App() {
   );
 }
 
+=== Markdown | <!-- @dsCard group="Display" height=900 subtitle="An answer's Markdown set as the record, and mid-stream: an open fence writes, a half table waits for its row" -->
+--- css
+.md-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 32px; max-width: 920px; align-items: start; }
+.md-demo .lbl { margin: 0 0 10px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+--- jsx
+const sources = [
+  { title: 'Billing FAQ', url: 'https://help.example.com/billing/faq', excerpt: 'Annual plans can be refunded in full within 30 days of purchase.' },
+  { title: 'Plans and pricing', url: 'https://example.com/pricing' },
+];
+const done = [
+  '# Refunds on annual plans',
+  '',
+  'Annual plans are refunded **in full** within 30 days [1]; after that, the unused months are credited as *account balance*, not cash [2].',
+  '',
+  '## What to check first',
+  '',
+  '- [x] The plan was bought less than 30 days ago',
+  '- [ ] No seats were added since',
+  '- [ ] The invoice is `paid`, not ~~pending~~',
+  '',
+  '| Plan | Window | Refund |',
+  '| --- | :---: | ---: |',
+  '| Monthly | none | $0 |',
+  '| Annual | 30 days | 100% |',
+  '',
+  '> Credits never expire, but they can\'t be moved to another workspace.',
+  '',
+  'Issue it from the console:',
+  '',
+  '```sh',
+  'altitude billing refund INV-0042 --full',
+  '```',
+  '',
+  'See [the billing guide](https://help.example.com/billing) for partial refunds.',
+].join('\n');
+const streaming = [
+  '## Steps',
+  '',
+  '1. Find the invoice',
+  '2. Check the **refund window',
+  '',
+  '| Invoice | Amount | Status |',
+  '| --- | ---: | --- |',
+  '| INV-0042 | $480 | paid |',
+  '| INV-0043 | $1',
+].join('\n') + '';
+const streamingCode = ['Run this:', '', '```ts', 'const refund = await billing.refund({', "  invoice: 'INV-0042',"].join('\n');
+function App() {
+  return (
+    <div className="md-demo">
+      <div>
+        <p className="lbl">Complete</p>
+        <A.Markdown citations={sources}>{done}</A.Markdown>
+      </div>
+      <div className="col">
+        <div>
+          <p className="lbl">Mid-stream: an unclosed bold and a half-received row</p>
+          <A.Markdown streaming>{streaming}</A.Markdown>
+        </div>
+        <div>
+          <p className="lbl">Mid-stream: an open fence</p>
+          <A.Markdown streaming>{streamingCode}</A.Markdown>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 === AILabel | <!-- @dsCard group="Display" height=480 subtitle="Mark what AI made, and explain it when asked: a plate, never a glow" -->
 --- css
 .al { max-width: 600px; }

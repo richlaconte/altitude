@@ -179,6 +179,10 @@ Approach only adds depth, never size or position, so nothing reflows. Values upd
 
 On touch a thing is picked up by a press-and-hold: 400ms without moving more than 8px. When the hold completes it lifts to level 3 on its usual `dur-travel-2` and `ease-rise`, the same lift a mouse pick-up gets, so the person knows they can move it; under reduced motion it lifts without travel. Moving before the hold completes gives the gesture to the page, which scrolls. See **Mobile**.
 
+## Answers in Markdown
+
+`Markdown` has no motion of its own: text arrives without per-word animation (Conversation's rule), and a table row that completes appears in place rather than rising. An image rises out of its imprint over `dur-travel-1` with `ease-rise` (2px of travel and its opacity); under reduced motion it appears in place.
+
 ## Reduced motion
 
 `--alt-travel` multiplies every translate and scale distance. It is 1 by default and 0 under `prefers-reduced-motion` or `AltitudeProvider motion="reduced"`. At 0, surfaces still change level, tint and shadow, and still fade, so state is never lost; they just don't travel. Every approach effect is multiplied by it too, so it disappears (a focused field doesn't deepen either); an avatar's shadow still shrinks with its height even though the face no longer moves. The skeleton sweep and indeterminate travel stop, and a pending surface holds at level 2 instead of breathing.
