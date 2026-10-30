@@ -138,7 +138,15 @@ export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
 export declare function CardContent(props: CardContentProps): React.ReactElement;
 export declare function CardFooter(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
 
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface SuggestionProps {
+  /** A proposed value, drawn as a ghost of the value in ink-faint (never put in the value): Tab accepts, Escape dismisses. */
+  suggestion?: string;
+  /** 'replace' (default): the suggestion is the whole value. 'append': it continues the text. */
+  suggestionMode?: 'replace' | 'append';
+  /** Called with the new value when Tab accepts (onChange is called too). */
+  onAcceptSuggestion?: (value: string) => void;
+}
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>, SuggestionProps {
   /** Digs the well to trench depth with a critical rim. Field sets it for you when it has an error. */
   invalid?: boolean;
   leading?: React.ReactNode;
@@ -147,7 +155,7 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   size?: 'sm' | 'md';
 }
 export declare const Input: React.ForwardRefExoticComponent<InputProps & React.RefAttributes<HTMLInputElement>>;
-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement>, SuggestionProps {
   invalid?: boolean;
   /** With maxLength, the well fills from the floor as the text nears the limit, with a live count. Default true. */
   showFill?: boolean;
