@@ -1522,6 +1522,10 @@ When an agent makes something substantial, harnesses show it in its own pane rat
 
 Every coding harness lets the person point the agent at things ("@pricing.ts", "@Q3 report", "@Maya") and run commands ("/review", "/compact") from the composer (#283); `CommentThread` already had @people. The issue asked for a plate *in* the text, which a textarea can't hold, and replacing the composer with a contenteditable editor would cost the IME, spelling and undo behaviour PromptInput gets for free. So it follows CommentThread: the text keeps "@label", and what's chosen also shows as a plate in the composer's context row, removable from either place (Backspace right after the token removes it whole). The list is Combobox's, rising above the composer because composers sit at the bottom of the screen. The first Escape closes the list and only a second stops generating, so closing a list never kills a run. Commands open only at the start of an empty composer, so a slash in a sentence or a path stays text. `checks/prompt-mentions.mjs`.
 
+### E150 · Listening without a pulse
+
+People talk to assistants, on phones, with busy hands, or because a long instruction is faster said; ChatGPT, Claude and AI Elements (`SpeechInput`) put a microphone in the composer (#284). The common ways to show listening, a pulsing red dot or a bouncing waveform, are motion Altitude doesn't use, and a level meter in height would put an amount in height. `PromptInputDictate` is a latched toggle instead: Toggle's "on" with "Listening" and a steady lamp. Interim words follow the suggestion rule (a ghost in `ink-faint`, never the value, so the field stays an opening); final words land at the caret. Altitude draws the states and leaves recognition to the app (the Web Speech API's support is uneven, and many apps transcribe on a server). Escape stops listening before it stops generating, the same order as closing a mention list (#283). `checks/prompt-dictate.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

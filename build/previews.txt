@@ -3801,7 +3801,7 @@ function App() {
   );
 }
 
-=== PromptInput | <!-- @dsCard group="Inputs" height=680 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
+=== PromptInput | <!-- @dsCard group="Inputs" height=840 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
 --- css
 .pi { max-width: 640px; }
 --- jsx
@@ -3822,6 +3822,32 @@ function Pointed() {
         <A.PromptInputToolbar><A.PromptInputSubmit /></A.PromptInputToolbar>
       </A.PromptInput>
       <p className="cap">{sent ? `Sent: ${sent}` : 'Type @ to point at a file, record or person, or / at the start for a command.'}</p>
+    </div>
+  );
+}
+// Dictation: here a scripted transcriber stands in for the app's speech recognition.
+function Dictated() {
+  const [status, setStatus] = React.useState('idle');
+  const [interim, setInterim] = React.useState('');
+  const [final, setFinal] = React.useState();
+  const timers = React.useRef([]);
+  const start = () => {
+    setStatus('listening');
+    const words = 'Summarise the open risks and who owns each one'.split(' ');
+    words.forEach((_, k) => timers.current.push(setTimeout(() => setInterim(words.slice(0, k + 1).join(' ')), 180 * (k + 1))));
+    timers.current.push(setTimeout(() => { setFinal({ id: Date.now(), text: words.join(' ') + '.' }); setInterim(''); setStatus('idle'); }, 180 * words.length + 400));
+  };
+  const stop = () => { timers.current.forEach(clearTimeout); timers.current = []; setInterim(''); setStatus('idle'); };
+  return (
+    <div className="col">
+      <A.PromptInput onSubmit={() => {}}>
+        <A.PromptInputTextarea placeholder="Type, or press the microphone and speak" />
+        <A.PromptInputToolbar>
+          <A.PromptInputDictate status={status} interim={interim} final={final} onStart={start} onStop={stop} />
+          <A.PromptInputDictate status="denied" label="Dictate (blocked example)" />
+          <A.PromptInputSubmit />
+        </A.PromptInputToolbar>
+      </A.PromptInput>
     </div>
   );
 }
@@ -3848,6 +3874,7 @@ function App() {
       </A.PromptInput>
       <p className="cap">{status === 'ready' ? (last || 'Enter sends, Shift+Enter adds a line. Paste or drop a file to attach it.') : status === 'submitted' ? 'Sending…' : 'Generating… Escape or Stop ends it.'}</p>
       <Pointed />
+      <Dictated />
     </div>
   );
 }

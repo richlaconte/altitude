@@ -34,7 +34,7 @@ export { CommentThread } from './comment-thread';
 export type { ThreadComment, Mentionable } from './comment-thread';
 export { Tour } from './tour';
 export type { TourStep } from './tour';
-export { PromptInput, PromptInputTextarea, PromptInputAttachments, PromptInputToolbar, PromptInputAttach, PromptInputSubmit } from './prompt-input';
+export { PromptInput, PromptInputTextarea, PromptInputAttachments, PromptInputToolbar, PromptInputAttach, PromptInputSubmit, PromptInputDictate } from './prompt-input';
 export type { PromptStatus, PromptAttachment, PromptMessage } from './prompt-input';
 export { Conversation, ConversationContent, ConversationScrollButton, Message, MessageContent, MessageActions, MessageAttachments, ConversationQueue, ConversationCheckpoint } from './conversation';
 export type { MessageStatus } from './conversation';

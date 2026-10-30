@@ -1922,6 +1922,15 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-prompt-option-desc { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .alt-prompt-searching { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
 .alt-prompt-searching .alt-skeleton { width: 80px; height: 10px; }
+/* Dictation (#284): listening is a latched toggle (a shallow well with accent-soft poured in, a steady lamp and the
+   word), never a pulse or a waveform; interim words are a ghost in ink-faint, like a suggestion, never in the value. */
+.alt-btn.alt-prompt-dictate[data-listening], .alt-btn.alt-prompt-dictate[data-listening]:focus-visible, .alt-btn.alt-prompt-dictate[data-listening]:active:not(:disabled) {
+  --wall: 0px; background: var(--accent-soft); background-image: none; color: var(--accent-ink); box-shadow: var(--well); transform: none; }
+.alt-prompt-listening { display: inline-flex; align-items: center; gap: 5px; margin-left: 4px; font: 500 12.5px/17px var(--font-sans); }
+.alt-prompt-lamp { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 22%, transparent); }
+.alt-prompt-dictate[data-blocked] { color: var(--ink-faint); }
+.alt-prompt-interim { margin: 2px 0 0; font: 400 15px/23px var(--font-sans); color: var(--ink-faint); white-space: pre-wrap; }
+@media (forced-colors: active) { .alt-btn.alt-prompt-dictate[data-listening] { border: 2px solid Highlight; } }
 .alt-prompt-context { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px 0; }
 .alt-prompt-kind { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-muted); }
 .alt-prompt-kind[data-kind="file"] { background: var(--accent-ink); }
