@@ -11,6 +11,8 @@
 .col { display: flex; flex-direction: column; gap: 14px; }
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
 .im-page{max-width:820px;margin-inline:auto;display:grid;gap:20px;overflow-wrap:break-word}.im-h{font:600 21px/28px var(--font-sans);margin:0}.im-sub{font:600 17px/24px var(--font-sans);margin:0}.im-step{display:grid;gap:16px}.im-note{margin:0;font:400 14px/21px var(--font-sans);color:var(--ink-muted)}.im-lead{margin:0;font:400 15px/23px var(--font-sans)}.im-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px 24px}.im-actions{display:flex;flex-wrap:wrap;gap:12px}.im-receipt{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:0}.im-receipt div{display:grid;gap:2px}.im-receipt dt{font:500 13px/18px var(--font-sans);color:var(--ink-muted)}.im-receipt dd{margin:0;font:600 17px/24px var(--font-sans)}
 </style>
 </head>

@@ -11,6 +11,8 @@
 .col { display: flex; flex-direction: column; gap: 14px; }
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
 .bl-page{max-width:820px;margin-inline:auto;display:grid;gap:24px;overflow-wrap:break-word}.bl-h{font:600 21px/28px var(--font-sans);margin:0}.bl-sub{font:600 17px/24px var(--font-sans);margin:0}.bl-section{display:grid;gap:16px}.bl-meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px 24px}.bl-note,.bl-proration{margin:0;font:400 14px/21px var(--font-sans);color:var(--ink-muted)}.bl-proration{color:var(--ink);font-size:15px}.bl-losses{font:400 14px/21px var(--font-sans)}.bl-losses ul{margin:6px 0 0;padding-inline-start:20px}.bl-actions{display:flex;flex-wrap:wrap;gap:12px}.bl-page [role="status"]:empty{display:none}.bl-page .alt-table{min-width:520px}
 </style>
 </head>

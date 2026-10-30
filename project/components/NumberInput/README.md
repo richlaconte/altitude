@@ -12,6 +12,8 @@ A number field: seats on a plan, rate limits, retention days, prices, quantities
 
 **Props:** `value`, `defaultValue` (`number | null`), `onValueChange`; `min`, `max`, `step` (default 1); `format`; `locale`; `invalid`; `size`; `wheel`; `incrementLabel`, `decrementLabel`; and the input's own attributes.
 
+**Target size.** The two steppers sit side by side, down then up, each 24×24 (WCAG 2.5.8): stacked, two 15px steppers could never each reach 24px. Under a coarse pointer each reaches 44px tall through a transparent hit area. The arrow keys still step, and Page Up and Page Down step by ten.
+
 **You provide:** the range, the step, the unit (in `format`) and a label (with `Field`).
 
 ```tsx
