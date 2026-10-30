@@ -19,14 +19,24 @@
 <div id="root"></div>
 <script>
 var A = window.Altitude;
-const ago = (m) => new Date(Date.now() - m * 6e4);
+const ago = (m) => {
+  const start = /* @__PURE__ */ new Date();
+  start.setHours(0, 0, 0, 0);
+  return new Date(Math.max(Date.now() - m * 6e4, start.getTime() + 1e3));
+};
+const yesterdayAt = (h) => {
+  const d = /* @__PURE__ */ new Date();
+  d.setDate(d.getDate() - 1);
+  d.setHours(h, 0, 0, 0);
+  return d;
+};
 const I = ({ d }) => /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d }));
 const icons = { status: "M5 12.5l4.5 4.5L19 7.5", comment: "M4 5h16v11H8l-4 4z", assign: "M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6" };
 function App() {
   const [events, setEvents] = React.useState([
     { id: "e3", at: ago(14), icon: "status", text: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, "Maya"), " changed status to ", /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Done")) },
     { id: "e2", at: ago(95), icon: "assign", text: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, "Theo"), " assigned this to ", /* @__PURE__ */ React.createElement("strong", null, "Maya")), href: "#/people/maya" },
-    { id: "e1", at: ago(60 * 26), icon: "comment", text: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, "Ada"), " commented"), detail: /* @__PURE__ */ React.createElement("p", { style: { margin: 0 } }, "\u201CCan we ship this before the release freeze on Friday?\u201D") }
+    { id: "e1", at: yesterdayAt(12), icon: "comment", text: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, "Ada"), " commented"), detail: /* @__PURE__ */ React.createElement("p", { style: { margin: 0 } }, "\u201CCan we ship this before the release freeze on Friday?\u201D") }
   ]);
   const [text, setText] = React.useState("");
   const send = (fail) => {
