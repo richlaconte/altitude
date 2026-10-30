@@ -1,0 +1,55 @@
+<!-- @dsCard group="Inputs" height=520 subtitle="Roles against permissions; inherited and fixed grants are settled, not disabled" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PermissionMatrix — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const roles = [{ id: "owner", name: "Owner", locked: true }, { id: "admin", name: "Admin" }, { id: "member", name: "Member" }, { id: "viewer", name: "Viewer" }];
+const perms = [
+  { id: "billing.view", name: "View invoices", group: "Billing" },
+  { id: "billing.manage", name: "Manage billing", group: "Billing" },
+  { id: "members.invite", name: "Invite members", group: "Members" },
+  { id: "members.remove", name: "Remove members", group: "Members" },
+  { id: "projects.create", name: "Create projects", group: "Projects" },
+  { id: "projects.view", name: "View projects", group: "Projects" }
+];
+function App() {
+  const [grants, setGrants] = React.useState({
+    admin: { "billing.view": true, "billing.manage": true, "members.invite": true, "members.remove": true, "projects.create": true },
+    member: { "members.invite": true, "projects.create": true },
+    viewer: {}
+  });
+  const inherited = (role, perm) => perm === "projects.view" ? { granted: true, from: "Everyone" } : role === "viewer" && perm.startsWith("billing") ? { granted: false, from: "Guest policy" } : void 0;
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(
+    A.PermissionMatrix,
+    {
+      "aria-label": "Role permissions",
+      roles,
+      permissions: perms,
+      value: grants,
+      inherited,
+      onChange: (role, perm, on) => new Promise((r) => setTimeout(() => {
+        setGrants((g) => ({ ...g, [role]: { ...g[role], [perm]: on } }));
+        r();
+      }, 600))
+    }
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Editable grants are checkboxes. Owner's and inherited grants are stamped into the record: they're decided, not unavailable. Arrow keys move; Space toggles."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

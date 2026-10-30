@@ -3263,6 +3263,28 @@ function App() {
   );
 }
 
+=== PermissionMatrix | <!-- @dsCard group="Inputs" height=520 subtitle="Roles against permissions; inherited and fixed grants are settled, not disabled" -->
+--- jsx
+const roles = [{ id: 'owner', name: 'Owner', locked: true }, { id: 'admin', name: 'Admin' }, { id: 'member', name: 'Member' }, { id: 'viewer', name: 'Viewer' }];
+const perms = [
+  { id: 'billing.view', name: 'View invoices', group: 'Billing' }, { id: 'billing.manage', name: 'Manage billing', group: 'Billing' },
+  { id: 'members.invite', name: 'Invite members', group: 'Members' }, { id: 'members.remove', name: 'Remove members', group: 'Members' },
+  { id: 'projects.create', name: 'Create projects', group: 'Projects' }, { id: 'projects.view', name: 'View projects', group: 'Projects' },
+];
+function App() {
+  const [grants, setGrants] = React.useState({ admin: { 'billing.view': true, 'billing.manage': true, 'members.invite': true, 'members.remove': true, 'projects.create': true },
+    member: { 'members.invite': true, 'projects.create': true }, viewer: {} });
+  // Everyone can view projects; admins inherit invoices from Billing admins in this example.
+  const inherited = (role, perm) => (perm === 'projects.view' ? { granted: true, from: 'Everyone' } : role === 'viewer' && perm.startsWith('billing') ? { granted: false, from: 'Guest policy' } : undefined);
+  return (
+    <div className="col">
+      <A.PermissionMatrix aria-label="Role permissions" roles={roles} permissions={perms} value={grants} inherited={inherited}
+        onChange={(role, perm, on) => new Promise((r) => setTimeout(() => { setGrants((g) => ({ ...g, [role]: { ...g[role], [perm]: on } })); r(); }, 600))} />
+      <p className="cap">Editable grants are checkboxes. Owner's and inherited grants are stamped into the record: they're decided, not unavailable. Arrow keys move; Space toggles.</p>
+    </div>
+  );
+}
+
 === DataGrid | <!-- @dsCard group="Display" height=520 subtitle="A table edited cell by cell with spreadsheet keys: type, Enter, Tab, paste a block" -->
 --- css
 .dg-demo { max-width: 820px; }

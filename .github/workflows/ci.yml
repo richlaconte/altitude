@@ -117,6 +117,7 @@ jobs:
           node ../scripts/record-check.mjs react18-sync-indicator node checks/sync-indicator.mjs
           node ../scripts/record-check.mjs react18-diff-view node checks/diff-view.mjs
           node ../scripts/record-check.mjs react18-save-bar node checks/save-bar.mjs
+          node ../scripts/record-check.mjs react18-permission-matrix node checks/permission-matrix.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
