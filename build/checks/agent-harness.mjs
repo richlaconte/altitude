@@ -23,7 +23,7 @@ const has = {
   Rewound: () => document.querySelector('.alt-checkpoint') !== null,
   Done: () => document.querySelector('.alt-msg[data-from="assistant"]')?.getAttribute('data-stream') === 'complete' && !!document.querySelector('.alt-suggestions'),
 };
-for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) {
+for (const scheme of ['daylight', 'nightfall']) {
   const page = await browser.newPage({ viewport: { width: 1180, height: 900 } });
   const errors = []; page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   await page.goto(`file://${T}p-AgentHarness-${scheme}.html`); await page.waitForTimeout(400);

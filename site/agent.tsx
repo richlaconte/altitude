@@ -9,7 +9,7 @@ import type { BuiltInScheme } from '../project/components/src/index';
 import { App as Harness } from '../build/fixtures/patterns/agent-harness.jsx';
 
 const SCHEMES: { id: BuiltInScheme; label: string }[] = [
-  { id: 'daylight', label: 'Daylight' }, { id: 'nightfall', label: 'Nightfall' }, { id: 'mesa', label: 'Mesa' }, { id: 'alpine', label: 'Alpine' },
+  { id: 'daylight', label: 'Daylight' }, { id: 'nightfall', label: 'Nightfall' },
 ];
 const systemScheme = (): BuiltInScheme => (matchMedia('(prefers-color-scheme: dark)').matches ? 'nightfall' : 'daylight');
 
