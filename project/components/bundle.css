@@ -1756,6 +1756,23 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 [data-contrast="more"] .alt-confirm[data-state="requested"] { box-shadow: 0 3px 0 0 var(--ink), var(--elev-1); }
 @media (forced-colors: active) { .alt-confirm { border: 1px solid CanvasText; } }
 
+/* ── Trace: an agent's steps as a vertical Stepper. Done steps are flush with a stamped check, the running step stands
+   raised on its wall (no spinner: a small steady lamp in its mark), planned steps are imprints. A failed step drops to a
+   trench with a critical rim and Retry. A step waiting for approval holds a Confirmation. Tool calls and reasoning sit
+   behind Accordion lids under their step, indented to the text. ── */
+.alt-trace .alt-step { width: 100%; }
+.alt-trace .alt-step[data-state="failed"] { background: var(--surface-well); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); color: var(--ink); }
+.alt-trace .alt-step[data-state="failed"] .alt-step-mark { background: var(--critical); color: var(--on-critical); }
+.alt-trace-live { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--accent); }
+.alt-trace-error { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: 4px; font: 400 13px/18px var(--font-sans); color: var(--ink); }
+.alt-trace-detail { display: flex; flex-direction: column; gap: var(--space-2); margin: 6px 0 0 40px; }
+.alt-trace-acc .alt-acc-trigger { padding-block: 6px; font-size: 13px; }
+.alt-trace-tool code { font: 500 12.5px/18px var(--font-mono); }
+.alt-trace-io { display: flex; flex-direction: column; gap: var(--space-2); }
+.alt-trace-wait, .alt-trace-reasoning { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); white-space: pre-wrap; }
+.alt-trace-item:last-child .alt-step-line { display: none; }
+@media (forced-colors: active) { .alt-step[data-state="failed"] { border: 3px dashed CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

@@ -125,6 +125,7 @@ jobs:
           node ../scripts/record-check.mjs react18-prompt-input node checks/prompt-input.mjs
           node ../scripts/record-check.mjs react18-conversation node checks/conversation.mjs
           node ../scripts/record-check.mjs react18-confirmation node checks/confirmation.mjs
+          node ../scripts/record-check.mjs react18-trace node checks/trace.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs

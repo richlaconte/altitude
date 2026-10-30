@@ -3112,6 +3112,30 @@ export interface ConfirmationProps {
 /** Approve or reject an agent's proposal: raised while requested, pending once approved, kept in the record when resolved. */
 export declare function Confirmation(props: ConfirmationProps): React.ReactElement;
 
+export type TraceStepStatus = 'planned' | 'running' | 'done' | 'failed' | 'awaiting-approval';
+export interface TraceProps extends React.OlHTMLAttributes<HTMLOListElement> { 'aria-label': string }
+/** An agent's steps as a vertical Stepper: done flush and stamped, running raised, planned imprinted, failed in a trench. */
+export declare function Trace(props: TraceProps): React.ReactElement;
+export interface TraceStepProps {
+  title: string;
+  status: TraceStepStatus;
+  /** Milliseconds it took. */
+  duration?: number;
+  /** Why it failed. */
+  error?: React.ReactNode;
+  onRetry?: () => void;
+  /** Tool calls, reasoning, a Confirmation. */
+  children?: React.ReactNode;
+  className?: string;
+}
+export declare function TraceStep(props: TraceStepProps): React.ReactElement;
+export interface TraceToolCallProps { name: string; input?: unknown; output?: unknown; defaultOpen?: boolean }
+/** A tool call's input and output behind an Accordion lid. */
+export declare function TraceToolCall(props: TraceToolCallProps): React.ReactElement;
+export interface TraceReasoningProps { duration?: number; children: React.ReactNode }
+/** Reasoning, closed by default behind "Thought for 12s". */
+export declare function TraceReasoning(props: TraceReasoningProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -3131,6 +3155,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
       Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
