@@ -37,6 +37,8 @@ export { PromptInput, PromptInputTextarea, PromptInputAttachments, PromptInputTo
 export type { PromptStatus, PromptAttachment, PromptMessage } from './prompt-input';
 export { Conversation, ConversationContent, ConversationScrollButton, Message, MessageContent, MessageActions } from './conversation';
 export type { MessageStatus } from './conversation';
+export { Confirmation } from './confirmation';
+export type { ConfirmationState } from './confirmation';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';

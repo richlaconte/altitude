@@ -1,0 +1,66 @@
+<!-- @dsCard group="Feedback" height=700 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirmation — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails }) {
+  const [state, setState] = React.useState("requested");
+  const [at, setAt] = React.useState();
+  const approve = () => {
+    setState("running");
+    setTimeout(() => {
+      setState(fails ? "failed" : "done");
+      setAt(/* @__PURE__ */ new Date());
+    }, 1400);
+  };
+  return /* @__PURE__ */ React.createElement(
+    A.Confirmation,
+    {
+      state,
+      title,
+      consequence,
+      escalate,
+      approveLabel,
+      rejectLabel,
+      runningLabel,
+      doneLabel,
+      failedLabel,
+      resolvedBy: "you",
+      resolvedAt: at,
+      onApprove: approve,
+      onReject: () => {
+        setState("rejected");
+        setAt(/* @__PURE__ */ new Date());
+      },
+      onRetry: () => {
+        setState("running");
+        setTimeout(() => {
+          setState("done");
+          setAt(/* @__PURE__ */ new Date());
+        }, 1e3);
+      }
+    }
+  );
+}
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(Proposal, { title: "Send campaign email", consequence: "214 Pro customers will receive \u201COctober product update\u201D.", approveLabel: "Send 214 emails", rejectLabel: "Don't send", runningLabel: "Sending\u2026", doneLabel: "Sent", failedLabel: "Couldn't send" }), /* @__PURE__ */ React.createElement(Proposal, { title: "Delete 3 stale branches", consequence: "release/2.3, spike/maps and fix/old-auth will be deleted from the repository.", approveLabel: "Delete 3 branches", rejectLabel: "Keep them", runningLabel: "Deleting\u2026", doneLabel: "Deleted", escalate: "hold" }), /* @__PURE__ */ React.createElement(Proposal, { title: "Archive the Atlas workspace", consequence: "12 people lose access; it can't be restored after 30 days.", approveLabel: "Archive workspace", rejectLabel: "Don't archive", runningLabel: "Archiving\u2026", failedLabel: "Couldn't archive", escalate: "dialog", fails: true }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
