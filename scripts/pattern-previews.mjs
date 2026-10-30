@@ -1,6 +1,7 @@
 // Each task pattern's working example lives in build/fixtures/patterns/<id>.jsx, where it's type-checked against the
 // public declarations. The lines between its preview markers are also the "<Id>Pattern" preview in build/previews.txt
-// (and so its Storybook story). `node scripts/pattern-previews.mjs` copies them in; `--check` lists any that differ.
+// (and so its Storybook story), unless a `// preview-name:` line names it otherwise.
+// `node scripts/pattern-previews.mjs` copies them in; `--check` lists any that differ.
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -10,7 +11,9 @@ export function examples() {
   return readdirSync(dir).filter((f) => f.endsWith('.jsx')).sort().map((f) => {
     const src = readFileSync(dir + f, 'utf8'), m = src.match(/\/\/ preview:start\n([\s\S]*?)\/\/ preview:end\n/);
     if (!m) throw new Error(`${f}: no preview markers`);
-    return { id: f.slice(0, -4), name: previewName(f.slice(0, -4)), jsx: m[1] };
+    // A `// preview-name: X` line names a preview that isn't a task pattern's (the app skeleton).
+    const named = src.match(/^\/\/ preview-name: (\w+)$/m);
+    return { id: f.slice(0, -4), name: named ? named[1] : previewName(f.slice(0, -4)), jsx: m[1] };
   });
 }
 export function sync(write) {
