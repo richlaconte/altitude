@@ -1,0 +1,58 @@
+<!-- @dsCard group="Display" height=760 subtitle="A command's output as it runs: a dashed rule while running, then its exit in words" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.tm { display: flex; flex-direction: column; gap: 16px; max-width: 680px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const E = String.fromCharCode(27);
+const testRun = [
+  { text: "> altitude@0.2.1 test\n> vitest run\n\n" },
+  { text: E + "[32m \u2713" + E + "[0m src/format.test.ts " + E + "[2m(12 tests)" + E + "[0m\n" },
+  { text: E + "[32m \u2713" + E + "[0m src/tokens.test.ts " + E + "[2m(31 tests)" + E + "[0m\n" },
+  { text: E + "[31m \u2717" + E + "[0m src/billing.test.ts > refunds an annual plan\n" },
+  { text: "   AssertionError: expected 240 to equal 200\n", stream: "stderr" },
+  { text: "\n" + E + "[1m Tests" + E + "[0m  " + E + "[31m1 failed" + E + "[0m | " + E + "[32m43 passed" + E + "[0m (44)\n" }
+];
+function App() {
+  const [n, setN] = React.useState(0);
+  const [stopped, setStopped] = React.useState(false);
+  React.useEffect(() => {
+    if (stopped || n >= 30) return;
+    const t = setTimeout(() => setN(n + 1), 140);
+    return () => clearTimeout(t);
+  }, [n, stopped]);
+  const lines = Array.from({ length: n }, (_, i) => `[migrate] applying 2026_10_${String(i + 1).padStart(2, "0")}_add_index.sql \u2026 ok
+`).join("");
+  return /* @__PURE__ */ React.createElement("div", { className: "tm" }, /* @__PURE__ */ React.createElement(A.Terminal, { command: "npm test", output: testRun, status: "exited", exitCode: 1, duration: 4200 }), /* @__PURE__ */ React.createElement(
+    A.Terminal,
+    {
+      command: "npm run migrate",
+      output: lines,
+      status: stopped ? "stopped" : n >= 30 ? "exited" : "running",
+      exitCode: 0,
+      duration: n * 140,
+      onStop: () => setStopped(true),
+      stopOnEscape: true
+    }
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

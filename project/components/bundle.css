@@ -265,15 +265,15 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 @media (hover: hover) { .alt-check:not(.alt-radio):hover:not([data-disabled]) input:not(:checked):not(:indeterminate) + .alt-check-track .alt-check-mark { color: var(--ink-faint); filter: none; } }
 @media (hover: hover) { .alt-check:not(.alt-radio):hover:not([data-disabled]) input:not(:checked):not(:indeterminate) + .alt-check-track .alt-check-tick { stroke-dashoffset: 0; opacity: 0.55; transition: stroke-dashoffset var(--dur-travel-2) var(--ease-rise); } }
 @media (hover: hover) { .alt-check:not(.alt-radio):hover:not([data-disabled]) input:checked + .alt-check-track .alt-check-mark { transform: translateY(calc(-0.5px * var(--alt-travel))); filter: drop-shadow(0 1.5px 1px rgb(0 0 0 / 0.32)); } }
-.alt-check input:checked + .alt-check-track, .alt-check input:indeterminate + .alt-check-track { border-color: var(--accent); }
-.alt-check input:checked + .alt-check-track .alt-check-fill, .alt-check input:indeterminate + .alt-check-track .alt-check-fill { opacity: 1; clip-path: circle(75% at 50% 50%); }
+.alt-check input:checked + .alt-check-track, .alt-check input[type="checkbox"]:indeterminate + .alt-check-track { border-color: var(--accent); }
+.alt-check input:checked + .alt-check-track .alt-check-fill, .alt-check input[type="checkbox"]:indeterminate + .alt-check-track .alt-check-fill { opacity: 1; clip-path: circle(75% at 50% 50%); }
 @media (hover: hover) { .alt-check:hover:not([data-disabled]) input:not(:checked):not(:indeterminate) + .alt-check-track { border-color: var(--ink-muted); } }
 .alt-check:not(.alt-radio):active:not([data-disabled]) .alt-check-track { box-shadow: var(--trench); }
 .alt-check:not(.alt-radio):active:not([data-disabled]) .alt-check-mark { transform: scale(calc(1 - 0.12 * var(--alt-travel))); transition-duration: var(--dur-press); }
 .alt-check input:focus-visible + .alt-check-track { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .alt-check-mark path { stroke-dasharray: 16; stroke-dashoffset: 16; transition: stroke-dashoffset var(--dur-travel-1) var(--ease-sink); }
 .alt-check input:checked:not(:indeterminate) + .alt-check-track .alt-check-tick,
-.alt-check input:indeterminate + .alt-check-track .alt-check-dash { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-travel-2) var(--ease-rise) 60ms; }
+.alt-check input[type="checkbox"]:indeterminate + .alt-check-track .alt-check-dash { stroke-dashoffset: 0; transition: stroke-dashoffset var(--dur-travel-2) var(--ease-rise) 60ms; }
 .alt-check-text { display: flex; flex-direction: column; gap: 2px; padding-top: 1px; }
 .alt-check-label { font: 500 14px/20px var(--font-sans); }
 .alt-check-desc { font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
@@ -1895,6 +1895,50 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-msg-name { margin: 0; font: 600 13px/18px var(--font-sans); color: var(--ink-muted); }
 .alt-msg-content { font: 400 15px/23px var(--font-sans); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
 
+/* ---- Terminal (#273) ----
+   A command's output in CodeBlock's frame: flush on the ground, a 1px rim, mono. Running, it isn't the record yet, so
+   a dashed line-control rule runs down the left; finished, the rule goes solid (critical when the exit is non-zero)
+   with one afterglow. stderr lines carry a critical mark in the gutter. "Jump to latest output" floats at level 3. */
+.alt-term { position: relative; border-left-width: 2px; }
+.alt-term[data-status="running"] { border-left-style: dashed; border-left-color: var(--line-control); }
+.alt-term[data-failed] { border-left-color: var(--critical); }
+.alt-term-cmd { min-width: 0; font: 500 13px/18px var(--font-mono); color: var(--ink); overflow-wrap: anywhere; }
+.alt-term-prompt { color: var(--ink-muted); }
+.alt-term-viewport { position: relative; }
+.alt-term-body { max-height: 320px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; outline: none; }
+.alt-term-body:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-term-pre { margin: 0; padding: var(--space-3) var(--space-4); font: 400 13px/20px var(--font-mono); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+.alt-term-line { position: relative; display: block; min-height: 20px; }
+.alt-term-line[data-stream="stderr"]::before { content: ""; position: absolute; left: calc(-1 * var(--space-4) + 6px); top: 3px; bottom: 3px; width: 3px; border-radius: 2px; background: var(--critical); }
+.alt-term [data-tone="critical"] { color: var(--critical); }
+.alt-term [data-tone="caution"] { color: var(--caution); }
+.alt-term [data-tone="positive"] { color: var(--positive); }
+.alt-term [data-tone="accent"] { color: var(--accent-ink); }
+.alt-term [data-tone="muted"] { color: var(--ink-muted); }
+.alt-term [data-bold] { font-weight: 600; }
+.alt-term-more { display: block; margin: var(--space-2) var(--space-4) 0; padding: 0; border: 0; background: none; color: var(--accent-ink); font: 500 12.5px/24px var(--font-sans); text-decoration: underline; cursor: pointer; }
+.alt-term-exit { display: flex; align-items: center; gap: 6px; padding: 8px var(--space-4); border-top: 1px solid var(--line); font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-term-exit[data-tone="critical"] { color: var(--critical); }
+[data-contrast="more"] .alt-term { border-color: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-term { border-color: CanvasText; }
+  .alt-term[data-status="running"] { border-left-style: dotted; }
+  .alt-term-line[data-stream="stderr"]::before { background: CanvasText; }
+}
+
+/* ---- Suggestions (#272) ----
+   Prompts to start from or follow up with are things you press: small secondary buttons, raised at level 1 with their
+   wall, lifting to 2 when pointed at, never the view's level-2 primary (that's the composer's Send). Follow-ups merely
+   became available, so they cross-fade in under the answer; they don't rise. */
+.alt-suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
+.alt-suggestions[data-arrive] { animation: alt-fade-in var(--dur-onset) var(--ease-rise) both; }
+.alt-suggestion { max-width: 100%; }
+.alt-suggestion-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-msg .alt-suggestions { margin-top: 4px; }
+.alt-empty .alt-suggestions { justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .alt-suggestions[data-arrive] { animation: none; } }
+[data-motion="reduced"] .alt-suggestions[data-arrive] { animation: none; }
+
 /* ---- Markdown (#268) ----
    An answer's text set as the record: everything sits on the ground at level 0 and nothing here adds height. Code is
    CodeBlock, links are Link, [n] markers are InlineCitation (the only part that lifts, when pointed at), tables use
@@ -1966,7 +2010,25 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-queued-state { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .alt-queued-actions { display: inline-flex; gap: 2px; margin-right: -6px; }
 @media (forced-colors: active) { .alt-queued { border-color: CanvasText; } }
-.alt-convo-jump { position: absolute; left: 50%; bottom: var(--space-3); translate: -50% 0; z-index: 1; --alt-bg: var(--surface-floating); --alt-sh: var(--elev-3); --alt-sh-up: var(--elev-3); animation: alt-emerge var(--dur-travel-2) var(--ease-rise); --alt-from-y: 6px; }
+/* Checkpoints (#277): a divider with a word between its lines, on the ground. While restoring, its label hovers as
+   pending (after dur-grace); restored, it settles once; failed, it sinks into a trench. Restore is a ghost button. */
+.alt-checkpoint { display: flex; align-items: center; gap: var(--space-3); margin: 4px 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-checkpoint-line { flex: 1; min-width: 16px; height: 1px; background: var(--line); }
+.alt-checkpoint-label { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 6px; min-width: 0; padding: 2px 8px; border-radius: var(--radius-sm); }
+.alt-checkpoint-label > * + *::before { content: "·"; margin-right: 6px; color: var(--ink-muted); }
+.alt-checkpoint-word { color: var(--ink); }
+.alt-checkpoint-name { overflow-wrap: anywhere; }
+.alt-checkpoint time { font-variant-numeric: tabular-nums; }
+.alt-checkpoint-actions { display: inline-flex; gap: 2px; }
+.alt-checkpoint-actions:empty { display: none; }
+.alt-checkpoint[data-phase="failed"] .alt-checkpoint-word { color: var(--critical); }
+[data-contrast="more"] .alt-checkpoint-line { background: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-checkpoint-line { background: CanvasText; }
+  .alt-checkpoint-label[data-status="pending"] { outline: 1px dotted CanvasText; }
+  .alt-checkpoint-label[data-status="failed"] { outline: 3px dashed CanvasText; }
+}
+.alt-convo-jump, .alt-term-jump { position: absolute; left: 50%; bottom: var(--space-3); translate: -50% 0; z-index: 1; --alt-bg: var(--surface-floating); --alt-sh: var(--elev-3); --alt-sh-up: var(--elev-3); animation: alt-emerge var(--dur-travel-2) var(--ease-rise); --alt-from-y: 6px; }
 @media (prefers-reduced-motion: reduce) { .alt-msg-caret { animation: none; } }
 [data-motion="reduced"] .alt-msg-caret { animation: none; }
 [data-contrast="more"] .alt-msg[data-stream] { box-shadow: inset 2px 0 0 0 var(--line-control); }
@@ -1999,7 +2061,23 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-confirm-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 .alt-confirm-who { margin-right: auto; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 [data-contrast="more"] .alt-confirm[data-state="requested"] { box-shadow: 0 3px 0 0 var(--ink), var(--elev-1); }
+.alt-confirm-scope { display: flex; flex-direction: column; gap: 1px; padding-block: 6px; white-space: normal; }
+.alt-menu:has(.alt-confirm-scope) { min-width: min(300px, calc(100vw - 16px)); }
+.alt-menu-item:has(.alt-confirm-scope) { height: auto; min-height: var(--size-row-md, 32px); }
+.alt-confirm-scope-desc { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 @media (forced-colors: active) { .alt-confirm { border: 1px solid CanvasText; } }
+/* Question (#270): Confirmation's raised card asking for an answer rather than approval. Options are trenches (radio or
+   checkbox), "Your own answer" a well; Answer is the one primary. Answered, it presses to the ground as one muted line. */
+.alt-question-options { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 0; }
+.alt-question-other { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.alt-question-other-label { font: 500 13px/18px var(--font-sans); color: var(--ink); }
+.alt-question[data-state="answered"], .alt-question[data-state="expired"] { padding-block: 8px; box-shadow: none; background: none; }
+.alt-question-record { display: flex; align-items: flex-start; gap: 6px; margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+.alt-question-record svg { flex: none; margin-top: 2.5px; }
+.alt-question-asked { color: var(--ink); }
+.alt-question-asked::after { content: " ·"; color: var(--ink-muted); }
+.alt-question-set { display: flex; flex-direction: column; gap: var(--space-3); max-width: 560px; }
+.alt-question-set > .alt-confirm { max-width: none; }
 
 /* ── Trace: an agent's steps as a vertical Stepper. Done steps are flush with a stamped check, the running step stands
    raised on its wall (no spinner: a small steady lamp in its mark), planned steps are imprints. A failed step drops to a
@@ -2011,10 +2089,28 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-trace-live { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--accent); }
 .alt-trace-error { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: 4px; font: 400 13px/18px var(--font-sans); color: var(--ink); }
 .alt-trace-detail { display: flex; flex-direction: column; gap: var(--space-2); margin: 6px 0 0 40px; }
+/* Subagents (#278): a nested run is a nested list behind an Accordion lid that says how it's going; steps that run at
+   once sit in a labelled group with a 1px line-control bracket, several raised at once because each is in play. */
+.alt-trace-nested-title { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.alt-trace-nested-sum { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-trace-nested .alt-trace { padding: 4px 0 0; }
+.alt-trace-parallel { margin: 6px 0 0; padding: 2px 0 2px 12px; border-left: 1px solid var(--line-control); }
+.alt-trace-parallel-head { display: flex; flex-wrap: wrap; gap: 2px 8px; margin: 0 0 6px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-trace-parallel-head > :first-child { color: var(--ink); }
+@media (forced-colors: active) { .alt-trace-parallel { border-left-color: CanvasText; } }
 .alt-trace-acc .alt-acc-trigger { padding-block: 6px; font-size: 13px; }
 .alt-trace-tool code { font: 500 12.5px/18px var(--font-mono); }
 .alt-trace-io { display: flex; flex-direction: column; gap: var(--space-2); }
 .alt-trace-wait, .alt-trace-reasoning { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); white-space: pre-wrap; }
+/* Reasoning while it streams (#279): not yet the record, like a streaming answer: "Thinking…" on the lid, and a dashed
+   line-control rule down the open compartment. No shimmer, no pulsing dots, no ticking counter; the lid's words
+   cross-fade when it completes. */
+.alt-trace-thought-title { animation: alt-fade-in var(--dur-travel-1) var(--ease-rise) both; }
+.alt-trace-thought[data-status="streaming"] .alt-trace-reasoning { max-height: 240px; overflow-y: auto; padding-left: 10px; border-left: 1px dashed var(--line-control); overscroll-behavior: contain; }
+.alt-trace-reasoning-hidden { margin: 0; padding: 4px 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+@media (prefers-reduced-motion: reduce) { .alt-trace-thought-title { animation: none; } }
+[data-motion="reduced"] .alt-trace-thought-title { animation: none; }
+@media (forced-colors: active) { .alt-trace-thought[data-status="streaming"] .alt-trace-reasoning { border-left: 1px dotted CanvasText; } }
 .alt-trace-item:last-child .alt-step-line { display: none; }
 @media (forced-colors: active) { .alt-step[data-state="failed"] { border: 3px dashed CanvasText; } }
 

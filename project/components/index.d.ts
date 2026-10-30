@@ -3282,6 +3282,21 @@ export interface MessageAttachment {
 }
 /** What was sent with a message, before its content: 64px thumbnails and settled Tag plates, in a list named "2 attachments". */
 export declare function MessageAttachments(props: { items: MessageAttachment[] } & Omit<React.HTMLAttributes<HTMLUListElement>, 'children'>): React.ReactElement | null;
+export interface ConversationCheckpointProps {
+  /** What the point is before: "Before editing 6 files". */
+  label: string;
+  at?: Date | string | number;
+  /** What restoring does, in words; it describes Restore and fills the confirmation. */
+  consequence: string;
+  /** Resolve when restored; reject (with a message) when it couldn't. */
+  onRestore: () => void | Promise<unknown>;
+  /** Real recovery: with it Restore runs at once and leaves "Return to where you were"; without it Restore asks in a Dialog. */
+  onReturn?: () => void | Promise<unknown>;
+  locale?: string;
+  className?: string;
+}
+/** A point to go back to: a divider "Checkpoint · label · time" with Restore, through the consequential-action contract. */
+export declare function ConversationCheckpoint(props: ConversationCheckpointProps): React.ReactElement;
 export interface QueuedMessage { id: string; text: string }
 export interface ConversationQueueProps {
   /** Messages written while the agent worked, in the order they'll be sent. */
@@ -3328,7 +3343,12 @@ export interface ConfirmationProps {
   resolvedAt?: Date | string | number;
   /** Who's asking. Default "The assistant". */
   requestedBy?: string;
-  onApprove?: () => void;
+  /** Wider ways to approve: Approve becomes a SplitButton (face: once; menu "More ways to approve": these). Ignored with escalate. */
+  scopes?: { value: string; label: string; description?: string }[];
+  /** The scope it was approved with ('once' or a scope's value), named in the resolved line. */
+  resolvedScope?: string;
+  /** Called with 'once' or a scope's value. */
+  onApprove?: (scope?: string) => void;
   onReject?: () => void;
   onRetry?: () => void;
   className?: string;
@@ -3340,9 +3360,18 @@ export type TraceStepStatus = 'planned' | 'running' | 'done' | 'failed' | 'await
 export interface TraceProps extends React.OlHTMLAttributes<HTMLOListElement> { 'aria-label': string }
 /** An agent's steps as a vertical Stepper: done flush and stamped, running raised, planned imprinted, failed in a trench. */
 export declare function Trace(props: TraceProps): React.ReactElement;
+export interface TraceParallelProps {
+  /** What runs at once: "Subagents". */
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}
+/** Steps that run at once, in a labelled group with a bracket: "Subagents · 3 in parallel · 2 of 3 done". A Trace inside a TraceStep is a nested run behind a lid. */
+export declare function TraceParallel(props: TraceParallelProps): React.ReactElement;
 export interface TraceStepProps {
   title: string;
-  status: TraceStepStatus;
+  /** 'auto': derived from the steps inside (a nested Trace or TraceParallel): running while any runs, done only when all are. */
+  status: TraceStepStatus | 'auto';
   /** Milliseconds it took. */
   duration?: number;
   /** Why it failed. */
@@ -3356,7 +3385,15 @@ export declare function TraceStep(props: TraceStepProps): React.ReactElement;
 export interface TraceToolCallProps { name: string; input?: unknown; output?: unknown; defaultOpen?: boolean }
 /** A tool call's input and output behind an Accordion lid. */
 export declare function TraceToolCall(props: TraceToolCallProps): React.ReactElement;
-export interface TraceReasoningProps { duration?: number; children: React.ReactNode }
+export interface TraceReasoningProps {
+  /** Milliseconds: "Thought for 12s". Said once, when it's known. */
+  duration?: number;
+  /** 'streaming': "Thinking…", the open text follows its end; 'complete' (default): "Thought for 12s"; 'redacted': "Reasoning hidden by the provider". */
+  status?: 'streaming' | 'complete' | 'redacted';
+  /** While streaming and open, keep the newest text in view until the person scrolls up. Default true. */
+  followWhileOpen?: boolean;
+  children?: React.ReactNode;
+}
 /** Reasoning, closed by default behind "Thought for 12s". */
 export declare function TraceReasoning(props: TraceReasoningProps): React.ReactElement;
 
@@ -3401,6 +3438,89 @@ export declare function InlineCitation(props: InlineCitationProps): React.ReactE
 export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
+export type QuestionState = 'asking' | 'answered' | 'expired';
+export interface QuestionAnswer { values: string[]; other?: string }
+export interface QuestionOptionProps { value: string; label: React.ReactNode; description?: React.ReactNode }
+export interface QuestionProps {
+  title: string;
+  /** Default 'asking'. */
+  state?: QuestionState;
+  /** Several may be chosen (checkboxes). Default false (radios). */
+  multiple?: boolean;
+  /** A field for an answer of the person's own. */
+  allowOther?: boolean;
+  otherLabel?: string;
+  answerLabel?: string;
+  /** A ghost button that lets the run go on: "Let the assistant decide". */
+  skipLabel?: string;
+  onSkip?: () => void;
+  onAnswer?: (answer: QuestionAnswer) => void;
+  /** Shown once answered. */
+  answer?: QuestionAnswer;
+  answeredAt?: Date | string | number;
+  requestedBy?: string;
+  /** Its key in a QuestionSet. */
+  name?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+export interface QuestionSetProps {
+  'aria-label'?: string;
+  state?: QuestionState;
+  onAnswer?: (answers: Record<string, QuestionAnswer>) => void;
+  answerLabel?: string;
+  skipLabel?: string;
+  onSkip?: () => void;
+  requestedBy?: string;
+  children: React.ReactNode;
+  className?: string;
+}
+/** An agent asks before it carries on: raised until answered (radio or checkboxes, your own answer), then one line in the record. */
+export declare function Question(props: QuestionProps): React.ReactElement;
+export declare function QuestionOption(props: QuestionOptionProps): null;
+/** Several questions answered by one button. */
+export declare function QuestionSet(props: QuestionSetProps): React.ReactElement;
+export type TerminalChunk = { text: string; stream?: 'stdout' | 'stderr' };
+export interface TerminalProps extends Omit<React.HTMLAttributes<HTMLElement>, 'children'> {
+  /** The command: "npm test". It names the figure. */
+  command: string;
+  /** Everything printed so far: a string, or chunks marked stdout or stderr. */
+  output: string | TerminalChunk[];
+  /** Default 'running'. */
+  status?: 'running' | 'exited' | 'stopped';
+  exitCode?: number;
+  /** Milliseconds it ran. */
+  duration?: number;
+  /** Shows Stop while it runs. */
+  onStop?: () => void;
+  /** Escape in the output stops a running command. Default false. */
+  stopOnEscape?: boolean;
+  /** Lines kept; earlier ones behind "Show N earlier lines". Default 400. */
+  maxLines?: number;
+  /** Map ANSI colours to Altitude's inks. Default true; off, escapes are stripped. */
+  ansi?: boolean;
+  /** Copy for the whole output. Default true. */
+  copyable?: boolean;
+}
+/** A command's output as it runs, in CodeBlock's frame: a dashed rule while running, then its exit in words. */
+export declare function Terminal(props: TerminalProps): React.ReactElement;
+export interface SuggestionsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChoose'> {
+  'aria-label': string;
+  /** 'fill' (default) puts the text in the composer; 'send' sends it at once. */
+  mode?: 'fill' | 'send';
+  onChoose: (value: string) => void;
+  /** Follow-ups cross-fade in. Default true inside a Message. */
+  arrive?: boolean;
+  children: React.ReactNode;
+}
+export interface SuggestionItemProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'value'> {
+  /** Filled or sent instead of the label. */
+  value?: string;
+  children: React.ReactNode;
+}
+/** Prompts to start from or follow up with: small secondary buttons in a labelled group (a toolbar past four). */
+export declare function Suggestions(props: SuggestionsProps): React.ReactElement;
+export declare function Suggestion(props: SuggestionItemProps): React.ReactElement;
 /** The elements a Markdown caller can replace. `pre` gets the fenced code's parts rather than children. */
 export interface MarkdownComponents {
   a?: React.ComponentType<React.AnchorHTMLAttributes<HTMLAnchorElement>>;
@@ -3493,11 +3613,12 @@ declare global {
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
+      Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;
-      Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
+      Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
-      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; MessageActions: typeof MessageActions;
+      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; ConversationCheckpoint: typeof ConversationCheckpoint; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;

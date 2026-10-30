@@ -1,4 +1,4 @@
-<!-- @dsCard group="Display" height=760 subtitle="The steps an agent takes: done in the record, running raised, planned imprinted" -->
+<!-- @dsCard group="Display" height=1180 subtitle="The steps an agent takes: done in the record, running raised, planned imprinted; subagents nest and run in parallel" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -74,7 +74,8 @@ function App() {
         onReject: () => setApproval("rejected")
       }
     )
-  ))));
+  ))), /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Agent run: compare billing providers" }, /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Plan the comparison", status: "done", duration: 900 }), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Research pricing pages", status: "auto" }, /* @__PURE__ */ React.createElement(A.TraceParallel, { label: "Subagents" }, /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Stripe", status: "auto" }, /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Stripe subagent" }, /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Open the pricing page", status: "done", duration: 1200 }), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Extract the fees", status: "done", duration: 3400 }))), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Paddle", status: "auto" }, /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Paddle subagent" }, /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Open the pricing page", status: "done", duration: 1500 }), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Extract the fees", status: "running" }))), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Lemon Squeezy", status: "failed", error: "The pricing page returned 403.", onRetry: () => {
+  } }))), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Weigh the fees", status: "running" }, /* @__PURE__ */ React.createElement(A.TraceReasoning, { status: "streaming" }, "Stripe charges 2.9% + 30\xA2 per card payment. Paddle is a merchant of record, so its 5% + 50\xA2 includes sales tax handling, which")), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Check the provider's notes", status: "done", duration: 2400 }, /* @__PURE__ */ React.createElement(A.TraceReasoning, { status: "redacted" })), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Write the comparison", status: "planned" })));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

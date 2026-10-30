@@ -1,4 +1,4 @@
-<!-- @dsCard group="Feedback" height=700 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
+<!-- @dsCard group="Feedback" height=900 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -20,10 +20,12 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 <div id="root"></div>
 <script>
 var A = window.Altitude;
-function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails }) {
+function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails, scopes }) {
   const [state, setState] = React.useState("requested");
+  const [scope, setScope] = React.useState();
   const [at, setAt] = React.useState();
-  const approve = () => {
+  const approve = (s) => {
+    setScope(s);
     setState("running");
     setTimeout(() => {
       setState(fails ? "failed" : "done");
@@ -44,6 +46,8 @@ function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, run
       failedLabel,
       resolvedBy: "you",
       resolvedAt: at,
+      scopes,
+      resolvedScope: scope,
       onApprove: approve,
       onReject: () => {
         setState("rejected");
@@ -60,7 +64,18 @@ function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, run
   );
 }
 function App() {
-  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(Proposal, { title: "Send campaign email", consequence: "214 Pro customers will receive \u201COctober product update\u201D.", approveLabel: "Send 214 emails", rejectLabel: "Don't send", runningLabel: "Sending\u2026", doneLabel: "Sent", failedLabel: "Couldn't send" }), /* @__PURE__ */ React.createElement(Proposal, { title: "Delete 3 stale branches", consequence: "release/2.3, spike/maps and fix/old-auth will be deleted from the repository.", approveLabel: "Delete 3 branches", rejectLabel: "Keep them", runningLabel: "Deleting\u2026", doneLabel: "Deleted", escalate: "hold" }), /* @__PURE__ */ React.createElement(Proposal, { title: "Archive the Atlas workspace", consequence: "12 people lose access; it can't be restored after 30 days.", approveLabel: "Archive workspace", rejectLabel: "Don't archive", runningLabel: "Archiving\u2026", failedLabel: "Couldn't archive", escalate: "dialog", fails: true }));
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(Proposal, { title: "Send campaign email", consequence: "214 Pro customers will receive \u201COctober product update\u201D.", approveLabel: "Send 214 emails", rejectLabel: "Don't send", runningLabel: "Sending\u2026", doneLabel: "Sent", failedLabel: "Couldn't send" }), /* @__PURE__ */ React.createElement(Proposal, { title: "Delete 3 stale branches", consequence: "release/2.3, spike/maps and fix/old-auth will be deleted from the repository.", approveLabel: "Delete 3 branches", rejectLabel: "Keep them", runningLabel: "Deleting\u2026", doneLabel: "Deleted", escalate: "hold" }), /* @__PURE__ */ React.createElement(Proposal, { title: "Archive the Atlas workspace", consequence: "12 people lose access; it can't be restored after 30 days.", approveLabel: "Archive workspace", rejectLabel: "Don't archive", runningLabel: "Archiving\u2026", failedLabel: "Couldn't archive", escalate: "dialog", fails: true }), /* @__PURE__ */ React.createElement(
+    Proposal,
+    {
+      title: "Run npm test",
+      consequence: "Runs the test suite in this workspace.",
+      approveLabel: "Run once",
+      rejectLabel: "Don't run",
+      runningLabel: "Running\u2026",
+      doneLabel: "Ran",
+      scopes: [{ value: "session", label: "Allow npm test for this session" }, { value: "always", label: "Always allow npm test", description: "Saved to this project\u2019s settings" }]
+    }
+  ));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

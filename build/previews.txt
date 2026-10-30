@@ -3225,7 +3225,7 @@ function App() {
   );
 }
 
-=== Trace | <!-- @dsCard group="Display" height=760 subtitle="The steps an agent takes: done in the record, running raised, planned imprinted" -->
+=== Trace | <!-- @dsCard group="Display" height=1180 subtitle="The steps an agent takes: done in the record, running raised, planned imprinted; subagents nest and run in parallel" -->
 --- css
 .tc { max-width: 620px; }
 --- jsx
@@ -3261,18 +3261,46 @@ function App() {
           </A.TraceStep>
         ))}
       </A.Trace>
+      <A.Trace aria-label="Agent run: compare billing providers">
+        <A.TraceStep title="Plan the comparison" status="done" duration={900} />
+        <A.TraceStep title="Research pricing pages" status="auto">
+          <A.TraceParallel label="Subagents">
+            <A.TraceStep title="Stripe" status="auto">
+              <A.Trace aria-label="Stripe subagent">
+                <A.TraceStep title="Open the pricing page" status="done" duration={1200} />
+                <A.TraceStep title="Extract the fees" status="done" duration={3400} />
+              </A.Trace>
+            </A.TraceStep>
+            <A.TraceStep title="Paddle" status="auto">
+              <A.Trace aria-label="Paddle subagent">
+                <A.TraceStep title="Open the pricing page" status="done" duration={1500} />
+                <A.TraceStep title="Extract the fees" status="running" />
+              </A.Trace>
+            </A.TraceStep>
+            <A.TraceStep title="Lemon Squeezy" status="failed" error="The pricing page returned 403." onRetry={() => {}} />
+          </A.TraceParallel>
+        </A.TraceStep>
+        <A.TraceStep title="Weigh the fees" status="running">
+          <A.TraceReasoning status="streaming">{'Stripe charges 2.9% + 30¢ per card payment. Paddle is a merchant of record, so its 5% + 50¢ includes sales tax handling, which'}</A.TraceReasoning>
+        </A.TraceStep>
+        <A.TraceStep title="Check the provider's notes" status="done" duration={2400}>
+          <A.TraceReasoning status="redacted" />
+        </A.TraceStep>
+        <A.TraceStep title="Write the comparison" status="planned" />
+      </A.Trace>
     </div>
   );
 }
 
-=== Confirmation | <!-- @dsCard group="Feedback" height=700 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
+=== Confirmation | <!-- @dsCard group="Feedback" height=900 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
 --- jsx
-function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails }) {
+function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails, scopes }) {
   const [state, setState] = React.useState('requested');
+  const [scope, setScope] = React.useState();
   const [at, setAt] = React.useState();
-  const approve = () => { setState('running'); setTimeout(() => { setState(fails ? 'failed' : 'done'); setAt(new Date()); }, 1400); };
+  const approve = (s) => { setScope(s); setState('running'); setTimeout(() => { setState(fails ? 'failed' : 'done'); setAt(new Date()); }, 1400); };
   return <A.Confirmation state={state} title={title} consequence={consequence} escalate={escalate} approveLabel={approveLabel} rejectLabel={rejectLabel}
-    runningLabel={runningLabel} doneLabel={doneLabel} failedLabel={failedLabel} resolvedBy="you" resolvedAt={at}
+    runningLabel={runningLabel} doneLabel={doneLabel} failedLabel={failedLabel} resolvedBy="you" resolvedAt={at} scopes={scopes} resolvedScope={scope}
     onApprove={approve} onReject={() => { setState('rejected'); setAt(new Date()); }} onRetry={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1000); }} />;
 }
 function App() {
@@ -3281,6 +3309,8 @@ function App() {
       <Proposal title="Send campaign email" consequence="214 Pro customers will receive “October product update”." approveLabel="Send 214 emails" rejectLabel="Don't send" runningLabel="Sending…" doneLabel="Sent" failedLabel="Couldn't send" />
       <Proposal title="Delete 3 stale branches" consequence="release/2.3, spike/maps and fix/old-auth will be deleted from the repository." approveLabel="Delete 3 branches" rejectLabel="Keep them" runningLabel="Deleting…" doneLabel="Deleted" escalate="hold" />
       <Proposal title="Archive the Atlas workspace" consequence="12 people lose access; it can't be restored after 30 days." approveLabel="Archive workspace" rejectLabel="Don't archive" runningLabel="Archiving…" failedLabel="Couldn't archive" escalate="dialog" fails />
+      <Proposal title="Run npm test" consequence="Runs the test suite in this workspace." approveLabel="Run once" rejectLabel="Don't run" runningLabel="Running…" doneLabel="Ran"
+        scopes={[{ value: 'session', label: 'Allow npm test for this session' }, { value: 'always', label: 'Always allow npm test', description: 'Saved to this project’s settings' }]} />
     </div>
   );
 }
@@ -3297,6 +3327,7 @@ function App() {
       { name: 'atlas-usage.png', type: 'image/svg+xml', url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='64'%3E%3Crect width='120' height='64' fill='%23e8edf5'/%3E%3Cpath d='M8 52 L32 36 L56 42 L80 20 L112 12' stroke='%233b6fd8' stroke-width='3' fill='none'/%3E%3C/svg%3E", onOpen: () => {} },
       { name: 'Atlas changelog.pdf', type: 'application/pdf', size: 482113, href: '#changelog' },
     ] },
+    { id: 'cp1', kind: 'checkpoint', label: 'Before the Atlas summary', at: '2026-10-30T14:14:00' },
     { id: 2, from: 'assistant', text: 'Atlas moved to the new permission model on 3 October, and its storage limit was raised to 2 TB. Three people joined: Maya, Theo and Ada.', status: 'complete' },
   ]);
   const [status, setStatus] = React.useState('ready');
@@ -3346,13 +3377,20 @@ function App() {
     stop();
     setTimeout(() => sendRef.current({ text: q.text }), 0);
   };
+  // Restoring a checkpoint sets the turns after it aside; returning brings them back.
+  const aside = React.useRef([]);
+  const restore = (id) => new Promise((done) => setTimeout(() => { setMsgs((ms) => { const i = ms.findIndex((m) => m.id === id); aside.current = ms.slice(i + 1); return ms.slice(0, i + 1); }); done(); }, 900));
+  const giveBack = () => { setMsgs((ms) => [...ms, ...aside.current]); aside.current = []; };
   const stop = () => { clearTimeout(timer.current); setStatus('ready'); setMsgs((ms) => ms.map((m) => (m.status === 'streaming' ? { ...m, status: 'stopped' } : m))); };
   sendRef.current = send;
   return (
     <div className="cv">
       <A.Conversation aria-label="Assistant">
         <A.ConversationContent>
-          {msgs.map((m) => (
+          {msgs.map((m) => m.kind === 'checkpoint' ? (
+            <A.ConversationCheckpoint key={m.id} label={m.label} at={m.at} onRestore={() => restore(m.id)} onReturn={giveBack}
+              consequence="The messages after this will be set aside. You can return to them." />
+          ) : (
             <A.Message key={m.id} from={m.from} status={m.status} edited={m.v > 0} onRetry={m.status === 'stopped' ? () => { setStatus('streaming'); stream(m.id); } : undefined}>
               {m.files && <A.MessageAttachments items={m.files} />}
               <A.MessageContent>{m.text}</A.MessageContent>
@@ -3387,6 +3425,108 @@ function App() {
     <div className="ic">
       <p>Annual plans can be refunded in full within 30 days<A.InlineCitation index={1} source={sources[0]} />. Monthly plans renew on the same day each month<A.InlineCitation index={2} source={sources[1]} />, and some customers report partial refunds after that<A.InlineCitation index={3} source={sources[2]} />.</p>
       <A.Sources items={sources} />
+    </div>
+  );
+}
+
+=== Question | <!-- @dsCard group="Feedback" height=900 subtitle="An agent asks before it carries on: raised until answered, then one line in the record" -->
+--- css
+.qs { display: flex; flex-direction: column; gap: 20px; max-width: 560px; }
+--- jsx
+function App() {
+  const [q, setQ] = React.useState({ state: 'asking' });
+  const [set, setSet] = React.useState({ state: 'asking' });
+  return (
+    <div className="qs">
+      <A.Question title="Which environment should I deploy to?" state={q.state} answer={q.answer} answeredAt={q.at} allowOther
+        answerLabel="Deploy" skipLabel="Let the assistant decide" onSkip={() => setQ({ state: 'expired' })}
+        onAnswer={(answer) => setQ({ state: 'answered', answer, at: Date.now() })}>
+        <A.QuestionOption value="staging" label="Staging" description="Resets nightly. Safe to try things." />
+        <A.QuestionOption value="production" label="Production" description="Customers will see it immediately." />
+      </A.Question>
+      <A.QuestionSet state={set.state} onAnswer={(answers) => setSet({ state: 'answered', answers })}>
+        <A.Question name="column" title="Keep the old status column, or drop it?" answer={set.answers?.column}>
+          <A.QuestionOption value="keep" label="Keep it" description="Writes go to both columns until you remove it." />
+          <A.QuestionOption value="drop" label="Drop it" description="The migration removes it after copying." />
+        </A.Question>
+        <A.Question name="notify" title="Who should hear about it?" multiple answer={set.answers?.notify}>
+          <A.QuestionOption value="eng" label="#eng-billing" />
+          <A.QuestionOption value="support" label="#support" />
+          <A.QuestionOption value="owner" label="The account owner" />
+        </A.Question>
+      </A.QuestionSet>
+      <A.Question title="Which layout should I use for the invoice?" state="answered" answer={{ values: ['compact'] }} answeredAt={Date.now() - 3 * 60000}>
+        <A.QuestionOption value="compact" label="Compact" />
+        <A.QuestionOption value="detailed" label="Detailed" />
+      </A.Question>
+    </div>
+  );
+}
+
+=== Terminal | <!-- @dsCard group="Display" height=760 subtitle="A command's output as it runs: a dashed rule while running, then its exit in words" -->
+--- css
+.tm { display: flex; flex-direction: column; gap: 16px; max-width: 680px; }
+--- jsx
+const E = String.fromCharCode(27);
+const testRun = [
+  { text: '> altitude@0.2.1 test\n> vitest run\n\n' },
+  { text: E + '[32m ✓' + E + '[0m src/format.test.ts ' + E + '[2m(12 tests)' + E + '[0m\n' },
+  { text: E + '[32m ✓' + E + '[0m src/tokens.test.ts ' + E + '[2m(31 tests)' + E + '[0m\n' },
+  { text: E + '[31m ✗' + E + '[0m src/billing.test.ts > refunds an annual plan\n' },
+  { text: '   AssertionError: expected 240 to equal 200\n', stream: 'stderr' },
+  { text: '\n' + E + '[1m Tests' + E + '[0m  ' + E + '[31m1 failed' + E + '[0m | ' + E + '[32m43 passed' + E + '[0m (44)\n' },
+];
+function App() {
+  const [n, setN] = React.useState(0);
+  const [stopped, setStopped] = React.useState(false);
+  React.useEffect(() => { if (stopped || n >= 30) return; const t = setTimeout(() => setN(n + 1), 140); return () => clearTimeout(t); }, [n, stopped]);
+  const lines = Array.from({ length: n }, (_, i) => `[migrate] applying 2026_10_${String(i + 1).padStart(2, '0')}_add_index.sql … ok\n`).join('');
+  return (
+    <div className="tm">
+      <A.Terminal command="npm test" output={testRun} status="exited" exitCode={1} duration={4200} />
+      <A.Terminal command="npm run migrate" output={lines} status={stopped ? 'stopped' : n >= 30 ? 'exited' : 'running'} exitCode={0} duration={n * 140}
+        onStop={() => setStopped(true)} stopOnEscape />
+    </div>
+  );
+}
+
+=== Suggestions | <!-- @dsCard group="Inputs" height=640 subtitle="Prompts to start from, or follow up with: small raised buttons that fill the composer or send" -->
+--- css
+.sg { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 32px; max-width: 900px; align-items: start; }
+.sg .lbl { margin: 0 0 10px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.sg .col { gap: 12px; }
+--- jsx
+function App() {
+  const [draft, setDraft] = React.useState('');
+  const [sent, setSent] = React.useState([]);
+  return (
+    <div className="sg">
+      <div className="col">
+        <p className="lbl">Starters in an empty conversation (fill the composer)</p>
+        <A.EmptyState title="Ask about this workspace" description="Pick a starting point, or write your own." size="sm">
+          <A.Suggestions aria-label="Start with" onChoose={setDraft}>
+            <A.Suggestion>Summarise last week's incidents</A.Suggestion>
+            <A.Suggestion>Draft a release note</A.Suggestion>
+            <A.Suggestion value="Which of my open pull requests are blocked, and by whom?">What's blocked?</A.Suggestion>
+          </A.Suggestions>
+        </A.EmptyState>
+        <A.PromptInput onSubmit={({ text }) => { setSent((s) => [...s, text]); setDraft(''); }} value={draft} onValueChange={setDraft}>
+          <A.PromptInputTextarea placeholder="Ask anything" />
+          <A.PromptInputToolbar><A.PromptInputSubmit /></A.PromptInputToolbar>
+        </A.PromptInput>
+      </div>
+      <div className="col">
+        <p className="lbl">Follow-ups under an answer (send at once)</p>
+        <A.Message from="assistant">
+          <A.MessageContent>Revenue grew 12% in Q3, led by the annual plan. Churn held at 2.1%.</A.MessageContent>
+          <A.Suggestions aria-label="Suggested follow-ups" mode="send" onChoose={(t) => setSent((s) => [...s, t])}>
+            <A.Suggestion>Compare with Q2</A.Suggestion>
+            <A.Suggestion>Make it shorter</A.Suggestion>
+            <A.Suggestion value="List the three biggest risks, with owners">Biggest risks</A.Suggestion>
+          </A.Suggestions>
+        </A.Message>
+        {sent.length > 0 && <p className="lbl">Sent: {sent[sent.length - 1]}</p>}
+      </div>
     </div>
   );
 }

@@ -15,6 +15,8 @@ Approve or reject an action an agent proposes, before anything happens: "Send 21
 
 **Props:** `state` (`'requested' | 'approved' | 'running' | 'done' | 'failed' | 'rejected' | 'expired'`); `title`; `consequence`; `details`; `approveLabel`, `rejectLabel`, `runningLabel`, `doneLabel`, `failedLabel`; `escalate`; `resolvedBy`, `resolvedAt`; `requestedBy`; `onApprove`, `onReject`, `onRetry`.
 
+**Scopes.** For an action that comes up again and again ("Run npm test"), give `scopes`: Approve becomes a SplitButton whose face approves once and whose menu, "More ways to approve", holds the wider scopes ("Allow npm test for this session", "Always allow npm test · Saved to this project's settings"). `onApprove` gets `'once'` or the scope's value; pass it back as `resolvedScope` and the resolved line says it: "Ran · allowed for this session by you". With `escalate`, scopes are ignored: an action that needs a hold or a dialog is never pre-approved.
+
 **You provide:** the state from your tool call, the consequence in words, and what approving and rejecting do.
 
 ```tsx
