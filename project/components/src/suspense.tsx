@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, riseDelay, useIsoLayoutEffect } from './core';
+import { cx, LoadingStyleContext, riseDelay, useBreath, useIsoLayoutEffect } from './core';
 
 /* ───────────────────────── Loading: imprints that come with the component ─────────────────────────
  *
@@ -112,12 +112,15 @@ export const useScopeWaiting = () => !!React.useContext(ScopeContext)?.waiting;
 
 /* ── RevealGroup: imprints that land together ── */
 
+type Release = (delay?: number) => void;
 class Group {
   waiting = new Set<object>();
-  held = new Map<object, () => void>();
+  held = new Map<object, Release>();
+  /** Breath: the group is one unit, so it takes one place in the attention budget and its parts follow 16ms apart. */
+  constructor(private unit = false) {}
   wait(id: object) { this.waiting.add(id); }
   /** Returns true when this was the last one: everything held is released together. */
-  land(id: object, release: () => void) {
+  land(id: object, release: Release) {
     this.waiting.delete(id);
     this.held.set(id, release);
     if (this.waiting.size) return false;
@@ -132,7 +135,8 @@ class Group {
   private flush() {
     const all = Array.from(this.held.values());
     this.held.clear();
-    all.forEach((f) => f());
+    const base = this.unit ? riseDelay() : 0;
+    all.forEach((f, i) => f(this.unit ? base + i * 16 : undefined));
   }
 }
 const GroupContext = React.createContext<Group | null>(null);
@@ -142,7 +146,8 @@ const GroupContext = React.createContext<Group | null>(null);
  * landed, then they all rise at once (four at a time, as always). Group things that load from the same place.
  */
 export function RevealGroup({ children }: { children?: React.ReactNode }) {
-  const group = React.useMemo(() => new Group(), []);
+  const unit = React.useContext(LoadingStyleContext) === 'breath';
+  const group = React.useMemo(() => new Group(unit), [unit]);
   return <GroupContext.Provider value={group}>{children}</GroupContext.Provider>;
 }
 
@@ -150,7 +155,10 @@ export function RevealGroup({ children }: { children?: React.ReactNode }) {
 
 /** How long an imprint waits before it shows (`dur-grace`): loads quicker than this show nothing and land without rising. */
 const GRACE = 300;
-type Box = { id: object; since: number | null };
+/** How long each landing runs, so the boundary can drop its phase after: the rise (dur-travel-3), breath's rise past and
+ * settle (dur-arrive), its fill past the ground (twice dur-travel-3) and a later arrival's plate (dur-plate). */
+const LAND = { rise: 320, arrive: 1140, fill: 480, plate: 640 };
+type Box = { id: object; since: number | null; shown: boolean };
 
 export interface AwaitProps {
   /** The imprint: the fallback while the children suspend. */
@@ -161,6 +169,17 @@ export interface AwaitProps {
   inline?: boolean;
   /** `false`: no boundary; the children suspend to yours. */
   enabled?: boolean;
+  /**
+   * Where the content rests once it lands, for `loading="breath"`. 'flush' (default): on the ground (text, a badge, a
+   * row); it fills past the ground and settles. 'raised': on its own surface at level 1 (a card); it rises a level past
+   * its rest and settles over dur-arrive.
+   */
+  settle?: 'flush' | 'raised';
+  /**
+   * Content arriving into a view that's already showing (Load more), for `loading="breath"`: flush content gets a
+   * plate that dissolves over dur-plate. A boundary that suspends again after it has landed is late without this.
+   */
+  late?: boolean;
   className?: string;
   children?: React.ReactNode;
 }
@@ -169,25 +188,26 @@ export interface AwaitProps {
  * A Suspense boundary whose fallback is an imprint, and whose content rises out of it. Every Suspense-native Altitude
  * component holds one; use it in your own components to give them the same behaviour.
  */
-export function Await({ imprint, shape = 'block', inline, enabled = true, className, children }: AwaitProps) {
+export function Await({ imprint, shape = 'block', inline, enabled = true, settle = 'flush', late, className, children }: AwaitProps) {
   const group = React.useContext(GroupContext);
-  const box = React.useRef<Box>({ id: {}, since: null });
+  const box = React.useRef<Box>({ id: {}, since: null, shown: false });
   React.useEffect(() => () => group?.leave(box.current.id), [group]);
   if (!enabled) return <>{children}</>;
   return (
     <React.Suspense fallback={<Imprint box={box} group={group} inline={inline}>{imprint}</Imprint>}>
-      <Landed box={box} group={group} shape={shape} inline={inline} className={className} imprint={imprint}>{children}</Landed>
+      <Landed box={box} group={group} shape={shape} inline={inline} settle={settle} late={late} className={className} imprint={imprint}>{children}</Landed>
     </React.Suspense>
   );
 }
 
 function Imprint({ box, group, inline, children }: { box: React.MutableRefObject<Box>; group: Group | null; inline?: boolean; children: React.ReactNode }) {
+  const breath = useBreath<HTMLSpanElement>();
   useIsoLayoutEffect(() => {
     if (box.current.since === null) box.current.since = performance.now();
     group?.wait(box.current.id);
   }, []);
   return (
-    <span className="alt-await-wait" data-inline={inline ? '' : undefined} aria-busy="true">
+    <span ref={breath} className="alt-await-wait" data-inline={inline ? '' : undefined} aria-busy="true">
       {children}
       <span className="alt-sr">Loading</span>
     </span>
@@ -195,11 +215,14 @@ function Imprint({ box, group, inline, children }: { box: React.MutableRefObject
 }
 
 type Phase = 'held' | 'reveal' | null;
-function Landed({ box, group, shape, inline, className, imprint, children }: {
-  box: React.MutableRefObject<Box>; group: Group | null; shape: AwaitProps['shape']; inline?: boolean; className?: string;
-  imprint: React.ReactNode; children: React.ReactNode;
+function Landed({ box, group, shape, inline, settle, late, className, imprint, children }: {
+  box: React.MutableRefObject<Box>; group: Group | null; shape: AwaitProps['shape']; inline?: boolean; settle: AwaitProps['settle'];
+  late?: boolean; className?: string; imprint: React.ReactNode; children: React.ReactNode;
 }) {
+  const breath = React.useContext(LoadingStyleContext) === 'breath';
+  const heldBreath = useBreath<HTMLSpanElement>();
   const [phase, setPhase] = React.useState<Phase>(null);
+  const [arrival, setArrival] = React.useState<'late' | undefined>(undefined);
   const [delay, setDelay] = React.useState(0);
   const [graceLeft, setGraceLeft] = React.useState(0);
   const done = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -208,15 +231,21 @@ function Landed({ box, group, shape, inline, className, imprint, children }: {
   useIsoLayoutEffect(() => {
     const since = box.current.since;
     box.current.since = null;
+    // Content that has been shown before and suspends again is arriving into a view that's already there.
+    const wasShown = box.current.shown;
+    box.current.shown = true;
     if (since === null) return;
-    const release = () => {
+    const release = (given?: number) => {
       clearTimeout(done.current);
       // The imprint never showed: the content simply appears, as if it had been there all along.
       if (performance.now() - since < GRACE) { setPhase(null); return; }
-      const d = riseDelay();
+      const d = given ?? riseDelay();
+      const isLate = late || wasShown;
       setDelay(d);
+      setArrival(isLate ? 'late' : undefined);
       setPhase('reveal');
-      done.current = setTimeout(() => setPhase(null), d + 320);
+      const run = !breath ? LAND.rise : settle === 'raised' ? LAND.arrive : isLate ? LAND.plate : LAND.fill;
+      done.current = setTimeout(() => setPhase(null), d + run);
     };
     if (group && !group.land(box.current.id, release)) {
       setGraceLeft(Math.max(0, GRACE - (performance.now() - since)));
@@ -226,10 +255,11 @@ function Landed({ box, group, shape, inline, className, imprint, children }: {
   React.useEffect(() => () => clearTimeout(done.current), []);
   return (
     <span className={cx('alt-await', className)} data-phase={phase ?? undefined} data-inline={inline ? '' : undefined} data-shape={shape}
+      data-rest={settle === 'raised' ? 'raised' : undefined} data-arrival={phase === 'reveal' ? arrival : undefined}
       aria-busy={phase === 'held' || undefined}
       style={phase ? { ['--alt-rise-delay' as string]: delay + 'ms', ['--alt-grace-left' as string]: graceLeft + 'ms' } : undefined}>
       {/* Held: the same imprint as before stays in place (the content is laid out, hidden, behind it, so it can be measured). */}
-      {phase === 'held' && <span className="alt-await-held" data-early={graceLeft > 0 ? '' : undefined} aria-hidden="true">{imprint}</span>}
+      {phase === 'held' && <span ref={heldBreath} className="alt-await-held" data-early={graceLeft > 0 ? '' : undefined} aria-hidden="true">{imprint}</span>}
       {phase === 'reveal' && shape !== 'none' && (
         <span className="alt-skeleton alt-await-imprint" data-shape={shape} aria-hidden="true" />
       )}

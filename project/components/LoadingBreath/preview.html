@@ -1,0 +1,66 @@
+<!-- @dsCard group="Patterns" height=700 subtitle="Experimental: imprints breathe while they wait, then rise out" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoadingBreath — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.envs { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.label { font: 500 13px/1 var(--font-sans); color: var(--ink-muted); }
+.feed { display: grid; border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--line); font: 400 14px/20px var(--font-sans); }
+.row b { font-weight: 500; }
+.row-imprint { display: block; height: 26px; margin: 12px 4px; border-radius: var(--radius-sm); }
+.bar { display: flex; gap: 10px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const later = (value, ms) => new Promise((r) => setTimeout(() => r(value), ms));
+function useLoaded(value, ms) {
+  const [data, setData] = React.useState(void 0);
+  React.useEffect(() => {
+    const t = setTimeout(() => setData(value), ms);
+    return () => clearTimeout(t);
+  }, []);
+  return data;
+}
+const Detail = ({ value }) => A.readPromised(value);
+function EnvCard({ env }) {
+  const e = A.readPromised(env);
+  return /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement("div", { className: "top" }, /* @__PURE__ */ React.createElement(A.CardTitle, null, e.name), /* @__PURE__ */ React.createElement(A.Badge, { tone: e.tone }, e.status))), /* @__PURE__ */ React.createElement(A.CardContent, { skeleton: { lines: 1 } }, /* @__PURE__ */ React.createElement(Detail, { value: e.commit })));
+}
+function Event({ event }) {
+  const [who, text] = A.readPromised(event);
+  return /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: who, size: 26 }), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, who), " ", text));
+}
+const EVENTS = [["Mara Osei", "promoted a41c9e2 to production"], ["Tom\xE1s Nieto", "started a deploy of c7d2f10 to staging"], ["Aiko Kato", "deploy of e09b3a4 failed at the build step"]];
+const OLDER = [["Priya Raman", "rolled back staging to 9f1e2b7"], ["Mara Osei", "added an environment variable to preview"]];
+function View() {
+  const [production] = React.useState(() => later({ name: "Production", tone: "positive", status: "Operational", commit: "a41c9e2 \xB7 Fix invoice rounding" }, 1300));
+  const status = useLoaded("Deploying", 900);
+  const [commit] = React.useState(() => later("c7d2f10 \xB7 Add bulk export to orders", 1700));
+  const [preview] = React.useState(() => later({ name: "Preview", tone: "critical", status: "Failed", commit: later("e09b3a4 \xB7 Try the new pricing table", 1500) }, 700));
+  const [feed] = React.useState(() => EVENTS.map((e) => later(e, 1500)));
+  const [older, setOlder] = React.useState([]);
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("span", { className: "label" }, "Environments"), /* @__PURE__ */ React.createElement("div", { className: "envs" }, /* @__PURE__ */ React.createElement(A.Await, { settle: "raised", imprint: /* @__PURE__ */ React.createElement(A.Skeleton, { height: 103, radius: "var(--radius-lg)" }) }, /* @__PURE__ */ React.createElement(EnvCard, { env: production })), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement("div", { className: "top" }, /* @__PURE__ */ React.createElement(A.CardTitle, null, "Staging"), /* @__PURE__ */ React.createElement(A.Badge, { tone: "caution" }, status))), /* @__PURE__ */ React.createElement(A.CardContent, { skeleton: { lines: 1 } }, /* @__PURE__ */ React.createElement(Detail, { value: commit }))), /* @__PURE__ */ React.createElement(A.Await, { settle: "raised", imprint: /* @__PURE__ */ React.createElement(A.Skeleton, { height: 103, radius: "var(--radius-lg)" }) }, /* @__PURE__ */ React.createElement(EnvCard, { env: preview }))), /* @__PURE__ */ React.createElement("span", { className: "label" }, "Recent activity"), /* @__PURE__ */ React.createElement("div", { className: "feed" }, /* @__PURE__ */ React.createElement(A.RevealGroup, null, feed.map((e, i) => /* @__PURE__ */ React.createElement(A.Await, { key: i, imprint: /* @__PURE__ */ React.createElement("span", { className: "alt-skeleton row-imprint" }) }, /* @__PURE__ */ React.createElement(Event, { event: e })))), older.map((e, i) => /* @__PURE__ */ React.createElement(A.Await, { key: "o" + i, late: true, imprint: /* @__PURE__ */ React.createElement("span", { className: "alt-skeleton row-imprint" }) }, /* @__PURE__ */ React.createElement(Event, { event: e })))), /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setOlder((o) => [...o, ...OLDER.map((e) => later(e, 1200))]), disabled: older.length > 0 }, "Load older events")));
+}
+function App() {
+  const [round, setRound] = React.useState(0);
+  return /* @__PURE__ */ React.createElement(A.AltitudeProvider, { loading: "breath" }, /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(View, { key: round }), /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => setRound((r) => r + 1) }, "Load the view again")), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Experimental (#343). Each imprint breathes in depth on one page clock, a slow swell down the view. Cards from one request rise a level past their rest and settle; a card's parts land together; rows fill past the ground; older events arrive on a plate.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
