@@ -22,6 +22,12 @@ export interface ScatterChartProps {
   size?: number;
   /** The readout. Default true. */
   tooltip?: boolean;
+  /**
+   * What the chart is about (#188): groups that keep their colours while the rest take data-context, or a test for
+   * the records that keep theirs (on a one-series chart, the categories the takeaway names). The author's statement of
+   * importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[] | ((d: ChartDatum) => boolean);
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit y to the matches. Default false: the axes hold. */
@@ -146,7 +152,7 @@ export function ScatterChart(props: ScatterChartProps) {
   // The ring that keeps overlapping dots apart: the plot's own colour, or 1px ink under contrast="more".
   const ring = forced ? { stroke: 'Canvas', strokeWidth: 4 } : more ? { stroke: 'var(--ink)', strokeWidth: 2 } : { stroke: 'var(--alt-chart-bg)', strokeWidth: 4 };
   const drawn = all.map(({ i, px, py, key }) => {
-    const d = data[i], e = encode(key);
+    const d = data[i], e = encode(key, d);
     const a = alpha(d, key);
     const dot = <ChartMarker key={i} className="alt-scatter-dot" data-series={key} shape={e.marker} x={px} y={py} size={sized(e.marker, size)} color={e.stroke} {...ring} paintOrder="stroke" opacity={a < 1 ? a : undefined} />;
     return hasRelevance ? <ChartRelevance key={i} miss={relevance(d) === 'miss'}>{dot}</ChartRelevance> : dot;
@@ -372,6 +378,7 @@ ScatterChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): 
     xDomain: raw ? niceDomain(raw.map((d) => d[p.x]).filter(num)) : undefined,
     summary, columns, rescale: p.rescale,
     relevance: p.relevance ? (d) => p.relevance!(src(d)) : undefined,
+    focus: typeof p.focus === 'function' ? (d) => (p.focus as (d: ChartDatum) => boolean)(src(d)) : p.focus && p.group ? p.focus.map((g) => GROUP + g) : p.focus,
     selected: p.selected ?? undefined,
     onSelect: p.onSelect ? (d) => p.onSelect!(d ? src(d) : null) : undefined,
     drill: p.drill ? (d) => p.drill!(src(d)) : undefined,

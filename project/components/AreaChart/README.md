@@ -26,6 +26,8 @@ A total over time and the parts that make it up (requests by region, storage by 
 
 **Props:** `data` and `x`; `window` and `onWindowChange`; `stack` (`true` or `'expand'`); `curve` (`'linear'` or `'monotone'`); `y={{ format }}`; `labels`; `tooltip`; `status` and `boundary`; and a `ChartTooltip` or `ChartLegend` as children.
 
+**Focus.** `focus={['team']}` keeps those bands' colours and draws the rest in `data-context`, their labels in `ink-muted`. The stack's order doesn't change. See [ChartContainer](../ChartContainer/README.md), "Focus".
+
 **You provide:** a `ChartContainer` whose `config` names each band in stacking order (the base first), the `data` in x order, and usually a `summary`.
 
 ```tsx

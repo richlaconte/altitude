@@ -161,6 +161,12 @@ jobs:
           node ../scripts/record-check.mjs react18-chart-status node checks/chart-status.mjs
           node ../scripts/record-check.mjs react18-chart-reference node checks/chart-reference.mjs
           node ../scripts/record-check.mjs react18-chart-takeaway node checks/chart-takeaway.mjs
+          node ../scripts/record-check.mjs react18-chart-axis-text node checks/chart-axis-text.mjs
+          node ../scripts/record-check.mjs react18-chart-banking node checks/chart-banking.mjs
+          node ../scripts/record-check.mjs react18-chart-focus node checks/chart-focus.mjs
+          node ../scripts/record-check.mjs react18-chart-compare node checks/chart-compare.mjs
+          node ../scripts/record-check.mjs react18-chart-pins node checks/chart-pins.mjs
+          node ../scripts/record-check.mjs react18-chart-since node checks/chart-since.mjs
           node ../scripts/record-check.mjs react18-chart-live node checks/chart-live.mjs
           node ../scripts/record-check.mjs react18-chart-filter node checks/chart-filter.mjs
           node ../scripts/record-check.mjs react18-chart-select node checks/chart-select.mjs
@@ -170,10 +176,11 @@ jobs:
           node ../scripts/record-check.mjs react18-bar-list node checks/bar-list.mjs
           node ../scripts/record-check.mjs react18-heatmap node checks/heatmap.mjs
           node ../scripts/record-check.mjs react18-scatter-chart node checks/scatter-chart.mjs
+          node ../scripts/record-check.mjs react18-dot-plot node checks/dot-plot.mjs
           node ../scripts/record-check.mjs react18-range-slider node checks/range-slider.mjs
           node ../scripts/record-check.mjs react18-chart-brush node checks/chart-brush.mjs
           node ../scripts/record-check.mjs chart-themes node checks/chart-themes.mjs
-          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,AreaChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,ChartStatus,ChartReference,ChartLive,ChartFilter,ChartSelect,ChartBrush,Sparkline,Stat,Meter,BarList daylight 960
+          DPR=2 FORCED=1 node shoot.mjs ChartContainer,ChartMotion,ChartPatterns,BarChart,LineChart,AreaChart,ChartTooltip,ChartLegend,ChartTable,ChartLoading,ChartStatus,ChartReference,ChartLive,ChartSince,ChartFilter,ChartSelect,ChartBrush,Sparkline,Stat,Meter,BarList daylight 960
           DPR=2 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight,nightfall,mesa,alpine 320
           DPR=2 FORCED=1 node shoot.mjs InlineEdit,Dialog,ActionsInPlace daylight 960
 

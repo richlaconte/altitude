@@ -28,6 +28,10 @@ Amounts compared across categories or periods: deploys per team, signups per mon
 
 The y axis always includes zero, whatever the container's `zero` says: a truncated bar axis isn't offered.
 
+**Focus.** `focus={['web']}` keeps those series' colours and draws the rest in `data-context`; on a one-series chart, `focus={(d) => d.team === 'Cedar' || d.team === 'Delta'}` picks out records instead, the categories the takeaway names. See [ChartContainer](../ChartContainer/README.md), "Focus".
+
+**Against the record before.** `compare={{ key: 'lastQuarter', label: 'Q2' }}` (a field on each record) or `compare={{ data: lastWeek, label: 'Last week' }}` (records matched by position, before any sort) draws the earlier value as a 2px `ink` tick across each bar, 4px past it on each side: Few's comparative measure. A value that fell leaves its tick past the bar's end, the drop visible as empty space. Grouped bars compare one `series` (default the first); a stack compares its total; shares (`stack="expand"`) don't compare. The readout, point names ("Up 11% from Q2"), the table ("Q2" and "vs Q2" columns) and the summary ("Against Q2: 3 rose, 1 fell.") say the difference, and earlier values join the axis.
+
 **You provide:** a `ChartContainer` with a `config` naming each series, the `data` and `x`, and usually a `summary`.
 
 ```tsx

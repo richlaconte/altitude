@@ -130,19 +130,24 @@ function bandScale(domain: string[], range: [number, number], padding: number): 
 /* ───────────────────────── text ───────────────────────── */
 
 const TICK_FONT = '500 12.5px "Instrument Sans", ui-sans-serif, system-ui, sans-serif';
+/** Axis text is a caption in weight 400 (#193): lighter than a label on a control, so it doesn't compete with the marks. */
+const AXIS_FONT = '400 13px "Instrument Sans", ui-sans-serif, system-ui, sans-serif';
 let measurer: CanvasRenderingContext2D | null | undefined;
 /** The width of a tick label: measured where there's a canvas, estimated otherwise (tabular figures are about 0.58em). */
-export function textWidth(s: string) {
+const measureIn = (font: string, s: string) => {
   if (measurer === undefined) measurer = typeof document !== 'undefined' ? document.createElement('canvas').getContext('2d') : null;
-  if (measurer) { measurer.font = TICK_FONT; return measurer.measureText(s).width; }
+  if (measurer) { measurer.font = font; return measurer.measureText(s).width; }
   return s.length * 7.3;
-}
+};
+export function textWidth(s: string) { return measureIn(TICK_FONT, s); }
+/** The width of axis text, in its own font. */
+const axisWidth = (s: string) => measureIn(AXIS_FONT, s);
 
 /** A label cut with an ellipsis to fit max px. The full text stays in the summary, the readout and the table. */
-export function fit(s: string, max: number) {
-  if (textWidth(s) <= max) return s;
+export function fit(s: string, max: number, measure: (s: string) => number = textWidth) {
+  if (measure(s) <= max) return s;
   let lo = 0, hi = s.length;
-  while (lo < hi) { const m = Math.ceil((lo + hi) / 2); if (textWidth(s.slice(0, m).trimEnd() + '…') <= max) lo = m; else hi = m - 1; }
+  while (lo < hi) { const m = Math.ceil((lo + hi) / 2); if (measure(s.slice(0, m).trimEnd() + '…') <= max) lo = m; else hi = m - 1; }
   return s.slice(0, lo).trimEnd() + '…';
 }
 
@@ -184,9 +189,10 @@ export interface ChartContextValue {
   setActive: (index: number | null) => void;
   /**
    * How to draw a series so it's told apart without colour: its fill (a hatch when patterns are on), stroke, dash and
-   * marker, fixed by its slot like its colour. Use these instead of `series.color` and every mode is handled.
+   * marker, fixed by its slot like its colour. Use these instead of `series.color` and every mode is handled. Pass the
+   * record for a mark that stands for one (a bar, a dot), so a record focus can set it in data-context.
    */
-  encode: (seriesKey: string) => ChartEncoding;
+  encode: (seriesKey: string, d?: ChartDatum) => ChartEncoding;
   /** Patterns are on: the `patterns` prop, forced colours or print. */
   patterns: boolean;
   /** Label series directly at their marks, not only in a legend: on under forced colours and in print. */
@@ -209,11 +215,15 @@ export interface ChartContextValue {
   hasRelevance: boolean;
   /** For lines and areas: the stretch of x each record owns (to the midpoints with its neighbours), and whether it's a miss. */
   relevanceRegions: Array<{ key: string; x0: number; x1: number; miss: boolean }>;
+  /** Changed since a snapshot (#191): a mark's old value where it changed (null if it didn't, or is new), or null without `since`. */
+  sinceOld: ((d: ChartDatum, seriesKey: string) => number | null) | null;
 }
 
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
 export interface ChartEncoding {
   slot: ChartSlot;
+  /** Outside the chart's focus (#188): drawn in data-context (GrayText under forced colours), its label in ink-muted. */
+  context: boolean;
   /** For bars and areas: the series colour, a hatch of it, or CanvasText under forced colours. */
   fill: string;
   /** For lines and outlines. */
@@ -309,6 +319,23 @@ export interface ChartInfo {
   yFormat?: (value: number) => string;
   /** Formats every value (axis, readout, names, summary) of a series that has no format of its own. */
   format?: (value: number) => string;
+  /**
+   * What the chart is about (#188): series keys that keep their colours while the rest take data-context, or a test
+   * for the records that keep theirs (bars, dots).
+   */
+  focus?: string[] | ((d: ChartDatum) => boolean);
+  /**
+   * Read against the record before (#189): the key holding each record's previous value, the series it's compared with
+   * (null: the stack's total), and the earlier period's name. Previous values join y and glide with the data.
+   */
+  compare?: { key: string; series: string | null; label: string };
+  /** Readings can be pinned to the plot (#190): true for two, or how many. */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled; and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
+  /** Bank the plot's proportions to the data (#194): the chart type asked for aspect="banked". */
+  aspect?: 'banked';
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
   right?: number;
   /** How the legend draws this chart's series: a block (bars, areas) or a short line (lines). */
@@ -366,7 +393,7 @@ export interface ChartInfo {
   /** Extra keys that glide with the values (a dot's x). */
   glide?: string[];
   /** The series, when they aren't the config's keys (a scatter's groups). The config then names the measures. */
-  series?: Array<{ key: string; label: string; color?: ChartSlot }>;
+  series?: Array<{ key: string; label: string; color?: ChartSlot; format?: (v: number) => string }>;
   /** Formats x values (ticks, the readout), when the chart knows x's format (a measure in the config). */
   xFormat?: (value: unknown) => string;
   /** The table view's columns, when a column per series isn't the shape of the data. */
@@ -467,7 +494,13 @@ ChartTooltip.chartTooltip = true;
 
 /* ───────────────────────── legend ───────────────────────── */
 
-export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; marker?: ChartMarkerShape; }
+export interface ChartLegendItem {
+  key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; marker?: ChartMarkerShape;
+  /** Outside the chart's focus (#188): its label recedes to ink-muted. */
+  context?: boolean;
+  /** In the chart's focus: said as "highlighted". */
+  highlighted?: boolean;
+}
 export interface ChartLegendContentProps {
   /** Let people hide and show series. Each key becomes a switch-like button in a toolbar. Default false: keys only name. */
   toggle?: boolean;
@@ -510,7 +543,7 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
   if (!toggle) {
     return (
       <div className="alt-chart-legend" role="list" aria-label={label}>
-        {items.map((i) => <span key={i.key} role="listitem" className="alt-legend-key"><Swatch item={i} swatch={swatch} /><span>{i.label}</span></span>)}
+        {items.map((i) => <span key={i.key} role="listitem" className="alt-legend-key" data-context={i.context ? '' : undefined}><Swatch item={i} swatch={swatch} /><span>{i.label}</span>{i.highlighted && <span className="alt-sr">, highlighted</span>}</span>)}
       </div>
     );
   }
@@ -524,7 +557,7 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
       {items.map((i, n) => {
         const last = !i.hidden && shown === 1;
         return (
-          <button key={i.key} ref={(el) => { refs.current[n] = el; }} type="button" className="alt-legend-key" tabIndex={n === focus ? 0 : -1}
+          <button key={i.key} ref={(el) => { refs.current[n] = el; }} type="button" className="alt-legend-key" data-context={i.context ? "" : undefined} tabIndex={n === focus ? 0 : -1}
             aria-pressed={!i.hidden} aria-disabled={last || undefined} aria-describedby={last ? `${id}-last` : undefined}
             onFocus={() => setFocus(n)}
             onClick={() => {
@@ -535,7 +568,7 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
             }}>
             {/* A switch's swatch is always a block: the series fill pours into the whole trench, as a Checkbox's accent does. */}
             <span className="alt-legend-swatch" data-shown={i.hidden ? undefined : ''}><Swatch item={i} swatch="rect" /></span>
-            <span>{i.label}</span>
+            <span>{i.label}</span>{i.highlighted && <span className="alt-sr">, highlighted</span>}
           </button>
         );
       })}
@@ -548,6 +581,45 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
 export function ChartLegend(_: { content?: React.ReactElement<ChartLegendContentProps> }) { return null; }
 ChartLegend.chartHtml = true;
 ChartLegend.chartLegend = true;
+
+/* ───────────────────────── read against the record before ───────────────────────── */
+
+/**
+ * The record before, to read each value against (#189): a field on the same record (`key`), or records matched by x
+ * position (`data`, for a shifted period on a time axis), named by `label` ("August", "Last week"). `series` is the
+ * one compared, by default the first; a stack is compared by its total.
+ */
+export interface ChartCompare { key?: string; data?: ChartDatum[]; label: string; series?: string }
+/** Where a matched earlier period's value is kept on each record. */
+export const COMPARE_KEY = '__compare';
+const compareCache = new WeakMap<ChartDatum[], WeakMap<ChartDatum[], Map<string, ChartDatum[]>>>();
+/**
+ * Each record with its earlier value under COMPARE_KEY: the sum of `keys` on the record at the same position in
+ * `before`. The same arrays give the same result, so it isn't mistaken for a change.
+ */
+export function withCompare(rows: ChartDatum[], before: ChartDatum[], keys: string[]): ChartDatum[] {
+  let a = compareCache.get(rows);
+  if (!a) compareCache.set(rows, (a = new WeakMap()));
+  let b = a.get(before);
+  if (!b) a.set(before, (b = new Map()));
+  const id = keys.join('|');
+  let out = b.get(id);
+  if (!out) {
+    out = rows.map((d, i) => {
+      const e = before[i], vs = e ? keys.map((k) => e[k]).filter((v): v is number => typeof v === 'number' && isFinite(v)) : [];
+      return { ...d, [COMPARE_KEY]: vs.length ? vs.reduce((t, v) => t + v, 0) : null };
+    });
+    b.set(id, out);
+  }
+  return out;
+}
+/** A change in words: "+10.6%", or the difference itself when the earlier value is zero. */
+export function changeWords(now: number, before: number, format: (v: number) => string) {
+  const diff = now - before;
+  if (before === 0) return diff === 0 ? 'no change' : `${diff > 0 ? '+' : '−'}${format(Math.abs(diff))}`;
+  const pct = (diff / Math.abs(before)) * 100;
+  return `${pct > 0 ? '+' : pct < 0 ? '−' : '±'}${Math.abs(pct).toFixed(Math.abs(pct) < 10 ? 1 : 0)}%`;
+}
 
 /* ───────────────────────── references and annotations ───────────────────────── */
 
@@ -612,7 +684,40 @@ type Layer = { frame: Frame; opacity: number };
 /** A reference laid out in a frame: its span on the value axis (from = to for a line) and where its label sits. */
 type RefGeo = { i: number; band: boolean; from: number; to: number; text: string; tone?: 'caution' | 'critical'; lx: number; ly: number; anchor: 'start' | 'end' };
 /** An annotation laid out in a frame: its x, its plate's left edge and width, and the row it stacks into. */
-type NoteGeo = { i: number; at: number; left: number; w: number; row: number };
+type NoteGeo = { i: number; at: number; left: number; w: number; row: number; pin?: number };
+/**
+ * Cleveland's banking to 45° (#194): the width ÷ height at which a line's segments average 45° of absolute orientation,
+ * found by bisection (orientation falls as the ratio grows), then held between 1 and 4 so a card is never a sliver or
+ * a tower. Steep segments bank wide and gentle ones tall. Each series is read in x order over the y domain; gaps break
+ * segments; flat data takes the tallest ratio, 1.
+ */
+function bankTo45(xs: number[], ys: Array<Array<number | null>>, yDomain: [number, number]): number {
+  const order = xs.map((x, i) => i).filter((i) => isFinite(xs[i])).sort((a, b) => xs[a] - xs[b]);
+  const xr = (xs[order[order.length - 1]] - xs[order[0]]) || 1, yr = (yDomain[1] - yDomain[0]) || 1;
+  const segs: Array<[number, number]> = [];
+  for (const s of ys) {
+    for (let k = 1; k < order.length; k++) {
+      const a = s[order[k - 1]], b = s[order[k]], dx = (xs[order[k]] - xs[order[k - 1]]) / xr;
+      if (a == null || b == null || !(dx > 0)) continue;
+      segs.push([dx, Math.abs(b - a) / yr]);
+    }
+  }
+  if (!segs.length || segs.every(([, dy]) => dy === 0)) return 1;
+  const mean = (r: number) => segs.reduce((t, [dx, dy]) => t + Math.atan(dy / (dx * r)), 0) / segs.length;
+  let lo = Math.log(1 / 256), hi = Math.log(256);
+  for (let n = 0; n < 50; n++) { const m = (lo + hi) / 2; if (mean(Math.exp(m)) > Math.PI / 4) lo = m; else hi = m; }
+  return Math.min(4, Math.max(1, Math.exp((lo + hi) / 2)));
+}
+/**
+ * The unit every axis label shares, as a prefix and a suffix ("$", " ms", "%"), so it can be said once. Only symbols
+ * and spaced words count: a compact "K" or "M" is part of the number, not a unit.
+ */
+function unitOf(words: string[]): [string, string] {
+  if (words.length < 2) return ['', ''];
+  const pre = /^[^\p{L}\d+\-−.,\s]*/u.exec(words[0])![0], suf = /(\s\D*|%)$/.exec(words[0])?.[0] ?? '';
+  const all = (f: (w: string) => boolean) => words.every(f);
+  return [pre && all((w) => w.startsWith(pre)) ? pre : '', suf && all((w) => w.endsWith(suf) && w.length > suf.length) ? suf : ''];
+}
 /** How a chart type's marks lie on the plot, for keeping words off them: lines, filled areas, or bars. */
 type MarkShape = { kind: 'line' | 'area' | 'bars'; stacked: boolean; shares: boolean };
 type PlotBox = { x0: number; x1: number; y0: number; y1: number };
@@ -823,8 +928,11 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   x?: string;
   /** How x is placed. Default: time for ISO dates, epoch numbers or Dates; linear for other numbers; band otherwise. */
   xScale?: 'band' | 'time' | 'linear';
-  /** Width ÷ height of the plot. Default 2, unless `height` is set. */
-  aspect?: number;
+  /**
+   * Width ÷ height of the plot. Default 2, unless `height` is set. 'banked' (#194): the line chart's segments set it,
+   * banked to an average of 45° so slopes read accurately, between 1 and 4 for the data area; the width is the card's.
+   */
+  aspect?: number | 'banked';
   /** The plot's height in px, instead of an aspect ratio. */
   height?: number;
   /** A visible name, inside the figure. Leave it out when a CardTitle names the chart, and pass `aria-labelledby`. */
@@ -850,6 +958,13 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   bandPadding?: number;
   /** Turns the axes off, for a chart that labels its marks directly. Gridlines and the ground line stay. */
   axes?: boolean;
+  /**
+   * Where the value axis's labels go (#193). 'gutter' (default): a column at the plot's left. 'inline': each label sits
+   * just above its gridline at the plot's left, on a halo, so the plot runs the full width; the top label carries the
+   * unit, a label that would cover a mark is left out, and the ground line goes unlabelled (it is zero). Vertical
+   * cartesian charts only.
+   */
+  yLabels?: 'gutter' | 'inline';
   /** The locale for numbers and dates. Default: the reader's. */
   locale?: string;
   /** The crosshair and readout. Default true; a chart type's `tooltip={false}` turns it off too. */
@@ -884,6 +999,13 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   live?: boolean;
   /** With `live`: a "Pause updates" switch in the frame, for WCAG 2.2.2 (Pause, Stop, Hide). */
   pausable?: boolean;
+  /**
+   * What changed since a snapshot (#191): the records as they were (`data`, matched by x or the chart's id) and when,
+   * in words (`label`: "since Tuesday 09:00"). A changed bar carries a tick at its old value, a changed line point a
+   * hollow ring; the frame says "3 changed since Tuesday 09:00" in a switch that filters to them; up to four changed
+   * marks get the afterglow on arrival. Storing what a person last saw is the application's.
+   */
+  since?: { data: ChartDatum[]; label: string };
   /** Updates are paused, controlled. Uncontrolled with `pausable`. */
   paused?: boolean;
   onPausedChange?: (paused: boolean) => void;
@@ -914,8 +1036,8 @@ const TOP_GAP = 8;
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
-  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
-  live = false, pausable = false, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
+  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -955,10 +1077,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const setHidden = (next: string[]) => { legendOpts.onHiddenChange?.(next); if (legendOpts.hidden === undefined) setHiddenOwn(next); };
   const shownConfig = hidden.length ? Object.fromEntries(Object.entries(config).filter(([k]) => !hidden.includes(k))) : config;
   const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(childProps, shownConfig) : {};
-  const TOP = TOP_GAP + (info.top ?? 0);
+  // Inline y labels (#193) sit above their gridlines, so the top one needs room above the plot.
+  const inlineY = yLabels === 'inline' && axes && !info.plot && info.layout !== 'horizontal';
+  const TOP = TOP_GAP + (info.top ?? 0) + (inlineY ? 14 : 0);
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   // A chart that draws its own plot: a grid of cells has no value axis to read a reference or an event against.
   const grid = info.plot === 'grid', xy = info.plot === 'xy';
+  // Focus (#188): the series or records the chart is about keep their colours; the rest are context.
+  const focusKeys = Array.isArray(info.focus) ? info.focus.map(String) : null;
+  const focusRec = typeof info.focus === 'function' ? info.focus : null;
+  const inContext = (key: string, d?: ChartDatum) => (focusKeys ? !focusKeys.includes(key) : focusRec && d ? !focusRec(d) : false);
   // How the marks lie, so reference labels keep off them (#184).
   const markKind = grid || xy ? null : info.imprint === 'area' ? 'area' : info.swatch === 'line' ? 'line' : info.swatch === 'rect' ? 'bars' : null;
   const marks: MarkShape | null = markKind && { kind: markKind, stacked: /stacked/i.test(info.kind ?? ''), shares: /shares/i.test(info.kind ?? '') };
@@ -976,9 +1104,31 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const drillCtx = useDrilldown();
   const interactive = !!(info.onSelect || info.drill);
   const sameX = (a: unknown, b: unknown) => String(a) === String(b) || (isTimeLike(a) && isTimeLike(b) && toTime(a) === toTime(b));
+  // Pinned readings (#190): a reading set down on the plot as a plate, at most pinMax, oldest first.
+  const pinMax = !grid && !xy && info.pinnable ? (info.pinnable === true ? 2 : Math.max(1, Math.floor(info.pinnable))) : 0;
+  const [pinsOwn, setPinsOwn] = React.useState<Array<string | number>>([]);
+  const pins = pinMax ? (info.pins ?? pinsOwn).filter((x) => data.some((d) => sameX(d[xKey], x))).slice(-pinMax) : [];
+  const setPins = (next: Array<string | number>) => { info.onPinsChange?.(next); if (info.pins === undefined) setPinsOwn(next); };
+  const [pinSaid, setPinSaid] = React.useState('');
   const hasSelection = !!info.onSelect && info.selected !== undefined && info.selected !== null;
-  const userRelevance = (d: ChartDatum): 'match' | 'miss' | undefined => { const v = info.relevance?.(d); return v === 'match' || v === 'miss' ? v : undefined; };
-  const filtered = !!info.relevance && data.some((d) => userRelevance(d) !== undefined);
+  // Changed since a snapshot (#191): records matched by the chart's id or by x; a new record counts as changed.
+  const sinceKey = (d: ChartDatum) => (info.id ? info.id(d) : isTimeLike(d[xKey]) ? String(toTime(d[xKey])) : String(d[xKey]));
+  const sinceMap = React.useMemo(() => (since ? new Map(since.data.map((d) => [sinceKey(d), d])) : null), [since?.data, xKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sinceSeries = (info.series ?? Object.keys(shownConfig).map((key) => ({ key }))).map((q) => q.key);
+  const isFiniteNum = (v: unknown): v is number => typeof v === 'number' && isFinite(v);
+  const sinceNew = (d: ChartDatum) => !!sinceMap && !sinceMap.has(sinceKey(d));
+  const sinceWas = (d: ChartDatum, k: string) => { const o = sinceMap?.get(sinceKey(d))?.[k]; return isFiniteNum(o) ? o : null; };
+  const changedAt = (d: ChartDatum, k: string) => !!sinceMap && isFiniteNum(d[k]) && (sinceNew(d) || (sinceWas(d, k) !== null && sinceWas(d, k) !== d[k]));
+  const changedRec = (d: ChartDatum) => sinceSeries.some((k) => changedAt(d, k));
+  const changedCount = sinceMap ? data.filter(changedRec).length : 0;
+  const [onlyChanged, setOnlyChanged] = React.useState(false);
+  const showOnlyChanged = onlyChanged && !!sinceMap && changedCount > 0;
+  const userRelevance = (d: ChartDatum): 'match' | 'miss' | undefined => {
+    // "Only what changed" recedes the rest where they stand, in the language of a filter.
+    if (showOnlyChanged) return changedRec(d) ? 'match' : 'miss';
+    const v = info.relevance?.(d); return v === 'match' || v === 'miss' ? v : undefined;
+  };
+  const filtered = (!!info.relevance || showOnlyChanged) && data.some((d) => userRelevance(d) !== undefined);
   const matchCount = filtered ? data.filter((d) => userRelevance(d) !== 'miss').length : 0;
   // A chart whose records have their own identity selects by it: the selected record, or its id.
   const selectedId = hasSelection && info.id ? (typeof info.selected === 'object' ? info.id(info.selected as ChartDatum) : String(info.selected)) : null;
@@ -1012,7 +1162,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const fmtY = yFormat ?? info.yFormat ?? series[0]?.format ?? ((v: number) => new Intl.NumberFormat(locale).format(v));
   const W = size?.w ?? 0, H = size?.h ?? 0;
   const horizontal = info.layout === 'horizontal' && kind === 'band';
-  const bottom = (axes && !grid ? 26 : 1) + (info.bottom ?? 0);
+  // Two pins say their difference in a strip under the x axis.
+  const bottom = (axes && !grid ? 26 : 1) + (info.bottom ?? 0) + (pins.length === 2 ? 24 : 0);
   const right = (info.right ?? 0) + (horizontal ? (axes ? 20 : 2) : kind === 'band' || !axes || grid ? 2 : 18);
 
   // The target frame: where the plot is going, independent of its width.
@@ -1021,10 +1172,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   else {
     // An uncertainty band counts toward the extent, so its edges are never cut off.
     const bandOn = bandInfo && series.some((s) => s.key === bandInfo!.series);
-    const extentKeys = [...series.map((s) => s.key), ...(bandOn ? [bandInfo!.low, bandInfo!.high] : [])];
+    const extentKeys = [...series.map((s) => s.key), ...(bandOn ? [bandInfo!.low, bandInfo!.high] : []), ...(info.compare ? [info.compare.key] : [])];
     // With rescale, y fits the matches; otherwise the axis holds, so every position survives the filter.
     const fit = info.rescale && filtered && matchCount ? data.filter((d) => relevanceOf(d) !== 'miss') : data;
     for (const d of fit) for (const k of extentKeys) { const v = d[k]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+    // A changed mark's old value joins y too, so its tick or ring is on the plot.
+    if (sinceMap) for (const d of data) for (const k of sinceSeries) { const v = changedAt(d, k) ? sinceWas(d, k) : null; if (v !== null) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
   }
   // A reference's own values count too, so a target above every value is still on the plot.
   for (const r of refs) for (const v of Array.isArray(r.y) ? r.y : [r.y]) if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
@@ -1033,7 +1186,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // All zero is real data: give it 0–1, so the ground line is the floor, not the middle of an invented range.
   if (lo === 0 && hi === 0) hi = 1;
   // Horizontal: categories take at most 40% of the width (longer names are cut with an ellipsis), values the rest.
-  const catWidth = horizontal && axes ? Math.min(Math.ceil(Math.max(0, ...[...new Set(data.map((d) => String(d[xKey])))].map((c) => textWidth(xFormat ? xFormat(c) : c)))) + 12, Math.round(W * 0.4)) : 0;
+  const catWidth = horizontal && axes ? Math.min(Math.ceil(Math.max(0, ...[...new Set(data.map((d) => String(d[xKey])))].map((c) => axisWidth(xFormat ? xFormat(c) : c)))) + 12, Math.round(W * 0.4)) : 0;
   const yCount = horizontal ? Math.max(2, Math.min(6, Math.round((W - catWidth - right) / 90))) : Math.max(3, Math.min(6, Math.round((H - TOP - bottom) / 56)));
   const ny = linearScale(yDomain ?? [lo, hi], [1, 0], yCount, !yDomain);
   const rowKey = (d: ChartDatum) => (info.id ? info.id(d) : String(kind === 'time' ? toTime(d[xKey]) : d[xKey]));
@@ -1046,14 +1199,23 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     ticks: ny.ticks.map((v) => ({ v, a: 1 })),
     band: unit ? new Map(cats.map((c) => [c, [unit(c), unit.bandwidth]])) : null,
     rowAlpha: new Map(), seriesAlpha: new Map(series.map((s) => [s.key, 1])),
-    left: grid ? info.left ?? 0 : !axes ? 0 : horizontal ? catWidth
-      : Math.ceil(Math.max(...ny.ticks.map((t) => textWidth(fmtY(t))), 0)) + 10,
-    extra: [...(bandInfo ? [bandInfo.low, bandInfo.high] : []), ...(info.glide ?? [])],
+    left: grid ? info.left ?? 0 : !axes || inlineY ? 0 : horizontal ? catWidth
+      : Math.ceil(Math.max(...ny.ticks.map((t) => axisWidth(fmtY(t))), 0)) + 10,
+    extra: [...(bandInfo ? [bandInfo.low, bandInfo.high] : []), ...(info.compare ? [info.compare.key] : []), ...(info.glide ?? [])],
     xDomain: kind === 'band' ? null : info.xDomain ?? (() => {
       const vs = data.map((d) => (kind === 'time' ? toTime(d[xKey]) : Number(d[xKey]))).filter((v) => isFinite(v));
       return vs.length ? [Math.min(...vs), Math.max(...vs)] as [number, number] : null;
     })(),
   };
+  // Banking (#194): the data area's width ÷ height that sets the segments at 45° on average. Read from the shown series
+  // over the y axis's domain, and kept while values glide: only new x values, which cross-fade as a new chart, change it.
+  const banked = (aspect === 'banked' || (aspect == null && info.aspect === 'banked')) && height == null;
+  const xSig = banked ? data.map((d) => String(d[xKey])).join('|') + '/' + series.map((s) => s.key).join('|') : '';
+  const bankRatio = React.useMemo(() => {
+    if (!banked) return null;
+    const xs = data.map((d, i) => (kind === 'time' ? toTime(d[xKey]) : kind === 'linear' ? Number(d[xKey]) : i));
+    return bankTo45(xs, series.map((s) => data.map((d) => (typeof d[s.key] === 'number' ? d[s.key] as number : null))), ny.domain);
+  }, [xSig]); // eslint-disable-line react-hooks/exhaustive-deps
   const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey, info.rescale ? `${lo}:${hi}` : '']); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef, live, info.motion);
 
@@ -1095,6 +1257,18 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     return () => window.clearTimeout(t);
   }, [glows]); // eslint-disable-line react-hooks/exhaustive-deps
   const captionDepth = useDepth({ settle: captionGlow || undefined });
+  // Changed since a snapshot (#191), on arrival: up to four changed marks take live's afterglow; more, and the
+  // "changed since" caption takes it instead. After that only the marks and the words remain.
+  const [sinceGlow, setSinceGlow] = React.useState(0);
+  React.useEffect(() => {
+    if (!sinceMap) return;
+    const changed = data.flatMap((d) => sinceSeries.filter((k) => changedAt(d, k)).map((k) => ({ key: rowKey(d), series: k })));
+    if (!changed.length) return;
+    if (changed.length > 4) { setSinceGlow((g) => g + 1); return; }
+    const now = Date.now(), gen = ++glowGen.current;
+    setGlows((g) => [...g, ...changed.map((c) => ({ ...c, gen, at: now, delay: riseDelay() }))]);
+  }, [sinceMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sinceDepth = useDepth({ settle: sinceGlow || undefined });
   const glowing = (key: string, series: string) => glows.some((g) => g.key === key && g.series === series);
   // Holding still: while the pointer or focus is in the plot, updates wait (the loading wrapper keeps the shown data).
   const holdPointer = React.useRef(false), holdFocus = React.useRef(false);
@@ -1136,14 +1310,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   }, []);
   const patterns = patternsProp || env.forced || env.print;
   const pid = id.replace(/[^\w-]/g, '');
-  const encode = (key: string): ChartEncoding => {
+  const encode = (key: string, d?: ChartDatum): ChartEncoding => {
     const s = allSeries.find((x) => x.key === key);
     const slot = s?.slot ?? 'data-other';
     const e = ENCODINGS[slot];
-    const color = env.forced ? 'CanvasText' : s?.color ?? 'var(--data-other)';
+    // Context (#188) is one shared neutral, flat: it isn't told apart, so it takes no hatch.
+    const context = inContext(key, d);
+    const color = context ? (env.forced ? 'GrayText' : 'var(--data-context)') : env.forced ? 'CanvasText' : s?.color ?? 'var(--data-other)';
     return {
-      slot, stroke: color, marker: e.marker,
-      fill: patterns && e.hatch ? `url(#${pid}-${slot})` : color,
+      slot, context, stroke: color, marker: e.marker,
+      fill: patterns && e.hatch && !context ? `url(#${pid}-${slot})` : color,
       dash: patterns ? e.dash : undefined,
       edge: env.forced ? 'CanvasText' : env.more ? 'var(--ink)' : undefined,
       pending: patterns && e.hatch ? `url(#${pid}-${slot})` : `url(#${pid}-${slot}-pending)`,
@@ -1164,6 +1340,39 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const shortDate = React.useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }), [locale]);
   const bandLabel = (v: unknown) => (xFormat ? xFormat(v) : datedBands ? shortDate.format(new Date(toTime(v))) : String(v));
   const formatX = xFormat ?? info.xFormat ?? (datedBands ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
+  // Pinned readings (#190), in words: the plate's short label, what's read aloud, and two pins' difference.
+  const pinRecord = (x: unknown) => data.find((d) => sameX(d[xKey], x));
+  const pinX = (x: unknown) => (kind === 'band' ? bandLabel(x) : kind === 'time' ? (intraday ? dateTime : shortDate).format(new Date(toTime(x))) : formatX(x));
+  const pinValues = (d: ChartDatum | undefined, spoken = false) => {
+    const shown = series.filter((q) => d && typeof d[q.key] === 'number' && isFinite(d[q.key] as number));
+    if (shown.length === 1) return spoken ? `${shown[0].format(d![shown[0].key] as number)} ${shown[0].label}` : shown[0].format(d![shown[0].key] as number);
+    return shown.map((q) => `${q.label} ${q.format(d![q.key] as number)}`).join(', ');
+  };
+  const pinLabel = (x: unknown) => `${pinX(x)} · ${pinValues(pinRecord(x))}`;
+  const pinDiff = (spoken: boolean, list = pins) => {
+    if (list.length !== 2) return '';
+    const [a, b] = [...list].sort((p, q) => data.findIndex((d) => sameX(d[xKey], p)) - data.findIndex((d) => sameX(d[xKey], q))).map(pinRecord);
+    if (!a || !b) return '';
+    const both = series.filter((q) => typeof a[q.key] === 'number' && typeof b[q.key] === 'number');
+    if (!both.length) return '';
+    const span = kind === 'time' ? (() => { const ms = toTime(b[xKey]) - toTime(a[xKey]), days = Math.round(ms / DAY); return days >= 1 ? `${days} ${days === 1 ? 'day' : 'days'}` : `${Math.round(ms / 36e5)} hours`; })() : '';
+    if (both.length === 1) {
+      const q = both[0], va = a[q.key] as number, vb = b[q.key] as number, w = changeWords(vb, va, q.format);
+      if (spoken) return va === vb ? `${formatX(b[xKey])} is the same as ${formatX(a[xKey])}.` : `${formatX(b[xKey])} is ${w.slice(1)} ${vb > va ? 'higher' : 'lower'} than ${formatX(a[xKey])}.`;
+      return span ? `${w} over ${span}` : `${w} from ${pinX(a[xKey])} to ${pinX(b[xKey])}`;
+    }
+    const parts = both.map((q) => `${q.label} ${changeWords(b[q.key] as number, a[q.key] as number, q.format)}`);
+    return spoken ? `From ${formatX(a[xKey])} to ${formatX(b[xKey])}: ${parts.join(', ')}.` : parts.join(' · ');
+  };
+  const pinAt = (d: ChartDatum) => {
+    if (!pinMax) return;
+    const x = d[xKey] as string | number;
+    if (pins.some((p) => sameX(p, x))) return;
+    const next = [...pins, x].slice(-pinMax);
+    setPins(next);
+    setPinSaid(`Pinned ${formatX(x)}: ${pinValues(d, true)}.${next.length === 2 ? ' ' + pinDiff(true, next) : ''}`);
+  };
+  const unpin = (x: unknown) => { const next = pins.filter((p) => !sameX(p, x)); setPins(next); setPinSaid(`Pin removed, ${formatX(x)}.`); };
 
   // The keyboard path (#63): the plot is one Tab stop holding three levels, summary → series → points. Enter goes
   // deeper and Escape comes back, as in Tree and Drilldown; a roving tabindex keeps one node in the tab order.
@@ -1173,7 +1382,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const navRefs = React.useRef(new Map<string, HTMLElement>());
   const wantFocus = React.useRef<string | null>(null);
   const navS = Math.min(nav.s, Math.max(0, series.length - 1)), navP = Math.min(nav.p, Math.max(0, data.length - 1));
-  const emphasis = navFocused && nav.level !== 'summary' && series.length > 1 && !info.flat ? series[navS]?.key ?? null : null;
+  // Focused series come first on the keyboard path (#188), as in the readout.
+  const navOrder = series.map((_, i) => i).sort((a, b) => +inContext(series[a].key) - +inContext(series[b].key) || a - b);
+  const emphasis = navFocused && nav.level !== 'summary' && series.length > 1 && !info.flat ? series[navOrder[navS]]?.key ?? null : null;
 
   /** A layer's scales, ticks and context, at the plot's size now. */
   const draw = (frame: Frame) => {
@@ -1225,10 +1436,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       const bw = (band.get(domain[0])?.[1] ?? 0) * along;
       x = Object.assign((v: string) => from + (band.get(String(v))?.[0] ?? 0) * along, { kind: 'band' as const, domain, range: [from, from + along] as [number, number], ticks: domain, bandwidth: bw, step: bw / (1 - bandPadding) }) as BandScale;
       if (axes && horizontal) {
-        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: fit(bandLabel(d), left - 12), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 }));
+        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: fit(bandLabel(d), left - 12, axisWidth), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 }));
       } else if (axes) {
         // Show every k-th label, k as small as lets each shown label clear its shown neighbours by 4px.
-        const ws = domain.map((d) => textWidth(bandLabel(d)));
+        const ws = domain.map((d) => axisWidth(bandLabel(d)));
         const step = Math.max(1, (x as BandScale).step);
         let every = 1;
         while (every < domain.length && ws.some((w, i) => i % every === 0 && i + every < ws.length && (w + ws[i + every]) / 2 + 4 > every * step)) every++;
@@ -1248,7 +1459,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       for (let max = Math.max(2, Math.floor(pw / 40)); max >= 2; max--) {
         t = timeScale(dom, [0, pw], max);
         const f = label(t.interval);
-        const at = t.scale.ticks.map((v) => t.scale(v)), ws = t.scale.ticks.map((v) => textWidth(f(v)));
+        const at = t.scale.ticks.map((v) => t.scale(v)), ws = t.scale.ticks.map((v) => axisWidth(f(v)));
         // The first label is set from its start when it sits at the edge, so it only needs to clear the next one.
         const fits = at.every((p, i) => i === 0 || p - at[i - 1] >= (i === 1 && at[0] < 24 ? ws[0] : ws[i - 1] / 2) + ws[i] / 2 + 8);
         if (fits) break;
@@ -1267,13 +1478,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const noteGeo: NoteGeo[] = [];
     if (!horizontal) {
       const rowsEnd: number[] = [];
-      notes.map((n, i) => ({ n, i, at: xOf({ [xKey]: n.x }) })).filter((g) => isFinite(g.at)).sort((p, q) => p.at - q.at).forEach(({ n, i, at }) => {
-        const w = Math.ceil(textWidth(n.label) * 0.96) + 18;
+      // Pinned readings (#190) are plates too, laid out with the annotations: a pin icon and a remove button beside the words.
+      const plates = [...notes.map((n, i) => ({ i, x: n.x as unknown, label: n.label, pin: undefined as number | undefined })),
+        ...pins.map((x, j) => ({ i: -1 - j, x: x as unknown, label: pinLabel(x), pin: j }))];
+      plates.map((n) => ({ n, at: xOf({ [xKey]: n.x }) })).filter((g) => isFinite(g.at)).sort((p, q) => p.at - q.at).forEach(({ n, at }) => {
+        const w = Math.ceil(textWidth(n.label) * 0.96) + 18 + (n.pin !== undefined ? 40 : 0);
         const left = Math.max(0, Math.min(pw - w, at - w / 2));
         let row = rowsEnd.findIndex((e) => e + 6 <= left);
         if (row < 0) { row = rowsEnd.length; rowsEnd.push(0); }
         rowsEnd[row] = left + w;
-        noteGeo.push({ i, at, left, w, row });
+        noteGeo.push({ i: n.i, at, left, w, row, pin: n.pin });
       });
       headY = Math.min(rowsEnd.length * 26, ph / 2);
       y.range = [ph, headY];
@@ -1306,7 +1520,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     }
     // Filter in place (#70): for lines and areas, the stretch of x each record owns, to the midpoints with its neighbours.
     const relevanceRegions: ChartContextValue['relevanceRegions'] = [];
-    if ((info.relevance || info.onSelect) && frame.kind !== 'band') {
+    if ((info.relevance || info.onSelect || sinceMap) && frame.kind !== 'band') {
       const xs = rows.map((d) => xOf(d));
       rows.forEach((d, i) => {
         // Edges on whole pixels, so neighbouring stretches meet without an anti-aliased seam.
@@ -1327,13 +1541,27 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         refGeo.push({ i, band: true, from: Math.min(p, q), to: Math.max(p, q), text, tone: r.tone, lx: 0, ly: 0, anchor: 'start' });
       } else refGeo.push({ i, band: false, from: y(v), to: y(v), text, tone: r.tone, lx: 0, ly: 0, anchor: 'end' });
     });
+    // Inline y labels (#193): each just above its gridline at the plot's left. One that would cover a mark is left out
+    // (its gridline stays), and the unit is said once, on the highest label shown. The ground line is zero, unlabelled.
+    const yInline: Array<{ v: number; at: number; a: number; text: string; box: PlotBox }> = [];
+    if (inlineY) {
+      const coverY = markCover(frame, marks, xKey, xOf, y, x, ground);
+      const ticks = frame.ticks.map((t) => ({ ...t, at: y(t.v) })).filter((t) => t.at >= -1 && t.at <= ph + 1 && !(Math.abs(t.at - ground) < 1 && d0 <= 0 && d1 >= 0)).sort((p, q) => p.at - q.at);
+      const words = ticks.map((t) => fmtY(t.v));
+      const [pre, suf] = unitOf(words);
+      ticks.forEach((t, i) => {
+        const box = { x0: 0, x1: axisWidth(words[i]), y0: t.at - 16, y1: t.at - 1 };
+        if (!coverY({ x0: box.x0, x1: box.x1 + 2, y0: box.y0, y1: box.y1 })) yInline.push({ v: t.v, at: t.at, a: t.a, text: words[i], box });
+      });
+      yInline.forEach((l, i) => { if (i > 0 && (pre || suf)) l.text = l.text.slice(pre.length, l.text.length - suf.length); });
+    }
     // Labels: a line's (and a thin band's) at an end of it, above or below; a tall band's inside it. Each takes the first
     // spot that covers no mark, no plate and no label already placed (#184); failing that, the first spot, stepped
     // down below whatever it would cover. Across a horizontal chart, labels sit in the headroom beside their line.
     if (horizontal) {
       for (const g of refGeo) { const a = across.get(g.i); if (a) { g.lx = a.lx; g.ly = a.ly; g.anchor = 'start'; } }
     } else {
-      const taken = noteGeo.map((n) => ({ x0: n.left - 4, x1: n.left + n.w + 4, y0: n.row * 26, y1: n.row * 26 + 22 }));
+      const taken = [...noteGeo.map((n) => ({ x0: n.left - 4, x1: n.left + n.w + 4, y0: n.row * 26, y1: n.row * 26 + 22 })), ...yInline.map((l) => ({ ...l.box, x1: l.box.x1 + 4 }))];
       type Box = { x0: number; x1: number; y0: number; y1: number };
       const hits = (a: Box, b: Box) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
       const covers = markCover(frame, marks, xKey, xOf, y, x, ground);
@@ -1381,12 +1609,59 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       setActive: (i) => show(i),
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
       status: statusOf, hasStatus: !!info.status, statusRanges: { record, pending },
-      relevance: relevanceOf, hasRelevance: !!info.relevance || !!info.onSelect, relevanceRegions,
+      relevance: relevanceOf, hasRelevance: !!info.relevance || !!info.onSelect || !!sinceMap, relevanceRegions,
+      sinceOld: sinceMap ? (d, k) => (changedAt(d, k) ? sinceWas(d, k) : null) : null,
     };
-    return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo };
+    return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo, yInline };
   };
 
-  const generated = info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf);
+  // Focus in words (#188): the generated summary starts with what's highlighted; a written one is followed by it.
+  const focusNames = focusKeys ? series.filter((q) => focusKeys.includes(q.key)).map((q) => q.label)
+    : focusRec ? data.filter((d) => focusRec(d)).map((d) => (info.label ? info.label(d) : formatX(d[xKey]))) : [];
+  const focusWords = focusNames.length ? `Highlighted: ${focusNames.length > 1 ? focusNames.slice(0, -1).join(', ') + ' and ' + focusNames[focusNames.length - 1] : focusNames[0]}.` : '';
+  // Read against the record before (#189): each record's value now and then, the change in words, and a count.
+  const cmp = info.compare;
+  const isVal = (v: unknown): v is number => typeof v === 'number' && isFinite(v);
+  const cmpNow = (d: ChartDatum): number | null => !cmp ? null : cmp.series === null
+    ? series.reduce((t, q) => t + (isVal(d[q.key]) ? (d[q.key] as number) : 0), 0) : isVal(d[cmp.series]) ? (d[cmp.series] as number) : null;
+  const cmpBefore = (d: ChartDatum): number | null => (cmp && isVal(d[cmp.key]) ? (d[cmp.key] as number) : null);
+  const cmpFmt = (cmp?.series ? allSeries.find((q) => q.key === cmp.series)?.format : series[0]?.format) ?? fmtY;
+  const cmpSentence = (d: ChartDatum) => {
+    const now = cmpNow(d), was = cmpBefore(d);
+    if (!cmp || now === null || was === null) return '';
+    return now === was ? `Same as ${cmp.label}.` : `${now > was ? 'Up' : 'Down'} ${changeWords(now, was, cmpFmt).slice(1)} from ${cmp.label}.`;
+  };
+  const cmpWords = (() => {
+    if (!cmp) return '';
+    const pairs = data.map((d) => [cmpNow(d), cmpBefore(d)]).filter(([a, b]) => a !== null && b !== null) as Array<[number, number]>;
+    if (!pairs.length) return '';
+    const up = pairs.filter(([a, b]) => a > b).length, down = pairs.filter(([a, b]) => a < b).length, same = pairs.length - up - down;
+    return ` Against ${cmp.label}: ${up} rose, ${down} fell${same ? `, ${same} held` : ''}.`;
+  })();
+  // Changed since a snapshot (#191), in words.
+  const sinceCap = since ? since.label.charAt(0).toUpperCase() + since.label.slice(1) : '';
+  const sinceSentence = (d: ChartDatum, k: string, fmt: (v: number) => string) => {
+    if (!since || !changedAt(d, k)) return '';
+    if (sinceNew(d)) return `New ${since.label}.`;
+    const was = sinceWas(d, k)!, now = d[k] as number;
+    return `${now > was ? 'Up' : 'Down'} ${changeWords(now, was, fmt).slice(1)} ${since.label}.`;
+  };
+  const sinceWords = (() => {
+    if (!since || !sinceMap) return '';
+    if (!changedCount) return ` Nothing changed ${since.label}.`;
+    // The largest relative change, to name first.
+    let top: { d: ChartDatum; k: string; r: number } | null = null;
+    for (const d of data) for (const k of sinceSeries) {
+      const was = changedAt(d, k) ? sinceWas(d, k) : null;
+      if (was === null || was === 0) continue;
+      const r = Math.abs(((d[k] as number) - was) / was);
+      if (!top || r > top.r) top = { d, k, r };
+    }
+    const fmt = (k: string) => allSeries.find((q) => q.key === k)?.format ?? fmtY;
+    const most = top ? `, most of all ${info.label ? info.label(top.d) : formatX(top.d[xKey])}${sinceSeries.length > 1 ? ` (${allSeries.find((q) => q.key === top!.k)?.label})` : ''}, ${sinceSentence(top.d, top.k, fmt(top.k)).replace(` ${since.label}.`, '').toLowerCase()}` : '';
+    return ` ${changedCount} of ${data.length} changed ${since.label}${most}.`;
+  })();
+  const generated = (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf)) + cmpWords + sinceWords;
   /** A record's short name: the chart type's, or its x. */
   const labelOf = (d: ChartDatum) => (info.label ? info.label(d) : formatX(d[xKey]));
   const selectedRecord = selecting ? data.find(isSelected) : undefined;
@@ -1403,9 +1678,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const labelledBy = (rest['aria-labelledby'] as string | undefined) ?? titleId;
   const vars: Record<string, string> = {};
   for (const s of series) vars[`--color-${cssKey(s.key)}`] = s.color;
-  if (aspect == null && height == null) aspect = 2;
-  // A chart whose content sets its height (a calendar's weeks) gets that height for the width it has.
-  const fitHeight = info.fitHeight && W && data.length ? Math.ceil(info.fitHeight(Math.max(0, W - (grid ? info.left ?? 0 : 0) - right))) + TOP + bottom : null;
+  if ((aspect == null || aspect === 'banked') && height == null) aspect = 2;
+  // A chart whose content sets its height (a calendar's weeks) gets that height for the width it has; so does a banked
+  // one, its data area at the banked ratio.
+  const fitHeight = info.fitHeight && W && data.length ? Math.ceil(info.fitHeight(Math.max(0, W - (grid ? info.left ?? 0 : 0) - right))) + TOP + bottom
+    : bankRatio && W ? Math.round(Math.max(0, W - Math.round(target.left) - right) / bankRatio) + TOP + bottom : null;
 
   // The table view (#64): the same records as a DataTable, x first, a column per series, a Total for stacks.
   const viewsOn = views !== undefined && views !== false;
@@ -1424,6 +1701,15 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       ...(total ? [{ key: '__total', header: 'Total', align: 'end' as const, cell: (d: ChartDatum) => allSeries[0].format(sum(d)), sortValue: sum }] : []),
       ...(bandInfo ? [{ key: '__band', header: bandInfo.label, align: 'end' as const,
         cell: (d: ChartDatum) => { const b = bandInfo!, f = allSeries.find((s) => s.key === b.series)?.format ?? fmtY; return isNum(d[b.low]) && isNum(d[b.high]) ? `${f(d[b.low] as number)}–${f(d[b.high] as number)}` : '—'; } }] : []),
+      // Changed since a snapshot (#191): a column of changes per series.
+      ...(sinceMap && since ? allSeries.map((q) => ({ key: `__since:${q.key}`, header: allSeries.length > 1 ? `${q.label}, ${since.label}` : sinceCap, align: 'end' as const,
+        cell: (d: ChartDatum) => (!isFiniteNum(d[q.key]) ? '—' : sinceNew(d) ? 'New' : !changedAt(d, q.key) ? 'No change' : changeWords(d[q.key] as number, sinceWas(d, q.key)!, q.format)) })) : []),
+      // The record before (#189): its value, and the change against it.
+      ...(cmp ? [
+        { key: '__cmp', header: cmp.label, align: 'end' as const, cell: (d: ChartDatum) => { const w = cmpBefore(d); return w === null ? '—' : cmpFmt(w); }, sortValue: (d: ChartDatum) => cmpBefore(d) ?? -Infinity },
+        { key: '__cmpd', header: `vs ${cmp.label}`, align: 'end' as const, cell: (d: ChartDatum) => { const n = cmpNow(d), w = cmpBefore(d); return n === null || w === null ? '—' : changeWords(n, w, cmpFmt); },
+          sortValue: (d: ChartDatum) => { const n = cmpNow(d), w = cmpBefore(d); return n === null || w === null || w === 0 ? -Infinity : (n - w) / Math.abs(w); } },
+      ] : []),
       // Data that isn't yet the record says so in its own column, so the table never passes it off as settled.
       ...(info.status && data.some((d) => statusOf(d)) ? [{ key: '__status', header: 'Status', cell: (d: ChartDatum) => { const st = statusOf(d); return st ? CHART_STATUS_WORDS[st] : 'Actual'; } }] : []),
     ];
@@ -1455,7 +1741,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // References and annotations are read after the summary, written or generated: "1 annotation: v2 launch, Mar 4, 2026."
   const overlayWords = (() => {
     if (!data.length) return '';
-    let out = '';
+    let out = summary && focusWords ? ` ${focusWords}` : '';
     const shown = top.refGeo;
     if (shown.length) {
       const items = shown.map((g) => {
@@ -1467,6 +1753,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (notes.length) out += ` ${notes.length} ${notes.length === 1 ? 'annotation' : 'annotations'}: ${notes.map((n) => `${n.label}, ${formatX(n.x)}`).join('; ')}.`;
     if (selecting) out += ` Filtered to ${selectedWords}.`;
     else if (filtered) out += ` ${countText}.`;
+    if (pins.length) out += ` Pinned: ${pins.map((x) => `${formatX(x)}, ${pinValues(pinRecord(x), true)}`).join('; ')}.`;
     return out;
   })();
 
@@ -1497,7 +1784,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     top.ctx.data.forEach((d, i) => { const dd = Math.abs(top.ctx.xOf(d) - along); if (dd < bd) { bd = dd; best = i; } });
     return best < 0 ? null : best;
   };
-  const holdTouch = React.useRef<{ timer: number; x: number; y: number; id: number } | null>(null);
+  const holdTouch = React.useRef<{ timer: number; x: number; y: number; id: number; open?: boolean; t?: number } | null>(null);
   const onPointerMove = (e: React.PointerEvent) => {
     if (!tooltipOn) return;
     if (e.pointerType !== 'touch') { show(nearest(e.clientX, e.clientY)); return; }
@@ -1508,7 +1795,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const onPointerDown = (e: React.PointerEvent) => {
     if (!tooltipOn || e.pointerType !== 'touch') return;
     const el = e.currentTarget as HTMLElement, id = e.pointerId, x = e.clientX, y = e.clientY;
-    holdTouch.current = { x, y, id, timer: window.setTimeout(() => {
+    const open = sticky.current, t = Date.now();
+    holdTouch.current = { x, y, id, open, t, timer: window.setTimeout(() => {
       // Press and hold shows the readout; dragging then scrubs along x; lifting leaves it until a tap elsewhere.
       sticky.current = true;
       hold('pointer', true);
@@ -1521,12 +1809,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (h) { window.clearTimeout(h.timer); if (!sticky.current) holdTouch.current = null; }
     // A tap (released before the hold that shows the readout) selects or drills, where marks act.
     if (interactive && e.pointerType === 'touch' && h && !sticky.current) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) activate(d); }
+    // With the touch readout open, a quick tap on the plot pins the reading (#190).
+    else if (!interactive && pinMax && e.pointerType === 'touch' && h?.open && Date.now() - (h.t ?? 0) < 250 && Math.hypot(e.clientX - h.x, e.clientY - h.y) < 8) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); }
   };
   /** The record a shown mark stands for, by its key: the shown rows glide, but what's chosen is the record itself. */
   const recordAt = (i: number) => { const shown = top.ctx.data[i]; if (!shown) return null; const k = rowKey(shown); return data.find((d) => rowKey(d) === k) ?? null; };
   const onClick = (e: React.MouseEvent) => {
-    if (!interactive || (e.target as HTMLElement).closest('button, a, .alt-chart-note')) return;
+    if ((e.target as HTMLElement).closest('button, a, .alt-chart-note')) return;
     if ((e.nativeEvent as PointerEvent).pointerType === 'touch') return;
+    // Where a click doesn't select or drill, it pins the reading under the pointer (#190).
+    if (!interactive) { if (pinMax && tooltipOn) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); } return; }
     const i = nearest(e.clientX, e.clientY);
     const d = i === null ? null : recordAt(i);
     if (d) activate(d);
@@ -1576,11 +1868,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const v = d[s.key];
     const st = statusOf(d);
     let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}${st ? `, ${CHART_STATUS_WORDS[st].toLowerCase()}` : ''}.`;
-    if (glowing(rowKey(d), s.key)) out += ' Changed.';
+    // A mark that glows because it changed since a snapshot says how, below, rather than just "Changed."
+    if (glowing(rowKey(d), s.key) && !sinceSentence(d, s.key, s.format)) out += ' Changed.';
     if (relevanceOf(d) === 'miss' && !selecting) out += ' Not matching.';
     if (bandInfo && bandInfo.series === s.key && num(d[bandInfo.low]) && num(d[bandInfo.high])) {
       out += ` ${bandInfo.label} ${s.format(d[bandInfo.low] as number)} to ${s.format(d[bandInfo.high] as number)}.`;
     }
+    if (cmp && cmp.series === s.key && cmpSentence(d)) out += ` ${cmpSentence(d)}`;
+    if (sinceSentence(d, s.key, s.format)) out += ` ${sinceSentence(d, s.key, s.format)}`;
     if (num(v) && kind !== 'band' && pi > 0) {
       const prev = data[pi - 1], pv = prev[s.key];
       if (num(pv)) {
@@ -1593,6 +1888,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (stacked) {
       const sum = series.reduce((t, x) => t + (num(d[x.key]) ? (d[x.key] as number) : 0), 0);
       out += info.share && num(v) && sum > 0 ? ` ${Math.round((v / sum) * 100)}% of ${s.format(sum)}.` : ` Total ${s.format(sum)}.`;
+      if (cmp && cmp.series === null && cmpSentence(d)) out += ` Total ${cmpSentence(d).charAt(0).toLowerCase()}${cmpSentence(d).slice(1)}`;
     }
     return `${out} ${pi + 1} of ${data.length}.`;
   };
@@ -1602,8 +1898,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     let next: Nav | null = null;
     // The chart type may move the keyboard itself: a grid by row and column.
     const moved = at.level === 'points' && childType?.chartMove && /^(Arrow|Home$|End$|Page)/.test(e.key) ? childType.chartMove(childProps, top.ctx, at.p, e) : null;
-    // Escape clears a selection first, then goes back up a level.
+    // Escape clears the last pin, then a selection, then goes back up a level. P pins the reading at the point (#190).
+    if (e.key === 'Escape' && pins.length) { e.preventDefault(); e.stopPropagation(); unpin(pins[pins.length - 1]); return; }
     if (e.key === 'Escape' && selecting) { e.preventDefault(); e.stopPropagation(); info.onSelect?.(null); return; }
+    if ((e.key === 'p' || e.key === 'P') && pinMax && at.level === 'points' && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); const d = recordAt(at.p); if (d) pinAt(d); return; }
     if (at.level === 'summary') {
       // Into the records at the chart type's first (Ctrl+Home): the leftmost dot, the grid's first cell.
       const first = single && childType?.chartMove ? childType.chartMove(childProps, top.ctx, 0, { key: 'Home', ctrlKey: true, metaKey: false } as React.KeyboardEvent) ?? 0 : 0;
@@ -1646,10 +1944,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         aria-label={`${summaryText} Press Enter to explore ${single ? 'the data' : 'the series'}.`} />;
     }
     if (nav.level === 'series') {
-      return series.map((s, i) => <div {...common(`s${i}`, i === navS)} className="alt-chart-node" data-level="series" aria-roledescription="series" style={plotBox}
-        aria-label={`${seriesName(i)} ${i + 1} of ${series.length}.`} />);
+      return navOrder.map((si, i) => <div {...common(`s${i}`, i === navS)} className="alt-chart-node" data-level="series" aria-roledescription="series" style={plotBox}
+        aria-label={`${seriesName(si)} ${i + 1} of ${series.length}.`} />);
     }
-    const s = series[navS];
+    const s = series[navOrder[navS]];
     return data.map((d, i) => {
       const shown = top.ctx.data[i] ?? d;
       const v = shown[s.key];
@@ -1658,7 +1956,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       const box = childType?.chartBox?.(childProps, top.ctx, shown);
       return <div {...common(`p${navS}-${i}`, i === navP)} className="alt-chart-node" data-level="point" data-shape={box ? 'cell' : undefined} aria-roledescription={grid ? 'cell' : 'data point'}
         aria-pressed={info.onSelect && !info.drill ? isSelected(d) : undefined} aria-haspopup={info.drill ? 'true' : undefined}
-        style={box ? { left: top.left + box[0], top: TOP + box[1], width: box[2], height: box[3] } : { left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navS, i) + (interactive ? ` Press Enter to ${info.drill ? 'open it' : isSelected(d) ? 'clear the filter' : 'filter to it'}.` : '')} />;
+        style={box ? { left: top.left + box[0], top: TOP + box[1], width: box[2], height: box[3] } : { left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navOrder[navS], i) + (interactive ? ` Press Enter to ${info.drill ? 'open it' : isSelected(d) ? 'clear the filter' : 'filter to it'}.` : '')} />;
     });
   })();
 
@@ -1675,7 +1973,21 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         if (!b || b.series !== s.key || !num(d[b.low]) || !num(d[b.high])) return [item];
         // The uncertainty band's row: its low and high, named by what the band is ("Range 10th–90th percentile").
         return [item, { key: `${s.key}-range`, label: b.label, value: d[b.high] as number, text: `${top.ctx.format(s.key, d[b.low] as number)}–${top.ctx.format(s.key, d[b.high] as number)}`, color: e.stroke, range: true }];
-      });
+      })
+      // Focused series first (#188).
+      .sort((a, b) => +inContext(a.key.replace(/-range$/, '')) - +inContext(b.key.replace(/-range$/, '')));
+    // Changed since a snapshot (#191): each changed series' old value and the change.
+    if (!own && sinceMap) for (const q of top.ctx.series) {
+      if (!changedAt(d, q.key)) continue;
+      const was = sinceWas(d, q.key);
+      payload.push({ key: `__since:${q.key}`, label: top.ctx.series.length > 1 ? `${q.label}, ${since!.label}` : sinceCap, value: was ?? 0,
+        text: sinceNew(d) || was === null ? 'New' : `${q.format(was)} · ${changeWords(d[q.key] as number, was, q.format)}`, color: 'var(--ink-muted)' });
+    }
+    // The record before (#189): its value and the change, after the series.
+    const cmpNowV = cmpNow(d), cmpWas = cmpBefore(d);
+    if (!own && cmp && cmpNowV !== null && cmpWas !== null) {
+      payload.push({ key: COMPARE_KEY, label: cmp.label, value: cmpWas, text: `${cmpFmt(cmpWas)} · ${changeWords(cmpNowV, cmpWas, cmpFmt)}`, color: 'var(--ink-muted)' });
+    }
     const at = top.ctx.xOf(d);
     const style: React.CSSProperties = {};
     let side: string;
@@ -1690,7 +2002,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     return (
       <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
         {React.cloneElement(content, { label: own ? own.label : d[xKey], payload, formatX: own ? String : formatX, note: (() => { const st = statusOf(d); const words = [st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' && !selecting ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })(),
-          action: interactive ? actionWord(d) : undefined })}
+          action: [interactive ? actionWord(d) : '', !pinMax ? '' : pins.some((p) => sameX(p, d[xKey])) ? 'Pinned' : navFocused ? 'P to pin' : interactive ? '' : sticky.current ? 'Tap to pin' : 'Click to pin'].filter(Boolean).join(' · ') || undefined })}
       </div>
     );
   })();
@@ -1730,7 +2042,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                 </defs>
               )}
               {layers.map(({ frame, opacity }, i) => {
-                const { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo } = i === layers.length - 1 ? top : draw(frame);
+                const { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo, yInline } = i === layers.length - 1 ? top : draw(frame);
                 return (
                   <g key={i} transform={`translate(${left},${TOP})`} opacity={opacity < 1 ? opacity : undefined}>
                     <g className="alt-chart-grid">
@@ -1758,6 +2070,19 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                     {boundaryAt !== null && info.boundary !== false && (() => {
                       const at = Math.round(boundaryAt) + 0.5;
                       return <g className="alt-chart-boundary">{horizontal ? <line x1={0} x2={pw} y1={at} y2={at} /> : <line x1={at} x2={at} y1={0} y2={ph} />}</g>;
+                    })()}
+                    {/* Two pins (#190): their difference under the x axis, between them, on a 1px line-control bracket. */}
+                    {i === layers.length - 1 && pins.length === 2 && !horizontal && (() => {
+                      const xs = pins.map((p) => { const d = pinRecord(p); return d ? ctx.xOf(d) : NaN; }).filter(isFinite).sort((p, q) => p - q);
+                      if (xs.length !== 2) return null;
+                      const [a, b] = xs.map((v) => Math.round(v) + 0.5), yb = ph + 30, words = pinDiff(false), w = textWidth(words);
+                      const cx = Math.max(w / 2, Math.min(pw - w / 2, (a + b) / 2));
+                      return (
+                        <g className="alt-chart-pins-strip" aria-hidden="true">
+                          <path d={`M${a},${yb - 4}V${yb}H${b}V${yb - 4}`} fill="none" />
+                          <text x={cx} y={yb + 15} textAnchor="middle">{words}</text>
+                        </g>
+                      );
                     })()}
                     {live && <defs><clipPath id={`${pid}-plot-${i}`}><rect x={-3} y={-TOP} width={pw + 9 + right} height={ph + TOP + 6} /></clipPath></defs>}
                     <g className="alt-chart-marks" clipPath={live ? `url(#${pid}-plot-${i})` : undefined}><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
@@ -1837,12 +2162,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                     )}
                     {axes && !horizontal && !grid && (
                       <>
-                        <g className="alt-chart-axis" data-axis="y">
-                          {frame.ticks.map((t) => {
-                            const at = ctx.y(t.v);
-                            return at >= -1 && at <= ph + 1 ? <text key={t.v} x={-10} y={at} dy="0.32em" textAnchor="end" opacity={t.a < 1 ? t.a : undefined}>{fmtY(t.v)}</text> : null;
-                          })}
-                        </g>
+                        {inlineY
+                          ? <g className="alt-chart-axis" data-axis="y" data-inline="">
+                            {yInline.map((t) => <text key={t.v} x={0} y={t.at - 4} opacity={t.a < 1 ? t.a : undefined}>{t.text}</text>)}
+                          </g>
+                          : <g className="alt-chart-axis" data-axis="y">
+                            {frame.ticks.map((t) => {
+                              const at = ctx.y(t.v);
+                              return at >= -1 && at <= ph + 1 ? <text key={t.v} x={-10} y={at} dy="0.32em" textAnchor="end" opacity={t.a < 1 ? t.a : undefined}>{fmtY(t.v)}</text> : null;
+                            })}
+                          </g>}
                         <g className="alt-chart-axis" data-axis="x">
                           {xTicks.map((t, j) => (
                             <text key={j} x={t.at} y={ph + 18} opacity={t.a < 1 ? t.a : undefined}
@@ -1857,8 +2186,19 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
             </svg>
           )}
           {W > 0 && data.length > 0 && top.noteGeo.map((g) => {
-            const n = notes[g.i];
             const style: React.CSSProperties = { left: top.left + g.left, top: TOP + g.row * 26, minWidth: g.w };
+            // A reading set down (#190): a plate on the ground with a pin, its words, and a ghost button that removes it.
+            if (g.pin !== undefined) {
+              const x = pins[g.pin], d = pinRecord(x);
+              return (
+                <span key={`pin-${String(x)}`} className="alt-badge alt-chart-note" data-variant="plate" data-pin="" style={style} role="group" aria-label={`Pinned ${formatX(x)}: ${pinValues(d, true)}`}>
+                  <Icons.Pin size={13} className="alt-chart-pin-icon" />
+                  <span aria-hidden="true">{pinLabel(x)}</span>
+                  <button type="button" className="alt-chart-pin-remove" aria-label={`Remove pin, ${formatX(x)}`} onClick={() => unpin(x)}><Icons.X size={12} /></button>
+                </span>
+              );
+            }
+            const n = notes[g.i];
             return n.onSelect
               ? <button key={g.i} type="button" className="alt-badge alt-chart-note" data-variant="plate" style={style} onClick={n.onSelect} aria-label={`${n.label}, ${formatX(n.x)}`}>{n.label}</button>
               : <span key={g.i} className="alt-badge alt-chart-note" data-variant="plate" style={style} aria-hidden="true">{n.label}</span>;
@@ -1871,7 +2211,13 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         </div>)}
         {brushWiring && React.cloneElement(brushEl!, { __brush: brushWiring })}
         {/* Filtered in place: the frame says how many match, in words, so the count never depends on seeing the fade. */}
-        {filtered && !selecting && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
+        {filtered && !selecting && !(showOnlyChanged && !info.relevance) && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
+        {/* Changed since a snapshot (#191): the count in words, a switch that shows only what changed. */}
+        {sinceMap && since && (
+          <div className="alt-chart-since" {...sinceDepth}>
+            {changedCount ? <Switch label={`${changedCount} changed ${since.label}`} checked={showOnlyChanged} onCheckedChange={setOnlyChanged} /> : <span>Nothing changed {since.label}</span>}
+          </div>
+        )}
         {/* Selected: the frame says what the chart (and whatever it filters) is narrowed to, with a way back. */}
         {info.onSelect && (
           <div className="alt-chart-selection" aria-live="polite">
@@ -1888,11 +2234,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           </div>
         )}
         {legendEl && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
-          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, marker: e.marker, hidden: hidden.includes(s.key) }; }),
+          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, marker: e.marker, hidden: hidden.includes(s.key), context: e.context, highlighted: !!focusKeys && !e.context }; }),
           swatch: info.swatch ?? 'rect',
           onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
         })}
         {htmlKids.filter((k) => !(k.type as ChartChild).chartLegend && !(k.type as ChartChild).chartBrush)}
+        {pinMax > 0 && <span className="alt-sr" aria-live="polite">{pinSaid}</span>}
         <figcaption id={sumId} className={summary ? 'alt-chart-summary' : 'alt-sr'}>
           {summary ?? generated}
           {summary && overlayWords ? <span className="alt-sr">{overlayWords}</span> : !summary && overlayWords}
