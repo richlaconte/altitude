@@ -26,17 +26,19 @@ export function Trace(props: TraceProps) {
 function statusesOf(children: React.ReactNode, deep = false): TraceStepStatus[] {
   const out: TraceStepStatus[] = [];
   React.Children.forEach(children, (child) => {
-    if (!React.isValidElement<any>(child)) return;
-    if (child.type === TraceStep) out.push(child.props.status === 'auto' ? derive(child.props.children) : child.props.status);
-    else if (child.type === TraceParallel || child.type === React.Fragment || (deep && child.type === Trace)) out.push(...statusesOf(child.props.children, deep));
+    if (!React.isValidElement(child)) return;
+    const props = child.props as { status?: TraceStepStatus | 'auto'; children?: React.ReactNode };
+    if (child.type === TraceStep) out.push(props.status === 'auto' || !props.status ? derive(props.children) : props.status);
+    else if (child.type === TraceParallel || child.type === React.Fragment || (deep && child.type === Trace)) out.push(...statusesOf(props.children, deep));
   });
   return out;
 }
 function derive(children: React.ReactNode): TraceStepStatus {
   const all: TraceStepStatus[] = [];
   React.Children.forEach(children, (child) => {
-    if (!React.isValidElement<any>(child)) return;
-    if (child.type === Trace || child.type === TraceParallel || child.type === React.Fragment) all.push(...statusesOf(child.props.children, true));
+    if (!React.isValidElement(child)) return;
+    const props = child.props as { status?: TraceStepStatus | 'auto'; children?: React.ReactNode };
+    if (child.type === Trace || child.type === TraceParallel || child.type === React.Fragment) all.push(...statusesOf(props.children, true));
   });
   if (!all.length) return 'planned';
   // Still going while anything in it is: a failed subagent fails the step only once the others have stopped.
