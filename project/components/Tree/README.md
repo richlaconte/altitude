@@ -82,3 +82,5 @@ The data, the writes and their concurrency guards, and the removal policy (recov
 ## Demo and verification
 
 The `Tree` section of `build/previews.txt` is a page tree with a toolbar; the demo service rejects names over 40 characters and moves out of Archive. `node checks/tree.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG keys and RTL, rename (cancel, rejection, save), create (sibling and child), keyboard carry (up, down, indent, outdent, cancel, drop, a rejected move, `canDrop`), Alt+↓, Delete with focus repair, pointer carry into a closed node (spring-loaded) and onto a slot, and 320/960px layouts in four schemes under reduced motion, forced colours and `contrast="more"`.
+**On touch.** With `onMove`, a swipe on a row scrolls; a press-and-hold picks it up, then a drag moves it.
+

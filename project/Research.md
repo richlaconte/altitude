@@ -1427,7 +1427,57 @@ A measurement (#258): at 375 CSS px a PropertyList row with a proposal kept thre
 
 A review (#267): an ItemGroup row's actions never yielded width, so at phone width Edit and Remove squeezed the title into a narrow column. The group is now a container, and under 480px of its own width the actions take their own row, lined up with the content after the media; `narrow="inline"` keeps them beside it. `ItemDescription truncate` clamps a long secondary line. The issue's third form, collapsing actions into a "…" menu, is deferred: an app's action children aren't menu items, so it needs an explicit API rather than a guess. `checks/narrow-rows.mjs` (with #258).
 
-### E126 · Does Altitude carry the tells of generated interfaces?
+### E126 · What's a list and its detail on a phone?
+
+A measurement (#265): at 375 CSS px the Resizable preview's list pane got about 80px, so "Invoice / INV-0042 / failed" took three lines, and the 1px handle had to be found with a finger. Under 480px of its own width, `narrow="stack"` (default) shows one pane at a time, the list-and-detail pattern on phones, with `narrowPanel` choosing which and `onNarrowChange` telling the app when to offer its way back; `narrow="vertical"` stacks the panes with a horizontal grip; `narrow={false}` keeps today's layout. The handle's hit area already spans the target size (#261); an older rule that shrank the vertical grip's area is gone. Pixel `minSize` is left for later. `checks/resizable-narrow.mjs`.
+
+### E127 · Can a week be read on a phone?
+
+A measurement (#257): at 375 CSS px the work week drew five 55px columns, so events read "Sta…" and "D", and the 55×11px slots were far under 24px. Under 480px of its own width, `narrowView="day"` (default) shows one day at a time, paged by the header's previous and next day; `narrowView={false}` keeps the view. Under a coarse pointer an hour is 96px unless `hourHeight` is set, so a 15-minute slot or event is 24px and still in proportion to its time. On touch a tap opens an event (double-click isn't reliably delivered there). A day strip, tap-to-create and press-and-hold to move are left for the touch-drag phase (#254–#256). `checks/schedule-narrow.mjs`.
+
+### E128 · Squeeze a table, or let it scroll?
+
+A measurement (#260): at 375 CSS px the DataGrid's five columns were each about 65px (its table is `table-layout: fixed` at 100%, which ignores a cell's minimum), so names read "Des…" and status badges "Acti"; DataTable's owners wrapped and clipped. The frame could already scroll; the columns never asked for the width. Under 480px of the frame's width (a container query), the table lays out by content at least as wide as its frame, every column keeps at least 6rem (checkbox, grip, expand and edit columns excepted), and the table scrolls inside its frame, the edge with more columns fading. Columns take `minWidth` and `sticky` (opaque ground surface over a flush 1px edge, no shadow, since a sticky column isn't live; the start fade is dropped when one marks the edge). Wide, nothing changes. The issue's `narrow="stack"` (rows as records) and `priority` are deferred: scrolling keeps the table's semantics and DataGrid's cell navigation intact, and stacking needs its own design for editing. `checks/table-narrow.mjs`.
+
+### E129 · On touch, is a finger on a row a scroll or a pick-up?
+
+A measurement (#256): `.alt-sort-item` was `touch-action: none` across the whole row, so on a phone every swipe that started on a sortable list reordered it and the page never scrolled. Rows are now `touch-action: manipulation`: a swipe scrolls, and a press-and-hold of 400ms without moving more than 8px picks the row up, after which the browser isn't allowed to pan (the first `touchmove` is cancelled) or open a long-press menu. The grip alone is `touch-action: none` and picks up at once, with a finger-sized hit area under a coarse pointer. A mouse drag starts as before, without a hold. The hold is a shared helper (`touchHold`), so Board and Tree take the same gesture (#254, #255). `checks/touch-drag.mjs`.
+
+### E130 · Board cards by touch
+
+A measurement (#254): on touch a Board card couldn't be moved at all. The board scrolls sideways, so the browser claimed the finger for panning and sent `pointercancel`, which the card treats as a drop; and the card tools only appeared on hover. Cards now take the shared press-and-hold (E129): a swipe scrolls the board, a 400ms hold picks the card up (it lifts as a mouse pick-up does, and "Picked up" is announced), and a drag then moves it between columns. The tools are always shown where there's no hover. Auto-scrolling the board while a card is carried near its edge is left for later. `checks/touch-drag.mjs`.
+
+### E131 · Tree rows by touch
+
+A measurement (#255): a Tree row with `onMove` couldn't be moved by touch. Its `touch-action: pan-y` gave every vertical gesture, the only direction a tree row moves, to the browser, which panned and sent `pointercancel`. Rows keep `pan-y`, so a swipe still scrolls, and take the shared press-and-hold (E129): after 400ms the row is carried as a mouse pick-up carries it, with the same targets and spring-open folders. A non-drag path for people with neither keyboard nor fine pointer (WCAG 2.5.7, a "Move to…" action) is left as its own change. `checks/touch-drag.mjs`.
+
+### E132 · The phone audit, and what it changed
+
+The audit behind the **Mobile** chapter (#244), at commit `f32b92b`: all 129 previews at 375 CSS px in Chromium with `isMobile` and `hasTouch`, plus touch events sent through CDP. It found 98 `:hover` rules outside `@media (hover: hover)`; 951 of 1,076 interactive targets under 44×44 CSS px, 279 under 24; 14px field text; `Board` and `Tree` not draggable by touch and `SortableList` reordering instead of scrolling; floating panels spilling off screen and overlays sized to `100vh`; nine layouts that didn't reflow; and ad hoc breakpoints at 768, 640, 560 and 480. E110–E131 record each fix. The chapter's constraints M1–M10 each name the check that holds them; M6 fails CI, and M1 and M2 warn, because a few pattern previews still overflow at 320px.
+
+### E133 · Markdown without a dependency
+
+Models answer in Markdown, and the answer is the largest thing on a harness's screen, but `MessageContent` took children, so every app chose its own parser and prose styles (#268). Altitude's bundle is dependency-free and ships as an IIFE, so `Markdown` is a small built-in parser (CommonMark blocks and inlines, GFM tables, task lists, strikethrough and bare links; no footnotes, math or reference links) with a `components` map for anything an app wants to render itself, the way `CodeBlock` takes `syntax`. Prior art reviewed: AI Elements' `Response` (built on Streamdown, which also patches unterminated constructs while streaming), react-markdown and markdown-it. Streaming rules, each a decision: an open fence is a streaming `CodeBlock`, since code is readable before it closes; a table shows nothing until its delimiter row arrives (before that it might not be a table) and never a row whose line hasn't ended, since its cells would shift as they arrive; unclosed emphasis, code spans and links show their words without markers, so nothing flashes as raw syntax and then jumps. Once complete, the source is read as CommonMark reads it (an unclosed `**` is literal). Raw HTML is text unless `allowHtml`; `javascript:`, `vbscript:`, `file:` and non-image `data:` URLs are refused. `checks/markdown.mjs` (35 cases).
+
+### E134 · Where did the files go?
+
+A person attaches a screenshot and a PDF in `PromptInput` and sends; the chips leave the composer and nothing in the thread shows what went with the message (#274), so neither someone scrolling back nor a screen reader user knows the answer was about those files. `MessageAttachments` puts them back, before the message text, in a list named "2 attachments": images as 64px thumbnails (`object-fit: cover`, a 1px rim drawn over the image so a light screenshot keeps its edge), other files as the composer's Tag plates, now settled, with type and size (`FormattedNumber` bytes). Those with `href` or `onOpen` act and are named "Open <file>"; an expired one says "No longer available" and doesn't act. They're never pending: a message isn't sent until its uploads finish. `checks/message-attachments.mjs`.
+
+### E135 · Can an imprint wait without moving the light?
+
+A design review (#343): three rounds of standalone prototypes, built from Altitude's tokens, compared ways for an imprint to show it's waiting and ways for content to land. `checks/loading-breath.mjs` drives the result: imprints waiting, a card from one request, a card whose parts arrive apart, a summary before its detail, a list, a later arrival, a ten-second wait, Nightfall, reduced motion, a chart, and the default left alone.
+
+- **Breath, not ripples.** Ripples, ribs, a wave, a lit membrane and a bump under the surface all read as the ground moving, but they move a pattern across the screen, which costs attention and is the kind of large-area motion that troubles motion-sensitive people. A ring from a point reads as Material's touch ripple, "you pressed here". Breath changes only depth and tone.
+- **It keeps the light still.** The sweep moves a band of light over the imprint, which bends "the light never moves". Breath moves the ground under a fixed light, which is what Altitude means by depth.
+- **One clock.** Things that change in step are grouped into one object (common fate; Usher and Donnelly, *Nature*, 1998), so imprints phased from one page clock spend one place in the attention budget. Out of step, a full view shimmers. The swell down the view keeps that coherence and gives it a direction. A CSS animation starts on the frame after its imprint commits, so imprints mounted in different commits drift by a few frames, under 5% of a breath.
+- **A different rhythm from pending.** A waiting imprint and a pending write are in different tiers, but at the same 1.8s rhythm they look alike. Breath is 4.8s, deepening over 40% and releasing over 60%, near a resting breath.
+- **The back wall in Nightfall.** Nightfall's well and trench are nearly one tone, so a floor breath almost disappears there. The back wall (`lip-top`) shows in both.
+- **Rise past needs a surface.** A card rises a level past its rest and settles. Text, badges and rows rest on the ground and have no surface to cast a shadow, so they fill past it, as a field does when filled. A plate is kept for content arriving into a view already showing; on a first load it would make everything look new, too close to the afterglow.
+- **Optional parts don't wait.** A card's undefined optional parts (description, body text) still render empty once its required parts land, so "a card's parts land together" holds for required parts and for anything that suspends.
+
+Not yet tested with people: whether breath reads as loading, how long the wait feels compared with the sweep, comfort for people who report motion sensitivity, and whether arrivals are noticed. Until then it's opt-in.
+
+### E136 · Does Altitude carry the tells of generated interfaces?
 
 An audit against the 47 tells catalogued in `tells.json` (#319), reading `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`. A regex prototype covered the `lint` tells; the rest were read by hand. Nothing was rendered, so `render` and `measure` tells are judged from source or left unchecked.
 
