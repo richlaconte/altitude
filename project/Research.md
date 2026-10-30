@@ -1025,6 +1025,17 @@ A design review: `DiffView` was rendered for a config file (two changed lines, a
 
 Not yet tested with people: whether the summary ("3 additions, 2 removals") is enough to decide whether to read on.
 
+### E87 · When should a save bar rise?
+
+A design review: `SaveBar` was rendered over a four-field settings form driven by `useEditRecord`, clean, dirty, saving, saved and failed, in all four schemes and under forced colours. `checks/save-bar.mjs` drives it.
+
+- **After the change settles, not on the key.** A bar that rises on the first keystroke is an abrupt onset while someone is typing. It rises 600ms after the draft stops changing, which the issue proposed.
+- **Level 3, below sheets.** A draft is in your hand, so it floats, but at level 3, so a Sheet or Dialog opened over the page still sits above it.
+- **Failure keeps the draft.** The bar drops to a trench and says "Your changes are kept", because the worst outcome of a failed save is a lost draft.
+- **Reads the record.** It reads useEditRecord's phase and errors rather than having its own state, so it can't disagree with the form.
+
+Not yet tested with people: whether 600ms feels responsive or late after a single edit.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

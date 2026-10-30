@@ -2931,6 +2931,30 @@ function App() {
   );
 }
 
+=== SaveBar | <!-- @dsCard group="Inputs" height=460 subtitle="Unsaved changes on a page, held above it until saved or discarded" -->
+--- css
+.sb { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 16px 24px; padding-bottom: 80px; }
+@media (max-width: 600px) { .sb { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+function App() {
+  const [failNext, setFailNext] = React.useState(false);
+  const fail = React.useRef(false); fail.current = failNext;
+  const record = A.useEditRecord({
+    initialValue: { name: 'Acme Inc.', domain: 'acme.dev', seats: '25', region: 'Frankfurt' }, validationMode: 'submit',
+    validate: (d) => (d.name.trim() ? {} : { name: 'Enter a workspace name' }),
+    save: (draft) => new Promise((r) => setTimeout(() => r(fail.current ? { ok: false, error: "We couldn't reach the server." } : { ok: true, value: draft }), 900)),
+  });
+  const f = (key, label) => <A.Field label={label} error={record.errors[key]}><A.Input value={record.draft[key]} onChange={(e) => record.setDraft({ ...record.draft, [key]: e.target.value })} /></A.Field>;
+  return (
+    <div className="col">
+      <div className="sb">{f('name', 'Workspace name')}{f('domain', 'Domain')}{f('seats', 'Seats')}{f('region', 'Region')}</div>
+      <A.Switch label="Make the next save fail" checked={failNext} onCheckedChange={setFailNext} />
+      <p className="cap">Change a field: once the change settles, the bar rises from the bottom edge. ⌘S or Save hovers while saving and lowers away when saved; a failed save drops into a trench and keeps your changes.</p>
+      <A.SaveBar record={record} />
+    </div>
+  );
+}
+
 === Select | <!-- @dsCard group="Inputs" height=380 subtitle="An opening you fill by choosing; the list rises at level 3" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 24px; max-width: 900px; align-items: start; }

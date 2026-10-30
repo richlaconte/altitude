@@ -23,6 +23,7 @@ export { SyncIndicator } from './sync-indicator';
 export type { SyncState } from './sync-indicator';
 export { DiffView, diffLines } from './diff-view';
 export type { DiffField } from './diff-view';
+export { SaveBar } from './save-bar';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';

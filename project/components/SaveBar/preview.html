@@ -1,0 +1,38 @@
+<!-- @dsCard group="Inputs" height=460 subtitle="Unsaved changes on a page, held above it until saved or discarded" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SaveBar — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.sb { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 16px 24px; padding-bottom: 80px; }
+@media (max-width: 600px) { .sb { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [failNext, setFailNext] = React.useState(false);
+  const fail = React.useRef(false);
+  fail.current = failNext;
+  const record = A.useEditRecord({
+    initialValue: { name: "Acme Inc.", domain: "acme.dev", seats: "25", region: "Frankfurt" },
+    validationMode: "submit",
+    validate: (d) => d.name.trim() ? {} : { name: "Enter a workspace name" },
+    save: (draft) => new Promise((r) => setTimeout(() => r(fail.current ? { ok: false, error: "We couldn't reach the server." } : { ok: true, value: draft }), 900))
+  });
+  const f = (key, label) => /* @__PURE__ */ React.createElement(A.Field, { label, error: record.errors[key] }, /* @__PURE__ */ React.createElement(A.Input, { value: record.draft[key], onChange: (e) => record.setDraft({ ...record.draft, [key]: e.target.value }) }));
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "sb" }, f("name", "Workspace name"), f("domain", "Domain"), f("seats", "Seats"), f("region", "Region")), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next save fail", checked: failNext, onCheckedChange: setFailNext }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Change a field: once the change settles, the bar rises from the bottom edge. \u2318S or Save hovers while saving and lowers away when saved; a failed save drops into a trench and keeps your changes."), /* @__PURE__ */ React.createElement(A.SaveBar, { record }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

@@ -1521,6 +1521,24 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 [data-contrast="more"] .alt-diff-line[data-kind="del"] { box-shadow: inset 2px 0 0 var(--critical); }
 @media (forced-colors: active) { .alt-diff-line[data-kind], .alt-diff-old, .alt-diff-new, .alt-diff-word { background: none; } .alt-diff { border: 1px solid CanvasText; } }
 
+/* ── SaveBar: an unsaved draft at page scope is something in your hand, so the bar floats at level 3, docked to the
+   bottom edge (below a Sheet or a Dialog, never competing with them). It rises from the edge once a change has settled
+   into the draft; saving hovers as a pending write; saved, it lowers away while the fields settle; a failed save drops
+   it to a trench, keeping the draft. ── */
+.alt-savebar {
+  position: fixed; left: 50%; bottom: var(--space-4); z-index: var(--z-floating); translate: -50% 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); width: max-content; max-width: calc(100vw - 32px);
+  padding: 8px 8px 8px var(--space-4); border-radius: var(--radius-lg); background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink);
+  transition: opacity var(--dur-travel-3) var(--ease-rise), transform var(--dur-travel-3) var(--ease-rise), background-color var(--dur-travel-2), box-shadow var(--dur-travel-2);
+}
+.alt-savebar[data-state="closed"] { opacity: 0; transform: translateY(calc(16px * var(--alt-travel))); transition-timing-function: var(--ease-settle); }
+.alt-savebar[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench); outline: 1px solid var(--critical); animation-duration: var(--dur-travel-5); }
+.alt-savebar-text { display: inline-flex; align-items: center; gap: 6px; font: 500 14px/20px var(--font-sans); }
+.alt-savebar[data-status="failed"] .alt-savebar-text svg { color: var(--critical); }
+.alt-savebar-actions { display: inline-flex; gap: var(--space-2); margin-left: auto; }
+[data-contrast="more"] .alt-savebar { box-shadow: 0 3px 0 0 var(--ink), var(--elev-3); }
+@media (forced-colors: active) { .alt-savebar { border: 2px solid CanvasText; } .alt-savebar[data-status="pending"] { border-style: dotted; } .alt-savebar[data-status="failed"] { border: 3px dashed CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

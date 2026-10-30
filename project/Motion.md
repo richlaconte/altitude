@@ -127,6 +127,10 @@ Every chart moves by one engine, built into `ChartContainer`, so no chart type h
 
 **The current destination's pill glides.** In a `Sidebar`, the raised pill under the current destination glides to the new one over `dur-travel-3` on `ease-glide`, as segmented `Tabs`' pill does. Collapsing to a rail changes the sidebar's width over `dur-travel-3` on `ease-glide`, with no change of level. The top bar rises over `dur-travel-1` while content passes under it. Under reduced motion the pill appears in place and the width changes at once. Nothing rises on a route change, except the new content's own afterglow.
 
+## Drafts
+
+**A draft rises from the edge.** A `SaveBar` rises from the bottom edge to level 3 over `dur-travel-3` on `ease-rise`, 600ms after a change settles into the draft. Saved, it lowers away on `ease-settle` as the saved fields begin their afterglow. A failed save drops it to a trench over `dur-travel-5` on `ease-sink`. Under reduced motion it fades in and out, and its levels still change.
+
 ## Panes
 
 **A grip is picked up.** A `ResizableHandle`'s grip lifts to level 1 over `dur-travel-1` when pointed at, rises to level 3 over `dur-travel-2` on `ease-rise` while held, and settles on `ease-settle` when let go. Collapsing a pane changes its size over `dur-travel-3` on `ease-glide`. Under reduced motion collapsing is instant; the grip's levels still change.
