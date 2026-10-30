@@ -95,8 +95,8 @@ const read = (page) => page.evaluate((schemes) => schemes.map((scheme) => {
     const box = await page.locator(`${D} [data-chart-name="growth"] .recharts-surface`).boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 3);
     await page.waitForTimeout(250);
-    const area = await page.evaluate((D) => { const c = document.querySelector(`${D} [data-chart-name="growth"] .recharts-tooltip-cursor`); const d = document.createElement('div'); d.style.color = 'var(--ink-muted)'; document.querySelector(D).append(d); const ink = getComputedStyle(d).color; d.remove(); return { cross: c && getComputedStyle(c).stroke, ink, dots: document.querySelectorAll(`${D} [data-chart-name="growth"] .recharts-active-dot`).length }; }, D);
-    expect(area.cross === area.ink && area.dots === 0, `hovering the area chart draws an ink-muted crosshair and no active dot (${area.cross}, ${area.dots} dots)`);
+    const area = await page.evaluate((D) => { const c = document.querySelector(`${D} [data-chart-name="growth"] .recharts-tooltip-cursor`); const d = document.createElement('div'); d.style.color = 'var(--line-control)'; document.querySelector(D).append(d); const ink = getComputedStyle(d).color; d.remove(); return { cross: c && getComputedStyle(c).stroke, ink, dots: document.querySelectorAll(`${D} [data-chart-name="growth"] .recharts-active-dot`).length }; }, D);
+    expect(area.cross === area.ink && area.dots === 0, `hovering the area chart draws a line-control crosshair and no active dot (${area.cross}, ${area.dots} dots)`);
     await page.mouse.move(0, 0);
   }
 

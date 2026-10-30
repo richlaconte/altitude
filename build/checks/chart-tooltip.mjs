@@ -34,6 +34,14 @@ expect(s.label === 'Jan 1, 2026' && s.rows.length === 4 && s.rows[0] === '40Free
 expect(s.cross !== null && s.rings === 4, `a crosshair at that x and the four points ringed (${s.rings})`);
 expect(s.side === 'right', `near the left edge it opens to the right: ${s.side}`);
 
+// The crosshair is line-control, lighter than a reference line's ink-muted (Charts.md, "Every part, by its build").
+const ink = await plot.evaluate((p) => {
+  const probe = (v) => { const e = document.createElement('i'); e.style.color = `var(${v})`; p.append(e); const c = getComputedStyle(e).color; e.remove(); return c; };
+  const c = p.querySelector('.alt-chart-crosshair');
+  return { stroke: c && getComputedStyle(c).stroke, control: probe('--line-control'), muted: probe('--ink-muted') };
+});
+expect(ink.stroke === ink.control && ink.stroke !== ink.muted, `the crosshair is 1px line-control, not ink-muted (${ink.stroke}; line-control ${ink.control})`);
+
 // Moving steps to the next x at once: left isn't animated, so it never drifts between positions.
 const first = s.left;
 await page.mouse.move(box.x + box.width * 0.32, box.y + box.height * 0.5);

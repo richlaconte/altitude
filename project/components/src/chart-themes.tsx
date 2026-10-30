@@ -87,7 +87,7 @@ export function echartsTheme(source: ChartTokenSource, options: ChartThemeOption
       backgroundColor: t['surface-floating'], borderColor: t.line, borderWidth: 1,
       textStyle: { color: t.ink, fontFamily: t['font-sans'] },
       extraCssText: `box-shadow: ${t['elev-3']}; border-radius: 8px;`,
-      axisPointer: { lineStyle: { color: t['ink-muted'], width: 1 }, crossStyle: { color: t['ink-muted'], width: 1 } },
+      axisPointer: { lineStyle: { color: t['line-control'], width: 1 }, crossStyle: { color: t['line-control'], width: 1 } },
     },
     // Magnitude reads the sequential ramp; set inRange to the diverging ramp for polarity.
     visualMap: { inRange: { color: ['data-seq-1', 'data-seq-2', 'data-seq-3', 'data-seq-4', 'data-seq-5', 'data-seq-6', 'data-seq-7'].map((n) => t[n]) }, textStyle: text },

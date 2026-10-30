@@ -366,6 +366,7 @@ A design review: the readout was rendered open on line and bar charts in all fou
 
 - **Steps, not glides.** Its position isn't transitioned: it jumps to the next x, with the crosshair, as a card in hand follows the pointer. Gliding between positions read as lag, and following every pixel (Recharts' default) would put it against E10's rule that nothing drifts across its own face.
 - **Never over the point.** It opens on whichever side of the point has room, so it never hides the value it's reading.
+- **Lighter than what it's read against.** The crosshair is 1px `line-control`, which holds 3:1 on every ground, and a reference line is `ink-muted`. Where they cross, the line the reader came to read against stays the stronger one (#186 brought Charts.md into line).
 - **Only what's read changes.** Lines ring their points in the plot's own colour, an outline rather than height; bars stay exactly as they were, because hovering a static bar does nothing.
 - **Touch.** Press and hold (250ms) opens it, so a quick swipe still scrolls the page; dragging scrubs; it stays after the finger lifts until a tap elsewhere.
 - **Dates as categories.** A bar per week printed raw ISO strings ("2026-03-02") on the axis; date-valued categories now read as dates ("Mar 2") on the axis and in full in the readout.

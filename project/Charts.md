@@ -50,12 +50,12 @@ Choose by the job the data does, not by what looks rich.
 | A heatmap's cells | ground | flat `data-seq` (or `data-div`) steps parted by 2px of the plot's colour; no data is a 1px `line` outline, not a well |
 | A clickable mark, hovered | ground | a 2px `ink` outline and a pointer cursor; it never lifts |
 | The readout | floating, level 3 | a `Tooltip`, rising from the side facing its mark |
-| The crosshair | ground | a 1px `ink-muted` rule; it doesn't move the marks |
+| The crosshair | ground | a 1px `line-control` rule, lighter than a reference line's `ink-muted` because it's a pointer, not something to read against; it doesn't move the marks |
 | A legend you can toggle | sunk and raised | a choice, so it's built like the Switch: a trench with a raised mark when the series is on |
 | A legend that only labels | ground | a plate set flush, like a `Badge`; better still, label the series directly |
 | An overview brush | sunk and raised | the range `Slider`: the series a flat line in a trench, the chosen window a raised lens (level 1, `accent` rim, clear face) whose grips are the thumbs; outside it the overview recedes to 35% |
 | Drilling in | ground, stacked | a `Drilldown`: the detail is laid on top, the staircase shows the way back |
-| Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are dashed `ink-muted` |
+| Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are solid 1px `ink-muted`, because dashes mean projected |
 | Loading | sunk | an imprint (`Await`), at the chart's own size |
 | No data | sunk | an opening (`EmptyState`) that says why and what to do |
 | Projected or incomplete data | ground | not yet the record: dashed or hatched, and labelled as such |
