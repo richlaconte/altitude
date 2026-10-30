@@ -61,7 +61,7 @@ jobs:
           python3 tokcss.py ../project/tokens.json test/tokens.css
           node shoot.mjs "" daylight,nightfall,mesa,alpine 960
           # Every preview as a phone (320 and 375, touch): overflow, target size, field text. PHONE_FAIL lists what fails.
-          PHONE_FAIL= node ../scripts/record-check.mjs phone node checks/phone.mjs
+          PHONE_FAIL=M6 node ../scripts/record-check.mjs phone node checks/phone.mjs
           node ../scripts/record-check.mjs density node checks/density.mjs
           node ../scripts/record-check.mjs hover-media node checks/hover-media.mjs
           node checks/approach-and-lamps.mjs

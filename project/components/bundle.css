@@ -1106,14 +1106,15 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-numfield { padding-right: 3px; }
 .alt-numfield input { font-variant-numeric: tabular-nums; }
 .alt-numfield-unit { font: 400 14px/20px var(--font-sans); }
-.alt-numfield-steps { display: flex; flex-direction: column; gap: 2px; flex: none; align-self: center; }
+/* Side by side, 24×24 each (#261): stacked, two 15px steppers could never each reach the 24px minimum. Down first. */
+.alt-numfield-steps { display: flex; flex-direction: row-reverse; gap: 2px; flex: none; align-self: center; }
 .alt-numfield-step {
-  display: grid; place-items: center; width: 24px; height: 15px; padding: 0; border: 0; border-radius: var(--radius-xs); cursor: pointer;
+  display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: var(--radius-xs); cursor: pointer;
   background: var(--surface-raised); background-image: var(--alt-sheen); color: var(--ink-muted);
   box-shadow: 0 1px 0 0 var(--surface-trench), var(--elev-1);
   transition: box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-2) var(--ease-settle), color var(--dur-travel-1);
 }
-.alt-numfield[data-size="sm"] .alt-numfield-step { height: 13px; }
+.alt-numfield[data-size="sm"] .alt-numfield-step { height: 24px; }
 @media (hover: hover) { .alt-numfield-step:hover:not(:disabled) { background-color: var(--surface-lifted); color: var(--ink); box-shadow: 0 2px 0 0 var(--surface-trench), var(--elev-2); transform: translateY(calc(-1px * var(--alt-travel))); } }
 .alt-numfield-step:active:not(:disabled) { box-shadow: 0 0 0 0 var(--surface-trench), var(--elev-0); background-image: none; transform: translateY(1px); transition-duration: var(--dur-press); }
 .alt-numfield-step:disabled { background: transparent; background-image: none; box-shadow: none; color: var(--ink-faint); cursor: default; }
@@ -1382,7 +1383,8 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 .alt-resizable[data-animate] .alt-resizable-panel { transition: flex-basis var(--dur-travel-3) var(--ease-glide); }
 .alt-resizable-handle { position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: 1px; background: var(--line); cursor: col-resize; touch-action: none; outline: none; }
 .alt-resizable[data-direction="vertical"] > .alt-resizable-handle { width: auto; height: 1px; cursor: row-resize; }
-.alt-resizable-handle::before { content: ""; position: absolute; inset: 0 -5px; }
+.alt-resizable[data-direction="vertical"] > .alt-resizable-handle::before { inset: calc((var(--size-target-min) - 1px) / -2) 0; }
+.alt-resizable-handle::before { content: ""; position: absolute; inset: 0 calc((var(--size-target-min) - 1px) / -2); }
 .alt-resizable[data-direction="vertical"] > .alt-resizable-handle::before { inset: -5px 0; }
 .alt-resizable-grip {
   position: relative; width: 8px; height: 28px; border-radius: var(--radius-full); border: 1px solid var(--line-control); background: var(--surface-ground);
@@ -3740,3 +3742,16 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
     font-size: max(16px, 1em) !important;
   }
 }
+
+/* ── Hit areas (#261): a small face keeps its size and its tier, and a transparent ::after centred on it reaches
+   size-target-min, 24px (WCAG 2.5.8) or 44px under a coarse pointer, so a finger finds it. It has no colour, border
+   or shadow, so forced colours and every elevation are untouched. Date segments sit side by side, so theirs stops at
+   24px rather than covering a neighbour. ── */
+:is(.alt-tag-remove, .alt-toast-close, .alt-cite, .alt-ailabel, .alt-filter-operator, .alt-date-seg, .alt-numfield-step, .alt-table-sort, .alt-link, .alt-reltime) { position: relative; }
+:is(.alt-numfield-step, .alt-slider-thumb, .alt-brush-grip, .alt-tag-remove, .alt-toast-close, .alt-cite, .alt-ailabel, button.alt-chart-note, .alt-alert-more, .alt-filter-operator, .alt-table-sort)::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, var(--size-target-min)); height: max(100%, var(--size-target-min)); transform: translate(-50%, -50%);
+}
+.alt-numfield .alt-numfield-step::after { width: 100%; }
+/* Links and relative times sit in rows of text: they reach 24px tall, never wider, so neighbours stay apart. */
+:is(.alt-link, .alt-reltime):not(:is(p, li, dd, td) > *)::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: max(100%, 24px); transform: translateY(-50%); }
+.alt-date-seg::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 24px); height: max(100%, 24px); transform: translate(-50%, -50%); }

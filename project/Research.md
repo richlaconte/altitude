@@ -1232,6 +1232,17 @@ A code audit (#246): all 98 `:hover` rules in `bundle.css` applied on touch scre
 - **Forced colours keep their outlines.** Under forced colours a hover is a system-colour outline with no height, so those eight rules stay bare (the issue's hairline exception).
 - **Linted.** `checks/hover-media.mjs` fails on a bare `:hover`, and in a browser checks that a mouse still lifts a button while a phone's tap leaves it at rest.
 
+### E113 · Can a finger hit every control?
+
+A measurement (#261): at 375 CSS px the phone check found 167 targets under WCAG 2.5.8's 24×24, in 58 previews: NumberInput's 24×15 steppers stacked with no gap, date segments, 20px slider thumbs, 10px brush grips, 20px tag removes, the 23px toast close, 16px citation markers, 22px badge buttons, a 1px resize handle, and the previews' own disclosures.
+
+- **The face keeps its tier; the target grows.** A transparent `::after` centred on each small face reaches `size-target-min`, 24px or 44px under a coarse pointer (#245). It has no colour, border or shadow, so elevation and forced colours are untouched. The resize handle's existing hit strip now spans the target too.
+- **Neighbours don't share a target.** Date segments sit side by side, so theirs stops at 24px. Links and relative times in rows of text reach 24px tall, never wider.
+- **Steppers side by side.** Two stacked 15px steppers could never each reach 24px without overlapping. They now sit in a row, down then up, 24×24 each.
+- **Spacing counts.** WCAG's exception (targets whose 24px circles don't touch) is in the check, so annotation plates 26px apart pass.
+
+After: 16 left, all either a `Schedule` event (#257) or a target the check finds covered by an open layer.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

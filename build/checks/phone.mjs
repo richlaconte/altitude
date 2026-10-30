@@ -36,14 +36,19 @@ const measure = (W) => {
   const targets = [...document.querySelectorAll(sel)].filter((e) => !ignored(e) && visible(e) && !e.disabled && !e.closest('[disabled]'));
   const coarse = matchMedia('(pointer: coarse)').matches;
   for (const e of targets) {
-    // An inline link in running text is exempt.
-    if (e.tagName === 'A' && getComputedStyle(e).display === 'inline' && e.parentElement && /^(P|LI|SPAN|DD|TD|FIGCAPTION|LABEL)$/.test(e.parentElement.tagName)) continue;
+    // A target inline in running text (a link, a relative time) is exempt: its size is the line's (2.5.8's inline exception).
+    if (getComputedStyle(e).display === 'inline' && e.tagName !== 'BUTTON' && e.tagName !== 'INPUT') continue;
     // A checkbox, radio or switch input is hit through its label; a text field through its frame.
     const owner = (e.tagName === 'INPUT' || e.tagName === 'TEXTAREA' || e.tagName === 'SELECT') ? (e.closest('label') ?? e.closest('.alt-input') ?? e) : e;
     const r = owner.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const hits = (x, y) => { const h = document.elementFromPoint(x, y); return !!h && (owner.contains(h) || h === owner || (e.labels && [...e.labels].some((l) => l.contains(h)))); };
     if (!hits(cx, cy)) continue; // covered by something else (a popover, a layer): not measured here
-    const reaches = (s) => hits(cx - s / 2 + 0.5, cy) && hits(cx + s / 2 - 0.5, cy) && hits(cx, cy - s / 2 + 0.5) && hits(cx, cy + s / 2 - 0.5);
+    // WCAG 2.5.8's spacing exception: a probe that lands on another target counts if the two centres are 24px apart,
+    // so a 24px circle on each doesn't touch the other.
+    const spaced = (x, y) => { const h = document.elementFromPoint(x, y), o = h && targets.find((t) => t !== e && (t === h || t.contains(h)));
+      if (!o) return false; const q = o.getBoundingClientRect(); return Math.hypot(q.left + q.width / 2 - cx, q.top + q.height / 2 - cy) >= 24; };
+    const ok = (s, x, y) => hits(x, y) || (s === 24 && spaced(x, y));
+    const reaches = (s) => ok(s, cx - s / 2 + 0.5, cy) && ok(s, cx + s / 2 - 0.5, cy) && ok(s, cx, cy - s / 2 + 0.5) && ok(s, cx, cy + s / 2 - 0.5);
     const size = `${Math.round(r.width)}×${Math.round(r.height)}`;
     if (!reaches(24)) out['M2-24'].push(`${name(owner)} ${size}`);
     else if (coarse && !reaches(44)) out['M2-44'].push(`${name(owner)} ${size}`);
