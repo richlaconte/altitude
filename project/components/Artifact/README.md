@@ -6,7 +6,7 @@ What an agent is making (a document, a component, a page, a chart, a config) in 
 - **The pane** lies on the ground beside the conversation (put it in a `ResizablePanel`), named by its title.
 - **Being written** isn't the record yet: a dashed `line-control` rule at the pane's edge and "Writing… version 3" (`aria-busy`).
 - **Complete**: the rule goes solid with one afterglow, and "Version 3" (announced once: "Pricing page, version 3, complete").
-- **Failed**: a critical rule, "Couldn't finish version 3" and Retry; keep the last whole version on show.
+- **Failed**: "Couldn't finish version 3" with a critical mark and Retry; keep the last whole version on show. The edge stays solid and neutral: a coloured stripe is a tell of generated interfaces (Distinctiveness, CM3), and the words already say it.
 - **Viewing an earlier version** is a mode, and a mode isn't a height: a flush strip across the top with a `line-control` border, "Viewing version 1 of 3", Return to latest and Restore this version.
 - **Header tools** are ghost buttons named for the artifact. **Preview / Source / Changes** is segmented `Tabs`.
 - **The reference** in a message is a plate that acts, lifting one level when pointed at.
