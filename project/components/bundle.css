@@ -190,6 +190,19 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-input[data-multiline] { height: auto; padding: var(--space-2) var(--space-3); align-items: stretch; flex-direction: column; overflow: hidden; }
 .alt-input textarea { min-height: 84px; resize: vertical; line-height: 21px; }
 .alt-input-adorn { display: inline-flex; color: var(--ink-muted); flex: none; transform: translateY(calc(var(--wd) * 0.5)); transition: transform var(--dur-travel-2) var(--ease-settle); }
+/* Suggested: a value proposed for the field is a ghost of the value in ink-faint, the feedforward vocabulary (the ghost
+   of the check a box would get). It isn't the value, so an empty field with a ghost stays an opening; Tab accepts,
+   raising the floor flush with one afterglow. The ghost appears without motion: nothing has arrived in the record. */
+.alt-input-field { position: relative; flex: 1; min-width: 0; display: flex; align-self: stretch; }
+.alt-input-field[data-multiline] { flex-direction: column; }
+.alt-input-ghost {
+  position: absolute; inset: 0; display: flex; align-items: center; overflow: hidden; white-space: pre; pointer-events: none;
+  font: 400 14px/20px var(--font-sans); color: var(--ink-faint);
+  transform: translateY(calc(var(--wd) * 0.5)); transition: transform var(--dur-travel-2) var(--ease-settle);
+}
+.alt-input-ghost[data-multiline] { display: block; white-space: pre-wrap; overflow-wrap: break-word; line-height: 21px; }
+.alt-input-ghost-typed { color: transparent; }
+@media (forced-colors: active) { .alt-input-ghost { color: GrayText; } }
 /* Fill line: with a maxLength, the well fills from the floor as the text approaches the limit. */
 .alt-input-gauge {
   --g: var(--accent-ink);

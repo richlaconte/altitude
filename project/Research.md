@@ -1135,6 +1135,17 @@ A design review: `Trace` was rendered running a five-step plan (a tool call, rea
 
 Not yet tested with people: whether planned imprints set expectations the agent then breaks when its plan changes.
 
+### E97 · Is a suggested value a value?
+
+A design review: `Input` and `Textarea` were rendered with suggestions (a whole subject for an empty field, the rest of a label being typed, a sentence appended to a reply), accepted with Tab, dismissed with Escape and typed past, in all four schemes and under forced colours. `checks/input-suggestion.mjs` drives it.
+
+- **Not a value.** Putting the suggestion in the value makes it look like the person's input and fills the well, so the form says the field is done when nobody has decided. The ghost is drawn over the field and the well stays an opening until it's accepted.
+- **Feedforward, not new.** Altitude already shows what an action would produce as a faint ghost (the check a box would get). A suggestion is the same promise: "this is what Tab will put here."
+- **Tab only when there's a ghost.** Otherwise Tab must move focus, or keyboard users are trapped in the field.
+- **Heard before accepted.** The suggestion is the field's description, so a screen reader user hears it when they arrive, and acceptance is announced.
+
+Not yet tested with people: whether Tab-to-accept collides with expectations in forms where Tab always moves on.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

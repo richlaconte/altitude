@@ -3142,6 +3142,29 @@ function App() {
   );
 }
 
+=== InputSuggestion | <!-- @dsCard group="Inputs" height=460 subtitle="A suggested value is a ghost in the field: Tab accepts, Escape dismisses" -->
+--- css
+.sg { max-width: 520px; }
+--- jsx
+function App() {
+  const [subject, setSubject] = React.useState('');
+  const [body, setBody] = React.useState('Hi Jamie, thanks for getting in touch about your refund.');
+  const [label, setLabel] = React.useState('Bil');
+  return (
+    <div className="col sg">
+      <A.Field label="Subject" hint="Suggested from the conversation. Tab to accept.">
+        <A.Input value={subject} onChange={(e) => setSubject(e.target.value)} suggestion="Your refund for the annual plan" placeholder="Write a subject" />
+      </A.Field>
+      <A.Field label="Label">
+        <A.Input value={label} onChange={(e) => setLabel(e.target.value)} suggestion="Billing" />
+      </A.Field>
+      <A.Field label="Reply">
+        <A.Textarea value={body} onChange={(e) => setBody(e.target.value)} suggestionMode="append" suggestion={body.endsWith('refund.') ? ' Your full refund of €240 is on its way and should arrive within 5 working days.' : undefined} />
+      </A.Field>
+    </div>
+  );
+}
+
 === PromptInput | <!-- @dsCard group="Inputs" height=420 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
 --- css
 .pi { max-width: 640px; }

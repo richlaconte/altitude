@@ -116,47 +116,131 @@ export const CardFooter = ({ className, ...p }: React.HTMLAttributes<HTMLDivElem
 
 /* ───────────────────────── Input / Textarea / Field ───────────────────────── */
 
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface SuggestionProps {
+  /**
+   * A value proposed for this field (by an AI feature, autofill, a template), drawn as a ghost of the value in ink-faint:
+   * the whole value while the field is empty (or the rest of it while what's typed matches its start), or after the text
+   * with suggestionMode="append". Tab accepts, Escape dismisses, typing carries on past it. It's never put in the value,
+   * so an empty field with a ghost is still an opening.
+   */
+  suggestion?: string;
+  /** 'replace' (default): the suggestion is the whole value. 'append': it continues the text. */
+  suggestionMode?: 'replace' | 'append';
+  /** Called with the new value when Tab accepts (onChange is called too). */
+  onAcceptSuggestion?: (value: string) => void;
+}
+type FieldEl = HTMLInputElement | HTMLTextAreaElement;
+/** The ghost of a suggested value: what's shown, the description that reads it, and Tab / Escape. */
+function useSuggestion<E extends FieldEl>({ suggestion, suggestionMode = 'replace', onAcceptSuggestion }: SuggestionProps, current: string, el: React.RefObject<E | null>) {
+  const [dismissed, setDismissed] = React.useState(false);
+  const [accepted, setAccepted] = React.useState(0);
+  const [said, setSaid] = React.useState('');
+  React.useEffect(() => { setDismissed(false); }, [suggestion]);
+  let typed = current, ghost = '';
+  if (suggestion && !dismissed) {
+    if (suggestionMode === 'append') ghost = suggestion;
+    else if (!current) ghost = suggestion;
+    else if (suggestion.length > current.length && suggestion.toLowerCase().startsWith(current.toLowerCase())) ghost = suggestion.slice(current.length);
+  }
+  if (!ghost) typed = '';
+  const next = suggestionMode === 'append' ? current + (suggestion ?? '') : suggestion ?? '';
+  const onKeyDown = (e: React.KeyboardEvent<E>) => {
+    if (!ghost) return;
+    if (e.key === 'Tab' && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      const node = el.current!;
+      // Sets the value the way typing does, so a controlled field's onChange hears it.
+      Object.getOwnPropertyDescriptor(Object.getPrototypeOf(node), 'value')!.set!.call(node, next);
+      node.dispatchEvent(new Event('input', { bubbles: true }));
+      node.setSelectionRange(next.length, next.length);
+      onAcceptSuggestion?.(next);
+      setAccepted((n) => n + 1); setSaid('Suggestion accepted.');
+    } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setDismissed(true); setSaid('Suggestion dismissed.'); }
+  };
+  const description = ghost ? `Suggestion: ${next}. Press Tab to accept.` : undefined;
+  return { typed, ghost, description, onKeyDown, accepted, said, on: suggestion !== undefined };
+}
+const Ghost = ({ typed, ghost, multiline, el }: { typed: string; ghost: string; multiline?: boolean; el: React.RefObject<FieldEl | null> }) => {
+  const box = React.useRef<HTMLSpanElement>(null);
+  // Scrolls with the field, so the ghost stays after the text.
+  React.useEffect(() => {
+    const f = el.current; if (!f) return;
+    const sync = () => { if (box.current) { box.current.scrollLeft = f.scrollLeft; box.current.scrollTop = f.scrollTop; } };
+    sync(); f.addEventListener('scroll', sync); f.addEventListener('input', sync);
+    return () => { f.removeEventListener('scroll', sync); f.removeEventListener('input', sync); };
+  });
+  if (!ghost) return null;
+  return <span ref={box} className="alt-input-ghost" data-multiline={multiline ? '' : undefined} aria-hidden="true"><span className="alt-input-ghost-typed">{typed}</span>{ghost}</span>;
+};
+const useFieldRef = <E,>(ref: React.ForwardedRef<E>) => {
+  const inner = React.useRef<E | null>(null);
+  const set = React.useCallback((node: E | null) => { inner.current = node; if (typeof ref === 'function') ref(node); else if (ref) ref.current = node; }, [ref]);
+  return [inner, set] as const;
+};
+
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>, SuggestionProps {
   invalid?: boolean;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
   size?: 'sm' | 'md';
 }
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Input(
-  { invalid, leading, trailing, size = 'md', className, disabled, placeholder, ...rest }, ref) {
+  { invalid, leading, trailing, size = 'md', className, disabled, placeholder, suggestion, suggestionMode, onAcceptSuggestion, onChange, onKeyDown, value, defaultValue, ...rest }, ref) {
   useApproach();
   useKeyFocus();
+  const [inner, setRef] = useFieldRef(ref);
+  const [cur, setCur] = React.useState(() => String(value ?? defaultValue ?? ''));
+  React.useEffect(() => { if (value !== undefined) setCur(String(value)); }, [value]);
+  const s = useSuggestion({ suggestion, suggestionMode, onAcceptSuggestion }, cur, inner);
+  const { style, ...depth } = useDepth({ settle: s.accepted || undefined });
+  const field = (
+    // A placeholder (even a blank one) lets the well know whether it's empty or filled, without JavaScript. A ghost
+    // replaces a visible placeholder but leaves the blank one, so the well stays an opening.
+    <input ref={setRef} disabled={disabled} aria-invalid={invalid || undefined} placeholder={s.ghost ? ' ' : placeholder ?? ' '} value={value} defaultValue={defaultValue}
+      aria-description={s.description} {...rest}
+      onChange={(e) => { setCur(e.target.value); onChange?.(e); }} onKeyDown={(e) => { onKeyDown?.(e); if (!e.defaultPrevented) s.onKeyDown(e); }} />
+  );
   return (
-    <div className={cx('alt-input', className)} data-size={size} data-approach="56" data-invalid={invalid ? '' : undefined} data-disabled={disabled ? '' : undefined}>
+    <div className={cx('alt-input', className)} data-size={size} data-approach="56" data-invalid={invalid ? '' : undefined} data-disabled={disabled ? '' : undefined}
+      {...(s.on ? depth : {})} style={s.on ? style : undefined}>
       {leading && <span className="alt-input-adorn">{leading}</span>}
-      {/* A placeholder (even a blank one) lets the well know whether it's empty or filled, without JavaScript. */}
-      <input ref={ref} disabled={disabled} aria-invalid={invalid || undefined} placeholder={placeholder ?? ' '} {...rest} />
+      {s.on ? <span className="alt-input-field">{field}<Ghost typed={s.typed} ghost={s.ghost} el={inner} /></span> : field}
       {trailing && <span className="alt-input-adorn">{trailing}</span>}
+      {s.on && <span className="alt-sr" aria-live="polite">{s.said}</span>}
     </div>
   );
 });
 
-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement>, SuggestionProps {
   invalid?: boolean;
   /** With maxLength, the well fills from the bottom as the text approaches the limit, and shows a count. Default true. */
   showFill?: boolean;
 }
 /** A deep well. With a maxLength it shows how full it is: a fill line rises from the floor as you type. */
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { invalid, className, disabled, placeholder, maxLength, showFill = true, onChange, value, defaultValue, ...rest }, ref) {
-  const [len, setLen] = React.useState(() => String(value ?? defaultValue ?? '').length);
-  React.useEffect(() => { if (value !== undefined) setLen(String(value).length); }, [value]);
+  { invalid, className, disabled, placeholder, maxLength, showFill = true, onChange, onKeyDown, value, defaultValue, suggestion, suggestionMode, onAcceptSuggestion, ...rest }, ref) {
+  const [inner, setRef] = useFieldRef(ref);
+  const [cur, setCur] = React.useState(() => String(value ?? defaultValue ?? ''));
+  React.useEffect(() => { if (value !== undefined) setCur(String(value)); }, [value]);
+  const len = cur.length;
+  const s = useSuggestion({ suggestion, suggestionMode, onAcceptSuggestion }, cur, inner);
+  const { style: depthStyle, ...depth } = useDepth({ settle: s.accepted || undefined });
   const gauge = showFill && maxLength ? Math.min(1, len / maxLength) : null;
   const level = gauge === null ? undefined : len >= maxLength! ? 'full' : gauge >= 0.9 ? 'near' : 'ok';
   useApproach();
   useKeyFocus();
   return (
     <div className={cx('alt-input', className)} data-multiline="" data-approach="56" data-invalid={invalid ? '' : undefined} data-disabled={disabled ? '' : undefined}
-      data-fill={level} style={gauge !== null ? ({ ['--alt-fill' as any]: gauge } as React.CSSProperties) : undefined}>
+      data-fill={level} {...(s.on ? depth : {})} style={{ ...(gauge !== null ? ({ ['--alt-fill' as any]: gauge } as React.CSSProperties) : {}), ...(s.on ? depthStyle : {}) }}>
       {gauge !== null && <span className="alt-input-gauge" aria-hidden="true" />}
-      <textarea ref={ref} disabled={disabled} aria-invalid={invalid || undefined} placeholder={placeholder ?? ' '} maxLength={maxLength}
-        value={value} defaultValue={defaultValue} {...rest} onChange={(e) => { setLen(e.target.value.length); onChange?.(e); }} />
+      {(() => {
+        const field = <textarea ref={setRef} disabled={disabled} aria-invalid={invalid || undefined} placeholder={s.ghost ? ' ' : placeholder ?? ' '} maxLength={maxLength}
+          value={value} defaultValue={defaultValue} aria-description={s.description} {...rest}
+          onChange={(e) => { setCur(e.target.value); onChange?.(e); }} onKeyDown={(e) => { onKeyDown?.(e); if (!e.defaultPrevented) s.onKeyDown(e); }} />;
+        return s.on ? <span className="alt-input-field" data-multiline="">{field}<Ghost typed={s.typed} ghost={s.ghost} multiline el={inner} /></span> : field;
+      })()}
       {gauge !== null && <span className="alt-input-count" aria-live="polite">{len} / {maxLength}</span>}
+      {s.on && <span className="alt-sr" aria-live="polite">{s.said}</span>}
     </div>
   );
 });

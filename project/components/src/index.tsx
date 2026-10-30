@@ -41,6 +41,7 @@ export { Confirmation } from './confirmation';
 export type { ConfirmationState } from './confirmation';
 export { Trace, TraceStep, TraceToolCall, TraceReasoning } from './trace';
 export type { TraceStepStatus } from './trace';
+export type { SuggestionProps } from './controls';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';
