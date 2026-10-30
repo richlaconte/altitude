@@ -3341,7 +3341,12 @@ export interface ConfirmationProps {
   resolvedAt?: Date | string | number;
   /** Who's asking. Default "The assistant". */
   requestedBy?: string;
-  onApprove?: () => void;
+  /** Wider ways to approve: Approve becomes a SplitButton (face: once; menu "More ways to approve": these). Ignored with escalate. */
+  scopes?: { value: string; label: string; description?: string }[];
+  /** The scope it was approved with ('once' or a scope's value), named in the resolved line. */
+  resolvedScope?: string;
+  /** Called with 'once' or a scope's value. */
+  onApprove?: (scope?: string) => void;
   onReject?: () => void;
   onRetry?: () => void;
   className?: string;

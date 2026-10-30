@@ -3292,14 +3292,15 @@ function App() {
   );
 }
 
-=== Confirmation | <!-- @dsCard group="Feedback" height=700 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
+=== Confirmation | <!-- @dsCard group="Feedback" height=900 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
 --- jsx
-function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails }) {
+function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails, scopes }) {
   const [state, setState] = React.useState('requested');
+  const [scope, setScope] = React.useState();
   const [at, setAt] = React.useState();
-  const approve = () => { setState('running'); setTimeout(() => { setState(fails ? 'failed' : 'done'); setAt(new Date()); }, 1400); };
+  const approve = (s) => { setScope(s); setState('running'); setTimeout(() => { setState(fails ? 'failed' : 'done'); setAt(new Date()); }, 1400); };
   return <A.Confirmation state={state} title={title} consequence={consequence} escalate={escalate} approveLabel={approveLabel} rejectLabel={rejectLabel}
-    runningLabel={runningLabel} doneLabel={doneLabel} failedLabel={failedLabel} resolvedBy="you" resolvedAt={at}
+    runningLabel={runningLabel} doneLabel={doneLabel} failedLabel={failedLabel} resolvedBy="you" resolvedAt={at} scopes={scopes} resolvedScope={scope}
     onApprove={approve} onReject={() => { setState('rejected'); setAt(new Date()); }} onRetry={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1000); }} />;
 }
 function App() {
@@ -3308,6 +3309,8 @@ function App() {
       <Proposal title="Send campaign email" consequence="214 Pro customers will receive “October product update”." approveLabel="Send 214 emails" rejectLabel="Don't send" runningLabel="Sending…" doneLabel="Sent" failedLabel="Couldn't send" />
       <Proposal title="Delete 3 stale branches" consequence="release/2.3, spike/maps and fix/old-auth will be deleted from the repository." approveLabel="Delete 3 branches" rejectLabel="Keep them" runningLabel="Deleting…" doneLabel="Deleted" escalate="hold" />
       <Proposal title="Archive the Atlas workspace" consequence="12 people lose access; it can't be restored after 30 days." approveLabel="Archive workspace" rejectLabel="Don't archive" runningLabel="Archiving…" failedLabel="Couldn't archive" escalate="dialog" fails />
+      <Proposal title="Run npm test" consequence="Runs the test suite in this workspace." approveLabel="Run once" rejectLabel="Don't run" runningLabel="Running…" doneLabel="Ran"
+        scopes={[{ value: 'session', label: 'Allow npm test for this session' }, { value: 'always', label: 'Always allow npm test', description: 'Saved to this project’s settings' }]} />
     </div>
   );
 }

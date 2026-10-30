@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cx, Icons, useDepth } from './core';
 import { Button, HoldButton } from './controls';
 import { Dialog } from './overlays';
+import { SplitButton } from './split-button';
 import { RelativeTime } from './relative-time';
 
 /* ───────────────────────── Confirmation ───────────────────────── */
@@ -32,7 +33,15 @@ export interface ConfirmationProps {
   resolvedAt?: Date | string | number;
   /** Who's asking. Default "The assistant". */
   requestedBy?: string;
-  onApprove?: () => void;
+  /**
+   * Wider ways to approve (#280): Approve becomes a SplitButton whose face approves once and whose menu ("More ways to
+   * approve") holds these. Ignored with `escalate`: an action that needs a hold or a dialog is never pre-approved.
+   */
+  scopes?: { value: string; label: string; description?: string }[];
+  /** The scope it was approved with ('once', or a scope's value), named in the resolved line. */
+  resolvedScope?: string;
+  /** Called with the scope: 'once' from the face, or a scope's value from the menu. */
+  onApprove?: (scope?: string) => void;
   onReject?: () => void;
   onRetry?: () => void;
   className?: string;
@@ -44,7 +53,9 @@ export interface ConfirmationProps {
  * flush and muted, kept in the record.
  */
 export function Confirmation({ state, title, consequence, details, approveLabel = 'Approve', rejectLabel = 'Reject', runningLabel = 'Working…', doneLabel = 'Done',
-  failedLabel = "Couldn't finish", escalate, resolvedBy, resolvedAt, requestedBy = 'The assistant', onApprove, onReject, onRetry, className }: ConfirmationProps) {
+  failedLabel = "Couldn't finish", escalate, resolvedBy, resolvedAt, requestedBy = 'The assistant', scopes, resolvedScope, onApprove, onReject, onRetry, className }: ConfirmationProps) {
+  // How widely it was approved, in words: "allowed for this session".
+  const scoped = resolvedScope && resolvedScope !== 'once' ? (resolvedScope === 'session' ? 'allowed for this session' : resolvedScope === 'always' ? 'always allowed' : `allowed: ${scopes?.find((x) => x.value === resolvedScope)?.label ?? resolvedScope}`) : null;
   const id = React.useId();
   const [asking, setAsking] = React.useState(false);
   const status = state === 'approved' || state === 'running' ? 'pending' : state === 'done' ? 'committed' : state === 'failed' ? 'failed' : undefined;
@@ -54,7 +65,7 @@ export function Confirmation({ state, title, consequence, details, approveLabel 
   React.useEffect(() => {
     if (last.current !== state) {
       const name = typeof title === 'string' ? title : 'Action';
-      setSaid(state === 'done' ? `${name}: ${doneLabel}.` : state === 'failed' ? `${name}: ${failedLabel}.` : state === 'rejected' ? `${name}: rejected.` : state === 'running' || state === 'approved' ? `${name}: approved. ${runningLabel}` : '');
+      setSaid(state === 'done' ? `${name}: ${doneLabel}.` : state === 'failed' ? `${name}: ${failedLabel}.` : state === 'rejected' ? `${name}: rejected.` : state === 'running' || state === 'approved' ? `${name}: ${scoped ?? 'approved'}. ${runningLabel}` : '');
     }
     last.current = state;
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -62,13 +73,16 @@ export function Confirmation({ state, title, consequence, details, approveLabel 
   const when = resolvedAt !== undefined ? <> · <RelativeTime date={resolvedAt} /></> : null;
   const line = state === 'requested' ? <><Icons.AlertCircle size={14} aria-hidden="true" />Approval needed</>
     : status === 'pending' ? runningLabel
-    : state === 'done' ? <><Icons.CircleCheck size={14} aria-hidden="true" />{doneLabel}{resolvedBy && ` · approved by ${resolvedBy}`}{when}</>
+    : state === 'done' ? <><Icons.CircleCheck size={14} aria-hidden="true" />{doneLabel}{scoped ? ` · ${scoped}${resolvedBy ? ` by ${resolvedBy}` : ''}` : resolvedBy && ` · approved by ${resolvedBy}`}{when}</>
     : state === 'failed' ? <><Icons.AlertCircle size={14} aria-hidden="true" />{failedLabel}</>
     : state === 'rejected' ? <>Rejected{resolvedBy && ` by ${resolvedBy}`}{when}</>
     : 'No longer needed';
   const approve = escalate === 'hold'
     ? <HoldButton size="sm" variant="primary" onConfirm={() => onApprove?.()} holdingLabel="Keep holding…">{approveLabel}</HoldButton>
-    : <Button size="sm" variant="primary" onClick={() => (escalate === 'dialog' ? setAsking(true) : onApprove?.())}>{approveLabel}</Button>;
+    : !escalate && scopes?.length
+      ? <SplitButton size="sm" variant="primary" label={approveLabel} onClick={() => onApprove?.('once')} menuLabel="More ways to approve"
+        items={scopes.map((x) => ({ label: <span className="alt-confirm-scope"><span>{x.label}</span>{x.description && <span className="alt-confirm-scope-desc">{x.description}</span>}</span>, onSelect: () => onApprove?.(x.value) }))} />
+      : <Button size="sm" variant="primary" onClick={() => (escalate === 'dialog' ? setAsking(true) : onApprove?.())}>{approveLabel}</Button>;
   return (
     <section className={cx('alt-confirm', className)} data-state={state} aria-labelledby={`${id}-t`} aria-describedby={`${id}-c`} {...depth} style={style}>
       <p className="alt-confirm-line" data-tone={state === 'failed' ? 'critical' : state === 'requested' ? 'accent' : undefined}>{line}</p>
