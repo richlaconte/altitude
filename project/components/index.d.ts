@@ -3451,6 +3451,42 @@ export declare function InlineCitation(props: InlineCitationProps): React.ReactE
 export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
+export type ThreadStatus = 'idle' | 'working' | 'needs-input' | 'failed' | 'stopped';
+export interface ThreadListProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
+  /** A search field; ⌘K / Ctrl+K focuses it. */
+  searchable?: boolean;
+  onSearch?: (query: string) => void;
+  searchLabel?: string;
+  children: React.ReactNode;
+}
+export interface ThreadListGroupProps { label: string; children: React.ReactNode; className?: string }
+export interface ThreadListItemProps {
+  href: string;
+  title: string;
+  updatedAt: Date | string | number;
+  /** Default 'idle'. */
+  status?: ThreadStatus;
+  /** For 'needs-input'. Default 'approval'. */
+  needs?: 'approval' | 'question';
+  unread?: boolean;
+  current?: boolean;
+  onSelect?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  /** Rename in place (F2 or the row menu). */
+  onRename?: (title: string) => void;
+  /** Delete (Delete key or the row menu): a receipt with Undo. Drop the thread in onDeleted. */
+  onDelete?: () => void;
+  onUndoDelete?: () => void;
+  onDeleted?: () => void;
+  onArchive?: () => void;
+  className?: string;
+}
+/** Conversations beside the thread, each saying its state in words; built from Sidebar's parts. */
+export declare function ThreadList(props: ThreadListProps): React.ReactElement;
+export declare function ThreadListGroup(props: ThreadListGroupProps): React.ReactElement;
+export declare function ThreadListItem(props: ThreadListItemProps): React.ReactElement | null;
+export declare function ThreadListNew(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }): React.ReactElement;
+/** Today, Yesterday, Previous 7 days, Previous 30 days, then by month. */
+export declare function groupByDate<T>(threads: T[], getDate: (t: T) => Date | string | number, now?: Date | number, locale?: string): { label: string; threads: T[] }[];
 export type QuestionState = 'asking' | 'answered' | 'expired';
 export interface QuestionAnswer { values: string[]; other?: string }
 export interface QuestionOptionProps { value: string; label: React.ReactNode; description?: React.ReactNode }
@@ -3626,6 +3662,7 @@ declare global {
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
+      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;

@@ -3468,6 +3468,53 @@ function App() {
   );
 }
 
+=== ThreadList | <!-- @dsCard group="Layout" height=640 subtitle="Conversations with an assistant beside the thread, the ones still working said in words" -->
+--- css
+.tl { height: 600px; max-width: 760px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.tl .page { padding: 24px; color: var(--ink-muted); font: 400 14px/20px var(--font-sans); }
+--- jsx
+const now = Date.now(), min = 60000, day = 86400000;
+const seed = [
+  { id: 'a', title: 'Q3 pricing comparison', at: now - 2 * min, status: 'needs-input', needs: 'approval' },
+  { id: 'b', title: 'Refactor the billing module', at: now - 9 * min, status: 'working' },
+  { id: 'c', title: 'Summarise incident #4821', at: now - 40 * min, unread: true },
+  { id: 'd', title: 'Draft the release note', at: now - day - 3 * 3600000 },
+  { id: 'e', title: 'Migrate the users table', at: now - day - 5 * 3600000, status: 'failed' },
+  { id: 'f', title: 'Onboarding email ideas', at: now - 4 * day },
+  { id: 'g', title: 'Competitor research', at: now - 12 * day, status: 'stopped' },
+];
+function App() {
+  const [threads, setThreads] = React.useState(seed);
+  const [at, setAt] = React.useState('b');
+  const [q, setQ] = React.useState('');
+  const shown = threads.filter((t) => t.title.toLowerCase().includes(q.toLowerCase()));
+  const set = (id, patch) => setThreads((ts) => ts.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  return (
+    <div className="tl">
+      <A.AppShell sidebar={
+        <A.Sidebar aria-label="Conversations">
+          <A.SidebarHeader><A.ThreadListNew onClick={() => { const id = String(Date.now()); setThreads((ts) => [{ id, title: 'New conversation', at: Date.now() }, ...ts]); setAt(id); }} /></A.SidebarHeader>
+          <A.SidebarContent>
+            <A.ThreadList searchable onSearch={setQ}>
+              {A.groupByDate(shown, (t) => t.at, now).map((g) => (
+                <A.ThreadListGroup key={g.label} label={g.label}>
+                  {g.threads.map((t) => (
+                    <A.ThreadListItem key={t.id} href={'#/c/' + t.id} title={t.title} updatedAt={t.at} status={t.status} needs={t.needs} unread={t.unread} current={t.id === at}
+                      onSelect={(e) => { e.preventDefault(); setAt(t.id); set(t.id, { unread: false }); }}
+                      onRename={(title) => set(t.id, { title })} onDelete={() => {}} onUndoDelete={() => {}} onDeleted={() => setThreads((ts) => ts.filter((x) => x.id !== t.id))} />
+                  ))}
+                </A.ThreadListGroup>
+              ))}
+            </A.ThreadList>
+          </A.SidebarContent>
+        </A.Sidebar>
+      }>
+        <div className="page">The conversation “{threads.find((t) => t.id === at)?.title}” is open here.</div>
+      </A.AppShell>
+    </div>
+  );
+}
+
 === Question | <!-- @dsCard group="Feedback" height=900 subtitle="An agent asks before it carries on: raised until answered, then one line in the record" -->
 --- css
 .qs { display: flex; flex-direction: column; gap: 20px; max-width: 560px; }
