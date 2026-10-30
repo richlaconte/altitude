@@ -1,7 +1,9 @@
 // The tells of generated interfaces that only show once a page is rendered (Distinctiveness, #321). Warnings, never
 // failures: a row of genuinely equal items is legitimate, as Charts says of dashboard cards, so a person decides.
 //   LA4  three or more sibling surfaces of the same size, laid out together, none of them leading: no primary action and
-//        no larger title in one of them;
+//        no larger title in one of them, and no larger title just before the set (a hero number above a row of secondary
+//        ones leads it). A set of choices (radios, options, tabs) is exempt: options should weigh the same, and the
+//        current or recommended one is said in words;
 //   LA6  a view of eight or more different sections stacked with one gap, so nothing groups.
 // It opens every preview (test/p-<Name>-daylight.html, after a render or PAGES_ONLY=1) at 960 CSS px. An element inside
 // [data-tells-ignore="<id> <reason>"] is skipped for that id. TY5 (a font that never loads) is in tells-lint.mjs: the
@@ -23,7 +25,11 @@ const measure = () => {
   const transparent = (c) => c === 'rgba(0, 0, 0, 0)' || c === 'transparent';
   const surface = (e) => { const cs = getComputedStyle(e); return cs.boxShadow !== 'none' || (!transparent(cs.backgroundColor) && cs.backgroundColor !== getComputedStyle(e.parentElement).backgroundColor && parseFloat(cs.borderTopLeftRadius) > 0); };
   const near = (a, b, t) => Math.abs(a - b) <= t * Math.max(a, b);
-  const leads = (e) => !!e.querySelector('.alt-btn[data-variant="primary"]') || [...e.querySelectorAll('*')].some((x) => parseFloat(getComputedStyle(x).fontSize) >= 28 && x.textContent.trim());
+  const big = (e) => [e, ...e.querySelectorAll('*')].some((x) => parseFloat(getComputedStyle(x).fontSize) >= 28 && x.textContent.trim());
+  const leads = (e) => !!e.querySelector('.alt-btn[data-variant="primary"]') || big(e);
+  // A larger title or number among the set's container's earlier siblings, or its parent's, leads the set.
+  const ledFromBefore = (p) => [p, p.parentElement].filter(Boolean).some((n) => { for (let s = n.previousElementSibling; s; s = s.previousElementSibling) if (visible(s) && big(s)) return true; return false; });
+  const choice = (e) => e.matches('[role="radio"], [role="option"], [role="tab"], [role="checkbox"]') || !!e.closest('[role="radiogroup"], [role="listbox"], [role="tablist"]');
   for (const p of document.body.querySelectorAll('*')) {
     const kids = [...p.children].filter(visible);
     if (kids.length < 3) continue;
@@ -35,7 +41,7 @@ const measure = () => {
       const same = rs.every((r) => near(r.width, w, 0.05) && near(r.height, h, 0.05));
       const together = rs.some((r, i) => rs.some((q, j) => i !== j && Math.abs(r.top - q.top) < 2));
       const leading = cards.filter(leads).length;
-      if (same && together && (leading === 0 || leading === cards.length))
+      if (same && together && (leading === 0 || leading === cards.length) && !cards.every(choice) && !ledFromBefore(p))
         out.push(['LA4', `${cards.length} equal surfaces (${Math.round(w)}×${Math.round(h)}) in ${name(p)}, none leading`]);
     }
     // LA6: different sections, stacked, all one gap apart.

@@ -5963,7 +5963,7 @@ function App() {
           {test && <A.CodeBlock title="Test event sent: invoice.paid" language="json" code={PAYLOAD} />}
         </A.Card>
       </section>
-      <section className="dv-section" aria-labelledby="dv-apps-h">
+      <section className="dv-section" aria-labelledby="dv-apps-h" data-tells-ignore="LA4 installed integrations are peers; none should lead">
         <h3 id="dv-apps-h" className="dv-sub">Integrations</h3>
         <div className="dv-apps">{apps.map((a) => <A.Card key={a.id} className="dv-app" status={a.state === 'pending' ? 'pending' : undefined}>
           <div className="dv-row"><strong>{a.name}</strong>{a.state === 'connected' && <A.Badge tone="positive">Connected</A.Badge>}</div>

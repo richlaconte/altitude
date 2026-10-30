@@ -49,7 +49,7 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 
 - **CO3, Nightfall:** periwinkle on dark.
 - **CO8, Daylight:** its blue sits near Tailwind's.
-- **TY2 and IC3:** Instrument Sans and Lucide ([#325](https://github.com/richlaconte/altitude/issues/325)).
+- **TY2 and IC3:** Instrument Sans and Lucide, kept after review ([#325](https://github.com/richlaconte/altitude/issues/325)). Instrument Sans isn't on the catalogued lists; its serif sibling is, as the display accent Altitude doesn't use. The type rules (labels at 500, titles at 600, never 700, tracking that tightens with size, no all-caps labels) already differ from the generated defaults. Lucide is there because it shares the shipped icons' 24px grid and 1.75 stroke, and the icon tells that matter (CM4 icons in tinted squares, IC2 sparkles) are clear. Changing either would change every app built on Altitude, on practitioner evidence alone. Each quarterly audit checks whether generators have started reaching for either one.
 - **CM6:** props that mirror shadcn.
 - **CM2:** the dialog scrim's blur.
 - **Composition-dependent:** LA4 (equal-weight grids), LA7 (stat rows) and BH1 (design theater) depend on how apps compose the parts.
