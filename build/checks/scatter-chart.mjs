@@ -1,6 +1,6 @@
 // ScatterChart (#62): dots lie flat, at least 8px, ringed 2px in the plot's colour, a data-* fill and a marker shape
 // per group (circle, square, triangle); both axes are named; outliers are labelled in ink with a 1px leader, clear of
-// each other and of the trend, a 1px ink-muted least-squares line; the summary says how the measures relate; the
+// each other and of the trend, a 1px ink-muted least-squares line whose word covers no dot; the summary says how the measures relate; the
 // readout reads the nearest dot beside it with no crosshair; ← and → go in x order and ↑ and ↓ to the nearest dot
 // above or below; hidden groups leave the plot and the keyboard path; dots can be selected; with stable ids they glide;
 // forced colours keep the shapes, contrast="more" rings dots in ink. Run after a render of every preview (it opens
@@ -49,6 +49,10 @@ const overlap = (a, b) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1
   expect(lat.labels.length === 2 && lat.leaders === 2 && lat.labels.some((l) => l.text === 'Search search'), `outliers are labelled with leaders (${lat.labels.map((l) => l.text)})`);
   const boxes = [...lat.labels.map((l) => l.box), lat.trend.box];
   expect(boxes.every((a, i) => boxes.every((b, j) => i === j || !overlap(a, b))), 'labels clear each other and the trend\'s word');
+  const under = lat.dots.filter((d) => overlap(d.box, lat.trend.box));
+  expect(under.length === 0, `the trend's word covers no dot (#185; ${under.length} under it)`);
+  const hid = lat.labels.filter((l) => lat.dots.some((d) => overlap(d.box, l.box)));
+  expect(hid.length === 0, `no outlier's label covers a dot (${hid.map((l) => l.text)})`);
   expect(lat.trend && lat.trend.stroke === await color(page, 'var(--ink-muted)') && lat.trend.w === '1px' && lat.trend.text === 'Trend', `the trend is a 1px ink-muted line named "Trend" (${JSON.stringify(lat.trend)})`);
   expect(/^Scatter chart of p95 against Payload, 30 points in 3 groups: Checkout, Search and Media\. p95 rises (strongly|moderately) with Payload \(r = 0\.\d\d\)\. .*Labelled: .*Search search \(/.test(lat.summary), 'the summary says how the measures relate: ' + lat.summary.slice(0, 160));
   expect(spend.trend === null, 'no trend unless asked for');
@@ -134,6 +138,7 @@ const overlap = (a, b) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1
   const [lat] = await read(page);
   const boxes = [...lat.labels.map((l) => l.box), lat.trend.box];
   expect(lat.labels.length === 2 && boxes.every((a, i) => boxes.every((b, j) => i === j || !overlap(a, b))), `at 360px both labels are placed, clear of each other (${lat.labels.map((l) => l.text)})`);
+  expect(!lat.dots.some((d) => overlap(d.box, lat.trend.box)), 'at 360px the trend\'s word covers no dot');
   await page.close();
 }
 
