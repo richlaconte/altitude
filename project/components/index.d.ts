@@ -2862,6 +2862,27 @@ export interface SyncIndicatorProps {
 /** Whether work has reached the server, in words on a flush Badge plate whose lamp relights on change. */
 export declare function SyncIndicator(props: SyncIndicatorProps): React.ReactElement;
 
+/** Line operations for two texts. */
+export declare function diffLines(before: string, after: string): { kind: 'same' | 'add' | 'del'; text: string }[];
+export interface DiffField { key: string; label: string; format?: (value: unknown) => React.ReactNode }
+export interface DiffViewProps {
+  /** 'text' (default): lines of two texts. 'properties': fields of two records. */
+  mode?: 'text' | 'properties';
+  before: string | Record<string, unknown>;
+  after: string | Record<string, unknown>;
+  /** For mode="properties": which fields, labelled. Default every key that changed. */
+  fields?: DiffField[];
+  /** Unchanged lines kept around each change. Default 3. */
+  context?: number;
+  /** What's being compared ("Version 4 → 5"). */
+  caption?: React.ReactNode;
+  /** Precomputed line operations, for large inputs. */
+  hunks?: { kind: 'same' | 'add' | 'del'; text: string }[];
+  className?: string;
+}
+/** What changed between two versions, in signs and words; flush on the ground, never colour alone. */
+export declare function DiffView(props: DiffViewProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2881,6 +2902,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      DiffView: typeof DiffView; diffLines: typeof diffLines;
       SyncIndicator: typeof SyncIndicator;
       NotificationCenter: typeof NotificationCenter; NotificationList: typeof NotificationList;
       Timeline: typeof Timeline; TimelineItem: typeof TimelineItem;

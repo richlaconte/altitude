@@ -1014,6 +1014,17 @@ A design review: `SyncIndicator` was rendered saving, saved, offline with change
 
 Not yet tested with people: whether "Saved · 2 minutes ago" builds more trust than "Saved" alone.
 
+### E86 · How should a change read without colour?
+
+A design review: `DiffView` was rendered for a config file (two changed lines, an added line, unchanged runs folded) and for a subscription's properties, in all four schemes and under forced colours. `checks/diff-view.mjs` measures it, including the diff itself.
+
+- **Signs and words first.** Diffs drawn in red and green alone fail colour-blind readers and the "never colour alone" rule. Every change has a sign (`+`, `−`), an element (`ins`, `del`), a strike-through for removals and "Added"/"Removed" for screen readers; the tints are a third cue, dropped under forced colours.
+- **Pair by block.** A block of two removed lines followed by two added lines is two changed lines, so the nth removal pairs with the nth addition for word marks. Pairing only neighbours marked the wrong words.
+- **Fold long runs, not single lines.** A lid for one unchanged line takes as much room as the line and hides it, so only runs of two or more fold.
+- **Small, built in.** An LCS line and word diff covers documents and configs. Very large inputs can pass precomputed `hunks`.
+
+Not yet tested with people: whether the summary ("3 additions, 2 removals") is enough to decide whether to read on.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
