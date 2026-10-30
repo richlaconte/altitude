@@ -64,6 +64,7 @@ jobs:
           PHONE_FAIL=M6 node ../scripts/record-check.mjs phone node checks/phone.mjs
           node ../scripts/record-check.mjs density node checks/density.mjs
           node ../scripts/record-check.mjs hover-media node checks/hover-media.mjs
+          node ../scripts/record-check.mjs keyboard-hints node checks/keyboard-hints.mjs
           node checks/approach-and-lamps.mjs
           node checks/field-focus.mjs
           node checks/avatar.mjs

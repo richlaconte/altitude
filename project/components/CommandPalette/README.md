@@ -16,6 +16,8 @@ Finds and runs anything in the product from one field: the summit, at level 5, o
 
 **Keyboard and screen readers.** The field is a `combobox` that controls a `listbox` through `aria-activedescendant` (the WAI-ARIA combobox pattern), so focus stays in the field. ↑ and ↓ move and wrap, Enter chooses, Escape closes, and ⌘K / Ctrl+K toggles. Groups are named by their labels, the active option is `aria-selected`, disabled items are skipped, and the number of results is announced once typing pauses. Focus goes back where it was when the palette closes. Under reduced motion nothing travels; rows fade.
 
+**On touch.** `hints="auto"` (the default) shows the footer, the item shortcuts and the field's esc where there's likely a keyboard, and hides them on a touch-only device until a key is pressed, so a phone's palette isn't crowded with keys it can't press. `true` or `false` forces them. The shortcuts still work either way.
+
 **You provide:** `items`, a list of groups (`label`, `items`, optional `predicted`), each item with a `label` and usually an `icon`, `onSelect`, `shortcut` (display only: bind the key yourself), `keywords` and `description`; `open`/`onOpenChange` when you also open it from a button or a field; `query`/`onQueryChange` or `defaultQuery` when it should open on a query. Optionally `filter` (return 0 to hide, higher to rank nearer the top; `commandScore` is the default), `empty`, `placeholder`, and `shortcut` (another letter, or `false`).
 
 - Do start actions with a verb ("Invite people") and name places plainly ("Northwind").

@@ -594,7 +594,11 @@ export declare function Accordion(props: AccordionProps): React.ReactElement;
 export interface KbdProps extends React.HTMLAttributes<HTMLElement> {
   /** A KeyboardEvent.key; the key presses down while that key is held. */
   listen?: string;
+  /** Hide it on a touch-only device until a key is pressed: for a hint that only makes sense with a keyboard. Default false. */
+  hideOnTouch?: boolean;
 }
+/** Whether the person likely has a keyboard: false on a touch-only device until a key is pressed in the session. */
+export declare function useKeyboardLikely(): boolean;
 export declare function Kbd(props: KbdProps): React.ReactElement;
 
 export interface TooltipProps {
@@ -1058,8 +1062,8 @@ export interface CommandPaletteProps {
   onQueryChange?: (query: string) => void;
   /** Close once an item is chosen. Default true. */
   closeOnSelect?: boolean;
-  /** The key hints along the bottom. Default true. */
-  hints?: boolean;
+  /** The key hints (footer, item shortcuts, esc): 'auto' (default) hides them on a touch-only device until a key is pressed. */
+  hints?: boolean | 'auto';
   className?: string;
   /** Default "Command palette". */
   'aria-label'?: string;
@@ -3249,7 +3253,7 @@ declare global {
       Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; ItemGroup: typeof ItemGroup; RemovalReceipt: typeof RemovalReceipt; Item: typeof Item; ItemMedia: typeof ItemMedia; ItemContent: typeof ItemContent; ItemTitle: typeof ItemTitle; ItemDescription: typeof ItemDescription; ItemActions: typeof ItemActions; ItemSeparator: typeof ItemSeparator; PropertyList: typeof PropertyList; PropertyListItem: typeof PropertyListItem; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
-      Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd;
+      Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd; useKeyboardLikely: typeof useKeyboardLikely;
       HoldButton: typeof HoldButton; Pile: typeof Pile; ScrollArea: typeof ScrollArea; DropZone: typeof DropZone; SortableList: typeof SortableList; Checklist: typeof Checklist; Drilldown: typeof Drilldown; Tree: typeof Tree; useDepth: typeof useDepth; useApproach: typeof useApproach;
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
