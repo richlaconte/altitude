@@ -1,6 +1,13 @@
 {
   "name": "Tells of generated interfaces",
-  "reviewed": "2026-10-30",
+  "refresh": {
+    "reviewed": "2026-10-30",
+    "reviewEveryDays": 31,
+    "audited": "2026-10-30",
+    "auditEveryDays": 92,
+    "retireAfterDays": 184,
+    "note": "`reviewed` is the last monthly catalog review and `audited` the last quarterly re-audit of Altitude (E110 was the first). Update the date when you do one. `node build/checks/tells-freshness.mjs` warns in CI when either is overdue, and lists tells not seen in `retireAfterDays`. A major model release makes both due at once: set them back by hand to say so."
+  },
   "note": "The visual and behavioural defaults that mark an interface as machine-generated, and where Altitude stands on each. Distinctiveness.md says how to use this file and when to refresh it; Research.md (\"Generated interfaces converge\", E110) has the evidence. A tell is judged in a cluster, never alone. `detect` says what can catch it: `lint` (source text), `render` (a rendered preview), `measure` (the distinctiveness benchmark) or `human` (review). `altitude` is `clear`, `watch` (close to a tell, or depends on how it's used), `exposed` (matches a tell today) or `unchecked`. `lastSeen` is the last review that still found the tell common in generated output; retire a tell that hasn't been seen for two quarterly reviews.",
   "sources": {
     "anthropic-2025": { "cite": "Rajasekaran, Wei & Bricken, Improving frontend design through Skills, Anthropic, 2025-11-12", "url": "https://claude.com/resources/articles/improving-frontend-design-through-skills", "kind": "primary, vendor" },

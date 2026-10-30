@@ -40,6 +40,11 @@ jobs:
           npm ci
           npm ci --prefix build
 
+      # Distinctiveness.md, "Keeping current": warns (never fails) when the tells catalog is due its monthly review or
+      # quarterly audit, and fails only if tells.json is malformed.
+      - name: Tells catalog is current
+        run: npm run check:tells
+
       # build/ is the kit that produces the design system's bundle and previews (see build/SETUP.md). Rebuilding must
       # change nothing: if it does, someone edited the sources without rebuilding, and project/ is out of date.
       - name: Design system is in sync with its sources

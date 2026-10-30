@@ -62,6 +62,7 @@ As of the 2026-10-30 review (E110), 29 of 47 tells are clear, 11 are to watch, 3
 | When | What | Gates? |
 |---|---|---|
 | Every push | The `lint` and `render` checks (#320, #321) | `lint` fails; equal-weight grids and flat spacing warn |
+| Every push | `npm run check:tells`: is the catalog due a review or audit? | Warns |
 | Every pull request that changes how something looks | The review list below | Reviewer |
 | Each release, and quarterly | The benchmark against a rebuilt baseline (#322) | Recorded, not gated |
 | Yearly | The blind study with people (#326) | Recorded in Research |
@@ -76,13 +77,15 @@ For a pull request that changes how something looks, the reviewer asks:
 
 ## Keeping current
 
-The look moves with each model release and each popular anti-slop prompt, so the catalog is refreshed on a schedule:
+The look moves with each model release and each popular anti-slop prompt, so the catalog is refreshed on a schedule. Nothing runs the refresh for us; the repository says when it's due. `tells.json` records when the catalog was last reviewed and last audited, and how often each is due (`refresh`). `npm run check:tells` runs on every push. It warns when either is overdue and lists tells not seen for six months, as annotations on the run and in its summary. It never fails a build for being overdue, only for a malformed catalog; `--strict` makes overdue a failure locally.
 
 | When | What | Output |
 |---|---|---|
 | Monthly | Read the practitioner catalogs (avoid-ai-design and others), the avoid-lists in the major frontend design skills (they say where generators will go next), new preprints on generative UI homogeneity, and design press | New tells added to `tells.json` with sources; `lastSeen` updated on the ones still common; new `lint` rules filed against #320 |
 | Quarterly, and after a major model release | Rebuild the benchmark baseline with current tools and models, rerun it, and re-audit the schemes, type and skeleton against the current defaults | A numbered experiment in Research; status changes in `tells.json` |
 | Yearly | The study with people | A numbered experiment; new tells from what participants named |
+
+When you finish a review or an audit, set `refresh.reviewed` or `refresh.audited` to the date, in the same pull request as its changes. A major model release makes both due at once: set the dates back to say so.
 
 Retire a tell that two quarterly reviews in a row no longer find in generated output. A tell that's gone from generators but still in Altitude isn't a problem; one that's common in both is.
 
