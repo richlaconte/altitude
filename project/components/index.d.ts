@@ -3224,7 +3224,16 @@ export declare function Tour(props: TourProps): React.ReactElement | null;
 
 export type PromptStatus = 'ready' | 'submitted' | 'streaming' | 'error';
 export interface PromptAttachment { id: string; file: File; name: string; status?: 'pending' }
-export interface PromptMessage { text: string; files: File[] }
+export interface PromptMention { id: string; label: string; kind?: 'file' | 'record' | 'person'; description?: string }
+export interface PromptCommand { name: string; description?: string }
+export interface PromptMessage {
+  text: string;
+  files: File[];
+  /** What was pointed at with @ and is still in the text. */
+  mentions?: PromptMention[];
+  /** The command chosen with /, without its slash; taken out of text. */
+  command?: string;
+}
 export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
   /** Called with the text and attached files when sent. */
   onSubmit: (message: PromptMessage) => void;
@@ -3232,6 +3241,10 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
   status?: PromptStatus;
   onStop?: () => void;
   /** Enter while 'submitted' or 'streaming' queues the message instead of doing nothing; the button stays Stop. Show the queue with ConversationQueue. */
+  /** @ opens a list of matches; a chosen one is "@label" in the text and a plate above it. A promise shows "Searching…". */
+  mentionable?: (query: string) => PromptMention[] | Promise<PromptMention[]>;
+  /** / at the start of an empty composer opens these. */
+  commands?: PromptCommand[];
   onQueue?: (message: PromptMessage) => void;
   value?: string;
   onValueChange?: (text: string) => void;

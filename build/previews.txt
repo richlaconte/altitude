@@ -3801,10 +3801,30 @@ function App() {
   );
 }
 
-=== PromptInput | <!-- @dsCard group="Inputs" height=420 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
+=== PromptInput | <!-- @dsCard group="Inputs" height=680 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
 --- css
 .pi { max-width: 640px; }
 --- jsx
+const context = [
+  { id: 'f1', label: 'pricing.ts', kind: 'file', description: 'src/pricing.ts' },
+  { id: 'f2', label: 'plans.test.ts', kind: 'file', description: 'src/plans.test.ts' },
+  { id: 'r1', label: 'Q3 report', kind: 'record', description: 'Shared by Maya, 2 days ago' },
+  { id: 'p1', label: 'Maya Chen', kind: 'person', description: 'Billing team' },
+];
+function Pointed() {
+  const [sent, setSent] = React.useState('');
+  return (
+    <div className="col">
+      <A.PromptInput onSubmit={({ text, mentions, command }) => setSent(`${command ? `/${command} · ` : ''}${text}${mentions ? ` · context: ${mentions.map((m) => m.label).join(', ')}` : ''}`)}
+        mentionable={(q) => new Promise((r) => setTimeout(() => r(context.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()))), 250))}
+        commands={[{ name: 'review', description: 'Review the current changes' }, { name: 'compact', description: 'Summarise the conversation so far' }, { name: 'clear', description: 'Start a new conversation' }]}>
+        <A.PromptInputTextarea placeholder="@ to add context, / for commands" />
+        <A.PromptInputToolbar><A.PromptInputSubmit /></A.PromptInputToolbar>
+      </A.PromptInput>
+      <p className="cap">{sent ? `Sent: ${sent}` : 'Type @ to point at a file, record or person, or / at the start for a command.'}</p>
+    </div>
+  );
+}
 function App() {
   const [status, setStatus] = React.useState('ready');
   const [last, setLast] = React.useState('');
@@ -3827,6 +3847,7 @@ function App() {
         </A.PromptInputToolbar>
       </A.PromptInput>
       <p className="cap">{status === 'ready' ? (last || 'Enter sends, Shift+Enter adds a line. Paste or drop a file to attach it.') : status === 'submitted' ? 'Sending…' : 'Generating… Escape or Stop ends it.'}</p>
+      <Pointed />
     </div>
   );
 }

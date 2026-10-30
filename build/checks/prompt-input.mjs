@@ -21,7 +21,7 @@ const read = () => page.evaluate(() => {
 let r = await read();
 const emptyBg = r.bg;
 expect(r.label === 'Send message' && r.disabled === 'true' && !r.native, 'an empty composer\'s Send is aria-disabled, still focusable');
-const ta = page.locator('textarea');
+const ta = page.locator('textarea').first();
 expect(await ta.getAttribute('aria-label') === 'Message', 'the textarea is named');
 await ta.click();
 await page.keyboard.type('Summarise last week');
