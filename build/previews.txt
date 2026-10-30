@@ -3032,6 +3032,46 @@ function App() {
   );
 }
 
+=== Trace | <!-- @dsCard group="Display" height=760 subtitle="The steps an agent takes: done in the record, running raised, planned imprinted" -->
+--- css
+.tc { max-width: 620px; }
+--- jsx
+const plan = [
+  { id: 's1', title: 'Search the help centre', ms: 820, tool: { name: 'search_documents', input: { query: 'refund policy annual plans', limit: 5 }, output: { results: 3 } } },
+  { id: 's2', title: 'Read 3 articles', ms: 1400 },
+  { id: 's3', title: 'Check the customer’s plan', ms: 600, fails: true, tool: { name: 'get_subscription', input: { customer: 'cus_EXAMPLE42' } } },
+  { id: 's4', title: 'Draft a reply', ms: 2100, reasoning: 'The customer is 20 days into an annual plan, so the 30-day full refund applies. No proration needed.' },
+  { id: 's5', title: 'Send the reply', approval: true },
+];
+function App() {
+  const [at, setAt] = React.useState(0);
+  const [failed, setFailed] = React.useState(false);
+  const [retried, setRetried] = React.useState(false);
+  const [approval, setApproval] = React.useState('requested');
+  React.useEffect(() => {
+    if (failed || at >= plan.length - 1) return;
+    const step = plan[at];
+    const t = setTimeout(() => { if (step.fails && !retried) setFailed(true); else setAt(at + 1); }, step.ms);
+    return () => clearTimeout(t);
+  }, [at, failed, retried]);
+  const status = (i) => (i < at ? 'done' : i > at ? 'planned' : failed ? 'failed' : plan[i].approval ? (approval === 'done' ? 'done' : 'awaiting-approval') : 'running');
+  return (
+    <div className="col tc">
+      <A.Trace aria-label="Agent run: answer refund question">
+        {plan.map((s, i) => (
+          <A.TraceStep key={s.id} title={s.title} status={status(i)} duration={i < at ? s.ms : undefined}
+            error={failed && i === at ? 'The billing service timed out.' : undefined} onRetry={failed && i === at ? () => { setRetried(true); setFailed(false); } : undefined}>
+            {s.tool && <A.TraceToolCall name={s.tool.name} input={s.tool.input} output={i < at ? s.tool.output ?? { plan: 'annual', startedDaysAgo: 20 } : undefined} />}
+            {s.reasoning && i < at && <A.TraceReasoning duration={s.ms}>{s.reasoning}</A.TraceReasoning>}
+            {s.approval && <A.Confirmation state={approval} title="Send reply to Jamie Lee" consequence="Jamie will get an email confirming a full refund of €240." approveLabel="Send reply" rejectLabel="Don't send" runningLabel="Sending…" doneLabel="Sent"
+              onApprove={() => { setApproval('running'); setTimeout(() => setApproval('done'), 1000); }} onReject={() => setApproval('rejected')} />}
+          </A.TraceStep>
+        ))}
+      </A.Trace>
+    </div>
+  );
+}
+
 === Confirmation | <!-- @dsCard group="Feedback" height=700 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
 --- jsx
 function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails }) {

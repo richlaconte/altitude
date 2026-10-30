@@ -1124,6 +1124,17 @@ A design review: `Confirmation` was rendered as three proposals (plain, hold to 
 
 Not yet tested with people: whether "The assistant is asking" is needed when proposals appear inside a conversation.
 
+### E96 · How does an agent's work look while it runs?
+
+A design review: `Trace` was rendered running a five-step plan (a tool call, reasoning, a step that fails and is retried, a step awaiting approval), in all four schemes and under forced colours. `checks/trace.mjs` drives it.
+
+- **Stepper, not cards.** Traces are usually nested cards with spinners. A run is a process, which Altitude already draws: done steps settle, the current one stands, planned ones are imprints. Using Stepper's plates means an agent run and a checkout flow read the same way.
+- **No spinners.** The running step is raised with a steady lamp in its mark. A spinner on every running row is motion that says nothing new.
+- **Failure is a trench, approval is raised.** A failed step drops down with its reason and Retry. A step waiting for approval holds a Confirmation, raised, because it asks for action (E95).
+- **Throttled announcements.** Agents can complete several steps per second; announcing each would bury the one that matters. Changes are coalesced; failures and approvals interrupt.
+
+Not yet tested with people: whether planned imprints set expectations the agent then breaks when its plan changes.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
