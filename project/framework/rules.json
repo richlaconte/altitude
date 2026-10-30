@@ -496,6 +496,29 @@
       "criteria": [],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-AGENT-001",
+      "title": "Each agent state is one reading, approval scales with consequence, and changes keep their provenance",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Embedded agents that act on someone's behalf.",
+      "exceptions": [
+        "Steps with a real undo may run without approval; the application decides which."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation",
+        "task-review"
+      ],
+      "repair": "Draw a proposal as raised and asking, never pending; hover only once approved and executing; land on the runtime's confirmation; sink failures with Retry; require a Confirmation for external or irreversible steps and a hold or stationary dialog for the most severe; put an AI label and the approver on every change; announce step changes politely and never token by token.",
+      "verification": [
+        "build/checks/agent-action-pattern.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }
