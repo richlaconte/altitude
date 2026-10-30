@@ -2,6 +2,19 @@
 
 Altitude is a design and HCI framework for React applications where height is the interface: the ground is the record. Before you change or propose anything, read the [README](README.md) (how the repository is laid out, and its one-source-per-thing rule), then [`project/README.md`](project/README.md) and [Elevation](project/Elevation.md). Before proposing or building a chart, graph, stat or meter, also read [Charts](project/Charts.md): in a chart, height is never allowed to carry the data.
 
+## How work is organised
+
+Milestones are goals, `P1`–`P3` are priority, and `ready` / `needs-design` say whether anyone may start. Sub-issues and "blocked by" links give structure and order. A linked draft pull request is the claim. All of it is readable with `gh` and plain `repo` access; the project board is only a view. The full table and lifecycle are in [CONTRIBUTING.md](CONTRIBUTING.md) ("How work is organised").
+
+## Picking up an issue
+
+1. **Only `ready` issues.** Don't implement anything labelled `needs-design` or untriaged, unless the person you're working for asks you to. You may comment design input on it.
+2. **Find one that's free.** `gh issue list --search "is:open label:ready no:assignee -is:blocked" --label P1` (then `P2`, `P3`, or `--milestone "<name>"`). Then check that nobody has a pull request for it: `gh pr list --state open --search "<number>"`.
+3. **Read all of it.** Read the body (the agreed spec), the comments, the issues it links, and the research its milestone links. If the body and the comments disagree, ask rather than guess.
+4. **Claim it before you build.** Branch from `main` (`feat/`, `fix/`, `docs/` or `chore/` plus a short slug), push, and open a draft pull request with `Fixes #<number>` in the body. If another pull request appears for the same issue first, stop and tell the person you're working for.
+5. **Keep to one pull request.** If the issue turns out to need several, stop and propose sub-issues in a comment. Don't widen the pull request. If you find something else broken, file it separately (see below) rather than fixing it here.
+6. **Finish it.** Tick the "Done when" list, run the checks it names, and mark the pull request ready for review.
+
 ## You can file issues
 
 You may open issues on this repository for:
@@ -21,14 +34,21 @@ You won't have `build/`, the checks or these docs in `node_modules`, and you don
 1. **Search for duplicates.** `gh issue list --state all --search "<Component> <keywords>"`. If one exists, comment on it with anything new instead of opening another.
 2. **Check it against `main`.** For a bug, reproduce it on the current `main` (or the latest published `altitude-design`) before filing, and note the version or commit you used. For a feature, check the component's README and `index.d.ts`: it may already exist under another name.
 3. **Fill in the template.** Copy the body of the template (everything after the front matter) into a file, fill every section, and delete the HTML comments and any optional section you left empty. Don't leave placeholder text.
-4. **Use the title and label from the template.** `New: <Name> — <what it's for>` with `enhancement`; `<Component>: <what it should do>` with `enhancement`; `<Component>: <what goes wrong>` with `bug`.
+4. **Use the title and labels from the template.** `New: <Name> — <what it's for>` with `enhancement,needs-design`; `<Component>: <what it should do>` with `enhancement,needs-design`; `<Component>: <what goes wrong>` with `bug`.
 5. **Create it.**
 
    ```sh
    gh issue create --title "Select: restore the previous value on Escape" --label bug --body-file issue.md
    ```
 
-6. **Say an agent wrote it.** End the body with one line: `Filed by an agent (<model or tool>) on behalf of @<person>.` If nobody asked you to file it, say what you were doing when you found it.
+6. **Link it.** If it's part of an umbrella issue, add it as a sub-issue; if it can't start until another issue lands, add that as "blocked by". Both calls take the REST `id` (`gh api repos/{owner}/{repo}/issues/<n> --jq .id`), not the number:
+
+   ```sh
+   gh api -X POST repos/{owner}/{repo}/issues/<parent>/sub_issues -F sub_issue_id=<id of the new issue>
+   gh api -X POST repos/{owner}/{repo}/issues/<new>/dependencies/blocked_by -F issue_id=<id of the blocker>
+   ```
+
+7. **Say an agent wrote it.** End the body with one line: `Filed by an agent (<model or tool>) on behalf of @<person>.` If nobody asked you to file it, say what you were doing when you found it.
 
 ## What to put in, and what not to
 
@@ -40,7 +60,7 @@ You won't have `build/`, the checks or these docs in `node_modules`, and you don
 
 ## What an issue doesn't authorise
 
-Filing an issue is not permission to implement it. Don't open a pull request for a new component or an API change until it's been agreed in the issue, unless the person you're working for asked you to. Don't add or edit labels beyond the one the template sets, assign people, or close other people's issues.
+Filing an issue is not permission to implement it. Don't open a pull request for a new component or an API change until it's been agreed in the issue, unless the person you're working for asked you to. Don't add or edit labels beyond the ones the template sets, set milestones or priorities, add `ready`, assign people, or close other people's issues. That's triage, and the maintainer does it, unless the person you're working for is the maintainer and asks you to.
 
 ## Building product workflows with Altitude
 

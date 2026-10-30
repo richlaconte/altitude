@@ -8,8 +8,8 @@ There are three kinds. Each has a template in [`.github/ISSUE_TEMPLATE/`](.githu
 
 | Kind | Template | Title | Label |
 |---|---|---|---|
-| A component Altitude doesn't have | [New component](.github/ISSUE_TEMPLATE/new-component.md) | `New: <Name> — <what it's for>` | `enhancement` |
-| New behaviour or a prop for an existing component | [Feature request](.github/ISSUE_TEMPLATE/feature-request.md) | `<Component>: <what it should do>` | `enhancement` |
+| A component Altitude doesn't have | [New component](.github/ISSUE_TEMPLATE/new-component.md) | `New: <Name> — <what it's for>` | `enhancement`, `needs-design` |
+| New behaviour or a prop for an existing component | [Feature request](.github/ISSUE_TEMPLATE/feature-request.md) | `<Component>: <what it should do>` | `enhancement`, `needs-design` |
 | Something that renders, moves, announces or builds wrong | [Bug report](.github/ISSUE_TEMPLATE/bug-report.md) | `<Component>: <what goes wrong>` | `bug` |
 
 Titles are sentence case and name the component first, so the list reads as an index: `Select: support grouped options`, `Tooltip: warm-up doesn't carry to HoverCard`. Use the component's exported name (`DropdownMenu`, not "dropdown"). For a problem that isn't one component's, use the area instead: `Tokens:`, `Motion:`, `Storybook:`, `Package:`, `CI:`.
@@ -26,13 +26,63 @@ Titles are sentence case and name the component first, so the list reads as an i
 - **Additive by default.** Feature requests don't change existing props, defaults or behaviour. If yours has to, say what breaks and why it's worth a major version.
 - **If a rule blocks a good design, say so.** Name the rule in "Rules it strains" rather than proposing something that quietly breaks it.
 
+- **Small enough for one pull request.** If the work needs more than one reviewable pull request (more than about five "Done when" items across unrelated files, or a description that says "and also"), make it an umbrella with sub-issues instead.
+- **Link, don't just mention.** If an issue is part of a bigger one, add it as a sub-issue. If it can't start until another lands, add a "blocked by" relationship. "Depends on #12" in prose is fine to explain why, but the link is what the queries below read.
+
 ### What happens next
 
-An issue is a proposal, not a go-ahead. New components and API changes are agreed in the issue before anyone opens a pull request for them. Small bug fixes can go straight to a pull request that links the issue.
+An issue is a proposal, not a go-ahead. New components and API changes are agreed in the issue before anyone opens a pull request for them; the `ready` label is the go-ahead (see "How work is organised" below). Small bug fixes can go straight to a pull request that links the issue.
+
+## How work is organised
+
+Everything you need to plan work lives in the repository: milestones, labels, sub-issues, dependencies and linked pull requests. `gh` with ordinary `repo` access sees all of it. The project board (the repository's Projects tab) is a view of the same issues, with progress kept by workflows. It is not a second source: never record something only on the board.
+
+| Question | Where it lives | Values |
+|---|---|---|
+| What kind of work? | label, set by the template | `bug`, `enhancement`, `documentation`; add `accessibility` when it's a barrier |
+| Can anyone start? | label | `ready`: agreed and specified, anyone may pick it up. `needs-design`: a proposal, so agree the design in the issue first. Neither: not triaged yet. |
+| How soon? | label | `P1`: do next (it hides data, breaks a core path or unblocks others). `P2`: a real gap with a workaround. `P3`: polish. |
+| Toward what goal? | milestone | One per body of work, usually a research pass in `docs/research/`. Its description links the research and says when the milestone is done. |
+| Part of what? | sub-issues | An umbrella issue (e.g. #244, Mobile) with its children |
+| After what? | "blocked by" / "blocking" relationships | GitHub's issue dependencies |
+| Who's on it? | a linked pull request (`Fixes #n`), opened as a draft when work starts | |
+| How far along? | the board's Status | Todo → In progress → In review → Done |
+
+### The lifecycle
+
+1. **Filed.** The template sets the kind; feature requests and new components also get `needs-design`. No milestone or priority yet.
+2. **Triaged** (maintainer). Sets a milestone and a priority, links sub-issues and dependencies, and labels a reproduced bug `ready`.
+3. **Agreed.** The design is settled in the issue's comments. The maintainer then edits the body so it states what was agreed and swaps `needs-design` for `ready`. The body is the spec; the comments are its history.
+4. **Claimed.** Someone opens a draft pull request with `Fixes #n` before writing much code. That pull request is the claim.
+5. **In review**, then merged, which closes the issue.
+
+### Finding something to work on
+
+```sh
+# Ready, unclaimed and unblocked, most urgent first
+gh issue list --search "is:open label:ready no:assignee -is:blocked" --label P1
+gh issue list --search "is:open label:ready no:assignee -is:blocked" --milestone "Explanatory charts"
+
+# Before starting #123, check nobody has a pull request for it
+gh pr list --state open --search "123"
+```
+
+### Why it works this way
+
+The system is built for agents doing most of the implementation, with a person agreeing designs and reviewing:
+
+- **Scope and self-containment matter most.** In a study of 3,180 issues assigned to Copilot's coding agent, issues small enough for one change and self-contained were associated with about 16 points higher merge rates; issues good on every criterion merged 77% of the time against 46% ([What Makes a GitHub Issue Ready for Copilot?, 2025](https://arxiv.org/abs/2512.21426)). Longer bodies were associated with fewer merges. So one pull request per issue, umbrellas with sub-issues, and the body kept to the agreed spec.
+- **Duplicates and abandonment sink agent pull requests.** Of 562 rejected agent pull requests, 38% were abandoned without review and 23% duplicated an existing one ([Where Do AI Coding Agents Fail?, 2026](https://arxiv.org/abs/2601.15195)). So a draft pull request is the claim, `ready` is the only go-ahead, and the queries above exclude claimed and blocked work.
+- **Make the structure explicit.** GitHub's guidance is to break large issues into sub-issues, state blocking relationships explicitly, and roll work up into milestones ([Best practices for Projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/best-practices-for-projects)). Their coding-agent guidance asks for clear scope, acceptance criteria and pointers to the files involved ([Best results with the coding agent](https://docs.github.com/en/copilot/tutorials/coding-agent/get-the-best-results)); the templates' "Done when" and "Today" sections are those.
+- **One source per thing.** Agents read labels, milestones and links with the same `gh` they already use, so those hold the state. The board only adds views and Status.
 
 ## Pull requests
 
-Follow "Working on it" in the [README](README.md): change the sources, then run `node build.mjs && node previews.mjs` in `build/` and commit what they produce. CI fails if `project/` doesn't match its sources. Link the issue the pull request resolves (`Fixes #12`).
+Follow "Working on it" in the [README](README.md): change the sources, then run `node build.mjs && node previews.mjs` in `build/` and commit what they produce. CI fails if `project/` doesn't match its sources.
+
+- **One issue per pull request**, linked with `Fixes #12` so merging closes it.
+- **Open it as a draft when you start.** That's how others see the issue is taken. Mark it ready for review when the "Done when" list is checked and CI passes.
+- **Stay inside the issue.** If you find something else, file an issue for it rather than fixing it in this pull request.
 
 ## Framework knowledge and workflow contributions
 
