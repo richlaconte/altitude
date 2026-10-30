@@ -1261,6 +1261,19 @@ A design review of `compare` (#189): seats by region against last quarter on a h
 
 Not yet tested with people: whether readers prefer the tick to a delta label on each bar on small charts.
 
+### E107 · Can a reading be kept?
+
+A design review of `pinnable` (#190): two pinned readings on a line of issues opened, pinned by mouse, keyboard and touch, on a chart whose clicks select, and with controlled pins, in all four schemes at 960px and 360px and under forced colours. `checks/chart-pins.mjs` measures it.
+
+- **Live things settle.** The readout was the only way to read a value exactly, and it left with the pointer, so comparing two meant holding one in memory. A pin lands the live readout on the record as a plate, the way an afterglow settles or a pending write lands.
+- **Two pins compare, in words.** Gleicher's explicit encoding: a strip under the axis between them says "+24% over 28 days" (or the change per series), and the second pin says it aloud. More pins are allowed, but only a pair compares.
+- **Clicks that already act (open question 1).** Where marks select or drill, a click keeps its meaning and only P pins; the readout's action line says "P to pin" while the keyboard is on the chart.
+- **Touch (open question 2).** A button inside the readout would need the readout to stop being `aria-hidden` decoration. Instead, while the touch readout is open, a quick tap on the plot pins the reading there, and the readout says "Tap to pin". Holding to open it never pins.
+- **Is a pin the record? (open question 3).** It's the reader's note on the record, which is what a plate is (Elevation, Labels). A pin icon keeps it from reading as an author's `ChartAnnotation`, and its remove button is the one part that lifts.
+- **Escape order.** The last pin goes first, then a selection, then the keyboard goes up a level, so Escape always undoes the most recent thing.
+
+Not yet tested with people: whether readers find click-to-pin without being told, and whether two pins are enough.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

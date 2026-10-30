@@ -28,6 +28,15 @@ export interface AreaChartProps {
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
   /**
+   * Let people pin a reading to the plot (#190): with the readout open, a click (or P on the keyboard path, or a tap
+   * while the touch readout is open) sets it down as a plate. true allows two, which compare in words; a number allows
+   * that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled (to keep them in the URL, say); and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
+  /**
    * What the chart is about (#188): these series keep their colours and the rest are drawn in data-context, their
    * labels in ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
    */
@@ -181,7 +190,7 @@ AreaChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   return {
     kind: p.stack === 'expand' ? 'Stacked area chart of shares' : p.stack ? 'Stacked area chart' : 'Area chart',
     zero: true, swatch: 'rect', imprint: 'area', yExtent, format: p.y?.format, seriesUp: !!p.stack, share: !!p.stack, status: p.status, boundary: p.boundary,
-    data: win?.rows, xDomain: win?.domain, focus: p.focus, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
+    data: win?.rows, xDomain: win?.domain, focus: p.focus, pinnable: p.pinnable, pins: p.pins, onPinsChange: p.onPinsChange, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

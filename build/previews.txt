@@ -1775,7 +1775,7 @@ function App() {
   );
 }
 
-=== ChartTooltip | <!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
+=== ChartTooltip | <!-- @dsCard group="Charts" height=740 subtitle="A crosshair on the ground and a readout floating over the plot; a reading pinned to it" -->
 --- css
 .ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 720px) { .ct { grid-template-columns: minmax(0, 1fr); } }
@@ -1790,6 +1790,7 @@ function Open({ at }) {
   return null;
 }
 function App() {
+  const [pins, setPins] = React.useState(['2026-03-09', '2026-04-06']);
   return (
     <div className="ct">
       <A.Card>
@@ -1808,6 +1809,14 @@ function App() {
               <A.ChartTooltip content={<A.ChartTooltipContent indicator="dot" labelFormat={(w) => 'Week of ' + long.format(new Date(w + 'T00:00:00Z'))} />} />
             </A.BarChart>
             <Open at={5} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="t3">Pinned readings</A.CardTitle><A.CardDescription>pinnable: click (or P) sets a reading down; two compare</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="t3" aspect={1.8} config={{ opened: { label: 'Opened' } }}>
+            <A.LineChart data={weeks} x="week" pinnable pins={pins} onPinsChange={setPins} />
           </A.ChartContainer>
         </A.CardContent>
       </A.Card>

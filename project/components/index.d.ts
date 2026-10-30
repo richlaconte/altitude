@@ -1933,6 +1933,14 @@ export interface BarChartProps {
    */
   compare?: ChartCompare;
   /**
+   * Let people pin a reading to the plot: a click (or P on the keyboard path, or a tap while the touch readout is open)
+   * sets it down as a plate. true allows two, which compare in words; a number allows that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled; and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
+  /**
    * What the chart is about: series keys that keep their colours while the rest take data-context, or a test for the
    * records that keep theirs. The author's statement of importance, not a reader's filter (that's relevance).
    */
@@ -1980,6 +1988,14 @@ export interface LineChartProps {
    * period is a 1.5px solid ink-muted trace under the compared series, named at its end.
    */
   compare?: ChartCompare;
+  /**
+   * Let people pin a reading to the plot: a click (or P on the keyboard path, or a tap while the touch readout is open)
+   * sets it down as a plate. true allows two, which compare in words; a number allows that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled; and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
   /**
    * What the chart is about: these series keep their colours and the rest are drawn in data-context, their labels in
    * ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
@@ -2034,6 +2050,14 @@ export interface AreaChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * Let people pin a reading to the plot: a click (or P on the keyboard path, or a tap while the touch readout is open)
+   * sets it down as a plate. true allows two, which compare in words; a number allows that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled; and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
   /**
    * What the chart is about: these series keep their colours and the rest are drawn in data-context, their labels in
    * ink-muted. The author's statement of importance, not a reader's filter (that's relevance).

@@ -20,6 +20,8 @@ Reading exact values off a chart. Point at a date on a line chart, or at a bar, 
 
 Turn the readout off with `tooltip={false}` on the chart type or the container. From your own marks or keyboard code, `useChart().active` is the record being read and `setActive(index)` opens the readout on one.
 
+**Pinning a reading.** `pinnable` on a `LineChart`, `BarChart` or `AreaChart` lets people keep a number: with the readout open, a click on the plot (or P on the keyboard path, or a quick tap while the touch readout is open) sets the reading down. The live readout lands on the record as a `Badge` plate at the top of the plot, from level 3 to the ground over `dur-travel-3` on `ease-settle`, then takes the afterglow once. It has a pin icon, so it isn't read as a `ChartAnnotation`, a 1px `line-control` leader to its x, and a ghost remove button named "Remove pin, Mar 9, 2026". With two pins, a strip under the x axis says the difference ("+24% over 28 days", or per series), and pinning the second says it aloud ("Apr 6, 2026 is 52% higher than Mar 2, 2026."). `pinnable` allows two; a number allows that many, and a new pin replaces the oldest. Escape on the chart removes the last pin before it clears a selection. Where a click selects or drills, it keeps doing that and only P pins. `pins` and `onPinsChange` control them, to keep them in the URL. The readout's action line says how to pin ("Click to pin", "P to pin", "Tap to pin").
+
 **You provide:** nothing, for the default. To change it, a `ChartTooltip` inside the chart type or the container.
 
 ```tsx
