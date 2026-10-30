@@ -1058,6 +1058,17 @@ A design review: `PlanPicker` was rendered with four plans (one current, one rec
 
 Not yet tested with people: whether a "Recommended" plate steers as many choices as a raised card, which is the question a growth team will ask.
 
+### E90 · Is a locked feature disabled?
+
+A design review: `FeatureGate` was rendered on a secondary and a ghost button, one with an upgrade and one for someone who can't upgrade, opened by pointer and keyboard, in all four schemes. `checks/feature-gate.mjs` measures it.
+
+- **Live, as the issue proposed.** The disabled build says nothing happens, is skipped by keyboard and some screen readers, and uses `ink-faint`. A locked feature does something (it explains), so it keeps the control's build, ink and hover lift, and adds a lock and a plan plate. Elevation.md now says so beside the disabled rule.
+- **The requirement is in the name.** "Export to CSV, requires Business plan" tells screen reader users what pressing it will lead to.
+- **One primary in the popover.** The upgrade is the popover's primary; PrimaryScope makes the popover its own view, so it doesn't count against the page's.
+- **Who can upgrade.** People who can't buy shouldn't get a dead-end button; they're told to ask an admin.
+
+Not yet tested with people: whether locked features in a toolbar feel like advertising.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

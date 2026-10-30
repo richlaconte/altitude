@@ -118,7 +118,7 @@ Rules that follow:
 - **Choices are switches.** Switch, Checkbox and RadioGroup share one build: a trench track that the accent pours into when it's on, with a raised white mark on top. When only one option can be chosen there is only one mark, and it travels.
 - **Hover is a promise.** A lift on hover means clicking does something. Static surfaces never lift; interactive ones always do.
 - **One primary per view.** The primary action rests at level 2, and a view has one: a page, a dialog, a sheet or a popover. `AltitudeProvider devChecks` warns in development when two are visible in one view (`ALT-VISUAL-002`).
-- **Pressing returns to ground; loading holds it there.** Disabled things are flush and stay flush.
+- **Pressing returns to ground; loading holds it there.** Disabled things are flush and stay flush. A feature locked behind a plan isn't disabled: it stays live and opens the upgrade (`FeatureGate`).
 - **Labels never lift.** Badges are stamped into the ground and informational alerts rest on it; only an alert that asks for action is raised, and only a count (which wants you) floats.
 - **Anticipate, don't perform.** Only openings anticipate, and only by deepening (at most 2px), only near the pointer, never for touch, and gone under reduced motion. Nothing raised moves before the pointer is on it, and nothing follows the pointer across its face: a control that drifts on its own reads as a fault. No lean, no tilt and no page-wide parallax.
 - **One summit.** Only one thing sits at level 5: a Dialog or the CommandPalette. Never open a dialog from a dialog, and never open a sheet from either (a sheet paints beneath the summit). (Apple's Liquid Glass guidance, "avoid glass on glass", is the same rule.)
@@ -137,7 +137,7 @@ Some states feel as if they deserve height, and don't get it. They're persistent
 | **Invited, awaiting someone else** | pending (hovering) | ground, with a `Badge` "Invited". Pending is only a write you dispatched that's still in flight (#167) |
 | **Recommended, most popular** | a lifted card | a "Recommended" plate on the ground; only its call to action is level 2 (`PlanPicker`) |
 | **Current plan, current item** | extra height beyond selection | the word "Current" and `aria-current`; the selection build where it's a choice |
-| **Locked behind a plan** | disabled (flush, faint) | live: it lifts on hover and opens the upgrade, with a lock and the plan's name (#145) |
+| **Locked behind a plan** | disabled (flush, faint) | live: it lifts on hover and opens the upgrade, with a lock and the plan's name (`FeatureGate`) |
 | **A mode (test, viewing as someone, read-only)** | a raised banner | a word and a viewport border: `AltitudeProvider mode` |
 | **Proposed by an agent** | pending (hovering) | raised, asking for action; pending only once approved (#153) |
 | **Streaming text** | lifted or glowing | on the ground under the "not yet the record" rule; it settles once, when it's done (#151) |

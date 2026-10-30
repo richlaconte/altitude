@@ -28,6 +28,7 @@ export { PermissionMatrix } from './permission-matrix';
 export type { MatrixRole, MatrixPermission, MatrixInherited } from './permission-matrix';
 export { PlanPicker } from './plan-picker';
 export type { Plan } from './plan-picker';
+export { FeatureGate } from './feature-gate';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';
