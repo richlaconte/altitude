@@ -1,0 +1,55 @@
+<!-- @dsCard group="Display" height=620 subtitle="Events in order on one ground line: activity, history, deliveries" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timeline — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.tl { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; align-items: start; }
+@media (max-width: 760px) { .tl { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const ago = (m) => new Date(Date.now() - m * 6e4);
+const I = ({ d }) => /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d }));
+const icons = { status: "M5 12.5l4.5 4.5L19 7.5", comment: "M4 5h16v11H8l-4 4z", assign: "M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6" };
+function App() {
+  const [events, setEvents] = React.useState([
+    { id: "e3", at: ago(14), icon: "status", text: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, "Maya"), " changed status to ", /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Done")) },
+    { id: "e2", at: ago(95), icon: "assign", text: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, "Theo"), " assigned this to ", /* @__PURE__ */ React.createElement("strong", null, "Maya")), href: "#/people/maya" },
+    { id: "e1", at: ago(60 * 26), icon: "comment", text: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, "Ada"), " commented"), detail: /* @__PURE__ */ React.createElement("p", { style: { margin: 0 } }, "\u201CCan we ship this before the release freeze on Friday?\u201D") }
+  ]);
+  const [text, setText] = React.useState("");
+  const send = (fail) => {
+    const id = "n" + Date.now();
+    setEvents((xs) => [{ id, at: /* @__PURE__ */ new Date(), icon: "comment", status: "pending", text: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, "You"), " commented \u201C", text || "Looks good", "\u201D") }, ...xs]);
+    setText("");
+    setTimeout(() => setEvents((xs) => xs.map((x) => x.id === id ? { ...x, status: fail ? "failed" : "committed" } : x)), 1200);
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "tl" }, /* @__PURE__ */ React.createElement(A.Timeline, { "aria-label": "Activity" }, events.map((e) => /* @__PURE__ */ React.createElement(
+    A.TimelineItem,
+    {
+      key: e.id,
+      time: e.at,
+      icon: /* @__PURE__ */ React.createElement(I, { d: icons[e.icon] }),
+      status: e.status,
+      href: e.href,
+      detail: e.detail,
+      onRetry: () => setEvents((xs) => xs.map((x) => x.id === e.id ? { ...x, status: "committed" } : x))
+    },
+    e.text
+  ))), /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Input, { value: text, onChange: (ev) => setText(ev.target.value), placeholder: "Add a comment", "aria-label": "Comment" }), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => send(false) }, "Comment"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => send(true) }, "Comment (fails)")), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Your comment hovers until it lands, then settles into the record; one that fails drops to a trench with Retry.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
