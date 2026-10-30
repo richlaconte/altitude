@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CHART_STATUS_WORDS, ChartRelevance, useChart, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { CHART_STATUS_WORDS, COMPARE_KEY, ChartRelevance, useChart, withCompare, type ChartCompare, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 import { windowed, type ChartWindow } from './line-chart';
 
 export interface BarChartProps {
@@ -25,6 +25,12 @@ export interface BarChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * Read each value against the record before (#189): `{ key: 'lastMonth', label: 'August' }` for a field on the same
+   * record, or `{ data: lastWeek, label: 'Last week' }` for records matched by position. The earlier value is a 2px ink
+   * tick across the bar (the bullet graph's comparative measure); a stack is compared by its total.
+   */
+  compare?: ChartCompare;
   /**
    * What the chart is about (#188): series keys that keep their colours while the rest take data-context, or a test for
    * the records that keep theirs (on a one-series chart, the categories the takeaway names). The author's statement of
@@ -96,7 +102,7 @@ function barPath(horizontal: boolean, a: number, b: number, g: number, e: number
  * their series' colours, square at the ground and rounded only at the data end, never shadowed or lifted. One
  * series, several side by side, or stacked into a total.
  */
-export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
+export function BarChart({ stack = false, labels = 'none', compare }: BarChartProps) {
   const { data, series, x, y, ground, horizontal, alpha: presence, encode, gap, xKey, format, emphasis, status, hasStatus, relevance, hasRelevance } = useChart();
   // While the keyboard is on one series, the others recede.
   const alpha: typeof presence = (d, key) => presence(d, key) * (key && emphasis && emphasis !== key ? 0.3 : 1);
@@ -125,9 +131,21 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
       style={{ fillOpacity: st ? enc.pendingOpacity : 0, strokeOpacity: st ? 1 : 0 }} opacity={opacity} data-series={s.key} data-category={cat} data-pending={st} aria-hidden="true" />);
   };
 
+  // The record before (#189): a 2px ink tick at each earlier value, 4px past the bar on each side, over the marks.
+  const ckey = compare && stack !== 'expand' ? compare.key ?? COMPARE_KEY : null;
+  const cseries = compare && !stack ? compare.series ?? series[0]?.key : null;
+  const ticks: React.ReactNode[] = [];
   for (const d of data) {
     const cat = String(d[xKey]);
     const a0 = x(cat), bw = x.bandwidth;
+    if (ckey && typeof d[ckey] === 'number' && isFinite(d[ckey] as number)) {
+      const n = series.length, w = Math.max(1, (bw - gap * (n - 1)) / n), at = stack || n === 1 ? a0 : a0 + Math.max(0, series.findIndex((s) => s.key === cseries)) * (w + gap);
+      const span = stack || n === 1 ? bw : w, v = Math.round(y(d[ckey] as number)) + (horizontal ? 0.5 : 0);
+      const tick = horizontal
+        ? <line key={cat + '-cmp'} className="alt-bar-compare" x1={v} x2={v} y1={at - 4} y2={at + span + 4} data-category={cat} />
+        : <line key={cat + '-cmp'} className="alt-bar-compare" x1={at - 4} x2={at + span + 4} y1={v} y2={v} data-category={cat} />;
+      ticks.push(hasRelevance ? <ChartRelevance key={cat + '-cmpr'} miss={relevance(d) === 'miss'}>{tick}</ChartRelevance> : tick);
+    }
     const rowA = alpha(d);
     const st = status(d);
     const miss = relevance(d) === 'miss';
@@ -190,7 +208,7 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
         </React.Fragment>
       );
   });
-  return <g className="alt-bar">{marks}{texts}</g>;
+  return <g className="alt-bar">{marks}{ticks}{texts}</g>;
 }
 
 /** One record's bar for one series: its span across the band (a to b) and from its ground side (g) to its data end (e). */
@@ -235,8 +253,13 @@ BarChart.chartMark = (props: Record<string, unknown>, ctx: ChartContextValue, d:
 BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): ChartInfo => {
   const p = props as unknown as BarChartProps;
   const keys = keysOf(config);
-  const rows = Array.isArray(p.data) ? (p.window ? windowed(p.data, p.x, p.window).rows : p.data) : undefined;
+  // The record before (#189), matched by position before any sort, so a sorted chart still compares like with like.
+  const cmp = p.compare && p.stack !== 'expand' ? p.compare : undefined;
+  const cseries = cmp && !p.stack ? cmp.series ?? keys[0] : null;
+  const src = Array.isArray(p.data) && cmp && !cmp.key && cmp.data ? withCompare(p.data, cmp.data, cseries ? [cseries] : keys) : p.data;
+  const rows = Array.isArray(src) ? (p.window ? windowed(src, p.x, p.window).rows : src) : undefined;
   const data = p.sort && rows ? sorted(rows, keys, p.sort) : rows;
+  const ckey = cmp ? cmp.key ?? COMPARE_KEY : null;
   let yExtent: [number, number] | undefined;
   if (p.stack === 'expand') yExtent = [0, 1];
   else if (p.stack && data) {
@@ -245,13 +268,15 @@ BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Char
     for (const d of fit) {
       let up = 0, down = 0;
       for (const k of keys) { const v = num(d[k]); if (v > 0) up += v; else down += v; }
+      // An earlier total joins the extent, so its tick is never off the plot.
+      if (ckey) { const w = num(d[ckey]); up = Math.max(up, w); down = Math.min(down, w); }
       hi = Math.max(hi, up); lo = Math.min(lo, down);
     }
     yExtent = [lo, hi];
   }
   return {
     kind: p.stack === 'expand' ? 'Stacked bar chart of shares' : p.stack ? 'Stacked bar chart' : 'Bar chart',
-    xScale: 'band', zero: true, swatch: 'rect', focus: p.focus, layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
+    xScale: 'band', zero: true, swatch: 'rect', focus: p.focus, compare: cmp && ckey ? { key: ckey, series: cseries, label: cmp.label } : undefined, layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

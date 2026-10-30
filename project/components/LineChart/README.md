@@ -30,6 +30,8 @@ Change over time: latency over a day, revenue over a year, one series or a few c
 
 **Focus.** `focus={['team']}` keeps those lines' colours and draws the rest in `data-context`, their end labels in `ink-muted`; the readout and the keyboard path list the focused lines first. See [ChartContainer](../ChartContainer/README.md), "Focus".
 
+**Against the record before.** `compare={{ data: lastWeek, label: 'Last week' }}` matches records by position (or `key` reads a field on each record) and draws the earlier period as a 1.5px solid `ink-muted` trace under the compared series (`series`, default the first), without points, named at its end in `ink-muted`. It's solid because dashes mean projected, and it follows the data, which a 1px straight reference line never does. The readout, point names, the table and the summary say the difference.
+
 **You provide:** a `ChartContainer` with a `config` naming each series, the `data` in x order, and usually a `summary`.
 
 ```tsx

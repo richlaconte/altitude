@@ -72,7 +72,8 @@ f = await press('Enter', 'Enter');
 expect(/^Jan, Web, 14\. Total 40\. 1 of 6\.$/.test(f.name), `a stacked bar's point says its total: ${f.name}`);
 await page.locator('.alt-chart-plot').nth(5).locator('[tabindex="0"]').focus();
 f = await press('Enter');
-expect(/^North America, Seats, 1,240\. 1 of 4\.$/.test(f.name), `horizontal bars: ${f.name}`);
+// The preview compares against Q2 (#189), so the name says the change too.
+expect(/^North America, Seats, 1,240\. Up 11% from Q2\. 1 of 4\.$/.test(f.name), `horizontal bars: ${f.name}`);
 const end = await page.evaluate(() => {
   const n = document.activeElement.getBoundingClientRect(), bar = document.querySelectorAll('.alt-chart-plot')[5].querySelector('.alt-bar path').getBoundingClientRect();
   return { dx: Math.abs(n.x + n.width / 2 - bar.right), dy: Math.abs(n.y + n.height / 2 - (bar.y + bar.height / 2)) };

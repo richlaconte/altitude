@@ -2465,6 +2465,12 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    Under forced colours context is GrayText at full strength, apart from a filter's misses, which also recede to 35%. */
 .alt-line-stroke, .alt-area-fill, .alt-area-line, .alt-scatter-dot { transition: fill var(--dur-travel-1) var(--ease-glide), stroke var(--dur-travel-1) var(--ease-glide); }
 .alt-line-label[data-context], .alt-area-label[data-context] { fill: var(--ink-muted); }
+/* The record before (#189): both settled, both flat on the ground, the earlier one quieter. On bars, a 2px ink tick
+   across the bar at the earlier value, 4px past it each side (the bullet graph's comparative measure); on lines, a
+   1.5px solid ink-muted trace under the series, named at its end. Never dotted: under forced colours dots mean pending. */
+.alt-bar-compare { stroke: var(--ink); stroke-width: 2; shape-rendering: crispEdges; }
+.alt-line-compare { stroke: var(--ink-muted); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+@media (forced-colors: active) { .alt-bar-compare { stroke: CanvasText; } .alt-line-compare { stroke: CanvasText; stroke-width: 1; } }
 .alt-legend-key[data-context] { color: var(--ink-muted); }
 @media (prefers-reduced-motion: reduce) { .alt-bar-mark, .alt-line-stroke, .alt-area-fill, .alt-area-line, .alt-scatter-dot { transition-property: fill-opacity, stroke-opacity; } }
 [data-motion="reduced"] .alt-bar-mark, [data-motion="reduced"] .alt-line-stroke, [data-motion="reduced"] .alt-area-fill, [data-motion="reduced"] .alt-area-line, [data-motion="reduced"] .alt-scatter-dot { transition-property: fill-opacity, stroke-opacity; }
