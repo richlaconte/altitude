@@ -1323,7 +1323,9 @@ An audit against the 47 tells catalogued in `tells.json` (#319), reading `tokens
 
 Result: 29 clear, 11 to watch, 3 unchecked, 4 exposed.
 
-**Decision (#324): Mesa and Alpine are retired**, on the side of caution, rather than retuned. Daylight and Nightfall remain as the light and dark schemes, and stay on watch. The old names still resolve to them: as `[data-theme]` aliases in the token CSS, and in the provider, which warns once in development. The Mesa and Alpine figures in earlier experiments (E23 among them) are kept as the record of what was measured. With the schemes gone, CO4 and CO5 are clear: 31 clear, 2 exposed.
+**Decision (#324): Mesa and Alpine are retired**, on the side of caution, rather than retuned. Daylight and Nightfall remain as the light and dark schemes, and stay on watch. The old names still resolve to them: as `[data-theme]` aliases in the token CSS, and in the provider, which warns once in development. The Mesa and Alpine figures in earlier experiments (E23 among them) are kept as the record of what was measured. With the schemes gone, CO4 and CO5 are clear.
+
+**Also fixed: the landing page.** The section kickers are gone, the hero's line and the panel and tier labels are in sentence case at normal tracking (TY4), and the accent swatches, previously Tailwind's orange-700, blue-700 and pink-700 (`#c2410c`, `#1d4ed8`, `#be185d`), are Altitude's own: Harbor `#2a6f9e`, Rosewood `#b13a68` and Olive `#6b7d1e`. Each holds at least 3:1 on both grounds. A graphite swatch was tried and dropped: on Nightfall its fill measured 1.9:1 against the ground. That leaves 32 clear and 1 exposed (LA5, the app skeleton, #323).
 
 Not yet tested with people: whether Altitude screens read as generated (#326).
 

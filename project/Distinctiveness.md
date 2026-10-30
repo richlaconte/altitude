@@ -37,15 +37,16 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 
 ## Where Altitude stands
 
-As of the 2026-10-30 review (E110), 31 of 47 tells are clear, 11 are to watch, 3 are unchecked and 2 are exposed. The review found 4 exposed; the two schemes among them were retired the same day. Nothing was rendered for this review; it read tokens, CSS, previews, sources and the landing page.
+As of the 2026-10-30 review (E110), 32 of 47 tells are clear, 11 are to watch, 3 are unchecked and 1 is exposed. The review found 4 exposed; the two schemes and the landing page's labels were fixed the same day. Nothing was rendered for this review; it read tokens, CSS, previews, sources and the landing page.
 
 **Clear.** No purple, gradient text, coloured stripes, glows, bounce, count-ups, emoji, sparkles or marketese anywhere in the library or previews. The content rules, the forbidden light glows, the rejected severity bars (E8) and Charts' "the data is the record" already rule most of the tells out.
 
 **Retired.** Mesa was terracotta on cream (`#b4441b` on `#f6f1ea`), the most-cited replacement for purple (CO4). Alpine was near-black with one mint accent (`#5fd6b2` on `#0f1513`, CO5). Both were removed rather than retuned, on the side of caution ([#324](https://github.com/richlaconte/altitude/issues/324)). Their names render as Daylight and Nightfall.
 
+**Fixed on the landing page.** The uppercase, letter-spaced kicker above every heading is gone, and its panel labels are in sentence case (TY4). Its accent swatches, which were stock Tailwind colours, are now its own.
+
 **Exposed:**
 
-- **TY4, the landing page** puts an uppercase, letter-spaced kicker above every heading ([#320](https://github.com/richlaconte/altitude/issues/320)).
 - **LA5, the app skeleton** is the sidebar, top bar and table every generated dashboard uses, and agents copy it for every screen ([#323](https://github.com/richlaconte/altitude/issues/323)).
 
 **Watch:**
