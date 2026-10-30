@@ -73,6 +73,7 @@ jobs:
           node ../scripts/record-check.mjs tabs-narrow node checks/tabs-narrow.mjs
           node ../scripts/record-check.mjs breadcrumb-fit node checks/breadcrumb-fit.mjs
           node ../scripts/record-check.mjs stepper-auto node checks/stepper-auto.mjs
+          node ../scripts/record-check.mjs narrow-rows node checks/narrow-rows.mjs
           node checks/approach-and-lamps.mjs
           node checks/field-focus.mjs
           node checks/avatar.mjs

@@ -1412,6 +1412,10 @@ A review (#264): at 375 CSS px the horizontal Stepper wrapped onto three lines, 
 
 A measurement (#258): at 375 CSS px a PropertyList row with a proposal kept three columns (label, change, actions), leaving the change about 35px, so "Qualified" broke as "Quali/fied" and "Proposed by…" took eleven lines. The list is now a container, and under the narrow breakpoint (480px) an inline list stacks each label over its value, and a proposal stacks its change, who proposed it and its actions. The plain list was already fine; nothing changes on wider screens.
 
+### E125 · Who gives way in a row with actions?
+
+A review (#267): an ItemGroup row's actions never yielded width, so at phone width Edit and Remove squeezed the title into a narrow column. The group is now a container, and under 480px of its own width the actions take their own row, lined up with the content after the media; `narrow="inline"` keeps them beside it. `ItemDescription truncate` clamps a long secondary line. The issue's third form, collapsing actions into a "…" menu, is deferred: an app's action children aren't menu items, so it needs an explicit API rather than a guess. `checks/narrow-rows.mjs` (with #258).
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

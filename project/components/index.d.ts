@@ -905,9 +905,11 @@ export declare function Item(props: React.HTMLAttributes<HTMLDivElement>): React
 export declare function ItemMedia(props: React.HTMLAttributes<HTMLDivElement> & { variant?: 'icon' | 'image' | 'avatar' }): React.ReactElement;
 export declare function ItemContent(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
 export declare function ItemTitle(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
-export declare function ItemDescription(props: React.HTMLAttributes<HTMLParagraphElement>): React.ReactElement;
+/** `truncate` clamps the line to that many lines (true: one). */
+export declare function ItemDescription(props: React.HTMLAttributes<HTMLParagraphElement> & { truncate?: boolean | number }): React.ReactElement;
 /** Visible actions, not hover-only. */
-export declare function ItemActions(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+/** `narrow`: 'below' (default) moves the actions under the content when the group is under 480px wide; 'inline' keeps them beside it. */
+export declare function ItemActions(props: React.HTMLAttributes<HTMLDivElement> & { narrow?: 'below' | 'inline' }): React.ReactElement;
 export declare function ItemSeparator(props: React.HTMLAttributes<HTMLHRElement>): React.ReactElement;
 
 export interface PropertyListEditAll<T extends Record<string, unknown>> {

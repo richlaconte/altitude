@@ -3621,7 +3621,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    picked up to reorder floats at level 3, tilted, over a slot that opens as a well. A recoverable removal leaves its
    RemovalReceipt in the slat's place, then glides the gap shut; a confirmed one asks in a stationary Dialog, then
    glides the slat shut. ── */
-.alt-item-group { position: relative; display: grid; gap: var(--space-2); min-width: 0; color: var(--ink); }
+.alt-item-group { position: relative; display: grid; gap: var(--space-2); min-width: 0; color: var(--ink); container-type: inline-size; }
 .alt-item-list { margin: 0; padding: 0; list-style: none; outline: none; }
 .alt-item-slat { position: relative; display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); border-radius: 0; transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1); }
 .alt-item-slat[data-editing] { border-bottom-color: transparent; }
@@ -3641,6 +3641,14 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-item-title { font: 500 14.5px/21px var(--font-sans); overflow-wrap: anywhere; }
 .alt-item-description { margin: 2px 0 0; color: var(--ink-muted); font: 400 13px/18px var(--font-sans); overflow-wrap: anywhere; }
 .alt-item-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); flex: none; }
+.alt-item-description[data-truncate] { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--lines, 1); line-clamp: var(--lines, 1); overflow: hidden; }
+/* Narrow (#267): under 480px of the group's width, actions take their own row, lined up with the content (after the
+   media), so a row's title keeps the width; narrow="inline" keeps them beside it. */
+@container (max-width: 480px) {
+  .alt-item:has(> .alt-item-actions[data-narrow="below"]) { flex-wrap: wrap; }
+  .alt-item-actions[data-narrow="below"] { flex-basis: 100%; }
+  .alt-item:has(> .alt-item-media) > .alt-item-actions[data-narrow="below"] { padding-left: calc(36px + var(--space-3)); }
+}
 .alt-item-separator { margin: 0; border: 0; border-top: 1px solid var(--line); }
 .alt-item-add {
   display: inline-flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 44px; padding: 0 var(--space-3); border: 1px dashed var(--line-control); border-radius: var(--radius-md);
