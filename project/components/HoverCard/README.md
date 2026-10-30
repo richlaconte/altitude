@@ -10,6 +10,8 @@ A richer preview of what a link or a face points to: who someone is, what a proj
 
 **Supplementary, always.** Nothing may live only in a HoverCard. The trigger must work on its own (the link goes to the profile; the profile has everything the card showed), because touch users never see the card and screen readers aren't told about it. In forced colours it has the floating tier's 2px border.
 
+**On a narrow screen.** It opens where its `side` and `align` put it, then shifts sideways to stay 8px inside the screen, and it's never wider than the screen less 16px.
+
 **You provide:** a `trigger` (a link or an avatar with its own job) and the card's content: a heading line, one or two sentences, perhaps a few numbers. Optionally `side`, `align`, `openDelay` and `closeDelay`.
 
 - Do keep it to a glance: if people need to act on it, it's a Popover (click to open) or a page.
