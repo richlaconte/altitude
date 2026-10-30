@@ -3415,14 +3415,16 @@ function App() {
 .tl { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; align-items: start; }
 @media (max-width: 760px) { .tl { grid-template-columns: minmax(0, 1fr); } }
 --- jsx
-const ago = (m) => new Date(Date.now() - m * 60000);
+// Anchored to the calendar day, so "Today" and "Yesterday" hold at any hour (just after midnight too).
+const ago = (m) => { const start = new Date(); start.setHours(0, 0, 0, 0); return new Date(Math.max(Date.now() - m * 60000, start.getTime() + 1000)); };
+const yesterdayAt = (h) => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(h, 0, 0, 0); return d; };
 const I = ({ d }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>;
 const icons = { status: 'M5 12.5l4.5 4.5L19 7.5', comment: 'M4 5h16v11H8l-4 4z', assign: 'M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6' };
 function App() {
   const [events, setEvents] = React.useState([
     { id: 'e3', at: ago(14), icon: 'status', text: <><strong>Maya</strong> changed status to <A.Badge tone="positive">Done</A.Badge></> },
     { id: 'e2', at: ago(95), icon: 'assign', text: <><strong>Theo</strong> assigned this to <strong>Maya</strong></>, href: '#/people/maya' },
-    { id: 'e1', at: ago(60 * 26), icon: 'comment', text: <><strong>Ada</strong> commented</>, detail: <p style={{ margin: 0 }}>“Can we ship this before the release freeze on Friday?”</p> },
+    { id: 'e1', at: yesterdayAt(12), icon: 'comment', text: <><strong>Ada</strong> commented</>, detail: <p style={{ margin: 0 }}>“Can we ship this before the release freeze on Friday?”</p> },
   ]);
   const [text, setText] = React.useState('');
   const send = (fail) => {
