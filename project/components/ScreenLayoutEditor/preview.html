@@ -1,0 +1,76 @@
+<!-- @dsCard group="Patterns" height=820 subtitle="The focused editor frame: the draft leads, details beside it, one primary action, saving as a status" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenLayoutEditor — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.le-page{max-width:1040px;margin-inline:auto;display:grid;gap:20px;overflow-wrap:break-word}.le-body{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:32px;align-items:start}.le-draft{display:grid;gap:16px}.le-side{display:grid;gap:12px}.le-sub{font:600 15px/22px var(--font-sans);margin:0}.le-note{margin:0;font:400 13px/19px var(--font-sans);color:var(--ink-muted)}.le-outcome{margin:0;font:400 15px/22px var(--font-sans)}@media (max-width:720px){.le-body{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const AUDIENCES = [{ value: "everyone", label: "Everyone" }, { value: "admins", label: "Workspace admins" }];
+function App() {
+  const [title, setTitle] = React.useState("Saved views, and a faster sidebar");
+  const [body, setBody] = React.useState("You can now save a filtered view of any table and come back to it from the sidebar.\n\nThe sidebar also opens twice as fast in large workspaces.");
+  const [audience, setAudience] = React.useState("everyone");
+  const [sync, setSync] = React.useState(
+    /** @type {A.SyncState} */
+    "saved"
+  );
+  const [titleError, setTitleError] = React.useState("");
+  const [phase, setPhase] = React.useState(
+    /** @type {'draft' | 'publishing' | 'published'} */
+    "draft"
+  );
+  const timer = React.useRef(0);
+  const outcome = React.useRef(
+    /** @type {HTMLParagraphElement | null} */
+    null
+  );
+  const edit = (set) => (e) => {
+    set(e.target.value);
+    setSync("saving");
+    clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setSync("saved"), 700);
+  };
+  const publish = () => {
+    if (!title.trim()) {
+      setTitleError("Give the note a title.");
+      document.getElementById("le-title")?.focus();
+      return;
+    }
+    setPhase("publishing");
+    window.setTimeout(() => {
+      setPhase("published");
+      requestAnimationFrame(() => outcome.current?.focus());
+    }, 600);
+  };
+  return /* @__PURE__ */ React.createElement("main", { className: "le-page" }, /* @__PURE__ */ React.createElement(
+    A.PageHeader,
+    {
+      breadcrumb: /* @__PURE__ */ React.createElement(A.Breadcrumb, { items: [{ label: "Release notes", href: "#/notes" }, { label: "Week 44" }] }),
+      actions: /* @__PURE__ */ React.createElement(A.SyncIndicator, { state: sync }),
+      primary: phase === "published" ? void 0 : /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", loading: phase === "publishing", onClick: publish }, "Publish")
+    },
+    /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, "Week 44 release note")
+  ), phase === "published" && /* @__PURE__ */ React.createElement("p", { className: "le-outcome", role: "status", tabIndex: -1, ref: outcome }, "Published. Week 44 is at the top of the changelog and in everyone\u2019s What\u2019s new. ", /* @__PURE__ */ React.createElement(A.Link, { href: "#/changelog" }, "View the changelog")), /* @__PURE__ */ React.createElement("div", { className: "le-body" }, /* @__PURE__ */ React.createElement("section", { className: "le-draft", "aria-label": "Draft" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Title", error: titleError || void 0 }, /* @__PURE__ */ React.createElement(A.Input, { id: "le-title", value: title, readOnly: phase !== "draft", onChange: (e) => {
+    setTitleError("");
+    edit(setTitle)(e);
+  } })), /* @__PURE__ */ React.createElement(A.Field, { label: "Note" }, /* @__PURE__ */ React.createElement(A.Textarea, { className: "le-text", rows: 14, value: body, readOnly: phase !== "draft", onChange: edit(setBody) }))), /* @__PURE__ */ React.createElement("aside", { className: "le-side", "aria-labelledby": "le-side-h" }, /* @__PURE__ */ React.createElement("h2", { id: "le-side-h", className: "le-sub" }, "Details"), /* @__PURE__ */ React.createElement(A.Field, { label: "Who sees it" }, /* @__PURE__ */ React.createElement(A.Select, { items: AUDIENCES, value: audience, onValueChange: (v) => setAudience(String(v)), disabled: phase !== "draft" })), /* @__PURE__ */ React.createElement("p", { className: "le-note" }, "Publishing adds it to the changelog and to What\u2019s new for ", audience === "everyone" ? "everyone" : "workspace admins", "."), /* @__PURE__ */ React.createElement("p", { className: "le-note" }, "Last week: \u201CExport any table as CSV\u201D."))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

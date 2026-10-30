@@ -544,6 +544,30 @@
       "owner": "Altitude maintainers"
     },
     {
+      "id": "ALT-LAYOUT-001",
+      "title": "A screen's frame is chosen from its task, with one lead and one primary action named first",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Any new screen or app: its frame, what leads and where the primary action sits.",
+      "exceptions": [
+        "An existing product keeps its navigation frame; the view inside it still names its task and lead."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation",
+        "task-review"
+      ],
+      "repair": "Write down the task, the one thing that leads, the one primary action and what comes next; choose the frame from the task (records, list and detail, focused editor, guided flow, decision, report) instead of the sidebar-and-cards default; put the lead first after the title and make it the largest region; then check that every stated choice is visible on the screen.",
+      "verification": [
+        "build/checks/screen-layout-pattern.mjs",
+        "build/checks/render-tells.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
+    },
+    {
       "id": "ALT-CONVO-001",
       "title": "A conversation never loses the person's words, completes only when the stream does, and says each failure in words",
       "authority": "altitude-policy",

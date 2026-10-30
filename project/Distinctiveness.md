@@ -37,17 +37,13 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 
 ## Where Altitude stands
 
-The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page's labels were fixed the same day. The tells lint (#320) then found one the audit couldn't: Artifact and Terminal, added afterwards, had a coloured failure stripe. The rendered check (#321) then cleared LA6, and the stripe was removed (#374). That leaves 33 of 47 clear, 11 to watch, 2 unchecked and 1 exposed. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
+The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page's labels were fixed the same day. The tells lint (#320) then found one the audit couldn't: Artifact and Terminal, added afterwards, had a coloured failure stripe. The rendered check (#321) then cleared LA6, and the stripe was removed (#374). The screen layout pattern (#323) moved LA5 from exposed to watch. That leaves 33 of 47 clear, 12 to watch, 2 unchecked and none exposed. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
 
 **Clear.** No purple, gradient text, coloured stripes, glows, bounce, count-ups, emoji, sparkles or marketese anywhere in the library or previews. The content rules, the forbidden light glows, the rejected severity bars (E8) and Charts' "the data is the record" already rule most of the tells out.
 
 **Retired.** Mesa was terracotta on cream (`#b4441b` on `#f6f1ea`), the most-cited replacement for purple (CO4). Alpine was near-black with one mint accent (`#5fd6b2` on `#0f1513`, CO5). Both were removed rather than retuned, on the side of caution ([#324](https://github.com/richlaconte/altitude/issues/324)). Their names render as Daylight and Nightfall. Their figures in earlier Research experiments (E23 among them) are kept as the record of what was measured.
 
 **Fixed on the landing page.** The uppercase, letter-spaced kicker above every heading is gone, and its panel labels are in sentence case (TY4). Its accent swatches, which were Tailwind's orange-700, blue-700 and pink-700, are now its own: Harbor `#2a6f9e`, Rosewood `#b13a68` and Olive `#6b7d1e`, each at least 3:1 on both grounds (a graphite swatch was dropped: 1.9:1 on Nightfall).
-
-**Exposed:**
-
-- **LA5, the app skeleton** is the sidebar, top bar and table every generated dashboard uses, and agents copy it for every screen ([#323](https://github.com/richlaconte/altitude/issues/323)).
 
 **Watch:**
 
@@ -57,6 +53,7 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 - **CM6:** props that mirror shadcn.
 - **CM2:** the dialog scrim's blur.
 - **Composition-dependent:** LA4 (equal-weight grids), LA7 (stat rows) and BH1 (design theater) depend on how apps compose the parts.
+- **LA5, one frame for every screen:** the app skeleton was the only frame offered, and agents copied it for every screen. [Screen layout](framework/patterns/screen-layout.md) now chooses the frame from the task (records, list and detail, focused editor, guided flow, decision, report), with the skeleton as the records frame ([#323](https://github.com/richlaconte/altitude/issues/323)). It stays on watch until the benchmark ([#322](https://github.com/richlaconte/altitude/issues/322)) measures it.
 
 ## How it's checked
 

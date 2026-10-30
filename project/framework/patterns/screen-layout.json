@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "id": "screen-layout",
+  "version": 1,
+  "title": "Screen layout",
+  "intents": [
+    "screen layout",
+    "page layout",
+    "new screen",
+    "new page",
+    "compose a screen",
+    "dashboard",
+    "focused editor",
+    "approve",
+    "approval",
+    "report",
+    "triage",
+    "inbox",
+    "setup flow"
+  ],
+  "purpose": "Choose a screen's frame from the person's task, the one thing that leads and the one primary action, instead of inheriting a sidebar, a top bar and a grid of cards.",
+  "useWhen": [
+    "Composing a new screen or a new app, before choosing where anything goes."
+  ],
+  "avoidWhen": [
+    "Copying the records frame (sidebar, filtered table, record in a sheet) for a screen whose task isn't working through many similar records."
+  ],
+  "alternatives": [
+    "Inside a chosen frame, follow the task pattern for the work itself: edit record, consequential action, review and submit, async collection."
+  ],
+  "requiredInputs": [
+    "the task in one sentence: who is here and what they came to do",
+    "the one thing that leads the screen",
+    "the one primary action, or none",
+    "what the person does next once the task is done"
+  ],
+  "states": [
+    "task-named",
+    "frame-chosen",
+    "built",
+    "checked-against-task",
+    "task-done"
+  ],
+  "transitions": [
+    "task-named → frame-chosen from the frame table, never by default",
+    "frame-chosen → built with the lead first in reading order and largest in the view",
+    "built → checked-against-task: each stated choice is visible, or the record or the screen changes",
+    "task-done → the next thing, said where the lead was"
+  ],
+  "rules": [
+    "ALT-LAYOUT-001",
+    "ALT-VISUAL-002",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Any new screen: its frame, what leads it and where its one primary action sits.",
+  "exceptions": [
+    "An existing product keeps its navigation frame; choose the frame of the view inside it from the task."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/screen-layout.md",
+  "implementation": "build/fixtures/patterns/screen-layout-editor.jsx",
+  "examples": [
+    "build/fixtures/patterns/screen-layout-editor.jsx",
+    "build/fixtures/patterns/screen-layout-decision.jsx",
+    "build/fixtures/patterns/screen-layout-report.jsx",
+    "build/fixtures/patterns/app-skeleton.jsx"
+  ],
+  "verification": [
+    "build/checks/screen-layout-pattern.mjs",
+    "build/checks/render-tells.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}
