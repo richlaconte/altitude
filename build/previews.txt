@@ -483,6 +483,90 @@ function App() {
   );
 }
 
+=== LoadingBreath | <!-- @dsCard group="Patterns" height=700 subtitle="Experimental: imprints breathe while they wait, then rise out" -->
+--- css
+.envs { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.label { font: 500 13px/1 var(--font-sans); color: var(--ink-muted); }
+.feed { display: grid; border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--line); font: 400 14px/20px var(--font-sans); }
+.row b { font-weight: 500; }
+.row-imprint { display: block; height: 26px; margin: 12px 4px; border-radius: var(--radius-sm); }
+.bar { display: flex; gap: 10px; flex-wrap: wrap; }
+--- jsx
+const later = (value, ms) => new Promise((r) => setTimeout(() => r(value), ms));
+// Stands in for useQuery or useSWR: undefined until the data arrives.
+function useLoaded(value, ms) {
+  const [data, setData] = React.useState(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setData(value), ms); return () => clearTimeout(t); }, []);
+  return data;
+}
+// Suspends until a promised detail lands, so the card's content imprints only that line.
+const Detail = ({ value }) => A.readPromised(value);
+function EnvCard({ env }) {
+  const e = A.readPromised(env);
+  return (
+    <A.Card>
+      <A.CardHeader>
+        <div className="top"><A.CardTitle>{e.name}</A.CardTitle><A.Badge tone={e.tone}>{e.status}</A.Badge></div>
+      </A.CardHeader>
+      <A.CardContent skeleton={{ lines: 1 }}><Detail value={e.commit} /></A.CardContent>
+    </A.Card>
+  );
+}
+function Event({ event }) {
+  const [who, text] = A.readPromised(event);
+  return <div className="row"><A.Avatar name={who} size={26} /><span><b>{who}</b> {text}</span></div>;
+}
+const EVENTS = [['Mara Osei', 'promoted a41c9e2 to production'], ['Tomás Nieto', 'started a deploy of c7d2f10 to staging'], ['Aiko Kato', 'deploy of e09b3a4 failed at the build step']];
+const OLDER = [['Priya Raman', 'rolled back staging to 9f1e2b7'], ['Mara Osei', 'added an environment variable to preview']];
+function View() {
+  // G1: the whole card comes from one request.
+  const [production] = React.useState(() => later({ name: 'Production', tone: 'positive', status: 'Operational', commit: 'a41c9e2 · Fix invoice rounding' }, 1300));
+  // G2: the card is known; its status and commit are still coming, and land together.
+  const status = useLoaded('Deploying', 900);
+  const [commit] = React.useState(() => later('c7d2f10 · Add bulk export to orders', 1700));
+  // G3: a summary first, then the detail inside it.
+  const [preview] = React.useState(() => later({ name: 'Preview', tone: 'critical', status: 'Failed', commit: later('e09b3a4 · Try the new pricing table', 1500) }, 700));
+  const [feed] = React.useState(() => EVENTS.map((e) => later(e, 1500)));
+  const [older, setOlder] = React.useState([]);
+  return (
+    <div className="col">
+      <span className="label">Environments</span>
+      <div className="envs">
+        <A.Await settle="raised" imprint={<A.Skeleton height={103} radius="var(--radius-lg)" />}><EnvCard env={production} /></A.Await>
+        <A.Card>
+          <A.CardHeader>
+            <div className="top"><A.CardTitle>Staging</A.CardTitle><A.Badge tone="caution">{status}</A.Badge></div>
+          </A.CardHeader>
+          <A.CardContent skeleton={{ lines: 1 }}><Detail value={commit} /></A.CardContent>
+        </A.Card>
+        <A.Await settle="raised" imprint={<A.Skeleton height={103} radius="var(--radius-lg)" />}><EnvCard env={preview} /></A.Await>
+      </div>
+      <span className="label">Recent activity</span>
+      <div className="feed">
+        <A.RevealGroup>
+          {feed.map((e, i) => <A.Await key={i} imprint={<span className="alt-skeleton row-imprint" />}><Event event={e} /></A.Await>)}
+        </A.RevealGroup>
+        {older.map((e, i) => <A.Await key={'o' + i} late imprint={<span className="alt-skeleton row-imprint" />}><Event event={e} /></A.Await>)}
+      </div>
+      <div className="bar"><A.Button onClick={() => setOlder((o) => [...o, ...OLDER.map((e) => later(e, 1200))])} disabled={older.length > 0}>Load older events</A.Button></div>
+    </div>
+  );
+}
+function App() {
+  const [round, setRound] = React.useState(0);
+  return (
+    <A.AltitudeProvider loading="breath">
+      <div className="col">
+        <View key={round} />
+        <div className="bar"><A.Button variant="ghost" onClick={() => setRound((r) => r + 1)}>Load the view again</A.Button></div>
+        <p className="cap">Experimental (#343). Each imprint breathes in depth on one page clock, a slow swell down the view. Cards from one request rise a level past their rest and settle; a card's parts land together; rows fill past the ground; older events arrive on a plate.</p>
+      </div>
+    </A.AltitudeProvider>
+  );
+}
+
 === Alert | <!-- @dsCard group="Display" height=640 subtitle="Sheets laid on the page; a stack when there are several; a banner across the top" -->
 --- css
 .wrap { max-width: 580px; }
