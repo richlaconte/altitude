@@ -111,7 +111,7 @@ export function Message({ from, status = 'complete', name, onRetry, edited, clas
   const { style, 'aria-busy': _busy, ...depth } = useDepth({ settle: done || undefined });
   const text = () => body.current?.querySelector('.alt-msg-content')?.textContent?.trim() ?? '';
   const [editing, setEditing] = React.useState<string | null>(null);
-  const edit = React.useRef<(text: string) => void>();
+  const edit = React.useRef<((text: string) => void) | undefined>(undefined);
   const opener = React.useRef<HTMLElement | null>(null);
   const startEdit = (from: HTMLElement | null) => { opener.current = from; setEditing(text()); };
   const endEdit = (sent?: string) => {
