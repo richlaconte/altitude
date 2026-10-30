@@ -1,0 +1,111 @@
+<!-- @dsCard group="Patterns" height=720 subtitle="Pending until the server says so, offline queues, conflicts kept, sessions that don't lose drafts" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SyncPattern — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.sy-page{max-width:720px;margin-inline:auto;display:grid;gap:20px;overflow-wrap:break-word}.sy-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}.sy-h{font:600 21px/28px var(--font-sans);margin:0}.sy-sub{font:600 17px/24px var(--font-sans);margin:0}.sy-ch{font:600 15px/22px var(--font-sans);margin:0}.sy-demo{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.sy-section{display:grid;gap:12px}.sy-tasks{list-style:none;margin:0;padding:0;display:grid;gap:8px}.sy-task{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-md)}.sy-state,.sy-note{font:500 13px/18px var(--font-sans);color:var(--ink-muted)}.sy-note{margin:0}.sy-note:empty{display:none}.sy-brief{margin:0;white-space:pre-line;font:400 15px/23px var(--font-sans)}.sy-conflict{padding:16px;display:grid;gap:12px;border-radius:var(--radius-lg)}.sy-versions{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.sy-version{padding:12px;border-radius:var(--radius-md);box-shadow:inset 0 0 0 1px var(--line-control)}.sy-version[data-presence="2"]{box-shadow:inset 0 0 0 2px var(--presence-2)}.sy-version p{margin:6px 0 0;font:400 15px/23px var(--font-sans)}.sy-who{display:flex;gap:6px;align-items:center;font:500 13px/18px var(--font-sans);color:var(--ink-muted)}.sy-actions{display:flex;flex-wrap:wrap;gap:8px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+function App() {
+  const [online, setOnline] = React.useState(true);
+  const live = React.useRef(true);
+  live.current = online;
+  const [tasks, setTasks] = React.useState([
+    { id: "t1", title: "Draft the launch email", done: true },
+    { id: "t2", title: "Book the venue", done: false },
+    { id: "t3", title: "Send the press kit", done: false }
+  ]);
+  const [writes, setWrites] = React.useState(
+    /** @type {Record<string, 'pending' | 'committed' | 'failed'>} */
+    {}
+  );
+  const [syncedAt, setSyncedAt] = React.useState(/* @__PURE__ */ new Date());
+  const [conflict, setConflict] = React.useState(
+    /** @type {{ mine: string, theirs: string } | null} */
+    null
+  );
+  const [brief, setBrief] = React.useState("Launch on 4 December, in Lisbon.");
+  const [message, setMessage] = React.useState("");
+  const [expiring, setExpiring] = React.useState(false);
+  const [left, setLeft] = React.useState(120);
+  React.useEffect(() => {
+    if (!expiring) return;
+    const t = setInterval(() => setLeft((s) => Math.max(0, s - 1)), 1e3);
+    return () => clearInterval(t);
+  }, [expiring]);
+  const queue = Object.keys(writes).filter((k) => writes[k] === "pending");
+  const send = async (ids) => {
+    await wait(700);
+    if (!live.current) return;
+    setWrites((w) => {
+      const n = { ...w };
+      ids.forEach((id) => {
+        n[id] = "committed";
+      });
+      return n;
+    });
+    setSyncedAt(/* @__PURE__ */ new Date());
+  };
+  const toggle = (id, done) => {
+    setTasks((l) => l.map((t) => t.id === id ? { ...t, done } : t));
+    setWrites((w) => ({ ...w, [id]: "pending" }));
+    void send([id]);
+  };
+  const goOnline = (v) => {
+    setOnline(v);
+    live.current = v;
+    if (v && queue.length) void send(queue);
+  };
+  const resolve = (choice) => {
+    if (!conflict) return;
+    setBrief(choice === "mine" ? conflict.mine : choice === "theirs" ? conflict.theirs : `${conflict.mine}
+${conflict.theirs}`);
+    setMessage(choice === "mine" ? "Kept your version. Jane Park\u2019s version is in the history." : choice === "theirs" ? "Kept Jane Park\u2019s version. Yours is in the history." : "Kept both versions, one after the other.");
+    setConflict(null);
+    setSyncedAt(/* @__PURE__ */ new Date());
+    requestAnimationFrame(() => document.getElementById("sy-brief-h")?.focus());
+  };
+  const minutes = Math.ceil(left / 60);
+  return /* @__PURE__ */ React.createElement("main", { className: "sy-page" }, /* @__PURE__ */ React.createElement("header", { className: "sy-head" }, /* @__PURE__ */ React.createElement("h2", { className: "sy-h" }, "Launch plan"), /* @__PURE__ */ React.createElement(
+    A.SyncIndicator,
+    {
+      state: conflict ? "conflict" : !online ? "offline" : queue.length ? "saving" : "saved",
+      pending: queue.length,
+      conflicts: conflict ? 1 : 0,
+      lastSyncedAt: syncedAt,
+      onOpenConflicts: () => document.getElementById("sy-conflict-h")?.focus()
+    }
+  )), /* @__PURE__ */ React.createElement("div", { className: "sy-demo" }, /* @__PURE__ */ React.createElement(A.Switch, { label: "Online", checked: online, onCheckedChange: goOnline }), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", disabled: !!conflict, onClick: () => setConflict({ mine: "Launch on 4 December, in Lisbon.", theirs: "Launch on 11 December, in Porto." }) }, "Simulate a conflict"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => {
+    setLeft(120);
+    setExpiring(true);
+  } }, "Simulate session expiry")), /* @__PURE__ */ React.createElement("section", { "aria-labelledby": "sy-tasks-h", className: "sy-section" }, /* @__PURE__ */ React.createElement("h3", { id: "sy-tasks-h", className: "sy-sub" }, "Tasks"), /* @__PURE__ */ React.createElement("ul", { className: "sy-tasks" }, tasks.map((t) => /* @__PURE__ */ React.createElement("li", { key: t.id }, /* @__PURE__ */ React.createElement(A.Surface, { level: 0, status: writes[t.id], className: "sy-task" }, /* @__PURE__ */ React.createElement(A.Checkbox, { label: t.title, checked: t.done, onCheckedChange: (v) => toggle(t.id, v) }), /* @__PURE__ */ React.createElement("span", { className: "sy-state" }, writes[t.id] === "pending" ? online ? "Saving\u2026" : "Waiting to sync" : "")))))), /* @__PURE__ */ React.createElement("section", { "aria-labelledby": "sy-brief-h", className: "sy-section" }, /* @__PURE__ */ React.createElement("h3", { id: "sy-brief-h", tabIndex: -1, className: "sy-sub" }, "Brief"), conflict ? /* @__PURE__ */ React.createElement(A.Surface, { level: 1, className: "sy-conflict", role: "group", "aria-labelledby": "sy-conflict-h" }, /* @__PURE__ */ React.createElement("h4", { id: "sy-conflict-h", tabIndex: -1, className: "sy-ch" }, "Changed by Jane Park while you were editing"), /* @__PURE__ */ React.createElement("div", { className: "sy-versions" }, /* @__PURE__ */ React.createElement("div", { className: "sy-version" }, /* @__PURE__ */ React.createElement("div", { className: "sy-who" }, "Your version"), /* @__PURE__ */ React.createElement("p", null, conflict.mine)), /* @__PURE__ */ React.createElement("div", { className: "sy-version", "data-presence": "2" }, /* @__PURE__ */ React.createElement("div", { className: "sy-who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Jane Park", size: 20 }), " Jane Park\u2019s version"), /* @__PURE__ */ React.createElement("p", null, conflict.theirs))), /* @__PURE__ */ React.createElement("div", { className: "sy-actions" }, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => resolve("mine") }, "Keep mine"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => resolve("theirs") }, "Keep theirs"), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => resolve("both") }, "Keep both"))) : /* @__PURE__ */ React.createElement("p", { className: "sy-brief" }, brief)), /* @__PURE__ */ React.createElement("p", { className: "sy-note", role: "status" }, message), /* @__PURE__ */ React.createElement(
+    A.Dialog,
+    {
+      open: expiring,
+      background: "stationary",
+      dismissible: false,
+      size: "sm",
+      onOpenChange: setExpiring,
+      title: left > 0 ? `Your session ends in ${minutes} ${minutes === 1 ? "minute" : "minutes"}` : "Your session ended",
+      description: left > 0 ? "Stay signed in to keep working. Your unsaved changes are kept on this device either way." : "Sign in again to continue. Your unsaved changes are kept on this device.",
+      footer: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setExpiring(false) }, "Sign out"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setExpiring(false) }, left > 0 ? "Stay signed in" : "Sign in again"))
+    }
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
