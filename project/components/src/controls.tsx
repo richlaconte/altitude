@@ -422,6 +422,29 @@ export function TabsList({ className, children, ...rest }: React.HTMLAttributes<
     document.fonts?.ready.then(measure);
     return () => ro.disconnect();
   }, [measure, pill]);
+  // Narrow (#259): a list that doesn't fit scrolls within itself, keeps the chosen tab in view, and fades the edge
+  // that has more, so the page never scrolls sideways.
+  const [edges, setEdges] = React.useState({ start: false, end: false });
+  const scan = React.useCallback(() => {
+    const l = listRef.current;
+    if (!l) return;
+    const more = l.scrollWidth - l.clientWidth > 1;
+    setEdges((p) => { const n = { start: more && l.scrollLeft > 1, end: more && l.scrollLeft < l.scrollWidth - l.clientWidth - 1 }; return p.start === n.start && p.end === n.end ? p : n; });
+  }, []);
+  useIsoLayoutEffect(() => {
+    const l = listRef.current, el = t.nodes.current.get(t.value);
+    if (l && el && l.scrollWidth > l.clientWidth + 1) {
+      const left = el.offsetLeft - 16, right = el.offsetLeft + el.offsetWidth + 16 - l.clientWidth;
+      if (l.scrollLeft > left) l.scrollLeft = Math.max(0, left); else if (l.scrollLeft < right) l.scrollLeft = right;
+    }
+    scan();
+  }, [t.value, scan]);
+  React.useEffect(() => {
+    const l = listRef.current;
+    if (!l) return;
+    const ro = new ResizeObserver(scan); ro.observe(l);
+    return () => ro.disconnect();
+  }, [scan]);
   const onKeyDown = (e: React.KeyboardEvent) => {
     const keys = [...t.nodes.current.keys()];
     const i = keys.indexOf(t.value);
@@ -430,7 +453,8 @@ export function TabsList({ className, children, ...rest }: React.HTMLAttributes<
     if (next) { e.preventDefault(); t.set(next); t.nodes.current.get(next)?.focus(); }
   };
   return (
-    <div ref={listRef} role="tablist" className={cx('alt-tabs-list', className)} onKeyDown={onKeyDown} {...rest}>
+    <div ref={listRef} role="tablist" className={cx('alt-tabs-list', className)} onKeyDown={onKeyDown} onScroll={scan}
+      data-more-start={edges.start ? '' : undefined} data-more-end={edges.end ? '' : undefined} {...rest}>
       {pill && <span className="alt-tabs-indicator" aria-hidden="true" data-ready={ind.ready ? '' : undefined}
         style={{ transform: `translateX(${ind.x}px)`, width: ind.w, opacity: ind.w ? 1 : 0 }} />}
       {children}

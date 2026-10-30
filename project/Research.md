@@ -1396,6 +1396,10 @@ A review (#249): at 375px a Select opened a 280px list under its trigger, with 3
 
 A measurement (#266): eight 40px slots with 6px gaps are 362px, so at 375 CSS px the preview's backup code ran past the edge. Slots now give way from 40px to 28px and the gaps tighten (3–6px), so eight characters fit a 320px screen; six-digit codes keep their full size. The phone check (#247) shows no overflow.
 
+### E121 · What happens to tabs that don't fit?
+
+A measurement (#259): at 375 CSS px the Tabs preview was 47px wider than the screen and SavedViews 26px, so the page scrolled sideways (WCAG 1.4.10). A tab list now scrolls within itself, with no scrollbar: the chosen tab is kept in view, and an edge with more tabs past it fades out, so you can see there's more. A "More" menu (as Toolbar has) was the alternative; scrolling keeps every tab one swipe away and in its place. The folder tabs' shadow and their reach into the panel sit in the list's padding, so scrolling doesn't clip them. `checks/tabs-narrow.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
