@@ -8,6 +8,8 @@ type GroupCtxT = {
   direction: 'horizontal' | 'vertical'; sizes: number[]; panels: PanelInfo[]; animate: boolean;
   resize: (handle: number, deltaPct: number) => void; setSize: (panel: number, size: number) => void; toggle: (panel: number) => void;
   box: React.RefObject<HTMLDivElement | null>;
+  /** Narrow and stacked (#265): only this panel shows, and the handles hide. */
+  shown: number | null;
 };
 const GroupCtx = React.createContext<GroupCtxT | null>(null);
 const IndexCtx = React.createContext(0);
@@ -21,12 +23,22 @@ export interface ResizablePanelGroupProps extends React.HTMLAttributes<HTMLDivEl
   /** Remembers the sizes in this browser under this name. */
   autoSaveId?: string;
   onLayout?: (sizes: number[]) => void;
+  /**
+   * Under 480px of its own width (#265). 'stack' (default): one panel at a time, `narrowPanel` (default the first), the
+   * list-and-detail pattern on phones, with the handles hidden. 'vertical': the panes stack with a horizontal grip.
+   * false: as on a wide screen.
+   */
+  narrow?: 'stack' | 'vertical' | false;
+  /** With narrow="stack", the panel shown while narrow (by index). Change it to move between list and detail. */
+  narrowPanel?: number;
+  /** Called when the group becomes narrow or wide again, so the app can show its way back (a Back button). */
+  onNarrowChange?: (narrow: boolean) => void;
 }
 /**
  * Panes beside each other on the ground, parted by dividers you can drag. The panes never lift (a detail pane opening
  * beside its list stays on the ground, unlike a Sheet); only the grip is live, and it floats while held.
  */
-export function ResizablePanelGroup({ direction = 'horizontal', autoSaveId, onLayout, className, children, ...rest }: ResizablePanelGroupProps) {
+export function ResizablePanelGroup({ direction: directionProp = 'horizontal', autoSaveId, onLayout, narrow = 'stack', narrowPanel = 0, onNarrowChange, className, children, ...rest }: ResizablePanelGroupProps) {
   const kids = React.Children.toArray(children).filter(React.isValidElement) as React.ReactElement<any>[];
   const panels: PanelInfo[] = kids.filter((k) => k.type === ResizablePanel).map((k, i) => ({
     defaultSize: k.props.defaultSize, minSize: k.props.minSize ?? 10, maxSize: k.props.maxSize ?? 90, collapsible: !!k.props.collapsible,
@@ -42,6 +54,19 @@ export function ResizablePanelGroup({ direction = 'horizontal', autoSaveId, onLa
   const restore = React.useRef<number[]>([]);
   const [animate, setAnimate] = React.useState(false);
   const box = React.useRef<HTMLDivElement>(null);
+  // Narrow (#265): measured on the group itself, at the narrow breakpoint.
+  const [isNarrow, setIsNarrow] = React.useState(false);
+  React.useEffect(() => {
+    const el = box.current;
+    if (!el || !narrow || directionProp !== 'horizontal') { setIsNarrow(false); return; }
+    const ro = new ResizeObserver(([e]) => setIsNarrow(e.contentRect.width < 480));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [narrow, directionProp]);
+  const said = React.useRef<boolean | null>(null);
+  React.useEffect(() => { if (said.current !== isNarrow) { if (said.current !== null || isNarrow) onNarrowChange?.(isNarrow); said.current = isNarrow; } }, [isNarrow]); // eslint-disable-line react-hooks/exhaustive-deps
+  const direction = isNarrow && narrow === 'vertical' ? 'vertical' : directionProp;
+  const shown = isNarrow && narrow === 'stack' ? Math.min(Math.max(0, narrowPanel), panels.length - 1) : null;
   const commit = (next: number[]) => { setSizes(next); write(autoSaveId, next); onLayout?.(next); };
   const clampPair = (s: number[], a: number, wantA: number) => {
     const b = a + 1, total = s[a] + s[b];
@@ -51,7 +76,7 @@ export function ResizablePanelGroup({ direction = 'horizontal', autoSaveId, onLa
     return next;
   };
   const ctx: GroupCtxT = {
-    direction, sizes, panels, animate, box,
+    direction, sizes, panels, animate, box, shown,
     resize: (h, d) => setSizes((s) => { const n = clampPair(s, h, s[h] + d); write(autoSaveId, n); onLayout?.(n); return n; }),
     setSize: (p, size) => commit(clampPair(sizes, p, size)),
     toggle: (p) => {
@@ -67,7 +92,7 @@ export function ResizablePanelGroup({ direction = 'horizontal', autoSaveId, onLa
   let panel = -1, handle = -1;
   return (
     <GroupCtx.Provider value={ctx}>
-      <div ref={box} className={cx('alt-resizable', className)} data-direction={direction} data-animate={animate ? '' : undefined} {...rest}>
+      <div ref={box} className={cx('alt-resizable', className)} data-direction={direction} data-narrow={shown !== null ? 'stack' : undefined} data-animate={animate ? '' : undefined} {...rest}>
         {kids.map((k, i) => {
           if (k.type === ResizablePanel) panel++;
           if (k.type === ResizableHandle) handle++;
@@ -95,9 +120,11 @@ export function ResizablePanel({ defaultSize: _d, minSize: _min, maxSize: _max, 
   const g = React.useContext(GroupCtx)!;
   const i = React.useContext(IndexCtx);
   const size = g.sizes[i] ?? 0;
-  const collapsed = size === 0;
-  return <div id={g.panels[i]?.id} role="region" className={cx('alt-resizable-panel', className)} data-collapsed={collapsed ? '' : undefined}
-    aria-hidden={collapsed || undefined} {...(collapsed ? inert : {})} style={{ flexBasis: `${size}%`, ...style }} {...rest} />;
+  // Stacked (#265): the shown panel takes the whole group, the others are hidden.
+  const away = g.shown !== null && g.shown !== i;
+  const collapsed = size === 0 && g.shown === null;
+  return <div id={g.panels[i]?.id} role="region" className={cx('alt-resizable-panel', className)} data-collapsed={collapsed ? '' : undefined} hidden={away || undefined}
+    aria-hidden={collapsed || undefined} {...(collapsed ? inert : {})} style={{ flexBasis: g.shown !== null ? '100%' : `${size}%`, ...style }} {...rest} />;
 }
 
 export interface ResizableHandleProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -134,6 +161,8 @@ export function ResizableHandle({ withGrip = true, label, className, ...rest }: 
     else if (e.key === 'End') { e.preventDefault(); g.setSize(i, p.maxSize); }
     else if (e.key === 'Enter') { e.preventDefault(); g.toggle(i); }
   };
+  // Stacked (#265), there's nothing beside the shown panel to resize.
+  if (g.shown !== null) return null;
   return (
     <div role="separator" tabIndex={0} aria-orientation={horizontal ? 'vertical' : 'horizontal'} aria-controls={p?.id}
       aria-label={label ?? (p?.label ? `Resize ${p.label.toLowerCase()}` : 'Resize')} aria-valuenow={Math.round(size)} aria-valuemin={p?.collapsible ? 0 : p?.minSize} aria-valuemax={p?.maxSize}
