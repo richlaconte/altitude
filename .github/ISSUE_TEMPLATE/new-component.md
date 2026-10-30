@@ -2,10 +2,10 @@
 name: New component
 about: Propose a component Altitude doesn't have yet
 title: "New: <Name> — <what it's for, in a few words>"
-labels: enhancement
+labels: enhancement, needs-design
 ---
 
-<!-- Read CONTRIBUTING.md ("Issues") before filling this in. Delete these comments and any section marked optional that you leave empty. -->
+<!-- Read CONTRIBUTING.md ("Issues") before filling this in. Delete these comments and any section marked optional that you leave empty. If this is part of a bigger issue or can't start until another lands, link it as a sub-issue or "blocked by" after filing (CONTRIBUTING.md, "How work is organised"). -->
 
 ## What it's for
 
@@ -47,6 +47,10 @@ labels: enhancement
 ## Rules it strains (optional)
 
 <!-- If a rule in the design guide blocks a good design, say which rule and why, rather than designing around it quietly. -->
+
+## Out of scope (optional)
+
+<!-- What this issue deliberately doesn't cover, so whoever picks it up doesn't widen it. Link a separate issue for anything that should follow. -->
 
 ## Done when
 

@@ -35,6 +35,8 @@ With `contrast="more"`, lines are 3px, adjacent marks are 3px apart, fills get a
 </ChartContainer>
 ```
 
+**Axis text.** Tick labels are captions: 13px, weight 400, `ink-muted`, tabular figures. Weight 500 is for labels on controls, so axis text is lighter, and the frame's words rank below the marks, the ground line and the references. (This changed from 500 12.5px in #193, with no API change.) `yLabels="inline"` sets each y label just above its gridline at the plot's left, on a halo of the plot's colour, so the plot runs the card's full width: 56px more in a 440px card, about a fifth of the plot at phone width. The top label carries the unit ("250 ms"), the rest only the number. A label that would sit on a line, an area or a bar is left out, and its gridline stays. The ground line goes unlabelled, because it's zero. It's for vertical cartesian charts; the default stays `'gutter'`.
+
 **The keyboard path.** The plot is one Tab stop: a layer of focusable nodes over the SVG, one level at a time, with a roving tabindex. After Olli and Data Navigator, it goes from the summary to the series to the data:
 
 | Key | On the summary | On a series | On a point |
@@ -64,6 +66,8 @@ A focused point gets a 2px `accent-ink` ring on its mark (`Highlight` under forc
 x is inferred from the first value of `x`; set `xScale` to override it. Numbers and dates are formatted with `Intl`, in the reader's locale unless you pass `locale`.
 
 **Colour.** Series take slots in config order: the first is `data-1`, the seventh and later are `data-other`. Set `color: 'data-3'` to pin one. The order is fixed for the chart's life, so hiding or filtering a series never repaints the others. The figure also sets `--color-<key>` for each series, for your own CSS.
+
+**Focus.** A chart type's `focus` says what the chart is about: `focus={['eu']}` keeps those series' colours and draws the rest in `data-context`, one flat neutral, with their end labels and legend keys in `ink-muted`; on bars and dots, `focus={(d) => d.team === 'Cedar'}` does the same for records. It's said in words: "Highlighted: EU." leads the generated summary (and follows a written one), focused legend keys say "highlighted", and the readout and the keyboard path list focused series first. Changing it cross-fades the colours over `dur-travel-1`, at once under reduced motion. It's the author's statement of importance, not a reader's control; the reader's is `relevance`, which recedes misses to 35% without repainting, so the two never read alike. Your own marks get it from `encode(key, d).context` and its colour. Pair it with a `takeaway`: when the words and the colour pick out the same thing, that's what people remember (E102, E105).
 
 **Motion.** When the data changes, the frame moves its marks by the one engine every chart shares ([Motion](../../Motion.md), "Charts"). Values glide at one level on `ease-glide`, after the axis has rescaled if its domain changed, never at the same time. Re-sorted bands are carried, and records and series entering or leaving cross-fade. First render, a change of x under a line, more than 500 marks and reduced motion all cross-fade instead. Resizing never animates. The plot's `data-stage` says where a change is (`rescale`, `values` or `fade`).
 
@@ -98,6 +102,8 @@ A `RevealGroup` around a row of charts and stats lands them together.
 - **Contrast only.** Elsewhere relevance raises matches, but marks can't rise, so in a chart it's spent as contrast alone. Under forced colours misses are `GrayText`.
 
 `useChart()` gives `relevance(d)`, `hasRelevance` and `relevanceRegions`; wrap your own marks in `ChartRelevance`. `BarList` takes the same `relevance`, and there rows rise and sink as `TableRow`s do.
+
+**Since your last visit.** `since={{ data: snapshot, label: 'since Tuesday 09:00' }}` answers "what moved while I was away?", which the afterglow can't when the change came before the page did. Records are matched by the chart's id or by x; a new one counts as changed. A changed bar carries a 2px `ink` tick at its old value (the comparison's mark, as `compare` draws it), a changed line point a small hollow `ink-muted` ring. The frame says "3 changed since Tuesday 09:00" in a `Switch` that turns on a filter for the changed records, so the rest recede to 35% where they stand. On arrival, up to four changed marks take `live`'s afterglow; more, and the caption takes it instead. Point names ("Up 40% since Tuesday 09:00"), the readout, the table and the summary ("3 of 8 changed since Tuesday 09:00, most of all Webhooks, up 75%.") say what changed. Keeping what each person last saw, and when, is the application's job.
 
 **Live data.** `live` is for charts that update on their own (deploys, error rates, queue depth). People miss changes they weren't attending to, so, as elsewhere in Altitude, a change shows at once and leaves a fading trace:
 
