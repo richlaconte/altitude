@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Layer, ModePlate, PrimaryScope, useControllable, useIsoLayoutEffect, useKeyboardLikely, useOutside, usePresence } from './core';
+import { cx, Icons, Layer, ModePlate, PrimaryScope, useControllable, useFitFloating, useIsoLayoutEffect, useKeyboardLikely, useOutside, usePresence } from './core';
 import { Button } from './controls';
 import { ModalOwner, modalDocument, tabbables, useAltitudeContext } from './modal-state';
 
@@ -29,6 +29,8 @@ export function Tooltip({ content, side = 'top', delay = 450, defaultOpen = fals
   const timer = React.useRef<number | undefined>(undefined);
   const id = React.useId();
   const { mounted, state } = usePresence(open, EXIT_3);
+  const tip = React.useRef<HTMLSpanElement>(null);
+  useFitFloating(tip, mounted);
   const show = () => {
     const isWarm = Date.now() - lastTipClose < 400;
     setWarm(isWarm);
@@ -42,7 +44,7 @@ export function Tooltip({ content, side = 'top', delay = 450, defaultOpen = fals
       onFocus={() => { window.clearTimeout(timer.current); setWarm(true); setOpen(true); }} onBlur={hide}
       onKeyDown={(e) => { if (e.key === 'Escape') hide(); }}>
       {React.cloneElement(children, { 'aria-describedby': open ? id : undefined })}
-      {mounted && <span role="tooltip" id={id} className="alt-tip" data-side={side} data-state={state} data-warm={warm ? '' : undefined}>{content}</span>}
+      {mounted && <span ref={tip} role="tooltip" id={id} className="alt-tip" data-side={side} data-state={state} data-warm={warm ? '' : undefined}>{content}</span>}
     </span>
   );
 }
@@ -65,6 +67,7 @@ export function Popover({ trigger, children, open, defaultOpen = false, onOpenCh
   const { mounted, state } = usePresence(isOpen, EXIT_3);
   const close = React.useCallback(() => set(false), [set]);
   useOutside(ref, isOpen, close);
+  useFitFloating(panel, mounted);
   React.useEffect(() => {
     if (state !== 'open' || !panel.current) return;
     const f = panel.current.querySelector<HTMLElement>('input, textarea, select, button, [href], [tabindex]:not([tabindex="-1"])');
@@ -121,6 +124,8 @@ export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', 
   const keyboard = useKeyboardLikely();
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   const menu = React.useRef<HTMLDivElement>(null);
+  // On screen at any width (#248); the panel mounts only while open.
+  useFitFloating(menu, true);
   const refs = React.useRef<(HTMLDivElement | null)[]>([]);
   useIsoLayoutEffect(() => {
     const el = active >= 0 ? refs.current[active] : null;
@@ -221,6 +226,8 @@ export function HoverCard({ trigger, children, side = 'bottom', align = 'start',
   const timer = React.useRef<number | undefined>(undefined);
   const closeMe = React.useRef(() => set(false));
   closeMe.current = () => set(false);
+  const card = React.useRef<HTMLDivElement>(null);
+  useFitFloating(card, mounted);
   // One preview at a time: opening a card hands over from whichever card is open (warm, so it's instant).
   React.useEffect(() => {
     if (!isOpen) return;
@@ -248,7 +255,7 @@ export function HoverCard({ trigger, children, side = 'bottom', align = 'start',
       onKeyDown={(e) => { if (e.key === 'Escape' && isOpen) { e.stopPropagation(); window.clearTimeout(timer.current); set(false); lastTipClose = Date.now(); } }}>
       {trigger}
       {mounted && (
-        <div className={cx('alt-pop alt-hovercard', className)} data-state={state} data-side={side} data-align={align}
+        <div ref={card} className={cx('alt-pop alt-hovercard', className)} data-state={state} data-side={side} data-align={align}
           onPointerEnter={() => window.clearTimeout(timer.current)}>
           {children}
         </div>
@@ -294,7 +301,17 @@ export function useModal({ open, onDismiss, exitMs, panel, modal = true, dismiss
   const latest = React.useRef({ open, modal, summit, autoFocus, restoreFocus, focusSelector, background, returnFocus, provider: ctx?.provider ?? null });
   latest.current = { open, modal, summit, autoFocus, restoreFocus, focusSelector, background, returnFocus, provider: ctx?.provider ?? null };
   if (owner.current) Object.assign(owner.current, latest.current);
+  // The visible viewport (#251): while a modal is open, its root follows visualViewport (the on-screen keyboard, a
+  // phone's retracting toolbar) through --alt-vvh and --alt-vv-top, so its footer and focused field stay in view.
+  const viewportOff = React.useRef<(() => void) | null>(null);
   const rootRef = React.useCallback((root: HTMLDivElement | null) => {
+    viewportOff.current?.(); viewportOff.current = null;
+    const vv = root?.ownerDocument.defaultView?.visualViewport;
+    if (root && vv) {
+      const sync = () => { root.style.setProperty('--alt-vvh', `${vv.height}px`); root.style.setProperty('--alt-vv-top', `${vv.offsetTop}px`); };
+      sync(); vv.addEventListener('resize', sync); vv.addEventListener('scroll', sync);
+      viewportOff.current = () => { vv.removeEventListener('resize', sync); vv.removeEventListener('scroll', sync); };
+    }
     if (!root) {
       const previous = owner.current;
       if (previous) modalDocument(previous.panel.ownerDocument).remove(previous);
@@ -443,6 +460,35 @@ export function Toaster({ className }: { className?: string }) {
     React.useCallback(() => documentState?.active ?? null, [documentState]), () => null);
   const blocked = !!activeModal;
   React.useEffect(() => { subs.add(force); return () => { subs.delete(force); }; }, []);
+  // On touch (#253) a tap opens the stack and pauses it, a tap outside folds it; hover is a mouse's.
+  const [tapped, setTapped] = React.useState(false);
+  React.useEffect(() => {
+    if (!tapped || !element) return;
+    const away = (e: PointerEvent) => { if (!element.contains(e.target as Node)) { setTapped(false); setExpanded(false); } };
+    element.ownerDocument.addEventListener('pointerdown', away);
+    return () => element.ownerDocument.removeEventListener('pointerdown', away);
+  }, [tapped, element]);
+  // A horizontal swipe on a toast dismisses it; it follows the finger until it's let go.
+  const swipe = React.useRef<{ id: number; x: number; y: number; dx: number; el: HTMLElement; moved: boolean } | null>(null);
+  const swipeStart = (id: number) => (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== 'touch' || (e.target as HTMLElement).closest('button, a')) return;
+    swipe.current = { id, x: e.clientX, y: e.clientY, dx: 0, el: e.currentTarget, moved: false };
+  };
+  const swipeMove = (e: React.PointerEvent<HTMLElement>) => {
+    const sw = swipe.current;
+    if (!sw) return;
+    sw.dx = e.clientX - sw.x;
+    if (!sw.moved && Math.abs(sw.dx) > 8 && Math.abs(sw.dx) > Math.abs(e.clientY - sw.y)) { sw.moved = true; try { sw.el.setPointerCapture(e.pointerId); } catch { /* gone */ } }
+    if (sw.moved) { sw.el.style.translate = `${sw.dx}px 0`; sw.el.style.opacity = String(Math.max(0, 1 - Math.abs(sw.dx) / 160)); }
+  };
+  const swipeEnd = () => {
+    const sw = swipe.current;
+    swipe.current = null;
+    if (!sw) return false;
+    if (sw.moved && Math.abs(sw.dx) > 64) { toast.dismiss(sw.id); return true; }
+    sw.el.style.translate = ''; sw.el.style.opacity = '';
+    return sw.moved;
+  };
 
   // Keep the remaining lifetime, including while a modal owns the document.
   React.useEffect(() => {
@@ -476,7 +522,13 @@ export function Toaster({ className }: { className?: string }) {
     <Layer>
       <section ref={setElement} aria-label="Notifications" aria-live={blocked ? "off" : "polite"} className={cx('alt-toaster', className)}
         style={{ height: expanded ? total : frontH }}
-        onPointerEnter={() => setExpanded(true)} onPointerLeave={() => setExpanded(false)}
+        onPointerEnter={(e) => { if (e.pointerType !== 'touch') setExpanded(true); }} onPointerLeave={(e) => { if (e.pointerType !== 'touch' && !tapped) setExpanded(false); }}
+        onPointerUp={(e) => {
+          if (e.pointerType !== 'touch') return;
+          if (swipeEnd() || (e.target as HTMLElement).closest('button, a')) return;
+          const open = !expanded; setExpanded(open); setTapped(open);
+        }}
+        onPointerCancel={() => swipeEnd()}
         onFocus={() => setExpanded(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setExpanded(false); }}>
         {toasts.map((t) => {
           const i = live.indexOf(t);
@@ -489,7 +541,7 @@ export function Toaster({ className }: { className?: string }) {
           if (!t.leaving && i >= 0) offset += h + GAP;
           const I = toastIcon[t.tone || 'neutral'];
           return (
-            <div key={t.id} className="alt-toast" data-toast-id={t.id} data-tone={t.tone} data-behind={behind ? '' : undefined} role={blocked || t.announce === false ? undefined : t.tone === 'critical' ? 'alert' : 'status'}
+            <div key={t.id} className="alt-toast" data-toast-id={t.id} onPointerDown={swipeStart(t.id)} onPointerMove={swipeMove} data-tone={t.tone} data-behind={behind ? '' : undefined} role={blocked || t.announce === false ? undefined : t.tone === 'critical' ? 'alert' : 'status'}
               aria-live={t.announce === false ? 'off' : undefined}
               ref={(el) => { if (el) { const nh = el.offsetHeight; if (heights.current.get(t.id) !== nh && !behind) { heights.current.set(t.id, nh); } } }}
               style={{ transform: `translateY(${y}) scale(${s})`, opacity: o, boxShadow: sh, zIndex: 100 - Math.max(i, 0), height: behind ? frontH : undefined, pointerEvents: o ? undefined : 'none' }}>

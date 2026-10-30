@@ -782,7 +782,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-tip {
   left: 50%; bottom: calc(100% + 8px); translate: -50% 0; transform-origin: 50% 100%;
   padding: 5px 10px; border-radius: var(--radius-sm); background: var(--surface-floating); box-shadow: var(--elev-3);
-  font: 500 12.5px/17px var(--font-sans); white-space: nowrap; pointer-events: none;
+  font: 500 12.5px/17px var(--font-sans); width: max-content; max-width: min(320px, calc(100vw - 16px)); pointer-events: none;
 }
 .alt-tip[data-side="bottom"] { bottom: auto; top: calc(100% + 8px); transform-origin: 50% 0; }
 .alt-tip[data-state="closed"] { transform: translateY(calc(4px * var(--alt-travel))) scale(calc(1 - 0.04 * var(--alt-travel))); }
@@ -791,8 +791,10 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-tip[data-side="right"][data-state="closed"] { transform: translateX(calc(-4px * var(--alt-travel))) scale(calc(1 - 0.04 * var(--alt-travel))); }
 .alt-tip[data-warm] { transition-duration: var(--dur-travel-1); }
 
+/* On screen at any width (#248): a panel is capped at the viewport's width, and useFitFloating shifts it sideways to
+   stay 8px clear of the edges when it opens. */
 .alt-pop {
-  top: calc(100% + 8px); left: 0; transform-origin: 0 0; min-width: 220px; padding: var(--space-4);
+  top: calc(100% + 8px); left: 0; transform-origin: 0 0; min-width: min(220px, calc(100vw - 16px)); max-width: calc(100vw - 16px); box-sizing: border-box; padding: var(--space-4);
   border-radius: var(--radius-lg); background: var(--surface-floating); box-shadow: var(--elev-3); outline: none;
 }
 .alt-pop[data-align="end"] { left: auto; right: 0; transform-origin: 100% 0; }
@@ -802,7 +804,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-pop[data-state="closed"] { transform: translateY(calc(-6px * var(--alt-travel))) scale(calc(1 - 0.04 * var(--alt-travel))); }
 .alt-pop[data-side="top"][data-state="closed"] { transform: translateY(calc(6px * var(--alt-travel))) scale(calc(1 - 0.04 * var(--alt-travel))); }
 
-.alt-menu { padding: var(--space-1); min-width: 228px; }
+.alt-menu { padding: var(--space-1); min-width: min(228px, calc(100vw - 16px)); }
 .alt-menu-hl {
   position: absolute; top: 0; left: var(--space-1); right: var(--space-1); border-radius: var(--radius-sm); background: var(--accent-soft);
   pointer-events: none; transition: transform var(--dur-travel-2) var(--ease-settle), height var(--dur-travel-2) var(--ease-settle), opacity var(--dur-travel-1), background-color var(--dur-travel-1);
@@ -825,13 +827,14 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-menu-sep { height: 1px; margin: var(--space-1) 6px; background: var(--line); }
 
 /* ── Dialog: level 5. The page recedes, the scrim veils it, the dialog rises with its shadow growing. ── */
-.alt-dialog-root { position: fixed; inset: 0; z-index: var(--z-modal); display: grid; place-items: center; padding: var(--space-6); }
+/* The modal roots cover the visible viewport (#251), not the largest one, so a footer is never under the keyboard. */
+.alt-dialog-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-modal); display: grid; place-items: center; padding: var(--space-6); padding: calc(var(--space-6) + env(safe-area-inset-top, 0px)) calc(var(--space-6) + env(safe-area-inset-right, 0px)) calc(var(--space-6) + env(safe-area-inset-bottom, 0px)) calc(var(--space-6) + env(safe-area-inset-left, 0px)); }
 .alt-scrim {
   position: absolute; inset: 0; background: var(--scrim); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   transition: opacity var(--dur-travel-5) var(--ease-rise);
 }
 .alt-dialog {
-  position: relative; width: min(100%, 460px); max-height: calc(100vh - 48px); overflow: auto; outline: none;
+  position: relative; width: min(100%, 460px); max-height: calc(100vh - 48px); max-height: calc(var(--alt-vvh, 100dvh) - 48px); overflow: auto; outline: none;
   padding: var(--space-6); border-radius: var(--radius-xl); background: var(--surface-modal); box-shadow: var(--elev-5); color: var(--ink);
   transition: opacity var(--dur-travel-5) var(--ease-rise), transform var(--dur-travel-5) var(--ease-rise), box-shadow var(--dur-travel-5) var(--ease-rise);
 }
@@ -853,10 +856,16 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-dialog-close { position: absolute; top: var(--space-4); right: var(--space-4); color: var(--ink-muted); }
 
 /* ── Toast: the stack is a depth stack. Newest in front at level 4; older ones sink behind it. ── */
+/* Safe areas (#252): every layer fixed to the screen's edge adds env(safe-area-inset-*) to its offset, so in an
+   edge-to-edge page (viewport-fit=cover) it clears the notch, the rounded corners and the home indicator. Without
+   viewport-fit=cover env() is 0 and nothing moves. The mode frame stays at the physical edge: it frames the screen. */
 .alt-toaster {
-  position: fixed; z-index: var(--z-toast); right: var(--space-6); bottom: var(--space-6); width: min(360px, calc(100vw - 32px));
+  position: fixed; z-index: var(--z-toast); right: calc(var(--space-6) + env(safe-area-inset-right, 0px)); bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px)); width: min(360px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   transition: height var(--dur-travel-4) var(--ease-rise);
 }
+/* On touch (#253): a tap opens the stack and holds it (timers paused) until a tap outside; a horizontal swipe dismisses
+   a toast, so the toast lets vertical scrolling through. */
+.alt-toast { touch-action: pan-y; }
 .alt-toast {
   position: absolute; right: 0; bottom: 0; width: 100%; display: flex; align-items: flex-start; gap: var(--space-3);
   padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); border-radius: var(--radius-lg);
@@ -1564,7 +1573,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    into the draft; saving hovers as a pending write; saved, it lowers away while the fields settle; a failed save drops
    it to a trench, keeping the draft. ── */
 .alt-savebar {
-  position: fixed; left: 50%; bottom: var(--space-4); z-index: var(--z-floating); translate: -50% 0;
+  position: fixed; left: 50%; bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-floating); translate: -50% 0;
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); width: max-content; max-width: calc(100vw - 32px);
   padding: 8px 8px 8px var(--space-4); border-radius: var(--radius-lg); background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink);
   transition: opacity var(--dur-travel-3) var(--ease-rise), transform var(--dur-travel-3) var(--ease-rise), background-color var(--dur-travel-2), box-shadow var(--dur-travel-2);
@@ -2103,7 +2112,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    change, rows that survive travel to their new places (FLIP, ease-glide) and new ones rise 4px in, at most four at a
    time (riseDelay) and only near the top; the rest cross-fade. On opening, predicted items are there at once and the
    rest fade in over dur-onset. ── */
-.alt-cmd-root { position: fixed; inset: 0; z-index: var(--z-modal); display: grid; justify-items: center; align-items: start; padding: max(var(--space-6), 12vh) var(--space-4) var(--space-6); }
+.alt-cmd-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-modal); display: grid; justify-items: center; align-items: start; padding: max(var(--space-6), calc(var(--alt-vvh, 100dvh) * 0.12)) var(--space-4) var(--space-6); }
 .alt-cmd-root[data-state="closed"] .alt-scrim { opacity: 0; transition-duration: calc(var(--dur-travel-5) * 0.7); transition-timing-function: var(--ease-sink); }
 .alt-cmd {
   position: relative; display: flex; flex-direction: column; width: min(100%, 600px); max-height: 100%; overflow: hidden; outline: none;
@@ -2118,7 +2127,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-cmd .alt-cmd-field { height: 48px; padding: 0 var(--space-3) 0 var(--space-4); gap: var(--space-3); border-radius: calc(var(--radius-xl) - var(--space-3)); }
 .alt-cmd .alt-cmd-field input { font-size: 16px; }
 .alt-cmd .alt-cmd-field:focus-within, .alt-cmd .alt-cmd-field:has(input:not(:placeholder-shown)) { background: var(--surface-modal); }
-.alt-cmd-viewport { position: relative; flex: 0 1 auto; min-height: 0; max-height: min(380px, 52vh); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.alt-cmd-viewport { position: relative; flex: 0 1 auto; min-height: 0; max-height: min(380px, 52vh); max-height: min(380px, calc(var(--alt-vvh, 100dvh) * 0.52)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .alt-cmd-viewport[data-ready] { transition: height var(--dur-travel-2) var(--ease-glide); }
 .alt-cmd-list { position: relative; padding: 0 var(--space-2) var(--space-2); outline: none; }
 .alt-cmd-group + .alt-cmd-group { margin-top: var(--space-1); }
@@ -2157,7 +2166,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    8px clear of its edge so its own edges, and the shadow it casts below them, read as height. While content scrolls
    under its header the header rises; where content continues below, the footer's top edge curves away. A bottom
    sheet has a finger pull: a small recess (an opening, like every place you put something into) to drag it down by. ── */
-.alt-sheet-root { position: fixed; inset: 0; z-index: var(--z-overlay); pointer-events: none; }
+.alt-sheet-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-overlay); pointer-events: none; }
 .alt-sheet-root > .alt-scrim { pointer-events: auto; }
 .alt-sheet-root[data-state="closed"] > .alt-scrim { opacity: 0; transition-duration: calc(var(--dur-travel-4) * 0.7); transition-timing-function: var(--ease-sink); }
 .alt-sheet {
@@ -2168,10 +2177,10 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 }
 .alt-sheet[data-size="sm"] { --w: 360px; }
 .alt-sheet[data-size="lg"] { --w: 560px; }
-.alt-sheet[data-side="right"], .alt-sheet[data-side="left"] { top: var(--edge); bottom: var(--edge); width: min(calc(100% - 2 * var(--edge)), var(--w)); }
-.alt-sheet[data-side="right"] { right: var(--edge); transform-origin: 100% 50%; }
-.alt-sheet[data-side="left"] { left: var(--edge); transform-origin: 0 50%; }
-.alt-sheet[data-side="bottom"] { --w: 720px; left: 0; right: 0; bottom: var(--edge); width: min(calc(100% - 2 * var(--edge)), var(--w)); max-height: calc(100% - 2 * var(--space-8)); margin: 0 auto; transform-origin: 50% 100%; }
+.alt-sheet[data-side="right"], .alt-sheet[data-side="left"] { top: calc(var(--edge) + env(safe-area-inset-top, 0px)); bottom: calc(var(--edge) + env(safe-area-inset-bottom, 0px)); width: min(calc(100% - 2 * var(--edge)), var(--w)); }
+.alt-sheet[data-side="right"] { right: calc(var(--edge) + env(safe-area-inset-right, 0px)); transform-origin: 100% 50%; }
+.alt-sheet[data-side="left"] { left: calc(var(--edge) + env(safe-area-inset-left, 0px)); transform-origin: 0 50%; }
+.alt-sheet[data-side="bottom"] { --w: 720px; left: 0; right: 0; bottom: calc(var(--edge) + env(safe-area-inset-bottom, 0px)); width: min(calc(100% - 2 * var(--edge)), var(--w)); max-height: calc(100% - 2 * var(--space-8)); margin: 0 auto; transform-origin: 50% 100%; }
 .alt-sheet[data-side="bottom"][data-size="sm"] { --w: 480px; }
 .alt-sheet[data-side="bottom"][data-size="lg"] { --w: 960px; }
 .alt-sheet-root[data-state="closed"] .alt-sheet { opacity: 0; box-shadow: var(--elev-1); }

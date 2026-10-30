@@ -1358,7 +1358,42 @@ A review (#262): at 375px, menus showed "⌘D" beside "Duplicate", and CommandPa
 - **Hints hide; shortcuts don't.** Menu shortcuts, CommandPalette's footer, chips and esc, and InlineEdit's "⌘+Enter to save" (which becomes "Save to keep it") follow it. The keys still work.
 - **An app's own `Kbd` stays** unless `hideOnTouch` is set, because it may be documenting shortcuts on purpose.
 
-### E115 · Does Altitude carry the tells of generated interfaces?
+### E115 · Is a dialog's button under the keyboard?
+
+A source audit (#251): Dialog, Sheet and CommandPalette sized themselves with `vh` and `position: fixed; inset: 0`, which on a phone means the largest viewport. With the on-screen keyboard open, a dialog's footer (its primary action) could sit under the keyboard. Nothing read `window.visualViewport`.
+
+- **The visible viewport.** While a modal is open, `useModal` follows `visualViewport` (resize and scroll) into `--alt-vvh` and `--alt-vv-top` on its root. The roots cover just the visible area, and the dialog's height, the palette's top padding and list height derive from it, with `dvh` and then `vh` as fallbacks.
+- **A claim you can answer.** A dialog is level 5 and claims you (Elevation); its answer must stay in reach.
+- Not observed on a device: Playwright can't open a keyboard, so `checks/visible-viewport.mjs` shrinks the viewport under an open Dialog and CommandPalette and checks the root follows and the panel stays inside.
+
+### E116 · Does a toast sit under the home indicator?
+
+A CSS audit (#252): no rule in `bundle.css` used `safe-area-inset`. In an edge-to-edge page (`viewport-fit=cover`, any installed PWA) the Toaster, SaveBar and Sheet sat under the notch, the rounded corners or the home indicator, where a swipe goes home instead of pressing.
+
+- **Offset by the inset.** Every layer fixed to an edge adds `env(safe-area-inset-*)` to its offset: Toaster, SaveBar, each side of a Sheet, and the Dialog root's padding. Without `viewport-fit=cover`, `env()` is 0 and nothing moves.
+- **The mode frame stays at the edge.** It frames the whole screen, so it isn't inset.
+- Not observed on a device (Chromium has no notch to emulate). `checks/safe-area.mjs` checks the rules, and that nothing moves without an inset.
+
+### E117 · Does a menu leave the screen?
+
+A measurement (#248): at 375 CSS px, DropdownMenu's "Predicted" menu pushed the page 86px sideways and HoverCard's card 26px; a tooltip at the left edge would have clipped. Panels were placed by CSS relative to their anchor, and nothing measured them. ContextMenu and Tour already clamped themselves.
+
+- **Measured, then shifted.** `useFitFloating` measures a panel when it opens (and on resize) and shifts it sideways to stay 8px clear of the visible viewport's edges, composed with its own placement's `translate`. It's on Tooltip, Popover, DropdownMenu's panel, HoverCard and the Select and Combobox lists.
+- **Capped.** Panels are at most the viewport's width less 16px; a tooltip wraps at 320px rather than running off the screen.
+- **The visible width.** A phone zooms out to fit overflowing content, which stretches `clientWidth` with it, so the fit uses the visual viewport's width.
+
+`checks/float-fit.mjs` opens each panel against a 360px screen's edges.
+
+### E118 · Can a toast be read on a phone?
+
+A source audit (#253): the stack fanned out and paused its timers on `pointerenter` and folded on `pointerleave`. Touch fires both around a tap, so on a phone the stack opened and folded with one tap and the timers never paused: WCAG 2.2.1 and 1.4.13 both ask for content a reader can hold.
+
+- **A tap holds it.** On touch, a tap on the stack fans it out and pauses every timer until a tap outside; lifting the finger changes nothing. Hover still does this for a mouse, and focus for the keyboard.
+- **A swipe dismisses.** A horizontal swipe on a toast follows the finger and dismisses it past 64px; the toast is `touch-action: pan-y`, so vertical scrolling still passes through.
+
+`checks/toaster-touch.mjs` drives it with touch events.
+
+### E119 · Does Altitude carry the tells of generated interfaces?
 
 An audit against the 47 tells catalogued in `tells.json` (#319), reading `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`. A regex prototype covered the `lint` tells; the rest were read by hand. Nothing was rendered, so `render` and `measure` tells are judged from source or left unchecked.
 
