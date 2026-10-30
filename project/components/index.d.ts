@@ -3451,6 +3451,27 @@ export declare function InlineCitation(props: InlineCitationProps): React.ReactE
 export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
+export type ArtifactStatus = 'writing' | 'complete' | 'failed';
+export interface ArtifactProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  title: string;
+  /** Default 'complete'. */
+  status?: ArtifactStatus;
+  /** The latest version's number. */
+  version?: number;
+  onRetry?: () => void;
+  id?: string;
+}
+export interface ArtifactHeaderProps { onCopy?: boolean | (() => string); onDownload?: () => void; onOpen?: () => void; onClose?: () => void; children?: React.ReactNode }
+export interface ArtifactVersionsProps { versions: number; current: number; onChange: (version: number) => void; onRestore?: (version: number) => void }
+export interface ArtifactContentProps { views: { preview?: React.ReactNode; source?: React.ReactNode; changes?: React.ReactNode }; defaultView?: 'preview' | 'source' | 'changes' }
+export interface ArtifactReferenceProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> { title: string; version?: number; status?: ArtifactStatus; controls: string; onOpen: () => void }
+/** What an agent is making, in a pane beside the conversation, with its versions. */
+export declare function Artifact(props: ArtifactProps): React.ReactElement;
+export declare function ArtifactHeader(props: ArtifactHeaderProps): React.ReactElement;
+export declare function ArtifactVersions(props: ArtifactVersionsProps): React.ReactElement | null;
+export declare function ArtifactContent(props: ArtifactContentProps): React.ReactElement;
+/** The plate in a message that opens the pane and focuses its heading. */
+export declare function ArtifactReference(props: ArtifactReferenceProps): React.ReactElement;
 export type ThreadStatus = 'idle' | 'working' | 'needs-input' | 'failed' | 'stopped';
 export interface ThreadListProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
   /** A search field; ⌘K / Ctrl+K focuses it. */
@@ -3662,6 +3683,7 @@ declare global {
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
+      Artifact: typeof Artifact; ArtifactHeader: typeof ArtifactHeader; ArtifactVersions: typeof ArtifactVersions; ArtifactContent: typeof ArtifactContent; ArtifactReference: typeof ArtifactReference;
       ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;

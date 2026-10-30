@@ -1437,6 +1437,45 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 .alt-sidebar-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-sidebar-icon { display: inline-flex; flex: none; width: 20px; justify-content: center; }
 .alt-sidebar-text { overflow: hidden; text-overflow: ellipsis; transition: opacity var(--dur-travel-2) var(--ease-rise); }
+/* Artifact (#271): what an agent is making, in a pane on the ground beside the conversation. Being written isn't the
+   record yet: a dashed line-control rule at the pane's edge; complete goes solid with one afterglow; failed, critical.
+   Viewing an earlier version is a mode, so it's a flush strip with a line-control border, not a lift. The reference in
+   a message is a plate that acts. */
+.alt-artifact { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; background: var(--surface-ground); border-left: 2px solid var(--line); outline: none; }
+.alt-artifact[data-status="writing"] { border-left-style: dashed; border-left-color: var(--line-control); }
+.alt-artifact[data-status="failed"] { border-left-color: var(--critical); }
+.alt-artifact-head { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-3) var(--space-2) var(--space-4); border-bottom: 1px solid var(--line); }
+.alt-artifact-titles { flex: 1; min-width: 0; }
+.alt-artifact-title { margin: 0; font: 600 15px/21px var(--font-sans); color: var(--ink); overflow-wrap: anywhere; outline: none; }
+.alt-artifact-title:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-sm); }
+.alt-artifact-state { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-artifact-state[data-tone="critical"] { color: var(--critical); }
+.alt-artifact-tools { display: inline-flex; gap: 2px; }
+.alt-artifact-versions { display: flex; align-items: center; gap: 2px; padding: 4px var(--space-3); }
+.alt-artifact-version { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-artifact-earlier { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: 6px var(--space-3) 6px var(--space-4); border-block: 1px solid var(--line-control); font: 500 13px/18px var(--font-sans); color: var(--ink); }
+.alt-artifact-earlier > span { margin-right: auto; }
+.alt-artifact-views { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.alt-artifact-views > .alt-tabs-list { align-self: flex-start; margin: var(--space-2) var(--space-3); }
+.alt-artifact-body { flex: 1; min-height: 0; overflow: auto; padding: var(--space-3); animation: alt-fade-in var(--dur-travel-1) var(--ease-rise) both; }
+.alt-artifact-body iframe { display: block; width: 100%; height: 100%; min-height: 280px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-ground); }
+.alt-artifact-ref { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 8px 12px 8px 10px; border: 0; border-radius: var(--radius-md); text-align: left; cursor: pointer;
+  background: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 9%, transparent); color: var(--ink);
+  transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise); }
+@media (hover: hover) { .alt-artifact-ref:hover { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); } }
+.alt-artifact-ref:active { transform: none; box-shadow: none; transition-duration: var(--dur-press); }
+.alt-artifact-ref:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-artifact-ref-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink-muted); }
+.alt-artifact-ref-text { display: flex; flex-direction: column; min-width: 0; }
+.alt-artifact-ref-title { font: 600 13.5px/19px var(--font-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-artifact-ref-meta { font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+@media (prefers-reduced-motion: reduce) { .alt-artifact-body { animation: none; } }
+[data-contrast="more"] .alt-artifact { border-left-color: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-artifact { border-left-color: CanvasText; }
+  .alt-artifact[data-status="writing"] { border-left-style: dotted; }
+  .alt-artifact-ref { border: 1px solid CanvasText; }
+}
 /* ThreadList (#269): conversations as Sidebar destinations, each with its state in words. Working isn't pending, so it
    never hovers: a plate with a steady lamp. Needs-you is a caution plate (a row can't lift into a card inside a nav).
    Unread is a dot and weight 600. Renaming opens a well in the row; deleting leaves a receipt in its slot. */

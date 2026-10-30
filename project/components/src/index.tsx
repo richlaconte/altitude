@@ -46,6 +46,8 @@ export type { SuggestionProps } from './controls';
 export { AILabel } from './ai-label';
 export type { AISource } from './ai-label';
 export { InlineCitation, Sources } from './inline-citation';
+export { Artifact, ArtifactHeader, ArtifactVersions, ArtifactContent, ArtifactReference } from './artifact';
+export type { ArtifactProps, ArtifactHeaderProps, ArtifactVersionsProps, ArtifactContentProps, ArtifactReferenceProps, ArtifactStatus } from './artifact';
 export { ThreadList, ThreadListGroup, ThreadListItem, ThreadListNew, groupByDate } from './thread-list';
 export type { ThreadListProps, ThreadListItemProps, ThreadListGroupProps, ThreadStatus } from './thread-list';
 export { Question, QuestionOption, QuestionSet } from './question';
