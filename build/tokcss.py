@@ -24,4 +24,10 @@ for fam, body in t.items():
     for tok in body['tokens']: root.append(f'  --{tok["name"]}: {tok["value"]};')
 for k, v in t['type']['families'].items(): root.append(f'  --font-{k}: {v};')
 out.append(':root {\n' + '\n'.join(root) + '\n}')
+# Sizes that step up under a coarse pointer (#245); density pins or forces them, except the hit-area minimum.
+stepped = [tok for fam, body in t.items() if fam not in ('color', 'shadow', 'type', 'name', 'version') for tok in body['tokens'] if 'coarse' in tok]
+if stepped:
+    out.append('@media (pointer: coarse) {\n  :root {\n' + '\n'.join(f'    --{x["name"]}: {x["coarse"]};' for x in stepped) + '\n  }\n}')
+    out.append('[data-density="comfortable"] {\n' + '\n'.join(f'  --{x["name"]}: {x["coarse"]};' for x in stepped) + '\n}')
+    out.append('[data-density="compact"] {\n' + '\n'.join(f'  --{x["name"]}: {x["value"]};' for x in stepped if x.get('density', True)) + '\n}')
 open(sys.argv[2], 'w').write('\n'.join(out) + '\n')

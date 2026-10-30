@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Kbd, Surface, useDepth, useIsoLayoutEffect } from './core';
+import { cx, Icons, Kbd, Surface, useDepth, useIsoLayoutEffect, useKeyboardLikely } from './core';
 import { Button, Input, Textarea } from './controls';
 import { useInPlaceMotion, useLingeringStatus } from './in-place';
 export type InlineEditSaveResult<V = string> = { ok: true; value: V } | { ok: false; error: string };
@@ -119,6 +119,8 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const input = React.useRef<HTMLInputElement>(null);
   const area = React.useRef<HTMLTextAreaElement>(null);
   const [apple, setApple] = React.useState(false);
+  // On a touch-only device the save hint says the touch way, not a shortcut (#262).
+  const keyboard = useKeyboardLikely();
   const textarea = multiline && !editor;
   const trigger = React.useRef<HTMLButtonElement>(null);
   const returnFocus = React.useRef(false);
@@ -355,7 +357,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
       <div className="alt-inline-edit-line">{session ? editSlot : readSlot}{actions}</div>
       {session?.error && <p className="alt-field-error alt-inline-edit-note" id={errorId} role="alert" data-arrive=""><Icons.AlertCircle size={14} />{session.error}</p>}
       {session && !session.error && textarea && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">
-        <span className="alt-inline-edit-keys">{apple ? <Kbd aria-label="Command">⌘</Kbd> : <Kbd>Ctrl</Kbd>}+<Kbd>Enter</Kbd> to save</span></p>}
+        {keyboard ? <span className="alt-inline-edit-keys">{apple ? <Kbd aria-label="Command">⌘</Kbd> : <Kbd>Ctrl</Kbd>}+<Kbd>Enter</Kbd> to save</span> : 'Save to keep it'}</p>}
       {session && !session.error && onChoose && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">Choose to save</p>}
       {session?.conflicted && <p className="alt-inline-edit-current alt-inline-edit-note" data-arrive="">Current value: <span>{display(value)}</span></p>}
     </Surface>

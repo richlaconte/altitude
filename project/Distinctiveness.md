@@ -2,7 +2,7 @@
 
 Interfaces built by agents now have a look people recognise and distrust: purple gradients, Inter, a centred hero, three icon cards, a sidebar and a grid of equal cards on every screen. Altitude is made for apps that agents write, so it can fall into that look twice: through its own defaults, and through what agents compose from them. This chapter says how it stays out, and how we keep checking, because the look keeps moving.
 
-The evidence is in **Research** ("Generated interfaces converge", E110). Every tell, with its sources and where Altitude stands, is in [`tells.json`](tells.json).
+The evidence is in **Research** ("Generated interfaces converge", E115). Every tell, with its sources and where Altitude stands, is in [`tells.json`](tells.json).
 
 ## Why it happens
 
@@ -37,7 +37,7 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 
 ## Where Altitude stands
 
-As of the 2026-10-30 review (E110), 32 of 47 tells are clear, 11 are to watch, 3 are unchecked and 1 is exposed. The review found 4 exposed; the two schemes and the landing page's labels were fixed the same day. Nothing was rendered for this review; it read tokens, CSS, previews, sources and the landing page.
+As of the 2026-10-30 review (E115), 32 of 47 tells are clear, 11 are to watch, 3 are unchecked and 1 is exposed. The review found 4 exposed; the two schemes and the landing page's labels were fixed the same day. Nothing was rendered for this review; it read tokens, CSS, previews, sources and the landing page.
 
 **Clear.** No purple, gradient text, coloured stripes, glows, bounce, count-ups, emoji, sparkles or marketese anywhere in the library or previews. The content rules, the forbidden light glows, the rejected severity bars (E8) and Charts' "the data is the record" already rule most of the tells out.
 

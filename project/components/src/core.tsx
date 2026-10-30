@@ -393,6 +393,12 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   motion?: 'system' | 'full' | 'reduced';
   /** 'more' renders elevation as hard, high-contrast slabs (offset = height). 'system' follows prefers-contrast. */
   contrast?: 'system' | 'more';
+  /**
+   * How large controls are (#245). 'auto' (default): today's sizes for a mouse, a step up under a coarse pointer (a
+   * finger), so they're big enough to hit. 'comfortable': the larger sizes everywhere (a kiosk, an accessibility
+   * setting). 'compact': today's sizes even on touch. Hit areas reach 44px under a coarse pointer either way.
+   */
+  density?: 'auto' | 'compact' | 'comfortable';
   recede?: boolean;
   /** Openings deepen as the pointer approaches (empty fields, a sheet's finger pull). Default true; reduced motion turns it off regardless. */
   approach?: boolean;
@@ -463,7 +469,7 @@ export function ModePlate() {
   return mode ? <span className="alt-badge alt-mode-plate" data-tone={mode.tone ?? 'caution'} data-variant="plate">{mode.label}</span> : null;
 }
 
-export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', recede = true, approach = true, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
+export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', density = 'auto', recede = true, approach = true, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
   const checks = devChecks ?? (typeof process !== 'undefined' && process?.env.NODE_ENV !== 'production');
   const pageScope = useScopeValue('page', checks);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -532,7 +538,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
     <AltitudeContext.Provider value={api}>
       <div ref={rootRef} className={cx('alt-root', className)} data-theme={custom ? theme ?? 'daylight' : theme}
         data-scheme={custom?.name} data-scheme-id={custom ? scope : undefined}
-        data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined}
+        data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined} data-density={density === 'auto' ? undefined : density}
         data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>
         {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
         <PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
@@ -677,11 +683,50 @@ export const Surface = React.forwardRef<HTMLElement, SurfaceProps>(function Surf
 
 /* ───────────────────────── Kbd ───────────────────────── */
 
+// Whether a keyboard is likely (#262): not on a touch-only device until a key is pressed, after which it is for the
+// rest of the session (a tablet's hardware keyboard). Shared, so every hint turns on together.
+let keySeen = false;
+const keyListeners = new Set<() => void>();
+const touchOnlyQuery = '(hover: none) and (pointer: coarse)';
+/**
+ * Whether the person likely has a keyboard: false on a touch-only device (no hover, a coarse pointer) until a key is
+ * pressed in the session, true otherwise. Components hide shortcut hints when it's false; the shortcuts still work.
+ */
+export function useKeyboardLikely(): boolean {
+  const [touchOnly, setTouchOnly] = React.useState(false);
+  const [, bump] = React.useState(0);
+  React.useEffect(() => {
+    const mq = window.matchMedia?.(touchOnlyQuery);
+    if (!mq) return;
+    const sync = () => setTouchOnly(mq.matches);
+    sync();
+    mq.addEventListener?.('change', sync);
+    // Only a touch-only instance can change its answer, so only it re-renders on the first key.
+    const seen = () => { if (mq.matches) bump((n) => n + 1); };
+    keyListeners.add(seen);
+    if (keyListeners.size === 1) window.addEventListener('keydown', onFirstKey, true);
+    return () => { mq.removeEventListener?.('change', sync); keyListeners.delete(seen); if (!keyListeners.size) window.removeEventListener('keydown', onFirstKey, true); };
+  }, []);
+  return !touchOnly || keySeen;
+}
+function onFirstKey() {
+  if (keySeen) return;
+  keySeen = true;
+  window.removeEventListener('keydown', onFirstKey, true);
+  keyListeners.forEach((f) => f());
+}
+
 export interface KbdProps extends React.HTMLAttributes<HTMLElement> {
   /** A KeyboardEvent.key (case-insensitive) — the key presses down while it is held. */
   listen?: string;
+  /**
+   * Hide it on a touch-only device until a key is pressed (#262): for a hint that only makes sense with a keyboard.
+   * Off by default, since an app may be documenting its shortcuts on purpose. Components' own hints do this already.
+   */
+  hideOnTouch?: boolean;
 }
-export function Kbd({ listen, className, children, ...rest }: KbdProps) {
+export function Kbd({ listen, hideOnTouch, className, children, ...rest }: KbdProps) {
+  const keyboard = useKeyboardLikely();
   const [down, setDown] = React.useState(false);
   React.useEffect(() => {
     if (!listen) return;
@@ -692,5 +737,6 @@ export function Kbd({ listen, className, children, ...rest }: KbdProps) {
     window.addEventListener('keydown', on); window.addEventListener('keyup', off); window.addEventListener('blur', blur);
     return () => { window.removeEventListener('keydown', on); window.removeEventListener('keyup', off); window.removeEventListener('blur', blur); };
   }, [listen]);
+  if (hideOnTouch && !keyboard) return null;
   return <kbd className={cx('alt-kbd', className)} data-pressed={down ? '' : undefined} {...rest}>{children}</kbd>;
 }

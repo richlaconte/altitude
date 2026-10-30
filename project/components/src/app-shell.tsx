@@ -32,12 +32,12 @@ export interface SidebarProviderProps {
   collapsed?: boolean;
   defaultCollapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
-  /** Below this width the sidebar becomes a drawer. Default 768. */
+  /** Below this width the sidebar becomes a drawer. Default 640, the compact breakpoint (`breakpoint-compact`). */
   mobileBreakpoint?: number;
   children: React.ReactNode;
 }
 /** Holds the sidebar's state, and toggles it with ⌘B / Ctrl+B. */
-export function SidebarProvider({ collapsed, defaultCollapsed = false, onCollapsedChange, mobileBreakpoint = 768, children }: SidebarProviderProps) {
+export function SidebarProvider({ collapsed, defaultCollapsed = false, onCollapsedChange, mobileBreakpoint = 640, children }: SidebarProviderProps) {
   const [c, setCollapsed] = useControllable(collapsed, defaultCollapsed, onCollapsedChange);
   const mobile = useMedia(`(max-width: ${mobileBreakpoint - 0.02}px)`);
   const [drawer, setDrawer] = React.useState(false);

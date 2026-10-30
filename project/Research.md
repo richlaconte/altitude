@@ -1310,8 +1310,55 @@ A prototype review of `DotPlot` (#192): eight services' p95 with the 10th–90th
 - **A hollow dot means projected elsewhere (open question 2).** A projected `LineChart` point is hollow too (E37). A `DotPlot` takes no `status`, so a dumbbell never has a projection to confuse with its "from" dot, and the link, the description and the names say which end is which. The risk stays for a reader who has just looked at a projected line; noted for testing.
 
 Not yet tested with people: whether readers take a dumbbell's direction from the filled end without the words.
+### E110 · How large is a control on a phone?
 
-### E110 · Does Altitude carry the tells of generated interfaces?
+A measurement (#245): `checks/phone.mjs` (#247) opened every preview at 320 and 375 CSS px as a phone. Of the interactive targets, 1,205 were under 44×44 on touch and 167 under 24×24, the WCAG 2.5.8 minimum; heights were literals, and four layout switches used five widths (768, 640, 640, 560, 480).
+
+- **One setting, not a size per component.** Heights now come from `size-*` tokens that step up under `(pointer: coarse)`: 36px buttons become 44, 40px fields 48, 32px rows 44. Apple's and WCAG 2.5.5's 44px is the touch size; Parhi, Karlson & Bederson (2006) found about 35 CSS px enough for one-handed thumb targets, with accuracy worst at the edges.
+- **Density is the override.** `density="comfortable"` takes the touch sizes everywhere; `compact` keeps desktop sizes on touch. The hit area follows the pointer alone, so a compact face still gets a 44px target: the face is the tier's, the target is the finger's.
+- **Not 44px everywhere.** Desktop density is information, and a mouse doesn't need it. Hit areas alone (a 44px target on a 36px face) would overlap neighbours in a dense list, which is why the faces step up too.
+- **Two breakpoints.** 480 for a component's own narrow layout and 640 for page chrome. AppShell's sidebar now becomes a drawer below 640 (it was 768) and the date picker stacks below 480 (it was 560). CSS can't read a token in a media query, so the numbers are checked.
+
+Measured with `checks/density.mjs`: buttons 36 → 44, small buttons 30 → 40, inputs 40 → 48, folder tabs 38 → 46 under a coarse pointer; unchanged with a mouse.
+
+### E111 · Does typing zoom the page?
+
+A measurement (#250): `checks/phone.mjs` found 146 text fields under 16px on touch across 68 previews: `.alt-input` text at 14px, `SecretField` at 13.5px, native selects at 12.5–13.3px. iOS Safari zooms the page when a field under 16px is focused, and leaves it zoomed.
+
+- **16px under a coarse pointer, for the text you type only.** Labels stay `text-label` (14px). The rule is `max(16px, 1em)`, so a field that inherits larger text, such as an in-place title, keeps its own size.
+- **A platform minimum wins.** Field fonts are set at many specificities (in-place editors inherit the value's font), so the minimum is `!important` inside the coarse-pointer query.
+- **Never `maximum-scale=1`.** It's the common workaround, and it stops pinch zoom, which fails WCAG 1.4.4 (Resize text).
+
+After: no field under 16px on touch in any preview.
+
+### E112 · Does a tap leave a surface lifted?
+
+A code audit (#246): all 98 `:hover` rules in `bundle.css` applied on touch screens, where a tap leaves `:hover` stuck until the next tap elsewhere, so a pressed button stayed at level 2 after doing its job. Law 4 says pressing returns a surface to the ground.
+
+- **Hover is a pointer's.** Every `:hover` rule now sits inside `@media (hover: hover)`. Rules that mixed hover with `:focus-visible` were split, so keyboard focus keeps its one-level lift everywhere.
+- **Forced colours keep their outlines.** Under forced colours a hover is a system-colour outline with no height, so those eight rules stay bare (the issue's hairline exception).
+- **Linted.** `checks/hover-media.mjs` fails on a bare `:hover`, and in a browser checks that a mouse still lifts a button while a phone's tap leaves it at rest.
+
+### E113 · Can a finger hit every control?
+
+A measurement (#261): at 375 CSS px the phone check found 167 targets under WCAG 2.5.8's 24×24, in 58 previews: NumberInput's 24×15 steppers stacked with no gap, date segments, 20px slider thumbs, 10px brush grips, 20px tag removes, the 23px toast close, 16px citation markers, 22px badge buttons, a 1px resize handle, and the previews' own disclosures.
+
+- **The face keeps its tier; the target grows.** A transparent `::after` centred on each small face reaches `size-target-min`, 24px or 44px under a coarse pointer (#245). It has no colour, border or shadow, so elevation and forced colours are untouched. The resize handle's existing hit strip now spans the target too.
+- **Neighbours don't share a target.** Date segments sit side by side, so theirs stops at 24px. Links and relative times in rows of text reach 24px tall, never wider.
+- **Steppers side by side.** Two stacked 15px steppers could never each reach 24px without overlapping. They now sit in a row, down then up, 24×24 each.
+- **Spacing counts.** WCAG's exception (targets whose 24px circles don't touch) is in the check, so annotation plates 26px apart pass.
+
+After: 16 left, all either a `Schedule` event (#257) or a target the check finds covered by an open layer.
+
+### E114 · Should a phone show keyboard shortcuts?
+
+A review (#262): at 375px, menus showed "⌘D" beside "Duplicate", and CommandPalette's footer said "↑↓ Move · ↵ Choose · esc Close", on a device with no keyboard. That's noise that takes width from the labels.
+
+- **Likely a keyboard, not definitely.** `useKeyboardLikely()` is false only on a touch-only device (`(hover: none) and (pointer: coarse)`) where no key has been pressed this session. A tablet with a keyboard flips it on with the first key press, for the rest of the session.
+- **Hints hide; shortcuts don't.** Menu shortcuts, CommandPalette's footer, chips and esc, and InlineEdit's "⌘+Enter to save" (which becomes "Save to keep it") follow it. The keys still work.
+- **An app's own `Kbd` stays** unless `hideOnTouch` is set, because it may be documenting shortcuts on purpose.
+
+### E115 · Does Altitude carry the tells of generated interfaces?
 
 An audit against the 47 tells catalogued in `tells.json` (#319), reading `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`. A regex prototype covered the `lint` tells; the rest were read by hand. Nothing was rendered, so `render` and `measure` tells are judged from source or left unchecked.
 

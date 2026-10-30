@@ -8,7 +8,7 @@ The frame of an app: a sidebar of destinations (grouped, collapsible), a top bar
 - **Only a count floats** (`Badge variant="count"`). A status ("Beta") would be a flush plate.
 - **Collapsing to a rail** changes width on `ease-glide`, not level. In the rail, each destination is an icon with its name in a tooltip to the right.
 - **The top bar** rises one level while content passes under it, as `ScrollArea`'s header does.
-- **On narrow screens** (below `mobileBreakpoint`, default 768px) the sidebar moves into a `Sheet` drawer from the left (level 4), titled "Navigation". Choosing a destination closes it.
+- **On narrow screens** (below `mobileBreakpoint`, default 640px, the compact breakpoint) the sidebar moves into a `Sheet` drawer from the left (level 4), titled "Navigation". Choosing a destination closes it.
 
 **Parts** (shadcn/ui's names):
 - `AppShell`: `sidebar`, `topBar` and the page. It includes a `SidebarProvider`, a skip link, and a `SidebarTrigger` at the start of the top bar.
