@@ -48,3 +48,12 @@ Wide record tables need a way to choose what shows. `columnsMenu` adds a **Colum
 
 Each has an uncontrolled `default…` form. Showing, hiding or reordering a column doesn't animate the table: it's a change of layout, not of the record. Each change is announced ("Owner column hidden", "Compact rows").
 
+## Paging from the server
+
+`pagination` puts paging in the table's footer, under a line:
+
+- **Pages:** `{ page, pageCount, pageSize, total, onPageChange, hrefFor?, noun? }` renders `Pagination` with its range summary ("9–16 of 214 invoices"). Leave out `pageCount` for cursor paging (Previous, Next, `hasNext`).
+- **Load more:** `{ mode: 'more', hasMore, onLoadMore, total?, noun? }` renders "6 of 46 events" and a Load more button. Loaded rows arrive with the afterglow (at most four begin at once), and "6 more loaded, 12 of 46" is announced.
+
+**While the next page loads** (`loading: true`), the current rows stay on the ground at half strength (the reading a refetching chart uses), the table is `aria-busy`, and the page thumb is held pressed. Your app loads the rows (`useAsyncCollection` keeps selection across pages with `selection: 'preserve'`). After a page change, focus stays on the pagination control.
+

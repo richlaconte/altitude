@@ -3,6 +3,7 @@ import { cssMs, cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEff
 import { Badge, Button, Checkbox, Input, SortableList } from './controls';
 import { Popover } from './overlays';
 import { ToggleGroup, ToggleGroupItem } from './toggle';
+import { Pagination } from './pagination';
 import { EditRegion, EditRegionBinder, EditRegionForm, EditRegionSaveResult } from './edit-region';
 import { Pile } from './pile';
 import { Arrive, Await, hint, isPromise, Promised, readPromised, SkeletonOption, useArrival, useHasWaited, useReportWaiting } from './suspense';
@@ -251,7 +252,13 @@ export interface DataTableProps<T> {
   onDensityChange?: (density: 'comfortable' | 'compact') => void;
   /** A "Columns" button in the toolbar: show, hide and reorder columns, and choose the density. */
   columnsMenu?: boolean;
+  /** Rows paged by your server: Pagination in the footer, or "Load more". */
+  pagination?: DataTablePaging;
 }
+export type DataTablePaging =
+  | { mode?: 'pages'; page: number; pageCount?: number; pageSize?: number; total?: number; onPageChange: (page: number) => void; hrefFor?: (page: number) => string; hasNext?: boolean;
+      /** The next page is loading: the rows stay at half strength and the page thumb is held pressed. */ loading?: boolean; noun?: string }
+  | { mode: 'more'; hasMore: boolean; onLoadMore: () => void; total?: number; loading?: boolean; noun?: string };
 
 const GripIcon = () => (
   <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" aria-hidden="true">
@@ -308,7 +315,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
   sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className,
   renderExpanded, renderEditor, onSave, onRowChange, expanded, defaultExpanded = [], onExpandedChange, expandMode = 'single',
   columnVisibility, defaultColumnVisibility = {}, onColumnVisibilityChange, columnOrder, defaultColumnOrder, onColumnOrderChange,
-  density, defaultDensity = 'comfortable', onDensityChange, columnsMenu, ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
+  density, defaultDensity = 'comfortable', onDensityChange, columnsMenu, pagination, ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
   const [visibility, setVisibility] = useControllable(columnVisibility, defaultColumnVisibility, onColumnVisibilityChange);
   const [order, setOrder] = useControllable<string[]>(columnOrder, defaultColumnOrder ?? columns.map((c) => c.key), onColumnOrderChange);
   const [dens, setDens] = useControllable(density, defaultDensity, onDensityChange);
@@ -318,6 +325,21 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
     return columns.map((c, i) => ({ c, i })).sort((a, b) => (at.get(a.c.key) ?? 1e6 + a.i) - (at.get(b.c.key) ?? 1e6 + b.i)).map((x) => x.c);
   }, [columns, order]);
   const shown = ordered.filter((c, i) => i === 0 || visibility[c.key] !== false);
+  // "Load more": rows that weren't here before arrive with the afterglow (staggered by riseDelay), and the new range is said.
+  const more = pagination?.mode === 'more' ? pagination : null;
+  const seen = React.useRef<Set<string> | null>(null);
+  const [fresh, setFresh] = React.useState<Set<string>>(() => new Set());
+  const [moreSaid, setMoreSaid] = React.useState('');
+  const rowIds = rows.map(getRowId).join('\u0000');
+  React.useEffect(() => {
+    const now = rows.map(getRowId);
+    if (more && seen.current) {
+      const added = now.filter((id) => !seen.current!.has(id));
+      setFresh(new Set(added));
+      if (added.length) setMoreSaid(`${added.length} more loaded, ${now.length}${more.total !== undefined ? ` of ${more.total}` : ''}.`);
+    }
+    seen.current = new Set(now);
+  }, [rowIds]); // eslint-disable-line react-hooks/exhaustive-deps
   const [sel, setSel] = useControllable(selected, defaultSelected, onSelectedChange);
   const [srt, setSrt] = useControllable<TableSort>(sort, defaultSort, onSortChange);
   const [open, setOpen] = useControllable(expanded, defaultExpanded, onExpandedChange);
@@ -447,7 +469,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
           )}</div>}
         </div>
       )}
-      <Table ref={table} data-density={dens} maxHeight={maxHeight} aria-label={rest['aria-label']} data-dragging={drag ? '' : undefined}
+      <Table ref={table} data-density={dens} data-refetching={pagination?.loading ? '' : undefined} aria-busy={pagination?.loading || undefined} maxHeight={maxHeight} aria-label={rest['aria-label']} data-dragging={drag ? '' : undefined}
         underlay={drag && s ? <span className="alt-table-slot" aria-hidden="true" style={{ top: slotTop + (table.current?.offsetTop ?? 0), height: h }} /> : null}>
         <TableHeader>
           <TableRow>
@@ -479,7 +501,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
             return (
               <React.Fragment key={id}>
               <TableRow rowId={id} selected={selectable && chosen.has(id)} interactive={!!onRowClick} relevance={relevance?.(r)}
-                settle={landed?.id === id ? landed.n : undefined} data-editing={isEditing ? '' : undefined} data-expanded={isOpen ? '' : undefined}
+                settle={landed?.id === id ? landed.n : fresh.has(id) ? true : undefined} data-editing={isEditing ? '' : undefined} data-expanded={isOpen ? '' : undefined}
                 held={following || held?.id === id} data-following={following ? '' : undefined}
                 style={following ? { transform: `translateY(${drag!.dy}px)` } : shift ? { transform: `translateY(${shift}px)` } : undefined}
                 onClick={onRowClick ? (e) => { if (!(e.target as HTMLElement).closest('button, a, input, label, select, textarea')) onRowClick(r); } : undefined}>
@@ -530,7 +552,16 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
           })}
         </TableBody>
       </Table>
-      <span className="alt-sr" aria-live="polite">{selectable && sel.length ? `${sel.length} selected. ` : ''}{said}</span>
+      {pagination && (pagination.mode === 'more'
+        ? <div className="alt-table-foot">
+            <span className="alt-pager-summary">{rows.length}{pagination.total !== undefined ? ` of ${pagination.total}` : ''}{pagination.noun ? ` ${pagination.noun}` : ''}</span>
+            {pagination.hasMore && <Button size="sm" variant="secondary" loading={pagination.loading} onClick={pagination.onLoadMore}>Load more</Button>}
+          </div>
+        : <div className="alt-table-foot">
+            <Pagination page={pagination.page} pageCount={pagination.pageCount} onPageChange={pagination.onPageChange} total={pagination.total} pageSize={pagination.pageSize}
+              hrefFor={pagination.hrefFor} hasNext={pagination.hasNext} loading={pagination.loading} noun={pagination.noun} aria-label={`${rest['aria-label'] ?? 'Table'} pages`} />
+          </div>)}
+      <span className="alt-sr" aria-live="polite">{selectable && sel.length ? `${sel.length} selected. ` : ''}{said} {moreSaid}</span>
     </div>
   );
 }

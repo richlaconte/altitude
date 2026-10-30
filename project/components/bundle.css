@@ -3086,6 +3086,10 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-table[data-density="compact"] .alt-td { padding-block: 4px; }
 .alt-table[data-density="compact"] .alt-th { padding-block: 6px; }
 .alt-table-hidden { color: var(--ink-muted); font-weight: 400; }
+/* Paging: the footer holds Pagination (or "Load more") under a line. While the next page loads the current rows stay on
+   the ground at half strength, as a refetching chart does, and the page thumb is held pressed. */
+.alt-table-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--line); margin-top: -1px; }
+.alt-table[data-refetching] tbody { opacity: 0.5; transition: opacity var(--dur-travel-2) var(--ease-sink); }
 .alt-table-columns { display: flex; flex-direction: column; gap: var(--space-2); width: 240px; max-width: 100%; }
 .alt-table-columns-title { margin: 0; font: 600 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .alt-table-columns-title + * { margin-bottom: var(--space-2); }

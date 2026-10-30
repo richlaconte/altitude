@@ -927,6 +927,17 @@ A design review: `DataTable columnsMenu` was rendered in the Table preview with 
 
 Not yet tested with people: whether the "· 3 hidden" count is enough to find hidden columns again.
 
+### E78 · What do rows do while the next page loads?
+
+A design review: `DataTable pagination` was rendered paging 214 invoices eight at a time and loading 46 events six at a time, mid-load and loaded, in all four schemes. `checks/table-paging.mjs` measures it.
+
+- **Half strength, not an imprint.** Replacing the rows with skeletons on every page change throws away what people were reading and moves their eyes. Keeping them on the ground at half strength, as a refetching chart does, says "these are about to change" and keeps the layout still.
+- **The thumb is held pressed.** "Loading: held pressed" applied to Pagination's thumb puts the in-flight state where the hand just was.
+- **Appended rows glow, staggered.** Rows from "Load more" are new to the page, so they take the afterglow, and riseDelay keeps at most four starting at once.
+- **The range is the announcement.** "6 more loaded, 12 of 46" says what happened and where you are, which "Loading complete" doesn't.
+
+Not yet tested with people: whether half strength is read as "loading" without a spinner.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
