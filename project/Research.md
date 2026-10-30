@@ -1355,6 +1355,14 @@ A source audit (#251): Dialog, Sheet and CommandPalette sized themselves with `v
 - **A claim you can answer.** A dialog is level 5 and claims you (Elevation); its answer must stay in reach.
 - Not observed on a device: Playwright can't open a keyboard, so `checks/visible-viewport.mjs` shrinks the viewport under an open Dialog and CommandPalette and checks the root follows and the panel stays inside.
 
+### E116 · Does a toast sit under the home indicator?
+
+A CSS audit (#252): no rule in `bundle.css` used `safe-area-inset`. In an edge-to-edge page (`viewport-fit=cover`, any installed PWA) the Toaster, SaveBar and Sheet sat under the notch, the rounded corners or the home indicator, where a swipe goes home instead of pressing.
+
+- **Offset by the inset.** Every layer fixed to an edge adds `env(safe-area-inset-*)` to its offset: Toaster, SaveBar, each side of a Sheet, and the Dialog root's padding. Without `viewport-fit=cover`, `env()` is 0 and nothing moves.
+- **The mode frame stays at the edge.** It frames the whole screen, so it isn't inset.
+- Not observed on a device (Chromium has no notch to emulate). `checks/safe-area.mjs` checks the rules, and that nothing moves without an inset.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

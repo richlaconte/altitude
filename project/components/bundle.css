@@ -826,7 +826,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 
 /* ── Dialog: level 5. The page recedes, the scrim veils it, the dialog rises with its shadow growing. ── */
 /* The modal roots cover the visible viewport (#251), not the largest one, so a footer is never under the keyboard. */
-.alt-dialog-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-modal); display: grid; place-items: center; padding: var(--space-6); }
+.alt-dialog-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-modal); display: grid; place-items: center; padding: var(--space-6); padding: calc(var(--space-6) + env(safe-area-inset-top, 0px)) calc(var(--space-6) + env(safe-area-inset-right, 0px)) calc(var(--space-6) + env(safe-area-inset-bottom, 0px)) calc(var(--space-6) + env(safe-area-inset-left, 0px)); }
 .alt-scrim {
   position: absolute; inset: 0; background: var(--scrim); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   transition: opacity var(--dur-travel-5) var(--ease-rise);
@@ -854,8 +854,11 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-dialog-close { position: absolute; top: var(--space-4); right: var(--space-4); color: var(--ink-muted); }
 
 /* ── Toast: the stack is a depth stack. Newest in front at level 4; older ones sink behind it. ── */
+/* Safe areas (#252): every layer fixed to the screen's edge adds env(safe-area-inset-*) to its offset, so in an
+   edge-to-edge page (viewport-fit=cover) it clears the notch, the rounded corners and the home indicator. Without
+   viewport-fit=cover env() is 0 and nothing moves. The mode frame stays at the physical edge: it frames the screen. */
 .alt-toaster {
-  position: fixed; z-index: var(--z-toast); right: var(--space-6); bottom: var(--space-6); width: min(360px, calc(100vw - 32px));
+  position: fixed; z-index: var(--z-toast); right: calc(var(--space-6) + env(safe-area-inset-right, 0px)); bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px)); width: min(360px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   transition: height var(--dur-travel-4) var(--ease-rise);
 }
 .alt-toast {
@@ -1565,7 +1568,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    into the draft; saving hovers as a pending write; saved, it lowers away while the fields settle; a failed save drops
    it to a trench, keeping the draft. ── */
 .alt-savebar {
-  position: fixed; left: 50%; bottom: var(--space-4); z-index: var(--z-floating); translate: -50% 0;
+  position: fixed; left: 50%; bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-floating); translate: -50% 0;
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); width: max-content; max-width: calc(100vw - 32px);
   padding: 8px 8px 8px var(--space-4); border-radius: var(--radius-lg); background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink);
   transition: opacity var(--dur-travel-3) var(--ease-rise), transform var(--dur-travel-3) var(--ease-rise), background-color var(--dur-travel-2), box-shadow var(--dur-travel-2);
@@ -2169,10 +2172,10 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 }
 .alt-sheet[data-size="sm"] { --w: 360px; }
 .alt-sheet[data-size="lg"] { --w: 560px; }
-.alt-sheet[data-side="right"], .alt-sheet[data-side="left"] { top: var(--edge); bottom: var(--edge); width: min(calc(100% - 2 * var(--edge)), var(--w)); }
-.alt-sheet[data-side="right"] { right: var(--edge); transform-origin: 100% 50%; }
-.alt-sheet[data-side="left"] { left: var(--edge); transform-origin: 0 50%; }
-.alt-sheet[data-side="bottom"] { --w: 720px; left: 0; right: 0; bottom: var(--edge); width: min(calc(100% - 2 * var(--edge)), var(--w)); max-height: calc(100% - 2 * var(--space-8)); margin: 0 auto; transform-origin: 50% 100%; }
+.alt-sheet[data-side="right"], .alt-sheet[data-side="left"] { top: calc(var(--edge) + env(safe-area-inset-top, 0px)); bottom: calc(var(--edge) + env(safe-area-inset-bottom, 0px)); width: min(calc(100% - 2 * var(--edge)), var(--w)); }
+.alt-sheet[data-side="right"] { right: calc(var(--edge) + env(safe-area-inset-right, 0px)); transform-origin: 100% 50%; }
+.alt-sheet[data-side="left"] { left: calc(var(--edge) + env(safe-area-inset-left, 0px)); transform-origin: 0 50%; }
+.alt-sheet[data-side="bottom"] { --w: 720px; left: 0; right: 0; bottom: calc(var(--edge) + env(safe-area-inset-bottom, 0px)); width: min(calc(100% - 2 * var(--edge)), var(--w)); max-height: calc(100% - 2 * var(--space-8)); margin: 0 auto; transform-origin: 50% 100%; }
 .alt-sheet[data-side="bottom"][data-size="sm"] { --w: 480px; }
 .alt-sheet[data-side="bottom"][data-size="lg"] { --w: 960px; }
 .alt-sheet-root[data-state="closed"] .alt-sheet { opacity: 0; box-shadow: var(--elev-1); }
