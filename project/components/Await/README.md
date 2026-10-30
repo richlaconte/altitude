@@ -53,6 +53,23 @@ const user = getUser(id);
 <Await inline shape="circle" imprint={<Skeleton shape="circle" width={24} />}><Flag code={country} /></Await>
 ```
 
+**Breath (experimental).** `<AltitudeProvider loading="breath">` changes how imprints wait and how content lands; nothing changes without it. Instead of light sweeping over them, imprints breathe in depth: the floor deepens to trench depth and releases (the back wall in Nightfall), once every `dur-breath` (4.8s), on one page clock, with a slow swell down the view. Ten seconds in, the breath calms. When content lands:
+
+| Content | `settle` | Lands |
+|---|---|---|
+| On its own surface (a card from one request) | `"raised"` | rises 8px to level 2 and settles to level 1 over `dur-arrive` |
+| On the ground (text, a badge, a row) | `"flush"` (default) | its floor comes up just past the ground and fills in flush |
+| Into a view already showing (Load more, a boundary that suspends again) | `late` | an untinted plate under it, gone in `dur-plate` |
+
+A `Card`'s parts land together, and a `RevealGroup` takes one place in the attention budget (its parts 16ms apart). A card's optional parts still don't wait: if its description is `undefined` once its title has landed, it renders empty, so pass a promise for a detail that's still coming. Chart, stat and meter imprints hold still, and a chart's marks still fade in place. Under reduced motion the breath stops and nothing travels.
+
+```tsx
+<AltitudeProvider scheme="daylight" loading="breath">
+  <Await settle="raised" imprint={<Skeleton height={103} radius="var(--radius-lg)" />}><DeployCard deploy={deploy} /></Await>
+  {older.map((e) => <Await key={e.id} late imprint={<Skeleton height={26} />}><Event event={e.promise} /></Await>)}
+</AltitudeProvider>
+```
+
 **You provide:** your data as it is, `undefined` until it arrives. Hints where the default shape won't match (`skeleton={{ lines: 3 }}`). If you pass promises, make them stable across renders: started in a server component, a loader, a cache or state, never created inline in a client component's render. `skeleton={false}` on any of them to opt out.
 
 - Do pass `user?.name` and friends straight in, and let each part land when its data does.

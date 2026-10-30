@@ -10,3 +10,5 @@ Imprints are wells (`surface-well`, inset shadow) because they're openings waiti
 
 - Match the real layout so nothing jumps when content arrives.
 - Don't show imprints for loads under about 300ms; show nothing.
+
+Under `AltitudeProvider loading="breath"` (experimental) a Skeleton breathes in depth instead of being swept by light, on the same page clock as every other imprint, and its content fills past the ground when `loaded` turns true. See `Await`.
