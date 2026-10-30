@@ -1225,8 +1225,17 @@ export interface DataTableProps<T> {
   selected?: string[];
   defaultSelected?: string[];
   onSelectedChange?: (ids: string[]) => void;
-  /** Actions for the selected rows, shown beside their count. */
-  actions?: (ids: string[]) => React.ReactNode;
+  /** Actions for the selected rows, beside their count. The second argument is the whole selection, which may be "all matching". */
+  actions?: (ids: string[], selection: TableSelection) => React.ReactNode;
+  /** The selection, when it can reach past the loaded rows. */
+  selection?: TableSelection;
+  onSelectionChange?: (selection: TableSelection) => void;
+  /** How many records match the current filter, across every page. Offers "Select all N matching" once a page is selected. */
+  matchingTotal?: number;
+  /** Where the count and actions sit: the toolbar, a bar floating at the bottom edge (level 3), or 'auto'. Default 'toolbar'. */
+  actionsPlacement?: 'toolbar' | 'floating' | 'auto';
+  /** What the rows are, plural ("users"). Default "rows". */
+  noun?: string;
   /** Anything else for the toolbar's end: a filter field, a button. */
   toolbar?: React.ReactNode;
   /** Header clicks cycle ascending, descending, none. */
@@ -1274,6 +1283,8 @@ export interface DataTableProps<T> {
   /** Rows paged by your server: Pagination in the footer, or "Load more". */
   pagination?: DataTablePaging;
 }
+/** Rows chosen by id, or every record matching the query except some. */
+export type TableSelection = { kind: 'ids'; ids: string[] } | { kind: 'query'; total: number; except: string[] };
 export type DataTablePaging =
   | { mode?: 'pages'; page: number; pageCount?: number; pageSize?: number; total?: number; onPageChange: (page: number) => void; hrefFor?: (page: number) => string; hasNext?: boolean;
       /** The next page is loading: the rows stay at half strength and the page thumb is held pressed. */ loading?: boolean; noun?: string }

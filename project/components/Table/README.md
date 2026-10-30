@@ -57,3 +57,18 @@ Each has an uncontrolled `default…` form. Showing, hiding or reordering a colu
 
 **While the next page loads** (`loading: true`), the current rows stay on the ground at half strength (the reading a refetching chart uses), the table is `aria-busy`, and the page thumb is held pressed. Your app loads the rows (`useAsyncCollection` keeps selection across pages with `selection: 'preserve'`). After a page change, focus stays on the pagination control.
 
+## Selecting past the page
+
+To bulk-act on a filtered set larger than a page ("Archive all 2,341 inactive users"), use the richer selection:
+
+```tsx
+<DataTable … selectable selection={selection} onSelectionChange={setSelection} matchingTotal={2341} noun="inactive users"
+  actions={(ids, sel) => <Button onClick={() => archive(sel)}>Archive</Button>} actionsPlacement="auto" />
+```
+
+- **A selection** is `{ kind: 'ids', ids }` or `{ kind: 'query', total, except }`. Actions get the loaded ids and the whole selection, so they can act on the *query*. It persists through filtering, sorting and paging, because it's yours.
+- **Once the header checkbox selects a page**, a flush `accent-soft` row offers "Select all 2,341 matching inactive users". A query selection is said in words ("All 2,341 matching, except 1"), and unchecking a row adds it to the exceptions.
+- **`actionsPlacement="floating"`**, or `auto` once the toolbar has scrolled away, docks the count and actions as **a bar floating at the bottom edge, level 3**: a selection is a set of records in your hand. It's a labelled region ("Selection"), and it rises into place.
+
+`selected` and `onSelectedChange` keep working for selections of loaded rows. Report each record's outcome of a long bulk action in place (`RemovalReceipt`'s reading) and in a toast.
+

@@ -938,6 +938,17 @@ A design review: `DataTable pagination` was rendered paging 214 invoices eight a
 
 Not yet tested with people: whether half strength is read as "loading" without a spinner.
 
+### E79 · Where do bulk actions go when the selection is "all matching"?
+
+A design review: `DataTable` was rendered with 25 loaded rows of 2,341 matching, the page selected, "all matching" selected with one exception, and scrolled until the toolbar was gone, in all four schemes. `checks/table-bulk.mjs` measures it.
+
+- **A query, not a list.** "Select all 2,341" can't mean 2,341 ids the browser has never seen. The selection becomes `{ kind: 'query', total, except }`, which an API can act on directly, the flow Gmail, Linear and Shopify's Polaris share.
+- **Said in words.** "All 2,341 matching, except 1" says exactly what an action will touch. A count alone ("2,340") hides that it's a query.
+- **The bar floats at level 3.** A large selection is something in your hand while you scroll, and "whatever is in a hand floats". In `auto` it floats only once the toolbar is out of view, so it never covers rows needlessly.
+- **The offer is flush.** "Select all matching" is information with a link, not an action asking to be taken, so it's a flush `accent-soft` row, not a raised banner.
+
+Not yet tested with people: whether "except 1" is noticed before a destructive bulk action.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

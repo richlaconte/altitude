@@ -207,8 +207,17 @@ export interface DataTableProps<T> {
   selected?: string[];
   defaultSelected?: string[];
   onSelectedChange?: (ids: string[]) => void;
-  /** Toolbar actions for the selected rows, shown beside their count. */
-  actions?: (ids: string[]) => React.ReactNode;
+  /** Actions for the selected rows, shown beside their count. The second argument is the whole selection, which may be "all matching". */
+  actions?: (ids: string[], selection: TableSelection) => React.ReactNode;
+  /** The selection, when it can reach past the loaded rows: { kind: 'ids', ids } or { kind: 'query', total, except }. */
+  selection?: TableSelection;
+  onSelectionChange?: (selection: TableSelection) => void;
+  /** How many records match the current filter, across every page. Offers "Select all N matching" once a page is selected. */
+  matchingTotal?: number;
+  /** Where the count and actions sit: in the toolbar, in a bar floating at the bottom edge (level 3), or 'auto' (floating once the toolbar scrolls away). Default 'toolbar'. */
+  actionsPlacement?: 'toolbar' | 'floating' | 'auto';
+  /** What the rows are, plural ("users"), for "Select all 2,341 users". Default "rows". */
+  noun?: string;
   /** Anything else for the toolbar's end (a filter field, a button). */
   toolbar?: React.ReactNode;
   sort?: TableSort;
@@ -255,6 +264,8 @@ export interface DataTableProps<T> {
   /** Rows paged by your server: Pagination in the footer, or "Load more". */
   pagination?: DataTablePaging;
 }
+/** Rows chosen by id, or every record matching the query except some. */
+export type TableSelection = { kind: 'ids'; ids: string[] } | { kind: 'query'; total: number; except: string[] };
 export type DataTablePaging =
   | { mode?: 'pages'; page: number; pageCount?: number; pageSize?: number; total?: number; onPageChange: (page: number) => void; hrefFor?: (page: number) => string; hasNext?: boolean;
       /** The next page is loading: the rows stay at half strength and the page thumb is held pressed. */ loading?: boolean; noun?: string }
@@ -315,7 +326,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
   sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className,
   renderExpanded, renderEditor, onSave, onRowChange, expanded, defaultExpanded = [], onExpandedChange, expandMode = 'single',
   columnVisibility, defaultColumnVisibility = {}, onColumnVisibilityChange, columnOrder, defaultColumnOrder, onColumnOrderChange,
-  density, defaultDensity = 'comfortable', onDensityChange, columnsMenu, pagination, ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
+  density, defaultDensity = 'comfortable', onDensityChange, columnsMenu, pagination, selection, onSelectionChange, matchingTotal, actionsPlacement = 'toolbar', noun = 'rows', ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
   const [visibility, setVisibility] = useControllable(columnVisibility, defaultColumnVisibility, onColumnVisibilityChange);
   const [order, setOrder] = useControllable<string[]>(columnOrder, defaultColumnOrder ?? columns.map((c) => c.key), onColumnOrderChange);
   const [dens, setDens] = useControllable(density, defaultDensity, onDensityChange);
@@ -340,7 +351,15 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
     }
     seen.current = new Set(now);
   }, [rowIds]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [sel, setSel] = useControllable(selected, defaultSelected, onSelectedChange);
+  const [selIds, setSelIds] = useControllable(selected, defaultSelected, onSelectedChange);
+  const rich = selection !== undefined || onSelectionChange !== undefined || matchingTotal !== undefined;
+  const [richSel, setRichSel] = useControllable<TableSelection>(selection, { kind: 'ids', ids: defaultSelected }, onSelectionChange);
+  // One selection, either way it's held: a list of ids, or "all matching" with exceptions.
+  const current: TableSelection = rich ? richSel : { kind: 'ids', ids: selIds };
+  const setCurrent = (s: TableSelection) => (rich ? setRichSel(s) : setSelIds(s.kind === 'ids' ? s.ids : []));
+  const isChosen = (id: string) => (current.kind === 'query' ? !current.except.includes(id) : current.ids.includes(id));
+  const count = current.kind === 'query' ? current.total - current.except.length : current.ids.length;
+  const nf = new Intl.NumberFormat();
   const [srt, setSrt] = useControllable<TableSort>(sort, defaultSort, onSortChange);
   const [open, setOpen] = useControllable(expanded, defaultExpanded, onExpandedChange);
   const [editing, setEditing] = React.useState<string | null>(null);
@@ -379,9 +398,10 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
     refocus.current = null;
     body.current?.querySelector<HTMLElement>(`tr[data-row="${CSS.escape(id)}"] [data-edit-row]`)?.focus();
   });
-  const chosen = new Set(sel);
-  const all = ids.length > 0 && ids.every((id) => chosen.has(id));
-  const some = !all && ids.some((id) => chosen.has(id));
+  const sel = current.kind === 'query' ? ids.filter(isChosen) : current.ids;
+  const all = ids.length > 0 && ids.every(isChosen);
+  const some = !all && ids.some(isChosen);
+  const described = current.kind === 'query' ? `All ${nf.format(current.total)} matching${current.except.length ? `, except ${nf.format(current.except.length)}` : ''}` : `${nf.format(count)} selected`;
   const movable = !!onReorder && !srt && !editing;
 
   const cycle = (c: DataTableColumn<T>) => {
@@ -389,7 +409,29 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
     setSrt(next);
     setSaid(next ? `Sorted by ${typeof c.header === 'string' ? c.header : c.key}, ${next.direction}.` : 'Sort cleared.');
   };
-  const toggle = (id: string, on: boolean) => setSel(on ? [...sel.filter((x) => x !== id), id] : sel.filter((x) => x !== id));
+  const toggle = (id: string, on: boolean) => {
+    if (current.kind === 'query') setCurrent({ ...current, except: on ? current.except.filter((x) => x !== id) : [...current.except, id] });
+    else setCurrent({ kind: 'ids', ids: on ? [...current.ids.filter((x) => x !== id), id] : current.ids.filter((x) => x !== id) });
+  };
+  const clear = () => setCurrent({ kind: 'ids', ids: [] });
+  // The toolbar's place on screen, for actionsPlacement="auto": the bar floats once the toolbar has scrolled away.
+  const tools = React.useRef<HTMLDivElement>(null);
+  const [toolsAway, setToolsAway] = React.useState(false);
+  React.useEffect(() => {
+    if (actionsPlacement !== 'auto' || !tools.current) return;
+    const io = new IntersectionObserver(([e]) => setToolsAway(!e.isIntersecting && e.boundingClientRect.top < 0));
+    io.observe(tools.current);
+    return () => io.disconnect();
+  }, [actionsPlacement]);
+  const floating = count > 0 && (actionsPlacement === 'floating' || (actionsPlacement === 'auto' && toolsAway));
+  const selectionBar = (
+    <>
+      <Badge variant="count" tone="accent" aria-hidden="true">{current.kind === 'query' ? nf.format(count) : count}</Badge>
+      <span>{current.kind === 'query' ? described : 'selected'}</span>
+      {actions?.(sel, current)}
+      <Button size="sm" variant="ghost" onClick={clear}>Clear</Button>
+    </>
+  );
 
   // Reordering by hand: pick a row up by its handle; the slot it will land in opens as a well; it lands where you drop it.
   const start = React.useRef<{ y: number; id: string; from: number; tops: number[]; hs: number[] } | null>(null);
@@ -453,15 +495,8 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
   return (
     <div className={cx('alt-data-table', className)}>
       {(selectable || toolbar || columnsMenu) && (
-        <div className="alt-table-tools">
-          {sel.length > 0 && (
-            <div className="alt-table-selection">
-              <Badge variant="count" tone="accent" aria-hidden="true">{sel.length}</Badge>
-              <span>selected</span>
-              {actions?.(sel)}
-              <Button size="sm" variant="ghost" onClick={() => setSel([])}>Clear</Button>
-            </div>
-          )}
+        <div className="alt-table-tools" ref={tools}>
+          {count > 0 && !floating && <div className="alt-table-selection">{selectionBar}</div>}
           {(toolbar || columnsMenu) && <div className="alt-table-tools-end">{toolbar}{columnsMenu && (
             <ColumnsMenu columns={ordered} visibility={visibility} density={dens}
               onVisibility={(key, on) => { setVisibility({ ...visibility, [key]: on }); const c = columns.find((x) => x.key === key)!; setSaid(`${typeof c.header === 'string' ? c.header : key} column ${on ? 'shown' : 'hidden'}.`); }}
@@ -477,7 +512,9 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
             {movable && <TableHead className="alt-th-grip"><span className="alt-sr">Move</span></TableHead>}
             {selectable && (
               <TableHead className="alt-th-check">
-                <Checkbox aria-label="Select all rows" checked={all} indeterminate={some} onCheckedChange={(on) => setSel(on ? Array.from(new Set([...sel, ...ids])) : sel.filter((x) => !ids.includes(x)))} />
+                <Checkbox aria-label="Select all rows" checked={all} indeterminate={some} onCheckedChange={(on) => (current.kind === 'query'
+                  ? (on ? setCurrent({ ...current, except: current.except.filter((x) => !ids.includes(x)) }) : clear())
+                  : setCurrent({ kind: 'ids', ids: on ? Array.from(new Set([...current.ids, ...ids])) : current.ids.filter((x) => !ids.includes(x)) }))} />
               </TableHead>
             )}
             {shown.map((c) => (
@@ -488,6 +525,13 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
         </TableHeader>
         <TableBody ref={body}>
           {!view.length && <tr><td className="alt-td alt-table-empty" colSpan={span}>{empty}</td></tr>}
+          {selectable && matchingTotal !== undefined && matchingTotal > ids.length && (all || current.kind === 'query') && (
+            <tr className="alt-tr alt-table-allrow"><td className="alt-td" colSpan={span}>
+              {current.kind === 'query'
+                ? <>{described} are selected. <button type="button" className="alt-link" onClick={clear}>Clear selection</button></>
+                : <>All {nf.format(ids.length)} on this page are selected. <button type="button" className="alt-link" onClick={() => setCurrent({ kind: 'query', total: matchingTotal, except: [] })}>Select all {nf.format(matchingTotal)} matching {noun}</button></>}
+            </td></tr>
+          )}
           {view.map((r, i) => {
             const id = ids[i];
             let shift = 0;
@@ -500,7 +544,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
             const isEditing = editing === id;
             return (
               <React.Fragment key={id}>
-              <TableRow rowId={id} selected={selectable && chosen.has(id)} interactive={!!onRowClick} relevance={relevance?.(r)}
+              <TableRow rowId={id} selected={selectable && isChosen(id)} interactive={!!onRowClick} relevance={relevance?.(r)}
                 settle={landed?.id === id ? landed.n : fresh.has(id) ? true : undefined} data-editing={isEditing ? '' : undefined} data-expanded={isOpen ? '' : undefined}
                 held={following || held?.id === id} data-following={following ? '' : undefined}
                 style={following ? { transform: `translateY(${drag!.dy}px)` } : shift ? { transform: `translateY(${shift}px)` } : undefined}
@@ -521,7 +565,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
                   </TableCell>
                 )}
                 {selectable && (
-                  <TableCell className="alt-td-check"><Checkbox aria-label={`Select ${name(r)}`} checked={chosen.has(id)} onCheckedChange={(on) => toggle(id, on)} /></TableCell>
+                  <TableCell className="alt-td-check"><Checkbox aria-label={`Select ${name(r)}`} checked={isChosen(id)} onCheckedChange={(on) => toggle(id, on)} /></TableCell>
                 )}
                 {shown.map((c, ci) => {
                   const content = c.cell ? c.cell(r) : String((r as any)[c.key] ?? '');
@@ -561,7 +605,8 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
             <Pagination page={pagination.page} pageCount={pagination.pageCount} onPageChange={pagination.onPageChange} total={pagination.total} pageSize={pagination.pageSize}
               hrefFor={pagination.hrefFor} hasNext={pagination.hasNext} loading={pagination.loading} noun={pagination.noun} aria-label={`${rest['aria-label'] ?? 'Table'} pages`} />
           </div>)}
-      <span className="alt-sr" aria-live="polite">{selectable && sel.length ? `${sel.length} selected. ` : ''}{said} {moreSaid}</span>
+      {floating && <section className="alt-table-floatbar" aria-label="Selection"><div className="alt-table-selection">{selectionBar}</div></section>}
+      <span className="alt-sr" aria-live="polite">{selectable && count ? `${described}. ` : ''}{said} {moreSaid}</span>
     </div>
   );
 }

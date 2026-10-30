@@ -1,0 +1,49 @@
+<!-- @dsCard group="Display" height=560 subtitle="Select every row that matches, across pages, with the actions floating at the bottom edge" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TableBulk — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.tb2 { height: 500px; overflow: auto; padding-right: 4px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const users = Array.from({ length: 25 }, (_, i) => ({ id: "u" + i, name: ["Maya Chen", "Theo Marsh", "Ada Obi", "Noa Levi", "Sam Okafor"][i % 5] + " " + (i + 1), last: 30 + i * 3 }));
+function App() {
+  const [selection, setSelection] = React.useState({ kind: "ids", ids: [] });
+  const [said, setSaid] = React.useState("");
+  return /* @__PURE__ */ React.createElement("div", { className: "tb2" }, /* @__PURE__ */ React.createElement(
+    A.DataTable,
+    {
+      "aria-label": "Inactive users",
+      rows: users,
+      getRowId: (r) => r.id,
+      getRowLabel: (r) => r.name,
+      selectable: true,
+      noun: "inactive users",
+      selection,
+      onSelectionChange: setSelection,
+      matchingTotal: 2341,
+      actionsPlacement: "auto",
+      actions: (ids, sel) => /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => {
+        setSaid(sel.kind === "query" ? `Archiving ${sel.total - sel.except.length} users\u2026` : `Archiving ${ids.length} users\u2026`);
+        setSelection({ kind: "ids", ids: [] });
+      } }, "Archive"),
+      columns: [{ key: "name", header: "Name" }, { key: "last", header: "Last seen", align: "end", cell: (r) => r.last + " days ago" }]
+    }
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap", role: "status" }, said || 'Select the page with the header checkbox, then "Select all 2,341 matching". Scroll down: the count and actions float at the bottom edge.'));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
