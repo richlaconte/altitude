@@ -4,7 +4,7 @@ Altitude is a design and HCI framework for React applications where height is th
 
 ## How work is organised
 
-Milestones are goals, `P1`–`P3` are priority, and `ready` / `needs-design` say whether anyone may start. Sub-issues and "blocked by" links give structure and order. A linked draft pull request is the claim. All of it is readable with `gh` and plain `repo` access; the project board is only a view. The full table and lifecycle are in [CONTRIBUTING.md](CONTRIBUTING.md) ("How work is organised").
+Milestones are goals, `P1`–`P3` are priority, and `ready` / `needs-design` say whether anyone may start. Sub-issues and "blocked by" links give structure and order. A linked draft pull request is the claim. All of it is readable with `gh` and plain `repo` access; the [project board](https://github.com/users/richlaconte/projects/1) is only a view, and its Status follows the pull requests by itself. The full table and lifecycle are in [CONTRIBUTING.md](CONTRIBUTING.md) ("How work is organised").
 
 ## Picking up an issue
 

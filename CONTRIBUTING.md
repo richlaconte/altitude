@@ -35,7 +35,7 @@ An issue is a proposal, not a go-ahead. New components and API changes are agree
 
 ## How work is organised
 
-Everything you need to plan work lives in the repository: milestones, labels, sub-issues, dependencies and linked pull requests. `gh` with ordinary `repo` access sees all of it. The project board (the repository's Projects tab) is a view of the same issues, with progress kept by workflows. It is not a second source: never record something only on the board.
+Everything you need to plan work lives in the repository: milestones, labels, sub-issues, dependencies and linked pull requests. `gh` with ordinary `repo` access sees all of it. The [project board](https://github.com/users/richlaconte/projects/1) is a view of the same issues (Board, Ready to pick up, Needs design, and one view per milestone), with Status kept by workflows. It is not a second source: never record something only on the board, and never set Status by hand.
 
 | Question | Where it lives | Values |
 |---|---|---|
@@ -46,15 +46,15 @@ Everything you need to plan work lives in the repository: milestones, labels, su
 | Part of what? | sub-issues | An umbrella issue (e.g. #244, Mobile) with its children |
 | After what? | "blocked by" / "blocking" relationships | GitHub's issue dependencies |
 | Who's on it? | a linked pull request (`Fixes #n`), opened as a draft when work starts | |
-| How far along? | the board's Status | Todo → In progress → In review → Done |
+| How far along? | the board's Status, set automatically | Todo → In progress (a pull request is linked) → Done (closed). Review state is on the pull request itself. |
 
 ### The lifecycle
 
 1. **Filed.** The template sets the kind; feature requests and new components also get `needs-design`. No milestone or priority yet.
 2. **Triaged** (maintainer). Sets a milestone and a priority, links sub-issues and dependencies, and labels a reproduced bug `ready`.
 3. **Agreed.** The design is settled in the issue's comments. The maintainer then edits the body so it states what was agreed and swaps `needs-design` for `ready`. The body is the spec; the comments are its history.
-4. **Claimed.** Someone opens a draft pull request with `Fixes #n` before writing much code. That pull request is the claim.
-5. **In review**, then merged, which closes the issue.
+4. **Claimed.** Someone opens a draft pull request with `Fixes #n` before writing much code. That pull request is the claim, and the board moves the issue to In progress.
+5. **Reviewed and merged**, which closes the issue and moves it to Done.
 
 ### Finding something to work on
 
@@ -74,7 +74,7 @@ The system is built for agents doing most of the implementation, with a person a
 - **Scope and self-containment matter most.** In a study of 3,180 issues assigned to Copilot's coding agent, issues small enough for one change and self-contained were associated with about 16 points higher merge rates; issues good on every criterion merged 77% of the time against 46% ([What Makes a GitHub Issue Ready for Copilot?, 2025](https://arxiv.org/abs/2512.21426)). Longer bodies were associated with fewer merges. So one pull request per issue, umbrellas with sub-issues, and the body kept to the agreed spec.
 - **Duplicates and abandonment sink agent pull requests.** Of 562 rejected agent pull requests, 38% were abandoned without review and 23% duplicated an existing one ([Where Do AI Coding Agents Fail?, 2026](https://arxiv.org/abs/2601.15195)). So a draft pull request is the claim, `ready` is the only go-ahead, and the queries above exclude claimed and blocked work.
 - **Make the structure explicit.** GitHub's guidance is to break large issues into sub-issues, state blocking relationships explicitly, and roll work up into milestones ([Best practices for Projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/best-practices-for-projects)). Their coding-agent guidance asks for clear scope, acceptance criteria and pointers to the files involved ([Best results with the coding agent](https://docs.github.com/en/copilot/tutorials/coding-agent/get-the-best-results)); the templates' "Done when" and "Today" sections are those.
-- **One source per thing.** Agents read labels, milestones and links with the same `gh` they already use, so those hold the state. The board only adds views and Status.
+- **One source per thing.** Agents read labels, milestones and links with the same `gh` they already use, so those hold the state. The board only adds views, a rough Size (S, M, L) for planning, and a Status that follows the pull requests.
 
 ## Pull requests
 
