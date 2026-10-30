@@ -70,7 +70,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-lift:hover, .alt-lift:focus-visible { background: var(--alt-bg-up); box-shadow: var(--alt-sh-up); transform: translateY(calc(-1px * var(--alt-travel))); }
 .alt-lift:active { box-shadow: var(--elev-0); transform: translateY(calc(1px * var(--alt-travel))); transition-duration: var(--dur-press); transition-timing-function: ease-out; }
 .alt-lift:focus-visible, .alt-tabs-trigger:focus-visible, .alt-acc-trigger:focus-visible,
-.alt-slider-thumb:focus-visible, .alt-switch:focus-visible, .alt-tabs-content:focus-visible, .alt-toast-close:focus-visible {
+.alt-slider-thumb:focus-visible, .alt-switch:focus-visible, .alt-tabs-content:focus-visible, .alt-toast-close:focus-visible, .alt-chart-pin-remove:focus-visible {
   outline: 2px solid var(--accent-ink); outline-offset: 2px;
 }
 
@@ -2469,6 +2469,19 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    across the bar at the earlier value, 4px past it each side (the bullet graph's comparative measure); on lines, a
    1.5px solid ink-muted trace under the series, named at its end. Never dotted: under forced colours dots mean pending. */
 .alt-bar-compare { stroke: var(--ink); stroke-width: 2; shape-rendering: crispEdges; }
+/* A reading set down (#190): the readout lands on the record as a plate, from level 3 to the ground over dur-travel-3 on
+   ease-settle, then takes the afterglow once. A pin icon tells it from an annotation; its ghost remove button lifts
+   when pointed at, as a ghost button does. Two pins say their difference under the x axis on a line-control bracket. */
+.alt-chart-note[data-pin] { display: inline-flex; align-items: center; gap: 4px; padding-right: 2px;
+  animation: alt-pin-land var(--dur-travel-3) var(--ease-settle) both, alt-pin-glow var(--dur-settle) var(--ease-decay) var(--dur-travel-3) both; }
+.alt-chart-pin-icon { flex: none; color: var(--ink-muted); }
+.alt-chart-pin-remove { display: inline-grid; place-items: center; width: 18px; height: 18px; margin: 0; padding: 0; border: 0; border-radius: var(--radius-xs); background: transparent; color: var(--ink-muted); cursor: pointer; box-shadow: var(--elev-0); transition: background-color var(--dur-travel-1) var(--ease-glide), box-shadow var(--dur-travel-1) var(--ease-glide), transform var(--dur-travel-1) var(--ease-glide); }
+.alt-chart-pin-remove:hover, .alt-chart-pin-remove:focus-visible { background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink); transform: translateY(calc(-1px * var(--alt-travel))); }
+@keyframes alt-pin-land { from { box-shadow: var(--elev-3); transform: translateY(calc(-6px * var(--alt-travel))); } }
+@keyframes alt-pin-glow { 0%, 12% { outline: 2px solid var(--accent-soft); outline-offset: 1px; } 100% { outline: 2px solid transparent; outline-offset: 1px; } }
+.alt-chart-pins-strip path { stroke: var(--line-control); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-pins-strip text { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
+@media (forced-colors: active) { .alt-chart-pins-strip path { stroke: CanvasText; } .alt-chart-pins-strip text { fill: CanvasText; } .alt-chart-pin-icon, .alt-chart-pin-remove { color: CanvasText; } }
 .alt-line-compare { stroke: var(--ink-muted); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
 @media (forced-colors: active) { .alt-bar-compare { stroke: CanvasText; } .alt-line-compare { stroke: CanvasText; stroke-width: 1; } }
 .alt-legend-key[data-context] { color: var(--ink-muted); }

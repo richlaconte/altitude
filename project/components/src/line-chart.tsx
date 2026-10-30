@@ -33,6 +33,15 @@ export interface LineChartProps {
    */
   compare?: ChartCompare;
   /**
+   * Let people pin a reading to the plot (#190): with the readout open, a click (or P on the keyboard path, or a tap
+   * while the touch readout is open) sets it down as a plate. true allows two, which compare in words; a number allows
+   * that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled (to keep them in the URL, say); and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
+  /**
    * What the chart is about (#188): these series keep their colours and the rest are drawn in data-context, their
    * labels in ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
    */
@@ -256,7 +265,7 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const win = Array.isArray(src) && p.window ? windowed(src, p.x, p.window) : undefined;
   const rows = win?.rows ?? (src !== p.data ? src as ChartDatum[] : undefined);
   return {
-    kind: 'Line chart', zero: false, swatch: 'line', focus: p.focus, format: p.y?.format, status: p.status, boundary: p.boundary, data: rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
+    kind: 'Line chart', zero: false, swatch: 'line', focus: p.focus, pinnable: p.pinnable, pins: p.pins, onPinsChange: p.onPinsChange, format: p.y?.format, status: p.status, boundary: p.boundary, data: rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     band: p.band ? { series: p.band.series, low: p.band.low, high: p.band.high, label: p.band.label ?? 'Range' } : undefined,
     right: labelled ? Math.ceil(Math.max(0, ...[...labels, ...(p.compare ? [p.compare.label] : [])].map(width))) + 12 : 0,
     compare: p.compare && cseries ? { key: p.compare.key ?? COMPARE_KEY, series: cseries, label: p.compare.label } : undefined,

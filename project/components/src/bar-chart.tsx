@@ -32,6 +32,15 @@ export interface BarChartProps {
    */
   compare?: ChartCompare;
   /**
+   * Let people pin a reading to the plot (#190): with the readout open, a click (or P on the keyboard path, or a tap
+   * while the touch readout is open) sets it down as a plate. true allows two, which compare in words; a number allows
+   * that many. Escape removes the last.
+   */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled (to keep them in the URL, say); and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
+  /**
    * What the chart is about (#188): series keys that keep their colours while the rest take data-context, or a test for
    * the records that keep theirs (on a one-series chart, the categories the takeaway names). The author's statement of
    * importance, not a reader's filter (that's relevance).
@@ -276,7 +285,7 @@ BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Char
   }
   return {
     kind: p.stack === 'expand' ? 'Stacked bar chart of shares' : p.stack ? 'Stacked bar chart' : 'Bar chart',
-    xScale: 'band', zero: true, swatch: 'rect', focus: p.focus, compare: cmp && ckey ? { key: ckey, series: cseries, label: cmp.label } : undefined, layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
+    xScale: 'band', zero: true, swatch: 'rect', focus: p.focus, pinnable: p.pinnable, pins: p.pins, onPinsChange: p.onPinsChange, compare: cmp && ckey ? { key: ckey, series: cseries, label: cmp.label } : undefined, layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

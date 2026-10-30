@@ -160,6 +160,7 @@ jobs:
           node ../scripts/record-check.mjs react18-chart-banking node checks/chart-banking.mjs
           node ../scripts/record-check.mjs react18-chart-focus node checks/chart-focus.mjs
           node ../scripts/record-check.mjs react18-chart-compare node checks/chart-compare.mjs
+          node ../scripts/record-check.mjs react18-chart-pins node checks/chart-pins.mjs
           node ../scripts/record-check.mjs react18-chart-live node checks/chart-live.mjs
           node ../scripts/record-check.mjs react18-chart-filter node checks/chart-filter.mjs
           node ../scripts/record-check.mjs react18-chart-select node checks/chart-select.mjs

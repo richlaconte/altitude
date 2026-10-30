@@ -327,6 +327,11 @@ export interface ChartInfo {
    * (null: the stack's total), and the earlier period's name. Previous values join y and glide with the data.
    */
   compare?: { key: string; series: string | null; label: string };
+  /** Readings can be pinned to the plot (#190): true for two, or how many. */
+  pinnable?: boolean | number;
+  /** The pinned readings' x values, controlled; and when they change. */
+  pins?: Array<string | number>;
+  onPinsChange?: (pins: Array<string | number>) => void;
   /** Bank the plot's proportions to the data (#194): the chart type asked for aspect="banked". */
   aspect?: 'banked';
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
@@ -677,7 +682,7 @@ type Layer = { frame: Frame; opacity: number };
 /** A reference laid out in a frame: its span on the value axis (from = to for a line) and where its label sits. */
 type RefGeo = { i: number; band: boolean; from: number; to: number; text: string; tone?: 'caution' | 'critical'; lx: number; ly: number; anchor: 'start' | 'end' };
 /** An annotation laid out in a frame: its x, its plate's left edge and width, and the row it stacks into. */
-type NoteGeo = { i: number; at: number; left: number; w: number; row: number };
+type NoteGeo = { i: number; at: number; left: number; w: number; row: number; pin?: number };
 /**
  * Cleveland's banking to 45° (#194): the width ÷ height at which a line's segments average 45° of absolute orientation,
  * found by bisection (orientation falls as the ratio grows), then held between 1 and 4 so a card is never a sliver or
@@ -1090,6 +1095,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const drillCtx = useDrilldown();
   const interactive = !!(info.onSelect || info.drill);
   const sameX = (a: unknown, b: unknown) => String(a) === String(b) || (isTimeLike(a) && isTimeLike(b) && toTime(a) === toTime(b));
+  // Pinned readings (#190): a reading set down on the plot as a plate, at most pinMax, oldest first.
+  const pinMax = !grid && !xy && info.pinnable ? (info.pinnable === true ? 2 : Math.max(1, Math.floor(info.pinnable))) : 0;
+  const [pinsOwn, setPinsOwn] = React.useState<Array<string | number>>([]);
+  const pins = pinMax ? (info.pins ?? pinsOwn).filter((x) => data.some((d) => sameX(d[xKey], x))).slice(-pinMax) : [];
+  const setPins = (next: Array<string | number>) => { info.onPinsChange?.(next); if (info.pins === undefined) setPinsOwn(next); };
+  const [pinSaid, setPinSaid] = React.useState('');
   const hasSelection = !!info.onSelect && info.selected !== undefined && info.selected !== null;
   const userRelevance = (d: ChartDatum): 'match' | 'miss' | undefined => { const v = info.relevance?.(d); return v === 'match' || v === 'miss' ? v : undefined; };
   const filtered = !!info.relevance && data.some((d) => userRelevance(d) !== undefined);
@@ -1126,7 +1137,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const fmtY = yFormat ?? info.yFormat ?? series[0]?.format ?? ((v: number) => new Intl.NumberFormat(locale).format(v));
   const W = size?.w ?? 0, H = size?.h ?? 0;
   const horizontal = info.layout === 'horizontal' && kind === 'band';
-  const bottom = (axes && !grid ? 26 : 1) + (info.bottom ?? 0);
+  // Two pins say their difference in a strip under the x axis.
+  const bottom = (axes && !grid ? 26 : 1) + (info.bottom ?? 0) + (pins.length === 2 ? 24 : 0);
   const right = (info.right ?? 0) + (horizontal ? (axes ? 20 : 2) : kind === 'band' || !axes || grid ? 2 : 18);
 
   // The target frame: where the plot is going, independent of its width.
@@ -1289,6 +1301,39 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const shortDate = React.useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }), [locale]);
   const bandLabel = (v: unknown) => (xFormat ? xFormat(v) : datedBands ? shortDate.format(new Date(toTime(v))) : String(v));
   const formatX = xFormat ?? info.xFormat ?? (datedBands ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
+  // Pinned readings (#190), in words: the plate's short label, what's read aloud, and two pins' difference.
+  const pinRecord = (x: unknown) => data.find((d) => sameX(d[xKey], x));
+  const pinX = (x: unknown) => (kind === 'band' ? bandLabel(x) : kind === 'time' ? (intraday ? dateTime : shortDate).format(new Date(toTime(x))) : formatX(x));
+  const pinValues = (d: ChartDatum | undefined, spoken = false) => {
+    const shown = series.filter((q) => d && typeof d[q.key] === 'number' && isFinite(d[q.key] as number));
+    if (shown.length === 1) return spoken ? `${shown[0].format(d![shown[0].key] as number)} ${shown[0].label}` : shown[0].format(d![shown[0].key] as number);
+    return shown.map((q) => `${q.label} ${q.format(d![q.key] as number)}`).join(', ');
+  };
+  const pinLabel = (x: unknown) => `${pinX(x)} · ${pinValues(pinRecord(x))}`;
+  const pinDiff = (spoken: boolean, list = pins) => {
+    if (list.length !== 2) return '';
+    const [a, b] = [...list].sort((p, q) => data.findIndex((d) => sameX(d[xKey], p)) - data.findIndex((d) => sameX(d[xKey], q))).map(pinRecord);
+    if (!a || !b) return '';
+    const both = series.filter((q) => typeof a[q.key] === 'number' && typeof b[q.key] === 'number');
+    if (!both.length) return '';
+    const span = kind === 'time' ? (() => { const ms = toTime(b[xKey]) - toTime(a[xKey]), days = Math.round(ms / DAY); return days >= 1 ? `${days} ${days === 1 ? 'day' : 'days'}` : `${Math.round(ms / 36e5)} hours`; })() : '';
+    if (both.length === 1) {
+      const q = both[0], va = a[q.key] as number, vb = b[q.key] as number, w = changeWords(vb, va, q.format);
+      if (spoken) return va === vb ? `${formatX(b[xKey])} is the same as ${formatX(a[xKey])}.` : `${formatX(b[xKey])} is ${w.slice(1)} ${vb > va ? 'higher' : 'lower'} than ${formatX(a[xKey])}.`;
+      return span ? `${w} over ${span}` : `${w} from ${pinX(a[xKey])} to ${pinX(b[xKey])}`;
+    }
+    const parts = both.map((q) => `${q.label} ${changeWords(b[q.key] as number, a[q.key] as number, q.format)}`);
+    return spoken ? `From ${formatX(a[xKey])} to ${formatX(b[xKey])}: ${parts.join(', ')}.` : parts.join(' · ');
+  };
+  const pinAt = (d: ChartDatum) => {
+    if (!pinMax) return;
+    const x = d[xKey] as string | number;
+    if (pins.some((p) => sameX(p, x))) return;
+    const next = [...pins, x].slice(-pinMax);
+    setPins(next);
+    setPinSaid(`Pinned ${formatX(x)}: ${pinValues(d, true)}.${next.length === 2 ? ' ' + pinDiff(true, next) : ''}`);
+  };
+  const unpin = (x: unknown) => { const next = pins.filter((p) => !sameX(p, x)); setPins(next); setPinSaid(`Pin removed, ${formatX(x)}.`); };
 
   // The keyboard path (#63): the plot is one Tab stop holding three levels, summary → series → points. Enter goes
   // deeper and Escape comes back, as in Tree and Drilldown; a roving tabindex keeps one node in the tab order.
@@ -1394,13 +1439,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const noteGeo: NoteGeo[] = [];
     if (!horizontal) {
       const rowsEnd: number[] = [];
-      notes.map((n, i) => ({ n, i, at: xOf({ [xKey]: n.x }) })).filter((g) => isFinite(g.at)).sort((p, q) => p.at - q.at).forEach(({ n, i, at }) => {
-        const w = Math.ceil(textWidth(n.label) * 0.96) + 18;
+      // Pinned readings (#190) are plates too, laid out with the annotations: a pin icon and a remove button beside the words.
+      const plates = [...notes.map((n, i) => ({ i, x: n.x as unknown, label: n.label, pin: undefined as number | undefined })),
+        ...pins.map((x, j) => ({ i: -1 - j, x: x as unknown, label: pinLabel(x), pin: j }))];
+      plates.map((n) => ({ n, at: xOf({ [xKey]: n.x }) })).filter((g) => isFinite(g.at)).sort((p, q) => p.at - q.at).forEach(({ n, at }) => {
+        const w = Math.ceil(textWidth(n.label) * 0.96) + 18 + (n.pin !== undefined ? 40 : 0);
         const left = Math.max(0, Math.min(pw - w, at - w / 2));
         let row = rowsEnd.findIndex((e) => e + 6 <= left);
         if (row < 0) { row = rowsEnd.length; rowsEnd.push(0); }
         rowsEnd[row] = left + w;
-        noteGeo.push({ i, at, left, w, row });
+        noteGeo.push({ i: n.i, at, left, w, row, pin: n.pin });
       });
       headY = Math.min(rowsEnd.length * 26, ph / 2);
       y.range = [ph, headY];
@@ -1639,6 +1687,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (notes.length) out += ` ${notes.length} ${notes.length === 1 ? 'annotation' : 'annotations'}: ${notes.map((n) => `${n.label}, ${formatX(n.x)}`).join('; ')}.`;
     if (selecting) out += ` Filtered to ${selectedWords}.`;
     else if (filtered) out += ` ${countText}.`;
+    if (pins.length) out += ` Pinned: ${pins.map((x) => `${formatX(x)}, ${pinValues(pinRecord(x), true)}`).join('; ')}.`;
     return out;
   })();
 
@@ -1669,7 +1718,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     top.ctx.data.forEach((d, i) => { const dd = Math.abs(top.ctx.xOf(d) - along); if (dd < bd) { bd = dd; best = i; } });
     return best < 0 ? null : best;
   };
-  const holdTouch = React.useRef<{ timer: number; x: number; y: number; id: number } | null>(null);
+  const holdTouch = React.useRef<{ timer: number; x: number; y: number; id: number; open?: boolean; t?: number } | null>(null);
   const onPointerMove = (e: React.PointerEvent) => {
     if (!tooltipOn) return;
     if (e.pointerType !== 'touch') { show(nearest(e.clientX, e.clientY)); return; }
@@ -1680,7 +1729,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const onPointerDown = (e: React.PointerEvent) => {
     if (!tooltipOn || e.pointerType !== 'touch') return;
     const el = e.currentTarget as HTMLElement, id = e.pointerId, x = e.clientX, y = e.clientY;
-    holdTouch.current = { x, y, id, timer: window.setTimeout(() => {
+    const open = sticky.current, t = Date.now();
+    holdTouch.current = { x, y, id, open, t, timer: window.setTimeout(() => {
       // Press and hold shows the readout; dragging then scrubs along x; lifting leaves it until a tap elsewhere.
       sticky.current = true;
       hold('pointer', true);
@@ -1693,12 +1743,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (h) { window.clearTimeout(h.timer); if (!sticky.current) holdTouch.current = null; }
     // A tap (released before the hold that shows the readout) selects or drills, where marks act.
     if (interactive && e.pointerType === 'touch' && h && !sticky.current) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) activate(d); }
+    // With the touch readout open, a quick tap on the plot pins the reading (#190).
+    else if (!interactive && pinMax && e.pointerType === 'touch' && h?.open && Date.now() - (h.t ?? 0) < 250 && Math.hypot(e.clientX - h.x, e.clientY - h.y) < 8) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); }
   };
   /** The record a shown mark stands for, by its key: the shown rows glide, but what's chosen is the record itself. */
   const recordAt = (i: number) => { const shown = top.ctx.data[i]; if (!shown) return null; const k = rowKey(shown); return data.find((d) => rowKey(d) === k) ?? null; };
   const onClick = (e: React.MouseEvent) => {
-    if (!interactive || (e.target as HTMLElement).closest('button, a, .alt-chart-note')) return;
+    if ((e.target as HTMLElement).closest('button, a, .alt-chart-note')) return;
     if ((e.nativeEvent as PointerEvent).pointerType === 'touch') return;
+    // Where a click doesn't select or drill, it pins the reading under the pointer (#190).
+    if (!interactive) { if (pinMax && tooltipOn) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); } return; }
     const i = nearest(e.clientX, e.clientY);
     const d = i === null ? null : recordAt(i);
     if (d) activate(d);
@@ -1776,8 +1830,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     let next: Nav | null = null;
     // The chart type may move the keyboard itself: a grid by row and column.
     const moved = at.level === 'points' && childType?.chartMove && /^(Arrow|Home$|End$|Page)/.test(e.key) ? childType.chartMove(childProps, top.ctx, at.p, e) : null;
-    // Escape clears a selection first, then goes back up a level.
+    // Escape clears the last pin, then a selection, then goes back up a level. P pins the reading at the point (#190).
+    if (e.key === 'Escape' && pins.length) { e.preventDefault(); e.stopPropagation(); unpin(pins[pins.length - 1]); return; }
     if (e.key === 'Escape' && selecting) { e.preventDefault(); e.stopPropagation(); info.onSelect?.(null); return; }
+    if ((e.key === 'p' || e.key === 'P') && pinMax && at.level === 'points' && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); const d = recordAt(at.p); if (d) pinAt(d); return; }
     if (at.level === 'summary') {
       // Into the records at the chart type's first (Ctrl+Home): the leftmost dot, the grid's first cell.
       const first = single && childType?.chartMove ? childType.chartMove(childProps, top.ctx, 0, { key: 'Home', ctrlKey: true, metaKey: false } as React.KeyboardEvent) ?? 0 : 0;
@@ -1871,7 +1927,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     return (
       <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
         {React.cloneElement(content, { label: own ? own.label : d[xKey], payload, formatX: own ? String : formatX, note: (() => { const st = statusOf(d); const words = [st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' && !selecting ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })(),
-          action: interactive ? actionWord(d) : undefined })}
+          action: [interactive ? actionWord(d) : '', !pinMax ? '' : pins.some((p) => sameX(p, d[xKey])) ? 'Pinned' : navFocused ? 'P to pin' : interactive ? '' : sticky.current ? 'Tap to pin' : 'Click to pin'].filter(Boolean).join(' · ') || undefined })}
       </div>
     );
   })();
@@ -1939,6 +1995,19 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                     {boundaryAt !== null && info.boundary !== false && (() => {
                       const at = Math.round(boundaryAt) + 0.5;
                       return <g className="alt-chart-boundary">{horizontal ? <line x1={0} x2={pw} y1={at} y2={at} /> : <line x1={at} x2={at} y1={0} y2={ph} />}</g>;
+                    })()}
+                    {/* Two pins (#190): their difference under the x axis, between them, on a 1px line-control bracket. */}
+                    {i === layers.length - 1 && pins.length === 2 && !horizontal && (() => {
+                      const xs = pins.map((p) => { const d = pinRecord(p); return d ? ctx.xOf(d) : NaN; }).filter(isFinite).sort((p, q) => p - q);
+                      if (xs.length !== 2) return null;
+                      const [a, b] = xs.map((v) => Math.round(v) + 0.5), yb = ph + 30, words = pinDiff(false), w = textWidth(words);
+                      const cx = Math.max(w / 2, Math.min(pw - w / 2, (a + b) / 2));
+                      return (
+                        <g className="alt-chart-pins-strip" aria-hidden="true">
+                          <path d={`M${a},${yb - 4}V${yb}H${b}V${yb - 4}`} fill="none" />
+                          <text x={cx} y={yb + 15} textAnchor="middle">{words}</text>
+                        </g>
+                      );
                     })()}
                     {live && <defs><clipPath id={`${pid}-plot-${i}`}><rect x={-3} y={-TOP} width={pw + 9 + right} height={ph + TOP + 6} /></clipPath></defs>}
                     <g className="alt-chart-marks" clipPath={live ? `url(#${pid}-plot-${i})` : undefined}><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
@@ -2042,8 +2111,19 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
             </svg>
           )}
           {W > 0 && data.length > 0 && top.noteGeo.map((g) => {
-            const n = notes[g.i];
             const style: React.CSSProperties = { left: top.left + g.left, top: TOP + g.row * 26, minWidth: g.w };
+            // A reading set down (#190): a plate on the ground with a pin, its words, and a ghost button that removes it.
+            if (g.pin !== undefined) {
+              const x = pins[g.pin], d = pinRecord(x);
+              return (
+                <span key={`pin-${String(x)}`} className="alt-badge alt-chart-note" data-variant="plate" data-pin="" style={style} role="group" aria-label={`Pinned ${formatX(x)}: ${pinValues(d, true)}`}>
+                  <Icons.Pin size={13} className="alt-chart-pin-icon" />
+                  <span aria-hidden="true">{pinLabel(x)}</span>
+                  <button type="button" className="alt-chart-pin-remove" aria-label={`Remove pin, ${formatX(x)}`} onClick={() => unpin(x)}><Icons.X size={12} /></button>
+                </span>
+              );
+            }
+            const n = notes[g.i];
             return n.onSelect
               ? <button key={g.i} type="button" className="alt-badge alt-chart-note" data-variant="plate" style={style} onClick={n.onSelect} aria-label={`${n.label}, ${formatX(n.x)}`}>{n.label}</button>
               : <span key={g.i} className="alt-badge alt-chart-note" data-variant="plate" style={style} aria-hidden="true">{n.label}</span>;
@@ -2078,6 +2158,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
         })}
         {htmlKids.filter((k) => !(k.type as ChartChild).chartLegend && !(k.type as ChartChild).chartBrush)}
+        {pinMax > 0 && <span className="alt-sr" aria-live="polite">{pinSaid}</span>}
         <figcaption id={sumId} className={summary ? 'alt-chart-summary' : 'alt-sr'}>
           {summary ?? generated}
           {summary && overlayWords ? <span className="alt-sr">{overlayWords}</span> : !summary && overlayWords}
