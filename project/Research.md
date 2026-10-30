@@ -1436,6 +1436,10 @@ A measurement (#256): `.alt-sort-item` was `touch-action: none` across the whole
 
 A measurement (#254): on touch a Board card couldn't be moved at all. The board scrolls sideways, so the browser claimed the finger for panning and sent `pointercancel`, which the card treats as a drop; and the card tools only appeared on hover. Cards now take the shared press-and-hold (E129): a swipe scrolls the board, a 400ms hold picks the card up (it lifts as a mouse pick-up does, and "Picked up" is announced), and a drag then moves it between columns. The tools are always shown where there's no hover. Auto-scrolling the board while a card is carried near its edge is left for later. `checks/touch-drag.mjs`.
 
+### E131 · Tree rows by touch
+
+A measurement (#255): a Tree row with `onMove` couldn't be moved by touch. Its `touch-action: pan-y` gave every vertical gesture, the only direction a tree row moves, to the browser, which panned and sent `pointercancel`. Rows keep `pan-y`, so a swipe still scrolls, and take the shared press-and-hold (E129): after 400ms the row is carried as a mouse pick-up carries it, with the same targets and spring-open folders. A non-drag path for people with neither keyboard nor fine pointer (WCAG 2.5.7, a "Move to…" action) is left as its own change. `checks/touch-drag.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

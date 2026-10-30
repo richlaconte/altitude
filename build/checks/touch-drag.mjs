@@ -102,6 +102,31 @@ if (!only || only === 'Board') {
     await page.close();
   }
 }
+if (!only || only === 'Tree') {
+  const order = (page) => page.evaluate(() => [...document.querySelectorAll('.alt-tree-row')].map((r) => r.textContent.trim().slice(0, 12)).join('|'));
+  const rowOf = (page, text) => page.evaluate((text) => [...document.querySelectorAll('.alt-tree-row')].findIndex((r) => r.textContent.includes(text)), text);
+  {
+    const { ctx, page, gesture } = await phone('Tree', 320);
+    await page.evaluate(() => { document.body.style.paddingBottom = '1500px'; });
+    const before = await order(page);
+    const i = await rowOf(page, 'Logo usage');
+    const [x, y] = await centre(page, '.alt-tree-row', i);
+    await gesture([x, y], [x, y - 150]);
+    const sy = await page.evaluate(() => scrollY);
+    expect(sy > 40 && (await order(page)) === before, `Tree: a vertical swipe on a row scrolls and leaves the order (scrollY ${sy})`);
+    await ctx.close();
+  }
+  {
+    const { ctx, page, gesture } = await phone('Tree');
+    const before = await order(page);
+    const i = await rowOf(page, 'Logo usage');
+    const [x, y] = await centre(page, '.alt-tree-row', i);
+    await gesture([x, y], [x, y + 120], 600);
+    const after = await order(page);
+    expect(after !== before, `Tree: press-and-hold, then drag, moves the row (${before} → ${after})`);
+    await ctx.close();
+  }
+}
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
 await browser.close();
