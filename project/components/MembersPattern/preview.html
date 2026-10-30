@@ -1,0 +1,141 @@
+<!-- @dsCard group="Patterns" height=1000 subtitle="Invite by email with a role, change roles in place, remove with what they lose" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MembersPattern — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.mb-page{max-width:760px;margin-inline:auto;display:grid;gap:20px;overflow-wrap:break-word}.mb-page td:first-child{width:40%}.mb-page .alt-table{min-width:600px}.mb-h{font:600 21px/28px var(--font-sans);margin:0}.mb-sub{font:600 17px/24px var(--font-sans);margin:0}.mb-invite{padding:20px;gap:16px}.mb-roles{display:grid;gap:8px}.mb-legend{font:500 14px/20px var(--font-sans)}.mb-who{display:flex;gap:10px;align-items:center;min-width:0}.mb-name{font:500 14px/20px var(--font-sans)}.mb-email,.mb-reason,.mb-write,.mb-invited{font:400 13px/18px var(--font-sans);color:var(--ink-muted)}.mb-invited{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.mb-role{display:grid;gap:4px;max-width:200px}.mb-write:empty{display:none}.mb-actions{display:inline-flex;gap:4px}.mb-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.mb-page [role="status"]:empty{display:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const ROLES = [
+  { value: "admin", label: "Admin", description: "Manages members, billing and every project." },
+  { value: "member", label: "Member", description: "Creates and edits projects they can see." },
+  { value: "viewer", label: "Viewer", description: "Sees projects and leaves comments. Can\u2019t edit." }
+];
+const roleName = (v) => v === "owner" ? "Owner" : ROLES.find((r) => r.value === v)?.label;
+function MemberRow({ person, me, owners, fail, onRole, onRemove, onResend, onRevoke }) {
+  const [write, setWrite] = React.useState(
+    /** @type {A.DepthProps['status']} */
+    void 0
+  );
+  const row = React.useRef(null);
+  const remove = A.useConsequentialAction({
+    target: person.name,
+    consequence: `${person.name} loses access to ${person.projects} projects and every shared dashboard. Their work stays in the workspace.`,
+    requiresConfirmation: true,
+    focusFallback: () => document.getElementById("mb-heading"),
+    execute: async () => {
+      await wait(700);
+      onRemove(person);
+      return { ok: true, value: person.id };
+    },
+    messages: { pending: `Removing ${person.name}`, succeeded: `${person.name} was removed` }
+  });
+  const { style, ...depth } = A.useDepth({ status: write, settle: person.invitedAt ? true : void 0 });
+  const changeRole = async (role) => {
+    const before = person.role;
+    onRole(person.id, role);
+    setWrite("pending");
+    await wait(800);
+    if (fail.current) {
+      onRole(person.id, before);
+      setWrite("failed");
+    } else setWrite("committed");
+  };
+  const onlyOwner = person.role === "owner" && owners === 1;
+  return /* @__PURE__ */ React.createElement(A.TableRow, { ref: row, rowId: person.id, ...depth, style }, /* @__PURE__ */ React.createElement(A.TableCell, null, /* @__PURE__ */ React.createElement("div", { className: "mb-who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: person.name, size: 28 }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "mb-name" }, person.name, person.id === me && " (you)"), /* @__PURE__ */ React.createElement("div", { className: "mb-email" }, person.email)))), /* @__PURE__ */ React.createElement(A.TableCell, null, person.invited ? /* @__PURE__ */ React.createElement("span", { className: "mb-invited" }, /* @__PURE__ */ React.createElement(A.Badge, null, "Invited"), " ", roleName(person.role), " \xB7 sent ", person.sent) : onlyOwner ? /* @__PURE__ */ React.createElement("span", { className: "mb-reason" }, "Owner. You\u2019re the only owner, so your role can\u2019t change. Transfer ownership first.") : /* @__PURE__ */ React.createElement("div", { className: "mb-role" }, /* @__PURE__ */ React.createElement(A.Select, { "aria-label": `Role for ${person.name}`, value: person.role, onValueChange: changeRole, items: ROLES.map(({ value, label }) => ({ value, label })) }), /* @__PURE__ */ React.createElement("span", { className: "mb-write", role: "status" }, write === "pending" ? "Changing role\u2026" : write === "failed" ? "Couldn\u2019t change the role. Try again." : write === "committed" ? "Role changed" : ""))), /* @__PURE__ */ React.createElement(A.TableCell, { align: "end" }, person.invited ? /* @__PURE__ */ React.createElement("div", { className: "mb-actions" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => onResend(person) }, "Resend"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => onRevoke(person) }, "Revoke")) : onlyOwner || person.id === me ? null : /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: remove.request }, "Remove"), /* @__PURE__ */ React.createElement(
+    A.Dialog,
+    {
+      open: ["confirming", "pending", "failed"].includes(remove.phase),
+      background: "stationary",
+      size: "sm",
+      dismissible: remove.phase !== "pending",
+      onOpenChange: (o) => {
+        if (!o) remove.cancel();
+      },
+      title: `Remove ${person.name}?`,
+      description: remove.consequence,
+      footer: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { disabled: remove.phase === "pending", onClick: remove.cancel }, "Keep ", person.name.split(" ")[0]), /* @__PURE__ */ React.createElement(A.Button, { variant: "danger", disabled: remove.phase === "pending", onClick: remove.confirm }, remove.phase === "pending" ? "Removing" : `Remove ${person.name.split(" ")[0]}`))
+    }
+  )));
+}
+function App() {
+  const me = "u1";
+  const [people, setPeople] = React.useState([
+    { id: "u1", name: "Maya Chen", email: "maya@acme.dev", role: "owner", projects: 14 },
+    { id: "u2", name: "Theo Marsh", email: "theo@acme.dev", role: "admin", projects: 9 },
+    { id: "u3", name: "Ines Duarte", email: "ines@acme.dev", role: "member", projects: 4 },
+    { id: "i1", name: "sam@acme.dev", email: "Invitation", role: "member", invited: true, sent: "yesterday", projects: 0 }
+  ]);
+  const [emails, setEmails] = React.useState(
+    /** @type {string[]} */
+    []
+  );
+  const [role, setRole] = React.useState("member");
+  const [sending, setSending] = React.useState(false);
+  const [status, setStatus] = React.useState("");
+  const [failNext, setFailNext] = React.useState(false);
+  const fail = React.useRef(false);
+  fail.current = failNext;
+  const owners = people.filter((p) => p.role === "owner").length;
+  const send = async () => {
+    setSending(true);
+    setStatus("Sending invites\u2026");
+    await wait(900);
+    const known = new Set(people.map((p) => p.name).concat(people.map((p) => p.email)));
+    const fresh = emails.filter((e) => !known.has(e)), already = emails.length - fresh.length;
+    const at = Date.now();
+    setPeople((list) => list.concat(fresh.map((e, i) => ({ id: "i" + at + i, name: e, email: "Invitation", role, invited: true, sent: "just now", invitedAt: at, projects: 0 }))));
+    setEmails([]);
+    setSending(false);
+    setStatus([fresh.length && `${fresh.length} ${fresh.length === 1 ? "invite" : "invites"} sent`, already && `${already} ${already === 1 ? "address is" : "addresses are"} already in the workspace`].filter(Boolean).join(", ") + ".");
+  };
+  return /* @__PURE__ */ React.createElement("main", { className: "mb-page" }, /* @__PURE__ */ React.createElement("h2", { id: "mb-heading", tabIndex: -1, className: "mb-h" }, "Members"), /* @__PURE__ */ React.createElement(A.Card, { className: "mb-invite", "aria-labelledby": "mb-invite-h" }, /* @__PURE__ */ React.createElement("h3", { id: "mb-invite-h", className: "mb-sub" }, "Invite people"), /* @__PURE__ */ React.createElement(A.Field, { label: "Email addresses", hint: "Separate addresses with commas, or paste a list." }, /* @__PURE__ */ React.createElement(
+    A.TagInput,
+    {
+      value: emails,
+      onValueChange: setEmails,
+      noun: ["address", "addresses"],
+      placeholder: "name@acme.dev",
+      disabled: sending,
+      normalize: (t) => t.trim().toLowerCase(),
+      validate: (t) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? void 0 : `${t} isn\u2019t an email address.`
+    }
+  )), /* @__PURE__ */ React.createElement("div", { className: "mb-roles" }, /* @__PURE__ */ React.createElement("span", { id: "mb-role-label", className: "mb-legend" }, "Role"), /* @__PURE__ */ React.createElement(A.RadioGroup, { value: role, onValueChange: setRole, "aria-labelledby": "mb-role-label" }, ROLES.map((r) => /* @__PURE__ */ React.createElement(A.Radio, { key: r.value, value: r.value, label: r.label, description: r.description })))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", loading: sending, disabled: !emails.length, onClick: send }, sending ? "Sending invites" : emails.length > 1 ? `Send ${emails.length} invites` : "Send invite"))), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next role change fail", checked: failNext, onCheckedChange: setFailNext }), /* @__PURE__ */ React.createElement(A.Table, { "aria-label": "Members and invitations" }, /* @__PURE__ */ React.createElement(A.TableHeader, null, /* @__PURE__ */ React.createElement(A.TableRow, null, /* @__PURE__ */ React.createElement(A.TableHead, null, "Person"), /* @__PURE__ */ React.createElement(A.TableHead, null, "Role"), /* @__PURE__ */ React.createElement(A.TableHead, { align: "end" }, /* @__PURE__ */ React.createElement("span", { className: "mb-vh" }, "Actions")))), /* @__PURE__ */ React.createElement(A.TableBody, null, people.map((p) => /* @__PURE__ */ React.createElement(
+    MemberRow,
+    {
+      key: p.id,
+      person: p,
+      me,
+      owners,
+      fail,
+      onRole: (id, r) => setPeople((l) => l.map((x) => x.id === id ? { ...x, role: r } : x)),
+      onRemove: (x) => {
+        setPeople((l) => l.filter((y) => y.id !== x.id));
+        setStatus(`${x.name} was removed.`);
+      },
+      onResend: (x) => setStatus(`Invite resent to ${x.name}.`),
+      onRevoke: (x) => {
+        setPeople((l) => l.filter((y) => y.id !== x.id));
+        setStatus(`Invitation to ${x.name} revoked.`);
+        document.getElementById("mb-heading")?.focus();
+      }
+    }
+  )))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, null, status));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

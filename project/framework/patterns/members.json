@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "members",
+  "version": 1,
+  "title": "Members",
+  "intents": [
+    "members",
+    "invite teammates",
+    "invite",
+    "roles",
+    "permissions",
+    "team"
+  ],
+  "purpose": "Invite people, change roles and remove access without misdrawing invitations or breaking ownership.",
+  "useWhen": [
+    "A workspace or account has members with roles, invitations and removal."
+  ],
+  "avoidWhen": [
+    "Sharing a single document with a link; use that product's sharing dialog instead."
+  ],
+  "alternatives": [
+    "Use the settings contract for workspace preferences, and the consequential-action contract for a single removal outside a members list."
+  ],
+  "requiredInputs": [
+    "members and invitations with roles",
+    "the acting person's identity and permissions",
+    "an invite adapter with a result per address",
+    "role-change and removal adapters",
+    "a sentence per role saying what it can do"
+  ],
+  "states": [
+    "ready",
+    "invite-sending",
+    "invitation-settled",
+    "role-pending",
+    "role-committed",
+    "role-failed",
+    "guarded",
+    "confirming-removal",
+    "removal-pending",
+    "removed"
+  ],
+  "transitions": [
+    "ready → invite-sending on Send",
+    "invite-sending → invitation-settled per sent address, with the result said",
+    "ready → role-pending on a role change",
+    "role-pending → role-committed, or role-failed with the role restored",
+    "ready → confirming-removal → removal-pending → removed"
+  ],
+  "rules": [
+    "ALT-MEMBERS-001",
+    "ALT-ACTION-001",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Workspaces or accounts whose members have roles, invitations and removal.",
+  "exceptions": [
+    "Require only states supported by the application; products without invitations skip those states."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/members.md",
+  "implementation": "build/fixtures/patterns/members.jsx",
+  "examples": [
+    "build/fixtures/patterns/members.jsx"
+  ],
+  "verification": [
+    "build/checks/members-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}
