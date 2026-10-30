@@ -7,7 +7,9 @@ const common = `#root { padding: 20px 24px; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .col { display: flex; flex-direction: column; gap: 14px; }
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
-.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }`;
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }`;
 const sections = src.split(/^=== /m).filter((s) => s.trim());
 const names = [];
 for (const sec of sections) {

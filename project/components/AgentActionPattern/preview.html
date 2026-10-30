@@ -11,6 +11,8 @@
 .col { display: flex; flex-direction: column; gap: 14px; }
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
 .ag-page{max-width:680px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:break-word}.ag-ask{justify-self:end;max-width:80%;padding:10px 14px;border-radius:var(--radius-lg);background:var(--surface-raised);box-shadow:var(--elev-1)}.ag-ask p{margin:2px 0 0;font:400 15px/23px var(--font-sans)}.ag-who,.ag-muted{font:500 12.5px/17px var(--font-sans);color:var(--ink-muted)}.ag-muted{margin:0}.ag-demo{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.ag-receipt{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font:400 14px/20px var(--font-sans)}.ag-record{display:grid;gap:6px;padding-top:12px;border-top:1px solid var(--line)}.ag-sub{font:600 17px/24px var(--font-sans);margin:0}.ag-line{margin:0;display:flex;gap:8px;align-items:center;font:400 15px/23px var(--font-sans)}
 </style>
 </head>

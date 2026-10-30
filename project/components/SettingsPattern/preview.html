@@ -11,7 +11,9 @@
 .col { display: flex; flex-direction: column; gap: 14px; }
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
-.st-page{max-width:680px;margin-inline:auto;display:grid;gap:20px;padding-bottom:96px;overflow-wrap:anywhere}.st-h{font:600 21px/28px var(--font-sans);margin:0}.st-nav{display:flex;flex-wrap:wrap;gap:6px 16px;font:500 14px/20px var(--font-sans)}.st-nav a{color:var(--ink-muted)}.st-form{display:grid;gap:16px}.st-page [role="status"]:empty{display:none}
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.st-page{max-width:680px;margin-inline:auto;display:grid;gap:20px;padding-bottom:96px;overflow-wrap:anywhere}.st-h{font:600 21px/28px var(--font-sans);margin:0}.st-nav{display:flex;flex-wrap:wrap;gap:6px 16px;font:500 14px/20px var(--font-sans)}.st-nav a{display:inline-block;padding-block:2px;color:var(--ink-muted)}.st-form{display:grid;gap:16px}.st-page [role="status"]:empty{display:none}
 </style>
 </head>
 <body>

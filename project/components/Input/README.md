@@ -17,6 +17,8 @@ The shadow list is always four layers (wall, occlusion, lip, halo; the halo is u
 
 `Textarea` is the same opening, multi-line and resizable. Give it a `maxLength` and it shows **how full** it is: a faint fill rises from the floor with a waterline at its top, turning `caution` at 90% and `critical` at the limit, with a live count below.
 
+**On touch.** Under a coarse pointer the field steps up to `size-field-md`'s 48px, and the text you type is at least 16px, so iOS Safari never zooms the page when the field is focused. Labels stay 14px. See [Theming](../../Theming.md), "Density and target size".
+
 **You provide:** `placeholder` in `ink-muted` (a hint, never the label), `size` (`sm` 34px, `md` 40px), optional `leading` and `trailing` nodes (16px icons, a `Kbd`, a unit). For Textarea, optional `maxLength` and `showFill={false}` to hide the fill. For either, an optional `suggestion`, `suggestionMode` and `onAcceptSuggestion`. Wrap either in `Field` for a label and messages.
 
 - Do use `Field` rather than a placeholder as the only label.

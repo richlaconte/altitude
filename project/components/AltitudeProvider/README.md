@@ -21,6 +21,8 @@ Modal ownership is coordinated privately per document. A nested themed Dialog ke
 
 Isolation preserves application-owned inertness and restores the original inline scroll style after the last modal exits. Reopening during exit retains the same ownership; route/provider unmount releases it immediately. Applications do not need a competing inert wrapper. The legacy `useAltitude().pushLayer()` helper remains compatible as a visual recession vote with an idempotent release. It does not acquire modal isolation or focus ownership; use Dialog and modal Sheet for those behaviors. `useAltitude()` supplies the nearest portal `host`, and the ownership registry remains private.
 
+**Density.** `density` sets how large controls are. `'auto'` (default) uses the mouse sizes and steps up under a coarse pointer, so controls are big enough to hit with a finger; `'comfortable'` uses the larger sizes everywhere; `'compact'` keeps the mouse sizes on touch. Hit areas reach 44px under a coarse pointer either way. See [Theming](../../Theming.md), "Density and target size".
+
 ## App modes
 
 `mode` marks the whole app as being in a state people must never mistake for the normal app: Stripe-style **test mode**, a support agent **viewing as a customer**, a **read-only** workspace, a **preview** of unpublished content.
