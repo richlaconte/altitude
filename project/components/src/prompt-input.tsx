@@ -7,11 +7,28 @@ import { Tag } from './tag-input';
 
 export type PromptStatus = 'ready' | 'submitted' | 'streaming' | 'error';
 export interface PromptAttachment { id: string; file: File; name: string; status?: 'pending' }
-export interface PromptMessage { text: string; files: File[] }
+export interface PromptMention { id: string; label: string; kind?: 'file' | 'record' | 'person'; description?: string }
+export interface PromptCommand { name: string; description?: string }
+export interface PromptMessage {
+  text: string; files: File[];
+  /** What was pointed at with @ and is still in the text. */
+  mentions?: PromptMention[];
+  /** The command chosen with / at the start, without its slash; it's taken out of `text`. */
+  command?: string;
+}
+type Option = { id: string; label: string; kind: 'file' | 'record' | 'person' | 'command'; description?: string; source: PromptMention | PromptCommand };
+interface Suggest {
+  open: boolean; listId: string; active: number; activeId?: string; enabled: boolean;
+  read: (value: string, caret: number) => void; close: () => void; key: (e: React.KeyboardEvent<HTMLTextAreaElement>) => boolean;
+}
 
 interface Ctx {
   text: string; setText: (t: string) => void; files: PromptAttachment[]; attach: (files: File[]) => void; remove: (id: string) => void;
   status: PromptStatus; submit: () => void; stop: () => void; busy: boolean; pick: () => void; area: React.MutableRefObject<HTMLTextAreaElement | null>;
+  suggest: Suggest;
+  // Dictation (#284): the mic registers how to stop and what's heard so far; the text shows the interim words.
+  dictation: React.MutableRefObject<{ listening: boolean; toggle?: () => void; stop?: () => void }>;
+  interim: string; setInterim: (t: string) => void; say: (t: string) => void;
 }
 const PromptCtx = React.createContext<Ctx | null>(null);
 const usePrompt = (part: string) => { const c = React.useContext(PromptCtx); if (!c) throw new Error(`${part} must be inside <PromptInput>.`); return c; };
@@ -28,6 +45,13 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
    * ConversationQueue and send the first one when the turn ends.
    */
   onQueue?: (message: PromptMessage) => void;
+  /**
+   * Things to point the agent at (#283): typing @ opens a list of what matches, filtered as you type. A chosen one is
+   * "@label" in the text and a plate above it; Backspace after it removes it whole. A promise shows "Searching…".
+   */
+  mentionable?: (query: string) => PromptMention[] | Promise<PromptMention[]>;
+  /** Commands: typing / at the start of an empty composer opens them ("/review"). */
+  commands?: PromptCommand[];
   /** Controlled text. */
   value?: string;
   onValueChange?: (text: string) => void;
@@ -43,7 +67,7 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
  * response is generating it becomes Stop in the same slot and size, so nothing moves. Enter sends, Shift+Enter adds a
  * line, and Enter during IME composition never sends.
  */
-export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, value, onValueChange, onAttach, accept, className, children, ...rest }: PromptInputProps) {
+export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, mentionable, commands, value, onValueChange, onAttach, accept, className, children, ...rest }: PromptInputProps) {
   useApproach(); useKeyFocus();
   const [own, setOwn] = React.useState('');
   const text = value ?? own;
@@ -68,19 +92,103 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, value
       () => setFiles((xs) => xs.map((x) => (added.some((a) => a.id === x.id) ? { ...x, status: undefined } : x))),
       () => { setFiles((xs) => xs.filter((x) => !added.some((a) => a.id === x.id))); setSaid(`Couldn't attach ${list.length === 1 ? list[0].name : `${list.length} files`}.`); });
   };
+  // @ mentions and / commands (#283): the query at the caret, its options, what's been chosen.
+  const listId = `${React.useId().replace(/:/g, '')}-suggest`;
+  const [query, setQuery] = React.useState<{ kind: '@' | '/'; q: string; at: number } | null>(null);
+  const [found, setFound] = React.useState<PromptMention[] | null>([]);
+  const [active, setActive] = React.useState(0);
+  const [chosen, setChosen] = React.useState<PromptMention[]>([]);
+  const [command, setCommand] = React.useState<string | null>(null);
+  const asked = React.useRef(0);
+  React.useEffect(() => {
+    if (query?.kind !== '@' || !mentionable) return;
+    const n = ++asked.current;
+    const r = mentionable(query.q);
+    if (r && typeof (r as Promise<PromptMention[]>).then === 'function') { setFound(null); (r as Promise<PromptMention[]>).then((xs) => { if (n === asked.current) setFound(xs); }, () => { if (n === asked.current) setFound([]); }); }
+    else setFound(r as PromptMention[]);
+  }, [query?.kind, query?.q]); // eslint-disable-line react-hooks/exhaustive-deps
+  const options: Option[] = !query ? [] : query.kind === '/'
+    ? (commands ?? []).map((c) => ({ c, s: c.name.toLowerCase().startsWith(query.q.toLowerCase()) ? 0 : c.name.toLowerCase().includes(query.q.toLowerCase()) ? 1 : 2 }))
+      .filter((x) => x.s < 2).sort((a, b) => a.s - b.s).map(({ c }) => ({ id: `cmd-${c.name}`, label: `/${c.name}`, kind: 'command' as const, description: c.description, source: c }))
+    : (found ?? []).slice(0, 8).map((m) => ({ id: `m-${m.id}`, label: m.label, kind: m.kind ?? 'record', description: m.description, source: m }));
+  const searching = query?.kind === '@' && found === null;
+  const listOpen = !!query && (options.length > 0 || searching);
+  const read = (v: string, caret: number) => {
+    const before = v.slice(0, caret);
+    let m: RegExpExecArray | null;
+    if (commands?.length && (m = /^\/([\w-]*)$/.exec(before)) && !v.includes('\n')) setQuery({ kind: '/', q: m[1], at: 0 });
+    else if (mentionable && (m = /(^|\s)@([^\s@]*)$/u.exec(before))) setQuery({ kind: '@', q: m[2], at: caret - m[2].length - 1 });
+    else setQuery(null);
+    setActive(0);
+    // What's no longer in the text is no longer chosen.
+    setChosen((cs) => cs.filter((x) => v.includes(`@${x.label}`)));
+    setCommand((c) => (c && v.startsWith(`/${c}`) ? c : null));
+  };
+  const caretTo = (pos: number) => requestAnimationFrame(() => { area.current?.focus(); area.current?.setSelectionRange(pos, pos); });
+  const choose = (o: Option) => {
+    if (!query) return;
+    const caret = area.current?.selectionStart ?? text.length;
+    if (o.kind === 'command') {
+      const name = (o.source as PromptCommand).name, rest = text.slice(caret).replace(/^\s+/, '');
+      setText(`/${name} ${rest}`); setCommand(name); caretTo(name.length + 2);
+    } else {
+      const m = o.source as PromptMention;
+      setText(`${text.slice(0, query.at)}@${m.label} ${text.slice(caret)}`); setChosen((cs) => (cs.some((x) => x.id === m.id) ? cs : [...cs, m]));
+      caretTo(query.at + m.label.length + 2);
+    }
+    setQuery(null);
+  };
+  // Takes a mention or command out of the text whole.
+  const unmention = (token: string, after = false) => {
+    const at = text.indexOf(token);
+    if (at < 0) return;
+    const end = at + token.length + (text[at + token.length] === ' ' ? 1 : 0);
+    setText(text.slice(0, at) + text.slice(end));
+    setChosen((cs) => cs.filter((x) => `@${x.label}` !== token));
+    if (token.startsWith('/')) setCommand(null);
+    if (after) caretTo(at);
+  };
+  const key = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return false;
+    if (listOpen) {
+      if (e.key === 'ArrowDown' && options.length) { e.preventDefault(); setActive((a) => (a + 1) % options.length); return true; }
+      if (e.key === 'ArrowUp' && options.length) { e.preventDefault(); setActive((a) => (a - 1 + options.length) % options.length); return true; }
+      if ((e.key === 'Enter' || e.key === 'Tab') && options[active]) { e.preventDefault(); choose(options[active]); return true; }
+      // The first Escape closes the list; only a second one stops generating.
+      if (e.key === 'Escape') { e.preventDefault(); setQuery(null); return true; }
+    }
+    if (e.key === 'Backspace') {
+      const el = e.currentTarget;
+      if (el.selectionStart !== el.selectionEnd) return false;
+      const before = text.slice(0, el.selectionStart);
+      const tokens = [...chosen.map((x) => `@${x.label}`), ...(command ? [`/${command}`] : [])];
+      const hit = tokens.find((t) => before.endsWith(t) || before.endsWith(`${t} `));
+      if (hit) { e.preventDefault(); unmention(hit, true); return true; }
+    }
+    return false;
+  };
+  const dictation = React.useRef<{ listening: boolean; toggle?: () => void; stop?: () => void }>({ listening: false });
+  const [interim, setInterim] = React.useState('');
+  const suggest: Suggest = { open: listOpen, listId, active, activeId: listOpen && options[active] ? `${listId}-${options[active].id}` : undefined, enabled: !!(mentionable || commands?.length), read, close: () => setQuery(null), key };
   const remove = (id: string) => { const f = files.find((x) => x.id === id); setFiles((xs) => xs.filter((x) => x.id !== id)); if (f) setSaid(`${f.name} removed.`); area.current?.focus(); };
   const ready = !!text.trim() && !files.some((f) => f.status === 'pending');
+  const message = (): PromptMessage => {
+    const body = command ? text.replace(new RegExp(`^/${command}\\s*`), '') : text;
+    const mentions = chosen.filter((x) => body.includes(`@${x.label}`));
+    return { text: body.trim(), files: files.map((f) => f.file), ...(mentions.length ? { mentions } : {}), ...(command ? { command } : {}) };
+  };
+  const clear = () => { setText(''); setFiles([]); setChosen([]); setCommand(null); setQuery(null); };
   const submit = () => {
     if (!ready || (busy && !onQueue)) return;
     if (busy) {
-      onQueue!({ text: text.trim(), files: files.map((f) => f.file) });
-      setText(''); setFiles([]);
+      onQueue!(message());
+      clear();
       setSaid('Message queued. It will be sent when the assistant finishes.');
       area.current?.focus();
       return;
     }
-    onSubmit({ text: text.trim(), files: files.map((f) => f.file) });
-    setText(''); setFiles([]);
+    onSubmit(message());
+    clear();
     area.current?.focus();
   };
   const stop = () => { if (!busy) return; onStop?.(); setSaid('Generating stopped.'); area.current?.focus(); };
@@ -88,13 +196,41 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, value
   const hasFiles = (e: React.DragEvent) => accept !== undefined && [...e.dataTransfer.types].includes('Files');
 
   return (
-    <PromptCtx.Provider value={{ text, setText, files, attach, remove, status, submit, stop, busy, pick, area }}>
+    <PromptCtx.Provider value={{ text, setText, files, attach, remove, status, submit, stop, busy, pick, area, suggest, dictation, interim, setInterim, say: setSaid }}>
       <form {...rest} className={cx('alt-prompt', className)} data-status={status} onSubmit={(e) => { e.preventDefault(); submit(); }}
         onDragEnter={(e) => { if (hasFiles(e)) { e.preventDefault(); setOver(true); } }}
         onDragOver={(e) => { if (hasFiles(e)) e.preventDefault(); }}
         onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(false); }}
         onDrop={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(false); attach([...e.dataTransfer.files]); }}>
+        {listOpen && (
+          <div id={listId} role="listbox" aria-label={query?.kind === '/' ? 'Commands' : 'Mention'} className="alt-pop alt-prompt-suggest" data-state="open" data-side="top" data-align="start" aria-busy={searching || undefined}>
+            {searching ? <p className="alt-prompt-searching"><span className="alt-skeleton" data-shape="text" aria-hidden="true" />Searching…</p>
+              : (['command', 'file', 'record', 'person'] as const).map((kind) => {
+                const group = options.filter((o) => o.kind === kind);
+                if (!group.length) return null;
+                const name = { command: 'Commands', file: 'Files', record: 'Records', person: 'People' }[kind];
+                return (
+                  <div key={kind} role="group" aria-label={name}>
+                    <p className="alt-prompt-suggest-head" aria-hidden="true">{name}</p>
+                    {group.map((o) => { const i = options.indexOf(o); return (
+                      <div key={o.id} id={`${listId}-${o.id}`} role="option" aria-selected={i === active} className="alt-prompt-option" data-active={i === active ? '' : undefined}
+                        onMouseDown={(e) => e.preventDefault()} onClick={() => choose(o)} onPointerMove={() => setActive(i)}>
+                        <span className="alt-prompt-option-label" data-kind={o.kind}>{o.label}</span>
+                        {o.description && <span className="alt-prompt-option-desc">{o.description}</span>}
+                      </div>
+                    ); })}
+                  </div>
+                );
+              })}
+          </div>
+        )}
         <div className="alt-input alt-prompt-well" data-multiline="" data-approach="56" data-drop={over ? 'over' : undefined}>
+          {(chosen.length > 0 || command) && (
+            <div className="alt-prompt-context" role="group" aria-label="Context">
+              {command && <Tag className="alt-prompt-command" label={`/${command}`} onRemove={() => unmention(`/${command}`)}>/{command}</Tag>}
+              {chosen.map((m) => <Tag key={m.id} label={m.label} onRemove={() => unmention(`@${m.label}`)}><span className="alt-prompt-kind" data-kind={m.kind ?? 'record'} aria-hidden="true" />{m.label}</Tag>)}
+            </div>
+          )}
           {children}
           {over && <span className="alt-prompt-drop" aria-hidden="true">Drop to attach</span>}
         </div>
@@ -120,18 +256,27 @@ export function PromptInputTextarea({ placeholder = 'Ask anything', maxHeight = 
   }, [c.area, maxHeight]);
   React.useLayoutEffect(grow, [c.text, grow]);
   return (
+    <>
     <textarea ref={c.area} rows={1} value={c.text} placeholder={placeholder} aria-label={label ?? (rest['aria-labelledby'] ? undefined : 'Message')} className={cx('alt-prompt-text', className)}
-      aria-keyshortcuts="Enter" {...rest}
-      onChange={(e) => c.setText(e.target.value)}
+      aria-keyshortcuts="Enter"
+      {...(c.suggest.enabled ? { role: 'combobox', 'aria-autocomplete': 'list' as const, 'aria-expanded': c.suggest.open, 'aria-controls': c.suggest.open ? c.suggest.listId : undefined, 'aria-activedescendant': c.suggest.activeId } : {})}
+      {...rest}
+      onChange={(e) => { c.setText(e.target.value); c.suggest.read(e.target.value, e.target.selectionStart); }}
+      onBlur={(e) => { rest.onBlur?.(e); setTimeout(c.suggest.close, 150); }}
       onPaste={(e) => { const fs = [...e.clipboardData.files]; if (fs.length) { e.preventDefault(); c.attach(fs); } }}
       onKeyDown={(e) => {
         onKeyDown?.(e);
-        if (e.defaultPrevented) return;
+        if (e.defaultPrevented || c.suggest.key(e)) return;
+        // Escape stops listening before it stops generating; ⌘D / Ctrl+D toggles dictation.
+        if (e.key === 'Escape' && c.dictation.current.listening) { e.preventDefault(); c.dictation.current.stop?.(); return; }
+        if (e.key.toLowerCase() === 'd' && (e.metaKey || e.ctrlKey) && c.dictation.current.toggle) { e.preventDefault(); c.dictation.current.toggle(); return; }
         // Enter while an IME is composing (Japanese, Chinese, Korean input) confirms the composition; it must never send.
         if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) { e.preventDefault(); c.submit(); }
         else if (e.key === 'Escape' && c.busy) { e.preventDefault(); c.stop(); }
         else if (e.key.toLowerCase() === 'u' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); c.pick(); }
       }} />
+    {c.interim && <p className="alt-prompt-interim" aria-hidden="true">{c.interim}</p>}
+    </>
   );
 }
 
@@ -157,6 +302,56 @@ export function PromptInputToolbar({ className, children }: { className?: string
 export function PromptInputAttach({ label = 'Attach files' }: { label?: string }) {
   const c = usePrompt('PromptInputAttach');
   return <Button size="sm" variant="ghost" square aria-label={label} aria-keyshortcuts="Meta+U Control+U" onClick={c.pick}><Icons.Paperclip size={16} /></Button>;
+}
+
+export interface PromptInputDictateProps {
+  /** Default 'idle'. 'denied' and 'unavailable' keep the button focusable and say why it can't listen. */
+  status?: 'idle' | 'listening' | 'denied' | 'unavailable';
+  onStart?: () => void;
+  onStop?: () => void;
+  /** Words heard but not final: a ghost under the text in ink-faint, never in the value. */
+  interim?: string;
+  /** Final words to insert at the caret; give each result a new id. */
+  final?: { id: string | number; text: string };
+  /** Default "Dictate". */
+  label?: string;
+}
+const Mic = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>;
+/**
+ * Dictate a message (#284): a latched toggle. Listening is the Toggle's "on": a shallow well with accent-soft poured
+ * in, "Listening" and a steady lamp, with no pulse and no waveform. Interim words are a ghost like a suggestion; final
+ * words land at the caret. Blocked or unavailable stays focusable and says why. ⌘D / Ctrl+D toggles; Escape stops
+ * listening before it stops generating. Your app supplies the speech recognition.
+ */
+export function PromptInputDictate({ status = 'idle', onStart, onStop, interim, final, label = 'Dictate' }: PromptInputDictateProps) {
+  const c = usePrompt('PromptInputDictate');
+  const listening = status === 'listening';
+  const blocked = status === 'denied' || status === 'unavailable';
+  const why = status === 'denied' ? "Microphone blocked. Allow it in your browser's site settings." : 'Dictation isn\'t available in this browser.';
+  const toggle = () => { if (blocked) { c.say(why); return; } if (listening) onStop?.(); else onStart?.(); };
+  c.dictation.current = { listening, toggle, stop: onStop };
+  React.useEffect(() => () => { c.dictation.current = { listening: false }; c.setInterim(''); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { c.setInterim(listening ? interim ?? '' : ''); }, [interim, listening]); // eslint-disable-line react-hooks/exhaustive-deps
+  const said = React.useRef(listening);
+  React.useEffect(() => { if (said.current !== listening) c.say(listening ? 'Listening' : 'Stopped listening'); said.current = listening; }, [listening]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Final words go in at the caret, with a space where they meet other words.
+  const seen = React.useRef(final?.id);
+  React.useEffect(() => {
+    if (!final || final.id === seen.current) return;
+    seen.current = final.id;
+    const el = c.area.current, at = el ? el.selectionStart : c.text.length, end = el ? el.selectionEnd : at;
+    const before = c.text.slice(0, at), after = c.text.slice(end);
+    const add = (before && !/\s$/.test(before) ? ' ' : '') + final.text.trim() + (after && !/^\s/.test(after) ? ' ' : '');
+    c.setText(before + add + after);
+    requestAnimationFrame(() => { const pos = before.length + add.length; c.area.current?.setSelectionRange(pos, pos); });
+  }, [final?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <Button size="sm" variant="ghost" className="alt-prompt-dictate" data-listening={listening ? '' : undefined} data-blocked={blocked ? '' : undefined}
+      aria-pressed={blocked ? undefined : listening} aria-disabled={blocked || undefined} aria-label={listening ? `${label}: listening` : label} title={blocked ? why : undefined}
+      aria-keyshortcuts="Meta+D Control+D" onClick={toggle}>
+      <Mic />{listening && <span className="alt-prompt-listening"><span className="alt-prompt-lamp" aria-hidden="true" />Listening</span>}
+    </Button>
+  );
 }
 
 /** Send, which becomes Stop in the same slot and size while a response is generating. */

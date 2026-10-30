@@ -3053,6 +3053,9 @@ export declare function SyncIndicator(props: SyncIndicatorProps): React.ReactEle
 /** Line operations for two texts. */
 export declare function diffLines(before: string, after: string): { kind: 'same' | 'add' | 'del'; text: string }[];
 export interface DiffField { key: string; label: string; format?: (value: unknown) => React.ReactNode }
+export type DiffDecision = 'accept' | 'reject';
+/** The changes in a list of line operations, with their ids ("change-1") and lines. */
+export declare function diffChanges(ops: { kind: 'same' | 'add' | 'del'; text: string }[]): { id: string; n: number; from: number; to: number; label: string }[];
 export interface DiffViewProps {
   /** 'text' (default): lines of two texts. 'properties': fields of two records. */
   mode?: 'text' | 'properties';
@@ -3066,6 +3069,12 @@ export interface DiffViewProps {
   caption?: React.ReactNode;
   /** Precomputed line operations, for large inputs. */
   hunks?: { kind: 'same' | 'add' | 'del'; text: string }[];
+  /** Review each change (text mode): raised while undecided with Accept and Reject; header Accept all, Reject all and a count; n/p move between undecided. */
+  review?: boolean;
+  /** Decisions by change id ("change-1", in order). */
+  decisions?: Record<string, DiffDecision>;
+  onDecide?: (changeId: string, decision: DiffDecision) => void;
+  onDecideAll?: (decision: DiffDecision) => void;
   className?: string;
 }
 /** What changed between two versions, in signs and words; flush on the ground, never colour alone. */
@@ -3217,7 +3226,16 @@ export declare function Tour(props: TourProps): React.ReactElement | null;
 
 export type PromptStatus = 'ready' | 'submitted' | 'streaming' | 'error';
 export interface PromptAttachment { id: string; file: File; name: string; status?: 'pending' }
-export interface PromptMessage { text: string; files: File[] }
+export interface PromptMention { id: string; label: string; kind?: 'file' | 'record' | 'person'; description?: string }
+export interface PromptCommand { name: string; description?: string }
+export interface PromptMessage {
+  text: string;
+  files: File[];
+  /** What was pointed at with @ and is still in the text. */
+  mentions?: PromptMention[];
+  /** The command chosen with /, without its slash; taken out of text. */
+  command?: string;
+}
 export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
   /** Called with the text and attached files when sent. */
   onSubmit: (message: PromptMessage) => void;
@@ -3225,6 +3243,10 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
   status?: PromptStatus;
   onStop?: () => void;
   /** Enter while 'submitted' or 'streaming' queues the message instead of doing nothing; the button stays Stop. Show the queue with ConversationQueue. */
+  /** @ opens a list of matches; a chosen one is "@label" in the text and a plate above it. A promise shows "Searching…". */
+  mentionable?: (query: string) => PromptMention[] | Promise<PromptMention[]>;
+  /** / at the start of an empty composer opens these. */
+  commands?: PromptCommand[];
   onQueue?: (message: PromptMessage) => void;
   value?: string;
   onValueChange?: (text: string) => void;
@@ -3245,6 +3267,19 @@ export declare function PromptInputAttachments(props: { className?: string }): R
 export declare function PromptInputToolbar(props: { className?: string; children?: React.ReactNode }): React.ReactElement;
 export declare function PromptInputAttach(props: { label?: string }): React.ReactElement;
 export declare function PromptInputSubmit(props: { className?: string }): React.ReactElement;
+export interface PromptInputDictateProps {
+  /** Default 'idle'. 'denied' and 'unavailable' stay focusable and say why. */
+  status?: 'idle' | 'listening' | 'denied' | 'unavailable';
+  onStart?: () => void;
+  onStop?: () => void;
+  /** Words heard but not final: a ghost under the text, never in the value. */
+  interim?: string;
+  /** Final words to insert at the caret; a new id each result. */
+  final?: { id: string | number; text: string };
+  label?: string;
+}
+/** Dictate: a latched toggle ("Listening", a steady lamp, no pulse); ⌘D / Ctrl+D toggles; Escape stops listening first. */
+export declare function PromptInputDictate(props: PromptInputDictateProps): React.ReactElement;
 
 export interface ConversationProps extends React.HTMLAttributes<HTMLDivElement> { 'aria-label': string }
 /** The thread between a person and an assistant: a log that follows to the bottom and announces answers once, when complete. */
@@ -3343,6 +3378,12 @@ export interface ConfirmationProps {
   resolvedAt?: Date | string | number;
   /** Who's asking. Default "The assistant". */
   requestedBy?: string;
+  /** Fields to change the proposal before approving: an Edit action opens them in place. Keep consequence and approveLabel following the values. */
+  edit?: React.ReactNode;
+  /** The proposal was changed: "Edited" by the title, "edited and approved by you" once done. */
+  edited?: boolean;
+  /** Cancel edit or Escape: put the values back. */
+  onEditCancel?: () => void;
   /** Wider ways to approve: Approve becomes a SplitButton (face: once; menu "More ways to approve": these). Ignored with escalate. */
   scopes?: { value: string; label: string; description?: string }[];
   /** The scope it was approved with ('once' or a scope's value), named in the resolved line. */
@@ -3438,6 +3479,63 @@ export declare function InlineCitation(props: InlineCitationProps): React.ReactE
 export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
+export type ArtifactStatus = 'writing' | 'complete' | 'failed';
+export interface ArtifactProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  title: string;
+  /** Default 'complete'. */
+  status?: ArtifactStatus;
+  /** The latest version's number. */
+  version?: number;
+  onRetry?: () => void;
+  id?: string;
+}
+export interface ArtifactHeaderProps { onCopy?: boolean | (() => string); onDownload?: () => void; onOpen?: () => void; onClose?: () => void; children?: React.ReactNode }
+export interface ArtifactVersionsProps { versions: number; current: number; onChange: (version: number) => void; onRestore?: (version: number) => void }
+export interface ArtifactContentProps { views: { preview?: React.ReactNode; source?: React.ReactNode; changes?: React.ReactNode }; defaultView?: 'preview' | 'source' | 'changes' }
+export interface ArtifactReferenceProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> { title: string; version?: number; status?: ArtifactStatus; controls: string; onOpen: () => void }
+/** What an agent is making, in a pane beside the conversation, with its versions. */
+export declare function Artifact(props: ArtifactProps): React.ReactElement;
+export declare function ArtifactHeader(props: ArtifactHeaderProps): React.ReactElement;
+export declare function ArtifactVersions(props: ArtifactVersionsProps): React.ReactElement | null;
+export declare function ArtifactContent(props: ArtifactContentProps): React.ReactElement;
+/** The plate in a message that opens the pane and focuses its heading. */
+export declare function ArtifactReference(props: ArtifactReferenceProps): React.ReactElement;
+export type ThreadStatus = 'idle' | 'working' | 'needs-input' | 'failed' | 'stopped';
+export interface ThreadListProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
+  /** A search field; ⌘K / Ctrl+K focuses it. */
+  searchable?: boolean;
+  onSearch?: (query: string) => void;
+  searchLabel?: string;
+  children: React.ReactNode;
+}
+export interface ThreadListGroupProps { label: string; children: React.ReactNode; className?: string }
+export interface ThreadListItemProps {
+  href: string;
+  title: string;
+  updatedAt: Date | string | number;
+  /** Default 'idle'. */
+  status?: ThreadStatus;
+  /** For 'needs-input'. Default 'approval'. */
+  needs?: 'approval' | 'question';
+  unread?: boolean;
+  current?: boolean;
+  onSelect?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  /** Rename in place (F2 or the row menu). */
+  onRename?: (title: string) => void;
+  /** Delete (Delete key or the row menu): a receipt with Undo. Drop the thread in onDeleted. */
+  onDelete?: () => void;
+  onUndoDelete?: () => void;
+  onDeleted?: () => void;
+  onArchive?: () => void;
+  className?: string;
+}
+/** Conversations beside the thread, each saying its state in words; built from Sidebar's parts. */
+export declare function ThreadList(props: ThreadListProps): React.ReactElement;
+export declare function ThreadListGroup(props: ThreadListGroupProps): React.ReactElement;
+export declare function ThreadListItem(props: ThreadListItemProps): React.ReactElement | null;
+export declare function ThreadListNew(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }): React.ReactElement;
+/** Today, Yesterday, Previous 7 days, Previous 30 days, then by month. */
+export declare function groupByDate<T>(threads: T[], getDate: (t: T) => Date | string | number, now?: Date | number, locale?: string): { label: string; threads: T[] }[];
 export type QuestionState = 'asking' | 'answered' | 'expired';
 export interface QuestionAnswer { values: string[]; other?: string }
 export interface QuestionOptionProps { value: string; label: React.ReactNode; description?: React.ReactNode }
@@ -3613,20 +3711,22 @@ declare global {
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
+      Artifact: typeof Artifact; ArtifactHeader: typeof ArtifactHeader; ArtifactVersions: typeof ArtifactVersions; ArtifactContent: typeof ArtifactContent; ArtifactReference: typeof ArtifactReference;
+      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
       Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; ConversationCheckpoint: typeof ConversationCheckpoint; MessageActions: typeof MessageActions;
-      PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
+      PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit; PromptInputDictate: typeof PromptInputDictate;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;
       FeatureGate: typeof FeatureGate;
       PlanPicker: typeof PlanPicker;
       PermissionMatrix: typeof PermissionMatrix;
       SaveBar: typeof SaveBar;
-      DiffView: typeof DiffView; diffLines: typeof diffLines;
+      DiffView: typeof DiffView; diffChanges: typeof diffChanges; diffLines: typeof diffLines;
       SyncIndicator: typeof SyncIndicator;
       NotificationCenter: typeof NotificationCenter; NotificationList: typeof NotificationList;
       Timeline: typeof Timeline; TimelineItem: typeof TimelineItem;

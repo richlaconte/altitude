@@ -1,0 +1,72 @@
+<!-- @dsCard group="Layout" height=640 subtitle="Conversations with an assistant beside the thread, the ones still working said in words" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ThreadList — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.tl { height: 600px; max-width: 760px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.tl .page { padding: 24px; color: var(--ink-muted); font: 400 14px/20px var(--font-sans); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const now = Date.now(), min = 6e4, day = 864e5;
+const seed = [
+  { id: "a", title: "Q3 pricing comparison", at: now - 2 * min, status: "needs-input", needs: "approval" },
+  { id: "b", title: "Refactor the billing module", at: now - 9 * min, status: "working" },
+  { id: "c", title: "Summarise incident #4821", at: now - 40 * min, unread: true },
+  { id: "d", title: "Draft the release note", at: now - day - 3 * 36e5 },
+  { id: "e", title: "Migrate the users table", at: now - day - 5 * 36e5, status: "failed" },
+  { id: "f", title: "Onboarding email ideas", at: now - 4 * day },
+  { id: "g", title: "Competitor research", at: now - 12 * day, status: "stopped" }
+];
+function App() {
+  const [threads, setThreads] = React.useState(seed);
+  const [at, setAt] = React.useState("b");
+  const [q, setQ] = React.useState("");
+  const shown = threads.filter((t) => t.title.toLowerCase().includes(q.toLowerCase()));
+  const set = (id, patch) => setThreads((ts) => ts.map((t) => t.id === id ? { ...t, ...patch } : t));
+  return /* @__PURE__ */ React.createElement("div", { className: "tl" }, /* @__PURE__ */ React.createElement(A.AppShell, { sidebar: /* @__PURE__ */ React.createElement(A.Sidebar, { "aria-label": "Conversations" }, /* @__PURE__ */ React.createElement(A.SidebarHeader, null, /* @__PURE__ */ React.createElement(A.ThreadListNew, { onClick: () => {
+    const id = String(Date.now());
+    setThreads((ts) => [{ id, title: "New conversation", at: Date.now() }, ...ts]);
+    setAt(id);
+  } })), /* @__PURE__ */ React.createElement(A.SidebarContent, null, /* @__PURE__ */ React.createElement(A.ThreadList, { searchable: true, onSearch: setQ }, A.groupByDate(shown, (t) => t.at, now).map((g) => /* @__PURE__ */ React.createElement(A.ThreadListGroup, { key: g.label, label: g.label }, g.threads.map((t) => /* @__PURE__ */ React.createElement(
+    A.ThreadListItem,
+    {
+      key: t.id,
+      href: "#/c/" + t.id,
+      title: t.title,
+      updatedAt: t.at,
+      status: t.status,
+      needs: t.needs,
+      unread: t.unread,
+      current: t.id === at,
+      onSelect: (e) => {
+        e.preventDefault();
+        setAt(t.id);
+        set(t.id, { unread: false });
+      },
+      onRename: (title) => set(t.id, { title }),
+      onDelete: () => {
+      },
+      onUndoDelete: () => {
+      },
+      onDeleted: () => setThreads((ts) => ts.filter((x) => x.id !== t.id))
+    }
+  ))))))) }, /* @__PURE__ */ React.createElement("div", { className: "page" }, "The conversation \u201C", threads.find((t) => t.id === at)?.title, "\u201D is open here.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

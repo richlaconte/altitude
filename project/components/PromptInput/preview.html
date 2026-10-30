@@ -1,4 +1,4 @@
-<!-- @dsCard group="Inputs" height=420 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
+<!-- @dsCard group="Inputs" height=840 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -20,6 +20,49 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 <div id="root"></div>
 <script>
 var A = window.Altitude;
+const context = [
+  { id: "f1", label: "pricing.ts", kind: "file", description: "src/pricing.ts" },
+  { id: "f2", label: "plans.test.ts", kind: "file", description: "src/plans.test.ts" },
+  { id: "r1", label: "Q3 report", kind: "record", description: "Shared by Maya, 2 days ago" },
+  { id: "p1", label: "Maya Chen", kind: "person", description: "Billing team" }
+];
+function Pointed() {
+  const [sent, setSent] = React.useState("");
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(
+    A.PromptInput,
+    {
+      onSubmit: ({ text, mentions, command }) => setSent(`${command ? `/${command} \xB7 ` : ""}${text}${mentions ? ` \xB7 context: ${mentions.map((m) => m.label).join(", ")}` : ""}`),
+      mentionable: (q) => new Promise((r) => setTimeout(() => r(context.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()))), 250)),
+      commands: [{ name: "review", description: "Review the current changes" }, { name: "compact", description: "Summarise the conversation so far" }, { name: "clear", description: "Start a new conversation" }]
+    },
+    /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "@ to add context, / for commands" }),
+    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, sent ? `Sent: ${sent}` : "Type @ to point at a file, record or person, or / at the start for a command."));
+}
+function Dictated() {
+  const [status, setStatus] = React.useState("idle");
+  const [interim, setInterim] = React.useState("");
+  const [final, setFinal] = React.useState();
+  const timers = React.useRef([]);
+  const start = () => {
+    setStatus("listening");
+    const words = "Summarise the open risks and who owns each one".split(" ");
+    words.forEach((_, k) => timers.current.push(setTimeout(() => setInterim(words.slice(0, k + 1).join(" ")), 180 * (k + 1))));
+    timers.current.push(setTimeout(() => {
+      setFinal({ id: Date.now(), text: words.join(" ") + "." });
+      setInterim("");
+      setStatus("idle");
+    }, 180 * words.length + 400));
+  };
+  const stop = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+    setInterim("");
+    setStatus("idle");
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.PromptInput, { onSubmit: () => {
+  } }, /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Type, or press the microphone and speak" }), /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputDictate, { status, interim, final, onStart: start, onStop: stop }), /* @__PURE__ */ React.createElement(A.PromptInputDictate, { status: "denied", label: "Dictate (blocked example)" }), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))));
+}
 function App() {
   const [status, setStatus] = React.useState("ready");
   const [last, setLast] = React.useState("");
@@ -47,7 +90,7 @@ function App() {
     /* @__PURE__ */ React.createElement(A.PromptInputAttachments, null),
     /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask about this workspace" }),
     /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputAttach, null), /* @__PURE__ */ React.createElement(A.Select, { size: "sm", "aria-label": "Model", defaultValue: "opus", items: [{ value: "opus", label: "Opus 5.5" }, { value: "sonnet", label: "Sonnet 5.5" }, { value: "haiku", label: "Haiku 5.5" }] }), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
-  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, status === "ready" ? last || "Enter sends, Shift+Enter adds a line. Paste or drop a file to attach it." : status === "submitted" ? "Sending\u2026" : "Generating\u2026 Escape or Stop ends it."));
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, status === "ready" ? last || "Enter sends, Shift+Enter adds a line. Paste or drop a file to attach it." : status === "submitted" ? "Sending\u2026" : "Generating\u2026 Escape or Stop ends it."), /* @__PURE__ */ React.createElement(Pointed, null), /* @__PURE__ */ React.createElement(Dictated, null));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

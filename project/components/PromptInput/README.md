@@ -16,6 +16,10 @@ Where a person writes to an assistant or agent: a textarea that grows, attachmen
 
 **Queueing.** With `onQueue`, Enter while the agent works queues the message instead of doing nothing: the button stays Stop, the composer empties and keeps focus, and "Message queued. It will be sent when the assistant finishes." is announced. Show the queue with `ConversationQueue`, and send the first one when the turn ends.
 
+**Context and commands.** With `mentionable(query)`, typing @ opens a list of matches above the composer, grouped by kind (Files, Records, People), ranked as you return them; a promise shows "Searching…". Choosing one puts "@label" in the text and a plate in the composer's context row; Backspace right after it removes it whole, and its plate's remove button does the same. With `commands`, / at the start of an empty composer lists them (best match first). `onSubmit` gets `mentions` and `command` separately; the command is taken out of `text`. The text is a combobox (arrows, Enter or Tab to choose); while generating, the first Escape closes the list and only a second one stops. IME composition never opens or drives it.
+
+**Dictation.** `PromptInputDictate` (in the toolbar) is a microphone toggle; your app supplies the speech recognition (the Web Speech API or a server transcriber) and passes `status`, `interim` and `final`. Listening is latched like a Toggle that's on (a shallow well with accent-soft poured in) with "Listening" and a steady lamp: no pulse, no waveform. Interim words are a ghost under the text in `ink-faint`, like a suggestion, never in the value; `final` words go in at the caret. ⌘D / Ctrl+D toggles from the text; Escape stops listening before it stops generating. "Listening" and "Stopped listening" are announced; interim words aren't. Blocked or unavailable stays focusable and says why.
+
 **You provide:** sending, stopping, uploading, and the `status` of the response. Leave out `accept` and there are no attachments.
 
 ```tsx

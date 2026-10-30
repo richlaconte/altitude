@@ -1437,6 +1437,66 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 .alt-sidebar-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-sidebar-icon { display: inline-flex; flex: none; width: 20px; justify-content: center; }
 .alt-sidebar-text { overflow: hidden; text-overflow: ellipsis; transition: opacity var(--dur-travel-2) var(--ease-rise); }
+/* Artifact (#271): what an agent is making, in a pane on the ground beside the conversation. Being written isn't the
+   record yet: a dashed line-control rule at the pane's edge; complete goes solid with one afterglow; failed, critical.
+   Viewing an earlier version is a mode, so it's a flush strip with a line-control border, not a lift. The reference in
+   a message is a plate that acts. */
+.alt-artifact { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%; background: var(--surface-ground); border-left: 2px solid var(--line); outline: none; }
+.alt-artifact[data-status="writing"] { border-left-style: dashed; border-left-color: var(--line-control); }
+.alt-artifact[data-status="failed"] { border-left-color: var(--critical); }
+.alt-artifact-head { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-3) var(--space-2) var(--space-4); border-bottom: 1px solid var(--line); }
+.alt-artifact-titles { flex: 1; min-width: 0; }
+.alt-artifact-title { margin: 0; font: 600 15px/21px var(--font-sans); color: var(--ink); overflow-wrap: anywhere; outline: none; }
+.alt-artifact-title:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-sm); }
+.alt-artifact-state { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-artifact-state[data-tone="critical"] { color: var(--critical); }
+.alt-artifact-tools { display: inline-flex; gap: 2px; }
+.alt-artifact-versions { display: flex; align-items: center; gap: 2px; padding: 4px var(--space-3); }
+.alt-artifact-version { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-artifact-earlier { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: 6px var(--space-3) 6px var(--space-4); border-block: 1px solid var(--line-control); font: 500 13px/18px var(--font-sans); color: var(--ink); }
+.alt-artifact-earlier > span { margin-right: auto; }
+.alt-artifact-views { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.alt-artifact-views > .alt-tabs-list { align-self: flex-start; margin: var(--space-2) var(--space-3); }
+.alt-artifact-body { flex: 1; min-height: 0; overflow: auto; padding: var(--space-3); animation: alt-fade-in var(--dur-travel-1) var(--ease-rise) both; }
+.alt-artifact-body iframe { display: block; width: 100%; height: 100%; min-height: 280px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-ground); }
+.alt-artifact-ref { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 8px 12px 8px 10px; border: 0; border-radius: var(--radius-md); text-align: left; cursor: pointer;
+  background: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 9%, transparent); color: var(--ink);
+  transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise); }
+@media (hover: hover) { .alt-artifact-ref:hover { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); } }
+.alt-artifact-ref:active { transform: none; box-shadow: none; transition-duration: var(--dur-press); }
+.alt-artifact-ref:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-artifact-ref-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink-muted); }
+.alt-artifact-ref-text { display: flex; flex-direction: column; min-width: 0; }
+.alt-artifact-ref-title { font: 600 13.5px/19px var(--font-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-artifact-ref-meta { font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+@media (prefers-reduced-motion: reduce) { .alt-artifact-body { animation: none; } }
+[data-contrast="more"] .alt-artifact { border-left-color: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-artifact { border-left-color: CanvasText; }
+  .alt-artifact[data-status="writing"] { border-left-style: dotted; }
+  .alt-artifact-ref { border: 1px solid CanvasText; }
+}
+/* ThreadList (#269): conversations as Sidebar destinations, each with its state in words. Working isn't pending, so it
+   never hovers: a plate with a steady lamp. Needs-you is a caution plate (a row can't lift into a card inside a nav).
+   Unread is a dot and weight 600. Renaming opens a well in the row; deleting leaves a receipt in its slot. */
+.alt-threads { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.alt-threads-search { margin: 0 var(--space-2); }
+.alt-thread .alt-thread-link { height: auto; min-height: 44px; padding-block: 5px; align-items: flex-start; }
+.alt-thread .alt-sidebar-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; width: 100%; }
+.alt-thread-main { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.alt-thread-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-thread[data-unread] .alt-thread-title { font-weight: 600; color: var(--ink); }
+.alt-thread-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.alt-thread-meta { display: flex; align-items: center; gap: 6px; min-width: 0; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-thread-plate { flex: none; }
+.alt-thread-time { white-space: nowrap; }
+.alt-thread-more { position: absolute; right: 4px; top: 6px; opacity: 0; transition: opacity var(--dur-travel-1); }
+.alt-thread:focus-within .alt-thread-more, .alt-thread-more[aria-expanded="true"] { opacity: 1; }
+@media (hover: hover) { .alt-thread:hover .alt-thread-more { opacity: 1; } }
+@media (hover: none) { .alt-thread-more { opacity: 1; } }
+.alt-thread:has(.alt-thread-more) .alt-thread-main { padding-right: 28px; }
+.alt-thread-rename { display: block; width: 100%; padding: 4px; }
+.alt-threads-new { width: 100%; justify-content: center; }
 /* In the rail only icons show: each destination is a square, and the rail lets its tooltips out to the right. */
 .alt-sidebar[data-rail], .alt-sidebar[data-rail] .alt-sidebar-content { overflow: visible; }
 .alt-sidebar[data-rail] .alt-sidebar-item .alt-tip-anchor { display: flex; flex: 1; }
@@ -1628,6 +1688,20 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-diff-line[data-kind="add"] .alt-diff-word { background: color-mix(in oklab, var(--positive) 22%, transparent); }
 .alt-diff-line[data-kind="del"] .alt-diff-word { background: color-mix(in oklab, var(--critical) 18%, transparent); }
 .alt-diff-fold button { display: flex; align-items: center; gap: 6px; width: 100%; padding: 4px var(--space-4) 4px 28px; border: 0; border-block: 1px solid var(--line); background: var(--surface-ground); font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); cursor: pointer; text-align: left; }
+/* Reviewing (#282): a change awaiting a decision is a proposal, raised at level 1 around its lines (as PropertyList's
+   proposed value); deciding lowers it to the record: accepted flush with one afterglow, rejected muted and collapsed. */
+.alt-diff-hunk { position: relative; margin: 4px 6px; border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1); overflow: hidden;
+  transition: box-shadow var(--dur-travel-1) var(--ease-sink), background-color var(--dur-travel-1) var(--ease-sink), margin var(--dur-travel-1) var(--ease-sink); }
+.alt-diff-hunk[data-decision] { margin-inline: 0; border-radius: 0; background: none; box-shadow: none; }
+.alt-diff-hunk[data-decision="reject"] { color: var(--ink-muted); }
+.alt-diff-hunk[data-decision="reject"] .alt-diff-line { opacity: 0.6; }
+.alt-diff-hunk-bar { position: sticky; left: 0; display: flex; align-items: center; justify-content: flex-end; gap: 2px; width: min(100%, 100cqw); padding: 2px 6px 2px 28px; font: 500 12.5px/17px var(--font-sans); }
+.alt-diff-hunk-state { display: inline-flex; align-items: center; gap: 5px; margin-right: auto; color: var(--ink-muted); }
+.alt-diff-hunk-folded { display: block; width: 100%; padding: 4px var(--space-4) 4px 28px; border: 0; background: none; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); text-align: left; cursor: pointer; }
+.alt-diff-hunk-folded:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-diff-body { container-type: inline-size; }
+@media (prefers-reduced-motion: reduce) { .alt-diff-hunk { transition: none; } }
+@media (forced-colors: active) { .alt-diff-hunk:not([data-decision]) { border: 1px solid CanvasText; } }
 @media (hover: hover) { .alt-diff-fold button:hover { background: var(--surface-raised); color: var(--ink); } }
 .alt-diff-fold button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-diff-props { display: flex; flex-direction: column; margin: 0; padding: 0 var(--space-4); }
@@ -1837,6 +1911,30 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-prompt-well { position: relative; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-lg); }
 .alt-prompt-well .alt-prompt-text { width: 100%; min-height: 24px; resize: none; transition: height var(--dur-travel-2) var(--ease-glide); }
 .alt-prompt-files { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+/* @ mentions and / commands (#283): the list is a floating Combobox list (level 3) rising above the composer, grouped
+   with headings; what's chosen is a flush plate in the composer's context row ("@label" stays in the text too). */
+.alt-prompt-suggest { position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 20; width: min(420px, 100%); max-height: 280px; overflow: auto; padding: 4px; }
+.alt-prompt-suggest-head { margin: 4px 8px 2px; font: 500 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-prompt-option { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer; }
+.alt-prompt-option[data-active] { background: var(--surface-raised); box-shadow: var(--elev-1); }
+.alt-prompt-option-label { font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.alt-prompt-option-label[data-kind="command"], .alt-prompt-command .alt-tag-face { font-family: var(--font-mono); }
+.alt-prompt-option-desc { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-prompt-searching { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-prompt-searching .alt-skeleton { width: 80px; height: 10px; }
+/* Dictation (#284): listening is a latched toggle (a shallow well with accent-soft poured in, a steady lamp and the
+   word), never a pulse or a waveform; interim words are a ghost in ink-faint, like a suggestion, never in the value. */
+.alt-btn.alt-prompt-dictate[data-listening], .alt-btn.alt-prompt-dictate[data-listening]:focus-visible, .alt-btn.alt-prompt-dictate[data-listening]:active:not(:disabled) {
+  --wall: 0px; background: var(--accent-soft); background-image: none; color: var(--accent-ink); box-shadow: var(--well); transform: none; }
+.alt-prompt-listening { display: inline-flex; align-items: center; gap: 5px; margin-left: 4px; font: 500 12.5px/17px var(--font-sans); }
+.alt-prompt-lamp { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 22%, transparent); }
+.alt-prompt-dictate[data-blocked] { color: var(--ink-faint); }
+.alt-prompt-interim { margin: 2px 0 0; font: 400 15px/23px var(--font-sans); color: var(--ink-faint); white-space: pre-wrap; }
+@media (forced-colors: active) { .alt-btn.alt-prompt-dictate[data-listening] { border: 2px solid Highlight; } }
+.alt-prompt-context { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px 0; }
+.alt-prompt-kind { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-muted); }
+.alt-prompt-kind[data-kind="file"] { background: var(--accent-ink); }
+.alt-prompt-kind[data-kind="person"] { background: var(--positive); }
 .alt-prompt-chip { display: inline-flex; border-radius: var(--radius-sm); }
 .alt-prompt-uploading { color: var(--ink-muted); }
 .alt-prompt-bar { display: flex; align-items: center; gap: var(--space-2); }
@@ -2061,6 +2159,12 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-confirm-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 .alt-confirm-who { margin-right: auto; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 [data-contrast="more"] .alt-confirm[data-state="requested"] { box-shadow: 0 3px 0 0 var(--ink), var(--elev-1); }
+/* Editing a proposal (#281): its fields open in place inside the raised card (wells), as EditRegion does; Reject and
+   Approve stay; an edited proposal carries an "Edited" plate by its title. */
+.alt-confirm-edit { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
+.alt-confirm-edit-actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+.alt-confirm-edited { display: inline-flex; align-items: center; height: 20px; margin-left: 8px; padding: 0 6px; border-radius: var(--radius-sm); vertical-align: 2px;
+  background: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 9%, transparent); font: 550 11.5px/1 var(--font-sans); color: var(--ink-muted); }
 .alt-confirm-scope { display: flex; flex-direction: column; gap: 1px; padding-block: 6px; white-space: normal; }
 .alt-menu:has(.alt-confirm-scope) { min-width: min(300px, calc(100vw - 16px)); }
 .alt-menu-item:has(.alt-confirm-scope) { height: auto; min-height: var(--size-row-md, 32px); }

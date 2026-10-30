@@ -644,7 +644,7 @@ function App() {
   );
 }
 
-=== DiffView | <!-- @dsCard group="Display" height=620 subtitle="What changed between two versions, in signs and words" -->
+=== DiffView | <!-- @dsCard group="Display" height=1040 subtitle="What changed between two versions, in signs and words; reviewed change by change" -->
 --- css
 .dv { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 760px) { .dv { grid-template-columns: minmax(0, 1fr); } }
@@ -674,12 +674,33 @@ cache: 5m
 health: /healthz
 owner: platform-team
 alerts: on-call`;
+const pricingBefore = `export const plans = {
+  starter: { monthly: 9, seats: 1 },
+  pro: { monthly: 29, seats: 5 },
+  business: { monthly: 99, seats: 25 },
+};
+export const trialDays = 14;
+export const currency = 'USD';`;
+const pricingAfter = `export const plans = {
+  starter: { monthly: 9, seats: 1 },
+  pro: { monthly: 32, seats: 5 },
+  business: { monthly: 99, seats: 25, sso: true },
+};
+export const trialDays = 30;
+export const currency = 'USD';`;
+function Review() {
+  const [decisions, setDecisions] = React.useState({ 'change-2': 'accept' });
+  return <A.DiffView caption="src/pricing.ts · proposed by the assistant" before={pricingBefore} after={pricingAfter} review decisions={decisions}
+    onDecide={(id, d) => setDecisions({ ...decisions, [id]: d })}
+    onDecideAll={(d) => setDecisions(Object.fromEntries(A.diffChanges(A.diffLines(pricingBefore, pricingAfter)).map((c) => [c.id, decisions[c.id] ?? d])))} />;
+}
 function App() {
   return (
     <div className="dv">
       <A.DiffView caption="deploy.yaml · version 4 → 5" before={v4} after={v5} context={1} />
       <A.DiffView mode="properties" caption="Subscription changed by Maya" before={{ plan: 'Pro', seats: 12, billing: 'Monthly' }} after={{ plan: 'Business', seats: 25, billing: 'Monthly' }}
         fields={[{ key: 'plan', label: 'Plan' }, { key: 'seats', label: 'Seats' }, { key: 'billing', label: 'Billing' }]} />
+      <Review />
     </div>
   );
 }
@@ -3292,7 +3313,7 @@ function App() {
   );
 }
 
-=== Confirmation | <!-- @dsCard group="Feedback" height=900 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
+=== Confirmation | <!-- @dsCard group="Feedback" height=1120 subtitle="Approve or reject an action an agent proposes: raised, not pending" -->
 --- jsx
 function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails, scopes }) {
   const [state, setState] = React.useState('requested');
@@ -3303,6 +3324,23 @@ function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, run
     runningLabel={runningLabel} doneLabel={doneLabel} failedLabel={failedLabel} resolvedBy="you" resolvedAt={at} scopes={scopes} resolvedScope={scope}
     onApprove={approve} onReject={() => { setState('rejected'); setAt(new Date()); }} onRetry={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1000); }} />;
 }
+// Edit what's proposed before approving: the consequence and the button follow the edited values.
+function EditableProposal() {
+  const original = { subject: 'October product update', segment: 'Pro customers', n: 214 };
+  const [v, setV] = React.useState(original);
+  const [state, setState] = React.useState('requested');
+  const [at, setAt] = React.useState();
+  const counts = { 'Pro customers': 214, 'All customers': 1180, 'Trial users': 96 };
+  const edited = v.subject !== original.subject || v.segment !== original.segment;
+  return <A.Confirmation state={state} title="Send campaign email" consequence={`${v.n} ${v.segment} will receive “${v.subject}”.`}
+    approveLabel={`Send ${v.n} emails`} rejectLabel="Don't send" runningLabel="Sending…" doneLabel="Sent" resolvedBy="you" resolvedAt={at} edited={edited}
+    edit={<>
+      <A.Field label="Subject"><A.Input value={v.subject} onChange={(e) => setV({ ...v, subject: e.target.value })} /></A.Field>
+      <A.Field label="Segment"><A.Select value={v.segment} onValueChange={(segment) => setV({ ...v, segment, n: counts[segment] })} items={Object.keys(counts).map((k) => ({ value: k, label: k }))} /></A.Field>
+    </>}
+    onEditCancel={() => setV(original)}
+    onApprove={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1200); }} onReject={() => { setState('rejected'); setAt(new Date()); }} />;
+}
 function App() {
   return (
     <div className="col">
@@ -3311,6 +3349,7 @@ function App() {
       <Proposal title="Archive the Atlas workspace" consequence="12 people lose access; it can't be restored after 30 days." approveLabel="Archive workspace" rejectLabel="Don't archive" runningLabel="Archiving…" failedLabel="Couldn't archive" escalate="dialog" fails />
       <Proposal title="Run npm test" consequence="Runs the test suite in this workspace." approveLabel="Run once" rejectLabel="Don't run" runningLabel="Running…" doneLabel="Ran"
         scopes={[{ value: 'session', label: 'Allow npm test for this session' }, { value: 'always', label: 'Always allow npm test', description: 'Saved to this project’s settings' }]} />
+      <EditableProposal />
     </div>
   );
 }
@@ -3425,6 +3464,101 @@ function App() {
     <div className="ic">
       <p>Annual plans can be refunded in full within 30 days<A.InlineCitation index={1} source={sources[0]} />. Monthly plans renew on the same day each month<A.InlineCitation index={2} source={sources[1]} />, and some customers report partial refunds after that<A.InlineCitation index={3} source={sources[2]} />.</p>
       <A.Sources items={sources} />
+    </div>
+  );
+}
+
+=== Artifact | <!-- @dsCard group="Layout" height=640 subtitle="What an agent is making, in a pane beside the conversation, with its versions" -->
+--- css
+.af { height: 600px; max-width: 960px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.af .chat { display: flex; flex-direction: column; gap: 12px; padding: 16px; height: 100%; overflow: auto; }
+.af .chat p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink); }
+--- jsx
+const versions = [
+  { code: `export function Pricing() {\n  return <h1>Pricing</h1>;\n}` },
+  { code: `export function Pricing() {\n  return (\n    <section>\n      <h1>Pricing</h1>\n      <p>Start free, upgrade when you grow.</p>\n    </section>\n  );\n}` },
+  { code: `export function Pricing() {\n  return (\n    <section>\n      <h1>Pricing</h1>\n      <p>Start free, upgrade when you grow.</p>\n      <Plans tiers={['Starter', 'Pro', 'Business']} />\n    </section>\n  );\n}` },
+];
+const html = (v) => `<body style="font:15px system-ui;margin:24px;color:#1b2230"><h1 style="font-size:22px">Pricing</h1>${v >= 2 ? '<p>Start free, upgrade when you grow.</p>' : ''}${v >= 3 ? '<div style="display:flex;gap:8px">' + ['Starter', 'Pro', 'Business'].map((t) => `<div style="flex:1;padding:12px;border:1px solid #d5dae3;border-radius:8px">${t}</div>`).join('') + '</div>' : ''}</body>`;
+function App() {
+  const [open, setOpen] = React.useState(true);
+  const [status, setStatus] = React.useState('writing');
+  const [v, setV] = React.useState(3);
+  React.useEffect(() => { const t = setTimeout(() => setStatus('complete'), 2500); return () => clearTimeout(t); }, []);
+  return (
+    <div className="af">
+      <A.ResizablePanelGroup direction="horizontal" narrow="stack" narrowPanel={open ? 1 : 0}>
+        <A.ResizablePanel defaultSize={42} aria-label="Conversation">
+          <div className="chat">
+            <A.Message from="user"><A.MessageContent>Make a pricing page with three plans.</A.MessageContent></A.Message>
+            <A.Message from="assistant">
+              <A.MessageContent>Here's the page, with the three plans in a row.</A.MessageContent>
+              <A.ArtifactReference title="Pricing page" version={3} status={status} controls="pricing-artifact" onOpen={() => setOpen(true)} />
+            </A.Message>
+          </div>
+        </A.ResizablePanel>
+        <A.ResizableHandle />
+        <A.ResizablePanel defaultSize={58} aria-label="Pricing page">
+          {open && (
+            <A.Artifact id="pricing-artifact" title="Pricing page" status={status} version={3}>
+              <A.ArtifactHeader onCopy={() => versions[v - 1].code} onDownload={() => {}} onClose={() => setOpen(false)} />
+              <A.ArtifactVersions versions={3} current={v} onChange={setV} onRestore={() => setV(3)} />
+              <A.ArtifactContent views={{
+                preview: <iframe sandbox="" srcDoc={html(v)} title={`Pricing page preview, version ${v}`} />,
+                source: <A.CodeBlock language="tsx" code={versions[v - 1].code} streaming={status === 'writing' && v === 3} />,
+                changes: v > 1 ? <A.DiffView caption={`Version ${v - 1} → ${v}`} before={versions[v - 2].code} after={versions[v - 1].code} /> : undefined,
+              }} />
+            </A.Artifact>
+          )}
+        </A.ResizablePanel>
+      </A.ResizablePanelGroup>
+    </div>
+  );
+}
+
+=== ThreadList | <!-- @dsCard group="Layout" height=640 subtitle="Conversations with an assistant beside the thread, the ones still working said in words" -->
+--- css
+.tl { height: 600px; max-width: 760px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.tl .page { padding: 24px; color: var(--ink-muted); font: 400 14px/20px var(--font-sans); }
+--- jsx
+const now = Date.now(), min = 60000, day = 86400000;
+const seed = [
+  { id: 'a', title: 'Q3 pricing comparison', at: now - 2 * min, status: 'needs-input', needs: 'approval' },
+  { id: 'b', title: 'Refactor the billing module', at: now - 9 * min, status: 'working' },
+  { id: 'c', title: 'Summarise incident #4821', at: now - 40 * min, unread: true },
+  { id: 'd', title: 'Draft the release note', at: now - day - 3 * 3600000 },
+  { id: 'e', title: 'Migrate the users table', at: now - day - 5 * 3600000, status: 'failed' },
+  { id: 'f', title: 'Onboarding email ideas', at: now - 4 * day },
+  { id: 'g', title: 'Competitor research', at: now - 12 * day, status: 'stopped' },
+];
+function App() {
+  const [threads, setThreads] = React.useState(seed);
+  const [at, setAt] = React.useState('b');
+  const [q, setQ] = React.useState('');
+  const shown = threads.filter((t) => t.title.toLowerCase().includes(q.toLowerCase()));
+  const set = (id, patch) => setThreads((ts) => ts.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  return (
+    <div className="tl">
+      <A.AppShell sidebar={
+        <A.Sidebar aria-label="Conversations">
+          <A.SidebarHeader><A.ThreadListNew onClick={() => { const id = String(Date.now()); setThreads((ts) => [{ id, title: 'New conversation', at: Date.now() }, ...ts]); setAt(id); }} /></A.SidebarHeader>
+          <A.SidebarContent>
+            <A.ThreadList searchable onSearch={setQ}>
+              {A.groupByDate(shown, (t) => t.at, now).map((g) => (
+                <A.ThreadListGroup key={g.label} label={g.label}>
+                  {g.threads.map((t) => (
+                    <A.ThreadListItem key={t.id} href={'#/c/' + t.id} title={t.title} updatedAt={t.at} status={t.status} needs={t.needs} unread={t.unread} current={t.id === at}
+                      onSelect={(e) => { e.preventDefault(); setAt(t.id); set(t.id, { unread: false }); }}
+                      onRename={(title) => set(t.id, { title })} onDelete={() => {}} onUndoDelete={() => {}} onDeleted={() => setThreads((ts) => ts.filter((x) => x.id !== t.id))} />
+                  ))}
+                </A.ThreadListGroup>
+              ))}
+            </A.ThreadList>
+          </A.SidebarContent>
+        </A.Sidebar>
+      }>
+        <div className="page">The conversation “{threads.find((t) => t.id === at)?.title}” is open here.</div>
+      </A.AppShell>
     </div>
   );
 }
@@ -3667,10 +3801,56 @@ function App() {
   );
 }
 
-=== PromptInput | <!-- @dsCard group="Inputs" height=420 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
+=== PromptInput | <!-- @dsCard group="Inputs" height=840 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
 --- css
 .pi { max-width: 640px; }
 --- jsx
+const context = [
+  { id: 'f1', label: 'pricing.ts', kind: 'file', description: 'src/pricing.ts' },
+  { id: 'f2', label: 'plans.test.ts', kind: 'file', description: 'src/plans.test.ts' },
+  { id: 'r1', label: 'Q3 report', kind: 'record', description: 'Shared by Maya, 2 days ago' },
+  { id: 'p1', label: 'Maya Chen', kind: 'person', description: 'Billing team' },
+];
+function Pointed() {
+  const [sent, setSent] = React.useState('');
+  return (
+    <div className="col">
+      <A.PromptInput onSubmit={({ text, mentions, command }) => setSent(`${command ? `/${command} · ` : ''}${text}${mentions ? ` · context: ${mentions.map((m) => m.label).join(', ')}` : ''}`)}
+        mentionable={(q) => new Promise((r) => setTimeout(() => r(context.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()))), 250))}
+        commands={[{ name: 'review', description: 'Review the current changes' }, { name: 'compact', description: 'Summarise the conversation so far' }, { name: 'clear', description: 'Start a new conversation' }]}>
+        <A.PromptInputTextarea placeholder="@ to add context, / for commands" />
+        <A.PromptInputToolbar><A.PromptInputSubmit /></A.PromptInputToolbar>
+      </A.PromptInput>
+      <p className="cap">{sent ? `Sent: ${sent}` : 'Type @ to point at a file, record or person, or / at the start for a command.'}</p>
+    </div>
+  );
+}
+// Dictation: here a scripted transcriber stands in for the app's speech recognition.
+function Dictated() {
+  const [status, setStatus] = React.useState('idle');
+  const [interim, setInterim] = React.useState('');
+  const [final, setFinal] = React.useState();
+  const timers = React.useRef([]);
+  const start = () => {
+    setStatus('listening');
+    const words = 'Summarise the open risks and who owns each one'.split(' ');
+    words.forEach((_, k) => timers.current.push(setTimeout(() => setInterim(words.slice(0, k + 1).join(' ')), 180 * (k + 1))));
+    timers.current.push(setTimeout(() => { setFinal({ id: Date.now(), text: words.join(' ') + '.' }); setInterim(''); setStatus('idle'); }, 180 * words.length + 400));
+  };
+  const stop = () => { timers.current.forEach(clearTimeout); timers.current = []; setInterim(''); setStatus('idle'); };
+  return (
+    <div className="col">
+      <A.PromptInput onSubmit={() => {}}>
+        <A.PromptInputTextarea placeholder="Type, or press the microphone and speak" />
+        <A.PromptInputToolbar>
+          <A.PromptInputDictate status={status} interim={interim} final={final} onStart={start} onStop={stop} />
+          <A.PromptInputDictate status="denied" label="Dictate (blocked example)" />
+          <A.PromptInputSubmit />
+        </A.PromptInputToolbar>
+      </A.PromptInput>
+    </div>
+  );
+}
 function App() {
   const [status, setStatus] = React.useState('ready');
   const [last, setLast] = React.useState('');
@@ -3693,6 +3873,8 @@ function App() {
         </A.PromptInputToolbar>
       </A.PromptInput>
       <p className="cap">{status === 'ready' ? (last || 'Enter sends, Shift+Enter adds a line. Paste or drop a file to attach it.') : status === 'submitted' ? 'Sending…' : 'Generating… Escape or Stop ends it.'}</p>
+      <Pointed />
+      <Dictated />
     </div>
   );
 }

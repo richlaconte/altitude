@@ -17,6 +17,8 @@ Approve or reject an action an agent proposes, before anything happens: "Send 21
 
 **Scopes.** For an action that comes up again and again ("Run npm test"), give `scopes`: Approve becomes a SplitButton whose face approves once and whose menu, "More ways to approve", holds the wider scopes ("Allow npm test for this session", "Always allow npm test · Saved to this project's settings"). `onApprove` gets `'once'` or the scope's value; pass it back as `resolvedScope` and the resolved line says it: "Ran · allowed for this session by you". With `escalate`, scopes are ignored: an action that needs a hold or a dialog is never pre-approved.
 
+**Editing the proposal.** Give `edit` (fields, e.g. `Field` + `Input`) and the card offers Edit: the fields open in place inside it, as `EditRegion` does, focusing the first. Keep `consequence` and `approveLabel` following the edited values so Approve always names what will happen, and set `edited` when they differ: "Edited" shows by the title, and once done the line reads "Sent · edited and approved by you". Escape or Cancel edit closes the fields and calls `onEditCancel` (put the values back); it doesn't reject the proposal. Reject stays available while editing.
+
 **You provide:** the state from your tool call, the consequence in words, and what approving and rejecting do.
 
 ```tsx
