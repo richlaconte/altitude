@@ -474,6 +474,28 @@
       ],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-DEV-001",
+      "title": "A secret is shown once behind an acknowledgement, listed masked, and its roll or revocation says what happens",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "contextual-review",
+      "applicability": "API keys, signing secrets and integrations.",
+      "exceptions": [
+        "Products that deliberately allow revealing a stored secret offer it on demand, masked by default."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "task-review"
+      ],
+      "repair": "Show a new secret in full once, in a dialog that closes only after the person confirms they saved it; list secrets masked with their last use; say a roll's overlap window before and after; name what breaks before revoking or disconnecting; show a retry as a pending write with its attempt.",
+      "verification": [
+        "build/checks/developer-settings-pattern.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }

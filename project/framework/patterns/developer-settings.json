@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "id": "developer-settings",
+  "version": 1,
+  "title": "Developer settings",
+  "intents": [
+    "api keys",
+    "api key",
+    "webhooks",
+    "webhook",
+    "integrations",
+    "developer settings",
+    "developers",
+    "oauth"
+  ],
+  "purpose": "Create, roll and revoke API keys, manage webhooks and connect integrations without treating them as ordinary forms.",
+  "useWhen": [
+    "A product exposes API keys, webhooks or third-party integrations to its customers."
+  ],
+  "avoidWhen": [
+    "Personal access tokens for the product's own sign-in; use the auth contract and SecretField."
+  ],
+  "alternatives": [
+    "Use the settings contract for ordinary preferences, and SecretField alone for one stored secret."
+  ],
+  "requiredInputs": [
+    "keys with name, masked tail and last use",
+    "a create adapter returning the secret once",
+    "roll and revoke adapters with the roll's overlap window",
+    "webhook endpoints, events, deliveries and retry and test adapters",
+    "integrations with OAuth start and completion"
+  ],
+  "states": [
+    "key-creating",
+    "secret-shown",
+    "secret-acknowledged",
+    "rolling",
+    "revoking",
+    "delivery-failed",
+    "delivery-retrying",
+    "test-sent",
+    "oauth-pending",
+    "connected",
+    "disconnecting"
+  ],
+  "transitions": [
+    "key-creating → secret-shown → secret-acknowledged before the dialog can close",
+    "rolling → the new key, with the old one working for the overlap",
+    "revoking → the key removed, said",
+    "delivery-failed → delivery-retrying → delivered or failed with its attempt",
+    "oauth-pending → connected, or back to Connect when abandoned",
+    "connected → disconnecting → not connected"
+  ],
+  "rules": [
+    "ALT-DEV-001",
+    "ALT-ACTION-001",
+    "ALT-STATUS-001"
+  ],
+  "sources": [
+    "task-review",
+    "altitude-elevation"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Developer areas with API keys, webhooks and integrations.",
+  "exceptions": [
+    "Require only the parts the product offers; products that allow revealing a stored secret must still mask it by default."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/developer-settings.md",
+  "implementation": "build/fixtures/patterns/developer-settings.jsx",
+  "examples": [
+    "build/fixtures/patterns/developer-settings.jsx"
+  ],
+  "verification": [
+    "build/checks/developer-settings-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}
