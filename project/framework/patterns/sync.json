@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "sync",
+  "version": 1,
+  "title": "Sync",
+  "intents": [
+    "autosave",
+    "offline",
+    "sync",
+    "conflict",
+    "session timeout",
+    "session expiry",
+    "local-first",
+    "optimistic"
+  ],
+  "purpose": "Say truthfully what has reached the server, through offline queues, conflicts and expiring sessions.",
+  "useWhen": [
+    "Work is saved continuously or optimistically, may go offline, or may be edited by two people at once."
+  ],
+  "avoidWhen": [
+    "Forms saved once with an explicit button; use the edit-record contract."
+  ],
+  "alternatives": [
+    "Use the edit-record contract for explicit saves, and SyncIndicator alone for a single autosaving document."
+  ],
+  "requiredInputs": [
+    "each change's write and acknowledgement",
+    "the connection state",
+    "the queue of unacknowledged changes",
+    "conflict detection with both versions and the other author",
+    "session expiry time and a way to extend it"
+  ],
+  "states": [
+    "saved",
+    "pending",
+    "failed",
+    "offline-queued",
+    "replaying",
+    "conflict",
+    "resolved",
+    "session-expiring",
+    "session-expired"
+  ],
+  "transitions": [
+    "saved → pending on a change → saved when acknowledged, or failed with Retry",
+    "pending → offline-queued when the connection drops",
+    "offline-queued → replaying → saved when it returns",
+    "pending → conflict when another version arrived → resolved by keep mine, theirs or both",
+    "session-expiring → saved on Stay signed in, or session-expired keeping the draft"
+  ],
+  "rules": [
+    "ALT-SYNC-001",
+    "ALT-EDIT-001",
+    "ALT-STATUS-001"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Autosaving, optimistic or local-first work, and sessions that expire.",
+  "exceptions": [
+    "Require only states supported by the application; online-only apps skip the offline states but still never claim unacknowledged work is saved."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/sync.md",
+  "implementation": "build/fixtures/patterns/sync.jsx",
+  "examples": [
+    "build/fixtures/patterns/sync.jsx"
+  ],
+  "verification": [
+    "build/checks/sync-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}

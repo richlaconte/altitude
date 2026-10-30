@@ -14,6 +14,7 @@ Start from the person's task. Read only the relevant pattern below, its linked r
 | Sign in, sign up, two-factor, reset | [Auth](patterns/auth.md) |
 | An audit log or a record's activity | [Audit log](patterns/audit-log.md) |
 | Import records from a CSV file | [Import](patterns/import.md) |
+| Autosave, offline, conflicts, session expiry | [Sync](patterns/sync.md) |
 
 Before implementation, capture a short design record in the application's normal documentation: user goal, audience, primary action, consequence, data shape, selected patterns, applicable states, and unresolved product decisions. Infer routine details from the existing product. Do not invent permissions, persistence, cancellation, rollback or undo. Ask only when an unknown changes consequences or the task itself.
 

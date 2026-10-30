@@ -136,6 +136,7 @@ jobs:
           node ../scripts/record-check.mjs react18-auth-pattern node checks/auth-pattern.mjs
           node ../scripts/record-check.mjs react18-audit-log-pattern node checks/audit-log-pattern.mjs
           node ../scripts/record-check.mjs react18-import-pattern node checks/import-pattern.mjs
+          node ../scripts/record-check.mjs react18-sync-pattern node checks/sync-pattern.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs

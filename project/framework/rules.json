@@ -449,6 +449,31 @@
       "criteria": [],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-SYNC-001",
+      "title": "Nothing is saved until the server says so, queued work is visible, and no edit is dropped silently",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "application-integration",
+      "applicability": "Autosaving, optimistic and local-first work, and expiring sessions.",
+      "exceptions": [
+        "Automatic merges need no prompt; only conflicts the merge strategy can't resolve ask the person."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "task-review",
+        "wcag22"
+      ],
+      "repair": "Keep each change pending until acknowledged and say Saved only when the queue is empty; show offline changes as waiting with a count; show unresolved conflicts with both versions, the other in its author's presence colour and name, and say where the version not kept went; warn before a session expires, offer to extend it and keep drafts across re-authentication.",
+      "verification": [
+        "build/checks/sync-pattern.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#timing-adjustable"
+      ],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }
