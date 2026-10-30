@@ -1347,21 +1347,6 @@ A review (#262): at 375px, menus showed "⌘D" beside "Duplicate", and CommandPa
 - **Hints hide; shortcuts don't.** Menu shortcuts, CommandPalette's footer, chips and esc, and InlineEdit's "⌘+Enter to save" (which becomes "Save to keep it") follow it. The keys still work.
 - **An app's own `Kbd` stays** unless `hideOnTouch` is set, because it may be documenting shortcuts on purpose.
 
-<<<<<<< HEAD
-### E115 · Can an imprint wait without moving the light?
-
-A design review (#343): three rounds of standalone prototypes, built from Altitude's tokens, compared ways for an imprint to show it's waiting and ways for content to land. `checks/loading-breath.mjs` drives the result: imprints waiting, a card from one request, a card whose parts arrive apart, a summary before its detail, a list, a later arrival, a ten-second wait, Nightfall, reduced motion, a chart, and the default left alone.
-
-- **Breath, not ripples.** Ripples, ribs, a wave, a lit membrane and a bump under the surface all read as the ground moving, but they move a pattern across the screen, which costs attention and is the kind of large-area motion that troubles motion-sensitive people. A ring from a point reads as Material's touch ripple, "you pressed here". Breath changes only depth and tone.
-- **It keeps the light still.** The sweep moves a band of light over the imprint, which bends "the light never moves". Breath moves the ground under a fixed light, which is what Altitude means by depth.
-- **One clock.** Things that change in step are grouped into one object (common fate; Usher and Donnelly, *Nature*, 1998), so imprints phased from one page clock spend one place in the attention budget. Out of step, a full view shimmers. The swell down the view keeps that coherence and gives it a direction. A CSS animation starts on the frame after its imprint commits, so imprints mounted in different commits drift by a few frames, under 5% of a breath.
-- **A different rhythm from pending.** A waiting imprint and a pending write are in different tiers, but at the same 1.8s rhythm they look alike. Breath is 4.8s, deepening over 40% and releasing over 60%, near a resting breath.
-- **The back wall in Nightfall.** Nightfall's well and trench are nearly one tone, so a floor breath almost disappears there. The back wall (`lip-top`) shows in both.
-- **Rise past needs a surface.** A card rises a level past its rest and settles. Text, badges and rows rest on the ground and have no surface to cast a shadow, so they fill past it, as a field does when filled. A plate is kept for content arriving into a view already showing; on a first load it would make everything look new, too close to the afterglow.
-- **Optional parts don't wait.** A card's undefined optional parts (description, body text) still render empty once its required parts land, so "a card's parts land together" holds for required parts and for anything that suspends.
-
-Not yet tested with people: whether breath reads as loading, how long the wait feels compared with the sweep, comfort for people who report motion sensitivity, and whether arrivals are noticed. Until then it's opt-in.
-=======
 ### E115 · Is a dialog's button under the keyboard?
 
 A source audit (#251): Dialog, Sheet and CommandPalette sized themselves with `vh` and `position: fixed; inset: 0`, which on a phone means the largest viewport. With the on-screen keyboard open, a dialog's footer (its primary action) could sit under the keyboard. Nothing read `window.visualViewport`.
@@ -1430,7 +1415,20 @@ A measurement (#258): at 375 CSS px a PropertyList row with a proposal kept thre
 ### E125 · Who gives way in a row with actions?
 
 A review (#267): an ItemGroup row's actions never yielded width, so at phone width Edit and Remove squeezed the title into a narrow column. The group is now a container, and under 480px of its own width the actions take their own row, lined up with the content after the media; `narrow="inline"` keeps them beside it. `ItemDescription truncate` clamps a long secondary line. The issue's third form, collapsing actions into a "…" menu, is deferred: an app's action children aren't menu items, so it needs an explicit API rather than a guess. `checks/narrow-rows.mjs` (with #258).
->>>>>>> origin/main
+
+### E126 · Can an imprint wait without moving the light?
+
+A design review (#343): three rounds of standalone prototypes, built from Altitude's tokens, compared ways for an imprint to show it's waiting and ways for content to land. `checks/loading-breath.mjs` drives the result: imprints waiting, a card from one request, a card whose parts arrive apart, a summary before its detail, a list, a later arrival, a ten-second wait, Nightfall, reduced motion, a chart, and the default left alone.
+
+- **Breath, not ripples.** Ripples, ribs, a wave, a lit membrane and a bump under the surface all read as the ground moving, but they move a pattern across the screen, which costs attention and is the kind of large-area motion that troubles motion-sensitive people. A ring from a point reads as Material's touch ripple, "you pressed here". Breath changes only depth and tone.
+- **It keeps the light still.** The sweep moves a band of light over the imprint, which bends "the light never moves". Breath moves the ground under a fixed light, which is what Altitude means by depth.
+- **One clock.** Things that change in step are grouped into one object (common fate; Usher and Donnelly, *Nature*, 1998), so imprints phased from one page clock spend one place in the attention budget. Out of step, a full view shimmers. The swell down the view keeps that coherence and gives it a direction. A CSS animation starts on the frame after its imprint commits, so imprints mounted in different commits drift by a few frames, under 5% of a breath.
+- **A different rhythm from pending.** A waiting imprint and a pending write are in different tiers, but at the same 1.8s rhythm they look alike. Breath is 4.8s, deepening over 40% and releasing over 60%, near a resting breath.
+- **The back wall in Nightfall.** Nightfall's well and trench are nearly one tone, so a floor breath almost disappears there. The back wall (`lip-top`) shows in both.
+- **Rise past needs a surface.** A card rises a level past its rest and settles. Text, badges and rows rest on the ground and have no surface to cast a shadow, so they fill past it, as a field does when filled. A plate is kept for content arriving into a view already showing; on a first load it would make everything look new, too close to the afterglow.
+- **Optional parts don't wait.** A card's undefined optional parts (description, body text) still render empty once its required parts land, so "a card's parts land together" holds for required parts and for anything that suspends.
+
+Not yet tested with people: whether breath reads as loading, how long the wait feels compared with the sweep, comfort for people who report motion sensitivity, and whether arrivals are noticed. Until then it's opt-in.
 
 ## What was rejected
 
