@@ -12,12 +12,24 @@ const page = await browser.newPage({ viewport: { width: 960, height: 600 } });
 await page.goto(`file://${T}p-TableBulk-daylight.html`);
 await page.waitForTimeout(400);
 
-const read = () => page.evaluate(() => {
+const readNow = () => page.evaluate(() => {
   const t = document.querySelector('.alt-data-table'), bar = t.querySelector('.alt-table-floatbar'), tools = t.querySelector('.alt-table-tools .alt-table-selection');
   return { allrow: t.querySelector('.alt-table-allrow')?.textContent ?? null, allrowBg: t.querySelector('.alt-table-allrow td') && getComputedStyle(t.querySelector('.alt-table-allrow td')).boxShadow,
     tools: tools?.textContent ?? null, bar: bar ? { label: bar.getAttribute('aria-label'), text: bar.textContent, shadow: getComputedStyle(bar.firstElementChild).boxShadow } : null,
     checked: [...t.querySelectorAll('tbody input[type="checkbox"]')].filter((c) => c.checked).length, said: t.querySelector(':scope > .alt-sr[aria-live]').textContent.trim() };
 });
+// Under load (CI's parallel shards) the table can re-render a frame or two after a click: read once the state has
+// held still for 200ms.
+const read = async () => {
+  let last = '', same = 0;
+  for (let i = 0; i < 60; i++) {
+    const now = JSON.stringify(await readNow());
+    same = now === last ? same + 1 : 0; last = now;
+    if (same >= 3) break;
+    await page.waitForTimeout(50);
+  }
+  return JSON.parse(last);
+};
 let r = await read();
 expect(r.allrow === null && r.tools === null, 'nothing selected: no offer, no count');
 await page.click('[aria-label="Select all rows"]', { force: true });
