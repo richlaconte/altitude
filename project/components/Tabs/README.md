@@ -8,6 +8,8 @@ Switches between views of the same content.
 
 Arrow keys, Home and End move between tabs in both.
 
+**Narrow.** A tab list that doesn't fit scrolls within itself, so the page never scrolls sideways: the chosen tab stays in view, and an edge with more tabs past it fades out.
+
 **You provide:** `Tabs` with `value`/`onValueChange` or `defaultValue` and optionally `variant`; a `TabsList` (with an `aria-label`) of `TabsTrigger value="…"`; one `TabsContent value="…"` per trigger. In the folder variant put the `TabsContent`s directly after the `TabsList`: together they're one folder.
 
 - Keep labels to one or two words.

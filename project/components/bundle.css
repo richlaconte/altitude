@@ -340,7 +340,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    variant="segmented": the options sit in a well and one raised pill glides between them. ── */
 .alt-tabs { display: flex; flex-direction: column; gap: var(--space-4); }
 .alt-tabs-list {
-  position: relative; display: inline-flex; align-self: flex-start; gap: 2px; padding: var(--space-1);
+  position: relative; display: inline-flex; align-self: flex-start; max-width: 100%; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; gap: 2px; padding: var(--space-1);
   border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-well); box-shadow: var(--well);
 }
 .alt-tabs-indicator {
@@ -356,13 +356,19 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-tabs-trigger[aria-selected="true"], .alt-tabs-trigger[aria-checked="true"] { color: var(--ink); }
 @media (hover: hover) { .alt-tabs-trigger:hover { color: var(--ink); } }
 @media (hover: hover) { .alt-tabs[data-variant="segmented"] .alt-tabs-trigger:hover:not([aria-selected="true"]), .alt-tgroup .alt-tabs-trigger:hover:not([aria-checked="true"]):not(:disabled) { background: color-mix(in oklab, var(--surface-raised) 40%, transparent); } }
+/* Narrow (#259): the list scrolls within itself; an edge with more tabs past it fades out, so you can see there's more. */
+.alt-tabs-list::-webkit-scrollbar { display: none; }
+.alt-tabs-list[data-more-end] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.alt-tabs-list[data-more-start] { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
+.alt-tabs-list[data-more-start][data-more-end] { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .alt-tabs-content { animation: alt-emerge var(--dur-travel-2) var(--ease-rise); border-radius: var(--radius-sm); }
 
 .alt-tabs[data-variant="folder"] { gap: 0; }
 /* The list makes no layer of its own, so each tab stacks against the panel: only the chosen tab lies over it (covering its
    hairline); the others, and a tab dropping back, sit behind the sheet. */
 .alt-tabs[data-variant="folder"] > .alt-tabs-list {
-  --r: 10px; align-self: stretch; z-index: auto; gap: var(--space-1); margin-bottom: -1px; padding: 0 var(--space-5);
+  /* It scrolls when narrow (#259), so the tab's shadow above and its 1px reach into the panel sit in its padding. */
+  --r: 10px; align-self: stretch; z-index: auto; gap: var(--space-1); margin: -6px 0 -2px; padding: 6px var(--space-5) 1px;
   border: 0; border-radius: 0; background: none; box-shadow: none;
 }
 .alt-tabs[data-variant="folder"] .alt-tabs-indicator { display: none; }

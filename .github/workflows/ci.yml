@@ -70,6 +70,7 @@ jobs:
           node ../scripts/record-check.mjs float-fit node checks/float-fit.mjs
           node ../scripts/record-check.mjs toaster-touch node checks/toaster-touch.mjs
           node ../scripts/record-check.mjs menu-sheet node checks/menu-sheet.mjs
+          node ../scripts/record-check.mjs tabs-narrow node checks/tabs-narrow.mjs
           node checks/approach-and-lamps.mjs
           node checks/field-focus.mjs
           node checks/avatar.mjs
