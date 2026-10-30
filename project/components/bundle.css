@@ -1866,12 +1866,79 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-convo-content { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-3) var(--space-1); }
 .alt-msg { display: flex; flex-direction: column; gap: 4px; max-width: 72ch; border-radius: var(--radius-md); }
 .alt-msg[data-from="user"] { align-self: flex-end; max-width: min(72ch, 85%); padding: 10px 14px; background: var(--accent-soft); color: var(--ink); }
+/* Attachments (#274): part of the record, on the ground. Images are 64px thumbnails in a 1px line rim; files are the
+   composer's Tag plates, settled. One that opens lifts a level when pointed at, as any plate that acts. */
+.alt-msg-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; padding: 0; list-style: none; }
+.alt-msg[data-from="user"] .alt-msg-attachments { justify-content: flex-end; }
+.alt-msg-attachment { display: flex; min-width: 0; }
+.alt-msg-thumb { position: relative; display: block; height: 64px; padding: 0; border: 0; border-radius: var(--radius-md); background: none; overflow: hidden; cursor: default; transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
+.alt-msg-thumb img { display: block; height: 64px; width: auto; max-width: 160px; min-width: 48px; object-fit: cover; }
+.alt-msg-thumb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--line); pointer-events: none; }
+:is(a, button).alt-msg-thumb { cursor: pointer; }
+.alt-msg-file { height: 28px; }
+.alt-msg-file .alt-tag-face { max-width: 36ch; text-decoration: none; }
+:is(a, button).alt-tag-face { cursor: pointer; }
+.alt-msg-file-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-msg-file-meta { flex: none; color: var(--ink-muted); font-weight: 450; }
+.alt-msg-file[data-unavailable] { color: var(--ink-muted); }
+@media (hover: hover) {
+  .alt-msg-file[data-acts]:hover { --t-bg: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+  :is(a, button).alt-msg-thumb:hover { box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+}
+.alt-msg-thumb:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-msg-file[data-acts]:active, :is(a, button).alt-msg-thumb:active { transform: none; box-shadow: none; transition-duration: var(--dur-press); }
+@media (forced-colors: active) { .alt-msg-thumb { border: 1px solid CanvasText; } }
 .alt-msg[data-from="assistant"] { border-radius: 0; padding: 2px 0 2px 14px; box-shadow: inset 2px 0 0 0 transparent; transition: box-shadow var(--dur-travel-2) var(--ease-rise); }
 .alt-msg[data-stream="streaming"] { box-shadow: none; background-image: linear-gradient(var(--line-control) 50%, transparent 50%); background-size: 2px 8px; background-repeat: repeat-y; background-position: left top; }
 .alt-msg[data-stream="complete"], .alt-msg[data-stream="stopped"], .alt-msg[data-stream="error"] { box-shadow: inset 2px 0 0 0 var(--line); }
 .alt-msg[data-stream="error"] { box-shadow: inset 2px 0 0 0 var(--critical); }
 .alt-msg-name { margin: 0; font: 600 13px/18px var(--font-sans); color: var(--ink-muted); }
 .alt-msg-content { font: 400 15px/23px var(--font-sans); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---- Markdown (#268) ----
+   An answer's text set as the record: everything sits on the ground at level 0 and nothing here adds height. Code is
+   CodeBlock, links are Link, [n] markers are InlineCitation (the only part that lifts, when pointed at), tables use
+   Table's flush rows with line dividers, and an image waits in a sunk imprint (-1) and rises out of it. Headings are
+   the heading style, never the title (which belongs to the page). Rims and rules are line; under contrast="more"
+   they're line-control, and in forced colours CanvasText. */
+.alt-md { font: 400 15px/23px var(--font-sans); color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
+.alt-md > :first-child { margin-top: 0; }
+.alt-md > :last-child { margin-bottom: 0; }
+.alt-md :is(p, .alt-md-list, .alt-md-quote, .alt-md-pre, .alt-md-table, .alt-md-html) { margin: 0 0 12px; }
+.alt-md :is(li, blockquote) > :last-child { margin-bottom: 0; }
+.alt-md-h { margin: 20px 0 8px; color: var(--ink); font: 600 15px/23px var(--font-sans); }
+.alt-md-h[data-depth="1"] { font-size: 19px; line-height: 26px; letter-spacing: -0.01em; }
+.alt-md-h[data-depth="2"] { font-size: 17px; line-height: 24px; }
+.alt-md-list { padding-inline-start: 1.5em; }
+.alt-md-list li + li { margin-top: 4px; }
+.alt-md-list .alt-md-list { margin: 4px 0 0; }
+.alt-md-list li::marker { color: var(--ink-muted); }
+.alt-md-task-item { list-style: none; display: flex; gap: 8px; align-items: flex-start; margin-inline-start: -1.5em; }
+.alt-md-task { flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; margin-top: 3.5px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line-control); color: var(--on-accent); }
+.alt-md-task[data-done] { background: var(--accent); box-shadow: none; }
+.alt-md-task-body { min-width: 0; }
+.alt-md-code { padding: 1px 5px; border-radius: var(--radius-sm); box-shadow: inset 0 0 0 1px var(--line); font: 400 0.87em/1 var(--font-mono); overflow-wrap: anywhere; }
+.alt-md-quote { margin-inline: 0; padding-inline-start: 12px; border-inline-start: 2px solid var(--line); color: var(--ink-muted); }
+.alt-md-hr { margin: 16px 0; }
+.alt-md-table { overflow-x: auto; outline: none; scrollbar-width: thin; }
+.alt-md-table:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-md); }
+.alt-md-table .alt-table { width: auto; min-width: 100%; }
+.alt-md-table .alt-th, .alt-md-table .alt-td { padding: 8px 12px; }
+.alt-md del { color: var(--ink-muted); }
+.alt-md-img { position: relative; display: inline-block; max-width: 100%; vertical-align: top; }
+.alt-md-img img { display: block; max-width: 100%; height: auto; border-radius: var(--radius-md); transition: opacity var(--dur-travel-1) var(--ease-rise), translate var(--dur-travel-1) var(--ease-rise); }
+.alt-md-img[data-state="wait"] { width: min(100%, 320px); aspect-ratio: 16 / 9; }
+.alt-md-img[data-state="wait"] img { position: absolute; inset: 0; opacity: 0; translate: 0 2px; }
+.alt-md-img-imprint { position: absolute; inset: 0; border-radius: var(--radius-md); }
+.alt-md-img-failed { color: var(--ink-muted); font-style: italic; }
+@media (prefers-reduced-motion: reduce) { .alt-md-img img { transition: none; translate: none; } }
+[data-contrast="more"] .alt-md-code { box-shadow: inset 0 0 0 1px var(--line-control); }
+[data-contrast="more"] .alt-md-quote { border-inline-start-color: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-md-code, .alt-md-task { box-shadow: none; border: 1px solid CanvasText; }
+  .alt-md-quote { border-inline-start-color: CanvasText; }
+  .alt-md-task[data-done] { background: Highlight; color: HighlightText; }
+}
 .alt-msg-caret { display: inline-block; width: 7px; height: 1.05em; margin-left: 2px; vertical-align: text-bottom; background: var(--ink-muted); animation: alt-caret 1s steps(1) infinite; }
 @keyframes alt-caret { 50% { opacity: 0; } }
 .alt-msg-caption { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }

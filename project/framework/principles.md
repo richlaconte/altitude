@@ -8,7 +8,7 @@ Rule authority is explicit: normative standards retain their applicability and e
 
 The machine-readable sources are `patterns/*.json`, `rules.json`, `evidence.json`, and their schemas. Pattern Markdown explains those contracts. Runtime sources and executable fixtures implement them; tests establish only the behavior they exercise. Package builds copy prose and generate indexes, versions, hashes, and reference snapshots. Do not hand-edit `dist/guidance`.
 
-For each supported journey test narrow viewports, long translated content, RTL, zoom, reduced motion and forced colors. Keep controls and status reachable without relying on hover, color or depth. Test with keyboard and relevant assistive technology; record browser/AT versions and remaining gaps. A passing scan is not a conformance claim.
+For each supported journey test narrow viewports (320 CSS px with touch; see `project/Mobile.md` and `build/checks/phone.mjs`), long translated content, RTL, zoom, reduced motion and forced colors. Keep controls and status reachable without relying on hover, color or depth. Test with keyboard and relevant assistive technology; record browser/AT versions and remaining gaps. A passing scan is not a conformance claim.
 
 ## Run the examples and verification
 
