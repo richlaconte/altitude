@@ -1203,6 +1203,18 @@ A design review of `takeaway` (#187): the BarChart and LineChart previews now le
 
 Not yet tested with people: whether readers check a takeaway against the marks, or take it on trust.
 
+### E103 · Does the frame's text rank below the data?
+
+A design review of axis text (#193): every chart preview at 960px and 360px in all four schemes, under forced colours and with `contrast="more"`, with `yLabels="inline"` on the "Response time" card. `checks/chart-axis-text.mjs` measures it.
+
+- **Weight before size.** Tick labels were 500 12.5px, the weight of a label on a control, so the axis read as something to press and competed with the marks. They're now 400 13px, the caption of `.alt-chart-desc`, still `ink-muted`, which holds 4.5:1 on every surface at that size. Gridlines stay `line`: visible but subtle is what Stone & Bartram measured, and there's no lighter grey to invent.
+- **The gutter is the cost.** In a 440px card the y labels took 56px: 15% of the plot at 960, 21% at 360. Inline labels, just above each gridline at the left (the FT and Economist convention), give it back.
+- **The unit once.** "250 ms" at the top, then "150" and "50": the numbers read faster without the repeated unit. Only shared symbols and spaced words are lifted out; a compact "K" is part of the number.
+- **Never on the data.** A label that would sit on a line, an area or a bar is left out, and its gridline stays (in the preview, 200 and 100 sit where the lines start). The readout and the table give the exact values. The ground line goes unlabelled, because it's zero, rather than sitting in the bars' way.
+- **Opt-in.** The default stays the gutter until people have used the inline layout.
+
+Not yet tested with people: whether leaving out labels that would cover the data slows reading compared with a full gutter.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

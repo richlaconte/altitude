@@ -130,19 +130,24 @@ function bandScale(domain: string[], range: [number, number], padding: number): 
 /* ───────────────────────── text ───────────────────────── */
 
 const TICK_FONT = '500 12.5px "Instrument Sans", ui-sans-serif, system-ui, sans-serif';
+/** Axis text is a caption in weight 400 (#193): lighter than a label on a control, so it doesn't compete with the marks. */
+const AXIS_FONT = '400 13px "Instrument Sans", ui-sans-serif, system-ui, sans-serif';
 let measurer: CanvasRenderingContext2D | null | undefined;
 /** The width of a tick label: measured where there's a canvas, estimated otherwise (tabular figures are about 0.58em). */
-export function textWidth(s: string) {
+const measureIn = (font: string, s: string) => {
   if (measurer === undefined) measurer = typeof document !== 'undefined' ? document.createElement('canvas').getContext('2d') : null;
-  if (measurer) { measurer.font = TICK_FONT; return measurer.measureText(s).width; }
+  if (measurer) { measurer.font = font; return measurer.measureText(s).width; }
   return s.length * 7.3;
-}
+};
+export function textWidth(s: string) { return measureIn(TICK_FONT, s); }
+/** The width of axis text, in its own font. */
+const axisWidth = (s: string) => measureIn(AXIS_FONT, s);
 
 /** A label cut with an ellipsis to fit max px. The full text stays in the summary, the readout and the table. */
-export function fit(s: string, max: number) {
-  if (textWidth(s) <= max) return s;
+export function fit(s: string, max: number, measure: (s: string) => number = textWidth) {
+  if (measure(s) <= max) return s;
   let lo = 0, hi = s.length;
-  while (lo < hi) { const m = Math.ceil((lo + hi) / 2); if (textWidth(s.slice(0, m).trimEnd() + '…') <= max) lo = m; else hi = m - 1; }
+  while (lo < hi) { const m = Math.ceil((lo + hi) / 2); if (measure(s.slice(0, m).trimEnd() + '…') <= max) lo = m; else hi = m - 1; }
   return s.slice(0, lo).trimEnd() + '…';
 }
 
@@ -613,6 +618,16 @@ type Layer = { frame: Frame; opacity: number };
 type RefGeo = { i: number; band: boolean; from: number; to: number; text: string; tone?: 'caution' | 'critical'; lx: number; ly: number; anchor: 'start' | 'end' };
 /** An annotation laid out in a frame: its x, its plate's left edge and width, and the row it stacks into. */
 type NoteGeo = { i: number; at: number; left: number; w: number; row: number };
+/**
+ * The unit every axis label shares, as a prefix and a suffix ("$", " ms", "%"), so it can be said once. Only symbols
+ * and spaced words count: a compact "K" or "M" is part of the number, not a unit.
+ */
+function unitOf(words: string[]): [string, string] {
+  if (words.length < 2) return ['', ''];
+  const pre = /^[^\p{L}\d+\-−.,\s]*/u.exec(words[0])![0], suf = /(\s\D*|%)$/.exec(words[0])?.[0] ?? '';
+  const all = (f: (w: string) => boolean) => words.every(f);
+  return [pre && all((w) => w.startsWith(pre)) ? pre : '', suf && all((w) => w.endsWith(suf) && w.length > suf.length) ? suf : ''];
+}
 /** How a chart type's marks lie on the plot, for keeping words off them: lines, filled areas, or bars. */
 type MarkShape = { kind: 'line' | 'area' | 'bars'; stacked: boolean; shares: boolean };
 type PlotBox = { x0: number; x1: number; y0: number; y1: number };
@@ -850,6 +865,13 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   bandPadding?: number;
   /** Turns the axes off, for a chart that labels its marks directly. Gridlines and the ground line stay. */
   axes?: boolean;
+  /**
+   * Where the value axis's labels go (#193). 'gutter' (default): a column at the plot's left. 'inline': each label sits
+   * just above its gridline at the plot's left, on a halo, so the plot runs the full width; the top label carries the
+   * unit, a label that would cover a mark is left out, and the ground line goes unlabelled (it is zero). Vertical
+   * cartesian charts only.
+   */
+  yLabels?: 'gutter' | 'inline';
   /** The locale for numbers and dates. Default: the reader's. */
   locale?: string;
   /** The crosshair and readout. Default true; a chart type's `tooltip={false}` turns it off too. */
@@ -914,7 +936,7 @@ const TOP_GAP = 8;
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
-  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
+  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
   live = false, pausable = false, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
@@ -955,7 +977,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const setHidden = (next: string[]) => { legendOpts.onHiddenChange?.(next); if (legendOpts.hidden === undefined) setHiddenOwn(next); };
   const shownConfig = hidden.length ? Object.fromEntries(Object.entries(config).filter(([k]) => !hidden.includes(k))) : config;
   const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(childProps, shownConfig) : {};
-  const TOP = TOP_GAP + (info.top ?? 0);
+  // Inline y labels (#193) sit above their gridlines, so the top one needs room above the plot.
+  const inlineY = yLabels === 'inline' && axes && !info.plot && info.layout !== 'horizontal';
+  const TOP = TOP_GAP + (info.top ?? 0) + (inlineY ? 14 : 0);
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   // A chart that draws its own plot: a grid of cells has no value axis to read a reference or an event against.
   const grid = info.plot === 'grid', xy = info.plot === 'xy';
@@ -1033,7 +1057,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // All zero is real data: give it 0–1, so the ground line is the floor, not the middle of an invented range.
   if (lo === 0 && hi === 0) hi = 1;
   // Horizontal: categories take at most 40% of the width (longer names are cut with an ellipsis), values the rest.
-  const catWidth = horizontal && axes ? Math.min(Math.ceil(Math.max(0, ...[...new Set(data.map((d) => String(d[xKey])))].map((c) => textWidth(xFormat ? xFormat(c) : c)))) + 12, Math.round(W * 0.4)) : 0;
+  const catWidth = horizontal && axes ? Math.min(Math.ceil(Math.max(0, ...[...new Set(data.map((d) => String(d[xKey])))].map((c) => axisWidth(xFormat ? xFormat(c) : c)))) + 12, Math.round(W * 0.4)) : 0;
   const yCount = horizontal ? Math.max(2, Math.min(6, Math.round((W - catWidth - right) / 90))) : Math.max(3, Math.min(6, Math.round((H - TOP - bottom) / 56)));
   const ny = linearScale(yDomain ?? [lo, hi], [1, 0], yCount, !yDomain);
   const rowKey = (d: ChartDatum) => (info.id ? info.id(d) : String(kind === 'time' ? toTime(d[xKey]) : d[xKey]));
@@ -1046,8 +1070,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     ticks: ny.ticks.map((v) => ({ v, a: 1 })),
     band: unit ? new Map(cats.map((c) => [c, [unit(c), unit.bandwidth]])) : null,
     rowAlpha: new Map(), seriesAlpha: new Map(series.map((s) => [s.key, 1])),
-    left: grid ? info.left ?? 0 : !axes ? 0 : horizontal ? catWidth
-      : Math.ceil(Math.max(...ny.ticks.map((t) => textWidth(fmtY(t))), 0)) + 10,
+    left: grid ? info.left ?? 0 : !axes || inlineY ? 0 : horizontal ? catWidth
+      : Math.ceil(Math.max(...ny.ticks.map((t) => axisWidth(fmtY(t))), 0)) + 10,
     extra: [...(bandInfo ? [bandInfo.low, bandInfo.high] : []), ...(info.glide ?? [])],
     xDomain: kind === 'band' ? null : info.xDomain ?? (() => {
       const vs = data.map((d) => (kind === 'time' ? toTime(d[xKey]) : Number(d[xKey]))).filter((v) => isFinite(v));
@@ -1225,10 +1249,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       const bw = (band.get(domain[0])?.[1] ?? 0) * along;
       x = Object.assign((v: string) => from + (band.get(String(v))?.[0] ?? 0) * along, { kind: 'band' as const, domain, range: [from, from + along] as [number, number], ticks: domain, bandwidth: bw, step: bw / (1 - bandPadding) }) as BandScale;
       if (axes && horizontal) {
-        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: fit(bandLabel(d), left - 12), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 }));
+        xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: fit(bandLabel(d), left - 12, axisWidth), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 }));
       } else if (axes) {
         // Show every k-th label, k as small as lets each shown label clear its shown neighbours by 4px.
-        const ws = domain.map((d) => textWidth(bandLabel(d)));
+        const ws = domain.map((d) => axisWidth(bandLabel(d)));
         const step = Math.max(1, (x as BandScale).step);
         let every = 1;
         while (every < domain.length && ws.some((w, i) => i % every === 0 && i + every < ws.length && (w + ws[i + every]) / 2 + 4 > every * step)) every++;
@@ -1248,7 +1272,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       for (let max = Math.max(2, Math.floor(pw / 40)); max >= 2; max--) {
         t = timeScale(dom, [0, pw], max);
         const f = label(t.interval);
-        const at = t.scale.ticks.map((v) => t.scale(v)), ws = t.scale.ticks.map((v) => textWidth(f(v)));
+        const at = t.scale.ticks.map((v) => t.scale(v)), ws = t.scale.ticks.map((v) => axisWidth(f(v)));
         // The first label is set from its start when it sits at the edge, so it only needs to clear the next one.
         const fits = at.every((p, i) => i === 0 || p - at[i - 1] >= (i === 1 && at[0] < 24 ? ws[0] : ws[i - 1] / 2) + ws[i] / 2 + 8);
         if (fits) break;
@@ -1327,13 +1351,27 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         refGeo.push({ i, band: true, from: Math.min(p, q), to: Math.max(p, q), text, tone: r.tone, lx: 0, ly: 0, anchor: 'start' });
       } else refGeo.push({ i, band: false, from: y(v), to: y(v), text, tone: r.tone, lx: 0, ly: 0, anchor: 'end' });
     });
+    // Inline y labels (#193): each just above its gridline at the plot's left. One that would cover a mark is left out
+    // (its gridline stays), and the unit is said once, on the highest label shown. The ground line is zero, unlabelled.
+    const yInline: Array<{ v: number; at: number; a: number; text: string; box: PlotBox }> = [];
+    if (inlineY) {
+      const coverY = markCover(frame, marks, xKey, xOf, y, x, ground);
+      const ticks = frame.ticks.map((t) => ({ ...t, at: y(t.v) })).filter((t) => t.at >= -1 && t.at <= ph + 1 && !(Math.abs(t.at - ground) < 1 && d0 <= 0 && d1 >= 0)).sort((p, q) => p.at - q.at);
+      const words = ticks.map((t) => fmtY(t.v));
+      const [pre, suf] = unitOf(words);
+      ticks.forEach((t, i) => {
+        const box = { x0: 0, x1: axisWidth(words[i]), y0: t.at - 16, y1: t.at - 1 };
+        if (!coverY({ x0: box.x0, x1: box.x1 + 2, y0: box.y0, y1: box.y1 })) yInline.push({ v: t.v, at: t.at, a: t.a, text: words[i], box });
+      });
+      yInline.forEach((l, i) => { if (i > 0 && (pre || suf)) l.text = l.text.slice(pre.length, l.text.length - suf.length); });
+    }
     // Labels: a line's (and a thin band's) at an end of it, above or below; a tall band's inside it. Each takes the first
     // spot that covers no mark, no plate and no label already placed (#184); failing that, the first spot, stepped
     // down below whatever it would cover. Across a horizontal chart, labels sit in the headroom beside their line.
     if (horizontal) {
       for (const g of refGeo) { const a = across.get(g.i); if (a) { g.lx = a.lx; g.ly = a.ly; g.anchor = 'start'; } }
     } else {
-      const taken = noteGeo.map((n) => ({ x0: n.left - 4, x1: n.left + n.w + 4, y0: n.row * 26, y1: n.row * 26 + 22 }));
+      const taken = [...noteGeo.map((n) => ({ x0: n.left - 4, x1: n.left + n.w + 4, y0: n.row * 26, y1: n.row * 26 + 22 })), ...yInline.map((l) => ({ ...l.box, x1: l.box.x1 + 4 }))];
       type Box = { x0: number; x1: number; y0: number; y1: number };
       const hits = (a: Box, b: Box) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
       const covers = markCover(frame, marks, xKey, xOf, y, x, ground);
@@ -1383,7 +1421,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       status: statusOf, hasStatus: !!info.status, statusRanges: { record, pending },
       relevance: relevanceOf, hasRelevance: !!info.relevance || !!info.onSelect, relevanceRegions,
     };
-    return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo };
+    return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo, yInline };
   };
 
   const generated = info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf);
@@ -1730,7 +1768,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                 </defs>
               )}
               {layers.map(({ frame, opacity }, i) => {
-                const { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo } = i === layers.length - 1 ? top : draw(frame);
+                const { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo, yInline } = i === layers.length - 1 ? top : draw(frame);
                 return (
                   <g key={i} transform={`translate(${left},${TOP})`} opacity={opacity < 1 ? opacity : undefined}>
                     <g className="alt-chart-grid">
@@ -1837,12 +1875,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                     )}
                     {axes && !horizontal && !grid && (
                       <>
-                        <g className="alt-chart-axis" data-axis="y">
-                          {frame.ticks.map((t) => {
-                            const at = ctx.y(t.v);
-                            return at >= -1 && at <= ph + 1 ? <text key={t.v} x={-10} y={at} dy="0.32em" textAnchor="end" opacity={t.a < 1 ? t.a : undefined}>{fmtY(t.v)}</text> : null;
-                          })}
-                        </g>
+                        {inlineY
+                          ? <g className="alt-chart-axis" data-axis="y" data-inline="">
+                            {yInline.map((t) => <text key={t.v} x={0} y={t.at - 4} opacity={t.a < 1 ? t.a : undefined}>{t.text}</text>)}
+                          </g>
+                          : <g className="alt-chart-axis" data-axis="y">
+                            {frame.ticks.map((t) => {
+                              const at = ctx.y(t.v);
+                              return at >= -1 && at <= ph + 1 ? <text key={t.v} x={-10} y={at} dy="0.32em" textAnchor="end" opacity={t.a < 1 ? t.a : undefined}>{fmtY(t.v)}</text> : null;
+                            })}
+                          </g>}
                         <g className="alt-chart-axis" data-axis="x">
                           {xTicks.map((t, j) => (
                             <text key={j} x={t.at} y={ph + 18} opacity={t.a < 1 ? t.a : undefined}
