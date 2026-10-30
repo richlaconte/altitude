@@ -1,7 +1,7 @@
 export { ModeContext } from './core';
 export type { AppMode } from './core';
 export { PrimaryScope } from './core';
-export { AltitudeProvider, useAltitude, useDepth, useApproach, riseDelay, Layer, Surface, Kbd, Icons, Spinner, deriveAccent, contrast, checkScheme, usePresence } from './core';
+export { AltitudeProvider, useAltitude, useDepth, useApproach, riseDelay, Layer, Surface, Kbd, useKeyboardLikely, Icons, Spinner, deriveAccent, contrast, checkScheme, usePresence } from './core';
 export type { Scheme, BuiltInScheme, RetiredScheme, CustomScheme, SchemeColorToken, SchemeShadowToken, DataColorToken, SchemeCheck } from './core';
 export {
   Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter,

@@ -11,6 +11,8 @@
 .col { display: flex; flex-direction: column; gap: 14px; }
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
 .sk-frame{height:680px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}.sk-ws{display:flex;align-items:center;gap:10px;padding:6px;font:600 14px/20px var(--font-sans)}.sk-search{flex:1;max-width:360px;justify-content:flex-start;color:var(--ink-muted)}.sk-body{display:grid;gap:16px;padding-bottom:96px;min-width:0}.sk-body .alt-table{min-width:560px}
 </style>
 </head>

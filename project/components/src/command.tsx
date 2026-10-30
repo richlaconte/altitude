@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cssMs, cx, Kbd, Layer, riseDelay, useControllable, useIsoLayoutEffect } from './core';
+import { cssMs, cx, Kbd, Layer, riseDelay, useControllable, useIsoLayoutEffect, useKeyboardLikely } from './core';
 import { Input } from './controls';
 import { summitTaken, useModal } from './overlays';
 import { useAltitudeContext } from './modal-state';
@@ -52,8 +52,11 @@ export interface CommandPaletteProps {
   onQueryChange?: (query: string) => void;
   /** Close once an item is chosen. Default true. */
   closeOnSelect?: boolean;
-  /** The key hints along the bottom. Default true. */
-  hints?: boolean;
+  /**
+   * The key hints: the footer, the item shortcuts and the field's esc. 'auto' (default): shown where there's likely a
+   * keyboard, hidden on a touch-only device until a key is pressed (#262). true or false forces them.
+   */
+  hints?: boolean | 'auto';
   className?: string;
   'aria-label'?: string;
 }
@@ -131,7 +134,9 @@ type Row = { key: string; item: CommandItem; group: CommandGroup; predicted: boo
  * when results change, surviving rows travel to their new places and new ones rise in, a few at a time.
  */
 export function CommandPalette({ items, open, defaultOpen = false, onOpenChange, onSelect, placeholder = 'Type a command or search…', filter, empty,
-  shortcut = 'k', query: queryProp, defaultQuery = '', onQueryChange, closeOnSelect = true, hints = true, className, ...rest }: CommandPaletteProps) {
+  shortcut = 'k', query: queryProp, defaultQuery = '', onQueryChange, closeOnSelect = true, hints: hintsProp = 'auto', className, ...rest }: CommandPaletteProps) {
+  const keyboard = useKeyboardLikely();
+  const hints = hintsProp === 'auto' ? keyboard : hintsProp;
   const [isOpen, set] = useControllable(open, defaultOpen, onOpenChange);
   const [innerQuery, setInnerQuery] = React.useState(defaultQuery);
   const query = queryProp ?? innerQuery;
@@ -281,7 +286,7 @@ export function CommandPalette({ items, open, defaultOpen = false, onOpenChange,
             <Input className="alt-cmd-field" value={query} placeholder={placeholder} autoComplete="off" spellCheck={false}
               role="combobox" aria-label={placeholder.replace(/[….]+$/, '')} aria-expanded={flat.length > 0} aria-controls={`${id}-list`}
               aria-autocomplete="list" aria-activedescendant={activeIndex >= 0 ? `${id}-o-${activeIndex}` : undefined}
-              leading={<SearchIcon />} trailing={<span aria-hidden="true"><Kbd>esc</Kbd></span>}
+              leading={<SearchIcon />} trailing={hints ? <span aria-hidden="true"><Kbd>esc</Kbd></span> : undefined}
               onChange={(e) => { setInnerQuery(e.target.value); setActive(0); setOnset(false); onQueryChange?.(e.target.value); }}
               // A query carried in is continued, not replaced: the caret lands after it.
               onFocus={(e) => { if (caretPlaced.current) return; caretPlaced.current = true; const n = e.currentTarget.value.length; e.currentTarget.setSelectionRange(n, n); }}
@@ -312,7 +317,7 @@ export function CommandPalette({ items, open, defaultOpen = false, onOpenChange,
                             <span className="alt-cmd-title"><Marked text={item.label} ranges={matchRanges(item.label, q)} /></span>
                             {item.description && <span className="alt-cmd-desc">{item.description}</span>}
                           </span>
-                          {item.shortcut && <span className="alt-cmd-keys">{item.shortcut.map((k, j) => <Kbd key={j}>{k}</Kbd>)}</span>}
+                          {item.shortcut && hints && <span className="alt-cmd-keys">{item.shortcut.map((k, j) => <Kbd key={j}>{k}</Kbd>)}</span>}
                         </div>
                       );
                     })}

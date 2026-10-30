@@ -11,6 +11,8 @@
 .col { display: flex; flex-direction: column; gap: 14px; }
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
 .dv-page{max-width:820px;margin-inline:auto;display:grid;gap:24px;overflow-wrap:break-word}.dv-h{font:600 21px/28px var(--font-sans);margin:0}.dv-sub{font:600 17px/24px var(--font-sans);margin:0}.dv-section{display:grid;gap:12px}.dv-row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}.dv-mask{font:500 13px/18px var(--font-mono)}.dv-muted{margin:0;font:400 13px/19px var(--font-sans);color:var(--ink-muted)}.dv-muted:empty{display:none}.dv-actions{display:inline-flex;gap:4px}.dv-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.dv-hook{padding:16px;gap:14px}.dv-hook code{font:500 13px/18px var(--font-mono)}.dv-events{display:flex;flex-wrap:wrap;gap:8px 20px}.dv-delivery{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap}.dv-apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.dv-app{padding:16px;gap:8px;align-items:flex-start}.dv-page .alt-table{min-width:600px}
 </style>
 </head>
