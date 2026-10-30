@@ -3802,8 +3802,8 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    size-target-min, 24px (WCAG 2.5.8) or 44px under a coarse pointer, so a finger finds it. It has no colour, border
    or shadow, so forced colours and every elevation are untouched. Date segments sit side by side, so theirs stops at
    24px rather than covering a neighbour. ── */
-:is(.alt-tag-remove, .alt-toast-close, .alt-cite, .alt-ailabel, .alt-filter-operator, .alt-date-seg, .alt-numfield-step, .alt-table-sort, .alt-link, .alt-reltime) { position: relative; }
-:is(.alt-numfield-step, .alt-slider-thumb, .alt-brush-grip, .alt-tag-remove, .alt-toast-close, .alt-cite, .alt-ailabel, button.alt-chart-note, .alt-alert-more, .alt-filter-operator, .alt-table-sort)::after {
+:is(.alt-tag-remove, .alt-toast-close, .alt-cite, .alt-ailabel, .alt-filter-operator, .alt-date-seg, .alt-numfield-step, .alt-table-sort, .alt-link, .alt-reltime, .alt-chart-pin-remove) { position: relative; }
+:is(.alt-numfield-step, .alt-slider-thumb, .alt-brush-grip, .alt-tag-remove, .alt-toast-close, .alt-cite, .alt-ailabel, button.alt-chart-note, .alt-alert-more, .alt-filter-operator, .alt-table-sort, .alt-chart-pin-remove)::after {
   content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, var(--size-target-min)); height: max(100%, var(--size-target-min)); transform: translate(-50%, -50%);
 }
 .alt-numfield .alt-numfield-step::after { width: 100%; }
