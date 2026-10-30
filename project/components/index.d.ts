@@ -1142,10 +1142,20 @@ export interface FilterField {
 }
 export type FilterValue = string | number | { start: string; end: string } | undefined;
 export interface Filter { id: string; field: string; operator: string; value: FilterValue }
+/** Nested logic: conditions and, with nesting={2}, groups of conditions, each with its own all/any. */
+export interface FilterTree { match: 'all' | 'any'; items: (Filter | FilterGroup)[] }
+export interface FilterGroup { id: string; match: 'all' | 'any'; items: Filter[] }
+/** The whole expression in words: "Plan is Pro and any of: Country is Germany, Seats > 50". */
+export declare function filterSentence(fields: FilterField[], value: Filter[] | FilterTree, match?: 'all' | 'any'): string;
 export interface FilterBarProps {
   fields: FilterField[];
-  value: Filter[];
-  onValueChange: (filters: Filter[]) => void;
+  /** The conditions; or a FilterTree for nested logic. */
+  value: Filter[] | FilterTree;
+  onValueChange: ((filters: Filter[]) => void) | ((tree: FilterTree) => void);
+  /** With a FilterTree: 2 allows groups one level deep. Default 1 (no groups). */
+  nesting?: 1 | 2;
+  /** Show the all/any segment even with one condition. */
+  matchAlways?: boolean;
   /** Shown as a segment when there's more than one filter. Omit to hide it. */
   match?: 'all' | 'any';
   onMatchChange?: (match: 'all' | 'any') => void;
@@ -2787,7 +2797,7 @@ declare global {
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
       Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
-      Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
+      Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; filterSentence: typeof filterSentence; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
