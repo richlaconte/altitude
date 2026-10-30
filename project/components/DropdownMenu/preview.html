@@ -13,7 +13,8 @@
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
 /* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
 summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
-.pair { display: flex; gap: 220px; }
+.pair { display: flex; flex-wrap: wrap; gap: 24px 220px; }
+@media (max-width: 640px) { .pair { gap: 300px 24px; } }
 </style>
 </head>
 <body>

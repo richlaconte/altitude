@@ -673,7 +673,8 @@ function App() {
 
 === DropdownMenu | <!-- @dsCard group="Overlays" height=340 subtitle="One gliding highlight; predicted items arrive first" -->
 --- css
-.pair { display: flex; gap: 220px; }
+.pair { display: flex; flex-wrap: wrap; gap: 24px 220px; }
+@media (max-width: 640px) { .pair { gap: 300px 24px; } }
 --- jsx
 const items = [
   { type: 'label', label: 'Project' },

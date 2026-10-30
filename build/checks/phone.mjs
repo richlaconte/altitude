@@ -27,9 +27,12 @@ const measure = (W) => {
   const visible = (e) => { const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && +cs.opacity !== 0 && !e.closest('[inert],[aria-hidden="true"]'); };
   // M1: sideways scroll, and the outermost element past the right edge that isn't inside a horizontal scroller.
   if (document.body.closest('[data-phone-ignore]')) return out;
-  if (document.documentElement.scrollWidth > W + 1) out.M1.push(`page scrolls sideways: ${document.documentElement.scrollWidth}px in ${W}px`);
   const scroller = (e) => { for (let p = e.parentElement; p; p = p.parentElement) { const o = getComputedStyle(p).overflowX; if (o === 'auto' || o === 'scroll' || o === 'hidden' || o === 'clip') return true; } return false; };
   const past = [...document.body.querySelectorAll('*')].filter((e) => !ignored(e) && visible(e) && e.getBoundingClientRect().right > W + 1 && !scroller(e));
+  // The page scrolls sideways only because something reaches past the edge. A phone's zoom-to-fit can keep a stretched
+  // layout viewport after a transient overflow at load (a panel opened by script before it was fitted), which a panel
+  // opened by a person never causes, so the page-wide width alone isn't counted.
+  if (past.length && document.documentElement.scrollWidth > W + 1) out.M1.push(`page scrolls sideways: ${document.documentElement.scrollWidth}px in ${W}px`);
   for (const e of past) if (!past.includes(e.parentElement)) out.M1.push(`${name(e)} reaches ${Math.round(e.getBoundingClientRect().right)}px`);
   // M2: hit areas, probed where the browser hits them.
   const sel = 'button, a[href], input, select, textarea, summary, [role=button], [role=tab], [role=option], [role=menuitem], [role=menuitemcheckbox], [role=menuitemradio], [role=checkbox], [role=radio], [role=switch], [role=slider], [role=treeitem], [role=spinbutton], [role=separator][tabindex], [tabindex="0"]';

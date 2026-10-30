@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Layer, ModePlate, PrimaryScope, useControllable, useIsoLayoutEffect, useKeyboardLikely, useOutside, usePresence } from './core';
+import { cx, Icons, Layer, ModePlate, PrimaryScope, useControllable, useFitFloating, useIsoLayoutEffect, useKeyboardLikely, useOutside, usePresence } from './core';
 import { Button } from './controls';
 import { ModalOwner, modalDocument, tabbables, useAltitudeContext } from './modal-state';
 
@@ -29,6 +29,8 @@ export function Tooltip({ content, side = 'top', delay = 450, defaultOpen = fals
   const timer = React.useRef<number | undefined>(undefined);
   const id = React.useId();
   const { mounted, state } = usePresence(open, EXIT_3);
+  const tip = React.useRef<HTMLSpanElement>(null);
+  useFitFloating(tip, mounted);
   const show = () => {
     const isWarm = Date.now() - lastTipClose < 400;
     setWarm(isWarm);
@@ -42,7 +44,7 @@ export function Tooltip({ content, side = 'top', delay = 450, defaultOpen = fals
       onFocus={() => { window.clearTimeout(timer.current); setWarm(true); setOpen(true); }} onBlur={hide}
       onKeyDown={(e) => { if (e.key === 'Escape') hide(); }}>
       {React.cloneElement(children, { 'aria-describedby': open ? id : undefined })}
-      {mounted && <span role="tooltip" id={id} className="alt-tip" data-side={side} data-state={state} data-warm={warm ? '' : undefined}>{content}</span>}
+      {mounted && <span ref={tip} role="tooltip" id={id} className="alt-tip" data-side={side} data-state={state} data-warm={warm ? '' : undefined}>{content}</span>}
     </span>
   );
 }
@@ -65,6 +67,7 @@ export function Popover({ trigger, children, open, defaultOpen = false, onOpenCh
   const { mounted, state } = usePresence(isOpen, EXIT_3);
   const close = React.useCallback(() => set(false), [set]);
   useOutside(ref, isOpen, close);
+  useFitFloating(panel, mounted);
   React.useEffect(() => {
     if (state !== 'open' || !panel.current) return;
     const f = panel.current.querySelector<HTMLElement>('input, textarea, select, button, [href], [tabindex]:not([tabindex="-1"])');
@@ -121,6 +124,8 @@ export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', 
   const keyboard = useKeyboardLikely();
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   const menu = React.useRef<HTMLDivElement>(null);
+  // On screen at any width (#248); the panel mounts only while open.
+  useFitFloating(menu, true);
   const refs = React.useRef<(HTMLDivElement | null)[]>([]);
   useIsoLayoutEffect(() => {
     const el = active >= 0 ? refs.current[active] : null;
@@ -221,6 +226,8 @@ export function HoverCard({ trigger, children, side = 'bottom', align = 'start',
   const timer = React.useRef<number | undefined>(undefined);
   const closeMe = React.useRef(() => set(false));
   closeMe.current = () => set(false);
+  const card = React.useRef<HTMLDivElement>(null);
+  useFitFloating(card, mounted);
   // One preview at a time: opening a card hands over from whichever card is open (warm, so it's instant).
   React.useEffect(() => {
     if (!isOpen) return;
@@ -248,7 +255,7 @@ export function HoverCard({ trigger, children, side = 'bottom', align = 'start',
       onKeyDown={(e) => { if (e.key === 'Escape' && isOpen) { e.stopPropagation(); window.clearTimeout(timer.current); set(false); lastTipClose = Date.now(); } }}>
       {trigger}
       {mounted && (
-        <div className={cx('alt-pop alt-hovercard', className)} data-state={state} data-side={side} data-align={align}
+        <div ref={card} className={cx('alt-pop alt-hovercard', className)} data-state={state} data-side={side} data-align={align}
           onPointerEnter={() => window.clearTimeout(timer.current)}>
           {children}
         </div>

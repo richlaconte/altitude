@@ -67,6 +67,7 @@ jobs:
           node ../scripts/record-check.mjs keyboard-hints node checks/keyboard-hints.mjs
           node ../scripts/record-check.mjs visible-viewport node checks/visible-viewport.mjs
           node ../scripts/record-check.mjs safe-area node checks/safe-area.mjs
+          node ../scripts/record-check.mjs float-fit node checks/float-fit.mjs
           node checks/approach-and-lamps.mjs
           node checks/field-focus.mjs
           node checks/avatar.mjs
