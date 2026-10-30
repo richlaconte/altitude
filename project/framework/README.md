@@ -2,6 +2,8 @@
 
 Start from the person's task. Read only the relevant pattern below, its linked rules, and the public declarations. The installed copy matches the package version; `altitude doctor --json` checks that connection. Guidance supports judgment; it does not certify an application.
 
+Starting a new app? Copy the [app skeleton](app-skeleton.md): shell, page header, a filtered and paged table, a record in a sheet, and settings, composed correctly.
+
 | Intent | Focused contract |
 | --- | --- |
 | Edit a record | [Edit record](patterns/edit-record.md) |
