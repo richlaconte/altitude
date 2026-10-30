@@ -3217,15 +3217,25 @@ function App() {
   ]);
   const [status, setStatus] = React.useState('ready');
   const timer = React.useRef();
+  // Messages written while the assistant works wait in the queue; the first is sent when the turn ends.
+  const [queued, setQueued] = React.useState([]);
+  const queuedRef = React.useRef(queued); queuedRef.current = queued;
+  const sendRef = React.useRef();
   const stream = (id) => {
     let n = 0;
     const tick = () => {
       n += 6;
       setMsgs((ms) => ms.map((m) => (m.id === id ? { ...m, text: answer.slice(0, n), status: n >= answer.length ? 'complete' : 'streaming' } : m)));
-      if (n < answer.length) timer.current = setTimeout(tick, 60); else setStatus('ready');
+      if (n < answer.length) timer.current = setTimeout(tick, 60);
+      else {
+        setStatus('ready');
+        const next = queuedRef.current[0];
+        if (next) { setQueued((q) => q.slice(1)); setTimeout(() => sendRef.current({ text: next.text }), 0); }
+      }
     };
     tick();
   };
+  const enqueue = ({ text }) => setQueued((q) => [...q, { id: String(Date.now()), text }]);
   const send = ({ text }) => {
     const id = Date.now();
     setMsgs((ms) => [...ms, { id: id - 1, from: 'user', text }, { id, from: 'assistant', text: '', status: 'streaming' }]);
@@ -3246,7 +3256,14 @@ function App() {
     const versions = m.versions.map((v, j) => (j === m.v ? { ...v, rest: msgs.slice(i + 1) } : v));
     setMsgs([...msgs.slice(0, i), { ...m, text: versions[k].text, files: versions[k].files, versions, v: k }, ...(versions[k].rest ?? [])]);
   };
+  const sendNow = (id) => {
+    const q = queued.find((x) => x.id === id);
+    setQueued((qs) => qs.filter((x) => x.id !== id));
+    stop();
+    setTimeout(() => sendRef.current({ text: q.text }), 0);
+  };
   const stop = () => { clearTimeout(timer.current); setStatus('ready'); setMsgs((ms) => ms.map((m) => (m.status === 'streaming' ? { ...m, status: 'stopped' } : m))); };
+  sendRef.current = send;
   return (
     <div className="cv">
       <A.Conversation aria-label="Assistant">
@@ -3262,7 +3279,8 @@ function App() {
         </A.ConversationContent>
         <A.ConversationScrollButton />
       </A.Conversation>
-      <A.PromptInput onSubmit={send} status={status} onStop={stop}>
+      <A.ConversationQueue items={queued} onSendNow={sendNow} onEdit={(id, text) => setQueued((qs) => qs.map((q) => (q.id === id ? { ...q, text } : q)))} onRemove={(id) => setQueued((qs) => qs.filter((q) => q.id !== id))} />
+      <A.PromptInput onSubmit={send} status={status} onStop={stop} onQueue={enqueue}>
         <A.PromptInputTextarea placeholder="Ask about this workspace" />
         <A.PromptInputToolbar><A.PromptInputSubmit /></A.PromptInputToolbar>
       </A.PromptInput>

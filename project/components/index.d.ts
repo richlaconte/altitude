@@ -3216,6 +3216,8 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
   /** 'submitted' and 'streaming' turn Send into Stop, in the same slot. Default 'ready'. */
   status?: PromptStatus;
   onStop?: () => void;
+  /** Enter while 'submitted' or 'streaming' queues the message instead of doing nothing; the button stays Stop. Show the queue with ConversationQueue. */
+  onQueue?: (message: PromptMessage) => void;
   value?: string;
   onValueChange?: (text: string) => void;
   /** A promise holds the chip as pending until it settles; a rejection removes it. */
@@ -3272,6 +3274,19 @@ export interface MessageAttachment {
 }
 /** What was sent with a message, before its content: 64px thumbnails and settled Tag plates, in a list named "2 attachments". */
 export declare function MessageAttachments(props: { items: MessageAttachment[] } & Omit<React.HTMLAttributes<HTMLUListElement>, 'children'>): React.ReactElement | null;
+export interface QueuedMessage { id: string; text: string }
+export interface ConversationQueueProps {
+  /** Messages written while the agent worked, in the order they'll be sent. */
+  items: QueuedMessage[];
+  /** Stop the current turn and send this one now. */
+  onSendNow?: (id: string) => void;
+  /** Edit opens it in place; called with the new text. */
+  onEdit?: (id: string, text: string) => void;
+  onRemove?: (id: string) => void;
+  className?: string;
+}
+/** Queued messages between the thread and the composer: flush sheets with a dashed rim, "Queued · 1 of 2", Send now, Edit, Remove. */
+export declare function ConversationQueue(props: ConversationQueueProps): React.ReactElement | null;
 export interface MessageActionsProps {
   /** Shows Copy (the message's text, or this function's). */
   onCopy?: boolean | (() => string);
@@ -3474,7 +3489,7 @@ declare global {
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
-      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; MessageActions: typeof MessageActions;
+      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;

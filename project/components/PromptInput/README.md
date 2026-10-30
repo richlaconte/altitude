@@ -14,6 +14,8 @@ Where a person writes to an assistant or agent: a textarea that grows, attachmen
 
 **Parts:** `PromptInput` (`onSubmit({ text, files })`, `status` (`'ready' | 'submitted' | 'streaming' | 'error'`), `onStop`, `value`, `onValueChange`, `onAttach`, `accept`); `PromptInputAttachments`; `PromptInputTextarea` (`placeholder`, `maxHeight`); `PromptInputToolbar`; `PromptInputAttach`; `PromptInputSubmit`.
 
+**Queueing.** With `onQueue`, Enter while the agent works queues the message instead of doing nothing: the button stays Stop, the composer empties and keeps focus, and "Message queued. It will be sent when the assistant finishes." is announced. Show the queue with `ConversationQueue`, and send the first one when the turn ends.
+
 **You provide:** sending, stopping, uploading, and the `status` of the response. Leave out `accept` and there are no attachments.
 
 ```tsx

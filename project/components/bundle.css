@@ -1887,6 +1887,16 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-msg-editor-actions { display: flex; justify-content: flex-end; gap: 6px; }
 .alt-msg[data-from="user"] .alt-msg-actions { justify-content: flex-end; margin-left: 0; margin-right: -6px; }
 .alt-msg[data-from="user"] .alt-msg-edited { justify-content: flex-end; }
+/* The queue (#276): written but not dispatched, so it doesn't hover; the person's sheet on the ground with a dashed
+   line-control rim, the way Altitude draws what isn't in the record yet. It appears in place: it's the person's own act. */
+.alt-convo-queue { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.alt-queued { width: fit-content; max-width: min(72ch, 85%); padding: 8px 12px 4px; border: 1px dashed var(--line-control); border-radius: var(--radius-md); background: var(--accent-soft); color: var(--ink); }
+.alt-queued[data-editing] { width: min(72ch, 85%); padding-bottom: 8px; }
+.alt-queued-text { margin: 0; font: 400 15px/23px var(--font-sans); white-space: pre-wrap; overflow-wrap: anywhere; }
+.alt-queued-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
+.alt-queued-state { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-queued-actions { display: inline-flex; gap: 2px; margin-right: -6px; }
+@media (forced-colors: active) { .alt-queued { border-color: CanvasText; } }
 .alt-convo-jump { position: absolute; left: 50%; bottom: var(--space-3); translate: -50% 0; z-index: 1; --alt-bg: var(--surface-floating); --alt-sh: var(--elev-3); --alt-sh-up: var(--elev-3); animation: alt-emerge var(--dur-travel-2) var(--ease-rise); --alt-from-y: 6px; }
 @media (prefers-reduced-motion: reduce) { .alt-msg-caret { animation: none; } }
 [data-motion="reduced"] .alt-msg-caret { animation: none; }

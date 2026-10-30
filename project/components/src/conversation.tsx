@@ -209,7 +209,7 @@ export function MessageContent({ className, children, ...rest }: React.HTMLAttri
 
 // The message opened in place: a Textarea well inside the sheet, with Cancel and "Send edit". Editing is temporary
 // local input, not a pending write, so nothing hovers until it's sent. Escape cancels; Ctrl/⌘+Enter sends.
-function MessageEditor({ initial, onDone }: { initial: string; onDone: (text?: string) => void }) {
+function MessageEditor({ initial, onDone, action = 'Send edit' }: { initial: string; onDone: (text?: string) => void; action?: string }) {
   const [value, setValue] = React.useState(initial);
   const ref = React.useRef<HTMLTextAreaElement>(null);
   React.useEffect(() => { const t = ref.current; if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, []);
@@ -224,9 +224,62 @@ function MessageEditor({ initial, onDone }: { initial: string; onDone: (text?: s
         }} />
       <div className="alt-msg-editor-actions">
         <Button size="sm" variant="ghost" onClick={() => onDone()}>Cancel</Button>
-        <Button size="sm" variant="secondary" disabled={!changed} onClick={() => onDone(value.trim())}>Send edit</Button>
+        <Button size="sm" variant="secondary" disabled={!changed} onClick={() => onDone(value.trim())}>{action}</Button>
       </div>
     </div>
+  );
+}
+
+export interface QueuedMessage { id: string; text: string }
+export interface ConversationQueueProps {
+  /** Messages written while the agent worked, in the order they'll be sent. */
+  items: QueuedMessage[];
+  /** Stop the current turn and send this one now. */
+  onSendNow?: (id: string) => void;
+  /** Edit opens it in place; called with the new text. */
+  onEdit?: (id: string, text: string) => void;
+  onRemove?: (id: string) => void;
+  className?: string;
+}
+/**
+ * Messages queued while the agent works (#276), between the thread and the composer, in order, each with Send now,
+ * Edit and Remove. A queued message is written but not dispatched, so it doesn't hover (pending is for a write in
+ * flight): it's the person's sheet on the ground with a dashed rim, "Queued · 1 of 2". Your app sends the first when
+ * the turn ends, and it becomes an ordinary message in the log.
+ */
+export function ConversationQueue({ items, onSendNow, onEdit, onRemove, className }: ConversationQueueProps) {
+  const [editing, setEditing] = React.useState<string | null>(null);
+  const list = React.useRef<HTMLOListElement>(null);
+  const remove = (id: string, i: number) => {
+    onRemove?.(id);
+    // Focus the next queued message's first action, or the composer when it was the last.
+    requestAnimationFrame(() => {
+      const rows = list.current?.querySelectorAll<HTMLElement>('.alt-queued');
+      const next = rows && i < rows.length ? rows[i].querySelector<HTMLElement>('button') : null;
+      (next ?? (list.current?.parentElement ?? document).querySelector<HTMLElement>('.alt-prompt textarea') ?? document.querySelector<HTMLElement>('.alt-prompt textarea'))?.focus();
+    });
+  };
+  if (!items.length) return null;
+  return (
+    <ol ref={list} className={cx('alt-convo-queue', className)} aria-label="Queued messages">
+      {items.map((q, i) => (
+        <li key={q.id} className="alt-queued" data-editing={editing === q.id ? '' : undefined}>
+          {editing === q.id
+            ? <MessageEditor initial={q.text} action="Save" onDone={(text) => { setEditing(null); if (text !== undefined) onEdit?.(q.id, text); }} />
+            : <>
+              <p className="alt-queued-text">{q.text}</p>
+              <div className="alt-queued-foot">
+                <span className="alt-queued-state">Queued · {i + 1} of {items.length}</span>
+                <span className="alt-queued-actions">
+                  {onSendNow && <Button size="sm" variant="ghost" onClick={() => onSendNow(q.id)}>Send now</Button>}
+                  {onEdit && <Button size="sm" variant="ghost" onClick={() => setEditing(q.id)}>Edit</Button>}
+                  {onRemove && <Button size="sm" variant="ghost" square aria-label={`Remove queued message ${i + 1}`} onClick={() => remove(q.id, i)}><Icons.X size={14} /></Button>}
+                </span>
+              </div>
+            </>}
+        </li>
+      ))}
+    </ol>
   );
 }
 
