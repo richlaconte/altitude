@@ -2455,7 +2455,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-board-empty { display: grid; place-items: center; min-height: 72px; border-radius: var(--radius-md); font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
 .alt-board-card {
   position: relative; padding: 10px 12px; border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1);
-  color: var(--ink); font: 500 14px/20px var(--font-sans); cursor: grab; user-select: none; outline: none;
+  color: var(--ink); font: 500 14px/20px var(--font-sans); cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; outline: none;
   transition: box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1), transform var(--dur-travel-2) var(--ease-settle),
     rotate var(--dur-travel-2) var(--ease-settle), scale var(--dur-travel-2) var(--ease-settle);
 }
@@ -3706,6 +3706,8 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-board-card-tools { position: absolute; top: 4px; right: 4px; display: inline-flex; gap: 2px; opacity: 0; transition: opacity var(--dur-travel-1); }
 .alt-board-card:focus-within .alt-board-card-tools, .alt-board-card:focus-visible .alt-board-card-tools { opacity: 1; }
 @media (hover: hover) { .alt-board-card:hover .alt-board-card-tools { opacity: 1; } }
+/* Without hover the tools are always there, or a finger could never find them (#254). */
+@media (hover: none) { .alt-board-card-tools { opacity: 1; } }
 .alt-board-card-editor { min-width: 0; }
 @media (forced-colors: active) { .alt-board-add { border: 1px dashed CanvasText; } .alt-board-new[data-status="pending"] { outline: 1px dotted CanvasText; } .alt-board-new[data-status="failed"] { outline: 2px dashed CanvasText; } }
 

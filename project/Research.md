@@ -1432,6 +1432,10 @@ A measurement (#260): at 375 CSS px the DataGrid's five columns were each about 
 
 A measurement (#256): `.alt-sort-item` was `touch-action: none` across the whole row, so on a phone every swipe that started on a sortable list reordered it and the page never scrolled. Rows are now `touch-action: manipulation`: a swipe scrolls, and a press-and-hold of 400ms without moving more than 8px picks the row up, after which the browser isn't allowed to pan (the first `touchmove` is cancelled) or open a long-press menu. The grip alone is `touch-action: none` and picks up at once, with a finger-sized hit area under a coarse pointer. A mouse drag starts as before, without a hold. The hold is a shared helper (`touchHold`), so Board and Tree take the same gesture (#254, #255). `checks/touch-drag.mjs`.
 
+### E130 · Board cards by touch
+
+A measurement (#254): on touch a Board card couldn't be moved at all. The board scrolls sideways, so the browser claimed the finger for panning and sent `pointercancel`, which the card treats as a drop; and the card tools only appeared on hover. Cards now take the shared press-and-hold (E129): a swipe scrolls the board, a 400ms hold picks the card up (it lifts as a mouse pick-up does, and "Picked up" is announced), and a drag then moves it between columns. The tools are always shown where there's no hover. Auto-scrolling the board while a card is carried near its edge is left for later. `checks/touch-drag.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
