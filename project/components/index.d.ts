@@ -3258,6 +3258,8 @@ export interface MessageProps extends React.HTMLAttributes<HTMLElement> {
   /** Who's speaking. Default "You" or "Assistant". */
   name?: string;
   onRetry?: () => void;
+  /** A person's message that was edited and resent: "Edited" in its caption. */
+  edited?: boolean;
 }
 export declare function Message(props: MessageProps): React.ReactElement;
 export declare function MessageContent(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
@@ -3284,8 +3286,10 @@ export interface MessageActionsProps {
   onRegenerate?: () => void;
   onFeedback?: (value: 'up' | 'down' | null) => void;
   feedback?: 'up' | 'down' | null;
-  /** Regenerated answers kept as versions: "Version 2 of 2". */
+  /** Regenerated answers, or a person's edited message, kept as versions: "Version 2 of 2". Switching is announced. */
   versions?: { index: number; total: number; onChange: (index: number) => void };
+  /** A person's message: an Edit action that opens it in place (Cancel, "Send edit"; Escape, Ctrl/⌘+Enter); called with the new text. */
+  onEdit?: (text: string) => void;
   className?: string;
 }
 export declare function MessageActions(props: MessageActionsProps): React.ReactElement | null;
