@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "import",
+  "version": 1,
+  "title": "Import",
+  "intents": [
+    "import",
+    "upload csv",
+    "csv",
+    "bulk import",
+    "map columns",
+    "spreadsheet upload"
+  ],
+  "purpose": "Upload a file, map its columns, fix the rows with problems, review and import with a receipt.",
+  "useWhen": [
+    "People bring many records in from a CSV or spreadsheet file."
+  ],
+  "avoidWhen": [
+    "Attaching files to a record; use DropZone with its upload queue."
+  ],
+  "alternatives": [
+    "Use DropZone for attachments, and the review-submit contract for a short form."
+  ],
+  "requiredInputs": [
+    "accepted file types and size limit",
+    "a parser returning columns and rows with line numbers",
+    "target fields with which are required",
+    "validation per field and the duplicate rule",
+    "an import job adapter with progress and cancellation where supported"
+  ],
+  "states": [
+    "upload",
+    "uploading",
+    "upload-failed",
+    "mapping",
+    "required-unmapped",
+    "fixing",
+    "reviewing",
+    "importing",
+    "cancelled",
+    "import-failed",
+    "complete"
+  ],
+  "transitions": [
+    "upload → uploading → mapping, or upload-failed with Retry",
+    "mapping → fixing once every required field is mapped",
+    "fixing → reviewing; rows with problems are skipped",
+    "reviewing → importing → complete with a receipt",
+    "importing → cancelled or import-failed, saying what was imported"
+  ],
+  "rules": [
+    "ALT-IMPORT-001",
+    "ALT-REVIEW-001",
+    "ALT-STATUS-001"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Importing many records from a file.",
+  "exceptions": [
+    "Require only states supported by the application; an import that can't be cancelled omits Cancel and says so."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/import.md",
+  "implementation": "build/fixtures/patterns/import.jsx",
+  "examples": [
+    "build/fixtures/patterns/import.jsx"
+  ],
+  "verification": [
+    "build/checks/import-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}

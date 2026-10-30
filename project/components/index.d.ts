@@ -1229,6 +1229,8 @@ export interface DataGridProps<T> {
   onCellsSave?: (changes: DataGridChange<T>[]) => DataGridResult | Promise<DataGridResult>;
   /** Ctrl/Cmd+Z: reverse the last committed change (or batch). Omit and Ctrl+Z does nothing. */
   onUndo?: (last: DataGridChange<T>[]) => void;
+  /** Check every cell against its column's `validate` at rest, not only while it's edited: an invalid value lies in a trench on critical-soft, with its problem in the cell's description. For data that arrived from elsewhere (an import). */
+  showInvalid?: boolean;
   maxHeight?: number | string;
   className?: string;
 }

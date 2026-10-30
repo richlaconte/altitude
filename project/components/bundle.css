@@ -3467,6 +3467,9 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-grid-cell[data-editing] { padding: 0; background: var(--surface-well); box-shadow: var(--well), inset 0 0 0 2px var(--alt-rim-held, var(--accent)); animation: alt-grid-sink var(--dur-travel-1) var(--ease-sink); }
 @keyframes alt-grid-sink { from { background: transparent; box-shadow: none; } }
 .alt-grid-cell[data-editing]:has([aria-invalid="true"]) { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 2px var(--critical); }
+.alt-grid-cell[data-invalid]:not([data-editing]) { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
+.alt-grid-cell[data-invalid][data-active]:not([data-editing]) { box-shadow: var(--trench), inset 0 0 0 2px var(--accent-ink); }
+@media (forced-colors: active) { .alt-grid-cell[data-invalid]:not([data-editing]) { outline: 2px dashed CanvasText; outline-offset: -3px; } }
 .alt-grid-input { display: block; width: 100%; height: 100%; min-height: 40px; padding: 10px 12px; border: 0; outline: none; background: none; color: var(--ink); font: inherit; box-sizing: border-box; }
 .alt-grid-cell[data-align="end"] .alt-grid-input { text-align: right; }
 .alt-grid-editor { display: block; padding: 3px; }

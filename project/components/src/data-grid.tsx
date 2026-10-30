@@ -46,6 +46,9 @@ export interface DataGridProps<T> {
   onCellsSave?: (changes: DataGridChange<T>[]) => DataGridResult | Promise<DataGridResult>;
   /** Ctrl/Cmd+Z: reverse the last committed change (or batch). Omit and Ctrl+Z does nothing. */
   onUndo?: (last: DataGridChange<T>[]) => void;
+  /** Check every cell against its column's `validate` at rest, not only while it's edited: an invalid value lies in a
+   * trench on critical-soft, with its problem in the cell's description. For data that arrived from elsewhere (an import). */
+  showInvalid?: boolean;
   maxHeight?: number | string;
   className?: string;
 }
@@ -61,7 +64,7 @@ const printable = (e: React.KeyboardEvent) => e.key.length === 1 && !e.ctrlKey &
  * rises flush and the cell settles. A pending cell holds a small raised plate; a failed one drops to a trench. Range
  * selection is a tint, not a height: choosing a target isn't live content.
  */
-export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, onCellsSave, onUndo, maxHeight, className, ...aria }: DataGridProps<T>) {
+export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, onCellsSave, onUndo, showInvalid, maxHeight, className, ...aria }: DataGridProps<T>) {
   const [active, setActive] = React.useState<Pos>({ r: 0, c: 0 });
   const [anchor, setAnchor] = React.useState<Pos | null>(null);
   const [editing, setEditing] = React.useState<Editing | null>(null);
@@ -242,11 +245,12 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
             const isActive = active.r === r && active.c === c;
             const isEditing = editing?.r === r && editing.c === c;
             const fail = failed[k];
+            const invalid = showInvalid && !isEditing && !fail && !pending.includes(k) ? col.validate?.(valueOf(r, c), row) : undefined;
             const name = `${label(col)}, ${getRowLabel(row)}`;
             return <td key={col.key} role="gridcell" className="alt-td alt-grid-cell" data-align={col.align} data-cell={`${r}:${c}`} aria-colindex={c + 1}
               tabIndex={isActive && !isEditing ? 0 : -1} aria-readonly={!col.editable} aria-selected={inRange(r, c) || isActive}
-              aria-invalid={fail ? true : undefined} aria-busy={pending.includes(k) || undefined} aria-describedby={fail ? `${auto}-${k}-err` : undefined}
-              data-active={isActive ? '' : undefined} data-range={inRange(r, c) ? '' : undefined} data-editing={isEditing ? '' : undefined}
+              aria-invalid={fail || invalid ? true : undefined} aria-busy={pending.includes(k) || undefined} aria-describedby={fail || invalid ? `${auto}-${k}-err` : undefined}
+              data-invalid={invalid ? '' : undefined} data-active={isActive ? '' : undefined} data-range={inRange(r, c) ? '' : undefined} data-editing={isEditing ? '' : undefined}
               data-status={pending.includes(k) ? 'pending' : fail ? 'failed' : undefined} data-settle={settled.includes(k) ? '' : undefined}
               onMouseDown={(e) => {
                 if (isEditing) return;
@@ -269,6 +273,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
               {isEditing && editing!.unsaved && !editing!.error && <span className="alt-grid-tip alt-grid-unsaved">Not saved yet</span>}
               {!isEditing && pending.includes(k) && <span className="alt-grid-plate" aria-hidden="true" />}
               {!isEditing && fail && <span className="alt-grid-fail"><Icons.AlertCircle size={13} /><span id={`${auto}-${k}-err`} className="alt-grid-sr">{fail.error}. Press Enter to try again.</span></span>}
+              {invalid && <span className="alt-grid-fail"><Icons.AlertCircle size={13} /><span id={`${auto}-${k}-err`} className="alt-grid-sr">{invalid}</span></span>}
             </td>;
           })}
         </tr>)}
