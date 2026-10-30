@@ -1224,6 +1224,14 @@ A measurement (#250): `checks/phone.mjs` found 146 text fields under 16px on tou
 
 After: no field under 16px on touch in any preview.
 
+### E112 · Does a tap leave a surface lifted?
+
+A code audit (#246): all 98 `:hover` rules in `bundle.css` applied on touch screens, where a tap leaves `:hover` stuck until the next tap elsewhere, so a pressed button stayed at level 2 after doing its job. Law 4 says pressing returns a surface to the ground.
+
+- **Hover is a pointer's.** Every `:hover` rule now sits inside `@media (hover: hover)`. Rules that mixed hover with `:focus-visible` were split, so keyboard focus keeps its one-level lift everywhere.
+- **Forced colours keep their outlines.** Under forced colours a hover is a system-colour outline with no height, so those eight rules stay bare (the issue's hairline exception).
+- **Linted.** `checks/hover-media.mjs` fails on a bare `:hover`, and in a browser checks that a mouse still lifts a button while a phone's tap leaves it at rest.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
