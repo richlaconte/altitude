@@ -44,7 +44,7 @@
     "pattern-types": "scripts/check-framework.mjs",
     "pattern-workflows": "scripts/check-framework.mjs",
     "semantics": "scripts/check-framework.mjs",
-    "shadcn-chart": ".github/workflows/ci.yml"
+    "shadcn-chart": ".github/workflows/ci.yml", "tells-freshness": "package.json"
   },
   "seconds": {
     "chart-themes": 1,
