@@ -16,7 +16,7 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
    - **polarity**: the diverging ramp `data-div-*` around a meaningful midpoint;
    - **status**: `positive`, `caution`, `critical`, only when the series *means* good or bad, and then with an icon and a word, as status always has.
 
-   Colour follows the entity: hiding or filtering a series never repaints the others. Text wears `ink` and `ink-muted`, never a series colour. `accent` and the `presence-*` hues stay reserved for what they already mean. `data-1` shares the accent's hue so a chart's first series looks like the product, but it's a different colour from `accent` and isn't a control. The values and their gates are in **Theming** ("The data palette").
+   Colour follows the entity: hiding or filtering a series never repaints the others. **Focus** is the one exception, and it isn't a filter: `focus` is the author's statement of what the chart is about, fixed for the chart rather than toggled by the reader. The focused series or records keep their identity colours and everything else takes one shared neutral, `data-context`, with its words in `ink-muted`; it's said in words too ("Highlighted: EU."), and a change of focus cross-fades. A reader's version is `relevance`, which recedes misses to 35% and repaints nothing, so "the author's context" and "your filter" stay two readings (E105). Text wears `ink` and `ink-muted`, never a series colour. `accent` and the `presence-*` hues stay reserved for what they already mean. `data-1` shares the accent's hue so a chart's first series looks like the product, but it's a different colour from `accent` and isn't a control. The values and their gates are in **Theming** ("The data palette").
 6. **One axis.** No dual-axis charts: two scales on one plot invite a correlation the data never made. Two measures of different scale are two charts, small multiples, or indexed to a common base.
 7. **Spend changes carefully.** Data that changes glides to its new value at one level, as a re-sort does: it's one change. New data gets an afterglow within the attention budget. Nothing grows from the baseline on first render for decoration; the chart is simply there.
 8. **A chart never travels alone.** As height never travels alone: every chart has a written summary, a keyboard path through its data, a table view, and direct labels or patterns so no series is told apart by colour alone.
@@ -34,6 +34,7 @@ Choose by the job the data does, not by what looks rich.
 | A value within a known range | `Meter` (a password's strength too, in `PasswordInput`) |
 | A value per cell over two dimensions | `Heatmap` |
 | How two measures relate | `ScatterChart` |
+| Values where zero isn't meaningful, averages with their spread, or before and after per category | `DotPlot` |
 | Part of a whole | a stacked `BarChart`, or a segmented `Meter` |
 
 **No pie or donut charts.** Angle and area are read less accurately than position and length, so a part of a whole is a stacked bar or a segmented meter. **No 3D, ever**, for the reasons in rule 1.
@@ -44,7 +45,7 @@ Choose by the job the data does, not by what looks rich.
 
 | Part | Tier | Built like |
 |---|---|---|
-| The plot, gridlines and axes | ground | flat; gridlines are `line`, axis text `ink-muted` |
+| The plot, gridlines and axes | ground | flat; gridlines are `line`; axis text a 13px caption in weight 400, `ink-muted` and tabular, lighter than a label on a control; y labels in a gutter, or inline just above their gridlines on a halo |
 | The zero baseline | ground | the ground line: 1px `ink-muted`, as under `Stepper` and `Drilldown` |
 | Marks (bars, lines, points, cells) | ground | flat ink in a series colour, no shadow, no wall, no sheen |
 | A scatter's dots | ground | flat `data-*` with a marker shape per group, ringed 2px in the plot's colour so overlaps stay apart; outliers named in `ink` with a 1px leader; no word, the trend's included, covers a dot |
@@ -73,6 +74,8 @@ These are the elevation signals a chart adds to **Elevation**'s table:
 - **Read against.** Targets, limits, normal ranges and events (`ChartReference`, `ChartAnnotation`) lie flush with the marks: a solid 1px line, a flat `line` band, a `Badge` plate with a leader. Their words are laid out together so they never overlap each other or cover a mark: plates sit in headroom above the data, and a label moves to its line's other side or end before it covers a line or a bar (E38, E101).
 - **Not yet the record.** A projected value or an incomplete period (this month so far) is dashed or hatched and says so in its label and readout. It's the record to come, so it's drawn as an imprint of the record, not raised as live. Built as `status` on `BarChart`, `LineChart` and `AreaChart`, with a "Today" rule where the record ends and an uncertainty `band` on `LineChart` (E37).
 - **A window on the record.** An overview sits in a trench and the chosen window is a raised lens in it, so the part you're looking at is the part you can move. The lens is raised because you move it, not because it's data: the series inside it stays flat.
+- **Read against the record before.** `compare` sets each value against the period before it. Both are settled, so both lie flat on the ground; the earlier one is quieter: a 2px `ink` tick across a bar at its earlier value (the bullet graph's comparative measure), or a 1.5px solid `ink-muted` trace under a line, named at its end. The difference is said in words in the readout, each point's name, the table and the summary (E106).
+- **Changed since.** Read against a snapshot (`since`), what changed while the reader was away is marked flat at its old value (a tick on a bar, a hollow ring on a line), counted in words in a switch that filters to it, and glows once on arrival within the attention budget (E108).
 - **Recency.** A value that just arrived, or just changed, gets the afterglow, within the attention budget, never a lift.
 - **Steps of one ramp.** A heatmap's value is a binned step of the sequential ramp (or the diverging one around a midpoint), each step's range in words in the legend, the cell's name and the table, and a pattern density when colour is lost (E42).
 - **Selection** is a tint and an outline, never a height. Selected marks keep their place on the ground line; unselected ones mute rather than sink.

@@ -22,6 +22,8 @@ Two measures per record, to see whether they move together and to spot the ones 
 
 **Selecting, drilling and filtering.** `selected` (the record or its id) and `onSelect`, `drill`, and `relevance` (with `rescale`) work as on every chart: the chosen dot keeps its colour, the rest recede to 35%, and the frame says "Filtered to Vandelay". See [ChartContainer](../ChartContainer/README.md).
 
+**Focus.** `focus={['Search']}` keeps those groups' colours (and every shape) and draws the rest in `data-context`; `focus={(d) => d.p95 > 250}` picks out dots instead. See [ChartContainer](../ChartContainer/README.md), "Focus".
+
 **You provide:** a `ChartContainer` whose `config` names and formats both measures, the records, and usually a `summary` that says what the relationship means.
 
 ```tsx

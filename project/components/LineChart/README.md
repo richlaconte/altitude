@@ -26,6 +26,12 @@ Change over time: latency over a day, revenue over a year, one series or a few c
 
 **Uncertainty is a band.** `band={{ low: 'p10', high: 'p90', label: 'Range 10th–90th percentile' }}` draws a flat fill of the series colour at 16% between the two keys, under the lines. It's never error bars, which readers misjudge (Correll & Gleicher 2014), and never a gradient. Its edges count toward the y axis. The readout adds a row for it ("499–787 Range 10th–90th percentile"), and so do point names and the table.
 
+**Banked to 45°.** `aspect="banked"` lets the data choose the chart's height: slopes read best when the segments average about 45° (Cleveland's banking), so the plot takes the width ÷ height that sets their mean absolute orientation there, held between 1 and 4 for the data area so a card is never a sliver or a tower. Steep, jagged data banks wide; a gentle trend banks tall. The width stays the card's. It's read from every shown series, and kept while values glide; only new x values, which cross-fade as a new chart, bank it afresh, and the height change itself never animates. Put it on the `LineChart` or on the container. In a grid of equal cards, keep a fixed `aspect`: banked neighbours would differ in height.
+
+**Focus.** `focus={['team']}` keeps those lines' colours and draws the rest in `data-context`, their end labels in `ink-muted`; the readout and the keyboard path list the focused lines first. See [ChartContainer](../ChartContainer/README.md), "Focus".
+
+**Against the record before.** `compare={{ data: lastWeek, label: 'Last week' }}` matches records by position (or `key` reads a field on each record) and draws the earlier period as a 1.5px solid `ink-muted` trace under the compared series (`series`, default the first), without points, named at its end in `ink-muted`. It's solid because dashes mean projected, and it follows the data, which a 1px straight reference line never does. The readout, point names, the table and the summary say the difference.
+
 **You provide:** a `ChartContainer` with a `config` naming each series, the `data` in x order, and usually a `summary`.
 
 ```tsx

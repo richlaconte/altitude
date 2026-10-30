@@ -1262,7 +1262,7 @@ function App() {
 const teams = [{ team: 'Atlas', deploys: 42 }, { team: 'Birch', deploys: 35 }, { team: 'Cedar', deploys: 51 }, { team: 'Delta', deploys: 19 }, { team: 'Ember', deploys: 28 }];
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, api: 20 + ((i * 7) % 11), web: 14 + ((i * 5) % 9), jobs: 6 + ((i * 3) % 7) }));
 const net = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, change: [12, -8, 5, -15, 9, 18][i] }));
-const regions = [{ region: 'North America', seats: 1240 }, { region: 'Europe, Middle East and Africa', seats: 980 }, { region: 'Asia Pacific', seats: 610 }, { region: 'Latin America', seats: 270 }];
+const regions = [{ region: 'North America', seats: 1240, before: 1120 }, { region: 'Europe, Middle East and Africa', seats: 980, before: 1040 }, { region: 'Asia Pacific', seats: 610, before: 470 }, { region: 'Latin America', seats: 270, before: 240 }];
 const stack3 = { api: { label: 'API' }, web: { label: 'Web' }, jobs: { label: 'Jobs' } };
 function Chart({ id, title, sub, children, ...props }) {
   // With a takeaway the figure names itself: the title becomes the label over the takeaway, the heading.
@@ -1282,13 +1282,13 @@ function App() {
   return (
     <div className="bc">
       <Chart id="b1" title="Deploys by team" takeaway="Cedar deployed nearly three times as often as Delta" sub='One series, sorted, labels="max"' config={{ deploys: { label: 'Deploys' } }} summary="Cedar deployed most, 51 times; Delta least, 19.">
-        <A.BarChart data={teams} x="team" sort="desc" labels="max" />
+        <A.BarChart data={teams} x="team" sort="desc" labels="max" focus={(d) => d.team === 'Cedar' || d.team === 'Delta'} />
       </Chart>
       <Chart id="b2" title="Requests by service" sub="Grouped: three series side by side" config={stack3}>
         <A.BarChart data={months.slice(3)} x="month" />
       </Chart>
-      <Chart id="b3" title="Requests, all services" sub='Stacked, labels="last"' config={stack3}>
-        <A.BarChart data={months} x="month" stack labels="last" />
+      <Chart id="b3" title="Requests, all services" sub='Stacked, labels="last", focus={["web"]}' config={stack3}>
+        <A.BarChart data={months} x="month" stack labels="last" focus={['web']} />
       </Chart>
       <Chart id="b4" title="Share of requests" sub='stack="expand": parts of 100%' config={stack3}>
         <A.BarChart data={months} x="month" stack="expand" />
@@ -1296,14 +1296,14 @@ function App() {
       <Chart id="b5" title="Net new customers" sub="Negative bars hang below the ground line" config={{ change: { label: 'Net change', format: (v) => (v > 0 ? '+' : '') + v } }}>
         <A.BarChart data={net} x="month" />
       </Chart>
-      <Chart id="b6" title="Seats by region" sub='layout="horizontal" for long names' config={{ seats: { label: 'Seats', format: (v) => v.toLocaleString('en') } }}>
-        <A.BarChart data={regions} x="region" layout="horizontal" labels="max" />
+      <Chart id="b6" title="Seats by region" sub='layout="horizontal", against last quarter' config={{ seats: { label: 'Seats', format: (v) => v.toLocaleString('en') } }}>
+        <A.BarChart data={regions} x="region" layout="horizontal" compare={{ key: 'before', label: 'Q2' }} labels="max" />
       </Chart>
     </div>
   );
 }
 
-=== LineChart | <!-- @dsCard group="Charts" height=720 subtitle="Change over time: lines named at their ends, gaps left as gaps" -->
+=== LineChart | <!-- @dsCard group="Charts" height=1240 subtitle="Change over time: lines named at their ends, gaps left as gaps" -->
 --- css
 .lc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 720px) { .lc { grid-template-columns: minmax(0, 1fr); } }
@@ -1313,6 +1313,7 @@ const latency = Array.from({ length: 49 }, (_, i) => ({ t: t0 + i * 30 * 60e3, p
 const revenue = ['2025-07-01', '2025-08-01', '2025-09-01', '2025-10-01', '2025-11-01', '2025-12-01', '2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01']
   .map((month, i) => ({ month, revenue: [61, 64, 63, 70, 74, 72, 79, 85, 83, 92, 98, 104][i] * 1000 }));
 const signups = Array.from({ length: 14 }, (_, i) => ({ day: `2026-04-${String(i + 1).padStart(2, '0')}`, signups: [42, 48, 51, null, null, 55, 61, 58, 63, null, 66, 70, 68, 74][i] }));
+const signupsBefore = [38, 41, 40, 44, 47, 45, 49, 52, 50, 53, 55, 54, 57, 58].map((signups) => ({ signups }));
 const plans = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'].map((month, i) => ({ month, free: 40 + i * 2, team: 34 + i * 3, business: 30 + i * 2.6, enterprise: 12 + i }));
 const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
 function Chart({ id, title, sub, children, ...props }) {
@@ -1332,17 +1333,20 @@ function Chart({ id, title, sub, children, ...props }) {
 function App() {
   return (
     <div className="lc">
-      <Chart id="l1" title="Response time" sub="14 Mar, every 30 minutes" config={{ p50: { label: 'p50' }, p95: { label: 'p95' } }}>
+      <Chart id="l1" title="Response time" sub='14 Mar, every 30 minutes; yLabels="inline"' yLabels="inline" config={{ p50: { label: 'p50' }, p95: { label: 'p95' } }}>
         <A.LineChart data={latency} x="t" y={{ format: (ms) => `${ms} ms` }} />
       </Chart>
       <Chart id="l2" title="Monthly revenue" takeaway="Revenue rose 70% over the year" sub='curve="monotone": no overshoot' config={{ revenue: { label: 'Revenue', format: usd.format } }} summary="Revenue rose 70% over the year, with small dips in September, December and March.">
         <A.LineChart data={revenue} x="month" curve="monotone" />
       </Chart>
-      <Chart id="l3" title="Daily signups" sub="Missing days are gaps, not guesses" config={{ signups: { label: 'Signups' } }}>
-        <A.LineChart data={signups} x="day" />
+      <Chart id="l3" title="Daily signups" sub="Gaps stay gaps; read against the two weeks before" config={{ signups: { label: 'Signups' } }}>
+        <A.LineChart data={signups} x="day" compare={{ data: signupsBefore, label: '2 weeks before' }} />
       </Chart>
-      <Chart id="l4" title="Seats by plan" sub="Four series, labels nudged apart" config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }}>
-        <A.LineChart data={plans} x="month" />
+      <Chart id="l4" title="Seats by plan" sub="Four series, focus on Team: the rest in data-context" config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }}>
+        <A.LineChart data={plans} x="month" focus={['team']} />
+      </Chart>
+      <Chart id="l5" title="Monthly revenue, banked" sub='aspect="banked": the segments average 45°' aspect="banked" config={{ revenue: { label: 'Revenue', format: usd.format } }}>
+        <A.LineChart data={revenue} x="month" curve="monotone" />
       </Chart>
     </div>
   );
@@ -1671,9 +1675,9 @@ function App() {
           <A.ChartLegend content={<A.ChartLegendContent toggle />} />
         </A.AreaChart>
       </Chart>
-      <Chart id="a2" title="Accounts by plan" sub='stack="expand": shares of 100%'
+      <Chart id="a2" title="Accounts by plan" sub='stack="expand", focus on Team'
         config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }} aspect={1.7}>
-        <A.AreaChart data={plans} x="month" stack="expand" />
+        <A.AreaChart data={plans} x="month" stack="expand" focus={['team']} />
       </Chart>
       <Chart id="a3" title="Storage used" sub="One area: a flat fill under its line" config={{ used: { label: 'Used', format: (v) => `${v} GB` } }} aspect={1.7}
         summary="Storage use rose from 41 GB to 58 GB over two weeks, fastest in the second.">
@@ -1789,7 +1793,38 @@ function App() {
   );
 }
 
-=== ChartTooltip | <!-- @dsCard group="Charts" height=420 subtitle="A crosshair on the ground and a readout floating over the plot" -->
+=== DotPlot | <!-- @dsCard group="Charts" height=560 subtitle="Values where zero isn't the story, with their spread; before and after per category" -->
+--- css
+.dp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .dp { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const services = [['Checkout', 212, 180, 240], ['Search', 188, 170, 205], ['Billing', 236, 190, 320], ['Accounts', 199, 182, 214], ['Media', 228, 196, 268], ['Auth', 184, 176, 193], ['Exports', 221, 187, 262], ['Email', 193, 179, 209]]
+  .map(([service, p95, p10, p90]) => ({ service, p95, p10, p90 }));
+const teams = [['Atlas', 71, 78], ['Birch', 64, 62], ['Cedar', 80, 86], ['Delta', 58, 69], ['Ember', 75, 77]].map(([team, q2, q3]) => ({ team, q2, q3 }));
+function App() {
+  return (
+    <div className="dp">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="d1">p95 latency by service</A.CardTitle><A.CardDescription>All between 180 and 240 ms; the band is the 10th–90th percentile</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="d1" aspect={1.5} config={{ p95: { label: 'p95', format: (v) => `${v} ms` } }}>
+            <A.DotPlot data={services} x="service" range={['p10', 'p90']} rangeLabel="10th–90th percentile" sort="desc" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="d2">Accessibility score, Q2 to Q3</A.CardTitle><A.CardDescription>A dumbbell: the hollow dot is Q2, the filled one Q3</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="d2" aspect={1.5} config={{ q2: { label: 'Q2' }, q3: { label: 'Q3' } }}>
+            <A.DotPlot data={teams} x="team" from="q2" to="q3" sort="desc" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
+=== ChartTooltip | <!-- @dsCard group="Charts" height=740 subtitle="A crosshair on the ground and a readout floating over the plot; a reading pinned to it" -->
 --- css
 .ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 720px) { .ct { grid-template-columns: minmax(0, 1fr); } }
@@ -1804,6 +1839,7 @@ function Open({ at }) {
   return null;
 }
 function App() {
+  const [pins, setPins] = React.useState(['2026-03-09', '2026-04-06']);
   return (
     <div className="ct">
       <A.Card>
@@ -1822,6 +1858,14 @@ function App() {
               <A.ChartTooltip content={<A.ChartTooltipContent indicator="dot" labelFormat={(w) => 'Week of ' + long.format(new Date(w + 'T00:00:00Z'))} />} />
             </A.BarChart>
             <Open at={5} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="t3">Pinned readings</A.CardTitle><A.CardDescription>pinnable: click (or P) sets a reading down; two compare</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="t3" aspect={1.8} config={{ opened: { label: 'Opened' } }}>
+            <A.LineChart data={weeks} x="week" pinnable pins={pins} onPinsChange={setPins} />
           </A.ChartContainer>
         </A.CardContent>
       </A.Card>
@@ -2075,6 +2119,40 @@ function App() {
             <A.Button size="sm" onClick={bump}>Add jobs to Email</A.Button>
             <A.Button size="sm" variant="ghost" onClick={reload}>Refresh all</A.Button>
           </div>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
+=== ChartSince | <!-- @dsCard group="Charts" height=560 subtitle="Since your last visit: what changed, marked against where it was, and a switch to see only that" -->
+--- css
+.cs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .cs { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+// The application keeps what each person last saw and when; the chart is given that snapshot and its label.
+const queues = [['Billing', 42, 30], ['Email', 18, 18], ['Exports', 9, 9], ['Imports', 27, 33], ['Search', 12, 12], ['Sync', 31, 31], ['Webhooks', 7, 4], ['Reports', 15, 15]];
+const now = queues.map(([queue, depth]) => ({ queue, depth }));
+const then = queues.map(([queue, , depth]) => ({ queue, depth }));
+const hours = Array.from({ length: 12 }, (_, i) => ({ t: Date.UTC(2026, 9, 27, 6 + i), errors: [0.8, 0.9, 0.7, 1.1, 1.0, 1.4, 1.9, 2.4, 2.1, 1.8, 1.5, 1.3][i] }));
+const hoursThen = hours.map((d, i) => ({ ...d, errors: i < 6 ? d.errors : [0.8, 0.9, 0.7, 1.1, 1.0, 1.4, 1.2, 1.1, 1.0, 1.2, 1.1, 1.0][i] }));
+function App() {
+  return (
+    <div className="cs">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="s1">Queue depth</A.CardTitle><A.CardDescription>Three queues moved since this morning; their old depth is the tick</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="s1" aspect={1.9} config={{ depth: { label: 'Jobs waiting' } }} since={{ data: then, label: 'since Tuesday 09:00' }}>
+            <A.BarChart data={now} x="queue" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="s2">Error rate</A.CardTitle><A.CardDescription>The afternoon rose after you looked; each old point is a ring</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="s2" aspect={1.9} config={{ errors: { label: 'Errors', format: (v) => `${v}%` } }} since={{ data: hoursThen, label: 'since 11:00' }}>
+            <A.LineChart data={hours} x="t" />
+          </A.ChartContainer>
         </A.CardContent>
       </A.Card>
     </div>

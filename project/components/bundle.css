@@ -71,7 +71,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 @media (hover: hover) { .alt-lift:hover { background: var(--alt-bg-up); box-shadow: var(--alt-sh-up); transform: translateY(calc(-1px * var(--alt-travel))); } }
 .alt-lift:active { box-shadow: var(--elev-0); transform: translateY(calc(1px * var(--alt-travel))); transition-duration: var(--dur-press); transition-timing-function: ease-out; }
 .alt-lift:focus-visible, .alt-tabs-trigger:focus-visible, .alt-acc-trigger:focus-visible,
-.alt-slider-thumb:focus-visible, .alt-switch:focus-visible, .alt-tabs-content:focus-visible, .alt-toast-close:focus-visible {
+.alt-slider-thumb:focus-visible, .alt-switch:focus-visible, .alt-tabs-content:focus-visible, .alt-toast-close:focus-visible, .alt-chart-pin-remove:focus-visible {
   outline: 2px solid var(--accent-ink); outline-offset: 2px;
 }
 
@@ -2481,7 +2481,10 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-chart-grid line { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
 .alt-chart-ground { stroke: var(--ink-muted); stroke-width: 1; shape-rendering: crispEdges; }
 .alt-chart-floor { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
-.alt-chart-axis text { fill: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: 0.005em; }
+/* Axis text is a caption in weight 400 (#193): the frame's words rank below the marks, the ground line and references.
+   Inline y labels sit just above their gridlines on a halo of the plot's colour, as reference labels do. */
+.alt-chart-axis text { fill: var(--ink-muted); font: 400 13px/19px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-chart-axis[data-inline] text { stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; }
 .alt-chart-summary { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); text-wrap: pretty; }
 /* ── BarChart: amounts as lengths standing on the ground line. Bars are the record, so they're flat data-* fills,
    square where they meet the ground and rounded (radius-xs) only at the data end; neighbours and stacked segments
@@ -2497,7 +2500,57 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    last settled point and their points hollow; areas are hatched. The record ends at a 1px line-control rule named in
    words ("Today"). A partial period that completes cross-fades from hatch to solid over dur-travel-3: it's been pressed
    into the record. An uncertainty band is a flat, low-opacity fill: no gradient, no error bars. ── */
-.alt-bar-mark, .alt-bar-pending { transition: fill-opacity var(--dur-travel-3) var(--ease-glide), stroke-opacity var(--dur-travel-3) var(--ease-glide); }
+.alt-bar-mark, .alt-bar-pending { transition: fill-opacity var(--dur-travel-3) var(--ease-glide), stroke-opacity var(--dur-travel-3) var(--ease-glide), fill var(--dur-travel-1) var(--ease-glide); }
+/* Focus (#188): what a chart isn't about is drawn in data-context, one flat neutral, and its words recede to ink-muted.
+   A change of focus cross-fades fills and strokes in place over dur-travel-1; under reduced motion it changes at once.
+   Under forced colours context is GrayText at full strength, apart from a filter's misses, which also recede to 35%. */
+.alt-line-stroke, .alt-area-fill, .alt-area-line, .alt-scatter-dot { transition: fill var(--dur-travel-1) var(--ease-glide), stroke var(--dur-travel-1) var(--ease-glide); }
+.alt-line-label[data-context], .alt-area-label[data-context] { fill: var(--ink-muted); }
+/* The record before (#189): both settled, both flat on the ground, the earlier one quieter. On bars, a 2px ink tick
+   across the bar at the earlier value, 4px past it each side (the bullet graph's comparative measure); on lines, a
+   1.5px solid ink-muted trace under the series, named at its end. Never dotted: under forced colours dots mean pending. */
+.alt-bar-compare { stroke: var(--ink); stroke-width: 2; shape-rendering: crispEdges; }
+/* A reading set down (#190): the readout lands on the record as a plate, from level 3 to the ground over dur-travel-3 on
+   ease-settle, then takes the afterglow once. A pin icon tells it from an annotation; its ghost remove button lifts
+   when pointed at, as a ghost button does. Two pins say their difference under the x axis on a line-control bracket. */
+.alt-chart-note[data-pin] { display: inline-flex; align-items: center; gap: 4px; padding-right: 2px;
+  animation: alt-pin-land var(--dur-travel-3) var(--ease-settle) both, alt-pin-glow var(--dur-settle) var(--ease-decay) var(--dur-travel-3) both; }
+.alt-chart-pin-icon { flex: none; color: var(--ink-muted); }
+.alt-chart-pin-remove { display: inline-grid; place-items: center; width: 18px; height: 18px; margin: 0; padding: 0; border: 0; border-radius: var(--radius-xs); background: transparent; color: var(--ink-muted); cursor: pointer; box-shadow: var(--elev-0); transition: background-color var(--dur-travel-1) var(--ease-glide), box-shadow var(--dur-travel-1) var(--ease-glide), transform var(--dur-travel-1) var(--ease-glide); }
+.alt-chart-pin-remove:hover, .alt-chart-pin-remove:focus-visible { background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink); transform: translateY(calc(-1px * var(--alt-travel))); }
+@keyframes alt-pin-land { from { box-shadow: var(--elev-3); transform: translateY(calc(-6px * var(--alt-travel))); } }
+@keyframes alt-pin-glow { 0%, 12% { outline: 2px solid var(--accent-soft); outline-offset: 1px; } 100% { outline: 2px solid transparent; outline-offset: 1px; } }
+.alt-chart-pins-strip path { stroke: var(--line-control); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-chart-pins-strip text { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
+@media (forced-colors: active) { .alt-chart-pins-strip path { stroke: CanvasText; } .alt-chart-pins-strip text { fill: CanvasText; } .alt-chart-pin-icon, .alt-chart-pin-remove { color: CanvasText; } }
+.alt-line-compare { stroke: var(--ink-muted); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+@media (forced-colors: active) { .alt-bar-compare { stroke: CanvasText; } .alt-line-compare { stroke: CanvasText; stroke-width: 1; } }
+/* ── DotPlot (#192): values where zero isn't part of the story, as position, never height. The values are the record,
+   so dots lie flat on the ground as a ScatterChart's do: at least 8px, a marker per series, ringed 2px in the plot's
+   colour. With no zero there's no ground line, only the plot's foot. Each row has a 1px line guide from its label. A
+   spread is a flat band of the series colour at 16% behind the dot, never error bars. A dumbbell joins a hollow "from"
+   dot to a filled "to" dot with a 2px ink-muted link. A mark that acts gets a 2px ink outline, never a lift. ── */
+.alt-dot-guide { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-dot-range { fill-opacity: 0.16; }
+.alt-dot-link { stroke: var(--ink-muted); stroke-width: 2; stroke-linecap: round; }
+.alt-dot-hover { fill: none; stroke: var(--ink); stroke-width: 2; }
+.alt-chart-plot[data-interactive] .alt-dot-row { cursor: pointer; }
+@media (prefers-contrast: more) { .alt-dot-guide { stroke: var(--line-control); } }
+[data-contrast="more"] .alt-dot-guide { stroke: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-dot-guide { stroke: GrayText; }
+  .alt-dot-range { fill: GrayText; fill-opacity: 0.4; }
+  .alt-dot-link, .alt-dot-hover { stroke: CanvasText; }
+  .alt-dot-mark[data-from] { stroke: CanvasText; fill: Canvas; }
+}
+/* Changed since a snapshot (#191): a changed bar's old value is the comparison's tick; a changed line point's old place
+   is a small hollow ink-muted ring. The caption says how many changed, in a switch that recedes the rest. */
+.alt-line-since { fill: var(--alt-chart-bg); stroke: var(--ink-muted); stroke-width: 1.5; }
+.alt-chart-since { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-2); border-radius: var(--radius-sm); font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+@media (forced-colors: active) { .alt-line-since { stroke: CanvasText; fill: Canvas; } }
+.alt-legend-key[data-context] { color: var(--ink-muted); }
+@media (prefers-reduced-motion: reduce) { .alt-bar-mark, .alt-line-stroke, .alt-area-fill, .alt-area-line, .alt-scatter-dot { transition-property: fill-opacity, stroke-opacity; } }
+[data-motion="reduced"] .alt-bar-mark, [data-motion="reduced"] .alt-line-stroke, [data-motion="reduced"] .alt-area-fill, [data-motion="reduced"] .alt-area-line, [data-motion="reduced"] .alt-scatter-dot { transition-property: fill-opacity, stroke-opacity; }
 .alt-chart-boundary line { stroke: var(--line-control); stroke-width: 1; shape-rendering: crispEdges; }
 .alt-chart-boundary-label { fill: var(--ink-muted); stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; font: 500 12.5px/17px var(--font-sans); }
 .alt-line-hollow { fill: var(--alt-chart-bg); stroke-width: 2; }
@@ -2956,6 +3009,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 [data-contrast="more"] .alt-chart-ground { stroke: var(--ink); }
 @media (forced-colors: active) {
   .alt-chart-axis text { fill: CanvasText; }
+  .alt-chart-axis[data-inline] text { stroke: Canvas; }
   .alt-chart-grid line, .alt-chart-floor { stroke: GrayText; }
   .alt-chart-ground { stroke: CanvasText; }
 }
