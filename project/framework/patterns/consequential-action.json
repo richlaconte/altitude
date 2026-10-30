@@ -9,7 +9,8 @@
     "revoke",
     "publish",
     "undo",
-    "recover"
+    "recover",
+    "approve"
   ],
   "purpose": "Complete a consequential operation with appropriate review or real recovery.",
   "useWhen": [

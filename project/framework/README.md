@@ -2,7 +2,7 @@
 
 Start from the person's task. Read only the relevant pattern below, its linked rules, and the public declarations. The installed copy matches the package version; `altitude doctor --json` checks that connection. Guidance supports judgment; it does not certify an application.
 
-Starting a new app? Copy the [app skeleton](app-skeleton.md): shell, page header, a filtered and paged table, a record in a sheet, and settings, composed correctly.
+Composing a new screen? Choose its frame from the task with [screen layout](patterns/screen-layout.md) first: name the task, the one thing that leads and the one primary action. The [app skeleton](app-skeleton.md) is one of its frames, for working through many similar records: shell, page header, a filtered and paged table, a record in a sheet, and settings, composed correctly.
 
 | Intent | Focused contract |
 | --- | --- |
@@ -21,6 +21,7 @@ Starting a new app? Copy the [app skeleton](app-skeleton.md): shell, page header
 | An agent that proposes and acts | [Agent action](patterns/agent-action.md) |
 | A conversation with an assistant (send, stream, stop, retry, limits) | [Assistant conversation](patterns/assistant-conversation.md) |
 | Setup checklist, empty states, tours, what's new | [Onboarding](patterns/onboarding.md) |
+| A new screen: choose its frame (editor, decision, report, triage, flow, records) from the task | [Screen layout](patterns/screen-layout.md) |
 
 Before implementation, capture a short design record in the application's normal documentation: user goal, audience, primary action, consequence, data shape, selected patterns, applicable states, and unresolved product decisions. Infer routine details from the existing product. Do not invent permissions, persistence, cancellation, rollback or undo. Ask only when an unknown changes consequences or the task itself.
 

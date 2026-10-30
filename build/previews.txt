@@ -6264,6 +6264,153 @@ function App() {
   );
 }
 
+=== ScreenLayoutEditor | <!-- @dsCard group="Patterns" height=820 subtitle="The focused editor frame: the draft leads, details beside it, one primary action, saving as a status" -->
+--- css
+.le-page{max-width:1040px;margin-inline:auto;display:grid;gap:20px;overflow-wrap:break-word}.le-body{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:32px;align-items:start}.le-draft{display:grid;gap:16px}.le-side{display:grid;gap:12px}.le-sub{font:600 15px/22px var(--font-sans);margin:0}.le-note{margin:0;font:400 13px/19px var(--font-sans);color:var(--ink-muted)}.le-outcome{margin:0;font:400 15px/22px var(--font-sans)}@media (max-width:720px){.le-body{grid-template-columns:minmax(0,1fr)}}
+--- jsx
+const AUDIENCES = [{ value: 'everyone', label: 'Everyone' }, { value: 'admins', label: 'Workspace admins' }];
+function App() {
+  const [title, setTitle] = React.useState('Saved views, and a faster sidebar');
+  const [body, setBody] = React.useState('You can now save a filtered view of any table and come back to it from the sidebar.\n\nThe sidebar also opens twice as fast in large workspaces.');
+  const [audience, setAudience] = React.useState('everyone');
+  const [sync, setSync] = React.useState(/** @type {A.SyncState} */ ('saved'));
+  const [titleError, setTitleError] = React.useState('');
+  const [phase, setPhase] = React.useState(/** @type {'draft' | 'publishing' | 'published'} */ ('draft'));
+  const timer = React.useRef(0);
+  const outcome = React.useRef(/** @type {HTMLParagraphElement | null} */ (null));
+  const edit = (set) => (e) => { set(e.target.value); setSync('saving'); clearTimeout(timer.current); timer.current = window.setTimeout(() => setSync('saved'), 700); };
+  const publish = () => {
+    if (!title.trim()) { setTitleError('Give the note a title.'); document.getElementById('le-title')?.focus(); return; }
+    setPhase('publishing');
+    window.setTimeout(() => { setPhase('published'); requestAnimationFrame(() => outcome.current?.focus()); }, 600);
+  };
+  return (
+    <main className="le-page">
+      <A.PageHeader breadcrumb={<A.Breadcrumb items={[{ label: 'Release notes', href: '#/notes' }, { label: 'Week 44' }]} />}
+        actions={<A.SyncIndicator state={sync} />}
+        primary={phase === 'published' ? undefined : <A.Button variant="primary" loading={phase === 'publishing'} onClick={publish}>Publish</A.Button>}>
+        <A.PageHeaderTitle>Week 44 release note</A.PageHeaderTitle>
+      </A.PageHeader>
+      {phase === 'published' && <p className="le-outcome" role="status" tabIndex={-1} ref={outcome}>Published. Week 44 is at the top of the changelog and in everyone’s What’s new. <A.Link href="#/changelog">View the changelog</A.Link></p>}
+      <div className="le-body">
+        <section className="le-draft" aria-label="Draft">
+          <A.Field label="Title" error={titleError || undefined}>
+            <A.Input id="le-title" value={title} readOnly={phase !== 'draft'} onChange={(e) => { setTitleError(''); edit(setTitle)(e); }} />
+          </A.Field>
+          <A.Field label="Note">
+            <A.Textarea className="le-text" rows={14} value={body} readOnly={phase !== 'draft'} onChange={edit(setBody)} />
+          </A.Field>
+        </section>
+        <aside className="le-side" aria-labelledby="le-side-h">
+          <h2 id="le-side-h" className="le-sub">Details</h2>
+          <A.Field label="Who sees it"><A.Select items={AUDIENCES} value={audience} onValueChange={(v) => setAudience(String(v))} disabled={phase !== 'draft'} /></A.Field>
+          <p className="le-note">Publishing adds it to the changelog and to What’s new for {audience === 'everyone' ? 'everyone' : 'workspace admins'}.</p>
+          <p className="le-note">Last week: “Export any table as CSV”.</p>
+        </aside>
+      </div>
+    </main>
+  );
+}
+
+=== ScreenLayoutDecision | <!-- @dsCard group="Patterns" height=820 subtitle="The decision frame: the question as the title, its consequence and the two choices before the evidence" -->
+--- css
+.ld-page{max-width:720px;margin-inline:auto;display:grid;gap:28px;overflow-wrap:break-word}.ld-choice{display:grid;gap:16px}.ld-consequence{margin:0;font:400 17px/26px var(--font-sans);max-width:60ch}.ld-actions{display:flex;flex-wrap:wrap;gap:8px}.ld-evidence{display:grid;gap:12px;padding-top:20px;border-top:1px solid var(--line)}.ld-sub{font:600 15px/22px var(--font-sans);margin:0}.ld-quote{margin:0;font:400 15px/23px var(--font-sans);color:var(--ink-muted);max-width:60ch}.ld-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+--- jsx
+function App() {
+  const [phase, setPhase] = React.useState(/** @type {'deciding' | 'declining' | 'sending' | 'approved' | 'declined'} */ ('deciding'));
+  const [reason, setReason] = React.useState('');
+  const [reasonError, setReasonError] = React.useState('');
+  const declineRef = React.useRef(/** @type {HTMLButtonElement | null} */ (null));
+  const outcome = React.useRef(/** @type {HTMLDivElement | null} */ (null));
+  const [sending, setSending] = React.useState(/** @type {'approved' | 'declined' | null} */ (null));
+  const decide = (result) => {
+    if (result === 'declined' && !reason.trim()) { setReasonError('Say why, so Support can tell Northwind.'); document.getElementById('ld-reason')?.focus(); return; }
+    setSending(result); setPhase('sending');
+    window.setTimeout(() => { setPhase(result); requestAnimationFrame(() => outcome.current?.focus()); }, 600);
+  };
+  const cancel = () => { setPhase('deciding'); setReasonError(''); requestAnimationFrame(() => declineRef.current?.focus()); };
+  const done = phase === 'approved' || phase === 'declined';
+  return (
+    <main className="ld-page">
+      <A.PageHeader breadcrumb={<A.Breadcrumb items={[{ label: 'Refund requests', href: '#/refunds' }, { label: 'R-1042' }]} />}>
+        <A.PageHeaderTitle>Refund €420 to Northwind?</A.PageHeaderTitle>
+        <A.PageHeaderDescription>Asked by Jon Park in Support, today at 09:12.</A.PageHeaderDescription>
+      </A.PageHeader>
+      {done ? (
+        <div className="ld-choice" role="status" tabIndex={-1} ref={outcome}>
+          <p className="ld-consequence">{phase === 'approved' ? 'Refund approved. €420 goes back to the card ending 4242 in 5–10 days, and the October invoice is marked refunded.' : 'Refund declined. Jon has your reason to send to Northwind.'}</p>
+          <div><A.Link href="#/refunds/R-1043">Next request: Halcyon, €96 (2 more waiting)</A.Link></div>
+        </div>
+      ) : (
+        <section className="ld-choice" aria-labelledby="ld-choice-h">
+          <h2 id="ld-choice-h" className="ld-sr">Your decision</h2>
+          <p className="ld-consequence">Approving sends €420 back to Northwind’s card ending 4242 in 5–10 days and marks their October invoice refunded. A refund can’t be taken back once it’s sent.</p>
+          {phase === 'declining' || (phase === 'sending' && sending === 'declined') ? <>
+            <A.Field label="Why decline?" hint="Jon sends this to Northwind." error={reasonError || undefined}>
+              <A.Textarea id="ld-reason" rows={3} value={reason} onChange={(e) => { setReason(e.target.value); setReasonError(''); }}
+                onKeyDown={(e) => { if (e.key === 'Escape') cancel(); }} />
+            </A.Field>
+            <div className="ld-actions">
+              <A.Button variant="primary" loading={phase === 'sending'} onClick={() => decide('declined')}>Send decline</A.Button>
+              <A.Button variant="ghost" onClick={cancel} disabled={phase === 'sending'}>Cancel</A.Button>
+            </div>
+          </> : (
+            <div className="ld-actions">
+              <A.Button variant="primary" loading={phase === 'sending'} onClick={() => decide('approved')}>Approve refund</A.Button>
+              <A.Button ref={declineRef} onClick={() => { setPhase('declining'); requestAnimationFrame(() => document.getElementById('ld-reason')?.focus()); }} disabled={phase === 'sending'}>Decline</A.Button>
+            </div>
+          )}
+        </section>
+      )}
+      <section className="ld-evidence" aria-labelledby="ld-why-h">
+        <h2 id="ld-why-h" className="ld-sub">Why they’re asking</h2>
+        <blockquote className="ld-quote">“We moved to annual billing on 2 October, but the monthly invoice still went out. We were charged twice for October.”</blockquote>
+        <A.PropertyList layout="inline" aria-label="The invoice">
+          <A.PropertyListItem label="Invoice" value="INV-2026-1017, 1 October" />
+          <A.PropertyListItem label="Amount" value="€420.00" />
+          <A.PropertyListItem label="Annual plan" value="Started 2 October, paid €4,536" />
+          <A.PropertyListItem label="Customer since" value="March 2023" />
+          <A.PropertyListItem label="Refunds before" value="None" />
+        </A.PropertyList>
+      </section>
+    </main>
+  );
+}
+
+=== ScreenLayoutReport | <!-- @dsCard group="Patterns" height=860 subtitle="The report frame: a chart whose takeaway is the heading leads; the secondary numbers follow, smaller" -->
+--- css
+.lr-page{max-width:1040px;margin-inline:auto;display:grid;gap:28px;overflow-wrap:break-word}.lr-more{display:grid;gap:12px}.lr-sub{font:600 15px/22px var(--font-sans);margin:0}.lr-note{margin:0;font:400 14px/21px var(--font-sans);color:var(--ink-muted);max-width:68ch}
+--- jsx
+// Daily signups for October 2026: about 40 a day, then about 80 a day from the pricing change on the 14th.
+const SIGNUPS = Array.from({ length: 31 }, (_, i) => ({ day: `2026-10-${String(i + 1).padStart(2, '0')}`, signups: (i < 13 ? 41 : 82) + Math.round(4 * Math.sin(i * 2.3)) - (new Date(Date.UTC(2026, 9, i + 1)).getUTCDay() % 6 === 0 ? 6 : 0) }));
+const total = SIGNUPS.reduce((n, d) => n + d.signups, 0);
+const before = SIGNUPS.slice(0, 13), after = SIGNUPS.slice(13);
+const mean = (rows) => Math.round(rows.reduce((n, d) => n + d.signups, 0) / rows.length);
+function App() {
+  return (
+    <main className="lr-page">
+      <A.PageHeader breadcrumb={<A.Breadcrumb items={[{ label: 'Reports', href: '#/reports' }, { label: 'Signups' }]} />}
+        actions={<A.Button variant="secondary">Export CSV</A.Button>}>
+        <A.PageHeaderTitle>Signups, October 2026</A.PageHeaderTitle>
+      </A.PageHeader>
+      <A.ChartContainer className="lr-lead" title="Daily signups" takeaway={`Signups doubled after the pricing change on 14 October, from ${mean(before)} a day to ${mean(after)}`}
+        config={{ signups: { label: 'Signups' } }} aspect={2.6} zero
+        summary={`${total.toLocaleString('en-IE')} signups in October. From 1 to 13 October about ${mean(before)} a day; from 14 October, when the free plan gained a third project, about ${mean(after)} a day.`}>
+        <A.LineChart data={SIGNUPS} x="day" />
+      </A.ChartContainer>
+      <section className="lr-more" aria-labelledby="lr-more-h">
+        <h2 id="lr-more-h" className="lr-sub">Around it</h2>
+        <A.StatGroup aria-label="October in numbers">
+          <A.Stat label="Signups in October" value={total} change={{ value: 0.41, vs: 'September' }} good="up" locale="en-IE" />
+          <A.Stat label="Became paying within 7 days" value="6.1%" help="5.8% in September" />
+          <A.Stat label="Cancelled in their first week" value={38} change={{ value: -0.12, vs: 'September' }} good="down" locale="en-IE" />
+        </A.StatGroup>
+        <p className="lr-note">Paid conversion held while signups doubled, so the new free-plan signups aren’t lower-intent so far. <A.Link href="#/reports/cohorts">See the October cohort</A.Link></p>
+      </section>
+    </main>
+  );
+}
+
 === EditRegion | <!-- @dsCard group="Inputs" height=900 subtitle="Edit several fields of one record in place, saved together as one write" -->
 --- css
 .er-demo { max-width: 720px; margin: auto; min-width: 0; color: var(--ink); }

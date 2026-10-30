@@ -1,0 +1,83 @@
+<!-- @dsCard group="Patterns" height=820 subtitle="The decision frame: the question as the title, its consequence and the two choices before the evidence" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenLayoutDecision — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.ld-page{max-width:720px;margin-inline:auto;display:grid;gap:28px;overflow-wrap:break-word}.ld-choice{display:grid;gap:16px}.ld-consequence{margin:0;font:400 17px/26px var(--font-sans);max-width:60ch}.ld-actions{display:flex;flex-wrap:wrap;gap:8px}.ld-evidence{display:grid;gap:12px;padding-top:20px;border-top:1px solid var(--line)}.ld-sub{font:600 15px/22px var(--font-sans);margin:0}.ld-quote{margin:0;font:400 15px/23px var(--font-sans);color:var(--ink-muted);max-width:60ch}.ld-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  const [phase, setPhase] = React.useState(
+    /** @type {'deciding' | 'declining' | 'sending' | 'approved' | 'declined'} */
+    "deciding"
+  );
+  const [reason, setReason] = React.useState("");
+  const [reasonError, setReasonError] = React.useState("");
+  const declineRef = React.useRef(
+    /** @type {HTMLButtonElement | null} */
+    null
+  );
+  const outcome = React.useRef(
+    /** @type {HTMLDivElement | null} */
+    null
+  );
+  const [sending, setSending] = React.useState(
+    /** @type {'approved' | 'declined' | null} */
+    null
+  );
+  const decide = (result) => {
+    if (result === "declined" && !reason.trim()) {
+      setReasonError("Say why, so Support can tell Northwind.");
+      document.getElementById("ld-reason")?.focus();
+      return;
+    }
+    setSending(result);
+    setPhase("sending");
+    window.setTimeout(() => {
+      setPhase(result);
+      requestAnimationFrame(() => outcome.current?.focus());
+    }, 600);
+  };
+  const cancel = () => {
+    setPhase("deciding");
+    setReasonError("");
+    requestAnimationFrame(() => declineRef.current?.focus());
+  };
+  const done = phase === "approved" || phase === "declined";
+  return /* @__PURE__ */ React.createElement("main", { className: "ld-page" }, /* @__PURE__ */ React.createElement(A.PageHeader, { breadcrumb: /* @__PURE__ */ React.createElement(A.Breadcrumb, { items: [{ label: "Refund requests", href: "#/refunds" }, { label: "R-1042" }] }) }, /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, "Refund \u20AC420 to Northwind?"), /* @__PURE__ */ React.createElement(A.PageHeaderDescription, null, "Asked by Jon Park in Support, today at 09:12.")), done ? /* @__PURE__ */ React.createElement("div", { className: "ld-choice", role: "status", tabIndex: -1, ref: outcome }, /* @__PURE__ */ React.createElement("p", { className: "ld-consequence" }, phase === "approved" ? "Refund approved. \u20AC420 goes back to the card ending 4242 in 5\u201310 days, and the October invoice is marked refunded." : "Refund declined. Jon has your reason to send to Northwind."), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(A.Link, { href: "#/refunds/R-1043" }, "Next request: Halcyon, \u20AC96 (2 more waiting)"))) : /* @__PURE__ */ React.createElement("section", { className: "ld-choice", "aria-labelledby": "ld-choice-h" }, /* @__PURE__ */ React.createElement("h2", { id: "ld-choice-h", className: "ld-sr" }, "Your decision"), /* @__PURE__ */ React.createElement("p", { className: "ld-consequence" }, "Approving sends \u20AC420 back to Northwind\u2019s card ending 4242 in 5\u201310 days and marks their October invoice refunded. A refund can\u2019t be taken back once it\u2019s sent."), phase === "declining" || phase === "sending" && sending === "declined" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Field, { label: "Why decline?", hint: "Jon sends this to Northwind.", error: reasonError || void 0 }, /* @__PURE__ */ React.createElement(
+    A.Textarea,
+    {
+      id: "ld-reason",
+      rows: 3,
+      value: reason,
+      onChange: (e) => {
+        setReason(e.target.value);
+        setReasonError("");
+      },
+      onKeyDown: (e) => {
+        if (e.key === "Escape") cancel();
+      }
+    }
+  )), /* @__PURE__ */ React.createElement("div", { className: "ld-actions" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", loading: phase === "sending", onClick: () => decide("declined") }, "Send decline"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: cancel, disabled: phase === "sending" }, "Cancel"))) : /* @__PURE__ */ React.createElement("div", { className: "ld-actions" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", loading: phase === "sending", onClick: () => decide("approved") }, "Approve refund"), /* @__PURE__ */ React.createElement(A.Button, { ref: declineRef, onClick: () => {
+    setPhase("declining");
+    requestAnimationFrame(() => document.getElementById("ld-reason")?.focus());
+  }, disabled: phase === "sending" }, "Decline"))), /* @__PURE__ */ React.createElement("section", { className: "ld-evidence", "aria-labelledby": "ld-why-h" }, /* @__PURE__ */ React.createElement("h2", { id: "ld-why-h", className: "ld-sub" }, "Why they\u2019re asking"), /* @__PURE__ */ React.createElement("blockquote", { className: "ld-quote" }, "\u201CWe moved to annual billing on 2 October, but the monthly invoice still went out. We were charged twice for October.\u201D"), /* @__PURE__ */ React.createElement(A.PropertyList, { layout: "inline", "aria-label": "The invoice" }, /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Invoice", value: "INV-2026-1017, 1 October" }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Amount", value: "\u20AC420.00" }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Annual plan", value: "Started 2 October, paid \u20AC4,536" }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Customer since", value: "March 2023" }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Refunds before", value: "None" }))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

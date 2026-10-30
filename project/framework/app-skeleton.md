@@ -1,6 +1,8 @@
 # App skeleton
 
-A starting point for a new SaaS app, with Altitude's parts composed the way they're meant to be: copy it, then replace the data and the services. It's the Storybook preview "Patterns/AppSkeleton", and its source is `build/fixtures/patterns/app-skeleton.jsx` in the repository, type-checked against the public declarations.
+Start from the task: [screen layout](patterns/screen-layout.md) chooses a screen's frame from what the person came to do. This skeleton is the records frame, for finding, comparing and acting on many similar records; a focused editor, a decision or a report is laid out differently.
+
+A starting point for a records app, with Altitude's parts composed the way they're meant to be: copy it, then replace the data and the services. It's the Storybook preview "Patterns/AppSkeleton", and its source is `build/fixtures/patterns/app-skeleton.jsx` in the repository, type-checked against the public declarations.
 
 ## What it composes
 

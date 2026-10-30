@@ -1,0 +1,52 @@
+<!-- @dsCard group="Patterns" height=860 subtitle="The report frame: a chart whose takeaway is the heading leads; the secondary numbers follow, smaller" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenLayoutReport — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.lr-page{max-width:1040px;margin-inline:auto;display:grid;gap:28px;overflow-wrap:break-word}.lr-more{display:grid;gap:12px}.lr-sub{font:600 15px/22px var(--font-sans);margin:0}.lr-note{margin:0;font:400 14px/21px var(--font-sans);color:var(--ink-muted);max-width:68ch}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const SIGNUPS = Array.from({ length: 31 }, (_, i) => ({ day: `2026-10-${String(i + 1).padStart(2, "0")}`, signups: (i < 13 ? 41 : 82) + Math.round(4 * Math.sin(i * 2.3)) - (new Date(Date.UTC(2026, 9, i + 1)).getUTCDay() % 6 === 0 ? 6 : 0) }));
+const total = SIGNUPS.reduce((n, d) => n + d.signups, 0);
+const before = SIGNUPS.slice(0, 13), after = SIGNUPS.slice(13);
+const mean = (rows) => Math.round(rows.reduce((n, d) => n + d.signups, 0) / rows.length);
+function App() {
+  return /* @__PURE__ */ React.createElement("main", { className: "lr-page" }, /* @__PURE__ */ React.createElement(
+    A.PageHeader,
+    {
+      breadcrumb: /* @__PURE__ */ React.createElement(A.Breadcrumb, { items: [{ label: "Reports", href: "#/reports" }, { label: "Signups" }] }),
+      actions: /* @__PURE__ */ React.createElement(A.Button, { variant: "secondary" }, "Export CSV")
+    },
+    /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, "Signups, October 2026")
+  ), /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      className: "lr-lead",
+      title: "Daily signups",
+      takeaway: `Signups doubled after the pricing change on 14 October, from ${mean(before)} a day to ${mean(after)}`,
+      config: { signups: { label: "Signups" } },
+      aspect: 2.6,
+      zero: true,
+      summary: `${total.toLocaleString("en-IE")} signups in October. From 1 to 13 October about ${mean(before)} a day; from 14 October, when the free plan gained a third project, about ${mean(after)} a day.`
+    },
+    /* @__PURE__ */ React.createElement(A.LineChart, { data: SIGNUPS, x: "day" })
+  ), /* @__PURE__ */ React.createElement("section", { className: "lr-more", "aria-labelledby": "lr-more-h" }, /* @__PURE__ */ React.createElement("h2", { id: "lr-more-h", className: "lr-sub" }, "Around it"), /* @__PURE__ */ React.createElement(A.StatGroup, { "aria-label": "October in numbers" }, /* @__PURE__ */ React.createElement(A.Stat, { label: "Signups in October", value: total, change: { value: 0.41, vs: "September" }, good: "up", locale: "en-IE" }), /* @__PURE__ */ React.createElement(A.Stat, { label: "Became paying within 7 days", value: "6.1%", help: "5.8% in September" }), /* @__PURE__ */ React.createElement(A.Stat, { label: "Cancelled in their first week", value: 38, change: { value: -0.12, vs: "September" }, good: "down", locale: "en-IE" })), /* @__PURE__ */ React.createElement("p", { className: "lr-note" }, "Paid conversion held while signups doubled, so the new free-plan signups aren\u2019t lower-intent so far. ", /* @__PURE__ */ React.createElement(A.Link, { href: "#/reports/cohorts" }, "See the October cohort"))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
