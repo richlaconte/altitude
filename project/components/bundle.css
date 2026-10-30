@@ -84,7 +84,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   --wall: var(--wall-1); --wall-c: var(--surface-trench);
   --alt-bg: var(--surface-raised); --alt-bg-up: var(--surface-lifted); --alt-fg: var(--ink); --alt-sh: var(--elev-1); --alt-sh-up: var(--elev-2);
   position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none;
-  height: 36px; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-md);
+  height: var(--size-control-md); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-md);
   font: 500 14px/20px var(--font-sans); letter-spacing: -0.003em; white-space: nowrap; user-select: none; cursor: pointer;
   background: var(--alt-bg); background-image: var(--alt-sheen); color: var(--alt-fg);
   /* A button stays exactly where it is until the pointer is on it: no approach, no lean. */
@@ -118,10 +118,10 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 .alt-btn[data-variant="ghost"] { --wall: 0px; --alt-bg: transparent; --alt-bg-up: var(--surface-raised); --alt-sh: var(--elev-0); --alt-sh-up: var(--elev-1); background-image: none; }
 .alt-btn[data-variant="ghost"]:hover:not(:disabled), .alt-btn[data-variant="ghost"]:focus-visible { --wall: var(--wall-1); background-image: var(--alt-sheen); }
-.alt-btn[data-size="sm"] { height: 30px; padding: 0 var(--space-3); font-size: 13px; border-radius: var(--radius-sm); }
+.alt-btn[data-size="sm"] { height: var(--size-control-sm); padding: 0 var(--space-3); font-size: 13px; border-radius: var(--radius-sm); }
 .alt-btn[data-size="lg"] { height: 44px; padding: 0 var(--space-5); font-size: 15px; }
-.alt-btn[data-square] { width: 36px; padding: 0; }
-.alt-btn[data-square][data-size="sm"] { width: 30px; }
+.alt-btn[data-square] { width: var(--size-control-md); padding: 0; }
+.alt-btn[data-square][data-size="sm"] { width: var(--size-control-sm); }
 .alt-btn[data-square][data-size="lg"] { width: 44px; }
 .alt-btn:hover:not(:disabled):not([data-loading]), .alt-btn:focus-visible {
   background: var(--alt-bg-up); background-image: var(--alt-sheen);
@@ -164,14 +164,14 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-input {
   --w: 4px; --wc: var(--alt-wall-in); --halo: 0px; --halo-c: transparent;
   --wd: calc(var(--w) + var(--n) * 2px);
-  position: relative; isolation: isolate; display: flex; align-items: center; gap: var(--space-2); height: 40px; padding: 0 var(--space-3);
+  position: relative; isolation: isolate; display: flex; align-items: center; gap: var(--space-2); height: var(--size-field-md); padding: 0 var(--space-3);
   border: 1px solid var(--line-control); border-radius: var(--radius-md);
   background: var(--surface-well); color: var(--ink); cursor: text;
   box-shadow: inset 0 var(--wd) 0 0 var(--wc), inset 0 calc(var(--wd) + 3px) 3px -2px var(--alt-cast), 0 1px 0 0 var(--alt-lip), 0 0 0 var(--halo) var(--halo-c);
   transition: background-color var(--dur-travel-2) var(--ease-rise), box-shadow var(--dur-travel-2) var(--ease-settle), border-color var(--dur-travel-1) var(--ease-rise), outline-color var(--dur-travel-1) var(--ease-rise);
   outline: 1px solid transparent; outline-offset: 0;
 }
-.alt-input[data-size="sm"] { --w: 3px; height: 34px; border-radius: var(--radius-sm); }
+.alt-input[data-size="sm"] { --w: 3px; height: var(--size-field-sm); border-radius: var(--radius-sm); }
 .alt-input:hover { border-color: var(--ink-muted); }
 /* Filled: the floor rises flush with the page. Nothing left to receive, so approach no longer deepens it. */
 .alt-input:has(input:not(:placeholder-shown)), .alt-input:has(textarea:not(:placeholder-shown)) { --w: 0px; --n: 0; background: var(--surface-raised); }
@@ -342,7 +342,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 .alt-tabs-indicator[data-ready] { transition: transform var(--dur-travel-3) var(--ease-settle), width var(--dur-travel-3) var(--ease-settle), opacity var(--dur-travel-1); }
 .alt-tabs-trigger {
-  position: relative; z-index: 1; height: 30px; padding: 0 var(--space-3); border: 0; border-radius: calc(var(--radius-md) - var(--space-1));
+  position: relative; z-index: 1; height: var(--size-control-sm); padding: 0 var(--space-3); border: 0; border-radius: calc(var(--radius-md) - var(--space-1));
   background: none; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); cursor: pointer; white-space: nowrap;
   transition: color var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise);
 }
@@ -358,7 +358,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   border: 0; border-radius: 0; background: none; box-shadow: none;
 }
 .alt-tabs[data-variant="folder"] .alt-tabs-indicator { display: none; }
-.alt-tabs[data-variant="folder"] .alt-tabs-trigger { z-index: 0; isolation: isolate; height: 38px; padding: 0 var(--space-4); border-radius: var(--r) var(--r) 0 0; }
+.alt-tabs[data-variant="folder"] .alt-tabs-trigger { z-index: 0; isolation: isolate; height: calc(var(--size-control-md) + 2px); padding: 0 var(--space-4); border-radius: var(--r) var(--r) 0 0; }
 .alt-tabs[data-variant="folder"] .alt-tabs-trigger:focus-visible { outline-offset: -5px; }
 /* The tab: the top edge of its sheet. It reaches 1px into the panel to cover the panel's top hairline. */
 .alt-tabs[data-variant="folder"] .alt-tabs-trigger::before {
@@ -799,7 +799,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 .alt-menu-hl[data-tone="critical"] { background: var(--critical-soft); }
 .alt-menu-item, .alt-menu-label {
-  position: relative; display: flex; align-items: center; gap: 10px; min-height: 34px; padding: 0 10px; border-radius: var(--radius-sm);
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: calc(var(--size-control-md) - 2px); padding: 0 10px; border-radius: var(--radius-sm);
   font: 500 14px/20px var(--font-sans); color: var(--ink); cursor: pointer; user-select: none;
   opacity: 0; transform: translateY(calc(-3px * var(--alt-travel)));
   transition: opacity var(--dur-travel-2) var(--ease-rise), transform var(--dur-travel-2) var(--ease-rise);
@@ -1139,7 +1139,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    Caps Lock is a caption with an icon. ── */
 .alt-pw { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .alt-pw .alt-input { padding-right: 4px; }
-.alt-pw-reveal.alt-btn[data-square][data-size="sm"] { width: 30px; height: 30px; color: var(--ink-muted); }
+.alt-pw-reveal.alt-btn[data-square][data-size="sm"] { width: var(--size-control-sm); height: var(--size-control-sm); color: var(--ink-muted); }
 .alt-pw-caps { display: flex; align-items: center; gap: 6px; margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink); }
 .alt-pw-caps svg { flex: none; color: var(--caution); }
 .alt-pw-strength .alt-meter-label { display: inline-flex; gap: 8px; }
@@ -1320,7 +1320,7 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 .alt-sidebar-menu { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .alt-sidebar-item { position: relative; display: flex; align-items: center; }
 .alt-sidebar-button {
-  position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; height: 34px; padding: 0 var(--space-2); border-radius: var(--radius-sm);
+  position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; height: calc(var(--size-control-md) - 2px); padding: 0 var(--space-2); border-radius: var(--radius-sm);
   font: 500 14px/20px var(--font-sans); color: var(--ink-muted); text-decoration: none; white-space: nowrap; cursor: pointer;
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), color var(--dur-travel-1);
 }
@@ -2008,7 +2008,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-crumbs li { position: relative; display: flex; --rise: calc(var(--d) * 3px); }
 .alt-crumbs .alt-crumb-link {
   --wd: calc(2px + var(--rise)); --wall: var(--wd); --wall-c: color-mix(in oklab, var(--surface-trench), var(--ink) 6%);
-  position: relative; display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border: 0; border-radius: var(--radius-sm);
+  position: relative; display: inline-flex; align-items: center; height: var(--size-control-sm); padding: 0 12px; border: 0; border-radius: var(--radius-sm);
   font: 500 13px/18px var(--font-sans); color: var(--ink-muted); white-space: nowrap; text-decoration: none; cursor: pointer;
   background: var(--surface-raised); background-image: var(--alt-sheen);
   box-shadow: 0 0 0 1px var(--alt-ring), 0 var(--wd) 0 0 var(--wall-c), 0 var(--wd) 0 1px var(--alt-ring),
@@ -2090,7 +2090,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 }
 .alt-cmd-hl[data-tone="critical"] { background: var(--critical-soft); }
 .alt-cmd-item {
-  position: relative; display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 10px; border-radius: var(--radius-sm);
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: var(--size-field-md); padding: 0 10px; border-radius: var(--radius-sm);
   font: 500 14px/20px var(--font-sans); color: var(--ink); cursor: pointer; user-select: none;
 }
 .alt-cmd-item[data-tone="critical"] { color: var(--critical); }
@@ -3164,8 +3164,8 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    onRemove hovers at level 2 after dur-grace; a rejected one drops to a trench with a critical rim. Suggestions are the
    Combobox's list at level 3. ── */
 .alt-tag-input { position: relative; display: block; min-width: 0; }
-.alt-tag-input > .alt-input { height: auto; min-height: 40px; flex-wrap: wrap; align-items: center; row-gap: 4px; padding-block: 5px; }
-.alt-tag-input > .alt-input[data-size="sm"] { min-height: 34px; padding-block: 3px; }
+.alt-tag-input > .alt-input { height: auto; min-height: var(--size-field-md); flex-wrap: wrap; align-items: center; row-gap: 4px; padding-block: 5px; }
+.alt-tag-input > .alt-input[data-size="sm"] { min-height: var(--size-field-sm); padding-block: 3px; }
 .alt-tag-input > .alt-input > input { flex: 1 1 6ch; min-width: 6ch; height: 28px; }
 .alt-tag-input > .alt-input:not([data-filled]):not([data-invalid]):not([data-disabled]) { --w: 4px; --n: calc(var(--near) * var(--alt-travel)); background: var(--surface-well); }
 .alt-tag-list { display: contents; list-style: none; margin: 0; padding: 0; }
@@ -3217,7 +3217,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-date-seg:focus { background: var(--accent); color: var(--on-accent); }
 .alt-date-sep { padding: 0 1px; color: var(--ink-muted); }
 .alt-date-to { padding: 0 var(--space-2); color: var(--ink-muted); transform: translateY(calc(var(--wd) * 0.5)); }
-.alt-date-button { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-left: auto; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1), color var(--dur-travel-1); }
+.alt-date-button { display: inline-grid; place-items: center; width: var(--size-control-sm); height: var(--size-control-sm); margin-left: auto; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1), color var(--dur-travel-1); }
 .alt-date-button:hover:not(:disabled) { background: var(--surface-raised); color: var(--ink); box-shadow: var(--elev-1); }
 .alt-date-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
 .alt-date-picker > .alt-input:not([data-filled]):not([data-invalid]):not([data-disabled]) { --w: 4px; --n: calc(var(--near) * var(--alt-travel)); background: var(--surface-well); }
@@ -3228,7 +3228,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-cal { width: max-content; color: var(--ink); font: 400 13.5px/1 var(--font-sans); font-variant-numeric: tabular-nums; }
 .alt-cal-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
 .alt-cal-title { margin: 0; font: 600 14px/20px var(--font-sans); }
-.alt-cal-nav { display: inline-grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1); }
+.alt-cal-nav { display: inline-grid; place-items: center; width: var(--size-control-sm); height: var(--size-control-sm); padding: 0; border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-muted); cursor: pointer; transition: background-color var(--dur-travel-1), box-shadow var(--dur-travel-1); }
 .alt-cal-nav:hover:not(:disabled) { background: var(--surface-raised); color: var(--ink); box-shadow: var(--elev-1); }
 .alt-cal-nav:disabled { opacity: 0.4; cursor: default; }
 .alt-cal-nav:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
@@ -3262,7 +3262,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-date-presets .alt-menu-hl { left: 0; right: var(--space-3); }
 .alt-date-presets:focus { outline: none; }
 .alt-date-custom { min-width: 0; }
-@media (max-width: 560px) {
+@media (max-width: 480px) {
   .alt-date-panes { flex-direction: column; }
   .alt-date-presets { align-self: stretch; padding: 0 0 var(--space-2); border-right: 0; border-bottom: 1px solid var(--line); }
   .alt-date-presets .alt-menu-hl { right: 0; }
@@ -3306,7 +3306,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-tree { margin: 0; padding: 0; list-style: none; color: var(--ink); font: 400 14px/20px var(--font-sans); }
 .alt-tree-row {
   --indent: calc((var(--level, 1) - 1) * var(--space-4));
-  position: relative; display: flex; align-items: center; gap: 4px; min-height: 32px; padding: 2px var(--space-2) 2px 4px; border-radius: var(--radius-sm);
+  position: relative; display: flex; align-items: center; gap: 4px; min-height: var(--size-row-md); padding: 2px var(--space-2) 2px 4px; border-radius: var(--radius-sm);
   outline: none; cursor: default; user-select: none; touch-action: pan-y;
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
 }
@@ -3424,7 +3424,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-filter-count { color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
 .alt-filter-picker { min-width: 200px; max-width: min(320px, calc(100vw - 32px)); padding: var(--space-1); }
 .alt-filter-list { max-height: 260px; overflow-y: auto; outline: none; }
-.alt-filter-option { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: 32px; padding: 0 var(--space-2); border-radius: var(--radius-sm); cursor: pointer; font: 400 13.5px/18px var(--font-sans); }
+.alt-filter-option { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--size-row-md); padding: 0 var(--space-2); border-radius: var(--radius-sm); cursor: pointer; font: 400 13.5px/18px var(--font-sans); }
 .alt-filter-option[data-active] { background: var(--accent-soft); }
 .alt-filter-empty { padding: var(--space-2); color: var(--ink-muted); }
 .alt-filter-search, .alt-filter-input {

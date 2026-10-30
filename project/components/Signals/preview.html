@@ -12,13 +12,14 @@
 .cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 24px; }
+@media (max-width: 640px) { .grid { grid-template-columns: minmax(0, 1fr); } }
 .cell { display: flex; flex-direction: column; gap: 12px; }
 .cell h4 { margin: 0; font: 600 14px/20px var(--font-sans); }
 .cell .cap { min-height: 34px; }
 .card { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .card b { font: 500 14px/20px var(--font-sans); }
 .card .sub { font: 400 12.5px/17px var(--font-mono); color: var(--ink-muted); }
-.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 8px; }
 .tile { padding: 10px; border-radius: var(--radius-md); font: 500 13px/18px var(--font-sans); text-align: center; }
 </style>
 </head>

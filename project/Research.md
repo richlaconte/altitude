@@ -1299,6 +1299,16 @@ A prototype review of `DotPlot` (#192): eight services' p95 with the 10th–90th
 - **A hollow dot means projected elsewhere (open question 2).** A projected `LineChart` point is hollow too (E37). A `DotPlot` takes no `status`, so a dumbbell never has a projection to confuse with its "from" dot, and the link, the description and the names say which end is which. The risk stays for a reader who has just looked at a projected line; noted for testing.
 
 Not yet tested with people: whether readers take a dumbbell's direction from the filled end without the words.
+### E110 · How large is a control on a phone?
+
+A measurement (#245): `checks/phone.mjs` (#247) opened every preview at 320 and 375 CSS px as a phone. Of the interactive targets, 1,205 were under 44×44 on touch and 167 under 24×24, the WCAG 2.5.8 minimum; heights were literals, and four layout switches used five widths (768, 640, 640, 560, 480).
+
+- **One setting, not a size per component.** Heights now come from `size-*` tokens that step up under `(pointer: coarse)`: 36px buttons become 44, 40px fields 48, 32px rows 44. Apple's and WCAG 2.5.5's 44px is the touch size; Parhi, Karlson & Bederson (2006) found about 35 CSS px enough for one-handed thumb targets, with accuracy worst at the edges.
+- **Density is the override.** `density="comfortable"` takes the touch sizes everywhere; `compact` keeps desktop sizes on touch. The hit area follows the pointer alone, so a compact face still gets a 44px target: the face is the tier's, the target is the finger's.
+- **Not 44px everywhere.** Desktop density is information, and a mouse doesn't need it. Hit areas alone (a 44px target on a 36px face) would overlap neighbours in a dense list, which is why the faces step up too.
+- **Two breakpoints.** 480 for a component's own narrow layout and 640 for page chrome. AppShell's sidebar now becomes a drawer below 640 (it was 768) and the date picker stacks below 480 (it was 560). CSS can't read a token in a media query, so the numbers are checked.
+
+Measured with `checks/density.mjs`: buttons 36 → 44, small buttons 30 → 40, inputs 40 → 48, folder tabs 38 → 46 under a coarse pointer; unchanged with a mouse.
 
 ## What was rejected
 
