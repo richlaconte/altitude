@@ -1,0 +1,66 @@
+<!-- @dsCard group="Layout" height=640 subtitle="What an agent is making, in a pane beside the conversation, with its versions" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artifact — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.af { height: 600px; max-width: 960px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.af .chat { display: flex; flex-direction: column; gap: 12px; padding: 16px; height: 100%; overflow: auto; }
+.af .chat p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const versions = [
+  { code: `export function Pricing() {
+  return <h1>Pricing</h1>;
+}` },
+  { code: `export function Pricing() {
+  return (
+    <section>
+      <h1>Pricing</h1>
+      <p>Start free, upgrade when you grow.</p>
+    </section>
+  );
+}` },
+  { code: `export function Pricing() {
+  return (
+    <section>
+      <h1>Pricing</h1>
+      <p>Start free, upgrade when you grow.</p>
+      <Plans tiers={['Starter', 'Pro', 'Business']} />
+    </section>
+  );
+}` }
+];
+const html = (v) => `<body style="font:15px system-ui;margin:24px;color:#1b2230"><h1 style="font-size:22px">Pricing</h1>${v >= 2 ? "<p>Start free, upgrade when you grow.</p>" : ""}${v >= 3 ? '<div style="display:flex;gap:8px">' + ["Starter", "Pro", "Business"].map((t) => `<div style="flex:1;padding:12px;border:1px solid #d5dae3;border-radius:8px">${t}</div>`).join("") + "</div>" : ""}</body>`;
+function App() {
+  const [open, setOpen] = React.useState(true);
+  const [status, setStatus] = React.useState("writing");
+  const [v, setV] = React.useState(3);
+  React.useEffect(() => {
+    const t = setTimeout(() => setStatus("complete"), 2500);
+    return () => clearTimeout(t);
+  }, []);
+  return /* @__PURE__ */ React.createElement("div", { className: "af" }, /* @__PURE__ */ React.createElement(A.ResizablePanelGroup, { direction: "horizontal", narrow: "stack", narrowPanel: open ? 1 : 0 }, /* @__PURE__ */ React.createElement(A.ResizablePanel, { defaultSize: 42, "aria-label": "Conversation" }, /* @__PURE__ */ React.createElement("div", { className: "chat" }, /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, "Make a pricing page with three plans.")), /* @__PURE__ */ React.createElement(A.Message, { from: "assistant" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, "Here's the page, with the three plans in a row."), /* @__PURE__ */ React.createElement(A.ArtifactReference, { title: "Pricing page", version: 3, status, controls: "pricing-artifact", onOpen: () => setOpen(true) })))), /* @__PURE__ */ React.createElement(A.ResizableHandle, null), /* @__PURE__ */ React.createElement(A.ResizablePanel, { defaultSize: 58, "aria-label": "Pricing page" }, open && /* @__PURE__ */ React.createElement(A.Artifact, { id: "pricing-artifact", title: "Pricing page", status, version: 3 }, /* @__PURE__ */ React.createElement(A.ArtifactHeader, { onCopy: () => versions[v - 1].code, onDownload: () => {
+  }, onClose: () => setOpen(false) }), /* @__PURE__ */ React.createElement(A.ArtifactVersions, { versions: 3, current: v, onChange: setV, onRestore: () => setV(3) }), /* @__PURE__ */ React.createElement(A.ArtifactContent, { views: {
+    preview: /* @__PURE__ */ React.createElement("iframe", { sandbox: "", srcDoc: html(v), title: `Pricing page preview, version ${v}` }),
+    source: /* @__PURE__ */ React.createElement(A.CodeBlock, { language: "tsx", code: versions[v - 1].code, streaming: status === "writing" && v === 3 }),
+    changes: v > 1 ? /* @__PURE__ */ React.createElement(A.DiffView, { caption: `Version ${v - 1} \u2192 ${v}`, before: versions[v - 2].code, after: versions[v - 1].code }) : void 0
+  } })))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

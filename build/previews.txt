@@ -3468,6 +3468,54 @@ function App() {
   );
 }
 
+=== Artifact | <!-- @dsCard group="Layout" height=640 subtitle="What an agent is making, in a pane beside the conversation, with its versions" -->
+--- css
+.af { height: 600px; max-width: 960px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.af .chat { display: flex; flex-direction: column; gap: 12px; padding: 16px; height: 100%; overflow: auto; }
+.af .chat p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink); }
+--- jsx
+const versions = [
+  { code: `export function Pricing() {\n  return <h1>Pricing</h1>;\n}` },
+  { code: `export function Pricing() {\n  return (\n    <section>\n      <h1>Pricing</h1>\n      <p>Start free, upgrade when you grow.</p>\n    </section>\n  );\n}` },
+  { code: `export function Pricing() {\n  return (\n    <section>\n      <h1>Pricing</h1>\n      <p>Start free, upgrade when you grow.</p>\n      <Plans tiers={['Starter', 'Pro', 'Business']} />\n    </section>\n  );\n}` },
+];
+const html = (v) => `<body style="font:15px system-ui;margin:24px;color:#1b2230"><h1 style="font-size:22px">Pricing</h1>${v >= 2 ? '<p>Start free, upgrade when you grow.</p>' : ''}${v >= 3 ? '<div style="display:flex;gap:8px">' + ['Starter', 'Pro', 'Business'].map((t) => `<div style="flex:1;padding:12px;border:1px solid #d5dae3;border-radius:8px">${t}</div>`).join('') + '</div>' : ''}</body>`;
+function App() {
+  const [open, setOpen] = React.useState(true);
+  const [status, setStatus] = React.useState('writing');
+  const [v, setV] = React.useState(3);
+  React.useEffect(() => { const t = setTimeout(() => setStatus('complete'), 2500); return () => clearTimeout(t); }, []);
+  return (
+    <div className="af">
+      <A.ResizablePanelGroup direction="horizontal" narrow="stack" narrowPanel={open ? 1 : 0}>
+        <A.ResizablePanel defaultSize={42} aria-label="Conversation">
+          <div className="chat">
+            <A.Message from="user"><A.MessageContent>Make a pricing page with three plans.</A.MessageContent></A.Message>
+            <A.Message from="assistant">
+              <A.MessageContent>Here's the page, with the three plans in a row.</A.MessageContent>
+              <A.ArtifactReference title="Pricing page" version={3} status={status} controls="pricing-artifact" onOpen={() => setOpen(true)} />
+            </A.Message>
+          </div>
+        </A.ResizablePanel>
+        <A.ResizableHandle />
+        <A.ResizablePanel defaultSize={58} aria-label="Pricing page">
+          {open && (
+            <A.Artifact id="pricing-artifact" title="Pricing page" status={status} version={3}>
+              <A.ArtifactHeader onCopy={() => versions[v - 1].code} onDownload={() => {}} onClose={() => setOpen(false)} />
+              <A.ArtifactVersions versions={3} current={v} onChange={setV} onRestore={() => setV(3)} />
+              <A.ArtifactContent views={{
+                preview: <iframe sandbox="" srcDoc={html(v)} title={`Pricing page preview, version ${v}`} />,
+                source: <A.CodeBlock language="tsx" code={versions[v - 1].code} streaming={status === 'writing' && v === 3} />,
+                changes: v > 1 ? <A.DiffView caption={`Version ${v - 1} → ${v}`} before={versions[v - 2].code} after={versions[v - 1].code} /> : undefined,
+              }} />
+            </A.Artifact>
+          )}
+        </A.ResizablePanel>
+      </A.ResizablePanelGroup>
+    </div>
+  );
+}
+
 === ThreadList | <!-- @dsCard group="Layout" height=640 subtitle="Conversations with an assistant beside the thread, the ones still working said in words" -->
 --- css
 .tl { height: 600px; max-width: 760px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
