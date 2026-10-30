@@ -3316,16 +3316,31 @@ function App() {
     setStatus('streaming');
     stream(id);
   };
+  // Editing a sent message starts a branch from it; the earlier exchange is kept as version 1.
+  const edit = (id, text) => {
+    const i = msgs.findIndex((m) => m.id === id), m = msgs[i];
+    const versions = (m.versions ?? [{ text: m.text, files: m.files }]).map((v, k) => (k === (m.v ?? 0) ? { ...v, rest: msgs.slice(i + 1) } : v));
+    const aid = Date.now();
+    setMsgs([...msgs.slice(0, i), { ...m, text, files: undefined, versions: [...versions, { text }], v: versions.length }, { id: aid, from: 'assistant', text: '', status: 'streaming' }]);
+    setStatus('streaming');
+    stream(aid);
+  };
+  const showVersion = (id, k) => {
+    const i = msgs.findIndex((m) => m.id === id), m = msgs[i];
+    const versions = m.versions.map((v, j) => (j === m.v ? { ...v, rest: msgs.slice(i + 1) } : v));
+    setMsgs([...msgs.slice(0, i), { ...m, text: versions[k].text, files: versions[k].files, versions, v: k }, ...(versions[k].rest ?? [])]);
+  };
   const stop = () => { clearTimeout(timer.current); setStatus('ready'); setMsgs((ms) => ms.map((m) => (m.status === 'streaming' ? { ...m, status: 'stopped' } : m))); };
   return (
     <div className="cv">
       <A.Conversation aria-label="Assistant">
         <A.ConversationContent>
           {msgs.map((m) => (
-            <A.Message key={m.id} from={m.from} status={m.status} onRetry={m.status === 'stopped' ? () => { setStatus('streaming'); stream(m.id); } : undefined}>
+            <A.Message key={m.id} from={m.from} status={m.status} edited={m.v > 0} onRetry={m.status === 'stopped' ? () => { setStatus('streaming'); stream(m.id); } : undefined}>
               {m.files && <A.MessageAttachments items={m.files} />}
               <A.MessageContent>{m.text}</A.MessageContent>
-              {m.from === 'assistant' && <A.MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />}
+              {m.from === 'assistant' ? <A.MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />
+                : <A.MessageActions onEdit={(t) => edit(m.id, t)} versions={m.versions && { index: m.v + 1, total: m.versions.length, onChange: (k) => showVersion(m.id, k - 1) }} />}
             </A.Message>
           ))}
         </A.ConversationContent>

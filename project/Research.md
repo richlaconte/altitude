@@ -69,7 +69,7 @@ The frame was reviewed against Altitude's rendering in E24. The full prototype r
 
 ### Generated interfaces converge
 
-These are the sources behind [Distinctiveness](Distinctiveness.md). Most of the catalogued tells come from practitioners, not studies; the strength of each source is recorded in `tells.json`.
+These are the sources behind [Distinctiveness](Distinctiveness.md), which also records the audit of Altitude against them. Most of the catalogued tells come from practitioners, not studies; the strength of each source is recorded in `tells.json`.
 
 - **Models sample from the safe centre.** Anthropic attributes the generic look of generated frontends to "distributional convergence": safe, universally acceptable choices dominate web training data, and without direction a model picks them. It names Inter, Roboto and Arial, purple gradients on white, predictable layouts and flat backgrounds ([Rajasekaran, Wei & Bricken, 2025](https://claude.com/resources/articles/improving-frontend-design-through-skills)). UI kits used as shipped amplify it; one widely repeated account traces the purple to Tailwind's `indigo-500` ([DEV Community](https://dev.to/alanwest/why-every-ai-built-website-looks-the-same-blame-tailwinds-indigo-500-3h2p); a single source).
 - **Structure converges more than colour.** Five generative UI tools given the same 24 prompts produced 120 interfaces whose visual similarity (UIClip embeddings) and layout similarity (tree edit distance) were closer than their colour (Earth Mover's Distance in CIELCh). The same study found a quarter of the tools' stated design rationales absent from what they built, and functional principles (system status, error recovery, user control) almost entirely missing: four of five tools scored 0.06 or less ([Imteyaz et al., 2026](https://arxiv.org/abs/2607.22928), preprint). Across 15 models and 160 briefs, structural originality was 0.59 against 0.76 for human reference designs, and the change between two domain variants of the same brief was 0.58 against 0.90, while appropriateness stayed above 90% ([Rusia et al., 2026](https://arxiv.org/abs/2610.11539), preprint by a vendor; colour, type and copy were excluded from the score by design). So the strongest tell is a layout that ignores its content, which is why Distinctiveness starts from the task (rule 2).
@@ -1477,21 +1477,9 @@ A design review (#343): three rounds of standalone prototypes, built from Altitu
 
 Not yet tested with people: whether breath reads as loading, how long the wait feels compared with the sweep, comfort for people who report motion sensitivity, and whether arrivals are noticed. Until then it's opt-in.
 
-### E136 · Does Altitude carry the tells of generated interfaces?
+### E136 · Editing what you asked
 
-An audit against the 47 tells catalogued in `tells.json` (#319), reading `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`. A regex prototype covered the `lint` tells; the rest were read by hand. Nothing was rendered, so `render` and `measure` tells are judged from source or left unchecked.
-
-- **The library is clear of the code-level tells.** No purple hues, gradient text, glows, coloured edge stripes, bounce, count-ups, emoji, sparkles, marketese or placeholder strings. The one violet is a ColorPicker swatch. `ease-settle`'s 2–3% overshoot is a settle, not a bounce. Earlier decisions did most of this work: light glows rejected, severity bars rejected (E8), no emoji, no "Oops", no decorative chart motion.
-- **Two schemes sat on the second-order palette defaults.** Mesa was terracotta on cream (`#b4441b` on `#f6f1ea`) and Alpine mint on near-black (`#5fd6b2` on `#0f1513`). Nightfall's periwinkle on dark and Daylight's blue, near Tailwind's blue-600, are close.
-- **The landing page has the all-caps kicker.** `.kicker` sits above every heading, with `.panel-label` and `.rung-tier`, all uppercase and letter-spaced. The library itself has none.
-- **The app skeleton is the generated dashboard.** Sidebar, top bar, table: the structure that converges most. Agents copy it whatever the task. Open in #323.
-- **Type and icons are close.** Instrument Sans is Instrument Serif's sibling, and Lucide is the generators' default set. Open in #325.
-
-Result: 29 clear, 11 to watch, 3 unchecked, 4 exposed.
-
-**Decision (#324): Mesa and Alpine are retired**, on the side of caution, rather than retuned. Daylight and Nightfall remain as the light and dark schemes, and stay on watch. The old names still resolve to them: as `[data-theme]` aliases in the token CSS, and in the provider, which warns once in development. The Mesa and Alpine figures in earlier experiments (E23 among them) are kept as the record of what was measured. With the schemes gone, CO4 and CO5 are clear: 31 clear, 2 exposed.
-
-Not yet tested with people: whether Altitude screens read as generated (#326).
+Every major harness lets a person edit an earlier message and resend it, starting a new branch while keeping the old one ("2 of 2"; assistant-ui's `EditComposer` and `BranchPicker`), but Altitude only versioned regenerated answers (#275). `MessageActions onEdit` opens the person's message in place, `InlineEdit`'s pattern for multi-line text: a Textarea well inside the sheet with Cancel and "Send edit" (secondary, so the composer's Send stays the view's one primary), Escape to cancel and Ctrl/⌘+Enter to send, and IME composition left alone. Sending hands the text to the app, which starts the branch; `versions` already had `onChange`, so the same switch moves between a person's branches and announces "Showing version 1 of 2". Focus goes back to Edit on cancel and to the composer after sending, where the new answer will be followed. Cross-fading the turns below on a switch is left to the app, which owns those turns. `checks/message-edit.mjs`.
 
 ## What was rejected
 

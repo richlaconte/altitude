@@ -2,7 +2,7 @@
 
 Interfaces built by agents now have a look people recognise and distrust: purple gradients, Inter, a centred hero, three icon cards, a sidebar and a grid of equal cards on every screen. Altitude is made for apps that agents write, so it can fall into that look twice: through its own defaults, and through what agents compose from them. This chapter says how it stays out, and how we keep checking, because the look keeps moving.
 
-The evidence is in **Research** ("Generated interfaces converge", E136). Every tell, with its sources and where Altitude stands, is in [`tells.json`](tells.json).
+The evidence is in **Research** ("Generated interfaces converge"). Every tell, with its sources and where Altitude stands, is in [`tells.json`](tells.json).
 
 ## Why it happens
 
@@ -37,11 +37,11 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 
 ## Where Altitude stands
 
-As of the 2026-10-30 review (E136), 31 of 47 tells are clear, 11 are to watch, 3 are unchecked and 2 are exposed. The review found 4 exposed; the two schemes among them were retired the same day. Nothing was rendered for this review; it read tokens, CSS, previews, sources and the landing page.
+As of the 2026-10-30 audit, 31 of 47 tells are clear, 11 are to watch, 3 are unchecked and 2 are exposed. The audit found 4 exposed; the two schemes among them were retired the same day. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
 
 **Clear.** No purple, gradient text, coloured stripes, glows, bounce, count-ups, emoji, sparkles or marketese anywhere in the library or previews. The content rules, the forbidden light glows, the rejected severity bars (E8) and Charts' "the data is the record" already rule most of the tells out.
 
-**Retired.** Mesa was terracotta on cream (`#b4441b` on `#f6f1ea`), the most-cited replacement for purple (CO4). Alpine was near-black with one mint accent (`#5fd6b2` on `#0f1513`, CO5). Both were removed rather than retuned, on the side of caution ([#324](https://github.com/richlaconte/altitude/issues/324)). Their names render as Daylight and Nightfall.
+**Retired.** Mesa was terracotta on cream (`#b4441b` on `#f6f1ea`), the most-cited replacement for purple (CO4). Alpine was near-black with one mint accent (`#5fd6b2` on `#0f1513`, CO5). Both were removed rather than retuned, on the side of caution ([#324](https://github.com/richlaconte/altitude/issues/324)). Their names render as Daylight and Nightfall. Their figures in earlier Research experiments (E23 among them) are kept as the record of what was measured.
 
 **Exposed:**
 
@@ -82,7 +82,7 @@ The look moves with each model release and each popular anti-slop prompt, so the
 | When | What | Output |
 |---|---|---|
 | Monthly | Read the practitioner catalogs (avoid-ai-design and others), the avoid-lists in the major frontend design skills (they say where generators will go next), new preprints on generative UI homogeneity, and design press | New tells added to `tells.json` with sources; `lastSeen` updated on the ones still common; new `lint` rules filed against #320 |
-| Quarterly, and after a major model release | Rebuild the benchmark baseline with current tools and models, rerun it, and re-audit the schemes, type and skeleton against the current defaults | A numbered experiment in Research; status changes in `tells.json` |
+| Quarterly, and after a major model release | Rebuild the benchmark baseline with current tools and models, rerun it, and re-audit the schemes, type and skeleton against the current defaults | The benchmark as a numbered experiment in Research; the audit in "Where Altitude stands"; status changes in `tells.json` |
 | Yearly | The study with people | A numbered experiment; new tells from what participants named |
 
 When you finish a review or an audit, set `refresh.reviewed` or `refresh.audited` to the date, in the same pull request as its changes. A major model release makes both due at once: set the dates back to say so.
