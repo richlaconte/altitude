@@ -1,0 +1,71 @@
+<!-- @dsCard group="Patterns" height=980 subtitle="A setup checklist the app stamps, empty states before tours, and what's new" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnboardingPattern — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.ob-page{max-width:720px;margin-inline:auto;display:grid;gap:20px;overflow-wrap:break-word}.ob-head,.ob-row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}.ob-tools{display:flex;gap:4px}.ob-h{font:600 21px/28px var(--font-sans);margin:0}.ob-sub{font:600 17px/24px var(--font-sans);margin:0}.ob-guide{padding:20px;gap:14px}.ob-note{margin:0;font:400 13px/19px var(--font-sans);color:var(--ink-muted)}.ob-tasks{list-style:none;margin:0;padding:0;display:grid}.ob-task{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.ob-title{font:500 15px/22px var(--font-sans)}.ob-task[data-done] .ob-title{color:var(--ink-muted)}.ob-section{display:grid;gap:10px}.ob-list{margin:0;padding-inline-start:20px;font:400 15px/23px var(--font-sans)}.ob-nav{display:grid;gap:4px;font:400 14px/20px var(--font-sans);padding:12px;border-radius:var(--radius-md);box-shadow:inset 0 0 0 1px var(--line);max-width:240px}.ob-news{width:min(340px,80vw);padding:4px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const TASKS = [
+  { id: "project", title: "Create a project", about: "Somewhere to keep your work." },
+  { id: "invite", title: "Invite your team", about: "Work goes faster together." },
+  { id: "connect", title: "Connect a data source", about: "Bring in what you already have.", action: "Connect a data source" },
+  { id: "billing", title: "Add billing details", about: "Needed before your trial ends on 14 November.", action: "Add billing details" }
+];
+function App() {
+  const [done, setDone] = React.useState(
+    /** @type {Record<string, boolean>} */
+    { project: true, invite: true }
+  );
+  const [guide, setGuide] = React.useState(true);
+  const [sources, setSources] = React.useState(
+    /** @type {string[]} */
+    []
+  );
+  const [tour, setTour] = React.useState(false);
+  const [seen, setSeen] = React.useState(false);
+  const count = TASKS.filter((t) => done[t.id]).length;
+  const happen = (id) => setDone((d) => ({ ...d, [id]: true }));
+  return /* @__PURE__ */ React.createElement("main", { className: "ob-page" }, /* @__PURE__ */ React.createElement("header", { className: "ob-head" }, /* @__PURE__ */ React.createElement("h2", { className: "ob-h" }, "Acme workspace"), /* @__PURE__ */ React.createElement("div", { className: "ob-tools" }, /* @__PURE__ */ React.createElement(
+    A.Popover,
+    {
+      "aria-label": "What\u2019s new",
+      align: "end",
+      onOpenChange: (o) => {
+        if (o) setSeen(true);
+      },
+      trigger: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", id: "ob-new" }, "What\u2019s new", !seen && /* @__PURE__ */ React.createElement(A.Badge, { variant: "count", "aria-label": "2 unseen" }, "2"))
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "ob-news" }, /* @__PURE__ */ React.createElement(A.Timeline, { "aria-label": "Recent changes", groupBy: "none", locale: "en-IE" }, /* @__PURE__ */ React.createElement(A.TimelineItem, { key: "n1", time: "2026-10-28T09:00:00Z", isNew: !seen }, "Saved views: keep a filter and come back to it"), /* @__PURE__ */ React.createElement(A.TimelineItem, { key: "n2", time: "2026-10-21T09:00:00Z", isNew: !seen }, "The sidebar now groups projects by team"), /* @__PURE__ */ React.createElement(A.TimelineItem, { key: "n3", time: "2026-10-07T09:00:00Z" }, "Export any table as CSV")))
+  ), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", id: "ob-help", onClick: () => setGuide(true) }, "Help: setup guide"))), guide && /* @__PURE__ */ React.createElement(A.Card, { className: "ob-guide", "aria-labelledby": "ob-guide-h" }, /* @__PURE__ */ React.createElement("div", { className: "ob-row" }, /* @__PURE__ */ React.createElement("h3", { id: "ob-guide-h", className: "ob-sub" }, "Set up your workspace"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => setGuide(false) }, count === TASKS.length ? "Hide setup guide" : "Skip for now")), /* @__PURE__ */ React.createElement(A.Meter, { label: "Setup", value: count, max: TASKS.length, format: (v) => `${v}` }), /* @__PURE__ */ React.createElement("p", { className: "ob-note" }, "Tasks are checked off when you do them, wherever you do them."), /* @__PURE__ */ React.createElement("ol", { className: "ob-tasks" }, TASKS.map((t) => /* @__PURE__ */ React.createElement("li", { key: t.id, className: "ob-task", "data-done": done[t.id] ? "" : void 0 }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "ob-title" }, t.title), /* @__PURE__ */ React.createElement("div", { className: "ob-note" }, t.about)), done[t.id] ? /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Done") : t.action ? /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => document.getElementById("ob-" + t.id)?.scrollIntoView({ block: "center" }) }, t.action) : null)))), !guide && /* @__PURE__ */ React.createElement("p", { className: "ob-note", role: "status" }, "Setup guide hidden. Open it again any time from Help."), /* @__PURE__ */ React.createElement("section", { className: "ob-section", "aria-labelledby": "ob-sources-h", id: "ob-connect" }, /* @__PURE__ */ React.createElement("h3", { id: "ob-sources-h", className: "ob-sub" }, "Data sources"), sources.length ? /* @__PURE__ */ React.createElement("ul", { className: "ob-list" }, sources.map((s) => /* @__PURE__ */ React.createElement("li", { key: s }, s))) : /* @__PURE__ */ React.createElement(
+    A.EmptyState,
+    {
+      size: "sm",
+      title: "No data sources yet",
+      description: "Connect a database or a spreadsheet and its tables appear here.",
+      action: /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => {
+        setSources(["Sales database"]);
+        happen("connect");
+      } }, "Connect a data source")
+    }
+  )), /* @__PURE__ */ React.createElement("section", { className: "ob-section", "aria-labelledby": "ob-billing-h", id: "ob-billing" }, /* @__PURE__ */ React.createElement("h3", { id: "ob-billing-h", className: "ob-sub" }, "Billing"), done.billing ? /* @__PURE__ */ React.createElement("p", { className: "ob-note" }, "Card ending 4242 on file.") : /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => happen("billing") }, "Add billing details"))), /* @__PURE__ */ React.createElement("nav", { "aria-label": "Projects", className: "ob-nav", id: "ob-sidebar" }, /* @__PURE__ */ React.createElement("span", { className: "ob-note" }, "Design team"), /* @__PURE__ */ React.createElement(A.Link, { href: "#/p/1" }, "Website refresh"), /* @__PURE__ */ React.createElement(A.Link, { href: "#/p/2" }, "Brand kit")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => setTour(true) }, "Show me what changed in the sidebar")), /* @__PURE__ */ React.createElement(A.Tour, { open: tour, onOpenChange: setTour, steps: [
+    { target: "#ob-sidebar", title: "Projects are grouped by team", body: "Each team\u2019s projects sit under its name. Drag a project to move it." },
+    { target: "#ob-new", title: "Find changes here", body: "What\u2019s new lists every change, so you can come back to this later." }
+  ] }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

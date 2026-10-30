@@ -519,6 +519,29 @@
       "criteria": [],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-ONBOARD-001",
+      "title": "Setup tasks are stamped when they happen, progress is a reading, and tours wait to be asked",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "First-run setup, empty states, tours and release notes.",
+      "exceptions": [
+        "A tour may be offered once after a change to existing UI; it still never starts on every visit."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation",
+        "task-review"
+      ],
+      "repair": "Stamp a setup task done from the application event, not a click on the item; show progress as a Meter; open each empty region with its one action; offer tours rather than starting them, keep them short and never dim the page; count only unseen changes; make every onboarding surface dismissible and re-findable from Help.",
+      "verification": [
+        "build/checks/onboarding-pattern.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }

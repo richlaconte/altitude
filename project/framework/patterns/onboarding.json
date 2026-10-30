@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "id": "onboarding",
+  "version": 1,
+  "title": "Onboarding",
+  "intents": [
+    "onboarding",
+    "getting started",
+    "setup checklist",
+    "product tour",
+    "tour",
+    "what's new",
+    "whats new",
+    "first run",
+    "empty state"
+  ],
+  "purpose": "Get someone new to value with a stamped setup checklist, empty states before tours, and what's new.",
+  "useWhen": [
+    "A new workspace or account needs a few setup tasks, or an existing interface changed."
+  ],
+  "avoidWhen": [
+    "Teaching the whole product up front with a modal carousel or a long tour."
+  ],
+  "alternatives": [
+    "Use EmptyState alone for a single empty region, and Tour only for a change to an interface people already use."
+  ],
+  "requiredInputs": [
+    "setup tasks with where each is done",
+    "application events when each task happens",
+    "per-person dismissal",
+    "empty regions with their one next step",
+    "the list of changes and which are unseen"
+  ],
+  "states": [
+    "guide-open",
+    "task-done",
+    "guide-complete",
+    "guide-skipped",
+    "guide-hidden",
+    "empty",
+    "tour-offered",
+    "touring",
+    "news-unseen",
+    "news-seen"
+  ],
+  "transitions": [
+    "guide-open → task-done when the application reports the task happened",
+    "guide-open → guide-skipped, or guide-complete → guide-hidden; Help reopens it",
+    "empty → filled by its one action, stamping the task",
+    "tour-offered → touring only when asked → done or skipped",
+    "news-unseen → news-seen when opened"
+  ],
+  "rules": [
+    "ALT-ONBOARD-001",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "First-run setup, empty states, tours of changes and release notes.",
+  "exceptions": [
+    "Require only the parts the product offers; products without setup tasks still prefer empty states to tours."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/onboarding.md",
+  "implementation": "build/fixtures/patterns/onboarding.jsx",
+  "examples": [
+    "build/fixtures/patterns/onboarding.jsx"
+  ],
+  "verification": [
+    "build/checks/onboarding-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}
