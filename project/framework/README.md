@@ -17,6 +17,7 @@ Start from the person's task. Read only the relevant pattern below, its linked r
 | Autosave, offline, conflicts, session expiry | [Sync](patterns/sync.md) |
 | API keys, webhooks, integrations | [Developer settings](patterns/developer-settings.md) |
 | An agent that proposes and acts | [Agent action](patterns/agent-action.md) |
+| Setup checklist, empty states, tours, what's new | [Onboarding](patterns/onboarding.md) |
 
 Before implementation, capture a short design record in the application's normal documentation: user goal, audience, primary action, consequence, data shape, selected patterns, applicable states, and unresolved product decisions. Infer routine details from the existing product. Do not invent permissions, persistence, cancellation, rollback or undo. Ask only when an unknown changes consequences or the task itself.
 
