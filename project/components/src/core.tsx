@@ -398,6 +398,13 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   /** Openings deepen as the pointer approaches (empty fields, a sheet's finger pull). Default true; reduced motion turns it off regardless. */
   approach?: boolean;
   /**
+   * How content that's still on its way waits (#343). 'sweep' (default): light passes over each imprint. 'breath'
+   * (experimental): imprints breathe in depth on one page clock, a swell crossing the view top to bottom; content that
+   * rests raised (`Await settle="raised"`) rises a level past its rest and settles, flush content fills past the ground,
+   * and a card's parts land together. Set it on the outer provider: nested providers inherit it and can't turn it off.
+   */
+  loading?: 'sweep' | 'breath';
+  /**
    * The whole app is in a mode people must never mistake for the normal app: test mode, viewing as a customer,
    * read-only, a preview. Height can't say "this whole ground is different", so it's said in words and a border: a
    * flush strip naming the mode at the top, a 2px frame around the viewport, and a plate in every Dialog and Sheet.
@@ -456,6 +463,8 @@ export function usePrimaryRegistration(el: React.RefObject<HTMLElement | null>, 
   React.useEffect(() => { if (!scope || !primary || !el.current) return; return scope.register(el.current); }, [scope, primary, el]);
 }
 
+/** The provider's loading style, for the parts of loading that aren't only CSS (RevealGroup's budget, Card's grouping). */
+export const LoadingStyleContext = React.createContext<'sweep' | 'breath'>('sweep');
 /** The app's mode, for Dialog and Sheet to name it in their headers. */
 export const ModeContext = React.createContext<AppMode | null>(null);
 /** The mode's name as a plate, for headers of things that float above the page (Dialog, Sheet). */
@@ -464,7 +473,11 @@ export function ModePlate() {
   return mode ? <span className="alt-badge alt-mode-plate" data-tone={mode.tone ?? 'caution'} data-variant="plate">{mode.label}</span> : null;
 }
 
-export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', density = 'auto', recede = true, approach = true, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
+export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', density = 'auto', recede = true, approach = true, loading, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
+  // Breath holds for everything inside the provider that sets it (its CSS matches any breath ancestor), so a nested
+  // provider can turn it on but not back off.
+  const inherited = React.useContext(LoadingStyleContext);
+  const loadingStyle = inherited === 'breath' ? 'breath' : loading ?? inherited;
   const checks = devChecks ?? (typeof process !== 'undefined' && process?.env.NODE_ENV !== 'production');
   const pageScope = useScopeValue('page', checks);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -527,9 +540,9 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
       <div ref={rootRef} className={cx('alt-root', className)} data-theme={custom ? custom.base ?? 'daylight' : scheme}
         data-scheme={custom?.name} data-scheme-id={custom ? scope : undefined}
         data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined} data-density={density === 'auto' ? undefined : density}
-        data-approach-off={approach ? undefined : ''} style={{ ...accentVars, ...style }} {...rest}>
+        data-approach-off={approach ? undefined : ''} data-loading={loading} style={{ ...accentVars, ...style }} {...rest}>
         {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
-        <PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
+        <LoadingStyleContext.Provider value={loadingStyle}><PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
           {mode && (
             <section className="alt-mode-strip" data-tone={mode.tone ?? 'caution'} aria-label={mode.label}>
               <strong className="alt-mode-label">{mode.label}</strong>
@@ -541,7 +554,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
           <div className="alt-layers" ref={setHost} />
           {mode && <div className="alt-mode-frame" data-tone={mode.tone ?? 'caution'} aria-hidden="true" />}
           {mode && <span className="alt-sr" aria-live="polite">{modeSaid}</span>}
-        </ModeContext.Provider></PrimaryScopeCtx.Provider>
+        </ModeContext.Provider></PrimaryScopeCtx.Provider></LoadingStyleContext.Provider>
       </div>
     </AltitudeContext.Provider>
   );
@@ -571,6 +584,28 @@ export function riseDelay() {
   const delay = Math.max(0, riseStarts.length - 3) * 90;
   riseStarts.push(now + delay);
   return delay;
+}
+
+/** One breath of a waiting imprint (dur-breath), how long its swell takes to cross the view (dur-wave), and when it calms. */
+const BREATH = 4800, WAVE = 1800, CALM = 10000;
+/**
+ * Breath (loading="breath"): an imprint takes its phase from one page clock, lagged by how far down the view it sits,
+ * so imprints change in step (one moving thing, not many) and a slow swell of depth crosses the view. Ten seconds in,
+ * it calms. Returns a ref for the element whose imprints breathe; does nothing under the sweep.
+ */
+export function useBreath<T extends HTMLElement>() {
+  const breath = React.useContext(LoadingStyleContext) === 'breath';
+  const calm = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  React.useEffect(() => () => clearTimeout(calm.current), []);
+  // A callback ref, so an imprint that appears after its component mounted (a held one) is phased too.
+  return React.useCallback((el: T | null) => {
+    clearTimeout(calm.current);
+    if (!breath || !el) return;
+    const vh = el.ownerDocument.defaultView?.innerHeight || 1;
+    const lag = Math.min(1, Math.max(0, el.getBoundingClientRect().top / vh)) * WAVE;
+    el.style.setProperty('--alt-breath-delay', `${Math.round(lag - (performance.now() % BREATH))}ms`);
+    calm.current = setTimeout(() => el.setAttribute('data-calm', ''), CALM);
+  }, [breath]);
 }
 
 export type Presence = 1 | 2 | 3;
