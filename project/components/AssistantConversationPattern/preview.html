@@ -1,0 +1,87 @@
+<!-- @dsCard group="Patterns" height=760 subtitle="Send, stream, stop, retry and recover without losing a word; each failure said in words" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AssistantConversationPattern — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.ac{max-width:680px;gap:12px}.ac .alt-convo{height:300px}.ac-note{margin:4px 0 0;font:400 12.5px/17px var(--font-sans);color:var(--critical)}.ac-context{flex:1;max-width:220px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const answer = "The billing migration is two days behind: the invoice backfill is still running. The EU data residency review needs a decision from legal by Friday.";
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+function scripted(failure) {
+  return async function* (_input, signal) {
+    await wait(350);
+    if (failure === "offline") throw new A.AssistantError("offline");
+    if (failure === "rate-limited") throw new A.AssistantError("rate-limited", void 0, Date.now() + 25 * 6e4);
+    if (failure === "context-full") throw new A.AssistantError("context-full");
+    for (let n = 0; n < answer.length; n += 6) {
+      if (signal.aborted) return;
+      await wait(45);
+      yield answer.slice(n, n + 6);
+    }
+  };
+}
+function Thread({ restored }) {
+  const [failure, setFailure] = React.useState(
+    /** @type {'offline' | 'rate-limited' | 'context-full' | 'none'} */
+    "none"
+  );
+  const [draft, setDraft] = React.useState("");
+  const [used, setUsed] = React.useState(64);
+  const turn = A.useAssistantTurn({ stream: scripted(failure), restored });
+  React.useEffect(() => {
+    if (turn.state === "failed" && turn.input) setDraft(turn.input);
+  }, [turn.state]);
+  React.useEffect(() => {
+    if (turn.state === "complete") setUsed((u) => Math.min(99, u + 9));
+  }, [turn.state]);
+  return /* @__PURE__ */ React.createElement("div", { className: "col ac" }, /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "single", size: "sm", "aria-label": "Make the next send fail", value: failure, onValueChange: (v) => setFailure(
+    /** @type {any} */
+    v || "none"
+  ) }, /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "none" }, "Works"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "offline" }, "Offline"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "rate-limited" }, "Rate limited"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "context-full" }, "Context full")), /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Assistant" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, turn.input !== void 0 && /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, turn.input)), (turn.text || turn.state === "streaming" || turn.state === "interrupted") && /* @__PURE__ */ React.createElement(A.Message, { from: "assistant", status: turn.messageStatus, onRetry: turn.state === "stopped" || turn.state === "interrupted" ? turn.retry : void 0 }, /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, { streaming: turn.state === "streaming" }, turn.text)), turn.state === "interrupted" && /* @__PURE__ */ React.createElement("p", { className: "ac-note" }, "Interrupted: the page reloaded before this answer finished.")))), turn.state === "failed" && /* @__PURE__ */ React.createElement(
+    A.Alert,
+    {
+      tone: turn.error?.kind === "context-full" ? "caution" : "critical",
+      title: turn.errorText,
+      action: turn.error?.kind === "context-full" ? /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Start a new conversation") : /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: () => {
+        setFailure("none");
+        setDraft("");
+      } }, "Try again")
+    }
+  ), /* @__PURE__ */ React.createElement(
+    A.PromptInput,
+    {
+      status: turn.promptStatus === "error" ? "ready" : turn.promptStatus,
+      value: draft,
+      onValueChange: setDraft,
+      onStop: turn.stop,
+      onSubmit: ({ text }) => {
+        turn.submit(text);
+      }
+    },
+    /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask about the release" }),
+    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.Meter, { className: "ac-context", label: "Context", value: used, max: 100, high: 80, critical: 95, format: (v) => `${v}% of context used` }), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
+  ));
+}
+function App() {
+  const [reloaded, setReloaded] = React.useState(false);
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => setReloaded((r) => !r) }, reloaded ? "Start fresh" : "Reload mid-answer"), reloaded ? /* @__PURE__ */ React.createElement(Thread, { key: "restored", restored: { input: "What are the open risks?", text: "The billing migration is two days behind: the invoice", complete: false } }) : /* @__PURE__ */ React.createElement(Thread, { key: "fresh" }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

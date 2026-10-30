@@ -542,6 +542,31 @@
       "criteria": [],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CONVO-001",
+      "title": "A conversation never loses the person's words, completes only when the stream does, and says each failure in words",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Conversations with an assistant: chat, copilots, agent conversations.",
+      "exceptions": [
+        "What persists across reloads, and for how long, is the application's decision."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation",
+        "task-review",
+        "wcag22"
+      ],
+      "repair": "Guard against double submits; ignore events from a superseded turn; keep the partial answer on Stop as \"Stopped\"; settle an answer only when the stream says it's complete and show an unfinished one after a reload as \"Interrupted\" with Retry; keep the message when sending fails; say offline, rate limited (with when), context full, refused and outage as distinct states with what to do; announce each answer once, never token by token.",
+      "verification": [
+        "build/checks/assistant-conversation-pattern.mjs",
+        "build/checks/pattern-workflows.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }

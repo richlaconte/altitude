@@ -19,6 +19,7 @@ Starting a new app? Copy the [app skeleton](app-skeleton.md): shell, page header
 | Autosave, offline, conflicts, session expiry | [Sync](patterns/sync.md) |
 | API keys, webhooks, integrations | [Developer settings](patterns/developer-settings.md) |
 | An agent that proposes and acts | [Agent action](patterns/agent-action.md) |
+| A conversation with an assistant (send, stream, stop, retry, limits) | [Assistant conversation](patterns/assistant-conversation.md) |
 | Setup checklist, empty states, tours, what's new | [Onboarding](patterns/onboarding.md) |
 
 Before implementation, capture a short design record in the application's normal documentation: user goal, audience, primary action, consequence, data shape, selected patterns, applicable states, and unresolved product decisions. Infer routine details from the existing product. Do not invent permissions, persistence, cancellation, rollback or undo. Ask only when an unknown changes consequences or the task itself.

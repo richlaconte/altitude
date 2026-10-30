@@ -3765,3 +3765,5 @@ export { useConsequentialAction } from './src/pattern-consequential-action';
 export type { ConsequentialActionOptions, ConsequentialPhase, ActionResult, UndoResult } from './src/pattern-consequential-action';
 export { useReviewSubmit } from './src/pattern-review-submit';
 export type { ReviewSubmitOptions, ReviewSubmitResult } from './src/pattern-review-submit';
+export { useAssistantTurn, AssistantError, assistantErrorText } from './src/pattern-assistant-conversation';
+export type { AssistantTurn, AssistantTurnOptions, AssistantTurnState, AssistantTurnError, AssistantErrorKind } from './src/pattern-assistant-conversation';

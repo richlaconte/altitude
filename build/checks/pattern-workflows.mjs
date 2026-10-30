@@ -19,7 +19,8 @@ const ruleAliases = { 'FORM-PRESERVE-INPUT':'ALT-EDIT-001', 'FORM-STALE-RESPONSE
  'FORM-UNSAVED':'ALT-EDIT-003', 'FORM-ERROR-ASSOCIATION':'ALT-EDIT-002', 'ACTION-TRUE-OUTCOME':'ALT-EDIT-001', 'ACTION-DUPLICATE':'ALT-ACTION-001',
  'COLLECTION-STATES':'ALT-COLLECTION-001', 'COLLECTION-SELECTION':'ALT-COLLECTION-001', 'COLLECTION-RECOVERY':'ALT-COLLECTION-001', 'COLLECTION-IDENTITY':'ALT-COLLECTION-001',
  'ACTION-CONFIRMATION':'ALT-ACTION-001', 'ACTION-FOCUS':'ALT-ACTION-001', 'ACTION-RECOVERY':'ALT-ACTION-001', 'ACTION-UNDO':'ALT-ACTION-001', 'ACTION-TARGET':'ALT-ACTION-001',
- 'REVIEW-RETAIN':'ALT-REVIEW-001', 'REVIEW-RECOVERY':'ALT-REVIEW-001', 'REVIEW-CONFIRMATION':'ALT-REVIEW-001', 'REVIEW-PROCESS':'ALT-REVIEW-001' };
+ 'REVIEW-RETAIN':'ALT-REVIEW-001', 'REVIEW-RECOVERY':'ALT-REVIEW-001', 'REVIEW-CONFIRMATION':'ALT-REVIEW-001', 'REVIEW-PROCESS':'ALT-REVIEW-001',
+ 'CONVO-DUPLICATE':'ALT-CONVO-001', 'CONVO-STALE':'ALT-CONVO-001', 'CONVO-KEEP':'ALT-CONVO-001', 'CONVO-COMPLETE':'ALT-CONVO-001', 'CONVO-ERRORS':'ALT-CONVO-001', 'CONVO-RELOAD':'ALT-CONVO-001' };
 const check = (condition, message) => {
  const ruleId = ruleAliases[message.split(':')[0]] || 'ALT-STATUS-001';
  if (!condition) console.error(JSON.stringify({ ruleId, classification:'deterministic', scope:'controlled fixture contract; not a general usability verdict',
@@ -177,6 +178,49 @@ try {
  check(await page.evaluate(()=>harness.writes)===0,'REVIEW-PROCESS: cannot submit before review');
  await page.evaluate(()=>{harness.review.review();void harness.review.submit();});await page.waitForFunction(()=>harness.writes===1);await phase('review');
  check(await page.evaluate(()=>harness.review.receipt===undefined && !!harness.review.error),'REVIEW-CONFIRMATION: malformed JavaScript success without receipt is recoverable failure');
+ // Assistant conversation (#285): a turn that can't be sent twice, drops events from a superseded stream, keeps the partial
+ // answer on Stop, completes only when the stream does, says errors in words, and shows an unfinished answer after a
+ // reload as interrupted.
+ check(await page.evaluate(() => typeof Altitude.useAssistantTurn === 'function'), 'CONVO-DUPLICATE: the turn hook is exported');
+ const mountTurn = (restored) => page.evaluate((restored) => {
+  fixtureRoot.unmount(); const h = React.createElement; const api = { streams: [] }; window.harness = api;
+  const stream = (input, signal) => {
+   const q = []; let wake = null, done = false, err = null;
+   const s = { input, signal, push: (t) => { q.push(t); wake?.(); }, end: () => { done = true; wake?.(); }, fail: (e) => { err = e; wake?.(); } };
+   api.streams.push(s);
+   return (async function* () { for (;;) { if (q.length) { yield q.shift(); continue; } if (err) throw err; if (done) return; await new Promise((r) => { wake = r; }); wake = null; } })();
+  };
+  function Fixture() { const turn = Altitude.useAssistantTurn({ stream, restored: restored ?? undefined, locale: 'en-US' }); api.turn = turn; return h('span', { id: 'phase' }, turn.state); }
+  fixtureRoot = createRoot(document.getElementById('root')); fixtureRoot.render(h(Fixture));
+ }, restored ?? null);
+ await mountTurn(); await phase('ready');
+ await page.evaluate(() => { harness.turn.submit('What changed?'); harness.turn.submit('What changed?'); }); await phase('submitted');
+ check(await page.evaluate(() => harness.streams.length) === 1, 'CONVO-DUPLICATE: a double submit sends once');
+ await page.evaluate(() => harness.streams[0].push('The billing ')); await phase('streaming');
+ check(await page.evaluate(() => harness.turn.promptStatus === 'streaming' && harness.turn.messageStatus === 'streaming'), 'CONVO-COMPLETE: streaming maps to the composer and the message');
+ await page.evaluate(() => harness.turn.stop()); await phase('stopped');
+ await page.evaluate(() => harness.streams[0].push('migration')); await page.waitForTimeout(50);
+ check(await page.evaluate(() => harness.turn.text) === 'The billing ', 'CONVO-STALE: Stop keeps the partial answer and drops what arrives after');
+ await page.evaluate(() => harness.turn.retry()); await phase('submitted');
+ await page.evaluate(() => { harness.streams[0].push(' late'); harness.streams[1].push('Two risks.'); }); await phase('streaming');
+ check(await page.evaluate(() => harness.turn.text) === 'Two risks.' && await page.evaluate(() => harness.streams[1].input) === 'What changed?', 'CONVO-STALE: retry sends the kept input and ignores the superseded stream');
+ check(await page.evaluate(() => harness.turn.state) === 'streaming', 'CONVO-COMPLETE: text alone never completes an answer');
+ await page.evaluate(() => harness.streams[1].end()); await phase('complete');
+ check(await page.evaluate(() => harness.turn.messageStatus) === 'complete', 'CONVO-COMPLETE: the answer settles when the stream says so');
+ await page.evaluate(() => harness.turn.submit('And now?')); await phase('submitted');
+ await page.evaluate(() => harness.streams[2].fail(new Altitude.AssistantError('rate-limited', undefined, new Date(2026, 9, 30, 15, 40).getTime()))); await phase('failed');
+ const failed = await page.evaluate(() => ({ text: harness.turn.errorText, input: harness.turn.input, prompt: harness.turn.promptStatus }));
+ check(failed.text === "You've reached this hour's limit. Try again at 3:40 PM." && failed.input === 'And now?' && failed.prompt === 'error', `CONVO-ERRORS: a rate limit says when, and the message is kept (${JSON.stringify(failed)})`);
+ check(await page.evaluate(() => [Altitude.assistantErrorText({ kind: 'context-full' }), Altitude.assistantErrorText({ kind: 'offline' })].every((t) => t && !/something went wrong/i.test(t))), 'CONVO-ERRORS: each kind has its own words');
+ await page.evaluate(() => { harness.turn.retry(); }); await phase('submitted');
+ await page.evaluate(() => harness.streams[3].push('Hi')); await phase('streaming');
+ await page.evaluate(() => harness.turn.awaitInput(true)); await phase('awaiting-input');
+ await page.evaluate(() => harness.turn.submit('Interrupting')); await page.waitForTimeout(30);
+ check(await page.evaluate(() => harness.streams.length) === 4, 'CONVO-DUPLICATE: nothing is sent over a turn waiting for the person');
+ await mountTurn({ input: 'What changed?', text: 'The billing', complete: false }); await phase('interrupted');
+ check(await page.evaluate(() => harness.turn.text === 'The billing' && harness.turn.messageStatus === 'error'), 'CONVO-RELOAD: an unfinished answer after a reload is interrupted, never complete');
+ await mountTurn({ input: 'What changed?', text: 'Done.', complete: true }); await phase('complete');
+ check(await page.evaluate(() => harness.turn.messageStatus) === 'complete', 'CONVO-RELOAD: a completed answer is restored as complete');
  check(errors.length === 0, `no browser errors: ${errors.join('; ')}`);
  console.log(`Workflow patterns: ${checks} assertions passed; Chromium ${browser.version()}.`);
 } finally { await browser.close(); await rm(temp, { recursive:true, force:true }); }

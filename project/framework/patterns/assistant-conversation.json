@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "assistant-conversation",
+  "version": 1,
+  "title": "Assistant conversation",
+  "intents": [
+    "chat",
+    "assistant",
+    "copilot",
+    "chatbot",
+    "agent conversation",
+    "ai chat"
+  ],
+  "purpose": "Send, stream, stop, retry and recover in a conversation with an assistant, without losing the person's words or claiming an answer is complete before it is.",
+  "useWhen": [
+    "A person writes to an assistant and reads its answers as they stream."
+  ],
+  "avoidWhen": [
+    "The agent's actions themselves (approve, run, recover); use the agent-action contract alongside this one."
+  ],
+  "alternatives": [
+    "Use agent-action for what the agent does, and consequential-action for a person's own destructive actions."
+  ],
+  "requiredInputs": [
+    "a stream that yields text and resolves only when complete",
+    "errors classified as offline, rate limited, context full, refused or outage",
+    "the restored answer and whether it completed, after a reload",
+    "the context window used, when known"
+  ],
+  "states": [
+    "ready",
+    "submitted",
+    "streaming",
+    "complete",
+    "stopped",
+    "failed",
+    "interrupted",
+    "awaiting-input",
+    "queued"
+  ],
+  "transitions": [
+    "ready → submitted → streaming → complete",
+    "streaming → stopped on Stop, keeping the partial answer",
+    "submitted or streaming → failed, keeping the message, with Retry",
+    "streaming → awaiting-input while a Confirmation or Question is open, then back",
+    "a reload during streaming → interrupted, with Retry",
+    "a message written while streaming → queued, sent when the turn ends"
+  ],
+  "rules": [
+    "ALT-CONVO-001",
+    "ALT-AGENT-001",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Conversations with an assistant, in products and harnesses.",
+  "exceptions": [
+    "Persistence, retention and the transport are the application's; the contract covers what the person sees."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/assistant-conversation.md",
+  "implementation": "build/fixtures/patterns/assistant-conversation.jsx",
+  "examples": [
+    "build/fixtures/patterns/assistant-conversation.jsx"
+  ],
+  "verification": [
+    "build/checks/assistant-conversation-pattern.mjs",
+    "build/checks/pattern-types.mjs",
+    "build/checks/pattern-workflows.mjs"
+  ]
+}
