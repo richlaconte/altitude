@@ -1274,6 +1274,20 @@ A design review of `pinnable` (#190): two pinned readings on a line of issues op
 
 Not yet tested with people: whether readers find click-to-pin without being told, and whether two pins are enough.
 
+### E108 · What moved since I was last here?
+
+A design review of `since` (#191): queue depths against a morning snapshot (three changed) and an error rate against an earlier one (six changed), in all four schemes at 960px and 360px, under forced colours and with reduced motion. `checks/chart-since.mjs` measures it.
+
+- **Change blindness.** People don't find a change they didn't see happen (Rensink, O'Regan & Clark, 1997); a trace of the change makes it findable (Baudisch et al., Phosphor, 2006), which is what the afterglow already does for changes that arrive while you watch. `since` gives the same trace to changes that happened while you were away.
+- **The comparison's mark, at the old value.** A changed bar carries `compare`'s tick (E106); a line can't carry a tick at every point, so each changed point's old place is a small hollow ring, outside the line, never on it. A "New" badge per mark would put a raised-looking plate on the data, and colouring changed marks would give colour a second job (rule 5).
+- **Counted, then filtered.** "3 changed since Tuesday 09:00" is a `Switch`, as `pausable`'s is: it turns on the filter language for the changed records (35%, positions held), so "show me only what changed" needs no new reading.
+- **Arrival spends the budget once.** Up to four changed marks glow, the `live` choreography exactly; more, and the caption glows. A changed point then says how it changed in its name instead of a bare "Changed."
+- **The application owns the snapshot.** What a person last saw and when is persistence, which the framework leaves to the application, as elsewhere.
+
+Not decided: whether `since` should advance with `live` as the person acknowledges changes.
+
+Not yet tested with people: whether the rings are found without the switch.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

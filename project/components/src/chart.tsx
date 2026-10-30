@@ -215,6 +215,8 @@ export interface ChartContextValue {
   hasRelevance: boolean;
   /** For lines and areas: the stretch of x each record owns (to the midpoints with its neighbours), and whether it's a miss. */
   relevanceRegions: Array<{ key: string; x0: number; x1: number; miss: boolean }>;
+  /** Changed since a snapshot (#191): a mark's old value where it changed (null if it didn't, or is new), or null without `since`. */
+  sinceOld: ((d: ChartDatum, seriesKey: string) => number | null) | null;
 }
 
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
@@ -997,6 +999,13 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   live?: boolean;
   /** With `live`: a "Pause updates" switch in the frame, for WCAG 2.2.2 (Pause, Stop, Hide). */
   pausable?: boolean;
+  /**
+   * What changed since a snapshot (#191): the records as they were (`data`, matched by x or the chart's id) and when,
+   * in words (`label`: "since Tuesday 09:00"). A changed bar carries a tick at its old value, a changed line point a
+   * hollow ring; the frame says "3 changed since Tuesday 09:00" in a switch that filters to them; up to four changed
+   * marks get the afterglow on arrival. Storing what a person last saw is the application's.
+   */
+  since?: { data: ChartDatum[]; label: string };
   /** Updates are paused, controlled. Uncontrolled with `pausable`. */
   paused?: boolean;
   onPausedChange?: (paused: boolean) => void;
@@ -1028,7 +1037,7 @@ const TOP_GAP = 8;
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
   zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
-  live = false, pausable = false, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -1102,8 +1111,24 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const setPins = (next: Array<string | number>) => { info.onPinsChange?.(next); if (info.pins === undefined) setPinsOwn(next); };
   const [pinSaid, setPinSaid] = React.useState('');
   const hasSelection = !!info.onSelect && info.selected !== undefined && info.selected !== null;
-  const userRelevance = (d: ChartDatum): 'match' | 'miss' | undefined => { const v = info.relevance?.(d); return v === 'match' || v === 'miss' ? v : undefined; };
-  const filtered = !!info.relevance && data.some((d) => userRelevance(d) !== undefined);
+  // Changed since a snapshot (#191): records matched by the chart's id or by x; a new record counts as changed.
+  const sinceKey = (d: ChartDatum) => (info.id ? info.id(d) : isTimeLike(d[xKey]) ? String(toTime(d[xKey])) : String(d[xKey]));
+  const sinceMap = React.useMemo(() => (since ? new Map(since.data.map((d) => [sinceKey(d), d])) : null), [since?.data, xKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sinceSeries = (info.series ?? Object.keys(shownConfig).map((key) => ({ key }))).map((q) => q.key);
+  const isFiniteNum = (v: unknown): v is number => typeof v === 'number' && isFinite(v);
+  const sinceNew = (d: ChartDatum) => !!sinceMap && !sinceMap.has(sinceKey(d));
+  const sinceWas = (d: ChartDatum, k: string) => { const o = sinceMap?.get(sinceKey(d))?.[k]; return isFiniteNum(o) ? o : null; };
+  const changedAt = (d: ChartDatum, k: string) => !!sinceMap && isFiniteNum(d[k]) && (sinceNew(d) || (sinceWas(d, k) !== null && sinceWas(d, k) !== d[k]));
+  const changedRec = (d: ChartDatum) => sinceSeries.some((k) => changedAt(d, k));
+  const changedCount = sinceMap ? data.filter(changedRec).length : 0;
+  const [onlyChanged, setOnlyChanged] = React.useState(false);
+  const showOnlyChanged = onlyChanged && !!sinceMap && changedCount > 0;
+  const userRelevance = (d: ChartDatum): 'match' | 'miss' | undefined => {
+    // "Only what changed" recedes the rest where they stand, in the language of a filter.
+    if (showOnlyChanged) return changedRec(d) ? 'match' : 'miss';
+    const v = info.relevance?.(d); return v === 'match' || v === 'miss' ? v : undefined;
+  };
+  const filtered = (!!info.relevance || showOnlyChanged) && data.some((d) => userRelevance(d) !== undefined);
   const matchCount = filtered ? data.filter((d) => userRelevance(d) !== 'miss').length : 0;
   // A chart whose records have their own identity selects by it: the selected record, or its id.
   const selectedId = hasSelection && info.id ? (typeof info.selected === 'object' ? info.id(info.selected as ChartDatum) : String(info.selected)) : null;
@@ -1151,6 +1176,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // With rescale, y fits the matches; otherwise the axis holds, so every position survives the filter.
     const fit = info.rescale && filtered && matchCount ? data.filter((d) => relevanceOf(d) !== 'miss') : data;
     for (const d of fit) for (const k of extentKeys) { const v = d[k]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+    // A changed mark's old value joins y too, so its tick or ring is on the plot.
+    if (sinceMap) for (const d of data) for (const k of sinceSeries) { const v = changedAt(d, k) ? sinceWas(d, k) : null; if (v !== null) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
   }
   // A reference's own values count too, so a target above every value is still on the plot.
   for (const r of refs) for (const v of Array.isArray(r.y) ? r.y : [r.y]) if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
@@ -1230,6 +1257,18 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     return () => window.clearTimeout(t);
   }, [glows]); // eslint-disable-line react-hooks/exhaustive-deps
   const captionDepth = useDepth({ settle: captionGlow || undefined });
+  // Changed since a snapshot (#191), on arrival: up to four changed marks take live's afterglow; more, and the
+  // "changed since" caption takes it instead. After that only the marks and the words remain.
+  const [sinceGlow, setSinceGlow] = React.useState(0);
+  React.useEffect(() => {
+    if (!sinceMap) return;
+    const changed = data.flatMap((d) => sinceSeries.filter((k) => changedAt(d, k)).map((k) => ({ key: rowKey(d), series: k })));
+    if (!changed.length) return;
+    if (changed.length > 4) { setSinceGlow((g) => g + 1); return; }
+    const now = Date.now(), gen = ++glowGen.current;
+    setGlows((g) => [...g, ...changed.map((c) => ({ ...c, gen, at: now, delay: riseDelay() }))]);
+  }, [sinceMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sinceDepth = useDepth({ settle: sinceGlow || undefined });
   const glowing = (key: string, series: string) => glows.some((g) => g.key === key && g.series === series);
   // Holding still: while the pointer or focus is in the plot, updates wait (the loading wrapper keeps the shown data).
   const holdPointer = React.useRef(false), holdFocus = React.useRef(false);
@@ -1481,7 +1520,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     }
     // Filter in place (#70): for lines and areas, the stretch of x each record owns, to the midpoints with its neighbours.
     const relevanceRegions: ChartContextValue['relevanceRegions'] = [];
-    if ((info.relevance || info.onSelect) && frame.kind !== 'band') {
+    if ((info.relevance || info.onSelect || sinceMap) && frame.kind !== 'band') {
       const xs = rows.map((d) => xOf(d));
       rows.forEach((d, i) => {
         // Edges on whole pixels, so neighbouring stretches meet without an anti-aliased seam.
@@ -1570,7 +1609,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       setActive: (i) => show(i),
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
       status: statusOf, hasStatus: !!info.status, statusRanges: { record, pending },
-      relevance: relevanceOf, hasRelevance: !!info.relevance || !!info.onSelect, relevanceRegions,
+      relevance: relevanceOf, hasRelevance: !!info.relevance || !!info.onSelect || !!sinceMap, relevanceRegions,
+      sinceOld: sinceMap ? (d, k) => (changedAt(d, k) ? sinceWas(d, k) : null) : null,
     };
     return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo, yInline };
   };
@@ -1598,7 +1638,30 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const up = pairs.filter(([a, b]) => a > b).length, down = pairs.filter(([a, b]) => a < b).length, same = pairs.length - up - down;
     return ` Against ${cmp.label}: ${up} rose, ${down} fell${same ? `, ${same} held` : ''}.`;
   })();
-  const generated = (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf)) + cmpWords;
+  // Changed since a snapshot (#191), in words.
+  const sinceCap = since ? since.label.charAt(0).toUpperCase() + since.label.slice(1) : '';
+  const sinceSentence = (d: ChartDatum, k: string, fmt: (v: number) => string) => {
+    if (!since || !changedAt(d, k)) return '';
+    if (sinceNew(d)) return `New ${since.label}.`;
+    const was = sinceWas(d, k)!, now = d[k] as number;
+    return `${now > was ? 'Up' : 'Down'} ${changeWords(now, was, fmt).slice(1)} ${since.label}.`;
+  };
+  const sinceWords = (() => {
+    if (!since || !sinceMap) return '';
+    if (!changedCount) return ` Nothing changed ${since.label}.`;
+    // The largest relative change, to name first.
+    let top: { d: ChartDatum; k: string; r: number } | null = null;
+    for (const d of data) for (const k of sinceSeries) {
+      const was = changedAt(d, k) ? sinceWas(d, k) : null;
+      if (was === null || was === 0) continue;
+      const r = Math.abs(((d[k] as number) - was) / was);
+      if (!top || r > top.r) top = { d, k, r };
+    }
+    const fmt = (k: string) => allSeries.find((q) => q.key === k)?.format ?? fmtY;
+    const most = top ? `, most of all ${info.label ? info.label(top.d) : formatX(top.d[xKey])}${sinceSeries.length > 1 ? ` (${allSeries.find((q) => q.key === top!.k)?.label})` : ''}, ${sinceSentence(top.d, top.k, fmt(top.k)).replace(` ${since.label}.`, '').toLowerCase()}` : '';
+    return ` ${changedCount} of ${data.length} changed ${since.label}${most}.`;
+  })();
+  const generated = (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf)) + cmpWords + sinceWords;
   /** A record's short name: the chart type's, or its x. */
   const labelOf = (d: ChartDatum) => (info.label ? info.label(d) : formatX(d[xKey]));
   const selectedRecord = selecting ? data.find(isSelected) : undefined;
@@ -1638,6 +1701,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       ...(total ? [{ key: '__total', header: 'Total', align: 'end' as const, cell: (d: ChartDatum) => allSeries[0].format(sum(d)), sortValue: sum }] : []),
       ...(bandInfo ? [{ key: '__band', header: bandInfo.label, align: 'end' as const,
         cell: (d: ChartDatum) => { const b = bandInfo!, f = allSeries.find((s) => s.key === b.series)?.format ?? fmtY; return isNum(d[b.low]) && isNum(d[b.high]) ? `${f(d[b.low] as number)}–${f(d[b.high] as number)}` : '—'; } }] : []),
+      // Changed since a snapshot (#191): a column of changes per series.
+      ...(sinceMap && since ? allSeries.map((q) => ({ key: `__since:${q.key}`, header: allSeries.length > 1 ? `${q.label}, ${since.label}` : sinceCap, align: 'end' as const,
+        cell: (d: ChartDatum) => (!isFiniteNum(d[q.key]) ? '—' : sinceNew(d) ? 'New' : !changedAt(d, q.key) ? 'No change' : changeWords(d[q.key] as number, sinceWas(d, q.key)!, q.format)) })) : []),
       // The record before (#189): its value, and the change against it.
       ...(cmp ? [
         { key: '__cmp', header: cmp.label, align: 'end' as const, cell: (d: ChartDatum) => { const w = cmpBefore(d); return w === null ? '—' : cmpFmt(w); }, sortValue: (d: ChartDatum) => cmpBefore(d) ?? -Infinity },
@@ -1802,12 +1868,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const v = d[s.key];
     const st = statusOf(d);
     let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}${st ? `, ${CHART_STATUS_WORDS[st].toLowerCase()}` : ''}.`;
-    if (glowing(rowKey(d), s.key)) out += ' Changed.';
+    // A mark that glows because it changed since a snapshot says how, below, rather than just "Changed."
+    if (glowing(rowKey(d), s.key) && !sinceSentence(d, s.key, s.format)) out += ' Changed.';
     if (relevanceOf(d) === 'miss' && !selecting) out += ' Not matching.';
     if (bandInfo && bandInfo.series === s.key && num(d[bandInfo.low]) && num(d[bandInfo.high])) {
       out += ` ${bandInfo.label} ${s.format(d[bandInfo.low] as number)} to ${s.format(d[bandInfo.high] as number)}.`;
     }
     if (cmp && cmp.series === s.key && cmpSentence(d)) out += ` ${cmpSentence(d)}`;
+    if (sinceSentence(d, s.key, s.format)) out += ` ${sinceSentence(d, s.key, s.format)}`;
     if (num(v) && kind !== 'band' && pi > 0) {
       const prev = data[pi - 1], pv = prev[s.key];
       if (num(pv)) {
@@ -1908,6 +1976,13 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       })
       // Focused series first (#188).
       .sort((a, b) => +inContext(a.key.replace(/-range$/, '')) - +inContext(b.key.replace(/-range$/, '')));
+    // Changed since a snapshot (#191): each changed series' old value and the change.
+    if (!own && sinceMap) for (const q of top.ctx.series) {
+      if (!changedAt(d, q.key)) continue;
+      const was = sinceWas(d, q.key);
+      payload.push({ key: `__since:${q.key}`, label: top.ctx.series.length > 1 ? `${q.label}, ${since!.label}` : sinceCap, value: was ?? 0,
+        text: sinceNew(d) || was === null ? 'New' : `${q.format(was)} · ${changeWords(d[q.key] as number, was, q.format)}`, color: 'var(--ink-muted)' });
+    }
     // The record before (#189): its value and the change, after the series.
     const cmpNowV = cmpNow(d), cmpWas = cmpBefore(d);
     if (!own && cmp && cmpNowV !== null && cmpWas !== null) {
@@ -2136,7 +2211,13 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         </div>)}
         {brushWiring && React.cloneElement(brushEl!, { __brush: brushWiring })}
         {/* Filtered in place: the frame says how many match, in words, so the count never depends on seeing the fade. */}
-        {filtered && !selecting && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
+        {filtered && !selecting && !(showOnlyChanged && !info.relevance) && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
+        {/* Changed since a snapshot (#191): the count in words, a switch that shows only what changed. */}
+        {sinceMap && since && (
+          <div className="alt-chart-since" {...sinceDepth}>
+            {changedCount ? <Switch label={`${changedCount} changed ${since.label}`} checked={showOnlyChanged} onCheckedChange={setOnlyChanged} /> : <span>Nothing changed {since.label}</span>}
+          </div>
+        )}
         {/* Selected: the frame says what the chart (and whatever it filters) is narrowed to, with a way back. */}
         {info.onSelect && (
           <div className="alt-chart-selection" aria-live="polite">
