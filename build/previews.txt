@@ -3209,7 +3209,10 @@ function App() {
 const answer = 'Last week the team shipped 14 changes. Two risks are open: the billing migration is two days behind, and the EU data residency review needs a decision from legal by Friday.';
 function App() {
   const [msgs, setMsgs] = React.useState([
-    { id: 1, from: 'user', text: 'What changed in the Atlas workspace this month?' },
+    { id: 1, from: 'user', text: 'What changed in the Atlas workspace this month?', files: [
+      { name: 'atlas-usage.png', type: 'image/svg+xml', url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='64'%3E%3Crect width='120' height='64' fill='%23e8edf5'/%3E%3Cpath d='M8 52 L32 36 L56 42 L80 20 L112 12' stroke='%233b6fd8' stroke-width='3' fill='none'/%3E%3C/svg%3E", onOpen: () => {} },
+      { name: 'Atlas changelog.pdf', type: 'application/pdf', size: 482113, href: '#changelog' },
+    ] },
     { id: 2, from: 'assistant', text: 'Atlas moved to the new permission model on 3 October, and its storage limit was raised to 2 TB. Three people joined: Maya, Theo and Ada.', status: 'complete' },
   ]);
   const [status, setStatus] = React.useState('ready');
@@ -3236,6 +3239,7 @@ function App() {
         <A.ConversationContent>
           {msgs.map((m) => (
             <A.Message key={m.id} from={m.from} status={m.status} onRetry={m.status === 'stopped' ? () => { setStatus('streaming'); stream(m.id); } : undefined}>
+              {m.files && <A.MessageAttachments items={m.files} />}
               <A.MessageContent>{m.text}</A.MessageContent>
               {m.from === 'assistant' && <A.MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />}
             </A.Message>

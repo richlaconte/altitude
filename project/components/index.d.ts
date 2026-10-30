@@ -3253,6 +3253,23 @@ export interface MessageProps extends React.HTMLAttributes<HTMLElement> {
 }
 export declare function Message(props: MessageProps): React.ReactElement;
 export declare function MessageContent(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export interface MessageAttachment {
+  name: string;
+  /** MIME type: image/* with a url is a thumbnail; anything else a file plate. */
+  type?: string;
+  /** Bytes, shown on a file plate. */
+  size?: number;
+  /** An image's thumbnail. */
+  url?: string;
+  /** An image's text alternative. Default its name. */
+  alt?: string;
+  href?: string;
+  onOpen?: () => void;
+  /** Expired or deleted: "No longer available", and it doesn't act. */
+  unavailable?: boolean;
+}
+/** What was sent with a message, before its content: 64px thumbnails and settled Tag plates, in a list named "2 attachments". */
+export declare function MessageAttachments(props: { items: MessageAttachment[] } & Omit<React.HTMLAttributes<HTMLUListElement>, 'children'>): React.ReactElement | null;
 export interface MessageActionsProps {
   /** Shows Copy (the message's text, or this function's). */
   onCopy?: boolean | (() => string);
@@ -3453,7 +3470,7 @@ declare global {
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
-      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageActions: typeof MessageActions;
+      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;
