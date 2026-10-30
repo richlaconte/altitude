@@ -2042,6 +2042,15 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-trace-live { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--accent); }
 .alt-trace-error { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: 4px; font: 400 13px/18px var(--font-sans); color: var(--ink); }
 .alt-trace-detail { display: flex; flex-direction: column; gap: var(--space-2); margin: 6px 0 0 40px; }
+/* Subagents (#278): a nested run is a nested list behind an Accordion lid that says how it's going; steps that run at
+   once sit in a labelled group with a 1px line-control bracket, several raised at once because each is in play. */
+.alt-trace-nested-title { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.alt-trace-nested-sum { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-trace-nested .alt-trace { padding: 4px 0 0; }
+.alt-trace-parallel { margin: 6px 0 0; padding: 2px 0 2px 12px; border-left: 1px solid var(--line-control); }
+.alt-trace-parallel-head { display: flex; flex-wrap: wrap; gap: 2px 8px; margin: 0 0 6px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-trace-parallel-head > :first-child { color: var(--ink); }
+@media (forced-colors: active) { .alt-trace-parallel { border-left-color: CanvasText; } }
 .alt-trace-acc .alt-acc-trigger { padding-block: 6px; font-size: 13px; }
 .alt-trace-tool code { font: 500 12.5px/18px var(--font-mono); }
 .alt-trace-io { display: flex; flex-direction: column; gap: var(--space-2); }

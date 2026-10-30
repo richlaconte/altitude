@@ -17,7 +17,87 @@ export interface TraceProps extends React.OlHTMLAttributes<HTMLOListElement> {
  * running step stands raised on its wall, planned steps are imprints. No spinners. A failed step drops to a trench with
  * Retry; one waiting for approval holds a Confirmation. Steps that start without a plan arrive with the afterglow.
  */
-export function Trace({ className, children, 'aria-label': label, ...rest }: TraceProps) {
+export function Trace(props: TraceProps) {
+  const parent = React.useContext(TraceCtx);
+  return parent ? <NestedTrace {...props} parent={parent} /> : <RootTrace {...props} />;
+}
+
+// What a set of steps adds up to: statuses read from the element tree (TraceSteps, TraceParallels, nested Traces).
+function statusesOf(children: React.ReactNode, deep = false): TraceStepStatus[] {
+  const out: TraceStepStatus[] = [];
+  React.Children.forEach(children, (child) => {
+    if (!React.isValidElement(child)) return;
+    const props = child.props as { status?: TraceStepStatus | 'auto'; children?: React.ReactNode };
+    if (child.type === TraceStep) out.push(props.status === 'auto' || !props.status ? derive(props.children) : props.status);
+    else if (child.type === TraceParallel || child.type === React.Fragment || (deep && child.type === Trace)) out.push(...statusesOf(props.children, deep));
+  });
+  return out;
+}
+function derive(children: React.ReactNode): TraceStepStatus {
+  const all: TraceStepStatus[] = [];
+  React.Children.forEach(children, (child) => {
+    if (!React.isValidElement(child)) return;
+    const props = child.props as { status?: TraceStepStatus | 'auto'; children?: React.ReactNode };
+    if (child.type === Trace || child.type === TraceParallel || child.type === React.Fragment) all.push(...statusesOf(props.children, true));
+  });
+  if (!all.length) return 'planned';
+  // Still going while anything in it is: a failed subagent fails the step only once the others have stopped.
+  if (all.includes('awaiting-approval')) return 'awaiting-approval';
+  if (all.includes('running')) return 'running';
+  if (all.includes('failed')) return 'failed';
+  if (all.every((x) => x === 'done')) return 'done';
+  if (all.every((x) => x === 'planned')) return 'planned';
+  return 'running';
+}
+const summary = (list: TraceStepStatus[]) => {
+  const n = (k: TraceStepStatus) => list.filter((x) => x === k).length;
+  const parts = [`${list.length} step${list.length === 1 ? '' : 's'}`];
+  if (n('running')) parts.push(`${n('running')} running`);
+  if (n('awaiting-approval')) parts.push(`${n('awaiting-approval')} waiting for approval`);
+  if (n('failed')) parts.push(`${n('failed')} failed`);
+  if (!n('running') && !n('failed') && !n('awaiting-approval') && n('done') === list.length) parts.push('all done');
+  return parts.join(' · ');
+};
+
+// A Trace inside a TraceStep is a nested run (a subagent): a nested list behind a lid that says how it's going, closed
+// unless something in it is running, waiting or failed. Its steps announce through the outer Trace, with its name.
+function NestedTrace({ className, children, 'aria-label': label, parent, ...rest }: TraceProps & { parent: TraceCtxT }) {
+  const list = statusesOf(children);
+  const live = list.some((x) => x === 'running' || x === 'failed' || x === 'awaiting-approval');
+  const announce = React.useCallback((text: string, urgent?: boolean) => parent.announce(`${text} (${label})`, urgent), [parent, label]);
+  return (
+    <TraceCtx.Provider value={{ announce, mounted: parent.mounted }}>
+      <Accordion className="alt-trace-acc alt-trace-nested" defaultValue={live ? ['n'] : []} items={[{ value: 'n',
+        title: <span className="alt-trace-nested-title"><span>{label}</span><span className="alt-trace-nested-sum">{summary(list)}</span></span>,
+        content: <ol className={cx('alt-stepper alt-trace', className)} data-orientation="vertical" aria-label={label} {...rest}>{children}</ol> }]} />
+    </TraceCtx.Provider>
+  );
+}
+
+export interface TraceParallelProps {
+  /** What runs at once: "Subagents". */
+  label: string;
+  /** TraceSteps that run at the same time. */
+  children: React.ReactNode;
+  className?: string;
+}
+/**
+ * Steps that run at once (#278), in a labelled group with a 1px bracket: "Subagents · 3 in parallel · 2 of 3 done".
+ * Several steps can be raised at once here, each because it's in play; the words carry the count.
+ */
+export function TraceParallel({ label, children, className }: TraceParallelProps) {
+  const list = statusesOf(children);
+  const done = list.filter((x) => x === 'done').length, failed = list.filter((x) => x === 'failed').length;
+  const sum = `${list.length} in parallel · ${done} of ${list.length} done${failed ? ` · ${failed} failed` : ''}`;
+  return (
+    <div className={cx('alt-trace-parallel', className)} role="group" aria-label={`${label}: ${sum}`}>
+      <p className="alt-trace-parallel-head" aria-hidden="true"><span>{label}</span><span>{sum}</span></p>
+      <ol className="alt-stepper alt-trace" data-orientation="vertical">{children}</ol>
+    </div>
+  );
+}
+
+function RootTrace({ className, children, 'aria-label': label, ...rest }: TraceProps) {
   const [said, setSaid] = React.useState({ polite: '', urgent: '' });
   const mounted = React.useRef(false);
   React.useEffect(() => { mounted.current = true; }, []);
@@ -49,7 +129,8 @@ const words: Record<TraceStepStatus, string> = { planned: 'Planned', running: 'R
 
 export interface TraceStepProps {
   title: string;
-  status: TraceStepStatus;
+  /** 'auto': derived from the steps inside it (a nested Trace or TraceParallel): done only when they all are. */
+  status: TraceStepStatus | 'auto';
   /** Milliseconds it took (done or failed) or has taken so far. */
   duration?: number;
   /** Why it failed. */
@@ -59,8 +140,9 @@ export interface TraceStepProps {
   children?: React.ReactNode;
   className?: string;
 }
-export function TraceStep({ title, status, duration, error, onRetry, children, className }: TraceStepProps) {
+export function TraceStep({ title, status: given, duration, error, onRetry, children, className }: TraceStepProps) {
   const c = React.useContext(TraceCtx);
+  const status = given === 'auto' ? derive(children) : given;
   const arrived = React.useRef(c?.mounted.current ?? false);
   const { style, ...depth } = useDepth({ settle: arrived.current && status !== 'planned' ? true : undefined });
   const last = React.useRef(status);

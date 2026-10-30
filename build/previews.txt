@@ -3225,7 +3225,7 @@ function App() {
   );
 }
 
-=== Trace | <!-- @dsCard group="Display" height=760 subtitle="The steps an agent takes: done in the record, running raised, planned imprinted" -->
+=== Trace | <!-- @dsCard group="Display" height=1180 subtitle="The steps an agent takes: done in the record, running raised, planned imprinted; subagents nest and run in parallel" -->
 --- css
 .tc { max-width: 620px; }
 --- jsx
@@ -3260,6 +3260,27 @@ function App() {
               onApprove={() => { setApproval('running'); setTimeout(() => setApproval('done'), 1000); }} onReject={() => setApproval('rejected')} />}
           </A.TraceStep>
         ))}
+      </A.Trace>
+      <A.Trace aria-label="Agent run: compare billing providers">
+        <A.TraceStep title="Plan the comparison" status="done" duration={900} />
+        <A.TraceStep title="Research pricing pages" status="auto">
+          <A.TraceParallel label="Subagents">
+            <A.TraceStep title="Stripe" status="auto">
+              <A.Trace aria-label="Stripe subagent">
+                <A.TraceStep title="Open the pricing page" status="done" duration={1200} />
+                <A.TraceStep title="Extract the fees" status="done" duration={3400} />
+              </A.Trace>
+            </A.TraceStep>
+            <A.TraceStep title="Paddle" status="auto">
+              <A.Trace aria-label="Paddle subagent">
+                <A.TraceStep title="Open the pricing page" status="done" duration={1500} />
+                <A.TraceStep title="Extract the fees" status="running" />
+              </A.Trace>
+            </A.TraceStep>
+            <A.TraceStep title="Lemon Squeezy" status="failed" error="The pricing page returned 403." onRetry={() => {}} />
+          </A.TraceParallel>
+        </A.TraceStep>
+        <A.TraceStep title="Write the comparison" status="planned" />
       </A.Trace>
     </div>
   );
