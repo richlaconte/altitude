@@ -200,6 +200,10 @@ Follow-ups under an answer cross-fade in over `dur-onset` (opacity only); they d
 
 Reasoning that's still arriving has no motion of its own: no shimmer, no pulsing dots, no counter ticking up. When it completes, "Thinking…" cross-fades to "Thought for 12s" over `dur-travel-1`; under reduced motion it swaps at once.
 
+## Commands
+
+`Terminal` output appends without animation. Finishing settles the frame with one afterglow, as a completed answer does. "Jump to latest output" emerges at level 3 when you scroll up while it runs, as `ConversationScrollButton` does. Under reduced motion nothing travels.
+
 ## Answers in Markdown
 
 `Markdown` has no motion of its own: text arrives without per-word animation (Conversation's rule), and a table row that completes appears in place rather than rising. An image rises out of its imprint over `dur-travel-1` with `ease-rise` (2px of travel and its opacity); under reduced motion it appears in place.

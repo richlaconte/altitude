@@ -1895,6 +1895,37 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-msg-name { margin: 0; font: 600 13px/18px var(--font-sans); color: var(--ink-muted); }
 .alt-msg-content { font: 400 15px/23px var(--font-sans); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
 
+/* ---- Terminal (#273) ----
+   A command's output in CodeBlock's frame: flush on the ground, a 1px rim, mono. Running, it isn't the record yet, so
+   a dashed line-control rule runs down the left; finished, the rule goes solid (critical when the exit is non-zero)
+   with one afterglow. stderr lines carry a critical mark in the gutter. "Jump to latest output" floats at level 3. */
+.alt-term { position: relative; border-left-width: 2px; }
+.alt-term[data-status="running"] { border-left-style: dashed; border-left-color: var(--line-control); }
+.alt-term[data-failed] { border-left-color: var(--critical); }
+.alt-term-cmd { min-width: 0; font: 500 13px/18px var(--font-mono); color: var(--ink); overflow-wrap: anywhere; }
+.alt-term-prompt { color: var(--ink-muted); }
+.alt-term-viewport { position: relative; }
+.alt-term-body { max-height: 320px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; outline: none; }
+.alt-term-body:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-term-pre { margin: 0; padding: var(--space-3) var(--space-4); font: 400 13px/20px var(--font-mono); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+.alt-term-line { position: relative; display: block; min-height: 20px; }
+.alt-term-line[data-stream="stderr"]::before { content: ""; position: absolute; left: calc(-1 * var(--space-4) + 6px); top: 3px; bottom: 3px; width: 3px; border-radius: 2px; background: var(--critical); }
+.alt-term [data-tone="critical"] { color: var(--critical); }
+.alt-term [data-tone="caution"] { color: var(--caution); }
+.alt-term [data-tone="positive"] { color: var(--positive); }
+.alt-term [data-tone="accent"] { color: var(--accent-ink); }
+.alt-term [data-tone="muted"] { color: var(--ink-muted); }
+.alt-term [data-bold] { font-weight: 600; }
+.alt-term-more { display: block; margin: var(--space-2) var(--space-4) 0; padding: 0; border: 0; background: none; color: var(--accent-ink); font: 500 12.5px/24px var(--font-sans); text-decoration: underline; cursor: pointer; }
+.alt-term-exit { display: flex; align-items: center; gap: 6px; padding: 8px var(--space-4); border-top: 1px solid var(--line); font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-term-exit[data-tone="critical"] { color: var(--critical); }
+[data-contrast="more"] .alt-term { border-color: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-term { border-color: CanvasText; }
+  .alt-term[data-status="running"] { border-left-style: dotted; }
+  .alt-term-line[data-stream="stderr"]::before { background: CanvasText; }
+}
+
 /* ---- Suggestions (#272) ----
    Prompts to start from or follow up with are things you press: small secondary buttons, raised at level 1 with their
    wall, lifting to 2 when pointed at, never the view's level-2 primary (that's the composer's Send). Follow-ups merely
@@ -1997,7 +2028,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   .alt-checkpoint-label[data-status="pending"] { outline: 1px dotted CanvasText; }
   .alt-checkpoint-label[data-status="failed"] { outline: 3px dashed CanvasText; }
 }
-.alt-convo-jump { position: absolute; left: 50%; bottom: var(--space-3); translate: -50% 0; z-index: 1; --alt-bg: var(--surface-floating); --alt-sh: var(--elev-3); --alt-sh-up: var(--elev-3); animation: alt-emerge var(--dur-travel-2) var(--ease-rise); --alt-from-y: 6px; }
+.alt-convo-jump, .alt-term-jump { position: absolute; left: 50%; bottom: var(--space-3); translate: -50% 0; z-index: 1; --alt-bg: var(--surface-floating); --alt-sh: var(--elev-3); --alt-sh-up: var(--elev-3); animation: alt-emerge var(--dur-travel-2) var(--ease-rise); --alt-from-y: 6px; }
 @media (prefers-reduced-motion: reduce) { .alt-msg-caret { animation: none; } }
 [data-motion="reduced"] .alt-msg-caret { animation: none; }
 [data-contrast="more"] .alt-msg[data-stream] { box-shadow: inset 2px 0 0 0 var(--line-control); }
