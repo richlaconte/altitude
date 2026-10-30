@@ -74,7 +74,7 @@ Rules that follow:
 | **Recency** | new or changed content arrives tinted and lifted, then settles to rest over `dur-settle` (afterglow) | `settle` on `Surface`, `Card` |
 | **Commitment** | a pending write hovers (after `dur-grace`), a confirmed one lands, a failed one drops into a trench | `status` on `Surface`, `Card` |
 | **Possession** | whatever is in a hand floats at level 3, tilted; a collaborator's hold wears their `presence-*` colour and name | `heldBy`, `SortableList`, `BoardCard heldBy`, a held `ResizableHandle` grip, a `DataTable` selection's floating action bar |
-| **Readiness to receive** | receptacles open (sink) only while something could be dropped into them, and deepen under the pointer | `DropZone`, the slot in `SortableList`, a slot or a node to drop into in `Tree` |
+| **Readiness to receive** | receptacles open (sink) only while something could be dropped into them, and deepen under the pointer | `DropZone` (its queued files: uploading in a Progress trench, processing hovering, done settling, failed in a trench), the slot in `SortableList`, a slot or a node to drop into in `Tree` |
 | **Emptiness** | a region with nothing in it yet is an opening, a well with a dashed rim that the first record will fill; pointing at its action deepens it to a trench | `EmptyState` |
 | **Relevance** | filtering lifts matches and sinks misses instead of removing them, so positions survive | `relevance` on `Surface`, `Card`, `TableRow`, driven by `FilterBar` |
 | **Overflow** | edges curve away where content continues; a header rises when content passes under it | `ScrollArea`, a sticky `PageHeader` |

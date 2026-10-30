@@ -1389,6 +1389,20 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 [data-contrast="more"] .alt-mode-frame { border-width: 3px; }
 @media (forced-colors: active) { .alt-mode-frame { border: 4px double CanvasText; } .alt-mode-strip { border-bottom: 1px solid CanvasText; } }
 
+/* ── DropZone's queue: each file is a slat on the ground under the zone. Uploading is a task, so a Progress fill rises
+   out of its trench; processing is a write the server hasn't confirmed, so the slat hovers as pending; done lands and
+   settles with the afterglow; failed drops to a trench with its reason and Retry. ── */
+.alt-drop-wrap { display: flex; flex-direction: column; gap: var(--space-3); }
+.alt-upload-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.alt-upload { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--surface-ground); box-shadow: 0 0 0 1px var(--line); }
+.alt-upload-text { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.alt-upload-name { font: 500 14px/20px var(--font-sans); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-upload-state { display: inline-flex; align-items: center; gap: 4px; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-upload[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench); }
+.alt-upload[data-state="failed"] .alt-upload-state { color: var(--critical); }
+.alt-upload .alt-progress { margin-top: 2px; }
+.alt-upload-actions { display: flex; flex: none; align-items: center; gap: var(--space-1); }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

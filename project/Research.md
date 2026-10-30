@@ -960,6 +960,16 @@ A design review: `SavedViews` was rendered over a FilterBar and a DataTable with
 
 Not yet tested with people: whether "Save view" over a shared view needs a confirmation.
 
+### E81 · What does each stage of an upload look like?
+
+A design review: `DropZone queue` was rendered with files uploading, processing, done and failed (with Retry), in all four schemes at 960px and 360px and under forced colours. `checks/dropzone-queue.mjs` drives a queue through every state.
+
+- **Four stages, four existing readings.** Uploading is a task moving toward done, so it's `Progress`. Processing is a write the server hasn't confirmed, so it hovers as pending (after `dur-grace`, so fast steps don't flicker). Done is committed, so it lands and settles. Failed drops to a trench. No new signal was needed, which is the point of the vocabulary.
+- **Coarse announcements.** Announcing every percent floods a screen reader, so progress is said at quarters, plus the changes of stage.
+- **Every button names its file.** In a list of five uploads, "Retry" alone is ambiguous, so each action's name includes the file.
+
+Not yet tested with people: whether the pending hover is read as "the server is working" rather than as a hover effect.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

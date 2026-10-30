@@ -2404,7 +2404,7 @@ function App() {
       <A.Checklist aria-labelledby="cl-pack" sortDone {...props} {...pack} placeholder="Add something to pack" /></section>
   </div>;
 }
-=== DropZone | <!-- @dsCard group="Inputs" height=230 subtitle="Receptacles open when they're needed" -->
+=== DropZone | <!-- @dsCard group="Inputs" height=600 subtitle="Receptacles open when they're needed; dropped files queue under them" -->
 --- css
 .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .lab { font: 500 12px/16px var(--font-mono); color: var(--ink-muted); margin-bottom: 8px; }
@@ -2416,8 +2416,29 @@ function App() {
       <div><div className="lab">idle · flush</div><A.DropZone state="idle"><Body /></A.DropZone></div>
       <div><div className="lab">armed · a file is in flight</div><A.DropZone state="armed"><Body /></A.DropZone></div>
       <div><div className="lab">over · ready to receive</div><A.DropZone state="over"><Body /></A.DropZone></div>
+      <div style={{ gridColumn: '1 / -1' }}><Queue /></div>
     </div>
   );
+}
+// A stand-in uploader: files upload in steps, then the server processes them; one fails until retried.
+const start = [
+  { id: 'a', name: 'Q3 board deck.pdf', size: 2400000, state: 'uploading', progress: 0 },
+  { id: 'b', name: 'Customer list.csv', size: 480000, state: 'uploading', progress: 0 },
+  { id: 'c', name: 'Brand guidelines.pdf', size: 18200000, state: 'uploading', progress: 0, fails: true },
+];
+function Queue() {
+  const [items, setItems] = React.useState(start);
+  React.useEffect(() => {
+    const t = setInterval(() => setItems((xs) => xs.map((x) => {
+      if (x.state === 'uploading') { const p = Math.min(100, x.progress + (x.id === 'b' ? 34 : 13)); if (x.fails && p > 40) return { ...x, state: 'failed', error: 'The connection dropped' }; return p >= 100 ? { ...x, state: 'processing', progress: 100 } : { ...x, progress: p }; }
+      if (x.state === 'processing') return Math.random() < 0.35 ? { ...x, state: 'done' } : x;
+      return x;
+    })), 450);
+    return () => clearInterval(t);
+  }, []);
+  return <A.DropZone multiple queue={items} onFiles={(fs) => setItems((xs) => [...xs, ...fs.map((f, i) => ({ id: f.name + Date.now() + i, name: f.name, size: f.size, state: 'uploading', progress: 0 }))])}
+    onRetry={(id) => setItems((xs) => xs.map((x) => (x.id === id ? { ...x, state: 'uploading', progress: 40, fails: false, error: undefined } : x)))}
+    onCancel={(id) => setItems((xs) => xs.filter((x) => x.id !== id))} onRemove={(id) => setItems((xs) => xs.filter((x) => x.id !== id))}><Body /></A.DropZone>;
 }
 
 === EmptyState | <!-- @dsCard group="Display" height=400 subtitle="Nothing here yet is an opening, waiting to receive" -->
