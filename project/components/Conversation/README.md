@@ -19,6 +19,8 @@ The thread between a person and an assistant: their messages, the assistant's an
 
 **Editing a sent message.** Give a person's message `MessageActions onEdit`: Edit opens it in place (the text stays where it is while a Textarea well opens around it), with Cancel and "Send edit"; Escape cancels, Ctrl/⌘+Enter sends. Sending calls `onEdit(text)`: start a new branch from that message, keep the earlier one, and show its `versions` ("Version 2 of 2") and `edited` ("Edited"). Switching versions is announced; render the turns of the branch shown. Nothing is deleted.
 
+**The queue.** `ConversationQueue` (`items`, `onSendNow`, `onEdit`, `onRemove`) goes between the thread and the composer and lists messages queued while the agent works (`PromptInput onQueue`), in order, each with Send now (stop the turn and send it), Edit (in place) and Remove. A queued message is written but not dispatched, so it doesn't hover: it's the person's sheet, flush, with a dashed rim and "Queued · 1 of 2". When the turn ends, send the first; it becomes an ordinary message in the log.
+
 **You provide:** the messages and their status as your stream reports it. Code inside an answer goes in `CodeBlock`.
 
 ```tsx

@@ -22,6 +22,12 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
   /** 'submitted' and 'streaming' turn Send into Stop, in the same slot. Default 'ready'. */
   status?: PromptStatus;
   onStop?: () => void;
+  /**
+   * Lets a person queue a message while the agent works (#276): Enter while 'submitted' or 'streaming' calls this
+   * instead of doing nothing; the button stays Stop, the composer empties and keeps focus. Show the queue with
+   * ConversationQueue and send the first one when the turn ends.
+   */
+  onQueue?: (message: PromptMessage) => void;
   /** Controlled text. */
   value?: string;
   onValueChange?: (text: string) => void;
@@ -37,7 +43,7 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
  * response is generating it becomes Stop in the same slot and size, so nothing moves. Enter sends, Shift+Enter adds a
  * line, and Enter during IME composition never sends.
  */
-export function PromptInput({ onSubmit, status = 'ready', onStop, value, onValueChange, onAttach, accept, className, children, ...rest }: PromptInputProps) {
+export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, value, onValueChange, onAttach, accept, className, children, ...rest }: PromptInputProps) {
   useApproach(); useKeyFocus();
   const [own, setOwn] = React.useState('');
   const text = value ?? own;
@@ -65,7 +71,14 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, value, onValue
   const remove = (id: string) => { const f = files.find((x) => x.id === id); setFiles((xs) => xs.filter((x) => x.id !== id)); if (f) setSaid(`${f.name} removed.`); area.current?.focus(); };
   const ready = !!text.trim() && !files.some((f) => f.status === 'pending');
   const submit = () => {
-    if (busy || !ready) return;
+    if (!ready || (busy && !onQueue)) return;
+    if (busy) {
+      onQueue!({ text: text.trim(), files: files.map((f) => f.file) });
+      setText(''); setFiles([]);
+      setSaid('Message queued. It will be sent when the assistant finishes.');
+      area.current?.focus();
+      return;
+    }
     onSubmit({ text: text.trim(), files: files.map((f) => f.file) });
     setText(''); setFiles([]);
     area.current?.focus();
