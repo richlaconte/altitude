@@ -3142,6 +3142,25 @@ function App() {
   );
 }
 
+=== InlineCitation | <!-- @dsCard group="Display" height=440 subtitle="Numbered source markers in a generated answer, previewed on hover and focus" -->
+--- css
+.ic { max-width: 600px; font: 400 15px/24px var(--font-sans); color: var(--ink); }
+.ic p { margin: 0; }
+--- jsx
+const sources = [
+  { title: 'Billing FAQ', url: 'https://help.example.com/billing/faq', excerpt: 'Annual plans can be refunded in full within 30 days of purchase.' },
+  { title: 'Plans and pricing', url: 'https://example.com/pricing', excerpt: 'Monthly plans renew on the same day each month.' },
+  { title: 'Forum post: “Refunds after 30 days?”', url: 'https://community.example.com/t/4821', unverified: true },
+];
+function App() {
+  return (
+    <div className="ic">
+      <p>Annual plans can be refunded in full within 30 days<A.InlineCitation index={1} source={sources[0]} />. Monthly plans renew on the same day each month<A.InlineCitation index={2} source={sources[1]} />, and some customers report partial refunds after that<A.InlineCitation index={3} source={sources[2]} />.</p>
+      <A.Sources items={sources} />
+    </div>
+  );
+}
+
 === AILabel | <!-- @dsCard group="Display" height=480 subtitle="Mark what AI made, and explain it when asked: a plate, never a glow" -->
 --- css
 .al { max-width: 600px; }

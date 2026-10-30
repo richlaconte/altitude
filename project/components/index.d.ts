@@ -3168,6 +3168,30 @@ export interface AILabelProps {
 /** Marks what AI made: a flush plate (no glow) that lifts and opens "About this content". */
 export declare function AILabel(props: AILabelProps): React.ReactElement;
 
+export interface CitationSource {
+  title: string;
+  url?: string;
+  /** A passage from the source. */
+  excerpt?: string;
+  /** Couldn't be verified: a caution mark and "Unverified source". */
+  unverified?: boolean;
+}
+export interface InlineCitationProps {
+  /** Its number, from 1, matching Sources. */
+  index: number;
+  source: CitationSource;
+  /** Where it goes. Default the source's entry in Sources. */
+  href?: string;
+  /** Shared with Sources. Default "source". */
+  idPrefix?: string;
+  className?: string;
+}
+/** A numbered source marker: a small flush plate named "Source 2: Billing FAQ", previewed on hover and focus. */
+export declare function InlineCitation(props: InlineCitationProps): React.ReactElement;
+export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
+/** The sources an answer cites, as a flush ordered list. */
+export declare function Sources(props: SourcesProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -3187,6 +3211,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      InlineCitation: typeof InlineCitation; Sources: typeof Sources;
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;

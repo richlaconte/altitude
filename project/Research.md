@@ -1168,6 +1168,17 @@ A design review: `AILabel` was rendered on a generated summary (with sources and
 
 Not yet tested with people: whether "AI" alone is understood, or a longer word ("AI-generated") is needed in some markets.
 
+### E100 · What is a citation in an answer?
+
+A design review: `InlineCitation` and `Sources` were rendered in a three-sentence answer citing three sources (one unverified), reached by pointer and keyboard, in all four schemes and under forced colours. `checks/inline-citation.mjs` drives it.
+
+- **A plate in the text.** Bare superscripts are hard to hit and read as "[2]". The marker is ChartAnnotation's flush plate at text size: part of the record, and it lifts only because it acts.
+- **Preview on focus too.** Hover-only previews leave keyboard users following links blind. The HoverCard opens on focus, and Enter follows.
+- **A name, not a number.** "Source 2: Billing FAQ" makes sense out of context, in a links list or read aloud.
+- **Unverified in words.** A caution mark alone would be colour and shape; "Unverified source" says it.
+
+Not yet tested with people: whether readers check sources more often with previews than with a list alone.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -1,0 +1,33 @@
+<!-- @dsCard group="Display" height=440 subtitle="Numbered source markers in a generated answer, previewed on hover and focus" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InlineCitation — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.ic { max-width: 600px; font: 400 15px/24px var(--font-sans); color: var(--ink); }
+.ic p { margin: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const sources = [
+  { title: "Billing FAQ", url: "https://help.example.com/billing/faq", excerpt: "Annual plans can be refunded in full within 30 days of purchase." },
+  { title: "Plans and pricing", url: "https://example.com/pricing", excerpt: "Monthly plans renew on the same day each month." },
+  { title: "Forum post: \u201CRefunds after 30 days?\u201D", url: "https://community.example.com/t/4821", unverified: true }
+];
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "ic" }, /* @__PURE__ */ React.createElement("p", null, "Annual plans can be refunded in full within 30 days", /* @__PURE__ */ React.createElement(A.InlineCitation, { index: 1, source: sources[0] }), ". Monthly plans renew on the same day each month", /* @__PURE__ */ React.createElement(A.InlineCitation, { index: 2, source: sources[1] }), ", and some customers report partial refunds after that", /* @__PURE__ */ React.createElement(A.InlineCitation, { index: 3, source: sources[2] }), "."), /* @__PURE__ */ React.createElement(A.Sources, { items: sources }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

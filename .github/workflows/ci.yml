@@ -129,6 +129,7 @@ jobs:
           node ../scripts/record-check.mjs react18-input-suggestion node checks/input-suggestion.mjs
           node ../scripts/record-check.mjs react18-property-proposals node checks/property-proposals.mjs
           node ../scripts/record-check.mjs react18-ai-label node checks/ai-label.mjs
+          node ../scripts/record-check.mjs react18-inline-citation node checks/inline-citation.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
