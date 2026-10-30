@@ -23,8 +23,9 @@ One record's properties as label–value pairs, each editable where it sits: an 
 - **An unset value** is a small opening: a dashed well, the empty field's treatment at plate size, naming what to add (“Add priority”), so a half-filled record reads at a glance. Setting it fills it.
 - **Editing** opens InlineEdit's well in the value's place, under its own text, so the value doesn't move; with `commit="on-choose"` the picker's list rises from it and there's no Save. Pending, failed and accepted are InlineEdit's.
 - **Edit all** (`editAll`) lifts the whole list into one raised `EditRegion`, for records with cross-field rules (a last day on or after the first).
+- **A proposed change** (an item's `proposed`: an agent read an email and suggests "Stage: Qualified → Proposal", or a teammate's suggested edit) is status that asks for action, so that field is **raised one level** (as `Confirmation`). It shows the current value struck through beside the proposed one (`DiffView`'s property change), "Proposed by Assistant", and Reject and Accept. **Nothing touches the record until it's accepted.** Accepting saves through `onSave`, hovering as pending ("Saving…") and settling with the afterglow (staggered for Accept all, at most four at once). A failed save drops to a trench with the reason and Retry. A raised summary above the list counts the proposals ("3 proposed changes by Assistant") with Accept all and Reject all.
 
-Each editable value is a button named by the label, the value and the verb (“Status: In review. Change status”), as GOV.UK's visually hidden “Change name” guidance asks, so it makes sense out of context. Each change is announced (“Status set to Done”). Forced colours: unset values dashed, the hover plate outlined. `contrast="more"`: the hover plate gets the level-1 ink slab.
+Each editable value is a button named by the label, the value and the verb (“Status: In review. Change status”), as GOV.UK's visually hidden “Change name” guidance asks, so it makes sense out of context. Each change is announced (“Status set to Done”). Proposals are a labelled group (“3 proposed changes”); each Accept and Reject names its field (“Accept new amount”), the old and new values are read as “Current” and “Proposed”, and outcomes are announced (“New amount saved”, “Rejected the new stage”). Forced colours: unset values dashed, the hover plate outlined. `contrast="more"`: the hover plate gets the level-1 ink slab.
 
 ## Keyboard
 
@@ -34,8 +35,8 @@ Tab moves through the editable values; Enter or Space opens one, and the editor 
 
 | | |
 |---|---|
-| `PropertyList` | `layout` (`'stacked'` or `'inline'`), `shortcuts`, `editAll` (`{ value, onValueChange, onSave, validate?, renderEditor, label? }`), `aria-label`/`aria-labelledby` |
-| `PropertyListItem` | `label`, `value`, `renderValue`, `emptyLabel`; editable with `onSave`, `onValueChange`, `editor`, `commit`, `validate`, `required`, `isEqual`, `shortcut` |
+| `PropertyList` | `layout` (`'stacked'` or `'inline'`), `shortcuts`, `editAll` (`{ value, onValueChange, onSave, validate?, renderEditor, label? }`), `proposedBy`, `aria-label`/`aria-labelledby` |
+| `PropertyListItem` | `label`, `value`, `renderValue`, `emptyLabel`; editable with `onSave`, `onValueChange`, `editor`, `commit`, `validate`, `required`, `isEqual`, `shortcut`; `proposed` and `onProposalResolved(accepted, value)` (clear `proposed` there) |
 
 InlineEdit gains `trigger="value"` (read mode as one value plate), `emptyLabel` and `shortcut` for this; they're available on their own too.
 

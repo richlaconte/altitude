@@ -1,0 +1,39 @@
+<!-- @dsCard group="Display" height=520 subtitle="Proposed changes to a record, accepted or rejected field by field" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PropertyProposals — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.pp { max-width: 560px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const stages = { qualified: "Qualified", proposal: "Proposal", won: "Won" };
+const eur = (n) => n == null ? "" : new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
+function App() {
+  const [deal, setDeal] = React.useState({ stage: "qualified", amount: 12e3, close: "", owner: "Maya Chen" });
+  const [proposed, setProposed] = React.useState({ stage: "proposal", amount: 18500, close: "30 Nov 2026" });
+  const save = (key) => (draft) => new Promise((r) => setTimeout(() => r(key === "amount" && draft > 18e3 && !window.__ok ? (window.__ok = true, { ok: false, error: "Amounts over \u20AC18,000 need a manager." }) : { ok: true, value: draft }), 700));
+  const resolve = (key) => (accepted, value) => {
+    if (accepted) setDeal((d) => ({ ...d, [key]: value }));
+    setProposed((p) => {
+      const { [key]: _, ...rest } = p;
+      return rest;
+    });
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "col pp" }, /* @__PURE__ */ React.createElement(A.PropertyList, { "aria-label": "Deal", layout: "inline", proposedBy: "Assistant (from Jamie's email)" }, /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Stage", value: deal.stage, renderValue: (v) => stages[v], proposed: proposed.stage, onSave: save("stage"), onValueChange: (v) => setDeal((d) => ({ ...d, stage: v })), onProposalResolved: resolve("stage") }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Amount", value: deal.amount, renderValue: eur, proposed: proposed.amount, onSave: save("amount"), onValueChange: (v) => setDeal((d) => ({ ...d, amount: v })), onProposalResolved: resolve("amount") }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Close date", value: deal.close, proposed: proposed.close, onSave: save("close"), onValueChange: (v) => setDeal((d) => ({ ...d, close: v })), onProposalResolved: resolve("close") }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Owner", value: deal.owner, onSave: save("owner"), onValueChange: (v) => setDeal((d) => ({ ...d, owner: v })) })));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

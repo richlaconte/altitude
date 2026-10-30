@@ -3550,6 +3550,22 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-property-value { min-width: 0; margin: 0; font: 400 14px/20px var(--font-sans); overflow-wrap: anywhere; }
 .alt-property-empty { color: var(--ink-muted); }
 .alt-property .alt-inline-edit-read { display: block; }
+/* Proposed changes: a field with a proposal is status that asks for action, so it's raised one level (as Confirmation),
+   showing the current value struck beside the proposed one (DiffView's property change), with Reject and Accept. Nothing
+   touches the record until it's accepted; accepting hovers as pending, then settles with the afterglow. The summary
+   offers Accept all and Reject all. */
+.alt-property-proposals { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); padding: 6px 6px 6px var(--space-3); border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1); }
+.alt-property-proposals-text { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; font: 500 13px/18px var(--font-sans); color: var(--ink); }
+.alt-property[data-proposed] { margin: 4px calc(-1 * var(--space-2)); padding: var(--space-2); border-radius: var(--radius-md); background: var(--surface-raised); background-image: var(--alt-sheen); box-shadow: var(--elev-1); }
+.alt-property-list[data-layout="inline"] .alt-property[data-proposed] { align-items: start; padding: var(--space-2); border-bottom-color: transparent; }
+.alt-property-list[data-layout="inline"] .alt-property[data-proposed] .alt-property-label { padding-top: 6px; }
+.alt-property-proposal { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px var(--space-2); }
+.alt-property-change { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.alt-property-proposal-by { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-property-proposal-error { display: inline-flex; align-items: center; gap: 4px; color: var(--critical); }
+.alt-property-proposal-by { grid-column: 1; }
+.alt-property-proposal-actions { display: inline-flex; gap: 4px; grid-column: 2; grid-row: 1 / span 2; }
+@media (forced-colors: active) { .alt-property[data-proposed], .alt-property-proposals { border: 1px solid CanvasText; } }
 .alt-inline-edit-plate {
   display: inline-flex; align-items: center; min-height: 30px; max-width: 100%; padding: 2px 12px; border: 1px solid transparent; border-radius: var(--radius-sm);
   background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
