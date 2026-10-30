@@ -3382,7 +3382,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-tree-row {
   --indent: calc((var(--level, 1) - 1) * var(--space-4));
   position: relative; display: flex; align-items: center; gap: 4px; min-height: var(--size-row-md); padding: 2px var(--space-2) 2px 4px; border-radius: var(--radius-sm);
-  outline: none; cursor: default; user-select: none; touch-action: pan-y;
+  outline: none; cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y;
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
 }
 .alt-tree-indent { flex: none; width: var(--indent); }
