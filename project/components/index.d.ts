@@ -1257,6 +1257,20 @@ export interface DataTableProps<T> {
   onExpandedChange?: (ids: string[]) => void;
   /** 'single' (default): opening one closes the others. */
   expandMode?: 'single' | 'multiple';
+  /** Which columns show, by key: false hides one. The first column in order always shows. */
+  columnVisibility?: Record<string, boolean>;
+  defaultColumnVisibility?: Record<string, boolean>;
+  onColumnVisibilityChange?: (visibility: Record<string, boolean>) => void;
+  /** The columns' order, by key. */
+  columnOrder?: string[];
+  defaultColumnOrder?: string[];
+  onColumnOrderChange?: (order: string[]) => void;
+  /** Row density. 'compact' keeps every target at least 24px tall. Default 'comfortable'. */
+  density?: 'comfortable' | 'compact';
+  defaultDensity?: 'comfortable' | 'compact';
+  onDensityChange?: (density: 'comfortable' | 'compact') => void;
+  /** A "Columns" button in the toolbar: show, hide and reorder columns, and choose the density. */
+  columnsMenu?: boolean;
 }
 /** A Table from data: sorting that carries rows, selection with a counted toolbar, filtering in place, interactive rows and reordering. */
 export declare function DataTable<T>(props: DataTableProps<T>): React.ReactElement;

@@ -916,6 +916,17 @@ An engineering review: two primaries on a page, one on a page plus one in a Dial
 
 Not yet tested with people: whether agents reliably move the second primary into `actions` when they see the warning.
 
+### E77 · Should a column appearing animate?
+
+A design review: `DataTable columnsMenu` was rendered in the Table preview with the menu open, columns hidden and reordered, and compact rows, in all four schemes and under forced colours. `checks/table-columns.mjs` measures it.
+
+- **No motion for layout.** Rows glide when they're re-sorted, because the record moved. A column appearing or leaving changes how the record is laid out, not the record, so the table re-lays out at once.
+- **Reuse, not a new control.** The menu is a Popover with a SortableList of Checkboxes and a ToggleGroup: every part already has its elevation and keyboard model, so the menu needed none of its own.
+- **The first column stays.** A row without its name column can't be read or acted on, so the first column in order can't be hidden, and its checkbox says so by being disabled.
+- **Compact stays 24px.** Compact density trims row padding to 4px, which keeps 28px rows and 24px targets.
+
+Not yet tested with people: whether the "· 3 hidden" count is enough to find hidden columns again.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

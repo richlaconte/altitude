@@ -37,3 +37,14 @@ The header stays flush until rows scroll under it, then rises to `elev-2` (as in
 - Do filter in place with `relevance` when position matters (a ranked list, a schedule); remove rows instead when it doesn't.
 - Don't make rows interactive unless clicking one does something; a lift that leads nowhere is a broken promise.
 - Don't nest tables or put a table inside a raised card's padding without a reason; the table is already the record.
+
+## Columns and density
+
+Wide record tables need a way to choose what shows. `columnsMenu` adds a **Columns** button to the toolbar (it says "· 3 hidden" when some are). It opens a `Popover` (level 3) holding a `SortableList` of `Checkbox`es (drag a column, or pick it up with Space and the arrows, to reorder it) and a density switch (a single-choice `ToggleGroup`: Comfortable or Compact). The first column in order can't be hidden: it names the row.
+
+- `columnVisibility`, `onColumnVisibilityChange`: `{ [key]: false }` hides a column.
+- `columnOrder`, `onColumnOrderChange`: keys in order; keys left out keep their place after the ones given.
+- `density`, `onDensityChange`: `'comfortable'` (default) or `'compact'`. Compact rows keep every target at least 24px tall ([WCAG 2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum)).
+
+Each has an uncontrolled `default…` form. Showing, hiding or reordering a column doesn't animate the table: it's a change of layout, not of the record. Each change is announced ("Owner column hidden", "Compact rows").
+

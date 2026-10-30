@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { cssMs, cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEffect } from './core';
-import { Badge, Button, Checkbox, Input } from './controls';
+import { Badge, Button, Checkbox, Input, SortableList } from './controls';
+import { Popover } from './overlays';
+import { ToggleGroup, ToggleGroupItem } from './toggle';
 import { EditRegion, EditRegionBinder, EditRegionForm, EditRegionSaveResult } from './edit-region';
 import { Pile } from './pile';
 import { Arrive, Await, hint, isPromise, Promised, readPromised, SkeletonOption, useArrival, useHasWaited, useReportWaiting } from './suspense';
@@ -235,6 +237,20 @@ export interface DataTableProps<T> {
   onExpandedChange?: (ids: string[]) => void;
   /** 'single' (default): opening one closes the others. */
   expandMode?: 'single' | 'multiple';
+  /** Which columns show, by key: false hides one. The first column in order always shows. */
+  columnVisibility?: Record<string, boolean>;
+  defaultColumnVisibility?: Record<string, boolean>;
+  onColumnVisibilityChange?: (visibility: Record<string, boolean>) => void;
+  /** The columns' order, by key. Keys left out keep their place after the ones given. */
+  columnOrder?: string[];
+  defaultColumnOrder?: string[];
+  onColumnOrderChange?: (order: string[]) => void;
+  /** Row density. 'compact' keeps every target at least 24px tall. Default 'comfortable'. */
+  density?: 'comfortable' | 'compact';
+  defaultDensity?: 'comfortable' | 'compact';
+  onDensityChange?: (density: 'comfortable' | 'compact') => void;
+  /** A "Columns" button in the toolbar: show, hide and reorder columns, and choose the density. */
+  columnsMenu?: boolean;
 }
 
 const GripIcon = () => (
@@ -290,7 +306,18 @@ function DataTableLanded<T>(props: Omit<DataTableProps<T>, 'skeleton'>) {
 }
 function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, selected, defaultSelected = [], onSelectedChange, actions, toolbar,
   sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className,
-  renderExpanded, renderEditor, onSave, onRowChange, expanded, defaultExpanded = [], onExpandedChange, expandMode = 'single', ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
+  renderExpanded, renderEditor, onSave, onRowChange, expanded, defaultExpanded = [], onExpandedChange, expandMode = 'single',
+  columnVisibility, defaultColumnVisibility = {}, onColumnVisibilityChange, columnOrder, defaultColumnOrder, onColumnOrderChange,
+  density, defaultDensity = 'comfortable', onDensityChange, columnsMenu, ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
+  const [visibility, setVisibility] = useControllable(columnVisibility, defaultColumnVisibility, onColumnVisibilityChange);
+  const [order, setOrder] = useControllable<string[]>(columnOrder, defaultColumnOrder ?? columns.map((c) => c.key), onColumnOrderChange);
+  const [dens, setDens] = useControllable(density, defaultDensity, onDensityChange);
+  // The columns in their order (keys the order doesn't name keep their place after it); the first always shows.
+  const ordered = React.useMemo(() => {
+    const at = new Map(order.map((k, i) => [k, i]));
+    return columns.map((c, i) => ({ c, i })).sort((a, b) => (at.get(a.c.key) ?? 1e6 + a.i) - (at.get(b.c.key) ?? 1e6 + b.i)).map((x) => x.c);
+  }, [columns, order]);
+  const shown = ordered.filter((c, i) => i === 0 || visibility[c.key] !== false);
   const [sel, setSel] = useControllable(selected, defaultSelected, onSelectedChange);
   const [srt, setSrt] = useControllable<TableSort>(sort, defaultSort, onSortChange);
   const [open, setOpen] = useControllable(expanded, defaultExpanded, onExpandedChange);
@@ -400,10 +427,10 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
   const s = start.current;
   const h = drag && s ? s.hs[drag.from] : 0;
   const slotTop = drag && s ? (drag.to <= drag.from ? s.tops[drag.to] : s.tops[drag.to] + s.hs[drag.to] - s.hs[drag.from]) : 0;
-  const span = columns.length + (selectable ? 1 : 0) + (movable ? 1 : 0) + (renderExpanded ? 1 : 0) + (editable ? 1 : 0);
+  const span = shown.length + (selectable ? 1 : 0) + (movable ? 1 : 0) + (renderExpanded ? 1 : 0) + (editable ? 1 : 0);
   return (
     <div className={cx('alt-data-table', className)}>
-      {(selectable || toolbar) && (
+      {(selectable || toolbar || columnsMenu) && (
         <div className="alt-table-tools">
           {sel.length > 0 && (
             <div className="alt-table-selection">
@@ -413,10 +440,14 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
               <Button size="sm" variant="ghost" onClick={() => setSel([])}>Clear</Button>
             </div>
           )}
-          {toolbar && <div className="alt-table-tools-end">{toolbar}</div>}
+          {(toolbar || columnsMenu) && <div className="alt-table-tools-end">{toolbar}{columnsMenu && (
+            <ColumnsMenu columns={ordered} visibility={visibility} density={dens}
+              onVisibility={(key, on) => { setVisibility({ ...visibility, [key]: on }); const c = columns.find((x) => x.key === key)!; setSaid(`${typeof c.header === 'string' ? c.header : key} column ${on ? 'shown' : 'hidden'}.`); }}
+              onOrder={(keys) => setOrder(keys)} onDensity={(d) => { setDens(d); setSaid(`${d === 'compact' ? 'Compact' : 'Comfortable'} rows.`); }} />
+          )}</div>}
         </div>
       )}
-      <Table ref={table} maxHeight={maxHeight} aria-label={rest['aria-label']} data-dragging={drag ? '' : undefined}
+      <Table ref={table} data-density={dens} maxHeight={maxHeight} aria-label={rest['aria-label']} data-dragging={drag ? '' : undefined}
         underlay={drag && s ? <span className="alt-table-slot" aria-hidden="true" style={{ top: slotTop + (table.current?.offsetTop ?? 0), height: h }} /> : null}>
         <TableHeader>
           <TableRow>
@@ -427,7 +458,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
                 <Checkbox aria-label="Select all rows" checked={all} indeterminate={some} onCheckedChange={(on) => setSel(on ? Array.from(new Set([...sel, ...ids])) : sel.filter((x) => !ids.includes(x)))} />
               </TableHead>
             )}
-            {columns.map((c) => (
+            {shown.map((c) => (
               <TableHead key={c.key} align={c.align} style={{ width: c.width }} sort={srt?.key === c.key ? srt.direction : 'none'} onSort={c.sortValue && !editing ? () => cycle(c) : undefined}>{c.header}</TableHead>
             ))}
             {editable && <TableHead className="alt-th-edit"><span className="alt-sr">Edit</span></TableHead>}
@@ -470,7 +501,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
                 {selectable && (
                   <TableCell className="alt-td-check"><Checkbox aria-label={`Select ${name(r)}`} checked={chosen.has(id)} onCheckedChange={(on) => toggle(id, on)} /></TableCell>
                 )}
-                {columns.map((c, ci) => {
+                {shown.map((c, ci) => {
                   const content = c.cell ? c.cell(r) : String((r as any)[c.key] ?? '');
                   return (
                     <TableCell key={c.key} align={c.align}>
@@ -501,6 +532,33 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
       </Table>
       <span className="alt-sr" aria-live="polite">{selectable && sel.length ? `${sel.length} selected. ` : ''}{said}</span>
     </div>
+  );
+}
+
+/** The "Columns" menu: a SortableList of checkboxes (the first can't be hidden) and a density switch, in a Popover. */
+function ColumnsMenu<T>({ columns, visibility, density, onVisibility, onOrder, onDensity }: {
+  columns: DataTableColumn<T>[]; visibility: Record<string, boolean>; density: 'comfortable' | 'compact';
+  onVisibility: (key: string, on: boolean) => void; onOrder: (keys: string[]) => void; onDensity: (d: 'comfortable' | 'compact') => void;
+}) {
+  const hidden = columns.filter((c, i) => i > 0 && visibility[c.key] === false).length;
+  const label = (c: DataTableColumn<T>) => (typeof c.header === 'string' ? c.header : c.key);
+  return (
+    <Popover aria-label="Columns" align="end" trigger={<Button size="sm" variant="secondary">Columns{hidden ? <span className="alt-table-hidden"> · {hidden} hidden</span> : null}</Button>}>
+      <div className="alt-table-columns">
+        <p className="alt-table-columns-title">Columns</p>
+        <SortableList items={columns} getKey={(c) => c.key} getLabel={label} gap={4} aria-label="Column order"
+          onReorder={(cs) => onOrder(cs.map((c) => c.key))}
+          renderItem={(c) => {
+            const first = c.key === columns[0].key;
+            return <Checkbox label={label(c)} checked={first || visibility[c.key] !== false} disabled={first} onCheckedChange={(on) => onVisibility(c.key, on)} />;
+          }} />
+        <p className="alt-table-columns-title">Rows</p>
+        <ToggleGroup type="single" value={density} onValueChange={(v) => v && onDensity(v as 'comfortable' | 'compact')} aria-label="Row density">
+          <ToggleGroupItem value="comfortable">Comfortable</ToggleGroupItem>
+          <ToggleGroupItem value="compact">Compact</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+    </Popover>
   );
 }
 

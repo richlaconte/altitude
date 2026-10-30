@@ -47,6 +47,7 @@ function App() {
       onRowClick: (r) => setOpened(r.name),
       relevance: (r) => q ? r.name.toLowerCase().includes(q.toLowerCase()) || r.owner.toLowerCase().includes(q.toLowerCase()) ? "match" : "miss" : void 0,
       actions: () => /* @__PURE__ */ React.createElement(A.Button, { size: "sm" }, "Archive"),
+      columnsMenu: true,
       toolbar: /* @__PURE__ */ React.createElement("div", { className: "filter" }, /* @__PURE__ */ React.createElement(A.Input, { size: "sm", placeholder: "Filter in place", value: q, onChange: (e) => setQ(e.target.value), "aria-label": "Filter projects" })),
       columns: [
         { key: "name", header: "Project", sortValue: (r) => r.name },
@@ -56,7 +57,7 @@ function App() {
         { key: "req", header: "Requests", align: "end", sortValue: (r) => r.req, cell: (r) => r.req.toLocaleString("en-US") }
       ]
     }
-  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys."));
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys. Columns shows, hides and reorders columns, and sets the row density."));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>
