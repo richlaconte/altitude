@@ -3341,6 +3341,12 @@ export interface ConfirmationProps {
   resolvedAt?: Date | string | number;
   /** Who's asking. Default "The assistant". */
   requestedBy?: string;
+  /** Fields to change the proposal before approving: an Edit action opens them in place. Keep consequence and approveLabel following the values. */
+  edit?: React.ReactNode;
+  /** The proposal was changed: "Edited" by the title, "edited and approved by you" once done. */
+  edited?: boolean;
+  /** Cancel edit or Escape: put the values back. */
+  onEditCancel?: () => void;
   /** Wider ways to approve: Approve becomes a SplitButton (face: once; menu "More ways to approve": these). Ignored with escalate. */
   scopes?: { value: string; label: string; description?: string }[];
   /** The scope it was approved with ('once' or a scope's value), named in the resolved line. */
