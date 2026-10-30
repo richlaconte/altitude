@@ -21,6 +21,8 @@ Connectors between steps are `accent` behind you and `line-control` ahead.
 | `onStepChange` | | makes completed steps buttons that go back |
 | `orientation` | `horizontal` | `vertical` stacks the plates, with descriptions under the titles |
 
+**Narrow.** `orientation="auto"` (recommended) lays the steps out in a row when they all fit on one line, and down the page when they don't, so a phone never shows connectors leading to the next line.
+
 **You provide:** `steps` with short titles (one or two words, sentence case), `current`, and the Back and Continue buttons that change it; `onStepChange` if people may revisit completed steps.
 
 - Do keep it to three to six steps; more than that is a list, not a staircase.

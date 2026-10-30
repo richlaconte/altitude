@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, useApproach, useControllable, useFitFloating, useIsoLayoutEffect, useKeyFocus, useOutside, usePresence } from './core';
+import { cx, Icons, SheetHead, useApproach, useControllable, useFitFloating, useIsoLayoutEffect, useKeyFocus, useOutside, usePresence, useSheetPresentation, type Presentation } from './core';
 import { commandScore } from './command';
 
 export const EXIT_3 = 160; // ≈ dur-travel-3 × 0.7
@@ -84,10 +84,15 @@ type ListProps = {
   id: string; options: SelectOption[]; active: number; value: string; state: 'open' | 'closed'; side: 'bottom' | 'top';
   query?: string; empty?: React.ReactNode; listRef: React.RefObject<HTMLDivElement | null>; labelledBy?: string; label?: string;
   focusable: boolean; onActive: (i: number) => void; onChoose: (i: number) => void; onKeyDown?: (e: React.KeyboardEvent) => void;
+  /** Presented as a bottom sheet (#249); Close calls onDismiss. */
+  sheet?: boolean; onDismiss?: () => void;
 };
-export function OptionList({ id, options, active, value, state, side, query, empty, listRef, labelledBy, label, focusable, onActive, onChoose, onKeyDown }: ListProps) {
-  // On screen at any width (#248).
-  useFitFloating(listRef, true);
+export function OptionList({ id, options, active, value, state, side, query, empty, listRef, labelledBy, label, focusable, onActive, onChoose, onKeyDown, sheet, onDismiss }: ListProps) {
+  // On screen at any width (#248); a sheet is placed by the bottom edge instead.
+  useFitFloating(listRef, !sheet);
+  // A sheet's title is the field's label.
+  const [title, setTitle] = React.useState<string | undefined>(label);
+  useIsoLayoutEffect(() => { if (sheet && labelledBy) setTitle(listRef.current?.ownerDocument.getElementById(labelledBy)?.textContent ?? label); }, [sheet, labelledBy]);
   const rows = React.useRef<(HTMLDivElement | null)[]>([]);
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   useIsoLayoutEffect(() => {
@@ -106,10 +111,10 @@ export function OptionList({ id, options, active, value, state, side, query, emp
     if (i < 0) return o.label;
     return <>{t.slice(0, i)}<mark className="alt-cmd-match">{t.slice(i, i + query.length)}</mark>{t.slice(i + query.length)}</>;
   };
-  return (
+  const list = (
     <div ref={listRef as React.Ref<HTMLDivElement>} id={id} role="listbox" tabIndex={focusable ? -1 : undefined} aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : label}
       aria-activedescendant={focusable && active >= 0 ? `${id}-${active}` : undefined}
-      className="alt-pop alt-menu alt-select-list" data-state={state} data-side={side} onKeyDown={onKeyDown}
+      className={sheet ? 'alt-menu alt-select-list' : 'alt-pop alt-menu alt-select-list'} data-state={state} data-side={side} onKeyDown={onKeyDown}
       onMouseDown={(e) => e.preventDefault()}>
       <span className="alt-menu-hl" aria-hidden="true" style={hl ? { transform: `translateY(${hl.y}px)`, height: hl.h, opacity: 1 } : { opacity: 0 }} />
       {options.map((o, i) => (
@@ -124,6 +129,9 @@ export function OptionList({ id, options, active, value, state, side, query, emp
       {!options.length && <div className="alt-select-empty">{empty}</div>}
     </div>
   );
+  return sheet
+    ? <div className="alt-pop alt-menu-sheet" data-presentation="sheet" data-state={state} onMouseDown={(e) => e.preventDefault()}><SheetHead title={title} onClose={() => onDismiss?.()} />{list}</div>
+    : list;
 }
 
 interface FieldLike {
@@ -145,6 +153,11 @@ interface FieldLike {
 }
 
 export interface SelectProps extends FieldLike {
+  /**
+   * 'auto' (default): the list opens under the trigger, or on a narrow touch screen as a sheet at the bottom edge with
+   * the field's label and Close (#249). 'anchored' or 'sheet' forces one.
+   */
+  presentation?: Presentation;
   /** Visible required-field feedback after native validation. Localize this for the application. */
   requiredMessage?: string;
   value?: string;
@@ -161,7 +174,8 @@ export interface SelectProps extends FieldLike {
  * the field's edge at level 3 with one gliding highlight; the chosen option wears the Checkbox family's tick.
  */
 export function Select({ value, defaultValue = '', onValueChange, items, children, id, name, required, disabled, invalid, size = 'md',
-  placeholder = 'Choose…', requiredMessage = 'Choose an option.', defaultOpen = false, className, ...aria }: SelectProps) {
+  placeholder = 'Choose…', requiredMessage = 'Choose an option.', defaultOpen = false, className, presentation, ...aria }: SelectProps) {
+  const sheet = useSheetPresentation(presentation);
   const options = collect(items, children);
   const [v, set] = useControllable(value, defaultValue, onValueChange);
   const [open, setOpen] = React.useState(defaultOpen);
@@ -271,13 +285,18 @@ export function Select({ value, defaultValue = '', onValueChange, items, childre
       {requiredError && <p className="alt-field-error" id={auto + '-required-error'} role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
       {mounted && (
         <OptionList id={listId} options={options} active={active} value={v} state={state} side={side} listRef={list} labelledBy={labelId}
-          label={aria['aria-label']} focusable onActive={setActive} onChoose={choose} onKeyDown={onListKey} />
+          label={aria['aria-label']} focusable onActive={setActive} onChoose={choose} onKeyDown={onListKey} sheet={sheet} onDismiss={() => close()} />
       )}
     </div>
   );
 }
 
 export interface ComboboxProps extends FieldLike {
+  /**
+   * 'auto' (default) and 'anchored': the list stays under the field you're typing in, so the on-screen keyboard never
+   * hides the list or the field. 'sheet' opens it at the bottom edge with the field's label and Close (#249).
+   */
+  presentation?: Presentation;
   items: SelectOption[];
   value?: string;
   defaultValue?: string;
@@ -293,7 +312,8 @@ export interface ComboboxProps extends FieldLike {
  * opening (its back wall showing) until an option is chosen; then its floor rises flush.
  */
 export function Combobox({ items, value, defaultValue = '', onValueChange, filter, empty = 'No matches', id, name, required, disabled, invalid,
-  size = 'md', placeholder = 'Type to search…', defaultOpen = false, className, ...aria }: ComboboxProps) {
+  size = 'md', placeholder = 'Type to search…', defaultOpen = false, className, presentation, ...aria }: ComboboxProps) {
+  const sheet = useSheetPresentation(presentation === 'sheet' ? 'sheet' : 'anchored');
   const [v, set] = useControllable(value, defaultValue, onValueChange);
   const chosen = items.find((o) => o.value === v);
   const [text, setText] = React.useState(chosen ? textOf(chosen) : '');
@@ -371,7 +391,7 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
       {name && <input type="hidden" name={name} value={v} />}
       {mounted && (
         <OptionList id={listId} options={shown} active={Math.min(active, shown.length - 1)} value={v} state={state} side={side} listRef={list} labelledBy={labelId}
-          label={aria['aria-label']} focusable={false} query={q} empty={empty} onActive={setActive} onChoose={choose} />
+          label={aria['aria-label']} focusable={false} query={q} empty={empty} onActive={setActive} onChoose={choose} sheet={sheet} onDismiss={commit} />
       )}
     </div>
   );

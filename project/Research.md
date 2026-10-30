@@ -1393,7 +1393,41 @@ A source audit (#253): the stack fanned out and paused its timers on `pointerent
 
 `checks/toaster-touch.mjs` drives it with touch events.
 
-### E119 · Does Altitude carry the tells of generated interfaces?
+### E119 · Where should a menu open on a phone?
+
+A review (#249): at 375px a Select opened a 280px list under its trigger, with 30–36px rows, possibly off the bottom of the screen; the thumb is at the bottom, the list wherever the trigger was. Native pickers open at the bottom for this reason, and AppShell and NotificationCenter already become sheets when narrow.
+
+- **At the bottom edge.** `presentation="auto"` opens DropdownMenu and Select as a sheet under 640px with a coarse pointer: full width less 8px, clear of the safe areas (#252), at most 70% of the visible height (#251), 44px rows, a head with the title and Close. Close sits outside the `menu`/`listbox` role, which only holds its options.
+- **Still a menu (the open question).** Moving to the bottom edge doesn't make it a different choice, so it stays at level 3, the menu's, not a sheet's level 4.
+- **Combobox stays put.** You type into it, so its list stays under the field rather than at a bottom edge the keyboard covers; `presentation="sheet"` opts in.
+
+`checks/menu-sheet.mjs` drives each by touch, and with a mouse.
+
+### E120 · Does a backup code fit a phone?
+
+A measurement (#266): eight 40px slots with 6px gaps are 362px, so at 375 CSS px the preview's backup code ran past the edge. Slots now give way from 40px to 28px and the gaps tighten (3–6px), so eight characters fit a 320px screen; six-digit codes keep their full size. The phone check (#247) shows no overflow.
+
+### E121 · What happens to tabs that don't fit?
+
+A measurement (#259): at 375 CSS px the Tabs preview was 47px wider than the screen and SavedViews 26px, so the page scrolled sideways (WCAG 1.4.10). A tab list now scrolls within itself, with no scrollbar: the chosen tab is kept in view, and an edge with more tabs past it fades out, so you can see there's more. A "More" menu (as Toolbar has) was the alternative; scrolling keeps every tab one swipe away and in its place. The folder tabs' shadow and their reach into the panel sit in the list's padding, so scrolling doesn't clip them. `checks/tabs-narrow.mjs`.
+
+### E122 · Should a breadcrumb wrap?
+
+A review (#263): `maxItems` collapsed the middle of a path only by count, and the trail wrapped onto more lines when narrow, so the staircase of steps broke over lines. `fit="collapse"` (default) measures the trail against its container and moves steps from the second onward behind the existing "…" menu until it fits on one line, always keeping the first step and the current page; with room again, every step comes back. Changes of width don't animate: it's layout, not a change in the record. `fit="wrap"` keeps the old behaviour. `checks/breadcrumb-fit.mjs`.
+
+### E123 · What does a five-step stepper do on a phone?
+
+A review (#264): at 375 CSS px the horizontal Stepper wrapped onto three lines, each ending in a connector that led nowhere, saying the opposite of the order. `orientation="auto"` lays the steps out in a row when every step fits on one line in its container, and vertically when not, measured at each width. The switch doesn't animate (resizing never does), and the list's semantics are the same either way. The default stays `horizontal`; the README recommends `auto`. `checks/stepper-auto.mjs`.
+
+### E124 · Does a proposed change fit a phone?
+
+A measurement (#258): at 375 CSS px a PropertyList row with a proposal kept three columns (label, change, actions), leaving the change about 35px, so "Qualified" broke as "Quali/fied" and "Proposed by…" took eleven lines. The list is now a container, and under the narrow breakpoint (480px) an inline list stacks each label over its value, and a proposal stacks its change, who proposed it and its actions. The plain list was already fine; nothing changes on wider screens.
+
+### E125 · Who gives way in a row with actions?
+
+A review (#267): an ItemGroup row's actions never yielded width, so at phone width Edit and Remove squeezed the title into a narrow column. The group is now a container, and under 480px of its own width the actions take their own row, lined up with the content after the media; `narrow="inline"` keeps them beside it. `ItemDescription truncate` clamps a long secondary line. The issue's third form, collapsing actions into a "…" menu, is deferred: an app's action children aren't menu items, so it needs an explicit API rather than a guess. `checks/narrow-rows.mjs` (with #258).
+
+### E126 · Does Altitude carry the tells of generated interfaces?
 
 An audit against the 47 tells catalogued in `tells.json` (#319), reading `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`. A regex prototype covered the `lint` tells; the rest were read by hand. Nothing was rendered, so `render` and `measure` tells are judged from source or left unchecked.
 

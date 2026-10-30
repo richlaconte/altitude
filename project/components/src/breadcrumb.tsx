@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx } from './core';
+import { cx, useIsoLayoutEffect } from './core';
 import { DropdownMenu } from './overlays';
 
 /* ───────────────────────── Breadcrumb ───────────────────────── */
@@ -25,6 +25,11 @@ export interface BreadcrumbProps extends Omit<React.HTMLAttributes<HTMLElement>,
   maxItems?: number;
   /** Renders a step's link your way (a router's Link). Spread the props onto it. */
   renderLink?: (item: BreadcrumbEntry, props: React.AnchorHTMLAttributes<HTMLAnchorElement> & { className: string }) => React.ReactElement;
+  /**
+   * 'collapse' (default): when the trail doesn't fit on one line, steps from the second onward move behind "…" until it
+   * does, keeping the first step and the current page (#263). 'wrap': it wraps onto more lines, as before.
+   */
+  fit?: 'collapse' | 'wrap';
   /** Called when a step in the "…" menu is chosen. Default: follow its href. */
   onNavigate?: (item: BreadcrumbEntry) => void;
   /** Composable parts (BreadcrumbList, BreadcrumbItem, …), instead of items. */
@@ -35,10 +40,31 @@ export interface BreadcrumbProps extends Omit<React.HTMLAttributes<HTMLElement>,
  * Drilldown (without its pile: a route change lays no sheet). Steps you can go back to lift when pointed at; the current
  * page is a step that doesn't press. A route change re-renders it without motion: a new route isn't an arrival.
  */
-export function Breadcrumb({ items, maxItems, renderLink, onNavigate, className, children, 'aria-label': label = 'Breadcrumb', ...rest }: BreadcrumbProps) {
+export function Breadcrumb({ items, maxItems, fit = 'collapse', renderLink, onNavigate, className, children, 'aria-label': label = 'Breadcrumb', ...rest }: BreadcrumbProps) {
+  // Fit to the width (#263): measured on one line, a step at a time behind "…", never fewer than the first and the
+  // current page. A new width starts from every step again. It's layout, not a change, so nothing animates.
+  const nav = React.useRef<HTMLElement>(null);
+  const total = items?.length ?? 0;
+  const [width, setWidth] = React.useState(0);
+  const [fitKeep, setFitKeep] = React.useState(total);
+  React.useEffect(() => {
+    const el = nav.current;
+    if (!el || fit !== 'collapse' || !items) return;
+    const ro = new ResizeObserver(([e]) => setWidth(Math.round(e.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fit, !items]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { setFitKeep(total); }, [width, total]);
+  useIsoLayoutEffect(() => {
+    const steps = nav.current?.querySelectorAll(':scope > ol > li');
+    if (fit !== 'collapse' || !steps || steps.length < 2) return;
+    const wrapped = (steps[steps.length - 1] as HTMLElement).offsetTop > (steps[0] as HTMLElement).offsetTop + 2;
+    if (wrapped && fitKeep > 2) setFitKeep((k) => k - 1);
+  }, [fitKeep, width]);
   if (!items) return <nav className={cx('alt-crumbs', 'alt-breadcrumb', className)} aria-label={label} {...rest}>{children}</nav>;
   // A deep path keeps its first step and its last (maxItems − 1); the ones between wait behind "…".
-  const keep = maxItems && items.length > maxItems ? Math.max(2, maxItems) : items.length;
+  const byCount = maxItems && items.length > maxItems ? Math.max(2, maxItems) : items.length;
+  const keep = fit === 'collapse' ? Math.max(2, Math.min(byCount, fitKeep)) : byCount;
   const hidden = keep < items.length ? items.slice(1, items.length - (keep - 1)) : [];
   const steps: (BreadcrumbEntry | 'more')[] = hidden.length ? [items[0], 'more', ...items.slice(items.length - (keep - 1))] : items;
   const link = (it: BreadcrumbEntry) => {
@@ -47,7 +73,7 @@ export function Breadcrumb({ items, maxItems, renderLink, onNavigate, className,
     return <button type="button" className="alt-crumb-link" onClick={it.onClick}>{it.label}</button>;
   };
   return (
-    <nav className={cx('alt-crumbs', 'alt-breadcrumb', className)} aria-label={label} {...rest}>
+    <nav ref={nav} className={cx('alt-crumbs', 'alt-breadcrumb', className)} aria-label={label} data-fit={fit} {...rest}>
       <ol>
         {steps.map((it, i) => {
           if (it === 'more') return <CrumbStep key="more" depth={i}><BreadcrumbEllipsisMenu items={hidden} onNavigate={onNavigate} /></CrumbStep>;

@@ -89,3 +89,5 @@ The `ItemGroup` section of `build/previews.txt` shows webhooks (edit, add, reord
 - the hold pausing on focus, several removals closing together, reduced motion, and a confirmed slat gliding shut.
 
 It also renders and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+**Narrow.** When the group is under 480px wide, `ItemActions` moves to its own row under the content, so the title keeps its width; `narrow="inline"` keeps the actions beside it. `ItemDescription truncate` (or a number of lines) clamps a long description.
+
