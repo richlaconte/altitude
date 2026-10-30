@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, DepthProps, Icons, inert, LoadingStyleContext, riseDelay, Spinner, useApproach, useBreath, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
+import { cx, DepthProps, Icons, inert, LoadingStyleContext, riseDelay, Spinner, touchHold, useApproach, useBreath, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
 import { Arrive, Await, hasPromise, hint, isPromise, LoadingScope, Promised, RevealGroup, readChildren, readPromised, SkeletonOption, TextImprint, useArrival, useHasWaited, useReportWaiting, useScopeWaiting } from './suspense';
 
 /* ───────────────────────── Button ───────────────────────── */
@@ -1177,7 +1177,7 @@ const move = <T,>(arr: T[], from: number, to: number) => { const a = arr.slice()
 export function SortableList<T>({ items, getKey, onReorder, renderItem, getLabel = (i) => String(getKey(i)), gap = 8, className, ...rest }: SortableListProps<T>) {
   const nodes = React.useRef(new Map<string, HTMLDivElement>());
   const before = React.useRef(new Map<string, number>());
-  const start = React.useRef<{ y: number; key: string; from: number; tops: number[]; hs: number[]; id: number } | null>(null);
+  const start = React.useRef<{ y: number; key: string; from: number; tops: number[]; hs: number[]; id: number; armed: boolean; release?: () => void } | null>(null);
   const [drag, setDrag] = React.useState<{ key: string; from: number; to: number; dy: number } | null>(null);
   const [kb, setKb] = React.useState<string | null>(null);
   const [msg, setMsg] = React.useState('');
@@ -1208,11 +1208,18 @@ export function SortableList<T>({ items, getKey, onReorder, renderItem, getLabel
   const keys = items.map(getKey);
   const onPointerDown = (e: React.PointerEvent, key: string, index: number) => {
     if (e.button !== 0) return;
+    start.current?.release?.();
     const els = keys.map((k) => nodes.current.get(k)!);
-    start.current = { y: e.clientY, key, from: index, tops: els.map((el) => el.offsetTop), hs: els.map((el) => el.offsetHeight), id: e.pointerId };
+    const s = { y: e.clientY, key, from: index, tops: els.map((el) => el.offsetTop), hs: els.map((el) => el.offsetHeight), id: e.pointerId, armed: true, release: undefined as undefined | (() => void) };
+    start.current = s;
+    // On touch the grip picks the row up at once; elsewhere on the row it takes a press-and-hold, so a swipe scrolls (#256).
+    if (e.pointerType === 'touch' && !(e.target as Element).closest('.alt-sort-grip')) {
+      s.armed = false;
+      s.release = touchHold(e, () => { if (start.current !== s) return; s.armed = true; setDrag({ key, from: index, to: index, dy: 0 }); });
+    }
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    const s = start.current; if (!s) return;
+    const s = start.current; if (!s || !s.armed) return;
     const dy = e.clientY - s.y;
     if (!drag && Math.abs(dy) < 4) return;
     if (!drag) (e.currentTarget as HTMLElement).setPointerCapture(s.id);
@@ -1223,6 +1230,7 @@ export function SortableList<T>({ items, getKey, onReorder, renderItem, getLabel
   };
   const onPointerUp = () => {
     const s = start.current; start.current = null;
+    s?.release?.();
     if (!drag || !s) { setDrag(null); return; }
     const { from, to } = drag;
     if (from !== to) snapshot();

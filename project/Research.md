@@ -1416,7 +1416,31 @@ A measurement (#258): at 375 CSS px a PropertyList row with a proposal kept thre
 
 A review (#267): an ItemGroup row's actions never yielded width, so at phone width Edit and Remove squeezed the title into a narrow column. The group is now a container, and under 480px of its own width the actions take their own row, lined up with the content after the media; `narrow="inline"` keeps them beside it. `ItemDescription truncate` clamps a long secondary line. The issue's third form, collapsing actions into a "…" menu, is deferred: an app's action children aren't menu items, so it needs an explicit API rather than a guess. `checks/narrow-rows.mjs` (with #258).
 
-### E126 · Can an imprint wait without moving the light?
+### E126 · What's a list and its detail on a phone?
+
+A measurement (#265): at 375 CSS px the Resizable preview's list pane got about 80px, so "Invoice / INV-0042 / failed" took three lines, and the 1px handle had to be found with a finger. Under 480px of its own width, `narrow="stack"` (default) shows one pane at a time, the list-and-detail pattern on phones, with `narrowPanel` choosing which and `onNarrowChange` telling the app when to offer its way back; `narrow="vertical"` stacks the panes with a horizontal grip; `narrow={false}` keeps today's layout. The handle's hit area already spans the target size (#261); an older rule that shrank the vertical grip's area is gone. Pixel `minSize` is left for later. `checks/resizable-narrow.mjs`.
+
+### E127 · Can a week be read on a phone?
+
+A measurement (#257): at 375 CSS px the work week drew five 55px columns, so events read "Sta…" and "D", and the 55×11px slots were far under 24px. Under 480px of its own width, `narrowView="day"` (default) shows one day at a time, paged by the header's previous and next day; `narrowView={false}` keeps the view. Under a coarse pointer an hour is 96px unless `hourHeight` is set, so a 15-minute slot or event is 24px and still in proportion to its time. On touch a tap opens an event (double-click isn't reliably delivered there). A day strip, tap-to-create and press-and-hold to move are left for the touch-drag phase (#254–#256). `checks/schedule-narrow.mjs`.
+
+### E128 · Squeeze a table, or let it scroll?
+
+A measurement (#260): at 375 CSS px the DataGrid's five columns were each about 65px (its table is `table-layout: fixed` at 100%, which ignores a cell's minimum), so names read "Des…" and status badges "Acti"; DataTable's owners wrapped and clipped. The frame could already scroll; the columns never asked for the width. Under 480px of the frame's width (a container query), the table lays out by content at least as wide as its frame, every column keeps at least 6rem (checkbox, grip, expand and edit columns excepted), and the table scrolls inside its frame, the edge with more columns fading. Columns take `minWidth` and `sticky` (opaque ground surface over a flush 1px edge, no shadow, since a sticky column isn't live; the start fade is dropped when one marks the edge). Wide, nothing changes. The issue's `narrow="stack"` (rows as records) and `priority` are deferred: scrolling keeps the table's semantics and DataGrid's cell navigation intact, and stacking needs its own design for editing. `checks/table-narrow.mjs`.
+
+### E129 · On touch, is a finger on a row a scroll or a pick-up?
+
+A measurement (#256): `.alt-sort-item` was `touch-action: none` across the whole row, so on a phone every swipe that started on a sortable list reordered it and the page never scrolled. Rows are now `touch-action: manipulation`: a swipe scrolls, and a press-and-hold of 400ms without moving more than 8px picks the row up, after which the browser isn't allowed to pan (the first `touchmove` is cancelled) or open a long-press menu. The grip alone is `touch-action: none` and picks up at once, with a finger-sized hit area under a coarse pointer. A mouse drag starts as before, without a hold. The hold is a shared helper (`touchHold`), so Board and Tree take the same gesture (#254, #255). `checks/touch-drag.mjs`.
+
+### E130 · Board cards by touch
+
+A measurement (#254): on touch a Board card couldn't be moved at all. The board scrolls sideways, so the browser claimed the finger for panning and sent `pointercancel`, which the card treats as a drop; and the card tools only appeared on hover. Cards now take the shared press-and-hold (E129): a swipe scrolls the board, a 400ms hold picks the card up (it lifts as a mouse pick-up does, and "Picked up" is announced), and a drag then moves it between columns. The tools are always shown where there's no hover. Auto-scrolling the board while a card is carried near its edge is left for later. `checks/touch-drag.mjs`.
+
+### E131 · Tree rows by touch
+
+A measurement (#255): a Tree row with `onMove` couldn't be moved by touch. Its `touch-action: pan-y` gave every vertical gesture, the only direction a tree row moves, to the browser, which panned and sent `pointercancel`. Rows keep `pan-y`, so a swipe still scrolls, and take the shared press-and-hold (E129): after 400ms the row is carried as a mouse pick-up carries it, with the same targets and spring-open folders. A non-drag path for people with neither keyboard nor fine pointer (WCAG 2.5.7, a "Move to…" action) is left as its own change. `checks/touch-drag.mjs`.
+
+### E132 · Can an imprint wait without moving the light?
 
 A design review (#343): three rounds of standalone prototypes, built from Altitude's tokens, compared ways for an imprint to show it's waiting and ways for content to land. `checks/loading-breath.mjs` drives the result: imprints waiting, a card from one request, a card whose parts arrive apart, a summary before its detail, a list, a later arrival, a ten-second wait, Nightfall, reduced motion, a chart, and the default left alone.
 

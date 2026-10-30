@@ -1166,6 +1166,10 @@ export interface DataTableColumn<T> {
   sortValue?: (row: T) => string | number;
   align?: 'start' | 'end';
   width?: number | string;
+  /** The narrowest the column gets; on a phone the table scrolls rather than squeezing it. Default: 6rem when narrow. */
+  minWidth?: number | string;
+  /** Keep this column in view while the table scrolls sideways, over a flush 1px edge. */
+  sticky?: boolean;
 }
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
 export interface FilterOption { value: string; label: string }
@@ -1240,6 +1244,10 @@ export interface DataGridColumn<T> {
   /** A custom editor (a Select): it commits as soon as a value is chosen. */
   editor?: (control: DataGridEditorControl) => React.ReactNode;
   width?: number | string;
+  /** The narrowest the column gets; on a phone the table scrolls rather than squeezing it. Default: 6rem when narrow. */
+  minWidth?: number | string;
+  /** Keep this column in view while the table scrolls sideways, over a flush 1px edge. */
+  sticky?: boolean;
 }
 export interface DataGridProps<T> {
   'aria-label'?: string;
@@ -1384,6 +1392,8 @@ export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
 export interface ScheduleProps<T> {
   /** Default 'week'. */
   view?: 'day' | 'week' | 'workweek';
+  /** Under 480px of its own width: 'day' (default) shows one day at a time; false keeps the view. */
+  narrowView?: 'day' | false;
   /** Any day in the period shown, 'YYYY-MM-DD'. */
   date: string;
   onDateChange?: (date: string) => void;
@@ -1397,7 +1407,7 @@ export interface ScheduleProps<T> {
   /** Default '08:00' and '19:00'. */
   dayStart?: string;
   dayEnd?: string;
-  /** Pixels per hour. Default 48. */
+  /** Pixels per hour. Default 48, or 96 under a coarse pointer so a 15-minute slot is 24px tall. */
   hourHeight?: number;
   /** 0 Sunday … 6 Saturday. Default 1. */
   weekStartsOn?: number;
@@ -2864,6 +2874,12 @@ export interface AppShellProps extends Omit<SidebarProviderProps, 'children'> {
 export declare function AppShell(props: AppShellProps): React.ReactElement;
 
 export interface ResizablePanelGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Under 480px of its own width: 'stack' (default) shows one panel (narrowPanel); 'vertical' stacks them; false keeps them side by side. */
+  narrow?: 'stack' | 'vertical' | false;
+  /** With narrow="stack", the panel shown while narrow, by index. */
+  narrowPanel?: number;
+  /** Called when the group becomes narrow or wide again. */
+  onNarrowChange?: (narrow: boolean) => void;
   /** horizontal (default): panes side by side; vertical: stacked. */
   direction?: 'horizontal' | 'vertical';
   /** Remembers the sizes in this browser under this name. */

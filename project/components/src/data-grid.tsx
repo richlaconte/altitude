@@ -31,6 +31,13 @@ export interface DataGridColumn<T> {
   /** A custom editor (a Select): it commits as soon as a value is chosen. */
   editor?: (control: DataGridEditorControl) => React.ReactNode;
   width?: number | string;
+  /**
+   * The narrowest the column gets (#260): on a phone the table scrolls inside its frame rather than squeezing a column
+   * below this. Default: the header's width, and at least 6rem when the table is narrow.
+   */
+  minWidth?: number | string;
+  /** Keep this column in view while the table scrolls sideways, over a flush 1px edge (no shadow: it isn't live). */
+  sticky?: boolean;
 }
 export interface DataGridProps<T> {
   'aria-label'?: string;
@@ -233,7 +240,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
         if (editing && !e.currentTarget.contains(e.relatedTarget as Node)) setEditing((x) => x && { ...x, unsaved: true });
       }}>
       <thead><tr className="alt-tr" aria-rowindex={1}>
-        {columns.map((col, c) => <th key={col.key} scope="col" role="columnheader" className="alt-th" data-align={col.align} aria-colindex={c + 1} style={{ width: col.width }}>
+        {columns.map((col, c) => <th key={col.key} scope="col" role="columnheader" className="alt-th" data-align={col.align} aria-colindex={c + 1} style={{ width: col.width, minWidth: col.minWidth }} data-sticky={col.sticky ? '' : undefined}>
           <span className="alt-grid-head">{col.header}{col.editable && <span className="alt-grid-pencil" aria-hidden="true"><Pencil /></span>}</span>
           {col.editable && <span className="alt-grid-sr">, editable</span>}
         </th>)}
@@ -247,7 +254,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
             const fail = failed[k];
             const invalid = showInvalid && !isEditing && !fail && !pending.includes(k) ? col.validate?.(valueOf(r, c), row) : undefined;
             const name = `${label(col)}, ${getRowLabel(row)}`;
-            return <td key={col.key} role="gridcell" className="alt-td alt-grid-cell" data-align={col.align} data-cell={`${r}:${c}`} aria-colindex={c + 1}
+            return <td key={col.key} role="gridcell" className="alt-td alt-grid-cell" data-align={col.align} data-sticky={col.sticky ? '' : undefined} data-cell={`${r}:${c}`} aria-colindex={c + 1}
               tabIndex={isActive && !isEditing ? 0 : -1} aria-readonly={!col.editable} aria-selected={inRange(r, c) || isActive}
               aria-invalid={fail || invalid ? true : undefined} aria-busy={pending.includes(k) || undefined} aria-describedby={fail || invalid ? `${auto}-${k}-err` : undefined}
               data-invalid={invalid ? '' : undefined} data-active={isActive ? '' : undefined} data-range={inRange(r, c) ? '' : undefined} data-editing={isEditing ? '' : undefined}

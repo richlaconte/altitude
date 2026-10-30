@@ -1468,9 +1468,8 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 .alt-resizable[data-animate] .alt-resizable-panel { transition: flex-basis var(--dur-travel-3) var(--ease-glide); }
 .alt-resizable-handle { position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: 1px; background: var(--line); cursor: col-resize; touch-action: none; outline: none; }
 .alt-resizable[data-direction="vertical"] > .alt-resizable-handle { width: auto; height: 1px; cursor: row-resize; }
-.alt-resizable[data-direction="vertical"] > .alt-resizable-handle::before { inset: calc((var(--size-target-min) - 1px) / -2) 0; }
 .alt-resizable-handle::before { content: ""; position: absolute; inset: 0 calc((var(--size-target-min) - 1px) / -2); }
-.alt-resizable[data-direction="vertical"] > .alt-resizable-handle::before { inset: -5px 0; }
+.alt-resizable[data-direction="vertical"] > .alt-resizable-handle::before { inset: calc((var(--size-target-min) - 1px) / -2) 0; }
 .alt-resizable-grip {
   position: relative; width: 8px; height: 28px; border-radius: var(--radius-full); border: 1px solid var(--line-control); background: var(--surface-ground);
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-2) var(--ease-settle), border-color var(--dur-travel-1);
@@ -2098,7 +2097,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-sort-item {
   position: relative; z-index: 1; display: flex; align-items: center; gap: var(--space-3); padding: 10px var(--space-4) 10px var(--space-3);
   border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink);
-  font: 500 14px/20px var(--font-sans); user-select: none; touch-action: none; cursor: grab; outline: none;
+  font: 500 14px/20px var(--font-sans); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; cursor: grab; outline: none;
   transition: transform var(--dur-travel-2) var(--ease-settle), box-shadow var(--dur-travel-2) var(--ease-rise), background-color var(--dur-travel-1);
 }
 @media (hover: hover) { .alt-sort-item:hover { box-shadow: var(--elev-2); } }
@@ -2107,6 +2106,9 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-sort-item[data-held]:not([data-following]) { transform: translateY(calc(-2px * var(--alt-travel))) rotate(calc(-0.5deg * var(--alt-travel))); }
 .alt-sort-item[data-following] { transition: box-shadow var(--dur-travel-2) var(--ease-rise), background-color var(--dur-travel-1); rotate: calc(-0.6deg * var(--alt-travel)); scale: calc(1 + 0.015 * var(--alt-travel)); }
 .alt-sort-grip { display: inline-flex; color: var(--ink-muted); flex: none; }
+/* On touch a swipe on the row scrolls and a press-and-hold picks it up; the grip picks it up at once, with a finger-sized hit area (#256). */
+.alt-sort-grip { position: relative; touch-action: none; }
+@media (pointer: coarse) { .alt-sort-grip::after { content: ""; position: absolute; inset: -14px -14px; } }
 .alt-sort-body { flex: 1; min-width: 0; }
 .alt-sort-slot {
   position: absolute; left: 0; right: 0; z-index: 0; border-radius: var(--radius-md); background: var(--surface-well); box-shadow: var(--well);
@@ -2432,6 +2434,17 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-table { --alt-row-w: 100%; width: 100%; border-collapse: separate; border-spacing: 0; font: 400 14px/20px var(--font-sans); color: var(--ink); font-variant-numeric: tabular-nums; }
 .alt-th, .alt-td { padding: 10px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--line); transition: border-color var(--dur-travel-1); }
 .alt-th[data-align="end"], .alt-td[data-align="end"] { text-align: right; }
+/* Narrow (#260): columns keep a readable width and the table scrolls inside its frame. A header never wraps, and a
+   cell's min-width (from minWidth, or 6rem when the table is narrow) stops a column being squeezed to "Des…". */
+.alt-table-wrap { container-type: inline-size; }
+@container (max-width: 480px) { .alt-table { table-layout: auto; width: max-content; min-width: 100%; } .alt-th, .alt-td:not([colspan]) { min-width: 6rem; } .alt-table :is(.alt-td-check, .alt-td-expand, .alt-td-grip, .alt-td-edit, .alt-th-check, .alt-th-expand, .alt-th-grip, .alt-th-edit, .alt-th:empty) { min-width: 0; } }
+/* A sticky column stays put over a flush 1px edge, on the ground surface (no shadow: it isn't live). */
+.alt-table .alt-th[data-sticky], .alt-table .alt-td[data-sticky] { position: sticky; left: 0; z-index: 2; background: var(--surface-ground); box-shadow: inset -1px 0 0 var(--line); }
+.alt-table .alt-th[data-sticky] { z-index: 5; }
+/* The edge with more columns fades; the start edge only without a sticky column, which already marks it. */
+.alt-table-wrap[data-more-end] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.alt-table-wrap[data-more-start]:not(:has([data-sticky])) { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
+.alt-table-wrap[data-more-start][data-more-end]:not(:has([data-sticky])) { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .alt-th { position: sticky; top: 0; z-index: 3; padding-block: 9px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); white-space: nowrap; }
 .alt-td:first-child { position: relative; }
 .alt-tr { --row-bg: transparent; --row-sh: var(--elev-0); transition: transform var(--dur-travel-1) var(--ease-rise), color var(--dur-travel-2) var(--ease-rise); }
@@ -2511,7 +2524,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-board-empty { display: grid; place-items: center; min-height: 72px; border-radius: var(--radius-md); font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
 .alt-board-card {
   position: relative; padding: 10px 12px; border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1);
-  color: var(--ink); font: 500 14px/20px var(--font-sans); cursor: grab; user-select: none; outline: none;
+  color: var(--ink); font: 500 14px/20px var(--font-sans); cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; outline: none;
   transition: box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1), transform var(--dur-travel-2) var(--ease-settle),
     rotate var(--dur-travel-2) var(--ease-settle), scale var(--dur-travel-2) var(--ease-settle);
 }
@@ -3438,7 +3451,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-tree-row {
   --indent: calc((var(--level, 1) - 1) * var(--space-4));
   position: relative; display: flex; align-items: center; gap: 4px; min-height: var(--size-row-md); padding: 2px var(--space-2) 2px 4px; border-radius: var(--radius-sm);
-  outline: none; cursor: default; user-select: none; touch-action: pan-y;
+  outline: none; cursor: default; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y;
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
 }
 .alt-tree-indent { flex: none; width: var(--indent); }
@@ -3762,6 +3775,8 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-board-card-tools { position: absolute; top: 4px; right: 4px; display: inline-flex; gap: 2px; opacity: 0; transition: opacity var(--dur-travel-1); }
 .alt-board-card:focus-within .alt-board-card-tools, .alt-board-card:focus-visible .alt-board-card-tools { opacity: 1; }
 @media (hover: hover) { .alt-board-card:hover .alt-board-card-tools { opacity: 1; } }
+/* Without hover the tools are always there, or a finger could never find them (#254). */
+@media (hover: none) { .alt-board-card-tools { opacity: 1; } }
 .alt-board-card-editor { min-width: 0; }
 @media (forced-colors: active) { .alt-board-add { border: 1px dashed CanvasText; } .alt-board-new[data-status="pending"] { outline: 1px dotted CanvasText; } .alt-board-new[data-status="failed"] { outline: 2px dashed CanvasText; } }
 
