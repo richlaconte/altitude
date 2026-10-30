@@ -18,6 +18,8 @@ Collapsing a pane changes its size on `ease-glide`, not its level.
 - `ResizablePanel`: `defaultSize`, `minSize`, `maxSize`, `collapsible`, `aria-label`.
 - `ResizableHandle`: `withGrip` (default true), `label`.
 
+**Narrow.** Under 480px of its own width, `narrow="stack"` (the default) shows one pane at a time: `narrowPanel` picks it (default the first), and `onNarrowChange` tells you when to show a way back, the list-and-detail pattern on phones. `narrow="vertical"` stacks the panes with a horizontal grip instead, and `narrow={false}` keeps them side by side.
+
 **You provide:** the panes and their names, and sensible limits.
 
 ```tsx

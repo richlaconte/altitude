@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cssMs, cx, Icons, useIsoLayoutEffect } from './core';
+import { cssMs, cx, Icons, touchHold, useIsoLayoutEffect } from './core';
 
 export type TreeResult = { ok: true } | { ok: false; error: string };
 export type TreeCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -302,7 +302,15 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
     let moving = false;
     const info = byKey.get(row.key)!;
     const from = { parentId: info.parentKey, index: info.index };
+    // On touch a row is picked up by press-and-hold, so a vertical swipe still scrolls (#255).
+    let armed = e.pointerType !== 'touch';
+    const release = armed ? undefined : touchHold(e, () => {
+      armed = moving = true;
+      setCarry({ key: row.key, from, to: from, mode: 'pointer' });
+      setPointer({ x: start.x, y: start.y, dx: start.x - box.left, dy: start.y - box.top, w: box.width });
+    });
     const move = (ev: PointerEvent) => {
+      if (!armed) return;
       if (!moving && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 5) return;
       if (!moving) { moving = true; setCarry({ key: row.key, from, to: from, mode: 'pointer' }); }
       setPointer({ x: ev.clientX, y: ev.clientY, dx: start.x - box.left, dy: start.y - box.top, w: box.width });
@@ -315,11 +323,12 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
       }
     };
     const up = () => {
+      release?.();
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel);
       window.clearTimeout(springTimer.current); setPointer(null);
       if (moving) void latestDrop.current();
     };
-    const cancel = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel); setPointer(null); setCarry(null); };
+    const cancel = () => { release?.(); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel); setPointer(null); setCarry(null); };
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', cancel);
   };
   const targetAt = (y: number, carried: string): { to: TreeTarget; into: string | null } | null => {

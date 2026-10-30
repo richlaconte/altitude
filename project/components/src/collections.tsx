@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cssMs, cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEffect } from './core';
+import { cssMs, cx, Icons, riseDelay, touchHold, useControllable, useDepth, useIsoLayoutEffect } from './core';
 import { Badge, Button, Checkbox, Input, SortableList } from './controls';
 import { Popover } from './overlays';
 import { ToggleGroup, ToggleGroupItem } from './toggle';
@@ -88,12 +88,14 @@ export const Table = React.forwardRef<HTMLTableElement, TableProps>(function Tab
   const wrap = React.useRef<HTMLDivElement>(null);
   const table = React.useRef<HTMLTableElement>(null);
   React.useImperativeHandle(ref, () => table.current as HTMLTableElement);
-  const [edges, setEdges] = React.useState({ top: false, bottom: false });
+  const [edges, setEdges] = React.useState({ top: false, bottom: false, start: false, end: false });
   const measure = React.useCallback(() => {
     const el = wrap.current;
     if (!el) return;
     const top = el.scrollTop > 1, bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 1;
-    setEdges((p) => (p.top === top && p.bottom === bottom ? p : { top, bottom }));
+    // Sideways, for a table wider than its frame on a phone (#260): which edges have more.
+    const x = Math.abs(el.scrollLeft), start = x > 1, end = x + el.clientWidth < el.scrollWidth - 1;
+    setEdges((p) => (p.top === top && p.bottom === bottom && p.start === start && p.end === end ? p : { top, bottom, start, end }));
   }, []);
   useIsoLayoutEffect(() => {
     const t = table.current;
@@ -109,6 +111,7 @@ export const Table = React.forwardRef<HTMLTableElement, TableProps>(function Tab
   const scrolls = maxHeight !== undefined;
   return (
     <div ref={wrap} className="alt-table-wrap" data-top={edges.top ? '' : undefined} data-bottom={edges.bottom ? '' : undefined}
+      data-more-start={edges.start ? '' : undefined} data-more-end={edges.end ? '' : undefined}
       style={scrolls ? { maxHeight } : undefined} onScroll={measure}
       {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': rest['aria-label'] } : {})}>
       {underlay}
@@ -191,6 +194,13 @@ export interface DataTableColumn<T> {
   sortValue?: (row: T) => string | number;
   align?: 'start' | 'end';
   width?: number | string;
+  /**
+   * The narrowest the column gets (#260): on a phone the table scrolls inside its frame rather than squeezing a column
+   * below this. Default: the header's width, and at least 6rem when the table is narrow.
+   */
+  minWidth?: number | string;
+  /** Keep this column in view while the table scrolls sideways, over a flush 1px edge (no shadow: it isn't live). */
+  sticky?: boolean;
 }
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
 export interface DataTableProps<T> {
@@ -296,7 +306,7 @@ export function DataTable<T>({ skeleton, ...props }: DataTableProps<T>) {
           <TableHeader>
             <TableRow>
               {selectable && <TableHead className="alt-th-check"><span className="alt-skeleton alt-check-imprint" /></TableHead>}
-              {columns.map((c) => <TableHead key={c.key} align={c.align} style={{ width: c.width }}>{c.header}</TableHead>)}
+              {columns.map((c) => <TableHead key={c.key} align={c.align} style={{ width: c.width, minWidth: c.minWidth }} data-sticky={c.sticky ? '' : undefined}>{c.header}</TableHead>)}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -518,7 +528,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
               </TableHead>
             )}
             {shown.map((c) => (
-              <TableHead key={c.key} align={c.align} style={{ width: c.width }} sort={srt?.key === c.key ? srt.direction : 'none'} onSort={c.sortValue && !editing ? () => cycle(c) : undefined}>{c.header}</TableHead>
+              <TableHead key={c.key} align={c.align} style={{ width: c.width, minWidth: c.minWidth }} data-sticky={c.sticky ? '' : undefined} sort={srt?.key === c.key ? srt.direction : 'none'} onSort={c.sortValue && !editing ? () => cycle(c) : undefined}>{c.header}</TableHead>
             ))}
             {editable && <TableHead className="alt-th-edit"><span className="alt-sr">Edit</span></TableHead>}
           </TableRow>
@@ -570,7 +580,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
                 {shown.map((c, ci) => {
                   const content = c.cell ? c.cell(r) : String((r as any)[c.key] ?? '');
                   return (
-                    <TableCell key={c.key} align={c.align}>
+                    <TableCell key={c.key} align={c.align} data-sticky={c.sticky ? '' : undefined}>
                       {onRowClick && ci === 0 ? <button type="button" className="alt-table-rowbtn" onClick={() => onRowClick(r)}>{content}</button> : content}
                     </TableCell>
                   );
@@ -706,7 +716,7 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
   const [kb, setKb] = React.useState<BoardCtxT['kb']>(null);
   const [landing, setLanding] = React.useState<string | null>(null);
   const [said, setSaid] = React.useState('');
-  const start = React.useRef<{ x: number; y: number; id: string; cols?: SnapCol[]; from?: BoardPlace; card?: SnapCard } | null>(null);
+  const start = React.useRef<{ x: number; y: number; id: string; cols?: SnapCol[]; from?: BoardPlace; card?: SnapCard; armed: boolean; release?: () => void } | null>(null);
   const dragged = React.useRef(false);
   useCarry(root, '[data-board-card]', 'data-board-card');
   React.useEffect(() => { if (!landing) return; const t = setTimeout(() => setLanding(null), 450); return () => clearTimeout(t); }, [landing]);
@@ -725,29 +735,44 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
   const onPointerDown = (e: React.PointerEvent, id: string) => {
     if (e.button !== 0 || kb || (e.target as HTMLElement).closest('button, a, input, textarea, select, [contenteditable]')) return;
     if ((e.currentTarget as HTMLElement).hasAttribute('data-held-by')) return; // someone else has it
-    start.current = { x: e.clientX, y: e.clientY, id };
+    start.current?.release?.();
+    const s: NonNullable<typeof start.current> = { x: e.clientX, y: e.clientY, id, armed: true };
+    start.current = s;
     dragged.current = false;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    // On touch a card is picked up by press-and-hold, so a swipe still scrolls the board (#254).
+    if (e.pointerType === 'touch') {
+      s.armed = false;
+      s.release = touchHold(e, () => { if (start.current !== s || !pickUp(s)) return; s.armed = true; carryTo(s, 0, 0); });
+    }
+  };
+  const pickUp = (s: NonNullable<typeof start.current>) => {
+    s.cols = readBoard(root.current!);
+    for (const c of s.cols) { const i = c.cards.findIndex((k) => k.id === s.id); if (i >= 0) { s.from = { column: c.id, index: i }; s.card = c.cards[i]; } }
+    if (!s.from) { start.current = null; return false; }
+    dragged.current = true;
+    setSaid(`Picked up ${nameOf(s.id)}.`);
+    return true;
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const s = start.current;
-    if (!s || !root.current) return;
+    if (!s || !s.armed || !root.current) return;
     const dx = e.clientX - s.x, dy = e.clientY - s.y;
     if (!s.cols) {
       if (Math.hypot(dx, dy) < 5) return;
-      s.cols = readBoard(root.current);
-      for (const c of s.cols) { const i = c.cards.findIndex((k) => k.id === s.id); if (i >= 0) { s.from = { column: c.id, index: i }; s.card = c.cards[i]; } }
-      if (!s.from) { start.current = null; return; }
-      dragged.current = true;
-      setSaid(`Picked up ${nameOf(s.id)}.`);
+      if (!pickUp(s)) return;
     }
+    carryTo(s, dx, dy);
+  };
+  const carryTo = (s: NonNullable<typeof start.current>, dx: number, dy: number) => {
     const k = s.card!;
-    const p = plan(s.cols, s.id, k.x + k.w / 2 + dx, k.y + k.h / 2 + dy, k.h);
+    const p = plan(s.cols!, s.id, k.x + k.w / 2 + dx, k.y + k.h / 2 + dy, k.h);
     setCarry({ id: s.id, from: s.from!, to: p.to, dx, dy, h: k.h, gap: p.gap, shifts: p.shifts, slotTop: p.slotTop });
   };
   const onPointerUp = () => {
     const s = start.current;
     start.current = null;
+    s?.release?.();
     if (!s?.cols || !carry || !root.current) { setCarry(null); return; }
     // Where each card was drawn when it was let go, so the landing travels from there.
     const m = new Map<string, { x: number; y: number }>();

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cx, Icons, useDepth } from './core';
 import { Button } from './controls';
 import { CopyButton } from './copy-button';
+import { FormattedNumber } from './formatted-number';
 import { ToggleGroup, ToggleGroupItem } from './toggle';
 import { Tooltip } from './overlays';
 
@@ -117,6 +118,66 @@ export function Message({ from, status = 'complete', name, onRetry, className, c
         )}
       </article>
     </MessageCtx.Provider>
+  );
+}
+
+export interface MessageAttachment {
+  name: string;
+  /** Its MIME type: image/* with a `url` shows as a thumbnail; anything else as a file plate. */
+  type?: string;
+  /** In bytes, shown on a file plate. */
+  size?: number;
+  /** An image's thumbnail. */
+  url?: string;
+  /** An image's text alternative. Default its name. */
+  alt?: string;
+  /** Opens the file as a link. */
+  href?: string;
+  /** Opens the file in the app (a preview Dialog, say). */
+  onOpen?: () => void;
+  /** Expired or deleted: "No longer available", and it doesn't act. */
+  unavailable?: boolean;
+}
+export interface MessageAttachmentsProps extends Omit<React.HTMLAttributes<HTMLUListElement>, 'children'> {
+  items: MessageAttachment[];
+}
+const kindOf = (a: MessageAttachment) => {
+  const sub = a.type?.split('/')[1]?.split(/[.+;-]/)[0];
+  const ext = /\.([a-z0-9]{1,6})$/i.exec(a.name)?.[1];
+  return (a.type === 'application/pdf' ? 'PDF' : ext ?? sub ?? 'File').toUpperCase();
+};
+/**
+ * What went with a message: the files the composer showed as plates, now settled into the record. Images are 64px
+ * thumbnails, other files Tag plates with name, type and size; those with href or onOpen act (and lift one level when
+ * pointed at). Put it before MessageContent. A sent attachment was uploaded before the message went, so it's never
+ * pending.
+ */
+export function MessageAttachments({ items, className, ...rest }: MessageAttachmentsProps) {
+  if (!items.length) return null;
+  return (
+    <ul className={cx('alt-msg-attachments', className)} aria-label={`${items.length} attachment${items.length === 1 ? '' : 's'}`} {...rest}>
+      {items.map((a, i) => {
+        const acts = !a.unavailable && !!(a.href || a.onOpen);
+        const image = !a.unavailable && !!a.url && !!a.type?.startsWith('image/');
+        const open = `Open ${a.name}`;
+        const face = image
+          ? <img src={a.url} alt={acts ? '' : a.alt ?? a.name} />
+          : <>
+            <Icons.Paperclip size={13} aria-hidden="true" />
+            <span className="alt-msg-file-name">{a.name}</span>
+            <span className="alt-msg-file-meta">{a.unavailable ? 'No longer available' : <>{kindOf(a)}{a.size !== undefined && <> · <FormattedNumber value={a.size} format="bytes" maximumFractionDigits={a.size >= 1e6 ? 1 : 0} /></>}</>}</span>
+          </>;
+        const cls = image ? 'alt-msg-thumb' : 'alt-tag-face';
+        const el = !acts ? <span className={cls}>{face}</span>
+          : a.href ? <a className={cls} href={a.href} aria-label={image ? open : undefined} title={image ? undefined : open} onClick={a.onOpen ? (e) => { e.preventDefault(); a.onOpen!(); } : undefined}>{face}</a>
+          : <button type="button" className={cls} aria-label={image ? open : undefined} title={image ? undefined : open} onClick={a.onOpen}>{face}</button>;
+        return (
+          <li key={`${a.name}-${i}`} className={image ? 'alt-msg-attachment' : 'alt-msg-attachment alt-tag alt-msg-file'} data-acts={acts ? '' : undefined} data-unavailable={a.unavailable ? '' : undefined}>
+            {el}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

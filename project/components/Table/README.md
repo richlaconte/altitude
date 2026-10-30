@@ -32,6 +32,8 @@ The header stays flush until rows scroll under it, then rises to `elev-2` (as in
 
 **Opening a row.** Read-only detail (`renderExpanded`) is a reveal of the record, so it stays on the ground: a full-width row under the record, inset, with the disclosure chevron turned and `aria-expanded`/`aria-controls` on its button. Editing (`renderEditor` + `onSave`) is live, so it rises: the row and its region become one raised slab (`elev-1`) holding a static `EditRegion`, with the row's cells still visible above it so the record stays identified. The first field takes focus; Enter in a single-line field saves and Escape cancels, and focus returns to the row's Edit button. While a row is in edit, the other rows' Edit buttons, sorting and reordering wait, so the edited row isn't carried away mid-edit; once saved it settles with an afterglow and, if its sort position changed, is carried to its new place. It stays a table, not a grid: the region is one `td` spanning the row. Above about eight fields, open the record in a `Sheet` beside the table instead (`onRowClick`).
 
+**On a phone.** Under 480px of the frame's width, columns keep at least 6rem (or their `minWidth`) and the table scrolls inside its frame, fading the edge with more columns, instead of squeezing cells. `sticky: true` keeps a column in view over a flush 1px edge. Wide, nothing changes.
+
 **You provide:** the data or the rows, short column headers in sentence case, numbers right-aligned (`align="end"`), and a `getRowLabel` that names each row the way people refer to it.
 
 - Do filter in place with `relevance` when position matters (a ranked list, a schedule); remove rows instead when it doesn't.

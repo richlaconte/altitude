@@ -72,3 +72,5 @@ The events and their writes (with concurrency guards), time zones, and the detai
 ## Demo and verification
 
 The `Schedule` section of `build/previews.txt` is a room-booking work week (26–30 Oct 2026): the service refuses Wednesday mornings, rooms close at 17:00 on Friday, and Ana holds the Retro. `node checks/schedule.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys and names, creating, carrying, resizing and cancelling without a pointer, a refused move with Retry, unavailable time, a collaborator's hold, rename, remove, the next week, pointer carry, drawing and the resize handle, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+**Narrow and on touch.** Under 480px of its own width the schedule shows one day at a time (`narrowView="day"`, the default; `false` keeps the week), paged by the header's previous and next. Under a coarse pointer an hour is 96px unless you set `hourHeight`, so a 15-minute slot is 24px tall, and a tap opens an event.
+

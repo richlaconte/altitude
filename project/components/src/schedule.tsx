@@ -10,6 +10,11 @@ export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
 export interface ScheduleProps<T> {
   /** Default 'week'. */
   view?: 'day' | 'week' | 'workweek';
+  /**
+   * What it shows under 480px of its own width (#257). 'day' (default): one day at a time, paged with the header's
+   * previous and next, so events and slots keep a readable width. false: the view, squeezed.
+   */
+  narrowView?: 'day' | false;
   /** Any day in the period shown, 'YYYY-MM-DD'. */
   date: string;
   onDateChange?: (date: string) => void;
@@ -23,7 +28,7 @@ export interface ScheduleProps<T> {
   /** Default '08:00' and '19:00'. */
   dayStart?: string;
   dayEnd?: string;
-  /** Pixels per hour. Default 48. */
+  /** Pixels per hour. Default 48, or 96 under a coarse pointer so a 15-minute slot is 24px tall. */
   hourHeight?: number;
   /** 0 Sunday … 6 Saturday. Default 1. */
   weekStartsOn?: number;
@@ -69,9 +74,24 @@ type Draft = { day: string; start: number; end: number; title: string; error?: s
  * level, like BoardCards. Time opens into wells only while something could land in it (carrying or drawing), and the
  * slot under a carried event deepens to a trench the length of the event. A carried event floats at level 3, tilted.
  */
-export function Schedule<T>({ view = 'week', date, onDateChange, events, getKey, getStart, getEnd, getLabel, step = 15, dayStart = '08:00', dayEnd = '19:00',
-  hourHeight = 48, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isUnavailable, now, locale,
+export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date, onDateChange, events, getKey, getStart, getEnd, getLabel, step = 15, dayStart = '08:00', dayEnd = '19:00',
+  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isUnavailable, now, locale,
   className, ...aria }: ScheduleProps<T>) {
+  // Narrow (#257): measured on the schedule itself, at the narrow breakpoint.
+  const [root, setRoot] = React.useState<HTMLDivElement | null>(null);
+  const [isNarrow, setIsNarrow] = React.useState(false);
+  React.useEffect(() => {
+    if (!root || !narrowView) { setIsNarrow(false); return; }
+    const ro = new ResizeObserver(([e]) => setIsNarrow(e.contentRect.width < 480));
+    ro.observe(root);
+    return () => ro.disconnect();
+  }, [root, narrowView]);
+  const view = isNarrow && narrowView ? narrowView : viewProp;
+  // Under a coarse pointer an hour is twice as tall (unless hourHeight is set), so a 15-minute slot or event is 24px:
+  // big enough for a finger, and still in proportion to its time (#257).
+  const [coarse, setCoarse] = React.useState(false);
+  React.useEffect(() => { const mq = window.matchMedia?.('(pointer: coarse)'); if (!mq) return; const sync = () => setCoarse(mq.matches); sync(); mq.addEventListener?.('change', sync); return () => mq.removeEventListener?.('change', sync); }, []);
+  const hourHeight = hourHeightProp ?? (coarse ? 96 : 48);
   const first = minutesOf(dayStart), last = minutesOf(dayEnd);
   const px = hourHeight / 60;
   const slots = Array.from({ length: Math.ceil((last - first) / step) }, (_, i) => first + i * step);
@@ -317,7 +337,7 @@ export function Schedule<T>({ view = 'week', date, onDateChange, events, getKey,
   const eventBox = (p: { key: string; day: string; start: number; end: number; lane: number; lanes: number }, inner: React.ReactNode, extra: Record<string, unknown>) =>
     <div key={p.key} className="alt-schedule-event-box" style={{ top: (p.start - Math.max(first, Math.floor(p.start / step) * step)) * px, height: Math.max(step * px, (p.end - p.start) * px) - 2, left: `calc(${(p.lane / p.lanes) * 100}% + 2px)`, width: `calc(${100 / p.lanes}% - 4px)` }} {...extra}>{inner}</div>;
 
-  return <div className={cx('alt-schedule', className)} data-carrying={carry || draft?.drawing ? '' : undefined} style={{ ['--days' as any]: days.length, ['--slot' as any]: `${step * px}px` }}>
+  return <div ref={setRoot} className={cx('alt-schedule', className)} data-narrow={isNarrow && narrowView ? '' : undefined} data-carrying={carry || draft?.drawing ? '' : undefined} style={{ ['--days' as any]: days.length, ['--slot' as any]: `${step * px}px` }}>
     <div className="alt-schedule-head">
       <h2 className="alt-schedule-period" aria-live="polite">{title}</h2>
       {onDateChange && <div className="alt-schedule-nav">
@@ -348,7 +368,8 @@ export function Schedule<T>({ view = 'week', date, onDateChange, events, getKey,
                   <button type="button" className="alt-schedule-event" data-event={p.key} tabIndex={isFocus ? 0 : -1} aria-label={nameOf(p)} aria-busy={busy === p.key || undefined}
                     data-status={busy === p.key ? 'pending' : failure?.key === p.key ? 'failed' : undefined} data-settle={settled === p.key ? '' : undefined}
                     data-held={who ? (who.presence ?? 1) : undefined} data-short={(p.end - p.start) * px < 36 ? '' : undefined} onFocus={() => setFocus({ day: d, min })}
-                    onPointerDown={(e) => { e.stopPropagation(); startDrag(e, 'move', p.key); }} onDoubleClick={() => onOpen?.(p.event)}>
+                    onPointerDown={(e) => { e.stopPropagation(); startDrag(e, 'move', p.key); }} onDoubleClick={() => onOpen?.(p.event)}
+                    onClick={(e) => { if ((e.nativeEvent as PointerEvent).pointerType === 'touch') onOpen?.(p.event); }}>
                     {isRenaming ? null : renderEvent ? renderEvent(p.event) : <><strong>{getLabel(p.event)}</strong><small>{clockText(p.start)}–{clockText(p.end)}</small></>}
                     {who && <span className="alt-schedule-holder" aria-hidden="true">{who.name}</span>}
                   </button>
