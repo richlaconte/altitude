@@ -294,7 +294,17 @@ export function useModal({ open, onDismiss, exitMs, panel, modal = true, dismiss
   const latest = React.useRef({ open, modal, summit, autoFocus, restoreFocus, focusSelector, background, returnFocus, provider: ctx?.provider ?? null });
   latest.current = { open, modal, summit, autoFocus, restoreFocus, focusSelector, background, returnFocus, provider: ctx?.provider ?? null };
   if (owner.current) Object.assign(owner.current, latest.current);
+  // The visible viewport (#251): while a modal is open, its root follows visualViewport (the on-screen keyboard, a
+  // phone's retracting toolbar) through --alt-vvh and --alt-vv-top, so its footer and focused field stay in view.
+  const viewportOff = React.useRef<(() => void) | null>(null);
   const rootRef = React.useCallback((root: HTMLDivElement | null) => {
+    viewportOff.current?.(); viewportOff.current = null;
+    const vv = root?.ownerDocument.defaultView?.visualViewport;
+    if (root && vv) {
+      const sync = () => { root.style.setProperty('--alt-vvh', `${vv.height}px`); root.style.setProperty('--alt-vv-top', `${vv.offsetTop}px`); };
+      sync(); vv.addEventListener('resize', sync); vv.addEventListener('scroll', sync);
+      viewportOff.current = () => { vv.removeEventListener('resize', sync); vv.removeEventListener('scroll', sync); };
+    }
     if (!root) {
       const previous = owner.current;
       if (previous) modalDocument(previous.panel.ownerDocument).remove(previous);

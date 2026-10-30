@@ -19,6 +19,8 @@ A large panel laid over the page at level 4, anchored to an edge, for a task tha
 | `modal` | `true` | `false`: a non-blocking panel |
 | `dismissible` | `true` | `false`: only your own buttons close it |
 
+**On a phone.** It sizes to the visible viewport, not the largest one: with the on-screen keyboard open it shrinks to the part you can see, so its footer and the focused field stay in reach.
+
 **You provide:** `open`/`onOpenChange` or a `trigger`, and the content: `SheetHeader` with `SheetTitle` (it names the sheet) and `SheetDescription`, the body, and `SheetFooter` with the actions (cancel as ghost first, the action last).
 
 - Do use a sheet to edit an item without leaving the list it's in, and for filters, details and settings.

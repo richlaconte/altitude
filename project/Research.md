@@ -1347,6 +1347,14 @@ A review (#262): at 375px, menus showed "⌘D" beside "Duplicate", and CommandPa
 - **Hints hide; shortcuts don't.** Menu shortcuts, CommandPalette's footer, chips and esc, and InlineEdit's "⌘+Enter to save" (which becomes "Save to keep it") follow it. The keys still work.
 - **An app's own `Kbd` stays** unless `hideOnTouch` is set, because it may be documenting shortcuts on purpose.
 
+### E115 · Is a dialog's button under the keyboard?
+
+A source audit (#251): Dialog, Sheet and CommandPalette sized themselves with `vh` and `position: fixed; inset: 0`, which on a phone means the largest viewport. With the on-screen keyboard open, a dialog's footer (its primary action) could sit under the keyboard. Nothing read `window.visualViewport`.
+
+- **The visible viewport.** While a modal is open, `useModal` follows `visualViewport` (resize and scroll) into `--alt-vvh` and `--alt-vv-top` on its root. The roots cover just the visible area, and the dialog's height, the palette's top padding and list height derive from it, with `dvh` and then `vh` as fallbacks.
+- **A claim you can answer.** A dialog is level 5 and claims you (Elevation); its answer must stay in reach.
+- Not observed on a device: Playwright can't open a keyboard, so `checks/visible-viewport.mjs` shrinks the viewport under an open Dialog and CommandPalette and checks the root follows and the panel stays inside.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
