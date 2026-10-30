@@ -215,6 +215,9 @@ jobs:
     if: ${{ !cancelled() }}
     needs: [build, framework, checks]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read   # to download this run's artifacts
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -231,22 +234,24 @@ jobs:
           npm ci
           npm ci --prefix build
 
+      # One artifact at a time, each tried three times. Anything still missing fails "The evidence is complete" below.
       - name: Collect the jobs' evidence
-        uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          pattern: alt-05-*
-          path: parts
-
-      - name: Collect the focused renders' screenshots
-        uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          name: renders-evidence-shots
-          path: build/test
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for name in $(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" --jq '.artifacts[].name | select(startswith("alt-05-") or . == "renders-evidence-shots")'); do
+            for attempt in 1 2 3; do
+              rm -rf "parts/$name"
+              gh run download "$GITHUB_RUN_ID" -n "$name" -D "parts/$name" && break
+              echo "::warning::Couldn't download $name (attempt $attempt of 3)"
+              sleep $((attempt * 5))
+            done
+          done
+          mkdir -p build/test
+          cp parts/renders-evidence-shots/*.png build/test/ || echo "::warning::No screenshots from the focused renders"
 
       - name: One record of the evidence, in the order the checks ran
-        run: node scripts/record-check.mjs --merge parts/*
+        run: node scripts/record-check.mjs --merge parts/alt-05-*
 
       - name: Keep Actions in place acceptance evidence
         uses: actions/upload-artifact@v7
@@ -265,6 +270,15 @@ jobs:
         run: |
           echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
           echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+
+      # Every labelled check the shards run, and the build job's two, kept their command, exit status and log.
+      - name: The evidence is complete
+        run: |
+          { node scripts/ci-checks.mjs --labels; echo package-api; echo shadcn-chart; } | sort > expected.txt
+          jq -r '.checks[].label' build/test/alt-05/results.json | sort > recorded.txt
+          missing=$(comm -23 expected.txt recorded.txt)
+          [ -z "$missing" ] || { echo "::error::The evidence has no record of: $(echo $missing)"; exit 1; }
+          echo "All $(wc -l < expected.txt) checks are on record."
 
   pages:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

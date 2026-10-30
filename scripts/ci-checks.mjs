@@ -7,6 +7,7 @@
 // of them. Needs build/SETUP.md's one-time setup (test/tokens.css and React) and Playwright's Chromium.
 //   --plan   print what each shard runs, and its expected time
 //   --check  only check that every file in build/checks runs somewhere
+//   --labels print the record-check.mjs label of every check that keeps evidence, one per line
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -64,6 +65,10 @@ const [k, n] = shardArg ? shardArg.split('/').map(Number) : [1, 1];
 if (!(k >= 1 && k <= n)) throw new Error(`No shard ${shardArg}`);
 if (args.includes('--check')) {
   console.log(`Every file in build/checks runs: ${items.length} items here, ${Object.keys(ci.elsewhere).length} elsewhere.`);
+  process.exit(0);
+}
+if (args.includes('--labels')) {
+  for (const item of items) if (item.run.some(({ argv }) => argv[0].endsWith('record-check.mjs'))) console.log(item.id);
   process.exit(0);
 }
 if (args.includes('--plan')) {
