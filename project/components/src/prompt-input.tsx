@@ -26,6 +26,9 @@ interface Ctx {
   text: string; setText: (t: string) => void; files: PromptAttachment[]; attach: (files: File[]) => void; remove: (id: string) => void;
   status: PromptStatus; submit: () => void; stop: () => void; busy: boolean; pick: () => void; area: React.MutableRefObject<HTMLTextAreaElement | null>;
   suggest: Suggest;
+  // Dictation (#284): the mic registers how to stop and what's heard so far; the text shows the interim words.
+  dictation: React.MutableRefObject<{ listening: boolean; toggle?: () => void; stop?: () => void }>;
+  interim: string; setInterim: (t: string) => void; say: (t: string) => void;
 }
 const PromptCtx = React.createContext<Ctx | null>(null);
 const usePrompt = (part: string) => { const c = React.useContext(PromptCtx); if (!c) throw new Error(`${part} must be inside <PromptInput>.`); return c; };
@@ -164,6 +167,8 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, menti
     }
     return false;
   };
+  const dictation = React.useRef<{ listening: boolean; toggle?: () => void; stop?: () => void }>({ listening: false });
+  const [interim, setInterim] = React.useState('');
   const suggest: Suggest = { open: listOpen, listId, active, activeId: listOpen && options[active] ? `${listId}-${options[active].id}` : undefined, enabled: !!(mentionable || commands?.length), read, close: () => setQuery(null), key };
   const remove = (id: string) => { const f = files.find((x) => x.id === id); setFiles((xs) => xs.filter((x) => x.id !== id)); if (f) setSaid(`${f.name} removed.`); area.current?.focus(); };
   const ready = !!text.trim() && !files.some((f) => f.status === 'pending');
@@ -191,7 +196,7 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, menti
   const hasFiles = (e: React.DragEvent) => accept !== undefined && [...e.dataTransfer.types].includes('Files');
 
   return (
-    <PromptCtx.Provider value={{ text, setText, files, attach, remove, status, submit, stop, busy, pick, area, suggest }}>
+    <PromptCtx.Provider value={{ text, setText, files, attach, remove, status, submit, stop, busy, pick, area, suggest, dictation, interim, setInterim, say: setSaid }}>
       <form {...rest} className={cx('alt-prompt', className)} data-status={status} onSubmit={(e) => { e.preventDefault(); submit(); }}
         onDragEnter={(e) => { if (hasFiles(e)) { e.preventDefault(); setOver(true); } }}
         onDragOver={(e) => { if (hasFiles(e)) e.preventDefault(); }}
@@ -251,6 +256,7 @@ export function PromptInputTextarea({ placeholder = 'Ask anything', maxHeight = 
   }, [c.area, maxHeight]);
   React.useLayoutEffect(grow, [c.text, grow]);
   return (
+    <>
     <textarea ref={c.area} rows={1} value={c.text} placeholder={placeholder} aria-label={label ?? (rest['aria-labelledby'] ? undefined : 'Message')} className={cx('alt-prompt-text', className)}
       aria-keyshortcuts="Enter"
       {...(c.suggest.enabled ? { role: 'combobox', 'aria-autocomplete': 'list' as const, 'aria-expanded': c.suggest.open, 'aria-controls': c.suggest.open ? c.suggest.listId : undefined, 'aria-activedescendant': c.suggest.activeId } : {})}
@@ -261,11 +267,16 @@ export function PromptInputTextarea({ placeholder = 'Ask anything', maxHeight = 
       onKeyDown={(e) => {
         onKeyDown?.(e);
         if (e.defaultPrevented || c.suggest.key(e)) return;
+        // Escape stops listening before it stops generating; ⌘D / Ctrl+D toggles dictation.
+        if (e.key === 'Escape' && c.dictation.current.listening) { e.preventDefault(); c.dictation.current.stop?.(); return; }
+        if (e.key.toLowerCase() === 'd' && (e.metaKey || e.ctrlKey) && c.dictation.current.toggle) { e.preventDefault(); c.dictation.current.toggle(); return; }
         // Enter while an IME is composing (Japanese, Chinese, Korean input) confirms the composition; it must never send.
         if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) { e.preventDefault(); c.submit(); }
         else if (e.key === 'Escape' && c.busy) { e.preventDefault(); c.stop(); }
         else if (e.key.toLowerCase() === 'u' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); c.pick(); }
       }} />
+    {c.interim && <p className="alt-prompt-interim" aria-hidden="true">{c.interim}</p>}
+    </>
   );
 }
 
@@ -291,6 +302,56 @@ export function PromptInputToolbar({ className, children }: { className?: string
 export function PromptInputAttach({ label = 'Attach files' }: { label?: string }) {
   const c = usePrompt('PromptInputAttach');
   return <Button size="sm" variant="ghost" square aria-label={label} aria-keyshortcuts="Meta+U Control+U" onClick={c.pick}><Icons.Paperclip size={16} /></Button>;
+}
+
+export interface PromptInputDictateProps {
+  /** Default 'idle'. 'denied' and 'unavailable' keep the button focusable and say why it can't listen. */
+  status?: 'idle' | 'listening' | 'denied' | 'unavailable';
+  onStart?: () => void;
+  onStop?: () => void;
+  /** Words heard but not final: a ghost under the text in ink-faint, never in the value. */
+  interim?: string;
+  /** Final words to insert at the caret; give each result a new id. */
+  final?: { id: string | number; text: string };
+  /** Default "Dictate". */
+  label?: string;
+}
+const Mic = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>;
+/**
+ * Dictate a message (#284): a latched toggle. Listening is the Toggle's "on": a shallow well with accent-soft poured
+ * in, "Listening" and a steady lamp, with no pulse and no waveform. Interim words are a ghost like a suggestion; final
+ * words land at the caret. Blocked or unavailable stays focusable and says why. ⌘D / Ctrl+D toggles; Escape stops
+ * listening before it stops generating. Your app supplies the speech recognition.
+ */
+export function PromptInputDictate({ status = 'idle', onStart, onStop, interim, final, label = 'Dictate' }: PromptInputDictateProps) {
+  const c = usePrompt('PromptInputDictate');
+  const listening = status === 'listening';
+  const blocked = status === 'denied' || status === 'unavailable';
+  const why = status === 'denied' ? "Microphone blocked. Allow it in your browser's site settings." : 'Dictation isn\'t available in this browser.';
+  const toggle = () => { if (blocked) { c.say(why); return; } if (listening) onStop?.(); else onStart?.(); };
+  c.dictation.current = { listening, toggle, stop: onStop };
+  React.useEffect(() => () => { c.dictation.current = { listening: false }; c.setInterim(''); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { c.setInterim(listening ? interim ?? '' : ''); }, [interim, listening]); // eslint-disable-line react-hooks/exhaustive-deps
+  const said = React.useRef(listening);
+  React.useEffect(() => { if (said.current !== listening) c.say(listening ? 'Listening' : 'Stopped listening'); said.current = listening; }, [listening]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Final words go in at the caret, with a space where they meet other words.
+  const seen = React.useRef(final?.id);
+  React.useEffect(() => {
+    if (!final || final.id === seen.current) return;
+    seen.current = final.id;
+    const el = c.area.current, at = el ? el.selectionStart : c.text.length, end = el ? el.selectionEnd : at;
+    const before = c.text.slice(0, at), after = c.text.slice(end);
+    const add = (before && !/\s$/.test(before) ? ' ' : '') + final.text.trim() + (after && !/^\s/.test(after) ? ' ' : '');
+    c.setText(before + add + after);
+    requestAnimationFrame(() => { const pos = before.length + add.length; c.area.current?.setSelectionRange(pos, pos); });
+  }, [final?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <Button size="sm" variant="ghost" className="alt-prompt-dictate" data-listening={listening ? '' : undefined} data-blocked={blocked ? '' : undefined}
+      aria-pressed={blocked ? undefined : listening} aria-disabled={blocked || undefined} aria-label={listening ? `${label}: listening` : label} title={blocked ? why : undefined}
+      aria-keyshortcuts="Meta+D Control+D" onClick={toggle}>
+      <Mic />{listening && <span className="alt-prompt-listening"><span className="alt-prompt-lamp" aria-hidden="true" />Listening</span>}
+    </Button>
+  );
 }
 
 /** Send, which becomes Stop in the same slot and size while a response is generating. */

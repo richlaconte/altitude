@@ -3265,6 +3265,19 @@ export declare function PromptInputAttachments(props: { className?: string }): R
 export declare function PromptInputToolbar(props: { className?: string; children?: React.ReactNode }): React.ReactElement;
 export declare function PromptInputAttach(props: { label?: string }): React.ReactElement;
 export declare function PromptInputSubmit(props: { className?: string }): React.ReactElement;
+export interface PromptInputDictateProps {
+  /** Default 'idle'. 'denied' and 'unavailable' stay focusable and say why. */
+  status?: 'idle' | 'listening' | 'denied' | 'unavailable';
+  onStart?: () => void;
+  onStop?: () => void;
+  /** Words heard but not final: a ghost under the text, never in the value. */
+  interim?: string;
+  /** Final words to insert at the caret; a new id each result. */
+  final?: { id: string | number; text: string };
+  label?: string;
+}
+/** Dictate: a latched toggle ("Listening", a steady lamp, no pulse); ⌘D / Ctrl+D toggles; Escape stops listening first. */
+export declare function PromptInputDictate(props: PromptInputDictateProps): React.ReactElement;
 
 export interface ConversationProps extends React.HTMLAttributes<HTMLDivElement> { 'aria-label': string }
 /** The thread between a person and an assistant: a log that follows to the bottom and announces answers once, when complete. */
@@ -3704,7 +3717,7 @@ declare global {
       Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
       Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; ConversationCheckpoint: typeof ConversationCheckpoint; MessageActions: typeof MessageActions;
-      PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
+      PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit; PromptInputDictate: typeof PromptInputDictate;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;
       FeatureGate: typeof FeatureGate;
