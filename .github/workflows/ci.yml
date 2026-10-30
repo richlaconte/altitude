@@ -155,6 +155,7 @@ jobs:
           node ../scripts/record-check.mjs react18-chart-loading node checks/chart-loading.mjs
           node ../scripts/record-check.mjs react18-chart-status node checks/chart-status.mjs
           node ../scripts/record-check.mjs react18-chart-reference node checks/chart-reference.mjs
+          node ../scripts/record-check.mjs react18-chart-takeaway node checks/chart-takeaway.mjs
           node ../scripts/record-check.mjs react18-chart-live node checks/chart-live.mjs
           node ../scripts/record-check.mjs react18-chart-filter node checks/chart-filter.mjs
           node ../scripts/record-check.mjs react18-chart-select node checks/chart-select.mjs

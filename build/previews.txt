@@ -1247,6 +1247,12 @@ const net = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ mont
 const regions = [{ region: 'North America', seats: 1240 }, { region: 'Europe, Middle East and Africa', seats: 980 }, { region: 'Asia Pacific', seats: 610 }, { region: 'Latin America', seats: 270 }];
 const stack3 = { api: { label: 'API' }, web: { label: 'Web' }, jobs: { label: 'Jobs' } };
 function Chart({ id, title, sub, children, ...props }) {
+  // With a takeaway the figure names itself: the title becomes the label over the takeaway, the heading.
+  if (props.takeaway) return (
+    <A.Card>
+      <A.CardContent style={{ paddingTop: 'var(--space-5)' }}><A.ChartContainer title={title} description={sub} aspect={1.45} {...props}>{children}</A.ChartContainer></A.CardContent>
+    </A.Card>
+  );
   return (
     <A.Card>
       <A.CardHeader><A.CardTitle id={id}>{title}</A.CardTitle><A.CardDescription>{sub}</A.CardDescription></A.CardHeader>
@@ -1257,7 +1263,7 @@ function Chart({ id, title, sub, children, ...props }) {
 function App() {
   return (
     <div className="bc">
-      <Chart id="b1" title="Deploys by team" sub='One series, sorted, labels="max"' config={{ deploys: { label: 'Deploys' } }} summary="Cedar deployed most, 51 times; Delta least.">
+      <Chart id="b1" title="Deploys by team" takeaway="Cedar deployed nearly three times as often as Delta" sub='One series, sorted, labels="max"' config={{ deploys: { label: 'Deploys' } }} summary="Cedar deployed most, 51 times; Delta least, 19.">
         <A.BarChart data={teams} x="team" sort="desc" labels="max" />
       </Chart>
       <Chart id="b2" title="Requests by service" sub="Grouped: three series side by side" config={stack3}>
@@ -1292,6 +1298,12 @@ const signups = Array.from({ length: 14 }, (_, i) => ({ day: `2026-04-${String(i
 const plans = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'].map((month, i) => ({ month, free: 40 + i * 2, team: 34 + i * 3, business: 30 + i * 2.6, enterprise: 12 + i }));
 const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
 function Chart({ id, title, sub, children, ...props }) {
+  // With a takeaway the figure names itself: the title becomes the label over the takeaway, the heading.
+  if (props.takeaway) return (
+    <A.Card>
+      <A.CardContent style={{ paddingTop: 'var(--space-5)' }}><A.ChartContainer title={title} description={sub} aspect={1.9} {...props}>{children}</A.ChartContainer></A.CardContent>
+    </A.Card>
+  );
   return (
     <A.Card>
       <A.CardHeader><A.CardTitle id={id}>{title}</A.CardTitle><A.CardDescription>{sub}</A.CardDescription></A.CardHeader>
@@ -1305,7 +1317,7 @@ function App() {
       <Chart id="l1" title="Response time" sub="14 Mar, every 30 minutes" config={{ p50: { label: 'p50' }, p95: { label: 'p95' } }}>
         <A.LineChart data={latency} x="t" y={{ format: (ms) => `${ms} ms` }} />
       </Chart>
-      <Chart id="l2" title="Monthly revenue" sub='curve="monotone": no overshoot' config={{ revenue: { label: 'Revenue', format: usd.format } }} summary="Revenue rose 70% over the year, with small dips in September, December and March.">
+      <Chart id="l2" title="Monthly revenue" takeaway="Revenue rose 70% over the year" sub='curve="monotone": no overshoot' config={{ revenue: { label: 'Revenue', format: usd.format } }} summary="Revenue rose 70% over the year, with small dips in September, December and March.">
         <A.LineChart data={revenue} x="month" curve="monotone" />
       </Chart>
       <Chart id="l3" title="Daily signups" sub="Missing days are gaps, not guesses" config={{ signups: { label: 'Signups' } }}>
