@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cx, Icons, useDepth } from './core';
-import { Button } from './controls';
+import { Button, Textarea } from './controls';
 import { CopyButton } from './copy-button';
 import { FormattedNumber } from './formatted-number';
 import { ToggleGroup, ToggleGroupItem } from './toggle';
@@ -70,7 +70,11 @@ export function ConversationScrollButton({ className }: { className?: string }) 
 }
 
 export type MessageStatus = 'streaming' | 'complete' | 'stopped' | 'error';
-interface MsgCtx { from: 'user' | 'assistant'; status: MessageStatus; text: () => string }
+interface MsgCtx {
+  from: 'user' | 'assistant'; status: MessageStatus; text: () => string;
+  // Editing a sent message in place (#275): MessageActions offers it, MessageContent draws the editor.
+  editing: string | null; startEdit: (from: HTMLElement | null) => void; endEdit: (text?: string) => void; edit: React.MutableRefObject<((text: string) => void) | undefined>;
+}
 const MessageCtx = React.createContext<MsgCtx | null>(null);
 
 export interface MessageProps extends React.HTMLAttributes<HTMLElement> {
@@ -80,13 +84,15 @@ export interface MessageProps extends React.HTMLAttributes<HTMLElement> {
   /** Who's speaking. Default "You" or "Assistant". */
   name?: string;
   onRetry?: () => void;
+  /** A person's message that was edited and resent: "Edited" in its caption. */
+  edited?: boolean;
 }
 /**
  * One message. A person's is a flush accent-soft sheet; an assistant's is flush, no bubble. While an answer streams it
  * isn't the record yet: it rests on the ground with a dashed rule down its edge (charts' "not yet the record"), never
  * hovering, because nothing you sent is in flight. When it completes the rule goes solid and it settles once.
  */
-export function Message({ from, status = 'complete', name, onRetry, className, children, ...rest }: MessageProps) {
+export function Message({ from, status = 'complete', name, onRetry, edited, className, children, ...rest }: MessageProps) {
   const c = React.useContext(ConversationCtx);
   const who = name ?? (from === 'user' ? 'You' : 'Assistant');
   const body = React.useRef<HTMLElement>(null);
@@ -103,13 +109,26 @@ export function Message({ from, status = 'complete', name, onRetry, className, c
   }, [status]); // eslint-disable-line react-hooks/exhaustive-deps
   const { style, 'aria-busy': _busy, ...depth } = useDepth({ settle: done || undefined });
   const text = () => body.current?.querySelector('.alt-msg-content')?.textContent?.trim() ?? '';
+  const [editing, setEditing] = React.useState<string | null>(null);
+  const edit = React.useRef<(text: string) => void>();
+  const opener = React.useRef<HTMLElement | null>(null);
+  const startEdit = (from: HTMLElement | null) => { opener.current = from; setEditing(text()); };
+  const endEdit = (sent?: string) => {
+    setEditing(null);
+    if (sent !== undefined) {
+      edit.current?.(sent);
+      // After sending, back to the composer, where the new branch's answer will be followed.
+      requestAnimationFrame(() => { const near = body.current?.closest('.alt-convo')?.parentElement ?? document; near.querySelector<HTMLElement>('.alt-prompt textarea')?.focus(); });
+    } else requestAnimationFrame(() => (opener.current?.isConnected ? opener.current : body.current?.querySelector<HTMLElement>('button[aria-label="Edit message"]'))?.focus());
+  };
   return (
-    <MessageCtx.Provider value={{ from, status, text }}>
-      <article ref={body} {...depth} className={cx('alt-msg', className)} data-from={from} data-stream={from === 'assistant' ? status : undefined} aria-busy={status === 'streaming' || undefined}
+    <MessageCtx.Provider value={{ from, status, text, editing, startEdit, endEdit, edit }}>
+      <article ref={body} {...depth} className={cx('alt-msg', className)} data-from={from} data-editing={editing !== null ? '' : undefined} data-stream={from === 'assistant' ? status : undefined} aria-busy={status === 'streaming' || undefined}
         aria-label={who} style={style} {...rest}>
         <h3 className={from === 'user' ? 'alt-sr' : 'alt-msg-name'}>{who}</h3>
         {children}
         {status === 'streaming' && <p className="alt-msg-caption" aria-hidden="true">Generating…</p>}
+        {edited && editing === null && <p className="alt-msg-caption alt-msg-edited">Edited</p>}
         {(status === 'stopped' || status === 'error') && (
           <p className="alt-msg-caption" data-tone={status === 'error' ? 'critical' : undefined}>
             {status === 'error' ? <><Icons.AlertCircle size={13} aria-hidden="true" />Couldn't finish</> : 'Stopped'}
@@ -184,7 +203,31 @@ export function MessageAttachments({ items, className, ...rest }: MessageAttachm
 /** The message's text. Text arrives without per-word animation; a caret marks the end while it streams. */
 export function MessageContent({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   const m = React.useContext(MessageCtx);
+  if (m && m.editing !== null) return <MessageEditor initial={m.editing} onDone={m.endEdit} />;
   return <div className={cx('alt-msg-content', className)} {...rest}>{children}{m?.status === 'streaming' && <span className="alt-msg-caret" aria-hidden="true" />}</div>;
+}
+
+// The message opened in place: a Textarea well inside the sheet, with Cancel and "Send edit". Editing is temporary
+// local input, not a pending write, so nothing hovers until it's sent. Escape cancels; Ctrl/⌘+Enter sends.
+function MessageEditor({ initial, onDone }: { initial: string; onDone: (text?: string) => void }) {
+  const [value, setValue] = React.useState(initial);
+  const ref = React.useRef<HTMLTextAreaElement>(null);
+  React.useEffect(() => { const t = ref.current; if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, []);
+  const changed = value.trim() !== '' && value.trim() !== initial.trim();
+  return (
+    <div className="alt-msg-editor">
+      <Textarea ref={ref} aria-label="Edit message" value={value} rows={Math.min(8, Math.max(2, value.split('\n').length))} onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onDone(); }
+          else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && changed) { e.preventDefault(); onDone(value.trim()); }
+        }} />
+      <div className="alt-msg-editor-actions">
+        <Button size="sm" variant="ghost" onClick={() => onDone()}>Cancel</Button>
+        <Button size="sm" variant="secondary" disabled={!changed} onClick={() => onDone(value.trim())}>Send edit</Button>
+      </div>
+    </div>
+  );
 }
 
 export interface MessageActionsProps {
@@ -194,25 +237,34 @@ export interface MessageActionsProps {
   /** Shows good / bad response toggles; null when cleared. */
   onFeedback?: (value: 'up' | 'down' | null) => void;
   feedback?: 'up' | 'down' | null;
-  /** Regenerated answers are kept as versions, never overwritten: "Version 2 of 2". */
+  /**
+   * Regenerated answers, or a person's edited message, are kept as versions, never overwritten: "Version 2 of 2".
+   * Switching is announced ("Showing version 1 of 2").
+   */
   versions?: { index: number; total: number; onChange: (index: number) => void };
+  /** A person's message: an Edit action that opens it in place; sending the edit calls this with the new text (start a branch from it). */
+  onEdit?: (text: string) => void;
   className?: string;
 }
 /** Copy, regenerate, feedback and versions: ghost buttons that lift when pointed at. Hidden while the message streams. */
-export function MessageActions({ onCopy, onRegenerate, onFeedback, feedback, versions, className }: MessageActionsProps) {
+export function MessageActions({ onCopy, onRegenerate, onFeedback, feedback, versions, onEdit, className }: MessageActionsProps) {
   const m = React.useContext(MessageCtx);
+  const c = React.useContext(ConversationCtx);
+  if (m) m.edit.current = onEdit;
+  const switchTo = (i: number) => { versions!.onChange(i); c?.announce(`Showing version ${i} of ${versions!.total}`); };
   const [fb, setFb] = React.useState<'up' | 'down' | null>(feedback ?? null);
   React.useEffect(() => { if (feedback !== undefined) setFb(feedback); }, [feedback]);
-  if (m?.status === 'streaming') return null;
+  if (m?.status === 'streaming' || (m && m.editing !== null)) return null;
   return (
     <div className={cx('alt-msg-actions', className)} role="group" aria-label="Message actions">
       {versions && versions.total > 1 && (
         <span className="alt-msg-versions">
-          <Button size="sm" variant="ghost" square aria-label="Previous version" disabled={versions.index <= 1} onClick={() => versions.onChange(versions.index - 1)}><Icons.ChevronDown size={14} style={{ rotate: '90deg' }} /></Button>
+          <Button size="sm" variant="ghost" square aria-label="Previous version" disabled={versions.index <= 1} onClick={() => switchTo(versions.index - 1)}><Icons.ChevronDown size={14} style={{ rotate: '90deg' }} /></Button>
           <span className="alt-msg-version">Version {versions.index} of {versions.total}</span>
-          <Button size="sm" variant="ghost" square aria-label="Next version" disabled={versions.index >= versions.total} onClick={() => versions.onChange(versions.index + 1)}><Icons.ChevronDown size={14} style={{ rotate: '-90deg' }} /></Button>
+          <Button size="sm" variant="ghost" square aria-label="Next version" disabled={versions.index >= versions.total} onClick={() => switchTo(versions.index + 1)}><Icons.ChevronDown size={14} style={{ rotate: '-90deg' }} /></Button>
         </span>
       )}
+      {onEdit && m && <Tooltip content="Edit"><Button size="sm" variant="ghost" square aria-label="Edit message" onClick={(e) => m.startEdit(e.currentTarget)}><Icons.Pencil size={14} /></Button></Tooltip>}
       {onCopy && <CopyButton size="sm" label="Copy message" value={() => (typeof onCopy === 'function' ? onCopy() : m?.text() ?? '')} />}
       {onRegenerate && <Tooltip content="Regenerate"><Button size="sm" variant="ghost" square aria-label="Regenerate response" onClick={onRegenerate}><Icons.Refresh size={15} /></Button></Tooltip>}
       {onFeedback && (

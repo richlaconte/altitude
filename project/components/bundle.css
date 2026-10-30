@@ -1878,6 +1878,15 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-msg-actions .alt-tgroup { gap: 2px; }
 .alt-msg-versions { display: inline-flex; align-items: center; gap: 2px; margin-right: 4px; }
 .alt-msg-version { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+/* Editing a sent message (#275): the text stays where it is while a Textarea well opens around it, inside the sheet.
+   Editing is local input, not a pending write, so nothing hovers; "Send edit" is secondary, leaving the composer's
+   Send the view's one primary. */
+.alt-msg[data-from="user"][data-editing] { width: min(72ch, 85%); }
+.alt-msg-editor { display: flex; flex-direction: column; gap: 8px; }
+.alt-msg-editor .alt-textarea, .alt-msg-editor textarea { width: 100%; font: 400 15px/23px var(--font-sans); }
+.alt-msg-editor-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.alt-msg[data-from="user"] .alt-msg-actions { justify-content: flex-end; margin-left: 0; margin-right: -6px; }
+.alt-msg[data-from="user"] .alt-msg-edited { justify-content: flex-end; }
 .alt-convo-jump { position: absolute; left: 50%; bottom: var(--space-3); translate: -50% 0; z-index: 1; --alt-bg: var(--surface-floating); --alt-sh: var(--elev-3); --alt-sh-up: var(--elev-3); animation: alt-emerge var(--dur-travel-2) var(--ease-rise); --alt-from-y: 6px; }
 @media (prefers-reduced-motion: reduce) { .alt-msg-caret { animation: none; } }
 [data-motion="reduced"] .alt-msg-caret { animation: none; }

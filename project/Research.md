@@ -1452,6 +1452,10 @@ Models answer in Markdown, and the answer is the largest thing on a harness's sc
 
 A person attaches a screenshot and a PDF in `PromptInput` and sends; the chips leave the composer and nothing in the thread shows what went with the message (#274), so neither someone scrolling back nor a screen reader user knows the answer was about those files. `MessageAttachments` puts them back, before the message text, in a list named "2 attachments": images as 64px thumbnails (`object-fit: cover`, a 1px rim drawn over the image so a light screenshot keeps its edge), other files as the composer's Tag plates, now settled, with type and size (`FormattedNumber` bytes). Those with `href` or `onOpen` act and are named "Open <file>"; an expired one says "No longer available" and doesn't act. They're never pending: a message isn't sent until its uploads finish. `checks/message-attachments.mjs`.
 
+### E135 · Editing what you asked
+
+Every major harness lets a person edit an earlier message and resend it, starting a new branch while keeping the old one ("2 of 2"; assistant-ui's `EditComposer` and `BranchPicker`), but Altitude only versioned regenerated answers (#275). `MessageActions onEdit` opens the person's message in place, `InlineEdit`'s pattern for multi-line text: a Textarea well inside the sheet with Cancel and "Send edit" (secondary, so the composer's Send stays the view's one primary), Escape to cancel and Ctrl/⌘+Enter to send, and IME composition left alone. Sending hands the text to the app, which starts the branch; `versions` already had `onChange`, so the same switch moves between a person's branches and announces "Showing version 1 of 2". Focus goes back to Edit on cancel and to the composer after sending, where the new answer will be followed. Cross-fading the turns below on a switch is left to the app, which owns those turns. `checks/message-edit.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
