@@ -111,6 +111,8 @@ Under `(pointer: coarse)` the faces step up on their own. `<AltitudeProvider den
 
 Two breakpoints are the only widths a layout switches at: `breakpoint-narrow` (480px), for a component's own narrow layout, and `breakpoint-compact` (640px), for page chrome (the sidebar becomes a drawer, a panel becomes a sheet). CSS can't read a token in a media query, so they're written as numbers, and `checks/density.mjs` fails on any other.
 
+**Safe areas.** In an edge-to-edge page (`viewport-fit=cover`), layers fixed to an edge (Toaster, SaveBar, Sheet, Dialog) clear the notch and the home indicator through `env(safe-area-inset-*)`. Pages that don't opt in are unaffected.
+
 ## Your own fonts
 
 `altitude.css` loads Instrument Sans and JetBrains Mono from Google Fonts. To make no third-party request, import `altitude-design/altitude.no-fonts.css` instead (the same tokens and styles without the `@import`) and either self-host those two families or point the type at your own:

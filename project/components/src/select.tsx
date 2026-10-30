@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, useApproach, useControllable, useIsoLayoutEffect, useKeyFocus, useOutside, usePresence } from './core';
+import { cx, Icons, useApproach, useControllable, useFitFloating, useIsoLayoutEffect, useKeyFocus, useOutside, usePresence } from './core';
 import { commandScore } from './command';
 
 export const EXIT_3 = 160; // ≈ dur-travel-3 × 0.7
@@ -86,6 +86,8 @@ type ListProps = {
   focusable: boolean; onActive: (i: number) => void; onChoose: (i: number) => void; onKeyDown?: (e: React.KeyboardEvent) => void;
 };
 export function OptionList({ id, options, active, value, state, side, query, empty, listRef, labelledBy, label, focusable, onActive, onChoose, onKeyDown }: ListProps) {
+  // On screen at any width (#248).
+  useFitFloating(listRef, true);
   const rows = React.useRef<(HTMLDivElement | null)[]>([]);
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   useIsoLayoutEffect(() => {

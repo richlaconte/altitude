@@ -30,7 +30,7 @@ function App() {
   React.useEffect(() => {
     msgs.forEach((m, i) => setTimeout(() => A.toast({ ...m, duration: 6e4 }), 300 + i * 450));
   }, []);
-  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => A.toast({ title: "Changes saved", tone: "positive" }) }, "Toast"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => A.toast({ title: "Running low on storage", description: "92% used", tone: "caution" }) }, "Warning")), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { maxWidth: 300 } }, "Hover the stack to fan it out; timers pause while you read."), /* @__PURE__ */ React.createElement(A.Toaster, null));
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { onClick: () => A.toast({ title: "Changes saved", tone: "positive" }) }, "Toast"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => A.toast({ title: "Running low on storage", description: "92% used", tone: "caution" }) }, "Warning")), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { maxWidth: 300 } }, "Hover or tap the stack to fan it out; timers pause while you read; swipe a toast away."), /* @__PURE__ */ React.createElement(A.Toaster, null));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

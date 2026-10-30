@@ -669,6 +669,36 @@ export const Surface = React.forwardRef<HTMLElement, SurfaceProps>(function Surf
 
 });
 
+/* ───────────────────────── floating panels on screen ───────────────────────── */
+
+/**
+ * Keep an anchored floating panel (a tooltip, popover, menu, hover card, list) inside the viewport (#248): when it
+ * opens, and when the window resizes, it's measured and shifted sideways so it stays 8px clear of the screen's edges,
+ * on top of whatever translate its own placement uses. Its CSS caps its width at the viewport's.
+ */
+export function useFitFloating(ref: React.RefObject<HTMLElement | null>, open: boolean) {
+  useIsoLayoutEffect(() => {
+    const el = ref.current;
+    if (!open || !el) return;
+    const fit = () => {
+      el.style.translate = '';
+      // The visible width: a phone zooms out to fit overflowing content, which stretches clientWidth with it.
+      const vv = el.ownerDocument.defaultView?.visualViewport;
+      const view = Math.min(el.ownerDocument.documentElement.clientWidth, vv ? vv.width + vv.offsetLeft : Infinity), r = el.getBoundingClientRect(), m = 8;
+      let dx = 0;
+      if (r.right > view - m) dx = view - m - r.right;
+      if (r.left + dx < m) dx = m - r.left;
+      if (!dx) return;
+      const [tx = '0px', ty = '0px'] = (getComputedStyle(el).translate === 'none' ? '' : getComputedStyle(el).translate).split(' ').filter(Boolean);
+      el.style.translate = `calc(${tx} + ${dx}px) ${ty}`;
+    };
+    fit();
+    const win = el.ownerDocument.defaultView;
+    win?.addEventListener('resize', fit);
+    return () => win?.removeEventListener('resize', fit);
+  }, [open]);
+}
+
 /* ───────────────────────── Kbd ───────────────────────── */
 
 // Whether a keyboard is likely (#262): not on a touch-only device until a key is pressed, after which it is for the
