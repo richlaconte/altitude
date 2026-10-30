@@ -966,7 +966,7 @@ function App() {
         <A.Button onClick={() => A.toast({ title: 'Changes saved', tone: 'positive' })}>Toast</A.Button>
         <A.Button variant="ghost" onClick={() => A.toast({ title: 'Running low on storage', description: '92% used', tone: 'caution' })}>Warning</A.Button>
       </div>
-      <p className="cap" style={{ maxWidth: 300 }}>Hover the stack to fan it out; timers pause while you read.</p>
+      <p className="cap" style={{ maxWidth: 300 }}>Hover or tap the stack to fan it out; timers pause while you read; swipe a toast away.</p>
       <A.Toaster />
     </div>
   );

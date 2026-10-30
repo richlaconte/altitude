@@ -863,6 +863,9 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   position: fixed; z-index: var(--z-toast); right: calc(var(--space-6) + env(safe-area-inset-right, 0px)); bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px)); width: min(360px, calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   transition: height var(--dur-travel-4) var(--ease-rise);
 }
+/* On touch (#253): a tap opens the stack and holds it (timers paused) until a tap outside; a horizontal swipe dismisses
+   a toast, so the toast lets vertical scrolling through. */
+.alt-toast { touch-action: pan-y; }
 .alt-toast {
   position: absolute; right: 0; bottom: 0; width: 100%; display: flex; align-items: flex-start; gap: var(--space-3);
   padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); border-radius: var(--radius-lg);
