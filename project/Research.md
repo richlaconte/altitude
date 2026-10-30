@@ -1181,6 +1181,17 @@ A design review: `InlineCitation` and `Sources` were rendered in a three-sentenc
 
 Not yet tested with people: whether readers check sources more often with previews than with a list alone.
 
+### E101 · Do a chart's references hide the data they explain?
+
+An audit of the `ChartReference` preview (#184) found five words over marks: the "DNS outage" plate on the uptime dip it annotates, "Target 99.9%" and "Normal range" across the series line, "Bar 75" over the top bar with its halo cutting a notch out of the fill, and "Average 162.5 ms" crossed by the Apr 15 peak. E38 kept words off each other but never tested them against the marks. `checks/chart-reference.mjs` now samples each line's stroke and each bar's box under every label and plate, at 960px and 360px.
+
+- **Headroom for plates.** A plate is a label on the record, set above the data with a leader down to its x. The data now starts below the plates' last row, so a plate can't land on a peak. The plot gives up 26px a row (at most half its height).
+- **Above the bars, across a horizontal chart.** The labels' row sits above the first bar instead of on it.
+- **The other side, the other end.** A reference label tries its right end above the line, then below, then its left end, then steps along the line, and takes the first spot clear of every line, area and bar. A tall band's label tries its four inside corners first.
+- **The least covered, when nothing is clear.** On a 360px plot a label can have no clear spot. It then takes the one that covers least, with bars weighed by the area covered, so grazing a bar's top edge beats lying across it.
+
+Not yet tested with people: whether a label that moves to the left end is still read as belonging to its line.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

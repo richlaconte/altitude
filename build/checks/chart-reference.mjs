@@ -1,6 +1,7 @@
 // References and annotations (#68): a reference line is 1px ink-muted and solid, a status threshold wears its tone and
 // icon, a band is a flat line-coloured fill under the marks; references count toward y; a mean or median is computed
-// and said at the data's precision, and glides when the data changes; labels never overlap each other or a plate;
+// and said at the data's precision, and glides when the data changes; labels never overlap each other or a plate,
+// and neither covers a line or a bar;
 // annotations are Badge plates in rows with a leader to their x, buttons when they act (lifting when pointed at);
 // the summary lists references and annotations; horizontal charts draw references across; forced colours hatch bands.
 // Run after a render of every preview (it opens test/p-ChartReference-daylight.html); exits non-zero on a failure.
@@ -42,6 +43,21 @@ const read = (page) => page.evaluate(() => {
 });
 const overlap = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 && b.t < a.b - 0.5;
 
+// What a word covers (#184): the points along each line's stroke, and each bar's box, inside a label or a plate.
+const covered = (page) => page.evaluate(() => [...document.querySelectorAll('.alt-chart')].map((fig) => {
+  const plot = fig.querySelector('.alt-chart-plot');
+  const pts = [...plot.querySelectorAll('.alt-line-stroke')].flatMap((path) => {
+    const n = path.getTotalLength(), m = path.getScreenCTM(), out = [];
+    for (let l = 0; l <= n; l += 2) { const p = path.getPointAtLength(l); out.push([m.a * p.x + m.c * p.y + m.e, m.b * p.x + m.d * p.y + m.f]); }
+    return out;
+  });
+  const bars = [...plot.querySelectorAll('.alt-bar-mark, .alt-bar rect, .alt-bar path')].map((b) => b.getBoundingClientRect()).filter((r) => r.width && r.height);
+  const words = [...[...plot.querySelectorAll('.alt-chart-ref-label')].map((g) => ({ text: g.querySelector('text').textContent, r: g.getBoundingClientRect() })),
+    ...[...plot.querySelectorAll('.alt-chart-note')].map((p) => ({ text: p.textContent, r: p.getBoundingClientRect() }))];
+  return words.filter(({ r }) => pts.some(([x, y]) => x > r.left && x < r.right && y > r.top && y < r.bottom)
+    || bars.some((b) => b.left < r.right - 0.5 && r.left < b.right - 0.5 && b.top < r.bottom - 0.5 && r.top < b.bottom - 0.5)).map((w) => w.text);
+}));
+
 {
   const page = await open();
   const { inkMuted, critical, caution, line, lineControl, charts: [up, spend, score, lat] } = await read(page);
@@ -72,6 +88,8 @@ const overlap = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 
     const boxes = [...c.labels.map((l) => l.box), ...c.plates.map((p) => p.box)];
     expect(boxes.every((a, i) => boxes.every((b, j) => i === j || !overlap(a, b))), `labels and plates never overlap (${c.labels.map((l) => l.text)})`);
   }
+  const under = await covered(page);
+  expect(under.every((c) => c.length === 0), `no reference label or plate covers a line or a bar (#184; ${JSON.stringify(under)})`);
   const btn = lat.plates.find((p) => p.text === 'Cache rollout'), still = lat.plates.find((p) => p.text === 'Incident 412');
   expect(btn?.tag === 'BUTTON' && btn.name === 'Cache rollout, Apr 10, 2026' && /alt-badge/.test(btn.cls), `an annotation that acts is a Badge-plate button named with its date (${JSON.stringify(btn)})`);
   expect(still?.tag === 'SPAN' && still.hidden === 'true', 'one that only labels is hidden from assistive technology (the summary lists it)');
@@ -117,6 +135,10 @@ const overlap = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 
     const boxes = [...c.labels.map((l) => l.box), ...c.plates.map((p) => p.box)];
     expect(boxes.every((a, i) => boxes.every((b, j) => i === j || !overlap(a, b))), `360px: labels and plates never overlap (${c.labels.map((l) => l.text)})`);
   }
+  // A small plot can leave a label no clear spot (it then takes the one covering least), but the headroom always holds.
+  const narrow = await covered(page);
+  const plates = new Set(charts.flatMap((c) => c.plates.map((p) => p.text)));
+  expect(narrow.every((c) => c.every((t) => !plates.has(t))) && narrow[2].length === 0, `360px: no plate, nor a label across a horizontal chart, covers a mark (${JSON.stringify(narrow)})`);
   await page.close();
 }
 

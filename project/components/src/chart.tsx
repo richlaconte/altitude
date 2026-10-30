@@ -564,7 +564,8 @@ export interface ChartReferenceProps {
 /**
  * Something to read the chart against: a target, a limit, a normal range, the average. A line is 1px ink-muted and
  * solid (dashes mean "projected"), labelled at its right end; a band is a flat line-coloured fill, labelled inside.
- * Place it inside the chart type or the container. The container draws it, so labels stay clear of each other.
+ * Place it inside the chart type or the container. The container draws it, so labels stay clear of each other and of
+ * the marks.
  */
 export function ChartReference(_: ChartReferenceProps) { return null; }
 ChartReference.chartHtml = true;
@@ -580,7 +581,7 @@ export interface ChartAnnotationProps {
 }
 /**
  * An event on x ("the day we shipped v2"): a Badge plate flush at the top of the plot with a 1px line-control leader
- * down to its x. Plates that would overlap stack into rows. Listed after the summary for screen readers.
+ * down to its x. Plates that would overlap stack into rows, above the data. Listed after the summary for screen readers.
  */
 export function ChartAnnotation(_: ChartAnnotationProps) { return null; }
 ChartAnnotation.chartHtml = true;
@@ -612,6 +613,64 @@ type Layer = { frame: Frame; opacity: number };
 type RefGeo = { i: number; band: boolean; from: number; to: number; text: string; tone?: 'caution' | 'critical'; lx: number; ly: number; anchor: 'start' | 'end' };
 /** An annotation laid out in a frame: its x, its plate's left edge and width, and the row it stacks into. */
 type NoteGeo = { i: number; at: number; left: number; w: number; row: number };
+/** How a chart type's marks lie on the plot, for keeping words off them: lines, filled areas, or bars. */
+type MarkShape = { kind: 'line' | 'area' | 'bars'; stacked: boolean; shares: boolean };
+type PlotBox = { x0: number; x1: number; y0: number; y1: number };
+/**
+ * How much of the marks a box on the plot covers (#184), 0 for none: the line segments it crosses, the area of bar it
+ * overlaps (from the ground to the value, or to the stack's total), or 1 when it lies on an area's fill. A stack of shares
+ * fills the plot, so any box over it covers.
+ */
+function markCover(frame: Frame, shape: MarkShape | null, xKey: string, xOf: (d: ChartDatum) => number, y: LinearScale, x: ChartXScale, ground: number): (b: PlotBox) => number {
+  if (!shape) return () => 0;
+  const rows = frame.rows.map((r) => r.d), keys = frame.series.filter((q) => (frame.seriesAlpha.get(q.key) ?? 1) > 0).map((q) => q.key);
+  const val = (d: ChartDatum, k: string) => { const v = d[k]; return typeof v === 'number' && isFinite(v) ? v : null; };
+  // Each record's top and foot on the value axis: the stack's totals, or the highest and lowest series.
+  const span = (d: ChartDatum): [number, number] | null => {
+    const vs = keys.map((k) => val(d, k)).filter((v): v is number => v !== null);
+    if (!vs.length) return null;
+    if (shape.shares) return [0, 1];
+    if (shape.stacked) return [vs.reduce((t, v) => t + Math.min(0, v), 0), vs.reduce((t, v) => t + Math.max(0, v), 0)];
+    return [Math.min(0, ...vs), Math.max(0, ...vs)];
+  };
+  // A segment crosses a box: an end inside it, or the segment cutting one of its edges (Liang–Barsky).
+  const cuts = ([ax, ay]: [number, number], [bx, by]: [number, number], b: PlotBox) => {
+    let t0 = 0, t1 = 1;
+    const dx = bx - ax, dy = by - ay;
+    for (const [p, q] of [[-dx, ax - b.x0], [dx, b.x1 - ax], [-dy, ay - b.y0], [dy, b.y1 - ay]] as Array<[number, number]>) {
+      if (p === 0) { if (q < 0) return false; continue; }
+      const t = q / p;
+      if (p < 0) { if (t > t1) return false; t0 = Math.max(t0, t); } else { if (t < t0) return false; t1 = Math.min(t1, t); }
+    }
+    return true;
+  };
+  if (shape.kind === 'bars') {
+    if (x.kind !== 'band') return () => 0;
+    const rects = rows.flatMap((d) => { const s = span(d); if (!s) return []; const x0 = x(String(d[xKey])); const [a, c] = [y(s[0]), y(s[1])]; return [{ x0, x1: x0 + x.bandwidth, y0: Math.min(a, c), y1: Math.max(a, c) }]; });
+    // By the area covered, so grazing a bar's top edge counts for less than lying across it.
+    return (b) => rects.reduce((t, r) => t + Math.max(0, Math.min(b.x1, r.x1) - Math.max(b.x0, r.x0)) * Math.max(0, Math.min(b.y1, r.y1) - Math.max(b.y0, r.y0)), 0) / 50;
+  }
+  if (shape.kind === 'line' && !shape.stacked) {
+    const lines = keys.map((k) => rows.flatMap((d) => { const v = val(d, k); return v === null ? [] : [[xOf(d), y(v)] as [number, number]]; }));
+    return (b) => lines.reduce((t, pts) => t + (pts.length === 1 ? +cuts(pts[0], pts[0], b) : pts.filter((pt, i) => i > 0 && cuts(pts[i - 1], pt, b)).length), 0);
+  }
+  // An area (or a stack of lines): its top edge, and the fill from there down to the ground.
+  const top = rows.flatMap((d) => { const s = span(d); return s ? [[xOf(d), y(s[1])] as [number, number]] : []; });
+  const topAt = (px: number) => {
+    for (let i = 1; i < top.length; i++) {
+      const [ax, ay] = top[i - 1], [bx, by] = top[i];
+      if (px >= Math.min(ax, bx) && px <= Math.max(ax, bx)) return ax === bx ? Math.min(ay, by) : ay + ((by - ay) * (px - ax)) / (bx - ax);
+    }
+    return null;
+  };
+  return (b) => {
+    if (b.y0 >= ground) return 0;
+    const n = top.filter((pt, i) => i > 0 && cuts(top[i - 1], pt, b)).length;
+    if (n) return n;
+    const t = topAt((b.x0 + b.x1) / 2);
+    return t !== null && b.y1 > t ? 1 : 0;
+  };
+}
 /** Where a change is: the axis rescaling, the marks gliding to their values, or a cross-fade. */
 export type ChartStage = 'rescale' | 'values' | 'fade';
 
@@ -894,6 +953,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   // A chart that draws its own plot: a grid of cells has no value axis to read a reference or an event against.
   const grid = info.plot === 'grid', xy = info.plot === 'xy';
+  // How the marks lie, so reference labels keep off them (#184).
+  const markKind = grid || xy ? null : info.imprint === 'area' ? 'area' : info.swatch === 'line' ? 'line' : info.swatch === 'rect' ? 'bars' : null;
+  const marks: MarkShape | null = markKind && { kind: markKind, stacked: /stacked/i.test(info.kind ?? ''), shares: /shares/i.test(info.kind ?? '') };
   const childType = chartChild?.type as ChartChild | undefined;
   const refs = grid ? [] : overlayKids.filter((k) => (k.type as ChartChild).chartReference).map((k) => k.props as unknown as ChartReferenceProps);
   const notes = grid ? [] : overlayKids.filter((k) => (k.type as ChartChild).chartAnnotation).map((k) => k.props as unknown as ChartAnnotationProps);
@@ -1112,18 +1174,50 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const left = Math.round(frame.left);
     const pw = Math.max(0, W - left - right), ph = Math.max(0, H - TOP - bottom);
     const [d0, d1] = frame.y;
-    // Along the value axis: up the plot, or across it when horizontal.
-    const span = horizontal ? pw : ph;
-    const y = Object.assign((v: number) => (horizontal ? 0 : ph) + (horizontal ? 1 : -1) * ((v - d0) / (d1 - d0 || 1)) * span,
+    // Headroom (#184): the top of the plot that holds annotation plates (or, across a horizontal chart, reference
+    // labels) and no data, so they never cover a mark. Set below, once they're laid out; nothing reads y before.
+    let headY = 0, headX = 0;
+    // Along the value axis: up the plot, below the headroom, or across it when horizontal.
+    const y = Object.assign((v: number) => (horizontal ? ((v - d0) / (d1 - d0 || 1)) * pw : ph - ((v - d0) / (d1 - d0 || 1)) * (ph - headY)),
       { kind: 'linear' as const, domain: frame.y, range: (horizontal ? [0, pw] : [ph, 0]) as [number, number], ticks: frame.ticks.map((t) => t.v) }) as LinearScale;
+    // A reference's value in this frame, and its words: a mean or median is computed from the record.
+    const refAt = (r: ChartReferenceProps): { v: number | [number, number]; text: string } | null => {
+      let v: number | [number, number] | null = null;
+      const key = r.series ?? frame.series[0]?.key;
+      const vals = frame.rows.map((q) => q.d).filter((d) => !statusOf(d));
+      if (typeof r.y === 'string') {
+        const vs = vals.map((d) => d[key ?? '']).filter((n): n is number => typeof n === 'number' && isFinite(n)).sort((a, b) => a - b);
+        if (vs.length) v = r.y === 'mean' ? vs.reduce((t, n) => t + n, 0) / vs.length : vs.length % 2 ? vs[(vs.length - 1) / 2] : (vs[vs.length / 2 - 1] + vs[vs.length / 2]) / 2;
+      } else v = r.y;
+      if (v === null) return null;
+      const fmt = (n: number) => (frame.series.find((q) => q.key === key)?.format ?? fmtY)(n);
+      // A mean or median is said at the data's own precision, so a format that doesn't round still reads cleanly.
+      const places = Math.min(4, Math.max(0, ...frame.rows.map((q) => { const n = q.d[key ?? '']; return typeof n === 'number' && isFinite(n) ? (String(n).split('.')[1] ?? '').length : 0; })));
+      return { v, text: typeof r.y === 'string' && typeof v === 'number' ? `${r.label} ${fmt(Number(v.toFixed(places + 1)))}` : r.label };
+    };
+    // Across a horizontal chart, reference labels sit above the bars beside their line, stacked into rows.
+    const across = new Map<number, { lx: number; ly: number }>();
+    if (horizontal && refs.length) {
+      const ends: number[] = [];
+      refs.map((r, i) => ({ i, r, at: refAt(r) })).filter((q) => q.at).map(({ i, r, at }) => ({ i, r, text: at!.text, to: Array.isArray(at!.v) ? y(Math.max(...at!.v)) : y(at!.v) }))
+        .sort((p, q) => p.to - q.to).forEach(({ i, r, text, to }) => {
+          const w = textWidth(text) + (r.tone ? 18 : 0);
+          const x0 = Math.min(to + 4, pw - w);
+          let row = ends.findIndex((e) => e + 6 <= x0);
+          if (row < 0) { row = ends.length; ends.push(0); }
+          ends[row] = x0 + w;
+          across.set(i, { lx: x0 + (r.tone ? 18 : 0), ly: 12 + row * 16 });
+        });
+      headX = ends.length * 16 + 4;
+    }
     let x: ChartXScale;
     let xTicks: Array<{ at: number; label: string; a: number }> = [];
     if (frame.kind === 'band') {
       const band = frame.band!;
       const domain = frame.rows.map((r) => String(r.d[xKey]));
-      const along = horizontal ? ph : pw;
+      const along = horizontal ? ph - headX : pw, from = horizontal ? headX : 0;
       const bw = (band.get(domain[0])?.[1] ?? 0) * along;
-      x = Object.assign((v: string) => (band.get(String(v))?.[0] ?? 0) * along, { kind: 'band' as const, domain, range: [0, along] as [number, number], ticks: domain, bandwidth: bw, step: bw / (1 - bandPadding) }) as BandScale;
+      x = Object.assign((v: string) => from + (band.get(String(v))?.[0] ?? 0) * along, { kind: 'band' as const, domain, range: [from, from + along] as [number, number], ticks: domain, bandwidth: bw, step: bw / (1 - bandPadding) }) as BandScale;
       if (axes && horizontal) {
         xTicks = domain.map((d, i) => ({ at: (x as BandScale)(d) + bw / 2, label: fit(bandLabel(d), left - 12), a: frame.rowAlpha.get(frame.rows[i].key) ?? 1 }));
       } else if (axes) {
@@ -1162,6 +1256,22 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       if (axes) xTicks = (x as LinearScale).ticks.map((v) => ({ at: (x as LinearScale)(v), label: formatX(v), a: 1 }));
     }
     const xOf = (d: ChartDatum) => (x.kind === 'band' ? x(String(d[xKey])) + x.bandwidth / 2 : (x as LinearScale | TimeScale)(d[xKey] as number));
+    // Annotations (#68): a plate per event at the top of the plot, centred on its x, stacked into rows where they'd
+    // overlap. The rows are the plot's headroom: the data starts below them, so a plate never covers a mark.
+    const noteGeo: NoteGeo[] = [];
+    if (!horizontal) {
+      const rowsEnd: number[] = [];
+      notes.map((n, i) => ({ n, i, at: xOf({ [xKey]: n.x }) })).filter((g) => isFinite(g.at)).sort((p, q) => p.at - q.at).forEach(({ n, i, at }) => {
+        const w = Math.ceil(textWidth(n.label) * 0.96) + 18;
+        const left = Math.max(0, Math.min(pw - w, at - w / 2));
+        let row = rowsEnd.findIndex((e) => e + 6 <= left);
+        if (row < 0) { row = rowsEnd.length; rowsEnd.push(0); }
+        rowsEnd[row] = left + w;
+        noteGeo.push({ i, at, left, w, row });
+      });
+      headY = Math.min(rowsEnd.length * 26, ph / 2);
+      y.range = [ph, headY];
+    }
     const ground = d0 <= 0 && d1 >= 0 ? y(0) : horizontal ? 0 : ph;
     const rowAlpha = (d: ChartDatum) => frame.rowAlpha.get(rowKey(d)) ?? 1;
     // Not yet the record (#67): which stretches of x are pending, and where the record ends.
@@ -1203,56 +1313,47 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // References (#68): each one's place on the value axis in this frame, so they glide with a rescale.
     const refGeo: RefGeo[] = [];
     refs.forEach((r, i) => {
-      let v: number | [number, number] | null = null;
-      const key = r.series ?? frame.series[0]?.key;
-      if (typeof r.y === 'string') {
-        const vs = rows.filter((d) => !statusOf(d)).map((d) => d[key ?? '']).filter((n): n is number => typeof n === 'number' && isFinite(n)).sort((a, b) => a - b);
-        if (vs.length) v = r.y === 'mean' ? vs.reduce((t, n) => t + n, 0) / vs.length : vs.length % 2 ? vs[(vs.length - 1) / 2] : (vs[vs.length / 2 - 1] + vs[vs.length / 2]) / 2;
-      } else v = r.y;
-      if (v === null) return;
-      const fmt = (n: number) => (frame.series.find((q) => q.key === key)?.format ?? fmtY)(n);
-      // A mean or median is said at the data's own precision, so a format that doesn't round still reads cleanly.
-      const places = Math.min(4, Math.max(0, ...rows.map((d) => { const n = d[key ?? '']; return typeof n === 'number' && isFinite(n) ? (String(n).split('.')[1] ?? '').length : 0; })));
-      const text = typeof r.y === 'string' && typeof v === 'number' ? `${r.label} ${fmt(Number(v.toFixed(places + 1)))}` : r.label;
+      const at = refAt(r);
+      if (!at) return;
+      const { v, text } = at;
       if (Array.isArray(v)) {
         const [p, q] = [y(Math.min(v[0], v[1])), y(Math.max(v[0], v[1]))];
         refGeo.push({ i, band: true, from: Math.min(p, q), to: Math.max(p, q), text, tone: r.tone, lx: 0, ly: 0, anchor: 'start' });
       } else refGeo.push({ i, band: false, from: y(v), to: y(v), text, tone: r.tone, lx: 0, ly: 0, anchor: 'end' });
     });
-    // Annotations (#68): a plate per event at the top of the plot, centred on its x, stacked into rows where they'd overlap.
-    const noteGeo: NoteGeo[] = [];
-    if (!horizontal) {
-      const rowsEnd: number[] = [];
-      notes.map((n, i) => ({ n, i, at: xOf({ [xKey]: n.x }) })).filter((g) => isFinite(g.at)).sort((p, q) => p.at - q.at).forEach(({ n, i, at }) => {
-        const w = Math.ceil(textWidth(n.label) * 0.96) + 18;
-        const left = Math.max(0, Math.min(pw - w, at - w / 2));
-        let row = rowsEnd.findIndex((e) => e + 6 <= left);
-        if (row < 0) { row = rowsEnd.length; rowsEnd.push(0); }
-        rowsEnd[row] = left + w;
-        noteGeo.push({ i, at, left, w, row });
-      });
-    }
-    // Labels: a band's inside it when it's tall enough; a line's (and a thin band's) at the right end, above it, nudged
-    // at least 16px apart. Across a horizontal chart, labels sit at the top beside their line, stacked into rows.
-    const outside: RefGeo[] = [];
-    for (const g of refGeo) {
-      if (horizontal) { outside.push(g); continue; }
-      if (g.band && g.to - g.from >= 20) { g.lx = 8; g.ly = g.from + 14; g.anchor = 'start'; } else { g.lx = pw - 4; g.ly = g.from - 5; g.anchor = 'end'; outside.push(g); }
-    }
+    // Labels: a line's (and a thin band's) at an end of it, above or below; a tall band's inside it. Each takes the first
+    // spot that covers no mark, no plate and no label already placed (#184); failing that, the first spot, stepped
+    // down below whatever it would cover. Across a horizontal chart, labels sit in the headroom beside their line.
     if (horizontal) {
-      const ends: number[] = [];
-      for (const g of [...outside].sort((p, q) => p.from - q.from)) {
-        const w = textWidth(g.text) + (g.tone ? 18 : 0);
-        const x0 = Math.min(g.to + 4, pw - w);
-        let row = ends.findIndex((e) => e + 6 <= x0);
-        if (row < 0) { row = ends.length; ends.push(0); }
-        ends[row] = x0 + w;
-        g.lx = x0 + (g.tone ? 18 : 0); g.ly = 12 + row * 16; g.anchor = 'start';
-      }
+      for (const g of refGeo) { const a = across.get(g.i); if (a) { g.lx = a.lx; g.ly = a.ly; g.anchor = 'start'; } }
     } else {
-      // One pass, top to bottom: a label that would cover a plate or a label already placed steps down below it.
       const taken = noteGeo.map((n) => ({ x0: n.left - 4, x1: n.left + n.w + 4, y0: n.row * 26, y1: n.row * 26 + 22 }));
+      type Box = { x0: number; x1: number; y0: number; y1: number };
+      const hits = (a: Box, b: Box) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
+      const covers = markCover(frame, marks, xKey, xOf, y, x, ground);
+      // Its right end first, above then below; then its left end; then stepping along the line from the right.
+      const spots = (g: RefGeo): Array<[number, number, 'start' | 'end']> => {
+        const w = textWidth(g.text) + (g.tone ? 18 : 0), l = 4 + (g.tone ? 18 : 0), r = pw - 4;
+        const out: Array<[number, number, 'start' | 'end']> = [[r, g.from - 5, 'end'], [r, g.to + 15, 'end'], [l, g.from - 5, 'start'], [l, g.to + 15, 'start']];
+        for (let k = 1; k < 6; k++) { const at = r - ((pw - 8 - w) * k) / 6; if (at - w > l) out.push([at, g.from - 5, 'end'], [at, g.to + 15, 'end']); }
+        return g.band && g.to - g.from >= 20 ? [[l + 4, g.from + 14, 'start'], [r - 4, g.from + 14, 'end'], [l + 4, g.to - 5, 'start'], [r - 4, g.to - 5, 'end'], ...out] : out;
+      };
+      const boxOf = (g: RefGeo, [lx, ly, anchor]: [number, number, 'start' | 'end']): Box => {
+        const w = textWidth(g.text) + (g.tone ? 18 : 0), x0 = anchor === 'end' ? lx - w : lx - (g.tone ? 18 : 0);
+        return { x0, x1: x0 + w, y0: ly - 13, y1: ly + 4 };
+      };
+      for (const g of refGeo) [g.lx, g.ly, g.anchor] = spots(g)[0];
       for (const g of [...refGeo].sort((p, q) => p.ly - q.ly)) {
+        // Of the spots inside the plot and clear of other words, the one that covers least: none, where there's room.
+        let best: [number, number, 'start' | 'end'] | null = null, least = Infinity;
+        for (const sp of spots(g)) {
+          const b = boxOf(g, sp);
+          if (b.y0 < 0 || b.y1 > ph || b.x0 < 0 || b.x1 > pw || taken.some((t) => hits(b, t))) continue;
+          const n = covers({ x0: b.x0 - 2, x1: b.x1 + 2, y0: b.y0 - 1, y1: b.y1 + 1 });
+          if (n < least) { best = sp; least = n; }
+          if (!n) break;
+        }
+        if (best) { [g.lx, g.ly, g.anchor] = best; const b = boxOf(g, best); taken.push({ x0: b.x0 - 4, x1: b.x1 + 4, y0: b.y0, y1: b.y1 }); continue; }
         const w = textWidth(g.text) + (g.tone ? 18 : 0), x0 = g.anchor === 'end' ? g.lx - w : g.lx - (g.tone ? 18 : 0);
         g.ly = Math.max(g.ly, 12);
         for (let moved = true, n = 0; moved && n < 20; n++) {

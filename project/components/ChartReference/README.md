@@ -16,13 +16,13 @@ Reading a chart against something: an SLO target, a budget, a normal range, the 
 
 | Part | Drawn as | Words |
 |---|---|---|
-| Reference line | 1px `ink-muted`, solid, over the marks. Dashes mean "projected", so a reference line never has them | its label at the right end, above the line, in caption text |
+| Reference line | 1px `ink-muted`, solid, over the marks. Dashes mean "projected", so a reference line never has them | its label at the right end, above the line, in caption text; below it, at the left end or further along when that spot would cover a mark |
 | Status threshold (`tone`) | 1px `caution` or `critical` | the label in `ink`, with the status icon in its tone |
-| Band (`y={[low, high]}`) | a flat `line` fill under the marks: a decorative token, so it isn't read as data or as an opening | its label inside the band, or at the right end when the band is under 20px tall |
-| Annotation | a `Badge` plate flush at the top of the plot (a label is part of the record), with a 1px `line-control` leader down to its x | the plate's text |
+| Band (`y={[low, high]}`) | a flat `line` fill under the marks: a decorative token, so it isn't read as data or as an opening | its label inside the band, at whichever corner covers no mark, or beside it when the band is under 20px tall |
+| Annotation | a `Badge` plate flush at the top of the plot, in a row of headroom above the data (a label is part of the record), with a 1px `line-control` leader down to its x | the plate's text |
 | Annotation with `onSelect` | the plate is a button and lifts one level when pointed at | button semantics, named "v2 launch, Mar 4, 2026" |
 
-**Labels stay clear.** The container draws every reference and annotation itself, so it can lay their words out together. Labels at the right end are nudged at least 16px apart. Plates that would overlap stack into rows 26px apart. A label that would sit under a plate steps down below the plates' rows. Across a horizontal chart, references stand upright and their labels stack along the top. All labels are on a halo of the plot's colour, so a line or a bar under them never cuts through the text.
+**Labels stay clear, of each other and of the data.** The container draws every reference and annotation itself, so it can lay their words out together with the marks. Plates sit in rows 26px apart at the top of the plot, and the data starts below the last row, so a plate never covers a mark. A reference's label takes the first spot that covers no line, area or bar and no other word: the right end above its line, then below, then the left end, then along the line. On a plot too small for any of those, it takes the spot that covers least. Across a horizontal chart, references stand upright and their labels stack in a row above the bars. All labels are on a halo of the plot's colour.
 
 **Values.** A reference's own values count toward the y axis, so a target above every value is still on the plot. `y="mean"` and `y="median"` are read from the settled records of `series` (default: the first shown), and the label adds the value at the data's own precision: "Average 162.5 ms".
 
