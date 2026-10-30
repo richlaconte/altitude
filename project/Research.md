@@ -1382,6 +1382,16 @@ A source audit (#253): the stack fanned out and paused its timers on `pointerent
 
 `checks/toaster-touch.mjs` drives it with touch events.
 
+### E119 · Where should a menu open on a phone?
+
+A review (#249): at 375px a Select opened a 280px list under its trigger, with 30–36px rows, possibly off the bottom of the screen; the thumb is at the bottom, the list wherever the trigger was. Native pickers open at the bottom for this reason, and AppShell and NotificationCenter already become sheets when narrow.
+
+- **At the bottom edge.** `presentation="auto"` opens DropdownMenu and Select as a sheet under 640px with a coarse pointer: full width less 8px, clear of the safe areas (#252), at most 70% of the visible height (#251), 44px rows, a head with the title and Close. Close sits outside the `menu`/`listbox` role, which only holds its options.
+- **Still a menu (the open question).** Moving to the bottom edge doesn't make it a different choice, so it stays at level 3, the menu's, not a sheet's level 4.
+- **Combobox stays put.** You type into it, so its list stays under the field rather than at a bottom edge the keyboard covers; `presentation="sheet"` opts in.
+
+`checks/menu-sheet.mjs` drives each by touch, and with a mouse.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
