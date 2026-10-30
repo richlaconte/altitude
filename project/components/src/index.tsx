@@ -150,6 +150,8 @@ export type { FieldErrors, EditRecordResult, EditRecordPhase, EditRecordOptions,
 export { useAsyncCollection } from './pattern-async-collection';
 export type { AsyncCollectionOptions, CollectionPhase } from './pattern-async-collection';
 export { useConsequentialAction } from './pattern-consequential-action';
+export { useAssistantTurn, AssistantError, assistantErrorText } from './pattern-assistant-conversation';
+export type { AssistantTurn, AssistantTurnOptions, AssistantTurnState, AssistantTurnError, AssistantErrorKind } from './pattern-assistant-conversation';
 export type { ConsequentialActionOptions, ConsequentialPhase, ActionResult, UndoResult } from './pattern-consequential-action';
 export { useReviewSubmit } from './pattern-review-submit';
 export type { ReviewSubmitOptions, ReviewSubmitResult } from './pattern-review-submit';

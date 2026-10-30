@@ -1,6 +1,10 @@
 {
   "purpose": "Guidance-only condition: replace sentences that name runtime exports or reference snapshots the condition omits. Each 'from' must occur exactly once; preparation fails when a source sentence changes.",
   "files": {
+    "patterns/assistant-conversation.md": [
+      ["The hook `useAssistantTurn` holds the turn.", "One piece of turn state holds the conversation."],
+      ["Supply a stream that yields text as it arrives and resolves only when the provider says the answer is complete (throw an `AssistantError` with its kind when it fails), the restored answer and whether it completed when the page reloads, and the context window used when you know it.", "Supply a stream that yields text as it arrives and resolves only when the provider says the answer is complete (and says which kind of failure it was when it fails), the restored answer and whether it completed when the page reloads, and the context window used when you know it."]
+    ],
     "patterns/edit-record.md": [
       ["Do not use this hook as a backend, authorization layer or autosave engine.", "Do not treat this workflow as a backend, authorization layer or autosave engine."],
       ["`ErrorSummary` links to actual control IDs and takes focus on invalid submit via `focusKey={form.submitCount}`.", "An error summary links to actual control IDs and takes focus on each invalid submit."],
