@@ -2169,6 +2169,42 @@ export interface ScatterChartProps {
 }
 /** Two measures per record, to see how they relate: flat dots ringed apart, a shape per group, outliers named. Renders inside a ChartContainer. */
 export declare function ScatterChart(props: ScatterChartProps): React.ReactElement;
+/** The props of a DotPlot. */
+export interface DotPlotProps {
+  /** The records: one per category. undefined or a promise while they load; null or [] when there are none. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** What the plot says when there's no data. */
+  empty?: ChartEmpty;
+  /** The key of each record's category, down the side. */
+  x: string;
+  /** Order the categories by value ('desc': the largest first): the first series', or `to`'s. */
+  sort?: 'asc' | 'desc';
+  /** A spread around each value, as the keys of its low and high: a flat band behind the dot. Never error bars. */
+  range?: [string, string];
+  /** What the spread is, in words. Default "Range". */
+  rangeLabel?: string;
+  /** The series the spread belongs to. Default the first. */
+  rangeSeries?: string;
+  /** Before and after per category (a dumbbell): the earlier dot hollow, the later filled, joined by a 2px ink-muted link. */
+  from?: string;
+  to?: string;
+  /** Force zero onto the axis. Default false. */
+  zero?: boolean;
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  rescale?: boolean;
+  selected?: unknown;
+  onSelect?: (d: ChartDatum | null) => void;
+  drill?: (d: ChartDatum) => string | null | undefined;
+  tooltip?: boolean;
+  /** Series keys that keep their colours while the rest take data-context. */
+  focus?: string[];
+  children?: React.ReactNode;
+}
+/**
+ * Values compared across categories where zero isn't part of the story, averages with their spread, or before and
+ * after per category. Dots lie flat on the ground, ringed in the plot's colour; with no zero there's no ground line.
+ */
+export declare function DotPlot(props: DotPlotProps): React.ReactElement;
 /** A sliding window over x: a span of time, or the last N records. */
 export interface ChartWindow {
   minutes?: number; hours?: number; days?: number; points?: number;
@@ -3332,7 +3368,7 @@ declare global {
       Tooltip: typeof Tooltip; Popover: typeof Popover; DropdownMenu: typeof DropdownMenu; Dialog: typeof Dialog; Toaster: typeof Toaster; toast: typeof toast;
       Sheet: typeof Sheet; SheetHeader: typeof SheetHeader; SheetTitle: typeof SheetTitle; SheetDescription: typeof SheetDescription; SheetFooter: typeof SheetFooter;
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
-      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
+      Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; DotPlot: typeof DotPlot; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
       Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; filterSentence: typeof filterSentence; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;

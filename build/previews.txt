@@ -1775,6 +1775,37 @@ function App() {
   );
 }
 
+=== DotPlot | <!-- @dsCard group="Charts" height=560 subtitle="Values where zero isn't the story, with their spread; before and after per category" -->
+--- css
+.dp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 720px) { .dp { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const services = [['Checkout', 212, 180, 240], ['Search', 188, 170, 205], ['Billing', 236, 190, 320], ['Accounts', 199, 182, 214], ['Media', 228, 196, 268], ['Auth', 184, 176, 193], ['Exports', 221, 187, 262], ['Email', 193, 179, 209]]
+  .map(([service, p95, p10, p90]) => ({ service, p95, p10, p90 }));
+const teams = [['Atlas', 71, 78], ['Birch', 64, 62], ['Cedar', 80, 86], ['Delta', 58, 69], ['Ember', 75, 77]].map(([team, q2, q3]) => ({ team, q2, q3 }));
+function App() {
+  return (
+    <div className="dp">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="d1">p95 latency by service</A.CardTitle><A.CardDescription>All between 180 and 240 ms; the band is the 10th–90th percentile</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="d1" aspect={1.5} config={{ p95: { label: 'p95', format: (v) => `${v} ms` } }}>
+            <A.DotPlot data={services} x="service" range={['p10', 'p90']} rangeLabel="10th–90th percentile" sort="desc" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="d2">Accessibility score, Q2 to Q3</A.CardTitle><A.CardDescription>A dumbbell: the hollow dot is Q2, the filled one Q3</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="d2" aspect={1.5} config={{ q2: { label: 'Q2' }, q3: { label: 'Q3' } }}>
+            <A.DotPlot data={teams} x="team" from="q2" to="q3" sort="desc" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === ChartTooltip | <!-- @dsCard group="Charts" height=740 subtitle="A crosshair on the ground and a readout floating over the plot; a reading pinned to it" -->
 --- css
 .ct { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }

@@ -118,6 +118,8 @@ export { Heatmap } from './heatmap';
 export type { HeatmapProps } from './heatmap';
 export { ScatterChart } from './scatter-chart';
 export type { ScatterChartProps } from './scatter-chart';
+export { DotPlot } from './dot-plot';
+export type { DotPlotProps } from './dot-plot';
 export { ChartBrush } from './chart-brush';
 export type { ChartBrushProps } from './chart-brush';
 export type { AreaChartProps } from './area-chart';

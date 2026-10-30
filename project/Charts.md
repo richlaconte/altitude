@@ -34,6 +34,7 @@ Choose by the job the data does, not by what looks rich.
 | A value within a known range | `Meter` (a password's strength too, in `PasswordInput`) |
 | A value per cell over two dimensions | `Heatmap` |
 | How two measures relate | `ScatterChart` |
+| Values where zero isn't meaningful, averages with their spread, or before and after per category | `DotPlot` |
 | Part of a whole | a stacked `BarChart`, or a segmented `Meter` |
 
 **No pie or donut charts.** Angle and area are read less accurately than position and length, so a part of a whole is a stacked bar or a segmented meter. **No 3D, ever**, for the reasons in rule 1.

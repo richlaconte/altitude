@@ -2484,6 +2484,24 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 @media (forced-colors: active) { .alt-chart-pins-strip path { stroke: CanvasText; } .alt-chart-pins-strip text { fill: CanvasText; } .alt-chart-pin-icon, .alt-chart-pin-remove { color: CanvasText; } }
 .alt-line-compare { stroke: var(--ink-muted); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
 @media (forced-colors: active) { .alt-bar-compare { stroke: CanvasText; } .alt-line-compare { stroke: CanvasText; stroke-width: 1; } }
+/* ── DotPlot (#192): values where zero isn't part of the story, as position, never height. The values are the record,
+   so dots lie flat on the ground as a ScatterChart's do: at least 8px, a marker per series, ringed 2px in the plot's
+   colour. With no zero there's no ground line, only the plot's foot. Each row has a 1px line guide from its label. A
+   spread is a flat band of the series colour at 16% behind the dot, never error bars. A dumbbell joins a hollow "from"
+   dot to a filled "to" dot with a 2px ink-muted link. A mark that acts gets a 2px ink outline, never a lift. ── */
+.alt-dot-guide { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-dot-range { fill-opacity: 0.16; }
+.alt-dot-link { stroke: var(--ink-muted); stroke-width: 2; stroke-linecap: round; }
+.alt-dot-hover { fill: none; stroke: var(--ink); stroke-width: 2; }
+.alt-chart-plot[data-interactive] .alt-dot-row { cursor: pointer; }
+@media (prefers-contrast: more) { .alt-dot-guide { stroke: var(--line-control); } }
+[data-contrast="more"] .alt-dot-guide { stroke: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-dot-guide { stroke: GrayText; }
+  .alt-dot-range { fill: GrayText; fill-opacity: 0.4; }
+  .alt-dot-link, .alt-dot-hover { stroke: CanvasText; }
+  .alt-dot-mark[data-from] { stroke: CanvasText; fill: Canvas; }
+}
 /* Changed since a snapshot (#191): a changed bar's old value is the comparison's tick; a changed line point's old place
    is a small hollow ink-muted ring. The caption says how many changed, in a switch that recedes the rest. */
 .alt-line-since { fill: var(--alt-chart-bg); stroke: var(--ink-muted); stroke-width: 1.5; }

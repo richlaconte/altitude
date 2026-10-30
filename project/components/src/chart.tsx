@@ -393,7 +393,7 @@ export interface ChartInfo {
   /** Extra keys that glide with the values (a dot's x). */
   glide?: string[];
   /** The series, when they aren't the config's keys (a scatter's groups). The config then names the measures. */
-  series?: Array<{ key: string; label: string; color?: ChartSlot }>;
+  series?: Array<{ key: string; label: string; color?: ChartSlot; format?: (v: number) => string }>;
   /** Formats x values (ticks, the readout), when the chart knows x's format (a measure in the config). */
   xFormat?: (value: unknown) => string;
   /** The table view's columns, when a column per series isn't the shape of the data. */
