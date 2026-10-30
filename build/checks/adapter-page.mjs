@@ -18,6 +18,7 @@ export async function adapterPages(file, exportName) {
     createRoot(document.getElementById('root')).render(React.createElement(AltitudeProvider, { scheme: q.get('scheme'), contrast: q.get('contrast') || 'system', motion: q.get('motion') || 'system' }, React.createElement(Example[q.get('example') || '${exportName}'])));`;
   const out = await build({ stdin: { contents: entry, resolveDir: root, loader: 'jsx' }, bundle: true, write: false, outdir: dir, format: 'iife', jsx: 'transform',
     loader: { '.js': 'jsx' }, define: { 'process.env.NODE_ENV': '"production"' }, logLevel: 'silent' });
+  await writeFile(join(dir, 'bundle.css'), ''); // an example that imports no CSS still gets the file its page links
   for (const f of out.outputFiles) await writeFile(join(dir, f.path.endsWith('.css') ? 'bundle.css' : 'bundle.js'), f.contents);
   const tokens = await readFile(join(root, 'build/test/tokens.css'), 'utf8');
   const altitude = (await readFile(join(root, 'project/components/bundle.css'), 'utf8')).replace(/^@import[^\n]*\n/, '');

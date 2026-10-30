@@ -49,6 +49,10 @@ await build({ ...themes, format: 'cjs', outfile: 'dist/chart-themes.cjs' });
 // are; they style the library's own elements and import nothing.
 mkdirSync('dist/adapters', { recursive: true });
 for (const file of readdirSync('project/components/adapters').filter((f) => f.endsWith('.css'))) copyFileSync('project/components/adapters/' + file, 'dist/adapters/' + file);
+// The CodeMirror adapter is code: a theme extension that imports only CodeMirror, the app's peer dependency.
+const codemirror = { ...shared, entryPoints: ['project/components/src/adapter-codemirror.tsx'], banner: {}, external: ['@codemirror/*', '@lezer/*'] };
+await build({ ...codemirror, format: 'esm', outfile: 'dist/adapters/codemirror.js' });
+await build({ ...codemirror, format: 'cjs', outfile: 'dist/adapters/codemirror.cjs' });
 execSync('npx tsc -p tsconfig.json', { stdio: 'inherit' });
 // NodeNext requires explicit relative specifiers. A CJS declaration tree matches the
 // require runtime, while ESM/Bundler keep the primary .d.ts tree. Both derive from tsc.

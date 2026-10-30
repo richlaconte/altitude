@@ -289,3 +289,22 @@ Styles Tiptap's `.tiptap` editor (ProseMirror, Tiptap 2 or later):
 - **The mention list is yours too.** Render it with class `alt-rte-mentions`, `role="listbox"` and options with `aria-selected`, and it floats at level 3 like `Combobox`'s list.
 
 What it can't cover: Tiptap's menus beyond mentions (bubble and floating menus are your markup: build them from `Popover` and `Toolbar`), and anything a custom extension renders itself.
+
+### CodeMirror
+
+```ts
+import { EditorView } from '@codemirror/view';
+import { altitudeTheme } from 'altitude-design/adapters/codemirror';
+
+new EditorView({ parent, extensions: [altitudeTheme(), /* your language, lint, keymaps */] });
+```
+
+`altitudeTheme()` is a CodeMirror 6 extension: a theme plus a syntax highlight style. Every value is one of the scheme's custom properties, so the editor follows the active scheme, a custom accent and `contrast="more"` without being re-created. `altitudeEditorTheme` and `altitudeHighlightStyle` are exported separately if you compose your own.
+
+- **The editor is an opening**: a well with its inside wall; focus lights the floor and keyboard focus adds the 2px neutral rim.
+- **Gutter and lines are ground.** The active line is a tint, never a height; the selection is accent.
+- **Syntax uses `ink`, `ink-muted` and `accent-ink` only**: keywords and literals in accent-ink, comments and punctuation in ink-muted, the rest in ink. Code is text to read, not data to compare, so there are no `data-*` hues.
+- **Lint errors** (`@codemirror/lint`) sink their gutter marker into a trench on `critical-soft`, underline the range in critical, and keep the message in words in the tooltip.
+- **Tooltips and completion lists** float at level 3.
+
+What it can't cover: the editor's state changes without a transition, because a CodeMirror theme can't scope a reduced-motion query to the editor itself. If you add `drawSelection()`, its blinking cursor is CodeMirror's own. Search and other panels take ground and line but keep CodeMirror's layout.

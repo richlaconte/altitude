@@ -35,6 +35,12 @@ for (const [key, path] of Object.entries(pkg.exports).filter(([k]) => k.startsWi
   const css = readFileSync(new URL('../' + path, import.meta.url), 'utf8');
   assert.ok(!/@import/.test(css), `${key} imports nothing`);
 }
+// altitude-design/adapters/codemirror: a theme extension importing only CodeMirror, in ESM and CommonJS, with declarations.
+const cmEsm = await import('../dist/adapters/codemirror.js'), cmCjs = require('../dist/adapters/codemirror.cjs');
+for (const [name, api] of [['ESM', cmEsm], ['CJS', cmCjs]]) assert.equal(typeof api.altitudeTheme, 'function', `adapters/codemirror ${name}: altitudeTheme`);
+const cmImports = [...readFileSync(new URL('../dist/adapters/codemirror.js', import.meta.url), 'utf8').matchAll(/^import .* from ["']([^"']+)["']/gm)].map((m) => m[1]);
+assert.ok(cmImports.length && cmImports.every((m) => /^@(codemirror|lezer)\//.test(m)), `adapters/codemirror imports only CodeMirror (${cmImports})`);
+for (const path of Object.values(pkg.exports['./adapters/codemirror']).flatMap((v) => Object.values(v))) readFileSync(new URL('../' + path, import.meta.url));
 const folder = new URL('../build/test/alt-05/', import.meta.url);
 mkdirSync(folder, { recursive: true });
 const fixture = new URL('public-api.tsx', folder);
