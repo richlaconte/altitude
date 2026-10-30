@@ -210,6 +210,8 @@ interface SelectFieldProps {
   'aria-describedby'?: string;
 }
 export interface SelectProps extends SelectFieldProps {
+  /** 'auto' (default): anchored, or on a narrow touch screen a sheet at the bottom edge with a title and Close. 'anchored' or 'sheet' forces one. */
+  presentation?: 'auto' | 'anchored' | 'sheet';
   /** Visible required feedback after native validation. Localize for the application. Default "Choose an option." */
   requiredMessage?: string;
   value?: string;
@@ -229,6 +231,8 @@ export interface SelectItemProps { value: string; children: React.ReactNode; tex
 /** Declares one option of a Select; renders nothing itself. */
 export declare function SelectItem(props: SelectItemProps): React.ReactElement | null;
 export interface ComboboxProps extends SelectFieldProps {
+  /** 'auto' (default) and 'anchored' keep the list under the field you type in; 'sheet' opens it at the bottom edge. */
+  presentation?: 'auto' | 'anchored' | 'sheet';
   items: SelectOption[];
   value?: string;
   defaultValue?: string;
@@ -664,6 +668,10 @@ export type MenuEntry =
   | { type: 'separator' }
   | { type: 'label'; label: React.ReactNode };
 export interface DropdownMenuProps {
+  /** 'auto' (default): anchored, or on a narrow touch screen a sheet at the bottom edge with a title and Close. 'anchored' or 'sheet' forces one. */
+  presentation?: 'auto' | 'anchored' | 'sheet';
+  /** The sheet's title. Default: the trigger's aria-label or text. */
+  title?: string;
   trigger: React.ReactElement;
   items: MenuEntry[];
   /** Default 'start'. */

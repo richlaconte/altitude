@@ -84,6 +84,8 @@ Exits run at 70% of their entry: attention has already moved on.
 - **Charts glide, they don't grow.** A chart's data changes at one level, staged, by one engine every chart shares: see **Charts** below.
 - **Repeat the warm state.** After one tooltip has shown, its neighbours open instantly for 400ms. Moving along a toolbar shouldn't make you wait at every button.
 
+- **A menu that's a sheet rises from the edge.** On a narrow touch screen a menu or list opens at the bottom edge (#249): it rises 24px from the edge over `dur-travel-3` on `ease-rise`, as a Sheet does, and sinks back on close. Under reduced motion it fades.
+
 ## Charts
 
 Every chart moves by one engine, built into `ChartContainer`, so no chart type has its own easing. Marks have no level, so none of this is height: it's position, length and presence changing on the ground.

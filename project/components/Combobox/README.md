@@ -8,6 +8,8 @@ An editable Select: type to narrow a long list, then choose. What you type is a 
 
 **Keyboard and screen readers.** The WAI-ARIA combobox pattern with a listbox popup: the text field has `role="combobox"`, `aria-expanded`, `aria-autocomplete="list"` and `aria-activedescendant`, so focus stays in the field. Typing opens and filters; ↓ and ↑ move (↓ also opens it, Alt+↓ without moving); Enter chooses; Escape closes and puts back the previous value. Home and End stay with the text. Leaving the field, by Tab or by clicking away, commits what's typed: an exact name chooses that option, an empty field clears the value, anything else goes back to the value it had. The chevron opens the list for pointer users.
 
+**On a phone.** The list stays under the field you're typing in by default (`presentation="auto"` or `"anchored"`), so the on-screen keyboard hides neither. `presentation="sheet"` opens it at the bottom edge instead.
+
 **You provide:** `items` (`{ value, label, textValue?, description?, disabled? }`), `value`/`onValueChange` or `defaultValue`, a `placeholder` that invites typing ("Search people"), optionally `filter` (return 0 or false to hide, higher to rank first), `empty` (default "No matches") and `name` for forms. Wrap it in `Field`.
 
 - Do use it when the list is long enough that scrolling is slower than typing (people, countries, repositories).
