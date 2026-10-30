@@ -1363,6 +1363,16 @@ A CSS audit (#252): no rule in `bundle.css` used `safe-area-inset`. In an edge-t
 - **The mode frame stays at the edge.** It frames the whole screen, so it isn't inset.
 - Not observed on a device (Chromium has no notch to emulate). `checks/safe-area.mjs` checks the rules, and that nothing moves without an inset.
 
+### E117 · Does a menu leave the screen?
+
+A measurement (#248): at 375 CSS px, DropdownMenu's "Predicted" menu pushed the page 86px sideways and HoverCard's card 26px; a tooltip at the left edge would have clipped. Panels were placed by CSS relative to their anchor, and nothing measured them. ContextMenu and Tour already clamped themselves.
+
+- **Measured, then shifted.** `useFitFloating` measures a panel when it opens (and on resize) and shifts it sideways to stay 8px clear of the visible viewport's edges, composed with its own placement's `translate`. It's on Tooltip, Popover, DropdownMenu's panel, HoverCard and the Select and Combobox lists.
+- **Capped.** Panels are at most the viewport's width less 16px; a tooltip wraps at 320px rather than running off the screen.
+- **The visible width.** A phone zooms out to fit overflowing content, which stretches `clientWidth` with it, so the fit uses the visual viewport's width.
+
+`checks/float-fit.mjs` opens each panel against a 360px screen's edges.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

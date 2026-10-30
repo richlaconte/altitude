@@ -4,6 +4,8 @@ Names an icon-only control or adds a short hint; it floats at level 3 above its 
 
 It opens after `delay` (450ms) on hover or immediately on keyboard focus, rising 4px from the anchor while its shadow grows from `elev-1` to `elev-3` (`dur-travel-3`). After one tooltip closes, neighbours open instantly for 400ms, so moving along a toolbar doesn't make you wait twice. Escape closes it.
 
+**On a narrow screen.** It opens where its `side` and `align` put it, then shifts sideways to stay 8px inside the screen, and it's never wider than the screen less 16px.
+
 **You provide:** `content` (a few words, optionally a shortcut), one focusable child, optionally `side="bottom"`.
 
 - Do use `side="right"` for a rail of icons (a collapsed `Sidebar`), where a tooltip above would cover the next icon.
