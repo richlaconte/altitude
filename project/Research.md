@@ -1248,6 +1248,19 @@ A design review of `focus` and `data-context` (#188): the deploys bar chart focu
 
 Not yet tested with people: whether context series are still compared accurately against the focused one, or simply ignored.
 
+### E106 · How should a chart show the period before?
+
+A design review of `compare` (#189): seats by region against last quarter on a horizontal bar chart, daily signups against the two weeks before, and a stack against its earlier totals, in all four schemes at 960px and 360px, under forced colours and with `contrast="more"`. `checks/chart-compare.mjs` measures it.
+
+- **Superpose the shape, encode the number.** Of Gleicher's three comparison designs, juxtaposing doubles the chart and a second series competes as an equal in a categorical colour. The earlier period is superposed, quieter, and the difference is explicit in words: the readout ("38 · +11%"), each point's name, the table's "vs" column and the summary's count of what rose and fell.
+- **Bars: the bullet graph's tick.** A 2px `ink` tick across the bar, 4px past it each side (Few, 2006). A ghost bar beside each would double the bars, and a hollow bar already means projected (E37). A drop shows as empty space between the bar's end and its tick.
+- **Lines: a trace, not a reference.** The open question was whether a 1.5px `ink-muted` trace could be confused with a reference line, which is 1px `ink-muted` (E38). It can't, in practice: a reference is straight, spans the plot and is named for a value ("Target 99.9%"); the trace follows the data and is named for a period. It stays `ink-muted` rather than `line-control`, because `line-control` is the crosshair's rule (E27, #186), and a trace in it would read as the pointer. Solid, because dashes mean projected.
+- **The tick against the hover outline.** A clickable bar's hover outline (E41) traces the bar's edge; the tick crosses it and reaches past both sides. Side by side they don't read alike.
+- **Stacks compare their total.** A tick per segment would stack ticks on ticks. Shares don't compare at all: every total is 100%.
+- **Matched by position, before any sort.** A shifted period on a time axis has different x values, so `data` is matched by position, over the whole record before windowing or sorting.
+
+Not yet tested with people: whether readers prefer the tick to a delta label on each bar on small charts.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

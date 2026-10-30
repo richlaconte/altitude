@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChartMarker, ChartRelevance, ChartStatusClip, toTime, useChart, type ChartConfig, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { COMPARE_KEY, ChartMarker, ChartRelevance, ChartStatusClip, toTime, useChart, withCompare, type ChartCompare, type ChartConfig, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 
 export interface LineChartProps {
   /** The records, in x order: one per time or value of x. */
@@ -26,6 +26,12 @@ export interface LineChartProps {
    * series colour, never error bars and never a gradient. `label` names it in the readout (default "Range").
    */
   band?: { low: string; high: string; series?: string; label?: string };
+  /**
+   * Read each value against the record before (#189): `{ data: lastWeek, label: 'Last week' }` for records matched by
+   * position, or `{ key: 'lastWeek', label: 'Last week' }` for a field on the same record. The earlier period is a
+   * 1.5px solid ink-muted trace under the compared series (`series`, default the first), named at its end.
+   */
+  compare?: ChartCompare;
   /**
    * What the chart is about (#188): these series keep their colours and the rest are drawn in data-context, their
    * labels in ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
@@ -148,7 +154,7 @@ export function linePath(points: Array<[number, number] | null>, curve: 'linear'
  * no fill, no glow. A missing value breaks the line. The last point carries a marker and each line is named at its
  * end, so the legend is the lines themselves.
  */
-export function LineChart({ curve = 'linear', endLabels, band }: LineChartProps) {
+export function LineChart({ curve = 'linear', endLabels, band, compare }: LineChartProps) {
   const { data, series, config, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis, status, statusRanges, hasRelevance, relevanceRegions } = useChart();
   const labelled = endLabels ?? (series.length <= 4 || directLabels);
   const lines: React.ReactNode[] = [];
@@ -171,6 +177,18 @@ export function LineChart({ curve = 'linear', endLabels, band }: LineChartProps)
     if (d) lines.push(<path key="band" className="alt-line-band" data-series={bandSeries.key} d={d} fill={patterns ? e.pending : e.stroke} fillOpacity={patterns ? undefined : 0.16} opacity={a < 1 ? a : undefined} />);
   }
   const ends: Array<{ key: string; label: string; x: number; y: number; a: number }> = [];
+  // The record before (#189): a 1.5px solid ink-muted trace under the series, without points, named at its end. Solid,
+  // because dashes mean projected.
+  const ckey = compare ? compare.key ?? COMPARE_KEY : null;
+  const cseries = compare ? series.find((s) => s.key === (compare.series ?? Object.keys(config)[0])) : undefined;
+  if (ckey && cseries) {
+    const pts = data.map((d) => (isNum(d[ckey]) ? ([xOf(d), y(d[ckey] as number)] as [number, number]) : null));
+    const a = alpha(null, cseries.key) * (emphasis && emphasis !== cseries.key ? 0.3 : 1);
+    lines.push(<path key="compare" className="alt-line-compare" d={linePath(pts, curve)} fill="none" opacity={a < 1 ? a : undefined} />);
+    let last = pts.length - 1;
+    while (last >= 0 && !pts[last]) last--;
+    if (last >= 0) ends.push({ key: COMPARE_KEY, label: compare!.label, x: pts[last]![0], y: pts[last]![1], a });
+  }
   for (const s of series) {
     const e = encode(s.key);
     // While the keyboard is on one series, the others recede.
@@ -223,7 +241,7 @@ export function LineChart({ curve = 'linear', endLabels, band }: LineChartProps)
       {hasRelevance && <defs>{relevanceRegions.map((r, i) => <ChartStatusClip key={r.key} id={`${clip}-rel-${i}`} ranges={[[r.x0, r.x1]]} height={height} />)}</defs>}
       {body}
       {hovered}
-      {labelled && ends.map((p) => <text key={p.key} className="alt-line-label" data-context={encode(p.key).context ? '' : undefined} x={p.x + 10} y={p.y} dy="0.32em" opacity={p.a < 1 ? p.a : undefined}>{p.label}</text>)}
+      {labelled && ends.map((p) => <text key={p.key} className="alt-line-label" data-context={p.key === COMPARE_KEY || encode(p.key).context ? '' : undefined} data-compare={p.key === COMPARE_KEY ? '' : undefined} x={p.x + 10} y={p.y} dy="0.32em" opacity={p.a < 1 ? p.a : undefined}>{p.label}</text>)}
     </g>
   );
 }
@@ -232,11 +250,16 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const p = props as unknown as LineChartProps;
   const labels = Object.values(config).map((c) => c.label);
   const labelled = p.endLabels ?? labels.length <= 4;
-  const win = Array.isArray(p.data) && p.window ? windowed(p.data, p.x, p.window) : undefined;
+  // The record before (#189), matched by position over the whole record, then windowed with it.
+  const cseries = p.compare ? p.compare.series ?? Object.keys(config)[0] : null;
+  const src = Array.isArray(p.data) && p.compare && !p.compare.key && p.compare.data && cseries ? withCompare(p.data, p.compare.data, [cseries]) : p.data;
+  const win = Array.isArray(src) && p.window ? windowed(src, p.x, p.window) : undefined;
+  const rows = win?.rows ?? (src !== p.data ? src as ChartDatum[] : undefined);
   return {
-    kind: 'Line chart', zero: false, swatch: 'line', focus: p.focus, format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
+    kind: 'Line chart', zero: false, swatch: 'line', focus: p.focus, format: p.y?.format, status: p.status, boundary: p.boundary, data: rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     band: p.band ? { series: p.band.series, low: p.band.low, high: p.band.high, label: p.band.label ?? 'Range' } : undefined,
-    right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
+    right: labelled ? Math.ceil(Math.max(0, ...[...labels, ...(p.compare ? [p.compare.label] : [])].map(width))) + 12 : 0,
+    compare: p.compare && cseries ? { key: p.compare.key ?? COMPARE_KEY, series: cseries, label: p.compare.label } : undefined,
     aspect: p.aspect === 'banked' ? 'banked' : undefined,
   };
 };

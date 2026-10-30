@@ -1840,6 +1840,12 @@ export interface ChartTooltipContentProps {
 }
 /** The readout's rows: value first, series name second, keyed by the series colour. */
 export declare function ChartTooltipContent(props: ChartTooltipContentProps): React.ReactElement;
+/**
+ * The record before, to read each value against: a field on the same record (`key`), or records matched by x position
+ * (`data`), named by `label` ("August", "Last week"). `series` is the one compared, by default the first; a stack is
+ * compared by its total.
+ */
+export interface ChartCompare { key?: string; data?: ChartDatum[]; label: string; series?: string }
 export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; /** Outside the chart's focus: its label recedes. */ context?: boolean; /** In the chart's focus: said as "highlighted". */ highlighted?: boolean; }
 export interface ChartLegendContentProps {
   /** Let people hide and show series: each key becomes an aria-pressed button in a toolbar. Default false. */
@@ -1922,6 +1928,11 @@ export interface BarChartProps {
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
   /**
+   * Read each value against the record before: `{ key: 'lastMonth', label: 'August' }` or `{ data: lastWeek, label: 'Last week' }`.
+   * The earlier value is a 2px ink tick across the bar; a stack is compared by its total.
+   */
+  compare?: ChartCompare;
+  /**
    * What the chart is about: series keys that keep their colours while the rest take data-context, or a test for the
    * records that keep theirs. The author's statement of importance, not a reader's filter (that's relevance).
    */
@@ -1964,6 +1975,11 @@ export interface LineChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * Read each value against the record before: `{ data: lastWeek, label: 'Last week' }` or `{ key, label }`. The earlier
+   * period is a 1.5px solid ink-muted trace under the compared series, named at its end.
+   */
+  compare?: ChartCompare;
   /**
    * What the chart is about: these series keep their colours and the rest are drawn in data-context, their labels in
    * ink-muted. The author's statement of importance, not a reader's filter (that's relevance).

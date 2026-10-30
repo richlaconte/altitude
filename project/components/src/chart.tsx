@@ -322,6 +322,11 @@ export interface ChartInfo {
    * for the records that keep theirs (bars, dots).
    */
   focus?: string[] | ((d: ChartDatum) => boolean);
+  /**
+   * Read against the record before (#189): the key holding each record's previous value, the series it's compared with
+   * (null: the stack's total), and the earlier period's name. Previous values join y and glide with the data.
+   */
+  compare?: { key: string; series: string | null; label: string };
   /** Bank the plot's proportions to the data (#194): the chart type asked for aspect="banked". */
   aspect?: 'banked';
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
@@ -569,6 +574,45 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
 export function ChartLegend(_: { content?: React.ReactElement<ChartLegendContentProps> }) { return null; }
 ChartLegend.chartHtml = true;
 ChartLegend.chartLegend = true;
+
+/* ───────────────────────── read against the record before ───────────────────────── */
+
+/**
+ * The record before, to read each value against (#189): a field on the same record (`key`), or records matched by x
+ * position (`data`, for a shifted period on a time axis), named by `label` ("August", "Last week"). `series` is the
+ * one compared, by default the first; a stack is compared by its total.
+ */
+export interface ChartCompare { key?: string; data?: ChartDatum[]; label: string; series?: string }
+/** Where a matched earlier period's value is kept on each record. */
+export const COMPARE_KEY = '__compare';
+const compareCache = new WeakMap<ChartDatum[], WeakMap<ChartDatum[], Map<string, ChartDatum[]>>>();
+/**
+ * Each record with its earlier value under COMPARE_KEY: the sum of `keys` on the record at the same position in
+ * `before`. The same arrays give the same result, so it isn't mistaken for a change.
+ */
+export function withCompare(rows: ChartDatum[], before: ChartDatum[], keys: string[]): ChartDatum[] {
+  let a = compareCache.get(rows);
+  if (!a) compareCache.set(rows, (a = new WeakMap()));
+  let b = a.get(before);
+  if (!b) a.set(before, (b = new Map()));
+  const id = keys.join('|');
+  let out = b.get(id);
+  if (!out) {
+    out = rows.map((d, i) => {
+      const e = before[i], vs = e ? keys.map((k) => e[k]).filter((v): v is number => typeof v === 'number' && isFinite(v)) : [];
+      return { ...d, [COMPARE_KEY]: vs.length ? vs.reduce((t, v) => t + v, 0) : null };
+    });
+    b.set(id, out);
+  }
+  return out;
+}
+/** A change in words: "+10.6%", or the difference itself when the earlier value is zero. */
+export function changeWords(now: number, before: number, format: (v: number) => string) {
+  const diff = now - before;
+  if (before === 0) return diff === 0 ? 'no change' : `${diff > 0 ? '+' : '−'}${format(Math.abs(diff))}`;
+  const pct = (diff / Math.abs(before)) * 100;
+  return `${pct > 0 ? '+' : pct < 0 ? '−' : '±'}${Math.abs(pct).toFixed(Math.abs(pct) < 10 ? 1 : 0)}%`;
+}
 
 /* ───────────────────────── references and annotations ───────────────────────── */
 
@@ -1091,7 +1135,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   else {
     // An uncertainty band counts toward the extent, so its edges are never cut off.
     const bandOn = bandInfo && series.some((s) => s.key === bandInfo!.series);
-    const extentKeys = [...series.map((s) => s.key), ...(bandOn ? [bandInfo!.low, bandInfo!.high] : [])];
+    const extentKeys = [...series.map((s) => s.key), ...(bandOn ? [bandInfo!.low, bandInfo!.high] : []), ...(info.compare ? [info.compare.key] : [])];
     // With rescale, y fits the matches; otherwise the axis holds, so every position survives the filter.
     const fit = info.rescale && filtered && matchCount ? data.filter((d) => relevanceOf(d) !== 'miss') : data;
     for (const d of fit) for (const k of extentKeys) { const v = d[k]; if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
@@ -1118,7 +1162,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     rowAlpha: new Map(), seriesAlpha: new Map(series.map((s) => [s.key, 1])),
     left: grid ? info.left ?? 0 : !axes || inlineY ? 0 : horizontal ? catWidth
       : Math.ceil(Math.max(...ny.ticks.map((t) => axisWidth(fmtY(t))), 0)) + 10,
-    extra: [...(bandInfo ? [bandInfo.low, bandInfo.high] : []), ...(info.glide ?? [])],
+    extra: [...(bandInfo ? [bandInfo.low, bandInfo.high] : []), ...(info.compare ? [info.compare.key] : []), ...(info.glide ?? [])],
     xDomain: kind === 'band' ? null : info.xDomain ?? (() => {
       const vs = data.map((d) => (kind === 'time' ? toTime(d[xKey]) : Number(d[xKey]))).filter((v) => isFinite(v));
       return vs.length ? [Math.min(...vs), Math.max(...vs)] as [number, number] : null;
@@ -1487,7 +1531,26 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const focusNames = focusKeys ? series.filter((q) => focusKeys.includes(q.key)).map((q) => q.label)
     : focusRec ? data.filter((d) => focusRec(d)).map((d) => (info.label ? info.label(d) : formatX(d[xKey]))) : [];
   const focusWords = focusNames.length ? `Highlighted: ${focusNames.length > 1 ? focusNames.slice(0, -1).join(', ') + ' and ' + focusNames[focusNames.length - 1] : focusNames[0]}.` : '';
-  const generated = (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf));
+  // Read against the record before (#189): each record's value now and then, the change in words, and a count.
+  const cmp = info.compare;
+  const isVal = (v: unknown): v is number => typeof v === 'number' && isFinite(v);
+  const cmpNow = (d: ChartDatum): number | null => !cmp ? null : cmp.series === null
+    ? series.reduce((t, q) => t + (isVal(d[q.key]) ? (d[q.key] as number) : 0), 0) : isVal(d[cmp.series]) ? (d[cmp.series] as number) : null;
+  const cmpBefore = (d: ChartDatum): number | null => (cmp && isVal(d[cmp.key]) ? (d[cmp.key] as number) : null);
+  const cmpFmt = (cmp?.series ? allSeries.find((q) => q.key === cmp.series)?.format : series[0]?.format) ?? fmtY;
+  const cmpSentence = (d: ChartDatum) => {
+    const now = cmpNow(d), was = cmpBefore(d);
+    if (!cmp || now === null || was === null) return '';
+    return now === was ? `Same as ${cmp.label}.` : `${now > was ? 'Up' : 'Down'} ${changeWords(now, was, cmpFmt).slice(1)} from ${cmp.label}.`;
+  };
+  const cmpWords = (() => {
+    if (!cmp) return '';
+    const pairs = data.map((d) => [cmpNow(d), cmpBefore(d)]).filter(([a, b]) => a !== null && b !== null) as Array<[number, number]>;
+    if (!pairs.length) return '';
+    const up = pairs.filter(([a, b]) => a > b).length, down = pairs.filter(([a, b]) => a < b).length, same = pairs.length - up - down;
+    return ` Against ${cmp.label}: ${up} rose, ${down} fell${same ? `, ${same} held` : ''}.`;
+  })();
+  const generated = (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf)) + cmpWords;
   /** A record's short name: the chart type's, or its x. */
   const labelOf = (d: ChartDatum) => (info.label ? info.label(d) : formatX(d[xKey]));
   const selectedRecord = selecting ? data.find(isSelected) : undefined;
@@ -1527,6 +1590,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       ...(total ? [{ key: '__total', header: 'Total', align: 'end' as const, cell: (d: ChartDatum) => allSeries[0].format(sum(d)), sortValue: sum }] : []),
       ...(bandInfo ? [{ key: '__band', header: bandInfo.label, align: 'end' as const,
         cell: (d: ChartDatum) => { const b = bandInfo!, f = allSeries.find((s) => s.key === b.series)?.format ?? fmtY; return isNum(d[b.low]) && isNum(d[b.high]) ? `${f(d[b.low] as number)}–${f(d[b.high] as number)}` : '—'; } }] : []),
+      // The record before (#189): its value, and the change against it.
+      ...(cmp ? [
+        { key: '__cmp', header: cmp.label, align: 'end' as const, cell: (d: ChartDatum) => { const w = cmpBefore(d); return w === null ? '—' : cmpFmt(w); }, sortValue: (d: ChartDatum) => cmpBefore(d) ?? -Infinity },
+        { key: '__cmpd', header: `vs ${cmp.label}`, align: 'end' as const, cell: (d: ChartDatum) => { const n = cmpNow(d), w = cmpBefore(d); return n === null || w === null ? '—' : changeWords(n, w, cmpFmt); },
+          sortValue: (d: ChartDatum) => { const n = cmpNow(d), w = cmpBefore(d); return n === null || w === null || w === 0 ? -Infinity : (n - w) / Math.abs(w); } },
+      ] : []),
       // Data that isn't yet the record says so in its own column, so the table never passes it off as settled.
       ...(info.status && data.some((d) => statusOf(d)) ? [{ key: '__status', header: 'Status', cell: (d: ChartDatum) => { const st = statusOf(d); return st ? CHART_STATUS_WORDS[st] : 'Actual'; } }] : []),
     ];
@@ -1684,6 +1753,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (bandInfo && bandInfo.series === s.key && num(d[bandInfo.low]) && num(d[bandInfo.high])) {
       out += ` ${bandInfo.label} ${s.format(d[bandInfo.low] as number)} to ${s.format(d[bandInfo.high] as number)}.`;
     }
+    if (cmp && cmp.series === s.key && cmpSentence(d)) out += ` ${cmpSentence(d)}`;
     if (num(v) && kind !== 'band' && pi > 0) {
       const prev = data[pi - 1], pv = prev[s.key];
       if (num(pv)) {
@@ -1696,6 +1766,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (stacked) {
       const sum = series.reduce((t, x) => t + (num(d[x.key]) ? (d[x.key] as number) : 0), 0);
       out += info.share && num(v) && sum > 0 ? ` ${Math.round((v / sum) * 100)}% of ${s.format(sum)}.` : ` Total ${s.format(sum)}.`;
+      if (cmp && cmp.series === null && cmpSentence(d)) out += ` Total ${cmpSentence(d).charAt(0).toLowerCase()}${cmpSentence(d).slice(1)}`;
     }
     return `${out} ${pi + 1} of ${data.length}.`;
   };
@@ -1781,6 +1852,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       })
       // Focused series first (#188).
       .sort((a, b) => +inContext(a.key.replace(/-range$/, '')) - +inContext(b.key.replace(/-range$/, '')));
+    // The record before (#189): its value and the change, after the series.
+    const cmpNowV = cmpNow(d), cmpWas = cmpBefore(d);
+    if (!own && cmp && cmpNowV !== null && cmpWas !== null) {
+      payload.push({ key: COMPARE_KEY, label: cmp.label, value: cmpWas, text: `${cmpFmt(cmpWas)} · ${changeWords(cmpNowV, cmpWas, cmpFmt)}`, color: 'var(--ink-muted)' });
+    }
     const at = top.ctx.xOf(d);
     const style: React.CSSProperties = {};
     let side: string;
