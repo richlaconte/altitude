@@ -2712,6 +2712,50 @@ export declare function ContextMenu(props: ContextMenuProps): React.ReactElement
 
 
 
+/** What a view keeps: its filters, their match, the sort and the columns. */
+export interface ViewState {
+  filters: Filter[];
+  match: 'all' | 'any';
+  sort: TableSort;
+  columnVisibility: Record<string, boolean>;
+  columnOrder?: string[];
+}
+export interface SavedView extends Partial<ViewState> { id: string; name: string }
+export interface SavedViewsOptions {
+  views: SavedView[];
+  /** The view shown first. Default the first. */
+  defaultViewId?: string;
+  /** Saves the active view's changes over it. */
+  onSave?: (view: SavedView) => void;
+  /** Saves the active view's state as a new view with this name. */
+  onCreate?: (view: Omit<SavedView, 'id'>) => void;
+  onDelete?: (id: string) => void;
+}
+export interface SavedViewsApi {
+  views: SavedView[];
+  active: SavedView;
+  draft: ViewState;
+  modified: boolean;
+  select: (id: string) => void;
+  save: () => void;
+  saveAsNew: (name: string) => void;
+  reset: () => void;
+  canSave: boolean;
+  canCreate: boolean;
+  filterBarProps: { value: Filter[]; onValueChange: (f: Filter[]) => void; match: 'all' | 'any'; onMatchChange: (m: 'all' | 'any') => void };
+  tableProps: { sort: TableSort; onSortChange: (s: TableSort) => void; columnVisibility: Record<string, boolean>; onColumnVisibilityChange: (v: Record<string, boolean>) => void; columnOrder?: string[]; onColumnOrderChange: (o: string[]) => void };
+}
+/** Named views of a FilterBar and DataTable, each keeping its own draft. */
+export declare function useSavedViews(options: SavedViewsOptions): SavedViewsApi;
+export interface SavedViewsProps {
+  views: SavedViewsApi;
+  children: React.ReactNode;
+  'aria-label'?: string;
+  className?: string;
+}
+/** Saved views as folder Tabs; a changed view is a draft with Save view, Save as new view and Reset. */
+export declare function SavedViews(props: SavedViewsProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -2731,6 +2775,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      SavedViews: typeof SavedViews; useSavedViews: typeof useSavedViews;
       ModeContext: typeof ModeContext;
       PrimaryScope: typeof PrimaryScope;
       ContextMenu: typeof ContextMenu;

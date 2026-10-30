@@ -1,0 +1,70 @@
+<!-- @dsCard group="Display" height=600 subtitle="A filter, sort and columns kept under a name, as folder tabs above the table" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SavedViews — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const deals = [
+  { id: "d1", name: "Northwind renewal", stage: "Negotiation", owner: "Maya", value: 48e3 },
+  { id: "d2", name: "Globex expansion", stage: "Proposal", owner: "Theo", value: 12e4 },
+  { id: "d3", name: "Initech pilot", stage: "Discovery", owner: "Maya", value: 9e3 },
+  { id: "d4", name: "Umbrella security", stage: "Negotiation", owner: "Ada", value: 76e3 },
+  { id: "d5", name: "Hooli seats", stage: "Closed won", owner: "Theo", value: 31e3 }
+];
+const fields = [
+  { key: "stage", label: "Stage", type: "enum", options: ["Discovery", "Proposal", "Negotiation", "Closed won"].map((x) => ({ value: x, label: x })) },
+  { key: "owner", label: "Owner", type: "enum", options: ["Maya", "Theo", "Ada"].map((x) => ({ value: x, label: x })) }
+];
+const matches = (r, filters, match) => {
+  const t = filters.filter((f) => f.value !== void 0).map((f) => f.operator === "is" ? r[f.field] === f.value : r[f.field] !== f.value);
+  return !t.length || (match === "any" ? t.some(Boolean) : t.every(Boolean));
+};
+function App() {
+  const [saved, setSaved] = React.useState([
+    { id: "all", name: "All deals", sort: { key: "value", direction: "descending" } },
+    { id: "mine", name: "My open deals", filters: [{ id: "f1", field: "owner", operator: "is", value: "Maya" }, { id: "f2", field: "stage", operator: "is not", value: "Closed won" }] },
+    { id: "late", name: "In negotiation", filters: [{ id: "f3", field: "stage", operator: "is", value: "Negotiation" }], columnVisibility: { owner: false } }
+  ]);
+  const views = A.useSavedViews({
+    views: saved,
+    onSave: (v) => setSaved((xs) => xs.map((x) => x.id === v.id ? v : x)),
+    onCreate: (v) => setSaved((xs) => [...xs, { ...v, id: "v" + xs.length }])
+  });
+  const { value, match } = views.filterBarProps;
+  return /* @__PURE__ */ React.createElement(A.SavedViews, { views, "aria-label": "Deal views" }, /* @__PURE__ */ React.createElement(A.FilterBar, { fields, ...views.filterBarProps, "aria-label": "Filter deals" }), /* @__PURE__ */ React.createElement(
+    A.DataTable,
+    {
+      "aria-label": "Deals",
+      rows: deals,
+      getRowId: (r) => r.id,
+      ...views.tableProps,
+      columnsMenu: true,
+      density: "compact",
+      relevance: (r) => value.some((f) => f.value !== void 0) ? matches(r, value, match) ? "match" : "miss" : void 0,
+      columns: [
+        { key: "name", header: "Deal", sortValue: (r) => r.name },
+        { key: "stage", header: "Stage", sortValue: (r) => r.stage },
+        { key: "owner", header: "Owner", sortValue: (r) => r.owner },
+        { key: "value", header: "Value", align: "end", sortValue: (r) => r.value, cell: (r) => /* @__PURE__ */ React.createElement(A.FormattedNumber, { value: r.value, format: "currency", currency: "USD", minorUnits: false, maximumFractionDigits: 0 }) }
+      ]
+    }
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
