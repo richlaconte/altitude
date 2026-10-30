@@ -1,6 +1,6 @@
 Altitude is a design and HCI framework with React components where **height is the interface**. Its one idea: **the ground is the record.** Settled content sits on the ground. Anything live rises above it (something to press, something in your hand, something waiting to be confirmed, something that just changed), and the higher it goes, the more temporary it is and the more it asks of you. Anything that's waiting to receive sinks below it (a field, a slot, a track, a problem to fix). Motion only ever travels along that axis. Color schemes are swappable and the accent can be any color; the elevation language is the same in all of them.
 
-Read **Elevation** for the model and every signal height carries, **Motion** before animating anything, **Charts** before drawing data, **Research** for the evidence and measurements behind each rule, and **Theming** for schemes, custom accents and shadcn/ui.
+Read **Elevation** for the model and every signal height carries, **Motion** before animating anything, **Charts** before drawing data, **Research** for the evidence and measurements behind each rule, **Theming** for schemes, custom accents and shadcn/ui, and **Distinctiveness** before composing a screen, so it doesn't read as generated.
 
 ## The laws
 
