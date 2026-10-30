@@ -8,6 +8,7 @@ def data_tokens():
     usage = {f"data-{i}": f"Categorical series {i}: identity only, in config order. Charts only, as presence-* is only for people; never text, surfaces or status." for i in range(1, 7)}
     usage["data-1"] = "Categorical series 1, in the accent's hue (or the nearest that clears status and presence). Charts only, as presence-* is only for people; never text, surfaces or status."
     usage["data-other"] = "The fold for a seventh and later series: a neutral that holds 3:1 on ground and raised."
+    usage["data-context"] = "What a chart isn't about: series and records outside its focus. A neutral at 3:1, apart from line and data-other; never the only cue for a series."
     usage.update({f"data-seq-{i}": f"Magnitude ramp, step {i} of 7 (1 is least). One hue, monotone lightness; dark schemes climb from their ground." for i in range(1, 8)})
     usage.update({f"data-div-neg-{i}": f"Diverging ramp, {i} step{'s' if i > 1 else ''} below the midpoint (orange). Never a status hue." for i in range(1, 4)})
     usage["data-div-mid"] = "Diverging ramp midpoint: a neutral for the meaningful middle (zero, target, average)."

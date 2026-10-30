@@ -1228,6 +1228,26 @@ Rejected for now: multi-scale banking (a chart per frequency band). It's an anal
 
 Not yet tested with people: whether readers notice that banked neighbours differ in height, and whether that reads as a difference in the data.
 
+### E105 · Can a chart say what matters without raising it?
+
+A design review of `focus` and `data-context` (#188): the deploys bar chart focused on the two teams its takeaway names, the stacked requests on Web, seats by plan on Team and the plan shares on Team, in all four schemes at 960px and 360px, under forced colours, with reduced motion and with `contrast="more"`. `checks/chart-focus.mjs` measures it; `build/palette.mjs` chooses and gates the token.
+
+- **Nothing in a chart could matter more.** Every series wore a saturated identity colour at full strength, so the grouped, stacked and multi-line previews read as any library's defaults. Marks can't rise, so importance has to be colour and words: one hue for the story, a neutral for the context, as Knaflic and the FT do; focus shaped what people remembered (Ajani et al., 2021), and authors can't judge salience for readers (Xiong et al., 2020), so it's declared.
+- **A neutral of its own.** `data-other` couldn't serve: in the light schemes it's near-black and emphasises. `data-context` is the most receding neutral that holds 3:1, in the ground's hue:
+
+| Scheme | `data-context` | L | C | Contrast, worst of ground and raised | ΔE from `line` | ΔE from `data-other` | Nearest slot ΔE |
+|---|---|---|---|---|---|---|---|
+| Daylight | `#898a8e` | 0.63 | 0.006 | 3.14:1 | 28.1 | 30.9 | 11.1 |
+| Nightfall | `#86888b` | 0.63 | 0.005 | 4.80:1 | 34.1 | 10.2 | 13.2 |
+| Mesa | `#8b8985` | 0.63 | 0.006 | 3.11:1 | 27.4 | 28.0 | 11.2 |
+| Alpine | `#848987` | 0.63 | 0.007 | 4.79:1 | 34.3 | 10.5 | 12.8 |
+
+- **Exempt from the slot gate, by measurement.** As E23 found, no neutral at 3:1 is ΔE 15 from every slot (the nearest is 11.1). It's exempt because a context series is never told apart by its colour: it's unlabelled or labelled in `ink-muted`, and the words say what's highlighted.
+- **Dark schemes climb past `data-other`.** There the most receding neutral at 3:1 *is* `data-other` (ΔE 0.8), so `data-context` steps lighter until it's ΔE 10 clear. It recedes by having no hue rather than by darkness.
+- **The rule it strains.** Charts rule 5 says colour follows the entity. Focus repaints the rest, but it isn't a filter: it's fixed by the author, and every repaint cross-fades. A reader's filter (`relevance`) still recedes misses to 35% of their own colour, so the two never read alike, and under forced colours context is `GrayText` at full strength while a miss is at 35%.
+
+Not yet tested with people: whether context series are still compared accurately against the focused one, or simply ignored.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

@@ -86,6 +86,22 @@ function other(scheme, slots) {
 }
 
 /**
+ * Context (#188): the most receding neutral in the ground's hue that holds 3:1 on ground and raised, stays clear of the
+ * gridlines' line and of data-other. Light schemes come down from light; dark ones climb from their ground.
+ */
+function context(scheme, other) {
+  const [, , h] = oklch(V['surface-ground'][scheme]);
+  const dark = SCHEMES[scheme] === 'dark';
+  for (let i = 0; i < 120; i++) {
+    const hex = fromOklch(dark ? 0.4 + i * 0.005 : 0.8 - i * 0.005, 0.006, h);
+    if (Math.min(contrast(hex, V['surface-ground'][scheme]), contrast(hex, V['surface-raised'][scheme])) < GATES.contrast + 0.1) continue;
+    if (deltaE(hex, V.line[scheme]) < GATES.context.line || deltaE(hex, other) < GATES.context.other) continue;
+    return hex;
+  }
+  throw new Error(`${scheme}: no data-context clears line and data-other`);
+}
+
+/**
  * Polarity: orange below the midpoint and blue above it, around a neutral midpoint. Under protanopia and deuteranopia
  * the blue–yellow axis survives, so the two sides stay apart (ColorBrewer's PuOr and RdBu do the same). The hues and
  * the pole lightness are chosen for the greatest colour-blind separation between the sides at each step.
@@ -118,6 +134,7 @@ export function choose() {
     const t = {};
     slots.forEach((c, i) => (t[`data-${i + 1}`] = c));
     t['data-other'] = other(scheme, slots);
+    t['data-context'] = context(scheme, t['data-other']);
     sequentialRamp(oklch(slots[0])[2], SCHEMES[scheme] === 'dark').forEach((c, i) => (t[`data-seq-${i + 1}`] = c));
     [2, 1, 0].forEach((k) => (t[`data-div-neg-${k + 1}`] = div.neg[k]));
     t['data-div-mid'] = div.mid;

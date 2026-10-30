@@ -189,9 +189,10 @@ export interface ChartContextValue {
   setActive: (index: number | null) => void;
   /**
    * How to draw a series so it's told apart without colour: its fill (a hatch when patterns are on), stroke, dash and
-   * marker, fixed by its slot like its colour. Use these instead of `series.color` and every mode is handled.
+   * marker, fixed by its slot like its colour. Use these instead of `series.color` and every mode is handled. Pass the
+   * record for a mark that stands for one (a bar, a dot), so a record focus can set it in data-context.
    */
-  encode: (seriesKey: string) => ChartEncoding;
+  encode: (seriesKey: string, d?: ChartDatum) => ChartEncoding;
   /** Patterns are on: the `patterns` prop, forced colours or print. */
   patterns: boolean;
   /** Label series directly at their marks, not only in a legend: on under forced colours and in print. */
@@ -219,6 +220,8 @@ export interface ChartContextValue {
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
 export interface ChartEncoding {
   slot: ChartSlot;
+  /** Outside the chart's focus (#188): drawn in data-context (GrayText under forced colours), its label in ink-muted. */
+  context: boolean;
   /** For bars and areas: the series colour, a hatch of it, or CanvasText under forced colours. */
   fill: string;
   /** For lines and outlines. */
@@ -314,6 +317,11 @@ export interface ChartInfo {
   yFormat?: (value: number) => string;
   /** Formats every value (axis, readout, names, summary) of a series that has no format of its own. */
   format?: (value: number) => string;
+  /**
+   * What the chart is about (#188): series keys that keep their colours while the rest take data-context, or a test
+   * for the records that keep theirs (bars, dots).
+   */
+  focus?: string[] | ((d: ChartDatum) => boolean);
   /** Bank the plot's proportions to the data (#194): the chart type asked for aspect="banked". */
   aspect?: 'banked';
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
@@ -474,7 +482,13 @@ ChartTooltip.chartTooltip = true;
 
 /* ───────────────────────── legend ───────────────────────── */
 
-export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; marker?: ChartMarkerShape; }
+export interface ChartLegendItem {
+  key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; marker?: ChartMarkerShape;
+  /** Outside the chart's focus (#188): its label recedes to ink-muted. */
+  context?: boolean;
+  /** In the chart's focus: said as "highlighted". */
+  highlighted?: boolean;
+}
 export interface ChartLegendContentProps {
   /** Let people hide and show series. Each key becomes a switch-like button in a toolbar. Default false: keys only name. */
   toggle?: boolean;
@@ -517,7 +531,7 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
   if (!toggle) {
     return (
       <div className="alt-chart-legend" role="list" aria-label={label}>
-        {items.map((i) => <span key={i.key} role="listitem" className="alt-legend-key"><Swatch item={i} swatch={swatch} /><span>{i.label}</span></span>)}
+        {items.map((i) => <span key={i.key} role="listitem" className="alt-legend-key" data-context={i.context ? '' : undefined}><Swatch item={i} swatch={swatch} /><span>{i.label}</span>{i.highlighted && <span className="alt-sr">, highlighted</span>}</span>)}
       </div>
     );
   }
@@ -531,7 +545,7 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
       {items.map((i, n) => {
         const last = !i.hidden && shown === 1;
         return (
-          <button key={i.key} ref={(el) => { refs.current[n] = el; }} type="button" className="alt-legend-key" tabIndex={n === focus ? 0 : -1}
+          <button key={i.key} ref={(el) => { refs.current[n] = el; }} type="button" className="alt-legend-key" data-context={i.context ? "" : undefined} tabIndex={n === focus ? 0 : -1}
             aria-pressed={!i.hidden} aria-disabled={last || undefined} aria-describedby={last ? `${id}-last` : undefined}
             onFocus={() => setFocus(n)}
             onClick={() => {
@@ -542,7 +556,7 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
             }}>
             {/* A switch's swatch is always a block: the series fill pours into the whole trench, as a Checkbox's accent does. */}
             <span className="alt-legend-swatch" data-shown={i.hidden ? undefined : ''}><Swatch item={i} swatch="rect" /></span>
-            <span>{i.label}</span>
+            <span>{i.label}</span>{i.highlighted && <span className="alt-sr">, highlighted</span>}
           </button>
         );
       })}
@@ -1011,6 +1025,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
   // A chart that draws its own plot: a grid of cells has no value axis to read a reference or an event against.
   const grid = info.plot === 'grid', xy = info.plot === 'xy';
+  // Focus (#188): the series or records the chart is about keep their colours; the rest are context.
+  const focusKeys = Array.isArray(info.focus) ? info.focus.map(String) : null;
+  const focusRec = typeof info.focus === 'function' ? info.focus : null;
+  const inContext = (key: string, d?: ChartDatum) => (focusKeys ? !focusKeys.includes(key) : focusRec && d ? !focusRec(d) : false);
   // How the marks lie, so reference labels keep off them (#184).
   const markKind = grid || xy ? null : info.imprint === 'area' ? 'area' : info.swatch === 'line' ? 'line' : info.swatch === 'rect' ? 'bars' : null;
   const marks: MarkShape | null = markKind && { kind: markKind, stacked: /stacked/i.test(info.kind ?? ''), shares: /shares/i.test(info.kind ?? '') };
@@ -1197,14 +1215,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   }, []);
   const patterns = patternsProp || env.forced || env.print;
   const pid = id.replace(/[^\w-]/g, '');
-  const encode = (key: string): ChartEncoding => {
+  const encode = (key: string, d?: ChartDatum): ChartEncoding => {
     const s = allSeries.find((x) => x.key === key);
     const slot = s?.slot ?? 'data-other';
     const e = ENCODINGS[slot];
-    const color = env.forced ? 'CanvasText' : s?.color ?? 'var(--data-other)';
+    // Context (#188) is one shared neutral, flat: it isn't told apart, so it takes no hatch.
+    const context = inContext(key, d);
+    const color = context ? (env.forced ? 'GrayText' : 'var(--data-context)') : env.forced ? 'CanvasText' : s?.color ?? 'var(--data-other)';
     return {
-      slot, stroke: color, marker: e.marker,
-      fill: patterns && e.hatch ? `url(#${pid}-${slot})` : color,
+      slot, context, stroke: color, marker: e.marker,
+      fill: patterns && e.hatch && !context ? `url(#${pid}-${slot})` : color,
       dash: patterns ? e.dash : undefined,
       edge: env.forced ? 'CanvasText' : env.more ? 'var(--ink)' : undefined,
       pending: patterns && e.hatch ? `url(#${pid}-${slot})` : `url(#${pid}-${slot}-pending)`,
@@ -1234,7 +1254,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const navRefs = React.useRef(new Map<string, HTMLElement>());
   const wantFocus = React.useRef<string | null>(null);
   const navS = Math.min(nav.s, Math.max(0, series.length - 1)), navP = Math.min(nav.p, Math.max(0, data.length - 1));
-  const emphasis = navFocused && nav.level !== 'summary' && series.length > 1 && !info.flat ? series[navS]?.key ?? null : null;
+  // Focused series come first on the keyboard path (#188), as in the readout.
+  const navOrder = series.map((_, i) => i).sort((a, b) => +inContext(series[a].key) - +inContext(series[b].key) || a - b);
+  const emphasis = navFocused && nav.level !== 'summary' && series.length > 1 && !info.flat ? series[navOrder[navS]]?.key ?? null : null;
 
   /** A layer's scales, ticks and context, at the plot's size now. */
   const draw = (frame: Frame) => {
@@ -1461,7 +1483,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo, yInline };
   };
 
-  const generated = info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf);
+  // Focus in words (#188): the generated summary starts with what's highlighted; a written one is followed by it.
+  const focusNames = focusKeys ? series.filter((q) => focusKeys.includes(q.key)).map((q) => q.label)
+    : focusRec ? data.filter((d) => focusRec(d)).map((d) => (info.label ? info.label(d) : formatX(d[xKey]))) : [];
+  const focusWords = focusNames.length ? `Highlighted: ${focusNames.length > 1 ? focusNames.slice(0, -1).join(', ') + ' and ' + focusNames[focusNames.length - 1] : focusNames[0]}.` : '';
+  const generated = (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf));
   /** A record's short name: the chart type's, or its x. */
   const labelOf = (d: ChartDatum) => (info.label ? info.label(d) : formatX(d[xKey]));
   const selectedRecord = selecting ? data.find(isSelected) : undefined;
@@ -1532,7 +1558,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // References and annotations are read after the summary, written or generated: "1 annotation: v2 launch, Mar 4, 2026."
   const overlayWords = (() => {
     if (!data.length) return '';
-    let out = '';
+    let out = summary && focusWords ? ` ${focusWords}` : '';
     const shown = top.refGeo;
     if (shown.length) {
       const items = shown.map((g) => {
@@ -1723,10 +1749,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         aria-label={`${summaryText} Press Enter to explore ${single ? 'the data' : 'the series'}.`} />;
     }
     if (nav.level === 'series') {
-      return series.map((s, i) => <div {...common(`s${i}`, i === navS)} className="alt-chart-node" data-level="series" aria-roledescription="series" style={plotBox}
-        aria-label={`${seriesName(i)} ${i + 1} of ${series.length}.`} />);
+      return navOrder.map((si, i) => <div {...common(`s${i}`, i === navS)} className="alt-chart-node" data-level="series" aria-roledescription="series" style={plotBox}
+        aria-label={`${seriesName(si)} ${i + 1} of ${series.length}.`} />);
     }
-    const s = series[navS];
+    const s = series[navOrder[navS]];
     return data.map((d, i) => {
       const shown = top.ctx.data[i] ?? d;
       const v = shown[s.key];
@@ -1735,7 +1761,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       const box = childType?.chartBox?.(childProps, top.ctx, shown);
       return <div {...common(`p${navS}-${i}`, i === navP)} className="alt-chart-node" data-level="point" data-shape={box ? 'cell' : undefined} aria-roledescription={grid ? 'cell' : 'data point'}
         aria-pressed={info.onSelect && !info.drill ? isSelected(d) : undefined} aria-haspopup={info.drill ? 'true' : undefined}
-        style={box ? { left: top.left + box[0], top: TOP + box[1], width: box[2], height: box[3] } : { left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navS, i) + (interactive ? ` Press Enter to ${info.drill ? 'open it' : isSelected(d) ? 'clear the filter' : 'filter to it'}.` : '')} />;
+        style={box ? { left: top.left + box[0], top: TOP + box[1], width: box[2], height: box[3] } : { left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navOrder[navS], i) + (interactive ? ` Press Enter to ${info.drill ? 'open it' : isSelected(d) ? 'clear the filter' : 'filter to it'}.` : '')} />;
     });
   })();
 
@@ -1752,7 +1778,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         if (!b || b.series !== s.key || !num(d[b.low]) || !num(d[b.high])) return [item];
         // The uncertainty band's row: its low and high, named by what the band is ("Range 10th–90th percentile").
         return [item, { key: `${s.key}-range`, label: b.label, value: d[b.high] as number, text: `${top.ctx.format(s.key, d[b.low] as number)}–${top.ctx.format(s.key, d[b.high] as number)}`, color: e.stroke, range: true }];
-      });
+      })
+      // Focused series first (#188).
+      .sort((a, b) => +inContext(a.key.replace(/-range$/, '')) - +inContext(b.key.replace(/-range$/, '')));
     const at = top.ctx.xOf(d);
     const style: React.CSSProperties = {};
     let side: string;
@@ -1969,7 +1997,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           </div>
         )}
         {legendEl && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
-          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, marker: e.marker, hidden: hidden.includes(s.key) }; }),
+          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, marker: e.marker, hidden: hidden.includes(s.key), context: e.context, highlighted: !!focusKeys && !e.context }; }),
           swatch: info.swatch ?? 'rect',
           onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
         })}
