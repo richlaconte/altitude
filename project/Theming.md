@@ -308,3 +308,21 @@ new EditorView({ parent, extensions: [altitudeTheme(), /* your language, lint, k
 - **Tooltips and completion lists** float at level 3.
 
 What it can't cover: the editor's state changes without a transition, because a CodeMirror theme can't scope a reduced-motion query to the editor itself. If you add `drawSelection()`, its blinking cursor is CodeMirror's own. Search and other panels take ground and line but keep CodeMirror's layout.
+
+### React Flow
+
+```ts
+import '@xyflow/react/dist/base.css';
+import 'altitude-design/altitude.css';
+import 'altitude-design/adapters/react-flow.css';
+```
+
+Styles a React Flow 12 (`@xyflow/react`) canvas by setting its `--xy-*` properties from the active scheme and styling its elements:
+
+- **The canvas is ground**, with a dot grid in `line-control` (`<Background variant="dots" />`).
+- **Nodes are Cards at level 1.** A node you can select lifts one level when pointed at; a dragged node is in your hand at level 3; selection is a 2px accent rim, never extra height.
+- **Status uses the commitment signal**: give a running node `className: 'alt-node-pending'` (it hovers, after the grace period) and a failed one `'alt-node-failed'` (it drops into a trench on `critical-soft`). Put the state in the node's words too ("Failed: token expired"); a failed edge can take `'alt-edge-failed'`.
+- **Ports are openings**: small wells that deepen under an edge being drawn, and sink to a trench with the accent rim where it can land. The edge being drawn is dashed; edges are `line-control`, a selected edge `accent-ink`.
+- **The minimap is a well** with the visible area outlined as its lens; the controls are a raised toolbar.
+
+What it can't cover: custom node components draw themselves (build them from `Card` or `Surface`); a dragged node can't tilt, because React Flow owns its transform; and keyboard access is React Flow's own (Tab to a node, Enter to select, arrows to move), with no way to follow edges by keyboard, so offer a list or table of the same steps.
