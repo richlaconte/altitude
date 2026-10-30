@@ -94,8 +94,7 @@ const BREATH = 4800, WAVE = 1800;
   await page.waitForFunction(() => document.querySelector('.feed .alt-await[data-arrival="late"][data-phase="reveal"]'), null, { timeout: 3000 });
   const late = await page.evaluate(() => {
     const face = document.querySelector('.feed .alt-await[data-arrival="late"] > .alt-await-face');
-    const b = getComputedStyle(face, '::before');
-    return { plate: b.animationName, bg: b.backgroundColor, raised: getComputedStyle(document.querySelector('.alt-root')).getPropertyValue('--surface-raised').trim() };
+    return { plate: getComputedStyle(face, '::before').animationName };
   });
   expect(late.plate === 'alt-plate', `content that arrives into a view already showing gets a plate (${late.plate})`);
 

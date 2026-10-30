@@ -43,7 +43,7 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   recede?: boolean;
   /** Openings react as a mouse or pen approaches: empty fields deepen, a sheet's finger pull opens. Raised things never move before the pointer is on them. Never for touch; off under reduced motion. Default true. */
   approach?: boolean;
-  /** How content still on its way waits (#343). 'sweep' (default): light passes over each imprint. 'breath' (experimental): imprints breathe in depth on one page clock, a swell crossing the view; raised content (Await settle="raised") rises past its rest and settles, flush content fills past the ground, and a card's parts land together. Nested providers inherit it. */
+  /** How content still on its way waits (#343). 'sweep' (default): light passes over each imprint. 'breath' (experimental): imprints breathe in depth on one page clock, a swell crossing the view; raised content (Await settle="raised") rises past its rest and settles, flush content fills past the ground, and a card's parts land together. Set it on the outer provider: nested providers inherit it and can't turn it off. */
   loading?: 'sweep' | 'breath';
   /** The whole app is in a mode (test mode, viewing as a customer, read-only): a flush strip naming it, a 2px viewport frame, and a plate in every Dialog and Sheet. */
   mode?: AppMode;

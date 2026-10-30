@@ -401,7 +401,7 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
    * How content that's still on its way waits (#343). 'sweep' (default): light passes over each imprint. 'breath'
    * (experimental): imprints breathe in depth on one page clock, a swell crossing the view top to bottom; content that
    * rests raised (`Await settle="raised"`) rises a level past its rest and settles, flush content fills past the ground,
-   * and a card's parts land together. Nested providers inherit it.
+   * and a card's parts land together. Set it on the outer provider: nested providers inherit it and can't turn it off.
    */
   loading?: 'sweep' | 'breath';
   /**
@@ -474,8 +474,10 @@ export function ModePlate() {
 }
 
 export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', density = 'auto', recede = true, approach = true, loading, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
+  // Breath holds for everything inside the provider that sets it (its CSS matches any breath ancestor), so a nested
+  // provider can turn it on but not back off.
   const inherited = React.useContext(LoadingStyleContext);
-  const loadingStyle = loading ?? inherited;
+  const loadingStyle = inherited === 'breath' ? 'breath' : loading ?? inherited;
   const checks = devChecks ?? (typeof process !== 'undefined' && process?.env.NODE_ENV !== 'production');
   const pageScope = useScopeValue('page', checks);
   const rootRef = React.useRef<HTMLDivElement>(null);
