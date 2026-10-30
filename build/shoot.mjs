@@ -16,7 +16,9 @@ for (const c of comps) for (const th of themes) {
   const inject = `<style>${readFileSync('test/tokens.css', 'utf8')}</style><style>${readFileSync(root + '/project/components/bundle.css', 'utf8').replace(/^@import[^\n]*\n/, '')}</style>
 <script>${readFileSync('test/react.production.min.js', 'utf8')}</script><script>${readFileSync('test/react-dom.production.min.js', 'utf8')}</script><script>${readFileSync(root + '/project/components/bundle.js', 'utf8')}</script>`;
   html = html.replace('<html lang="en">', `<html lang="en" data-theme="${th}">`).replace('<head>', () => '<head>' + inject); // a function, so $& or $' in the bundle aren't read as patterns
-  const page = await browser.newPage({ viewport: { width, height: h }, deviceScaleFactor: +(process.env.DPR || 1), forcedColors: process.env.FORCED ? 'active' : 'none' });
+  // MOBILE=1: a phone's context, with touch, so (pointer: coarse) and (hover: none) match and touch events can be sent.
+  const opts = { viewport: { width, height: h }, deviceScaleFactor: +(process.env.DPR || 1), forcedColors: process.env.FORCED ? 'active' : 'none', ...(process.env.MOBILE ? { isMobile: true, hasTouch: true } : {}) };
+  const page = process.env.MOBILE ? await (await browser.newContext(opts)).newPage() : await browser.newPage(opts);
   page.on('pageerror', (e) => errors.push(cur + ': ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(cur + ' console: ' + m.text().slice(0, 300)); });
   writeFileSync(`test/p-${c}-${th}.html`, html);
@@ -25,6 +27,7 @@ for (const c of comps) for (const th of themes) {
   if (process.env.ACT) await eval(process.env.ACT);
   await page.screenshot({ path: `test/shot-${c}-${th}.png` });
   await page.close();
+  if (process.env.MOBILE) await page.context().close();
 }
 await browser.close();
 console.log(errors.length ? errors.join('\n') : 'no errors');
