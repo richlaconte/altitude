@@ -992,6 +992,17 @@ A design review: `Timeline` was rendered with events from today and yesterday, o
 
 Not yet tested with people: whether day headings help or slow scanning in a busy feed.
 
+### E84 · Is unread a height?
+
+A design review: `NotificationCenter` was rendered with unread and read notifications over two days, one with an action, opened, marked read and receiving a new notification, in all four schemes, at 360px (a bottom Sheet) and under forced colours. `checks/notifications.mjs` measures it.
+
+- **Unread is a mark.** Inboxes often keep unread items tinted or raised until they're read. That makes height mean "unread", a persistent state, which breaks "tiers carry meaning". Unread is an accent dot, weight 600 and "Unread" in the name; the item settles like anything else. Elevation.md's "States that don't rise" now points here.
+- **Only the count floats.** The bell is a ghost button; its count is the one thing on it that wants you, so it floats, as in a Sidebar.
+- **Announced while closed.** New notifications are announced, batched, from outside the panel, so they're heard without opening it.
+- **Opening one reads it.** Following an item marks it read and closes the panel, which is what people expect and saves a click.
+
+Not yet tested with people: whether the dot alone is noticed in a long list, without the tint people are used to.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
