@@ -11,7 +11,7 @@ export interface PromptMessage { text: string; files: File[] }
 
 interface Ctx {
   text: string; setText: (t: string) => void; files: PromptAttachment[]; attach: (files: File[]) => void; remove: (id: string) => void;
-  status: PromptStatus; submit: () => void; stop: () => void; busy: boolean; pick: () => void; area: React.RefObject<HTMLTextAreaElement | null>;
+  status: PromptStatus; submit: () => void; stop: () => void; busy: boolean; pick: () => void; area: React.MutableRefObject<HTMLTextAreaElement | null>;
 }
 const PromptCtx = React.createContext<Ctx | null>(null);
 const usePrompt = (part: string) => { const c = React.useContext(PromptCtx); if (!c) throw new Error(`${part} must be inside <PromptInput>.`); return c; };
@@ -45,7 +45,7 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, value, onValue
   const [files, setFiles] = React.useState<PromptAttachment[]>([]);
   const [over, setOver] = React.useState(false);
   const [said, setSaid] = React.useState('');
-  const area = React.useRef<HTMLTextAreaElement>(null);
+  const area = React.useRef<HTMLTextAreaElement | null>(null);
   const picker = React.useRef<HTMLInputElement>(null);
   const busy = status === 'submitted' || status === 'streaming';
   const wasBusy = React.useRef(busy);
