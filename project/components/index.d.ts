@@ -3425,6 +3425,30 @@ export declare function InlineCitation(props: InlineCitationProps): React.ReactE
 export interface SourcesProps { items: CitationSource[]; heading?: string; idPrefix?: string; className?: string }
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
+export type TerminalChunk = { text: string; stream?: 'stdout' | 'stderr' };
+export interface TerminalProps extends Omit<React.HTMLAttributes<HTMLElement>, 'children'> {
+  /** The command: "npm test". It names the figure. */
+  command: string;
+  /** Everything printed so far: a string, or chunks marked stdout or stderr. */
+  output: string | TerminalChunk[];
+  /** Default 'running'. */
+  status?: 'running' | 'exited' | 'stopped';
+  exitCode?: number;
+  /** Milliseconds it ran. */
+  duration?: number;
+  /** Shows Stop while it runs. */
+  onStop?: () => void;
+  /** Escape in the output stops a running command. Default false. */
+  stopOnEscape?: boolean;
+  /** Lines kept; earlier ones behind "Show N earlier lines". Default 400. */
+  maxLines?: number;
+  /** Map ANSI colours to Altitude's inks. Default true; off, escapes are stripped. */
+  ansi?: boolean;
+  /** Copy for the whole output. Default true. */
+  copyable?: boolean;
+}
+/** A command's output as it runs, in CodeBlock's frame: a dashed rule while running, then its exit in words. */
+export declare function Terminal(props: TerminalProps): React.ReactElement;
 export interface SuggestionsProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChoose'> {
   'aria-label': string;
   /** 'fill' (default) puts the text in the composer; 'send' sends it at once. */
@@ -3534,7 +3558,7 @@ declare global {
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
-      Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
+      Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
