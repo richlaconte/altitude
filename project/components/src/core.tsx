@@ -730,6 +730,30 @@ export function SheetHead({ title, onClose }: { title?: React.ReactNode; onClose
 
 /* ───────────────────────── Kbd ───────────────────────── */
 
+/**
+ * Touch drags start on press-and-hold, so a swipe still scrolls (#254–#256). Call on a touch pointerdown: after
+ * HOLD_MS without moving more than 8px it calls onHold, and from then until the finger lifts the browser isn't
+ * allowed to pan (the first touchmove is cancelled) or open a long-press menu. Moving first gives the gesture to the
+ * browser. Returns a function that abandons the hold.
+ */
+export const HOLD_MS = 400;
+export function touchHold(e: { clientX: number; clientY: number; pointerId: number }, onHold: () => void): () => void {
+  const x = e.clientX, y = e.clientY, id = e.pointerId;
+  let held = false;
+  const timer = window.setTimeout(() => { held = true; onHold(); }, HOLD_MS);
+  const block = (t: Event) => { if (held && t.cancelable) t.preventDefault(); };
+  const move = (p: PointerEvent) => { if (p.pointerId === id && !held && Math.hypot(p.clientX - x, p.clientY - y) > 8) stop(); };
+  const end = (p: PointerEvent) => { if (p.pointerId === id) stop(); };
+  const stop = () => {
+    window.clearTimeout(timer);
+    window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', end); window.removeEventListener('pointercancel', end);
+    window.removeEventListener('touchmove', block); window.removeEventListener('contextmenu', block);
+  };
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
+  window.addEventListener('touchmove', block, { passive: false }); window.addEventListener('contextmenu', block);
+  return stop;
+}
+
 // Whether a keyboard is likely (#262): not on a touch-only device until a key is pressed, after which it is for the
 // rest of the session (a tablet's hardware keyboard). Shared, so every hint turns on together.
 let keySeen = false;

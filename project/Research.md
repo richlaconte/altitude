@@ -1428,6 +1428,10 @@ A measurement (#257): at 375 CSS px the work week drew five 55px columns, so eve
 
 A measurement (#260): at 375 CSS px the DataGrid's five columns were each about 65px (its table is `table-layout: fixed` at 100%, which ignores a cell's minimum), so names read "Des…" and status badges "Acti"; DataTable's owners wrapped and clipped. The frame could already scroll; the columns never asked for the width. Under 480px of the frame's width (a container query), the table lays out by content at least as wide as its frame, every column keeps at least 6rem (checkbox, grip, expand and edit columns excepted), and the table scrolls inside its frame, the edge with more columns fading. Columns take `minWidth` and `sticky` (opaque ground surface over a flush 1px edge, no shadow, since a sticky column isn't live; the start fade is dropped when one marks the edge). Wide, nothing changes. The issue's `narrow="stack"` (rows as records) and `priority` are deferred: scrolling keeps the table's semantics and DataGrid's cell navigation intact, and stacking needs its own design for editing. `checks/table-narrow.mjs`.
 
+### E129 · On touch, is a finger on a row a scroll or a pick-up?
+
+A measurement (#256): `.alt-sort-item` was `touch-action: none` across the whole row, so on a phone every swipe that started on a sortable list reordered it and the page never scrolled. Rows are now `touch-action: manipulation`: a swipe scrolls, and a press-and-hold of 400ms without moving more than 8px picks the row up, after which the browser isn't allowed to pan (the first `touchmove` is cancelled) or open a long-press menu. The grip alone is `touch-action: none` and picks up at once, with a finger-sized hit area under a coarse pointer. A mouse drag starts as before, without a hold. The hold is a shared helper (`touchHold`), so Board and Tree take the same gesture (#254, #255). `checks/touch-drag.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
