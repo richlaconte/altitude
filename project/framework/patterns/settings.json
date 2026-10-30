@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "id": "settings",
+  "version": 1,
+  "title": "Settings",
+  "intents": [
+    "settings",
+    "preferences",
+    "workspace settings",
+    "account settings",
+    "danger zone"
+  ],
+  "purpose": "Change how a workspace or account behaves, deciding per section whether changes apply now or save together.",
+  "useWhen": [
+    "A page of settings mixes standalone preferences, records saved together and destructive actions."
+  ],
+  "avoidWhen": [
+    "A single record form with no standalone preferences; use the edit-record contract alone."
+  ],
+  "alternatives": [
+    "Use the edit-record contract for one record's form, and the consequential-action contract for a single destructive action outside settings."
+  ],
+  "requiredInputs": [
+    "current settings and who may change each section",
+    "a save adapter per record saved together",
+    "a write adapter per apply-now preference",
+    "consequence and execute adapter per destructive action"
+  ],
+  "states": [
+    "loading",
+    "ready",
+    "apply-pending",
+    "apply-committed",
+    "apply-failed",
+    "draft-dirty",
+    "draft-submitting",
+    "draft-failed",
+    "read-only",
+    "concurrent-change"
+  ],
+  "transitions": [
+    "ready → apply-pending when an apply-now control changes",
+    "apply-pending → apply-committed on acknowledgement, or apply-failed with the control restored",
+    "ready → draft-dirty when a field saved together changes",
+    "draft-dirty → draft-submitting on save, or ready on discard",
+    "draft-submitting → ready on success, or draft-failed with the draft kept"
+  ],
+  "rules": [
+    "ALT-SETTINGS-001",
+    "ALT-EDIT-001",
+    "ALT-EDIT-002",
+    "ALT-ACTION-001",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "nng-toggle",
+    "govuk-validation",
+    "altitude-elevation",
+    "task-review"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Settings pages that combine standalone preferences, records saved together and destructive actions.",
+  "exceptions": [
+    "Require only states supported by the application; a page with only one mode needs only that mode's states."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/settings.md",
+  "implementation": "project/components/src/settings.tsx",
+  "examples": [
+    "build/fixtures/patterns/settings.jsx"
+  ],
+  "verification": [
+    "build/checks/settings-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}

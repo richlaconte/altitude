@@ -1552,6 +1552,40 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 [data-contrast="more"] .alt-savebar { box-shadow: 0 3px 0 0 var(--ink), var(--elev-3); }
 @media (forced-colors: active) { .alt-savebar { border: 2px solid CanvasText; } .alt-savebar[data-status="pending"] { border-style: dotted; } .alt-savebar[data-status="failed"] { border: 3px dashed CanvasText; } }
 
+/* ── Settings: a section is a raised Card (level 1) of rows; the danger zone is the same card with a critical rim,
+   never higher. A row is flush, label and description on the start side, the control on the end side, stacked when
+   the section is narrow. An apply-now control's write is the row's: pending hovers it, committed lands, failed drops
+   it into a trench, with the state in words beside the control. ── */
+.alt-settings-section { container-type: inline-size; padding: var(--space-5); gap: var(--space-3); }
+.alt-settings-section[data-tone="critical"] { box-shadow: var(--elev-1), inset 0 0 0 1px var(--critical); }
+.alt-settings-head { display: flex; flex-direction: column; gap: var(--space-1); }
+.alt-settings-title { margin: 0; font: 600 17px/24px var(--font-sans); letter-spacing: -0.01em; }
+.alt-settings-desc, .alt-settings-readonly { margin: 0; font: 400 14px/20px var(--font-sans); color: var(--ink-muted); }
+.alt-settings-readonly { display: flex; gap: 6px; align-items: flex-start; }
+.alt-settings-readonly svg { flex: none; margin-top: 3px; }
+.alt-settings-rows { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; }
+.alt-settings-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-5);
+  margin-inline: calc(-1 * var(--space-3)); padding: var(--space-3); border-radius: var(--radius-md);
+}
+.alt-settings-row + .alt-settings-row { box-shadow: inset 0 1px 0 var(--line); }
+.alt-settings-row[data-status="pending"] { background: var(--surface-raised); }
+.alt-settings-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.alt-settings-label { font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.alt-settings-rowdesc, .alt-settings-error { margin: 0; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-settings-error { display: flex; gap: 6px; align-items: flex-start; color: var(--critical); }
+.alt-settings-error svg { flex: none; margin-top: 2px; }
+.alt-settings-control { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 0; }
+.alt-settings-control > .alt-input, .alt-settings-control > .alt-select { width: min(280px, 100%); }
+.alt-settings-status { font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-settings-status:empty { display: none; }
+.alt-settings-row[data-status="failed"] .alt-settings-status { color: var(--critical); }
+@container (max-width: 480px) {
+  .alt-settings-row { grid-template-columns: minmax(0, 1fr); }
+  .alt-settings-control { align-items: flex-start; }
+}
+@media (forced-colors: active) { .alt-settings-section[data-tone="critical"] { border: 2px solid CanvasText; } }
+
 /* ── PermissionMatrix: roles against permissions. The grid is settled, on the ground with line dividers. An editable
    grant is a choice, a Checkbox's trench that the accent pours into; an inherited or fixed grant is already decided, so
    it's a flush stamped check (or a dash), muted, like a done Checklist item: pressed into the record, not disabled. The

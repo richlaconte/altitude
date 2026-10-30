@@ -305,6 +305,29 @@
       "criteria": [],
       "reviewedAt": "2026-10-29",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-SETTINGS-001",
+      "title": "Each settings section applies now or saves together, and destructive actions sit in a final danger zone",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Settings pages that combine standalone preferences, records saved together and destructive actions.",
+      "exceptions": [
+        "A page with only one mode needs only that mode; a single destructive action outside settings follows the consequential-action contract alone."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "nng-toggle",
+        "task-review"
+      ],
+      "repair": "Give each section one mode: apply-now controls report their own write (pending, committed, failed with the control restored); fields that form one record join one draft saved once. Move delete, transfer and similar actions to a final section titled Danger zone, at the same height as the others, each named by its outcome with its consequence in words.",
+      "verification": [
+        "build/checks/settings-pattern.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }

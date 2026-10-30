@@ -24,6 +24,7 @@ export type { SyncState } from './sync-indicator';
 export { DiffView, diffLines } from './diff-view';
 export type { DiffField } from './diff-view';
 export { SaveBar } from './save-bar';
+export { SettingsSection, SettingsRow } from './settings';
 export { PermissionMatrix } from './permission-matrix';
 export type { MatrixRole, MatrixPermission, MatrixInherited } from './permission-matrix';
 export { PlanPicker } from './plan-picker';
