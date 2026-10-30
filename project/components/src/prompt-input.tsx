@@ -151,7 +151,7 @@ export function PromptInputSubmit({ className }: { className?: string }) {
   const c = usePrompt('PromptInputSubmit');
   const empty = !c.text.trim() || c.files.some((f) => f.status === 'pending');
   return c.busy
-    ? <Button size="sm" variant="primary" square className={cx('alt-prompt-send', className)} data-stop="" aria-label="Stop generating" aria-keyshortcuts="Escape" onClick={c.stop}><Icons.Stop size={14} /></Button>
+    ? <Button size="sm" variant="primary" square className={cx('alt-prompt-send', className)} data-stop="" aria-label="Stop generating" aria-keyshortcuts="Escape" onClick={c.stop}><Icons.Stop size={18} /></Button>
     : <Button type="submit" size="sm" variant="primary" square className={cx('alt-prompt-send', className)} aria-label="Send message" aria-disabled={empty || undefined}
         onClick={(e) => { if (empty) e.preventDefault(); }}><Icons.ArrowUp size={16} /></Button>;
 }

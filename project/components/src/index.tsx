@@ -35,6 +35,8 @@ export { Tour } from './tour';
 export type { TourStep } from './tour';
 export { PromptInput, PromptInputTextarea, PromptInputAttachments, PromptInputToolbar, PromptInputAttach, PromptInputSubmit } from './prompt-input';
 export type { PromptStatus, PromptAttachment, PromptMessage } from './prompt-input';
+export { Conversation, ConversationContent, ConversationScrollButton, Message, MessageContent, MessageActions } from './conversation';
+export type { MessageStatus } from './conversation';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';

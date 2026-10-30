@@ -3056,6 +3056,35 @@ export declare function PromptInputToolbar(props: { className?: string; children
 export declare function PromptInputAttach(props: { label?: string }): React.ReactElement;
 export declare function PromptInputSubmit(props: { className?: string }): React.ReactElement;
 
+export interface ConversationProps extends React.HTMLAttributes<HTMLDivElement> { 'aria-label': string }
+/** The thread between a person and an assistant: a log that follows to the bottom and announces answers once, when complete. */
+export declare function Conversation(props: ConversationProps): React.ReactElement;
+export declare function ConversationContent(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+/** "Jump to latest message", once the person has scrolled up. */
+export declare function ConversationScrollButton(props: { className?: string }): React.ReactElement | null;
+export type MessageStatus = 'streaming' | 'complete' | 'stopped' | 'error';
+export interface MessageProps extends React.HTMLAttributes<HTMLElement> {
+  from: 'user' | 'assistant';
+  /** Streaming rests on a dashed rule; complete settles once; stopped and error are kept with Retry. Default 'complete'. */
+  status?: MessageStatus;
+  /** Who's speaking. Default "You" or "Assistant". */
+  name?: string;
+  onRetry?: () => void;
+}
+export declare function Message(props: MessageProps): React.ReactElement;
+export declare function MessageContent(props: React.HTMLAttributes<HTMLDivElement>): React.ReactElement;
+export interface MessageActionsProps {
+  /** Shows Copy (the message's text, or this function's). */
+  onCopy?: boolean | (() => string);
+  onRegenerate?: () => void;
+  onFeedback?: (value: 'up' | 'down' | null) => void;
+  feedback?: 'up' | 'down' | null;
+  /** Regenerated answers kept as versions: "Version 2 of 2". */
+  versions?: { index: number; total: number; onChange: (index: number) => void };
+  className?: string;
+}
+export declare function MessageActions(props: MessageActionsProps): React.ReactElement | null;
+
 declare global {
   interface Window {
     Altitude: {
@@ -3075,6 +3104,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;
