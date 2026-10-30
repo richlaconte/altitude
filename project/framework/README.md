@@ -10,6 +10,7 @@ Start from the person's task. Read only the relevant pattern below, its linked r
 | Review answers and finish a process | [Review and submit](patterns/review-submit.md) |
 | A settings page: apply now, save together, danger zone | [Settings](patterns/settings.md) |
 | Invite people, change roles, remove access | [Members](patterns/members.md) |
+| Usage, plan changes, invoices | [Billing](patterns/billing.md) |
 
 Before implementation, capture a short design record in the application's normal documentation: user goal, audience, primary action, consequence, data shape, selected patterns, applicable states, and unresolved product decisions. Infer routine details from the existing product. Do not invent permissions, persistence, cancellation, rollback or undo. Ask only when an unknown changes consequences or the task itself.
 

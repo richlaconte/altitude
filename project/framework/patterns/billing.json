@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "billing",
+  "version": 1,
+  "title": "Billing",
+  "intents": [
+    "billing",
+    "change plan",
+    "upgrade",
+    "downgrade",
+    "usage",
+    "invoices",
+    "subscription",
+    "pricing"
+  ],
+  "purpose": "Show usage against limits as readings and change plan with the cost reviewed before it's confirmed.",
+  "useWhen": [
+    "A product shows what someone pays for, how much they've used, and lets them change plan."
+  ],
+  "avoidWhen": [
+    "A one-off checkout for a single purchase; use the review-submit contract with the payment provider's checkout."
+  ],
+  "alternatives": [
+    "Use the review-submit contract for a one-off purchase, and the settings contract for billing contact details."
+  ],
+  "requiredInputs": [
+    "plans with prices per period",
+    "current plan and period",
+    "usage per quota with limits and thresholds",
+    "an estimate and how it's computed",
+    "a proration preview from the billing service",
+    "losses a downgrade would cause",
+    "payment status and invoices"
+  ],
+  "states": [
+    "ready",
+    "choosing",
+    "reviewing",
+    "changing",
+    "changed",
+    "change-failed",
+    "downgrade-review",
+    "payment-failed",
+    "feature-locked"
+  ],
+  "transitions": [
+    "ready → choosing → reviewing with the proration",
+    "reviewing → changing on confirm, or choosing to pick again",
+    "changing → changed when the service confirms, or change-failed with nothing charged",
+    "choosing → downgrade-review when the plan removes access",
+    "ready → payment-failed when a charge fails, until the payment method is updated"
+  ],
+  "rules": [
+    "ALT-BILLING-001",
+    "ALT-REVIEW-001",
+    "ALT-ACTION-001",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "wcag22",
+    "altitude-elevation",
+    "task-review"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Products with plans, usage limits, plan changes and invoices.",
+  "exceptions": [
+    "Require only states supported by the application; flat-priced products without usage skip the quota states."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/billing.md",
+  "implementation": "build/fixtures/patterns/billing.jsx",
+  "examples": [
+    "build/fixtures/patterns/billing.jsx"
+  ],
+  "verification": [
+    "build/checks/billing-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}

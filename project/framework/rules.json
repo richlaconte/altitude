@@ -351,6 +351,32 @@
       "criteria": [],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-BILLING-001",
+      "title": "Usage is a reading, a plan change is reviewed with its cost, and a downgrade lists what's lost",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Billing pages with usage limits and plan changes.",
+      "exceptions": [
+        "Prices and proration are the billing service's; the interface shows what the service quotes and never computes a charge itself."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "wcag22",
+        "altitude-elevation",
+        "task-review"
+      ],
+      "repair": "Draw each quota as a Meter with its state in words, never Progress; mark the rest of the cycle as projected; review a plan change with the quoted proration as a sentence before confirming, and claim it only after the service confirms; list what a downgrade removes and name its button by the outcome.",
+      "verification": [
+        "build/checks/billing-pattern.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#error-prevention-legal-financial-data"
+      ],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }
