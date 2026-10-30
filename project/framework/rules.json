@@ -377,6 +377,32 @@
       ],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-AUTH-001",
+      "title": "Auth copy reveals nothing, fields carry autocomplete tokens, and nothing is submitted for the person",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Sign-in, sign-up, verification, two-factor and reset screens.",
+      "exceptions": [
+        "Products that delegate authentication to a hosted provider apply this to the parts they render."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "owasp-auth",
+        "wcag22"
+      ],
+      "repair": "Use responses that hold whether or not the account exists; state rate limits with the wait; give every field its autocomplete token and allow paste; keep Verify and Sign in as buttons the person presses; keep the email across steps; offer a path that isn't a cognitive test.",
+      "verification": [
+        "build/checks/auth-pattern.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#accessible-authentication-minimum",
+        "https://www.w3.org/TR/WCAG22/#identify-input-purpose"
+      ],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }

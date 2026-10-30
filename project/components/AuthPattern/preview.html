@@ -1,0 +1,121 @@
+<!-- @dsCard group="Patterns" height=760 subtitle="Sign in, sign up, two-factor and reset on a raised card, with copy that reveals nothing" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AuthPattern — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.au-page{display:grid;place-items:start center;padding-block:24px}.au-card{width:min(420px,100%);padding:28px;gap:16px}.au-card p{margin:0;font:400 15px/23px var(--font-sans)}.au-h{font:600 21px/28px var(--font-sans);margin:0}.au-form{display:grid;gap:16px}.au-wide{width:100%}.au-links{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}.au-card .au-note{font-size:14px;color:var(--ink-muted)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const RULES = [{ label: "At least 12 characters", test: (v) => v.length >= 12 }, { label: "Not just letters", test: (v) => /[^a-z]/i.test(v) }];
+function App() {
+  const [step, setStep] = React.useState("sign-in");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [name, setName] = React.useState("");
+  const [code, setCode] = React.useState("");
+  const [recovery, setRecovery] = React.useState("");
+  const [trust, setTrust] = React.useState(false);
+  const [busy, setBusy] = React.useState("");
+  const [errors, setErrors] = React.useState(
+    /** @type {{ id: string, label: string, message: string }[]} */
+    []
+  );
+  const [tries, setTries] = React.useState(0);
+  const [submits, setSubmits] = React.useState(0);
+  const [resendIn, setResendIn] = React.useState(0);
+  const heading = React.useRef(
+    /** @type {HTMLHeadingElement | null} */
+    null
+  );
+  React.useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1e3);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+  const go = (next) => {
+    setStep(next);
+    setErrors([]);
+    setBusy("");
+    requestAnimationFrame(() => heading.current?.focus());
+  };
+  const fail = (list) => {
+    setErrors(list);
+    setSubmits((n) => n + 1);
+  };
+  const signIn = async (e) => {
+    e.preventDefault();
+    const list = [];
+    if (!isEmail(email)) list.push({ id: "au-email", label: "Email", message: "Enter your email address, like name@example.com." });
+    if (!password) list.push({ id: "au-password", label: "Password", message: "Enter your password." });
+    if (list.length) return fail(list);
+    if (tries >= 3) return fail([{ id: "au-password", label: "Password", message: "Too many attempts. Wait 5 minutes, then try again, or reset your password." }]);
+    setBusy("password");
+    await wait(800);
+    setBusy("");
+    if (password !== "altitude") {
+      setTries((n) => n + 1);
+      setPassword("");
+      return fail([{ id: "au-password", label: "Password", message: "That email and password don\u2019t match. Try again or reset your password." }]);
+    }
+    go("two-factor");
+  };
+  const sendLink = async (next) => {
+    if (!isEmail(email)) return fail([{ id: "au-email", label: "Email", message: "Enter your email address, like name@example.com." }]);
+    setBusy("link");
+    await wait(700);
+    setResendIn(30);
+    go(next);
+  };
+  const signUp = async (e) => {
+    e.preventDefault();
+    const list = [];
+    if (!name.trim()) list.push({ id: "au-name", label: "Name", message: "Enter your name." });
+    if (!isEmail(email)) list.push({ id: "au-email", label: "Email", message: "Enter your email address, like name@example.com." });
+    if (!RULES.every((r) => r.test(password))) list.push({ id: "au-password", label: "Password", message: "Choose a password that meets both requirements." });
+    if (list.length) return fail(list);
+    setBusy("password");
+    await wait(800);
+    setCode("");
+    setResendIn(30);
+    go("verify");
+  };
+  const verify = async (value) => {
+    setBusy("code");
+    await wait(700);
+    if (value !== "123456") {
+      setBusy("");
+      setCode("");
+      return fail([{ id: "au-code", label: "Code", message: "That code didn\u2019t work. Check your authenticator app and enter the newest code." }]);
+    }
+    go("done");
+  };
+  const field = (id) => errors.find((x) => x.id === id)?.message;
+  const resend = /* @__PURE__ */ React.createElement("p", { className: "au-note" }, resendIn > 0 ? `You can resend the email in ${resendIn} ${resendIn === 1 ? "second" : "seconds"}.` : /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => sendLink(step) }, "Resend the email"));
+  return /* @__PURE__ */ React.createElement("main", { className: "au-page" }, /* @__PURE__ */ React.createElement(A.Card, { className: "au-card" }, step === "sign-in" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Sign in to Acme"), /* @__PURE__ */ React.createElement(A.Button, { className: "au-wide", onClick: () => go("sso") }, "Continue with single sign-on (SSO)"), /* @__PURE__ */ React.createElement(A.Separator, { label: "or" }), /* @__PURE__ */ React.createElement("form", { className: "au-form", noValidate: true, onSubmit: signIn, "aria-labelledby": "au-pw-h" }, /* @__PURE__ */ React.createElement("span", { id: "au-pw-h", hidden: true }, "Sign in with a password"), /* @__PURE__ */ React.createElement(A.ErrorSummary, { errors, focusKey: submits, title: "We couldn\u2019t sign you in" }), /* @__PURE__ */ React.createElement(A.Field, { label: "Email", error: field("au-email") }, /* @__PURE__ */ React.createElement(A.Input, { id: "au-email", type: "email", autoComplete: "username", value: email, onChange: (e) => setEmail(e.target.value) })), /* @__PURE__ */ React.createElement(A.Field, { label: "Password", error: field("au-password") }, /* @__PURE__ */ React.createElement(A.PasswordInput, { id: "au-password", autoComplete: "current-password", value: password, onChange: (e) => setPassword(e.target.value) })), /* @__PURE__ */ React.createElement(A.Button, { type: "submit", variant: "primary", className: "au-wide", loading: busy === "password" }, busy === "password" ? "Signing in" : "Sign in")), /* @__PURE__ */ React.createElement("div", { className: "au-links" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", loading: busy === "link", onClick: () => sendLink("link-sent") }, "Email me a sign-in link"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("reset") }, "Forgot your password?")), /* @__PURE__ */ React.createElement("p", { className: "au-note" }, "New to Acme? ", /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => {
+    setPassword("");
+    go("sign-up");
+  } }, "Create an account"))), step === "sign-up" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Create your Acme account"), /* @__PURE__ */ React.createElement("form", { className: "au-form", noValidate: true, onSubmit: signUp, "aria-label": "Create an account" }, /* @__PURE__ */ React.createElement(A.ErrorSummary, { errors, focusKey: submits }), /* @__PURE__ */ React.createElement(A.Field, { label: "Name", error: field("au-name") }, /* @__PURE__ */ React.createElement(A.Input, { id: "au-name", autoComplete: "name", value: name, onChange: (e) => setName(e.target.value) })), /* @__PURE__ */ React.createElement(A.Field, { label: "Email", error: field("au-email") }, /* @__PURE__ */ React.createElement(A.Input, { id: "au-email", type: "email", autoComplete: "email", value: email, onChange: (e) => setEmail(e.target.value) })), /* @__PURE__ */ React.createElement(A.Field, { label: "Password", error: field("au-password") }, /* @__PURE__ */ React.createElement(A.PasswordInput, { id: "au-password", autoComplete: "new-password", requirements: RULES, value: password, onChange: (e) => setPassword(e.target.value) })), /* @__PURE__ */ React.createElement(A.Button, { type: "submit", variant: "primary", className: "au-wide", loading: busy === "password" }, busy === "password" ? "Creating account" : "Create account")), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("sign-in") }, "I already have an account")), step === "verify" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Verify your email"), /* @__PURE__ */ React.createElement("p", null, "We sent a 6-digit code to ", /* @__PURE__ */ React.createElement("strong", null, email), ". It works for 10 minutes."), /* @__PURE__ */ React.createElement(A.ErrorSummary, { errors, focusKey: submits, title: "We couldn\u2019t verify that code" }), /* @__PURE__ */ React.createElement(A.Field, { label: "Verification code", error: field("au-code") }, /* @__PURE__ */ React.createElement(A.InputOTP, { id: "au-code", maxLength: 6, value: code, onChange: setCode, verifying: busy === "code", autoComplete: "one-time-code" })), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", className: "au-wide", loading: busy === "code", disabled: code.length < 6, onClick: () => verify(code) }, busy === "code" ? "Verifying" : "Verify email"), resend, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("sign-up") }, "Change email address")), step === "link-sent" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Check your email"), /* @__PURE__ */ React.createElement("p", null, "If ", /* @__PURE__ */ React.createElement("strong", null, email), " has an Acme account, we\u2019ve sent a sign-in link to it. The link works once, for 15 minutes."), resend, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("sign-in") }, "Use a different email address")), step === "sso" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Sign in with SSO"), /* @__PURE__ */ React.createElement(A.Field, { label: "Work email", hint: "We\u2019ll send you to your company\u2019s sign-in page." }, /* @__PURE__ */ React.createElement(A.Input, { type: "email", autoComplete: "username", value: email, onChange: (e) => setEmail(e.target.value) })), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", className: "au-wide", onClick: () => go("sign-in") }, "Continue"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("sign-in") }, "Back to sign in")), step === "two-factor" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Enter your code"), /* @__PURE__ */ React.createElement("p", null, "Open your authenticator app and enter the 6-digit code for Acme."), /* @__PURE__ */ React.createElement(A.ErrorSummary, { errors, focusKey: submits, title: "We couldn\u2019t verify that code" }), /* @__PURE__ */ React.createElement(A.Field, { label: "Authentication code", error: field("au-code") }, /* @__PURE__ */ React.createElement(A.InputOTP, { id: "au-code", maxLength: 6, value: code, onChange: setCode, verifying: busy === "code", autoComplete: "one-time-code" })), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Trust this device for 30 days", checked: trust, onCheckedChange: setTrust }), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", className: "au-wide", loading: busy === "code", disabled: code.length < 6, onClick: () => verify(code) }, busy === "code" ? "Verifying" : "Verify"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("recovery") }, "Use a recovery code instead")), step === "recovery" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Use a recovery code"), /* @__PURE__ */ React.createElement(A.Field, { label: "Recovery code", hint: "One of the codes you saved when you set up two-factor. Each works once." }, /* @__PURE__ */ React.createElement(A.Input, { autoComplete: "off", value: recovery, onChange: (e) => setRecovery(e.target.value) })), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", className: "au-wide", onClick: () => go("done") }, "Verify"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("two-factor") }, "Use your authenticator app")), step === "reset" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Reset your password"), /* @__PURE__ */ React.createElement(A.ErrorSummary, { errors, focusKey: submits }), /* @__PURE__ */ React.createElement(A.Field, { label: "Email", error: field("au-email") }, /* @__PURE__ */ React.createElement(A.Input, { id: "au-email", type: "email", autoComplete: "username", value: email, onChange: (e) => setEmail(e.target.value) })), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", className: "au-wide", loading: busy === "link", onClick: () => sendLink("reset-sent") }, "Send reset link"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("sign-in") }, "Back to sign in")), step === "reset-sent" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "Check your email"), /* @__PURE__ */ React.createElement("p", null, "If ", /* @__PURE__ */ React.createElement("strong", null, email), " has an Acme account, we\u2019ve sent a link to reset its password. The link works once, for 1 hour."), resend, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => go("sign-in") }, "Back to sign in")), step === "done" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "au-h" }, "You\u2019re signed in"), /* @__PURE__ */ React.createElement("p", null, trust ? "This device won\u2019t ask for a code for 30 days." : "We\u2019ll ask for a code next time you sign in on this device."), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", onClick: () => {
+    setPassword("");
+    setCode("");
+    setTries(0);
+    go("sign-in");
+  } }, "Sign out"))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

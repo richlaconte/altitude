@@ -63,6 +63,15 @@
       "status": "practice-guidance",
       "applicability": "Binary settings that take effect immediately; settings saved with a form use checkboxes or other controls submitted together.",
       "reviewed": "2026-10-30"
+    },
+    {
+      "id": "owasp-auth",
+      "authority": "contextual-pattern",
+      "title": "OWASP Authentication Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+      "status": "practice-guidance",
+      "applicability": "Authentication responses, error messages and rate limiting; implementation security remains the application's.",
+      "reviewed": "2026-10-30"
     }
   ]
 }
