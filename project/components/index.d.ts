@@ -2858,6 +2858,12 @@ export interface AppShellProps extends Omit<SidebarProviderProps, 'children'> {
 export declare function AppShell(props: AppShellProps): React.ReactElement;
 
 export interface ResizablePanelGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Under 480px of its own width: 'stack' (default) shows one panel (narrowPanel); 'vertical' stacks them; false keeps them side by side. */
+  narrow?: 'stack' | 'vertical' | false;
+  /** With narrow="stack", the panel shown while narrow, by index. */
+  narrowPanel?: number;
+  /** Called when the group becomes narrow or wide again. */
+  onNarrowChange?: (narrow: boolean) => void;
   /** horizontal (default): panes side by side; vertical: stacked. */
   direction?: 'horizontal' | 'vertical';
   /** Remembers the sizes in this browser under this name. */
