@@ -403,6 +403,29 @@
       ],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-AUDIT-001",
+      "title": "Audit entries are flush sentences that expand to their change, and export is a job",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Audit logs and activity feeds.",
+      "exceptions": [
+        "Entries that link somewhere may lift when pointed at; nothing else does."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation",
+        "task-review"
+      ],
+      "repair": "Render each entry as a flush row that reads as one sentence with its actor, exact time and origin; expand it to the before and after; keep the workspace log and a record's feed apart; run export as a task with progress, then offer the download and log the export.",
+      "verification": [
+        "build/checks/audit-log-pattern.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }
