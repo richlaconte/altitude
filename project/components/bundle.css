@@ -1437,6 +1437,27 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 .alt-sidebar-button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-sidebar-icon { display: inline-flex; flex: none; width: 20px; justify-content: center; }
 .alt-sidebar-text { overflow: hidden; text-overflow: ellipsis; transition: opacity var(--dur-travel-2) var(--ease-rise); }
+/* ThreadList (#269): conversations as Sidebar destinations, each with its state in words. Working isn't pending, so it
+   never hovers: a plate with a steady lamp. Needs-you is a caution plate (a row can't lift into a card inside a nav).
+   Unread is a dot and weight 600. Renaming opens a well in the row; deleting leaves a receipt in its slot. */
+.alt-threads { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.alt-threads-search { margin: 0 var(--space-2); }
+.alt-thread .alt-thread-link { height: auto; min-height: 44px; padding-block: 5px; align-items: flex-start; }
+.alt-thread .alt-sidebar-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; width: 100%; }
+.alt-thread-main { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.alt-thread-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-thread[data-unread] .alt-thread-title { font-weight: 600; color: var(--ink); }
+.alt-thread-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.alt-thread-meta { display: flex; align-items: center; gap: 6px; min-width: 0; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-thread-plate { flex: none; }
+.alt-thread-time { white-space: nowrap; }
+.alt-thread-more { position: absolute; right: 4px; top: 6px; opacity: 0; transition: opacity var(--dur-travel-1); }
+.alt-thread:focus-within .alt-thread-more, .alt-thread-more[aria-expanded="true"] { opacity: 1; }
+@media (hover: hover) { .alt-thread:hover .alt-thread-more { opacity: 1; } }
+@media (hover: none) { .alt-thread-more { opacity: 1; } }
+.alt-thread:has(.alt-thread-more) .alt-thread-main { padding-right: 28px; }
+.alt-thread-rename { display: block; width: 100%; padding: 4px; }
+.alt-threads-new { width: 100%; justify-content: center; }
 /* In the rail only icons show: each destination is a square, and the rail lets its tooltips out to the right. */
 .alt-sidebar[data-rail], .alt-sidebar[data-rail] .alt-sidebar-content { overflow: visible; }
 .alt-sidebar[data-rail] .alt-sidebar-item .alt-tip-anchor { display: flex; flex: 1; }
