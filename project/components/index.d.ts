@@ -1753,8 +1753,11 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   x?: string;
   /** How x is placed. Default: time for ISO dates, epoch numbers or Dates; linear for other numbers; band otherwise. */
   xScale?: 'band' | 'time' | 'linear';
-  /** Width ÷ height of the plot. Default 2, unless `height` is set. */
-  aspect?: number;
+  /**
+   * Width ÷ height of the plot. Default 2, unless `height` is set. 'banked': a line chart's segments set it, banked to
+   * an average of 45° so slopes read accurately, between 1 and 4 for the data area.
+   */
+  aspect?: number | 'banked';
   /** The plot's height in px, instead of an aspect ratio. */
   height?: number;
   /** A visible name, inside the figure. Leave it out when a CardTitle names the chart, and pass `aria-labelledby`. */
@@ -1972,6 +1975,11 @@ export interface LineChartProps {
   band?: { low: string; high: string; series?: string; label?: string };
   /** A ChartTooltip, to change what the readout shows. */
   children?: React.ReactNode;
+  /**
+   * 'banked': the plot takes the proportions that bank the lines' segments to 45° on average, between 1 and 4 for the
+   * data area; the width is the card's. Use a fixed aspect in a grid of equal cards.
+   */
+  aspect?: 'banked';
 }
 /** Change over time for one to four series: 2px lines named at their ends, gaps left as gaps. Renders inside a ChartContainer. */
 export declare function LineChart(props: LineChartProps): React.ReactElement;

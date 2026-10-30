@@ -1285,7 +1285,7 @@ function App() {
   );
 }
 
-=== LineChart | <!-- @dsCard group="Charts" height=720 subtitle="Change over time: lines named at their ends, gaps left as gaps" -->
+=== LineChart | <!-- @dsCard group="Charts" height=1240 subtitle="Change over time: lines named at their ends, gaps left as gaps" -->
 --- css
 .lc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 720px) { .lc { grid-template-columns: minmax(0, 1fr); } }
@@ -1325,6 +1325,9 @@ function App() {
       </Chart>
       <Chart id="l4" title="Seats by plan" sub="Four series, labels nudged apart" config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }}>
         <A.LineChart data={plans} x="month" />
+      </Chart>
+      <Chart id="l5" title="Monthly revenue, banked" sub='aspect="banked": the segments average 45°' aspect="banked" config={{ revenue: { label: 'Revenue', format: usd.format } }}>
+        <A.LineChart data={revenue} x="month" curve="monotone" />
       </Chart>
     </div>
   );
