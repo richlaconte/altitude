@@ -1440,6 +1440,10 @@ A measurement (#254): on touch a Board card couldn't be moved at all. The board 
 
 A measurement (#255): a Tree row with `onMove` couldn't be moved by touch. Its `touch-action: pan-y` gave every vertical gesture, the only direction a tree row moves, to the browser, which panned and sent `pointercancel`. Rows keep `pan-y`, so a swipe still scrolls, and take the shared press-and-hold (E129): after 400ms the row is carried as a mouse pick-up carries it, with the same targets and spring-open folders. A non-drag path for people with neither keyboard nor fine pointer (WCAG 2.5.7, a "Move to…" action) is left as its own change. `checks/touch-drag.mjs`.
 
+### E132 · The phone audit, and what it changed
+
+The audit behind the **Mobile** chapter (#244), at commit `f32b92b`: all 129 previews at 375 CSS px in Chromium with `isMobile` and `hasTouch`, plus touch events sent through CDP. It found 98 `:hover` rules outside `@media (hover: hover)`; 951 of 1,076 interactive targets under 44×44 CSS px, 279 under 24; 14px field text; `Board` and `Tree` not draggable by touch and `SortableList` reordering instead of scrolling; floating panels spilling off screen and overlays sized to `100vh`; nine layouts that didn't reflow; and ad hoc breakpoints at 768, 640, 560 and 480. E110–E131 record each fix. The chapter's constraints M1–M10 each name the check that holds them; M6 fails CI, and M1 and M2 warn, because a few pattern previews still overflow at 320px.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
