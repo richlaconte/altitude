@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { cx, DepthProps, Icons, inert, riseDelay, Spinner, useApproach, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
-import { Arrive, Await, hasPromise, hint, isPromise, LoadingScope, Promised, readChildren, readPromised, SkeletonOption, TextImprint, useArrival, useHasWaited, useReportWaiting, useScopeWaiting } from './suspense';
+import { cx, DepthProps, Icons, inert, LoadingStyleContext, riseDelay, Spinner, useApproach, useBreath, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
+import { Arrive, Await, hasPromise, hint, isPromise, LoadingScope, Promised, RevealGroup, readChildren, readPromised, SkeletonOption, TextImprint, useArrival, useHasWaited, useReportWaiting, useScopeWaiting } from './suspense';
 
 /* ───────────────────────── Button ───────────────────────── */
 
@@ -46,18 +46,20 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
   const actionable = interactive && !!rest.onClick;
   const { style: depthStyle, ...depth } = useDepth({ settle, status, heldBy, relevance });
   const { lines = 3 } = hint(skeleton);
+  // Under breath a card is one unit: its parts land together, in one place in the attention budget.
+  const Unit = React.useContext(LoadingStyleContext) === 'breath' ? RevealGroup : React.Fragment;
   return <div ref={ref} className={cx('alt-card', interactive && 'alt-lift', className)}
     role={actionable ? 'button' : undefined} tabIndex={actionable ? 0 : undefined}
     onKeyDown={actionable ? (e) => { onKeyDown?.(e); if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as HTMLElement).click(); } } : onKeyDown}
     {...depth} style={{ ...depthStyle, ...style }} {...rest}>
-    <LoadingScope>
+    <LoadingScope><Unit>
       <Await shape="none" enabled={skeleton !== false} imprint={
         <span className="alt-await-card">
           <TextImprint className="alt-card-title" width="45%" />
           <TextImprint className="alt-await-card-body" lines={lines} />
         </span>
       }>{children}</Await>
-    </LoadingScope>
+    </Unit></LoadingScope>
   </div>;
 });
 export const CardHeader = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => <div className={cx('alt-card-header', className)} {...p} />;
@@ -783,6 +785,7 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
 const LINE_WIDTHS = ['100%', '94%', '82%', '97%', '64%'];
 /** An imprint of the content to come, pressed into the page; when the content arrives it rises out of its imprint. */
 export function Skeleton({ loaded, shape = 'block', lines = 3, width, height, radius, className, style, children, ...rest }: SkeletonProps) {
+  const breath = useBreath<HTMLDivElement>();
   const [reveal, setReveal] = React.useState<number | null>(null);
   const was = React.useRef(loaded);
   React.useEffect(() => { if (loaded && !was.current) setReveal(riseDelay()); if (!loaded) setReveal(null); was.current = loaded; }, [loaded]);
@@ -796,7 +799,7 @@ export function Skeleton({ loaded, shape = 'block', lines = 3, width, height, ra
   }
   if (shape === 'text') {
     return (
-      <div className={cx('alt-skeleton-lines', className)} aria-hidden="true" style={{ width, ...style }} {...rest}>
+      <div ref={breath} className={cx('alt-skeleton-lines', className)} aria-hidden="true" style={{ width, ...style }} {...rest}>
         {Array.from({ length: lines }, (_, i) => (
           <div key={i} className="alt-skeleton" data-shape="text" style={{ width: i === lines - 1 && lines > 1 ? '60%' : LINE_WIDTHS[i % LINE_WIDTHS.length], height: height ?? 12, ['--i' as any]: i }} />
         ))}
@@ -804,7 +807,7 @@ export function Skeleton({ loaded, shape = 'block', lines = 3, width, height, ra
     );
   }
   const d = shape === 'circle' ? (width ?? height ?? 40) : undefined;
-  return <div className={cx('alt-skeleton', className)} data-shape={shape} aria-hidden="true"
+  return <div ref={breath} className={cx('alt-skeleton', className)} data-shape={shape} aria-hidden="true"
     style={{ width: d ?? width, height: d ?? height ?? 14, borderRadius: radius, ...style }} {...rest} />;
 }
 

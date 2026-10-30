@@ -43,6 +43,8 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   recede?: boolean;
   /** Openings react as a mouse or pen approaches: empty fields deepen, a sheet's finger pull opens. Raised things never move before the pointer is on them. Never for touch; off under reduced motion. Default true. */
   approach?: boolean;
+  /** How content still on its way waits (#343). 'sweep' (default): light passes over each imprint. 'breath' (experimental): imprints breathe in depth on one page clock, a swell crossing the view; raised content (Await settle="raised") rises past its rest and settles, flush content fills past the ground, and a card's parts land together. Nested providers inherit it. */
+  loading?: 'sweep' | 'breath';
   /** The whole app is in a mode (test mode, viewing as a customer, read-only): a flush strip naming it, a 2px viewport frame, and a plate in every Dialog and Sheet. */
   mode?: AppMode;
   /** Development checks: warns when more than one primary Button is visible in one view (law 1). Default: on when process.env.NODE_ENV isn't 'production'. */
@@ -526,6 +528,10 @@ export interface AwaitProps {
   inline?: boolean;
   /** false: no boundary; the children suspend to yours. */
   enabled?: boolean;
+  /** Where the content rests once it lands, for loading="breath". 'flush' (default): it fills past the ground and settles. 'raised' (a card): it rises a level past its rest and settles over dur-arrive. */
+  settle?: 'flush' | 'raised';
+  /** Content arriving into a view already showing (Load more), for loading="breath": flush content gets a plate that dissolves over dur-plate. A boundary that suspends again after landing is late without it. */
+  late?: boolean;
   className?: string;
   children?: React.ReactNode;
 }
