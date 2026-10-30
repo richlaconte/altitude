@@ -3150,6 +3150,24 @@ export interface TraceReasoningProps { duration?: number; children: React.ReactN
 /** Reasoning, closed by default behind "Thought for 12s". */
 export declare function TraceReasoning(props: TraceReasoningProps): React.ReactElement;
 
+export interface AISource { title: string; url?: string }
+export interface AILabelProps {
+  /** What it marks, for its name: "Summary generated with AI". Default "Content". */
+  subject?: string;
+  model?: string;
+  generatedAt?: Date | string | number;
+  sources?: AISource[];
+  /** Confidence, in words. */
+  confidence?: string;
+  /** A person who reviewed it: the plate reads "Drafted with AI". */
+  reviewedBy?: string;
+  editedBy?: string;
+  children?: React.ReactNode;
+  className?: string;
+}
+/** Marks what AI made: a flush plate (no glow) that lifts and opens "About this content". */
+export declare function AILabel(props: AILabelProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -3169,6 +3187,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      AILabel: typeof AILabel;
       Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
       Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageActions: typeof MessageActions;

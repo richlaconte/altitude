@@ -1786,6 +1786,26 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-trace-item:last-child .alt-step-line { display: none; }
 @media (forced-colors: active) { .alt-step[data-state="failed"] { border: 3px dashed CanvasText; } }
 
+/* ── AILabel: marks what AI made. A label is part of the record, so it's a flush Badge plate with a small static icon
+   and a word: no gradient, no glow, no shimmer (the light never moves, and a gradient rim reads as focus). It acts, so
+   it lifts one level when pointed at, and opens a Popover at level 3 saying how the content was produced. ── */
+.alt-ailabel { border: 0; cursor: pointer; font-family: var(--font-sans); transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1); }
+.alt-ailabel svg { flex: none; color: var(--ink-muted); }
+.alt-ailabel:hover, .alt-ailabel:focus-visible, .alt-ailabel[aria-expanded="true"] { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); }
+.alt-ailabel:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-ailabel-pop { width: min(320px, calc(100vw - 32px)); }
+.alt-ailabel-body { display: flex; flex-direction: column; gap: var(--space-2); }
+.alt-ailabel-title { margin: 0; font: 600 14px/20px var(--font-sans); }
+.alt-ailabel-sub { margin: var(--space-1) 0 0; font: 600 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-ailabel-facts { display: grid; gap: 4px; margin: 0; font: 400 13px/18px var(--font-sans); }
+.alt-ailabel-facts div { display: grid; grid-template-columns: 96px 1fr; gap: var(--space-2); }
+.alt-ailabel-facts dt { color: var(--ink-muted); }
+.alt-ailabel-facts dd { margin: 0; color: var(--ink); }
+.alt-ailabel-sources { margin: 0; padding-left: 1.3em; font: 400 13px/19px var(--font-sans); }
+.alt-ailabel-more { font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+[data-contrast="more"] .alt-ailabel { box-shadow: inset 0 0 0 1px var(--line-control); }
+@media (forced-colors: active) { .alt-ailabel { border: 1px solid ButtonText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */
