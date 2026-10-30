@@ -88,12 +88,14 @@ export const Table = React.forwardRef<HTMLTableElement, TableProps>(function Tab
   const wrap = React.useRef<HTMLDivElement>(null);
   const table = React.useRef<HTMLTableElement>(null);
   React.useImperativeHandle(ref, () => table.current as HTMLTableElement);
-  const [edges, setEdges] = React.useState({ top: false, bottom: false });
+  const [edges, setEdges] = React.useState({ top: false, bottom: false, start: false, end: false });
   const measure = React.useCallback(() => {
     const el = wrap.current;
     if (!el) return;
     const top = el.scrollTop > 1, bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 1;
-    setEdges((p) => (p.top === top && p.bottom === bottom ? p : { top, bottom }));
+    // Sideways, for a table wider than its frame on a phone (#260): which edges have more.
+    const x = Math.abs(el.scrollLeft), start = x > 1, end = x + el.clientWidth < el.scrollWidth - 1;
+    setEdges((p) => (p.top === top && p.bottom === bottom && p.start === start && p.end === end ? p : { top, bottom, start, end }));
   }, []);
   useIsoLayoutEffect(() => {
     const t = table.current;
@@ -109,6 +111,7 @@ export const Table = React.forwardRef<HTMLTableElement, TableProps>(function Tab
   const scrolls = maxHeight !== undefined;
   return (
     <div ref={wrap} className="alt-table-wrap" data-top={edges.top ? '' : undefined} data-bottom={edges.bottom ? '' : undefined}
+      data-more-start={edges.start ? '' : undefined} data-more-end={edges.end ? '' : undefined}
       style={scrolls ? { maxHeight } : undefined} onScroll={measure}
       {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': rest['aria-label'] } : {})}>
       {underlay}
@@ -191,6 +194,13 @@ export interface DataTableColumn<T> {
   sortValue?: (row: T) => string | number;
   align?: 'start' | 'end';
   width?: number | string;
+  /**
+   * The narrowest the column gets (#260): on a phone the table scrolls inside its frame rather than squeezing a column
+   * below this. Default: the header's width, and at least 6rem when the table is narrow.
+   */
+  minWidth?: number | string;
+  /** Keep this column in view while the table scrolls sideways, over a flush 1px edge (no shadow: it isn't live). */
+  sticky?: boolean;
 }
 export type TableSort = { key: string; direction: 'ascending' | 'descending' } | null;
 export interface DataTableProps<T> {
@@ -296,7 +306,7 @@ export function DataTable<T>({ skeleton, ...props }: DataTableProps<T>) {
           <TableHeader>
             <TableRow>
               {selectable && <TableHead className="alt-th-check"><span className="alt-skeleton alt-check-imprint" /></TableHead>}
-              {columns.map((c) => <TableHead key={c.key} align={c.align} style={{ width: c.width }}>{c.header}</TableHead>)}
+              {columns.map((c) => <TableHead key={c.key} align={c.align} style={{ width: c.width, minWidth: c.minWidth }} data-sticky={c.sticky ? '' : undefined}>{c.header}</TableHead>)}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -518,7 +528,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
               </TableHead>
             )}
             {shown.map((c) => (
-              <TableHead key={c.key} align={c.align} style={{ width: c.width }} sort={srt?.key === c.key ? srt.direction : 'none'} onSort={c.sortValue && !editing ? () => cycle(c) : undefined}>{c.header}</TableHead>
+              <TableHead key={c.key} align={c.align} style={{ width: c.width, minWidth: c.minWidth }} data-sticky={c.sticky ? '' : undefined} sort={srt?.key === c.key ? srt.direction : 'none'} onSort={c.sortValue && !editing ? () => cycle(c) : undefined}>{c.header}</TableHead>
             ))}
             {editable && <TableHead className="alt-th-edit"><span className="alt-sr">Edit</span></TableHead>}
           </TableRow>
@@ -570,7 +580,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
                 {shown.map((c, ci) => {
                   const content = c.cell ? c.cell(r) : String((r as any)[c.key] ?? '');
                   return (
-                    <TableCell key={c.key} align={c.align}>
+                    <TableCell key={c.key} align={c.align} data-sticky={c.sticky ? '' : undefined}>
                       {onRowClick && ci === 0 ? <button type="button" className="alt-table-rowbtn" onClick={() => onRowClick(r)}>{content}</button> : content}
                     </TableCell>
                   );

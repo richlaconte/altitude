@@ -2362,6 +2362,17 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-table { --alt-row-w: 100%; width: 100%; border-collapse: separate; border-spacing: 0; font: 400 14px/20px var(--font-sans); color: var(--ink); font-variant-numeric: tabular-nums; }
 .alt-th, .alt-td { padding: 10px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--line); transition: border-color var(--dur-travel-1); }
 .alt-th[data-align="end"], .alt-td[data-align="end"] { text-align: right; }
+/* Narrow (#260): columns keep a readable width and the table scrolls inside its frame. A header never wraps, and a
+   cell's min-width (from minWidth, or 6rem when the table is narrow) stops a column being squeezed to "Des…". */
+.alt-table-wrap { container-type: inline-size; }
+@container (max-width: 480px) { .alt-table { table-layout: auto; width: max-content; min-width: 100%; } .alt-th, .alt-td:not([colspan]) { min-width: 6rem; } .alt-table :is(.alt-td-check, .alt-td-expand, .alt-td-grip, .alt-td-edit, .alt-th-check, .alt-th-expand, .alt-th-grip, .alt-th-edit, .alt-th:empty) { min-width: 0; } }
+/* A sticky column stays put over a flush 1px edge, on the ground surface (no shadow: it isn't live). */
+.alt-table .alt-th[data-sticky], .alt-table .alt-td[data-sticky] { position: sticky; left: 0; z-index: 2; background: var(--surface-ground); box-shadow: inset -1px 0 0 var(--line); }
+.alt-table .alt-th[data-sticky] { z-index: 5; }
+/* The edge with more columns fades; the start edge only without a sticky column, which already marks it. */
+.alt-table-wrap[data-more-end] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.alt-table-wrap[data-more-start]:not(:has([data-sticky])) { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
+.alt-table-wrap[data-more-start][data-more-end]:not(:has([data-sticky])) { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
 .alt-th { position: sticky; top: 0; z-index: 3; padding-block: 9px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); white-space: nowrap; }
 .alt-td:first-child { position: relative; }
 .alt-tr { --row-bg: transparent; --row-sh: var(--elev-0); transition: transform var(--dur-travel-1) var(--ease-rise), color var(--dur-travel-2) var(--ease-rise); }
