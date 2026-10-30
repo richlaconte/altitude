@@ -44,6 +44,8 @@ export type { TraceStepStatus } from './trace';
 export type { SuggestionProps } from './controls';
 export { AILabel } from './ai-label';
 export type { AISource } from './ai-label';
+export { InlineCitation, Sources } from './inline-citation';
+export type { CitationSource } from './inline-citation';
 export type { RelativeTimeOptions } from './relative-time';
 export { CopyButton } from './copy-button';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle';
