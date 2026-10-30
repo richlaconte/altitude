@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "id": "audit-log",
+  "version": 1,
+  "title": "Audit log",
+  "intents": [
+    "audit log",
+    "audit",
+    "activity",
+    "history",
+    "events",
+    "security log"
+  ],
+  "purpose": "Find who did what, to which resource, when and from where, and export it.",
+  "useWhen": [
+    "A workspace keeps a log of changes that people filter, inspect and export, or a record shows its own activity."
+  ],
+  "avoidWhen": [
+    "Notifications meant for someone to act on; use NotificationCenter."
+  ],
+  "alternatives": [
+    "Use the async-collection contract for other filtered lists, and NotificationCenter for things that need attention."
+  ],
+  "requiredInputs": [
+    "events with actor, action, resource, exact time, origin, before and after",
+    "a server query that filters and pages",
+    "an export job adapter with progress and a download",
+    "the retention period"
+  ],
+  "states": [
+    "loading",
+    "ready",
+    "page-loading",
+    "no-results",
+    "empty",
+    "expanded",
+    "exporting",
+    "exported",
+    "export-failed",
+    "live-arrival"
+  ],
+  "transitions": [
+    "ready → page-loading → ready on a page turn, keeping the rows",
+    "ready → ready or no-results on a filter change, back to the first page",
+    "ready → expanded on an entry's disclosure",
+    "ready → exporting → exported with a download, or export-failed"
+  ],
+  "rules": [
+    "ALT-AUDIT-001",
+    "ALT-COLLECTION-001",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Workspace audit logs and record activity feeds.",
+  "exceptions": [
+    "Require only states supported by the application; a log without export skips those states."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/audit-log.md",
+  "implementation": "build/fixtures/patterns/audit-log.jsx",
+  "examples": [
+    "build/fixtures/patterns/audit-log.jsx"
+  ],
+  "verification": [
+    "build/checks/audit-log-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}
