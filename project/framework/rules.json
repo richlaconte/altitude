@@ -426,6 +426,29 @@
       "criteria": [],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-IMPORT-001",
+      "title": "Mapping shows what's left, invalid cells sink with their problem, and the import ends with a receipt",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "File imports with mapping and row validation.",
+      "exceptions": [
+        "Imports with a fixed format skip mapping; the fix, review and receipt still apply."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-elevation",
+        "task-review"
+      ],
+      "repair": "Give each source column a Select that fills when mapped and list unmapped required fields in words; show invalid cells as trenches with their problem in the cell's description and announce the count as it changes; review in one sentence of consequences; run the import as a job with progress, cancellation where supported, and a receipt of imported, skipped and failed rows.",
+      "verification": [
+        "build/checks/import-pattern.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-10-30",
+      "owner": "Altitude maintainers"
     }
   ]
 }

@@ -25,6 +25,8 @@ A table whose cells you edit one by one, with spreadsheet keys: arrows to move, 
 
 Writes follow the `InlineEdit` contract: resolve `{ ok: true }` after `rows` carries the canonical value, or `{ ok: false, error }`. `onCellsSave` takes a paste or a cleared range as one batch; without it, each cell goes through `onCellSave`. `onUndo` receives the last committed change (or batch); there's no client-side snapshot.
 
+Data that arrived from elsewhere (an import, a sync) may already break a column's `validate`. `showInvalid` checks every cell at rest: an invalid value lies in a trench on critical-soft with an alert mark, and its problem is the cell's description, so the work left is visible at a glance and each cell says what's wrong. Fixing the value through `onCellSave` lifts it out.
+
 ## Elevation
 
 - **Cells** are the record, flush in Table's rows. The **active cell** is a 2px `accent-ink` ring, not a height; a **range** is an `accent-soft` tint with `aria-selected`, because choosing a target isn't live content.
