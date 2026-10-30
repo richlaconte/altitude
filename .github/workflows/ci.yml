@@ -158,6 +158,7 @@ jobs:
           node ../scripts/record-check.mjs react18-chart-takeaway node checks/chart-takeaway.mjs
           node ../scripts/record-check.mjs react18-chart-axis-text node checks/chart-axis-text.mjs
           node ../scripts/record-check.mjs react18-chart-banking node checks/chart-banking.mjs
+          node ../scripts/record-check.mjs react18-chart-focus node checks/chart-focus.mjs
           node ../scripts/record-check.mjs react18-chart-live node checks/chart-live.mjs
           node ../scripts/record-check.mjs react18-chart-filter node checks/chart-filter.mjs
           node ../scripts/record-check.mjs react18-chart-select node checks/chart-select.mjs

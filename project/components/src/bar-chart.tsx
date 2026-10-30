@@ -26,6 +26,12 @@ export interface BarChartProps {
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
   /**
+   * What the chart is about (#188): series keys that keep their colours while the rest take data-context, or a test for
+   * the records that keep theirs (on a one-series chart, the categories the takeaway names). The author's statement of
+   * importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[] | ((d: ChartDatum) => boolean);
+  /**
    * Filter in place: which categories match. Misses recede to 35% and keep their place and colour; the frame says how
    * many match. Nothing is removed.
    */
@@ -105,8 +111,8 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
    * One bar or segment. Given a status, it's drawn twice: the solid fill and a hatch over it, one of them at zero
    * fill-opacity, so a partial period that completes cross-fades from hatch to solid rather than snapping.
    */
-  const bar = (k: string, s: (typeof series)[number], cat: string, d: string, opacity: number, st: ChartStatus | undefined, miss = false) => {
-    const enc = encode(s.key);
+  const bar = (k: string, s: (typeof series)[number], cat: string, d: string, opacity: number, st: ChartStatus | undefined, miss = false, rec?: ChartDatum) => {
+    const enc = encode(s.key, rec);
     // Filtered in place: the bar sits in a group that recedes when it misses, so the change cross-fades.
     const push = (...nodes: React.ReactNode[]) => { if (hasRelevance) marks.push(<ChartRelevance key={k + '-rel'} miss={miss}>{nodes}</ChartRelevance>); else marks.push(...nodes); };
     const base = <path key={k} className="alt-bar-mark" d={d} fill={enc.fill} stroke={enc.edge} strokeWidth={enc.edge ? 1 : undefined}
@@ -143,7 +149,7 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
         const e = y(top);
         if (Math.abs(e - g) < 0.5) { if (v > 0) up = top; else down = top; continue; }
         const outer = v > 0 ? s.key === lastUp : s.key === lastDown;
-        bar(cat + s.key, s, cat, barPath(horizontal, a0, a0 + bw, g, e, outer ? R : 0), rowA * alpha(null, s.key), st, miss);
+        bar(cat + s.key, s, cat, barPath(horizontal, a0, a0 + bw, g, e, outer ? R : 0), rowA * alpha(null, s.key), st, miss, d);
         if (v > 0) { up = top; firstUp = false; } else { down = top; firstDown = false; }
       }
       ends.push({ cat, value: expand ? total(d, keys) : keys.reduce((t, k) => t + num(d[k]), 0), label: '', at: y(expand ? up : Math.max(up, 0)), across: a0 + bw / 2, st, miss });
@@ -153,7 +159,7 @@ export function BarChart({ stack = false, labels = 'none' }: BarChartProps) {
       series.forEach((s, i) => {
         const v = num(d[s.key]);
         const a = a0 + i * (w + gap);
-        if (v !== 0) bar(cat + s.key, s, cat, barPath(horizontal, a, a + w, ground, y(v), R), rowA * alpha(null, s.key), st, miss);
+        if (v !== 0) bar(cat + s.key, s, cat, barPath(horizontal, a, a + w, ground, y(v), R), rowA * alpha(null, s.key), st, miss, d);
         ends.push({ cat, value: v, label: format(s.key, v), at: y(v), across: a + w / 2, st, miss });
       });
     }
@@ -245,7 +251,7 @@ BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Char
   }
   return {
     kind: p.stack === 'expand' ? 'Stacked bar chart of shares' : p.stack ? 'Stacked bar chart' : 'Bar chart',
-    xScale: 'band', zero: true, swatch: 'rect', layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
+    xScale: 'band', zero: true, swatch: 'rect', focus: p.focus, layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
   };
 };

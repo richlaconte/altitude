@@ -1699,7 +1699,7 @@ export interface ChartContextValue {
   /** Put the readout on a record by its index in `data`, or take it away with null: for keyboard paths. */
   setActive: (index: number | null) => void;
   /** How to draw a series so it's told apart without colour: fill (a hatch while patterns are on), stroke, dash, marker, edge. */
-  encode: (seriesKey: string) => ChartEncoding;
+  encode: (seriesKey: string, d?: ChartDatum) => ChartEncoding;
   /** Patterns are on: the `patterns` prop, forced colours or print. */
   patterns: boolean;
   /** Label series directly at their marks: on under forced colours and in print. */
@@ -1723,6 +1723,8 @@ export interface ChartContextValue {
 export type ChartMarkerShape = 'circle' | 'square' | 'triangle' | 'diamond' | 'ring' | 'cross';
 export interface ChartEncoding {
   slot: ChartSlot;
+  /** Outside the chart's focus: drawn in data-context (GrayText under forced colours), its label in ink-muted. */
+  context: boolean;
   /** For bars and areas: the series colour, a hatch of it, or CanvasText under forced colours. */
   fill: string;
   /** For lines and outlines. */
@@ -1838,7 +1840,7 @@ export interface ChartTooltipContentProps {
 }
 /** The readout's rows: value first, series name second, keyed by the series colour. */
 export declare function ChartTooltipContent(props: ChartTooltipContentProps): React.ReactElement;
-export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; }
+export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; /** Outside the chart's focus: its label recedes. */ context?: boolean; /** In the chart's focus: said as "highlighted". */ highlighted?: boolean; }
 export interface ChartLegendContentProps {
   /** Let people hide and show series: each key becomes an aria-pressed button in a toolbar. Default false. */
   toggle?: boolean;
@@ -1919,6 +1921,11 @@ export interface BarChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * What the chart is about: series keys that keep their colours while the rest take data-context, or a test for the
+   * records that keep theirs. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[] | ((d: ChartDatum) => boolean);
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
@@ -1957,6 +1964,11 @@ export interface LineChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * What the chart is about: these series keep their colours and the rest are drawn in data-context, their labels in
+   * ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[];
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
@@ -2006,6 +2018,11 @@ export interface AreaChartProps {
   status?: (d: ChartDatum) => ChartStatus | undefined;
   /** The rule where the record ends: its word (default "Today"), or false for none. */
   boundary?: string | false;
+  /**
+   * What the chart is about: these series keep their colours and the rest are drawn in data-context, their labels in
+   * ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[];
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour; the frame says how many match. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit the axis to the matches. Default false: the axis holds. */
@@ -2084,6 +2101,11 @@ export interface ScatterChartProps {
   size?: number;
   /** The readout. Default true. */
   tooltip?: boolean;
+  /**
+   * What the chart is about: groups that keep their colours while the rest take data-context, or a test for the
+   * records that keep theirs. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[] | ((d: ChartDatum) => boolean);
   /** Filter in place: which records match. Misses recede to 35%, keeping their place and colour. */
   relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
   /** With relevance: fit y to the matches. Default false: the axes hold. */

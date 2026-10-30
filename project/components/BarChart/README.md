@@ -28,6 +28,8 @@ Amounts compared across categories or periods: deploys per team, signups per mon
 
 The y axis always includes zero, whatever the container's `zero` says: a truncated bar axis isn't offered.
 
+**Focus.** `focus={['web']}` keeps those series' colours and draws the rest in `data-context`; on a one-series chart, `focus={(d) => d.team === 'Cedar' || d.team === 'Delta'}` picks out records instead, the categories the takeaway names. See [ChartContainer](../ChartContainer/README.md), "Focus".
+
 **You provide:** a `ChartContainer` with a `config` naming each series, the `data` and `x`, and usually a `summary`.
 
 ```tsx

@@ -27,6 +27,11 @@ export interface LineChartProps {
    */
   band?: { low: string; high: string; series?: string; label?: string };
   /**
+   * What the chart is about (#188): these series keep their colours and the rest are drawn in data-context, their
+   * labels in ink-muted. The author's statement of importance, not a reader's filter (that's relevance).
+   */
+  focus?: string[];
+  /**
    * Filter in place: which records match. The line recedes to 35% around its misses (each record owns its stretch of
    * x), keeping its place and colour; the frame says how many match. Nothing is removed.
    */
@@ -218,7 +223,7 @@ export function LineChart({ curve = 'linear', endLabels, band }: LineChartProps)
       {hasRelevance && <defs>{relevanceRegions.map((r, i) => <ChartStatusClip key={r.key} id={`${clip}-rel-${i}`} ranges={[[r.x0, r.x1]]} height={height} />)}</defs>}
       {body}
       {hovered}
-      {labelled && ends.map((p) => <text key={p.key} className="alt-line-label" x={p.x + 10} y={p.y} dy="0.32em" opacity={p.a < 1 ? p.a : undefined}>{p.label}</text>)}
+      {labelled && ends.map((p) => <text key={p.key} className="alt-line-label" data-context={encode(p.key).context ? '' : undefined} x={p.x + 10} y={p.y} dy="0.32em" opacity={p.a < 1 ? p.a : undefined}>{p.label}</text>)}
     </g>
   );
 }
@@ -229,7 +234,7 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
   const labelled = p.endLabels ?? labels.length <= 4;
   const win = Array.isArray(p.data) && p.window ? windowed(p.data, p.x, p.window) : undefined;
   return {
-    kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
+    kind: 'Line chart', zero: false, swatch: 'line', focus: p.focus, format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     band: p.band ? { series: p.band.series, low: p.band.low, high: p.band.high, label: p.band.label ?? 'Range' } : undefined,
     right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
     aspect: p.aspect === 'banked' ? 'banked' : undefined,

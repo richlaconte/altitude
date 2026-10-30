@@ -76,6 +76,7 @@ Charts get their own colours, so a series never borrows a meaning (see [Charts](
 |---|---|---|
 | `data-1` … `data-6` | identity: which series | six hues in a fixed order. `data-1` is in the accent's hue where a slot can be, at a different lightness from the accent; in mesa, where terracotta sits between `critical` and `caution`, it's the nearest hue that clears them |
 | `data-other` | the seventh and later series, folded | a neutral in the ground's hue |
+| `data-context` | what a chart isn't about: the series or records outside its `focus` | a neutral in the ground's hue, as receding as 3:1 allows |
 | `data-seq-1` … `data-seq-7` | magnitude: how much | `data-1`'s hue, lightness in even steps; light schemes darken from near-white, dark schemes climb from near their ground |
 | `data-div-neg-3` … `data-div-mid` … `data-div-pos-3` | polarity: which side of a midpoint | orange below, blue above, around a neutral; the blue–yellow axis is the one colour-blind readers keep |
 
@@ -86,6 +87,7 @@ Six is a measured limit, not a choice: past it, series fold into `data-other` or
 - Any two slots: normal-vision ΔE ≥ 15, hues at least 25° apart, colour-blind ΔE ≥ 6. Adjacent slots: colour-blind ΔE ≥ 8 under both protanopia and deuteranopia.
 - OKLCH lightness within 0.43–0.77 in light schemes and 0.48–0.67 in dark ones; chroma ≥ 0.10.
 - Marks hold 3:1 against both `surface-ground` and `surface-raised`, because charts sit on the page and in `Card`s. `data-other` too.
+- `data-context` is neutral (chroma ≤ 0.02), holds 3:1 on `surface-ground` and `surface-raised`, and sits at least ΔE 15 from `line` (so context isn't read as gridlines) and 10 from `data-other`. It's exempt from the slots' distance gate, because a context series is never told apart by its colour: it's unlabelled, or labelled in `ink-muted` (Research, E105).
 - The ramps are monotone in lightness, with steps of at least 0.06.
 - The diverging poles are never `positive` or `critical` (ΔE ≥ 15 from both): red–green is the worst pair for colour-blind readers, and both hues mean status.
 - When a series *means* good or bad (error rate, uptime), it wears the status tokens with an icon and a word, not a `data-*` slot, and never both in one chart.

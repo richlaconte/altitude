@@ -1264,13 +1264,13 @@ function App() {
   return (
     <div className="bc">
       <Chart id="b1" title="Deploys by team" takeaway="Cedar deployed nearly three times as often as Delta" sub='One series, sorted, labels="max"' config={{ deploys: { label: 'Deploys' } }} summary="Cedar deployed most, 51 times; Delta least, 19.">
-        <A.BarChart data={teams} x="team" sort="desc" labels="max" />
+        <A.BarChart data={teams} x="team" sort="desc" labels="max" focus={(d) => d.team === 'Cedar' || d.team === 'Delta'} />
       </Chart>
       <Chart id="b2" title="Requests by service" sub="Grouped: three series side by side" config={stack3}>
         <A.BarChart data={months.slice(3)} x="month" />
       </Chart>
-      <Chart id="b3" title="Requests, all services" sub='Stacked, labels="last"' config={stack3}>
-        <A.BarChart data={months} x="month" stack labels="last" />
+      <Chart id="b3" title="Requests, all services" sub='Stacked, labels="last", focus={["web"]}' config={stack3}>
+        <A.BarChart data={months} x="month" stack labels="last" focus={['web']} />
       </Chart>
       <Chart id="b4" title="Share of requests" sub='stack="expand": parts of 100%' config={stack3}>
         <A.BarChart data={months} x="month" stack="expand" />
@@ -1323,8 +1323,8 @@ function App() {
       <Chart id="l3" title="Daily signups" sub="Missing days are gaps, not guesses" config={{ signups: { label: 'Signups' } }}>
         <A.LineChart data={signups} x="day" />
       </Chart>
-      <Chart id="l4" title="Seats by plan" sub="Four series, labels nudged apart" config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }}>
-        <A.LineChart data={plans} x="month" />
+      <Chart id="l4" title="Seats by plan" sub="Four series, focus on Team: the rest in data-context" config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }}>
+        <A.LineChart data={plans} x="month" focus={['team']} />
       </Chart>
       <Chart id="l5" title="Monthly revenue, banked" sub='aspect="banked": the segments average 45°' aspect="banked" config={{ revenue: { label: 'Revenue', format: usd.format } }}>
         <A.LineChart data={revenue} x="month" curve="monotone" />
@@ -1656,9 +1656,9 @@ function App() {
           <A.ChartLegend content={<A.ChartLegendContent toggle />} />
         </A.AreaChart>
       </Chart>
-      <Chart id="a2" title="Accounts by plan" sub='stack="expand": shares of 100%'
+      <Chart id="a2" title="Accounts by plan" sub='stack="expand", focus on Team'
         config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }} aspect={1.7}>
-        <A.AreaChart data={plans} x="month" stack="expand" />
+        <A.AreaChart data={plans} x="month" stack="expand" focus={['team']} />
       </Chart>
       <Chart id="a3" title="Storage used" sub="One area: a flat fill under its line" config={{ used: { label: 'Used', format: (v) => `${v} GB` } }} aspect={1.7}
         summary="Storage use rose from 41 GB to 58 GB over two weeks, fastest in the second.">

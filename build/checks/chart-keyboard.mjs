@@ -67,7 +67,8 @@ expect(await page.evaluate(() => !document.querySelectorAll('.alt-chart-plot')[0
 await page.goto(`file://${T}p-BarChart-daylight.html`);
 await page.waitForTimeout(700);
 await page.locator('.alt-chart-plot').nth(2).locator('[tabindex="0"]').focus();
-f = await press('Enter', 'ArrowRight', 'Enter');
+// The preview focuses Web (#188), so it's the first series on the keyboard path.
+f = await press('Enter', 'Enter');
 expect(/^Jan, Web, 14\. Total 40\. 1 of 6\.$/.test(f.name), `a stacked bar's point says its total: ${f.name}`);
 await page.locator('.alt-chart-plot').nth(5).locator('[tabindex="0"]').focus();
 f = await press('Enter');

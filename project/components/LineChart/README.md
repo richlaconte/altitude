@@ -28,6 +28,8 @@ Change over time: latency over a day, revenue over a year, one series or a few c
 
 **Banked to 45°.** `aspect="banked"` lets the data choose the chart's height: slopes read best when the segments average about 45° (Cleveland's banking), so the plot takes the width ÷ height that sets their mean absolute orientation there, held between 1 and 4 for the data area so a card is never a sliver or a tower. Steep, jagged data banks wide; a gentle trend banks tall. The width stays the card's. It's read from every shown series, and kept while values glide; only new x values, which cross-fade as a new chart, bank it afresh, and the height change itself never animates. Put it on the `LineChart` or on the container. In a grid of equal cards, keep a fixed `aspect`: banked neighbours would differ in height.
 
+**Focus.** `focus={['team']}` keeps those lines' colours and draws the rest in `data-context`, their end labels in `ink-muted`; the readout and the keyboard path list the focused lines first. See [ChartContainer](../ChartContainer/README.md), "Focus".
+
 **You provide:** a `ChartContainer` with a `config` naming each series, the `data` in x order, and usually a `summary`.
 
 ```tsx
