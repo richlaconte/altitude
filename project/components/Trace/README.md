@@ -16,6 +16,8 @@ The steps an agent takes (searching, calling tools, reasoning, waiting for appro
 
 **Subagents.** A `Trace` inside a `TraceStep` is a nested run: a nested list behind a lid that says how it's going ("6 steps · 1 running"), open while something in it is running, waiting or failed, closed when it's all done. `TraceParallel label="Subagents"` groups steps that run at once, with a bracket and "3 in parallel · 2 of 3 done · 1 failed"; several can be raised at once, each because it's in play. `status="auto"` derives a parent from its children: running while any run, failed once the rest stop, done only when all are. Nested steps announce through the outer Trace with their run's name.
 
+**Reasoning as it streams.** `TraceReasoning status="streaming"` says "Thinking…" on its lid; opened, the text follows its end as it arrives, behind a dashed rule (not the record yet), until the person scrolls up. Complete, it's "Thought for 12s"; `status="redacted"` says "Reasoning hidden by the provider" with nothing to open. No shimmer, pulsing dots or ticking counter.
+
 **You provide:** the steps and their status from your agent's events.
 
 ```tsx

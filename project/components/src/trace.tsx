@@ -192,11 +192,35 @@ export function TraceToolCall({ name, input, output, defaultOpen = false }: Trac
 }
 
 export interface TraceReasoningProps {
-  /** How long it thought, in milliseconds: "Thought for 12s". */
+  /** How long it thought, in milliseconds: "Thought for 12s". Said once, when it's known; never a ticking counter. */
   duration?: number;
-  children: React.ReactNode;
+  /**
+   * 'streaming': the lid says "Thinking…" and, opened, the text follows its end as it arrives; 'complete' (default):
+   * "Thought for 12s"; 'redacted': "Reasoning hidden by the provider", with nothing to open.
+   */
+  status?: 'streaming' | 'complete' | 'redacted';
+  /** While streaming and open, keep the newest text in view (until the person scrolls up). Default true. */
+  followWhileOpen?: boolean;
+  children?: React.ReactNode;
 }
-/** The model's reasoning, closed by default behind "Thought for 12s". */
-export function TraceReasoning({ duration, children }: TraceReasoningProps) {
-  return <Accordion className="alt-trace-acc" items={[{ value: 'r', title: duration !== undefined ? `Thought for ${formatDuration(duration)}` : 'Reasoning', content: <div className="alt-trace-reasoning">{children}</div> }]} />;
+/**
+ * The model's reasoning, closed by default. While it streams it isn't the record yet: "Thinking…" on the lid and a
+ * dashed rule down the open compartment, never a shimmer or pulsing dots. Done, it's "Thought for 12s".
+ */
+export function TraceReasoning({ duration, status = 'complete', followWhileOpen = true, children }: TraceReasoningProps) {
+  const box = React.useRef<HTMLDivElement>(null);
+  const pinned = React.useRef(true);
+  React.useLayoutEffect(() => {
+    const el = box.current;
+    if (el && status === 'streaming' && followWhileOpen && pinned.current) el.scrollTop = el.scrollHeight;
+  });
+  if (status === 'redacted') return <p className="alt-trace-reasoning-hidden">Reasoning hidden by the provider</p>;
+  const title = status === 'streaming' ? 'Thinking…' : duration !== undefined ? `Thought for ${formatDuration(duration)}` : 'Reasoning';
+  return (
+    <div className="alt-trace-thought" data-status={status} aria-busy={status === 'streaming' || undefined}>
+      <Accordion className="alt-trace-acc" items={[{ value: 'r', title: <span key={status} className="alt-trace-thought-title">{title}</span>, content: (
+        <div ref={box} className="alt-trace-reasoning" onScroll={(e) => { const el = e.currentTarget; pinned.current = el.scrollTop + el.clientHeight >= el.scrollHeight - 8; }}>{children}</div>
+      ) }]} />
+    </div>
+  );
 }

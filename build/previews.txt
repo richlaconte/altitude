@@ -3196,6 +3196,12 @@ function App() {
             <A.TraceStep title="Lemon Squeezy" status="failed" error="The pricing page returned 403." onRetry={() => {}} />
           </A.TraceParallel>
         </A.TraceStep>
+        <A.TraceStep title="Weigh the fees" status="running">
+          <A.TraceReasoning status="streaming">{'Stripe charges 2.9% + 30¢ per card payment. Paddle is a merchant of record, so its 5% + 50¢ includes sales tax handling, which'}</A.TraceReasoning>
+        </A.TraceStep>
+        <A.TraceStep title="Check the provider's notes" status="done" duration={2400}>
+          <A.TraceReasoning status="redacted" />
+        </A.TraceStep>
         <A.TraceStep title="Write the comparison" status="planned" />
       </A.Trace>
     </div>

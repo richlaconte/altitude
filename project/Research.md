@@ -1472,6 +1472,10 @@ The Shape of AI calls them wayfinders (Suggestions, Initial CTA, Follow up), and
 
 Agents delegate: a coding agent starts three subagents in parallel, each with steps of its own, and the person needs "3 running", a way into each, and to know when all have finished (#278). `Trace` was one flat list with one current step. A `Trace` inside a `TraceStep` is now a nested run behind an Accordion lid that summarises it ("6 steps · 1 running"), open by default only while something in it needs attention; `TraceParallel` brackets steps that run at once and counts them in words. Stepper's single current step doesn't hold in parallel, but several raised steps don't make two meanings one level apart: each is raised because it's in play, and the count is in words. `status="auto"` derives a parent, and one decision there: a failed subagent fails its parent only once the others have stopped, since "Failed" over a step that's still working would be wrong. Nested steps announce through the outer Trace's throttled region with their run's name ("Summarise (Paddle subagent)"); failures go at once. `checks/trace-nested.mjs`.
 
+### E140 · Thinking, without a shimmer
+
+Reasoning models think for seconds or minutes first; harnesses say so ("Thinking…"), let the person read along, then replace it with "Thought for 12s". Some providers send only a summary or redact it. `TraceReasoning` only knew the finished state, so apps reached for a spinner or a shimmer of light across the text, both motion Altitude doesn't use for waiting (#279). `status="streaming"` reads as a streaming answer does, not yet the record: "Thinking…" on the lid and a dashed rule down the open compartment, with the text following its end until the person scrolls up (Conversation's rule). The duration is said once, when known, never as a ticking counter. `status="redacted"` says what happened instead of showing an empty lid. `checks/trace-reasoning.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

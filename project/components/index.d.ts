@@ -3372,7 +3372,15 @@ export declare function TraceStep(props: TraceStepProps): React.ReactElement;
 export interface TraceToolCallProps { name: string; input?: unknown; output?: unknown; defaultOpen?: boolean }
 /** A tool call's input and output behind an Accordion lid. */
 export declare function TraceToolCall(props: TraceToolCallProps): React.ReactElement;
-export interface TraceReasoningProps { duration?: number; children: React.ReactNode }
+export interface TraceReasoningProps {
+  /** Milliseconds: "Thought for 12s". Said once, when it's known. */
+  duration?: number;
+  /** 'streaming': "Thinking…", the open text follows its end; 'complete' (default): "Thought for 12s"; 'redacted': "Reasoning hidden by the provider". */
+  status?: 'streaming' | 'complete' | 'redacted';
+  /** While streaming and open, keep the newest text in view until the person scrolls up. Default true. */
+  followWhileOpen?: boolean;
+  children?: React.ReactNode;
+}
 /** Reasoning, closed by default behind "Thought for 12s". */
 export declare function TraceReasoning(props: TraceReasoningProps): React.ReactElement;
 
