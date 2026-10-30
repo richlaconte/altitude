@@ -1,0 +1,71 @@
+/* altitude-design/adapters/tiptap.css: Altitude readings for a Tiptap (ProseMirror) rich text editor.
+   Import it after altitude.css. It styles Tiptap's own elements; it doesn't import Tiptap, which your app installs.
+   - The editor is an opening, built like Textarea: an empty editor is a well showing its inside wall; once it holds
+     content the floor rises flush; focus lights the floor, and keyboard focus adds the 2px neutral rim.
+   - Content follows Altitude's type: links are .alt-link, inline code a mono plate, code blocks CodeBlock's ground,
+     mentions a flush Tag plate.
+   - The formatting bar is yours to render with Toolbar and ToolbarToggle (latched toggles). The mention list is yours
+     to render too: give it class "alt-rte-mentions" (role listbox, options with aria-selected) and it floats at level 3
+     like Combobox's list.
+   Tiptap's keyboard support and ARIA are untouched. ── */
+.tiptap {
+  --w: 4px; --n: 0; --wc: var(--alt-wall-in); --wd: calc(var(--w) + var(--n) * 2px);
+  position: relative; min-height: 120px; padding: calc(var(--space-2) + var(--wd) * 0.5) var(--space-3) var(--space-2);
+  border: 1px solid var(--line-control); border-radius: var(--radius-md); background: var(--surface-well); color: var(--ink);
+  font: 400 15px/23px var(--font-sans); overflow-wrap: break-word; cursor: text;
+  box-shadow: inset 0 var(--wd) 0 0 var(--wc), inset 0 calc(var(--wd) + 3px) 3px -2px var(--alt-cast), 0 1px 0 0 var(--alt-lip);
+  outline: 1px solid transparent; outline-offset: 0;
+  transition: background-color var(--dur-travel-2) var(--ease-rise), box-shadow var(--dur-travel-2) var(--ease-settle), border-color var(--dur-travel-1) var(--ease-rise),
+    outline-color var(--dur-travel-1) var(--ease-rise), padding var(--dur-travel-2) var(--ease-settle);
+}
+.tiptap:hover { border-color: var(--ink-muted); }
+/* Filled: anything but a single empty paragraph. The floor rises flush with the page. */
+.tiptap:not(:has(> p:only-child > br.ProseMirror-trailingBreak:only-child)):not(:has(> p:only-child:empty)) { --w: 0px; background: var(--surface-raised); }
+.tiptap.ProseMirror-focused, .tiptap:focus { background: var(--surface-raised); --n: var(--alt-travel); }
+.tiptap:focus-visible { border-color: var(--alt-rim-held); outline-color: var(--alt-rim-held); }
+.tiptap[contenteditable="false"] { --w: 0px; --n: 0; background: var(--surface-ground); border-color: var(--line); cursor: default; }
+.tiptap[aria-invalid="true"] { --w: 6px; --n: 0; --wc: color-mix(in oklab, var(--critical-soft), var(--critical) 34%); background: var(--critical-soft); border-color: var(--critical); }
+
+/* Placeholder (Tiptap's Placeholder extension): ink-muted, never the value. */
+.tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; color: var(--ink-muted); pointer-events: none; }
+
+/* Content */
+.tiptap > :first-child { margin-top: 0; }
+.tiptap > :last-child { margin-bottom: 0; }
+.tiptap p { margin: 0 0 var(--space-2); }
+.tiptap h1, .tiptap h2, .tiptap h3 { margin: var(--space-4) 0 var(--space-2); font-weight: 600; letter-spacing: -0.01em; }
+.tiptap h1 { font-size: 21px; line-height: 28px; } .tiptap h2 { font-size: 18px; line-height: 25px; } .tiptap h3 { font-size: 16px; line-height: 23px; }
+.tiptap ul, .tiptap ol { margin: 0 0 var(--space-2); padding-inline-start: 22px; }
+.tiptap li > p { margin: 0; }
+.tiptap li::marker { color: var(--ink-muted); }
+.tiptap blockquote { margin: 0 0 var(--space-2); padding-inline-start: var(--space-3); border-inline-start: 2px solid var(--line-control); color: var(--ink-muted); }
+.tiptap hr { margin: var(--space-3) 0; border: 0; border-top: 1px solid var(--line); }
+.tiptap a { color: var(--accent-ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+.tiptap code { padding: 1px 5px; border-radius: var(--radius-xs); background: var(--surface-well); box-shadow: inset 0 0 0 1px var(--line); font: 500 0.88em/1 var(--font-mono); }
+.tiptap pre { margin: 0 0 var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-ground); overflow-x: auto; }
+.tiptap pre code { padding: 0; background: none; box-shadow: none; font: 400 13px/20px var(--font-mono); }
+.tiptap strong { font-weight: 600; }
+.tiptap ::selection { background: var(--accent-soft); }
+.tiptap .mention, .tiptap [data-type="mention"] {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 6px; border-radius: var(--radius-sm); vertical-align: baseline;
+  background: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%); color: var(--ink); font: 550 0.9em/1 var(--font-sans);
+  box-shadow: inset 0 1px 1.5px color-mix(in oklab, var(--ink) 16%, transparent), inset 0 0 0 1px color-mix(in oklab, var(--ink) 9%, transparent);
+}
+.tiptap .ProseMirror-selectednode { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.tiptap .ProseMirror-gapcursor::after { border-top-color: var(--ink); }
+
+/* The mention list: your markup, floating at level 3 like Combobox's list. */
+.alt-rte-mentions { min-width: 200px; max-height: 260px; padding: var(--space-1); overflow-y: auto; border-radius: var(--radius-lg); background: var(--surface-floating); box-shadow: var(--elev-3); }
+.alt-rte-mentions [role="option"] { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 10px; border-radius: var(--radius-sm); font: 500 14px/20px var(--font-sans); color: var(--ink); cursor: pointer; }
+.alt-rte-mentions [role="option"][aria-selected="true"] { background: var(--accent-soft); }
+
+@media (prefers-reduced-motion: reduce) { .tiptap { transition: none; } }
+[data-motion="reduced"] .tiptap { transition: none; }
+@media (forced-colors: active) {
+  .tiptap { border: 1px solid CanvasText; }
+  .tiptap:has(> p:only-child > br.ProseMirror-trailingBreak:only-child) { border-style: dashed; }
+  .tiptap:focus-visible { outline: 2px solid Highlight; }
+  .tiptap .mention, .tiptap [data-type="mention"] { border: 1px solid CanvasText; }
+  .alt-rte-mentions { border: 1px solid CanvasText; }
+  .alt-rte-mentions [role="option"][aria-selected="true"] { outline: 2px solid Highlight; outline-offset: -2px; }
+}

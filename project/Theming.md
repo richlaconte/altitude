@@ -269,3 +269,23 @@ const config = {
   legend: { labelColor: t.ink, titleColor: t.ink }, title: { color: t.ink },
 };
 ```
+
+## Rich text, code and canvases
+
+Altitude doesn't own a rich text editor, a code editor or a node canvas: each is a large engine of its own. It ships **adapters** instead, so the one part of the screen drawn by another library still follows the elevation model. Each adapter reads the active scheme's custom properties, so all four schemes, custom accents and `contrast="more"` work. The library is an optional peer dependency your app installs; the adapters import nothing else, and they leave the library's own keyboard support and ARIA alone. Import a CSS adapter after `altitude.css`.
+
+### Tiptap
+
+```ts
+import 'altitude-design/altitude.css';
+import 'altitude-design/adapters/tiptap.css';
+```
+
+Styles Tiptap's `.tiptap` editor (ProseMirror, Tiptap 2 or later):
+
+- **The editor is an opening**, built like `Textarea`: empty, it's a well showing its inside wall; once it holds content the floor rises flush; focus lights the floor and keyboard focus adds the 2px neutral rim. `aria-invalid="true"` on the editor drops it to a trench.
+- **Content** follows Altitude's type: links in `accent-ink`, inline code on a mono plate, code blocks on `CodeBlock`'s ground, mentions (`@tiptap/extension-mention`) as flush Tag plates, Tiptap's Placeholder in `ink-muted`.
+- **The formatting bar is yours**, built from `Toolbar` and `ToolbarToggle`, so each mark is a latched toggle: pass `pressed={editor.isActive('bold')}`.
+- **The mention list is yours too.** Render it with class `alt-rte-mentions`, `role="listbox"` and options with `aria-selected`, and it floats at level 3 like `Combobox`'s list.
+
+What it can't cover: Tiptap's menus beyond mentions (bubble and floating menus are your markup: build them from `Popover` and `Toolbar`), and anything a custom extension renders itself.

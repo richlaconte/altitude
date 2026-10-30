@@ -7,6 +7,7 @@
 //   dist/tokens.css, tokens.json    the tokens on their own
 //   dist/altitude.iife.js           the same bundle the design system uses: a <script> that sets window.Altitude
 //   dist/chart-themes.js, .cjs      theme objects for ECharts and Chart.js (altitude-design/chart-themes); no dependencies
+//   dist/adapters/                  styles for third-party editors and canvases (altitude-design/adapters/*), each library a peer
 // --css-only writes just the stylesheets (Storybook uses it).
 import { build } from 'esbuild';
 import { execSync } from 'child_process';
@@ -44,6 +45,10 @@ await build({ ...shared, format: 'cjs', outfile: 'dist/index.cjs' });
 const themes = { ...shared, entryPoints: ['project/components/src/chart-themes.tsx'] };
 await build({ ...themes, format: 'esm', outfile: 'dist/chart-themes.js' });
 await build({ ...themes, format: 'cjs', outfile: 'dist/chart-themes.cjs' });
+// Adapters: Altitude readings for libraries it doesn't draw (rich text, code, canvases). CSS adapters are copied as they
+// are; they style the library's own elements and import nothing.
+mkdirSync('dist/adapters', { recursive: true });
+for (const file of readdirSync('project/components/adapters').filter((f) => f.endsWith('.css'))) copyFileSync('project/components/adapters/' + file, 'dist/adapters/' + file);
 execSync('npx tsc -p tsconfig.json', { stdio: 'inherit' });
 // NodeNext requires explicit relative specifiers. A CJS declaration tree matches the
 // require runtime, while ESM/Bundler keep the primary .d.ts tree. Both derive from tsc.

@@ -23,7 +23,7 @@ const checkCode=`import assert from 'node:assert/strict';import * as a from 'alt
 writeFileSync(join(consumer,'esm.mjs'),checkCode);
 execFileSync(process.execPath,['esm.mjs'],{cwd:consumer,stdio:'inherit'});
 for(const k of symbols)assert.ok(require('altitude-design')[k],k);
-for(const resource of ['altitude.css','altitude.no-fonts.css','fonts.css','tokens.css','tokens.json','altitude.iife.js','guidance'])assert.ok(existsSync(require.resolve('altitude-design/'+resource)),resource);
+for(const resource of ['altitude.css','altitude.no-fonts.css','fonts.css','tokens.css','tokens.json','altitude.iife.js','guidance','adapters/tiptap.css'])assert.ok(existsSync(require.resolve('altitude-design/'+resource)),resource);
 assert.ok(!readFileSync(require.resolve('altitude-design/altitude.no-fonts.css'),'utf8').includes('@import'));
 assert.equal(require('altitude-design/guidance').version,pkg.version);
 for(const fn of ['echartsTheme','chartjsDefaults','dataColors','readChartTokens','useChartTheme'])assert.equal(typeof require('altitude-design/chart-themes')[fn],'function','chart-themes CJS '+fn);

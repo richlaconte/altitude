@@ -30,6 +30,11 @@ const themeImports = [...readFileSync(new URL('../dist/chart-themes.js', import.
 assert.deepEqual(themeImports, ['react'], `chart-themes imports only React (${themeImports})`);
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 for (const path of [pkg.exports['./chart-themes'].import.types, pkg.exports['./chart-themes'].import.default, pkg.exports['./chart-themes'].require.types, pkg.exports['./chart-themes'].require.default]) readFileSync(new URL('../' + path, import.meta.url));
+// Adapters: each CSS entry is in the package and imports nothing (the library is the app's peer dependency).
+for (const [key, path] of Object.entries(pkg.exports).filter(([k]) => k.startsWith('./adapters/') && k.endsWith('.css'))) {
+  const css = readFileSync(new URL('../' + path, import.meta.url), 'utf8');
+  assert.ok(!/@import/.test(css), `${key} imports nothing`);
+}
 const folder = new URL('../build/test/alt-05/', import.meta.url);
 mkdirSync(folder, { recursive: true });
 const fixture = new URL('public-api.tsx', folder);
