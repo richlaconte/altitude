@@ -47,6 +47,11 @@ export interface LineChartProps {
   /** Called with the new { start, end } when a ChartBrush moves the window. Without `window`, the brush keeps its own. */
   onWindowChange?: (window: { start: string | number; end: string | number }) => void;
   /** A ChartTooltip, to change what the readout shows. */
+  /**
+   * 'banked' (#194): the plot takes the proportions that bank the lines' segments to 45° on average, so slopes read
+   * accurately, between 1 and 4 for the data area; the width is the card's. Use a fixed aspect in a grid of equal cards.
+   */
+  aspect?: 'banked';
   children?: React.ReactNode;
   /** What the plot says when there's no data: an EmptyState at widget size. */
   empty?: import('./chart').ChartEmpty;
@@ -227,5 +232,6 @@ LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Cha
     kind: 'Line chart', zero: false, swatch: 'line', format: p.y?.format, status: p.status, boundary: p.boundary, data: win?.rows, xDomain: win?.domain, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     band: p.band ? { series: p.band.series, low: p.band.low, high: p.band.high, label: p.band.label ?? 'Range' } : undefined,
     right: labelled ? Math.ceil(Math.max(0, ...labels.map(width))) + 12 : 0,
+    aspect: p.aspect === 'banked' ? 'banked' : undefined,
   };
 };

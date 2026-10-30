@@ -314,6 +314,8 @@ export interface ChartInfo {
   yFormat?: (value: number) => string;
   /** Formats every value (axis, readout, names, summary) of a series that has no format of its own. */
   format?: (value: number) => string;
+  /** Bank the plot's proportions to the data (#194): the chart type asked for aspect="banked". */
+  aspect?: 'banked';
   /** Extra room at the plot's right edge, in px: for labels a chart sets beside its marks (a line's end label). */
   right?: number;
   /** How the legend draws this chart's series: a block (bars, areas) or a short line (lines). */
@@ -619,6 +621,29 @@ type RefGeo = { i: number; band: boolean; from: number; to: number; text: string
 /** An annotation laid out in a frame: its x, its plate's left edge and width, and the row it stacks into. */
 type NoteGeo = { i: number; at: number; left: number; w: number; row: number };
 /**
+ * Cleveland's banking to 45° (#194): the width ÷ height at which a line's segments average 45° of absolute orientation,
+ * found by bisection (orientation falls as the ratio grows), then held between 1 and 4 so a card is never a sliver or
+ * a tower. Steep segments bank wide and gentle ones tall. Each series is read in x order over the y domain; gaps break
+ * segments; flat data takes the tallest ratio, 1.
+ */
+function bankTo45(xs: number[], ys: Array<Array<number | null>>, yDomain: [number, number]): number {
+  const order = xs.map((x, i) => i).filter((i) => isFinite(xs[i])).sort((a, b) => xs[a] - xs[b]);
+  const xr = (xs[order[order.length - 1]] - xs[order[0]]) || 1, yr = (yDomain[1] - yDomain[0]) || 1;
+  const segs: Array<[number, number]> = [];
+  for (const s of ys) {
+    for (let k = 1; k < order.length; k++) {
+      const a = s[order[k - 1]], b = s[order[k]], dx = (xs[order[k]] - xs[order[k - 1]]) / xr;
+      if (a == null || b == null || !(dx > 0)) continue;
+      segs.push([dx, Math.abs(b - a) / yr]);
+    }
+  }
+  if (!segs.length || segs.every(([, dy]) => dy === 0)) return 1;
+  const mean = (r: number) => segs.reduce((t, [dx, dy]) => t + Math.atan(dy / (dx * r)), 0) / segs.length;
+  let lo = Math.log(1 / 256), hi = Math.log(256);
+  for (let n = 0; n < 50; n++) { const m = (lo + hi) / 2; if (mean(Math.exp(m)) > Math.PI / 4) lo = m; else hi = m; }
+  return Math.min(4, Math.max(1, Math.exp((lo + hi) / 2)));
+}
+/**
  * The unit every axis label shares, as a prefix and a suffix ("$", " ms", "%"), so it can be said once. Only symbols
  * and spaced words count: a compact "K" or "M" is part of the number, not a unit.
  */
@@ -838,8 +863,11 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   x?: string;
   /** How x is placed. Default: time for ISO dates, epoch numbers or Dates; linear for other numbers; band otherwise. */
   xScale?: 'band' | 'time' | 'linear';
-  /** Width ÷ height of the plot. Default 2, unless `height` is set. */
-  aspect?: number;
+  /**
+   * Width ÷ height of the plot. Default 2, unless `height` is set. 'banked' (#194): the line chart's segments set it,
+   * banked to an average of 45° so slopes read accurately, between 1 and 4 for the data area; the width is the card's.
+   */
+  aspect?: number | 'banked';
   /** The plot's height in px, instead of an aspect ratio. */
   height?: number;
   /** A visible name, inside the figure. Leave it out when a CardTitle names the chart, and pass `aria-labelledby`. */
@@ -1078,6 +1106,15 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       return vs.length ? [Math.min(...vs), Math.max(...vs)] as [number, number] : null;
     })(),
   };
+  // Banking (#194): the data area's width ÷ height that sets the segments at 45° on average. Read from the shown series
+  // over the y axis's domain, and kept while values glide: only new x values, which cross-fade as a new chart, change it.
+  const banked = (aspect === 'banked' || (aspect == null && info.aspect === 'banked')) && height == null;
+  const xSig = banked ? data.map((d) => String(d[xKey])).join('|') + '/' + series.map((s) => s.key).join('|') : '';
+  const bankRatio = React.useMemo(() => {
+    if (!banked) return null;
+    const xs = data.map((d, i) => (kind === 'time' ? toTime(d[xKey]) : kind === 'linear' ? Number(d[xKey]) : i));
+    return bankTo45(xs, series.map((s) => data.map((d) => (typeof d[s.key] === 'number' ? d[s.key] as number : null))), ny.domain);
+  }, [xSig]); // eslint-disable-line react-hooks/exhaustive-deps
   const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey, info.rescale ? `${lo}:${hi}` : '']); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef, live, info.motion);
 
@@ -1441,9 +1478,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const labelledBy = (rest['aria-labelledby'] as string | undefined) ?? titleId;
   const vars: Record<string, string> = {};
   for (const s of series) vars[`--color-${cssKey(s.key)}`] = s.color;
-  if (aspect == null && height == null) aspect = 2;
-  // A chart whose content sets its height (a calendar's weeks) gets that height for the width it has.
-  const fitHeight = info.fitHeight && W && data.length ? Math.ceil(info.fitHeight(Math.max(0, W - (grid ? info.left ?? 0 : 0) - right))) + TOP + bottom : null;
+  if ((aspect == null || aspect === 'banked') && height == null) aspect = 2;
+  // A chart whose content sets its height (a calendar's weeks) gets that height for the width it has; so does a banked
+  // one, its data area at the banked ratio.
+  const fitHeight = info.fitHeight && W && data.length ? Math.ceil(info.fitHeight(Math.max(0, W - (grid ? info.left ?? 0 : 0) - right))) + TOP + bottom
+    : bankRatio && W ? Math.round(Math.max(0, W - Math.round(target.left) - right) / bankRatio) + TOP + bottom : null;
 
   // The table view (#64): the same records as a DataTable, x first, a column per series, a Total for stacks.
   const viewsOn = views !== undefined && views !== false;

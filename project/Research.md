@@ -1215,6 +1215,19 @@ A design review of axis text (#193): every chart preview at 960px and 360px in a
 
 Not yet tested with people: whether leaving out labels that would cover the data slows reading compared with a full gutter.
 
+### E104 · How tall should a line chart be?
+
+A design review of `aspect="banked"` (#194): the LineChart preview's monthly revenue at the default and banked, in a card at 960px and 360px. `checks/chart-banking.mjs` measures each line's segments as drawn.
+
+- **The data chooses.** Every chart was 2:1, so a sharp rise and a gentle one filled the same box. People judge slopes best when segments average about 45° (Cleveland; Heer & Agrawala 2006 refined the criteria). The ratio is found by bisection on the mean absolute orientation, which falls as the plot widens.
+- **Measured.** The revenue line averaged 24.7° at the preview's 1.9 (a data area of 1.84); banked, the ratio wants to go below 1 and is held there, at 42.8°. A smooth sine banks to 45° within a degree.
+- **Clamped to 1–4.** A sawtooth wants a sliver and a gentle ramp a tower; neither fits a card.
+- **Steady.** The ratio is read from all shown series and kept while values glide, so the chart doesn't change height under the reader. New x values cross-fade as a new chart, and bank afresh then. Resizing never animates.
+
+Rejected for now: multi-scale banking (a chart per frequency band). It's an analysis, not a default; small multiples could carry it later.
+
+Not yet tested with people: whether readers notice that banked neighbours differ in height, and whether that reads as a difference in the data.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
