@@ -203,6 +203,10 @@ Reasoning that's still arriving has no motion of its own: no shimmer, no pulsing
 
 A question arrives lifted and settles with the afterglow, like any new content that needs notice. Answering presses it to the ground: its shadow and surface fall from 1 to 0 over `dur-travel-2` as it collapses to its one-line record.
 
+## Reviewing changes
+
+Deciding a change lowers it from 1 to 0 over `dur-travel-1` with `ease-sink`; an accepted one settles with one afterglow, a rejected one collapses to a line after `dur-linger`. Under reduced motion it changes in place and a rejected change collapses at once.
+
 ## Answers in Markdown
 
 `Markdown` has no motion of its own: text arrives without per-word animation (Conversation's rule), and a table row that completes appears in place rather than rising. An image rises out of its imprint over `dur-travel-1` with `ease-rise` (2px of travel and its opacity); under reduced motion it appears in place.

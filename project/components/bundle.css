@@ -1559,6 +1559,20 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-diff-line[data-kind="add"] .alt-diff-word { background: color-mix(in oklab, var(--positive) 22%, transparent); }
 .alt-diff-line[data-kind="del"] .alt-diff-word { background: color-mix(in oklab, var(--critical) 18%, transparent); }
 .alt-diff-fold button { display: flex; align-items: center; gap: 6px; width: 100%; padding: 4px var(--space-4) 4px 28px; border: 0; border-block: 1px solid var(--line); background: var(--surface-ground); font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); cursor: pointer; text-align: left; }
+/* Reviewing (#282): a change awaiting a decision is a proposal, raised at level 1 around its lines (as PropertyList's
+   proposed value); deciding lowers it to the record: accepted flush with one afterglow, rejected muted and collapsed. */
+.alt-diff-hunk { position: relative; margin: 4px 6px; border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1); overflow: hidden;
+  transition: box-shadow var(--dur-travel-1) var(--ease-sink), background-color var(--dur-travel-1) var(--ease-sink), margin var(--dur-travel-1) var(--ease-sink); }
+.alt-diff-hunk[data-decision] { margin-inline: 0; border-radius: 0; background: none; box-shadow: none; }
+.alt-diff-hunk[data-decision="reject"] { color: var(--ink-muted); }
+.alt-diff-hunk[data-decision="reject"] .alt-diff-line { opacity: 0.6; }
+.alt-diff-hunk-bar { position: sticky; left: 0; display: flex; align-items: center; justify-content: flex-end; gap: 2px; width: min(100%, 100cqw); padding: 2px 6px 2px 28px; font: 500 12.5px/17px var(--font-sans); }
+.alt-diff-hunk-state { display: inline-flex; align-items: center; gap: 5px; margin-right: auto; color: var(--ink-muted); }
+.alt-diff-hunk-folded { display: block; width: 100%; padding: 4px var(--space-4) 4px 28px; border: 0; background: none; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); text-align: left; cursor: pointer; }
+.alt-diff-hunk-folded:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-diff-body { container-type: inline-size; }
+@media (prefers-reduced-motion: reduce) { .alt-diff-hunk { transition: none; } }
+@media (forced-colors: active) { .alt-diff-hunk:not([data-decision]) { border: 1px solid CanvasText; } }
 @media (hover: hover) { .alt-diff-fold button:hover { background: var(--surface-raised); color: var(--ink); } }
 .alt-diff-fold button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-diff-props { display: flex; flex-direction: column; margin: 0; padding: 0 var(--space-4); }

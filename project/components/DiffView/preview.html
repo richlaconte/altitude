@@ -1,4 +1,4 @@
-<!-- @dsCard group="Display" height=620 subtitle="What changed between two versions, in signs and words" -->
+<!-- @dsCard group="Display" height=1040 subtitle="What changed between two versions, in signs and words; reviewed change by change" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -46,6 +46,35 @@ cache: 5m
 health: /healthz
 owner: platform-team
 alerts: on-call`;
+const pricingBefore = `export const plans = {
+  starter: { monthly: 9, seats: 1 },
+  pro: { monthly: 29, seats: 5 },
+  business: { monthly: 99, seats: 25 },
+};
+export const trialDays = 14;
+export const currency = 'USD';`;
+const pricingAfter = `export const plans = {
+  starter: { monthly: 9, seats: 1 },
+  pro: { monthly: 32, seats: 5 },
+  business: { monthly: 99, seats: 25, sso: true },
+};
+export const trialDays = 30;
+export const currency = 'USD';`;
+function Review() {
+  const [decisions, setDecisions] = React.useState({ "change-2": "accept" });
+  return /* @__PURE__ */ React.createElement(
+    A.DiffView,
+    {
+      caption: "src/pricing.ts \xB7 proposed by the assistant",
+      before: pricingBefore,
+      after: pricingAfter,
+      review: true,
+      decisions,
+      onDecide: (id, d) => setDecisions({ ...decisions, [id]: d }),
+      onDecideAll: (d) => setDecisions(Object.fromEntries(A.diffChanges(A.diffLines(pricingBefore, pricingAfter)).map((c) => [c.id, decisions[c.id] ?? d])))
+    }
+  );
+}
 function App() {
   return /* @__PURE__ */ React.createElement("div", { className: "dv" }, /* @__PURE__ */ React.createElement(A.DiffView, { caption: "deploy.yaml \xB7 version 4 \u2192 5", before: v4, after: v5, context: 1 }), /* @__PURE__ */ React.createElement(
     A.DiffView,
@@ -56,7 +85,7 @@ function App() {
       after: { plan: "Business", seats: 25, billing: "Monthly" },
       fields: [{ key: "plan", label: "Plan" }, { key: "seats", label: "Seats" }, { key: "billing", label: "Billing" }]
     }
-  ));
+  ), /* @__PURE__ */ React.createElement(Review, null));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

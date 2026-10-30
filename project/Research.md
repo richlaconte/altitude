@@ -1492,6 +1492,10 @@ Approving `npm test` for the fifth time trains people to approve without reading
 
 A proposal that's nearly right ("Send campaign email" with a subject one word off) could only be approved as is or rejected and explained in the composer, which costs a turn; harnesses increasingly let the person edit the arguments and approve the edited version, telling the agent what changed (#281). `Confirmation edit` opens the fields in place inside the raised card (EditRegion's pattern: the padding is already there, so nothing jumps), focusing the first. The app keeps `consequence` and `approveLabel` following the values, so the description read with Approve is always what will happen. Escape cancels the edit, not the proposal, and Reject stays available while editing. The record says "edited and approved by you". `checks/confirm-edit.mjs`.
 
+### E145 · Accept this hunk, reject that one
+
+An agent changes a file and the person reviews it before it's kept: accept this hunk, reject that one, accept the rest (Cursor, Copilot Edits, Claude Code's IDE integrations), and apps embedding editing agents need the same for documents (#282). `DiffView` was read only. `review` follows `PropertyList proposed`: a hunk awaiting a decision is a proposal, so it's raised around its lines; once decided it's the record again, accepted flush with an afterglow, rejected muted and collapsed after `dur-linger` with a way to show it. Decisions are controlled by the app, which owns applying them; changes have stable ids in order (`diffChanges`). Navigation keys skip decided changes. The rejected alternative, reviewing whole files only, forces all-or-nothing on a file that's mostly right; it remains the composition for many files (an Accordion per file). Property diffs aren't reviewable yet. `checks/diff-review.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
