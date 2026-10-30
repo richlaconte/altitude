@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { cx, DepthProps, Icons, inert, riseDelay, Spinner, useApproach, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
-import { Arrive, Await, hasPromise, hint, isPromise, LoadingScope, Promised, readChildren, readPromised, SkeletonOption, TextImprint, useArrival, useHasWaited, useReportWaiting, useScopeWaiting } from './suspense';
+import { cx, DepthProps, Icons, inert, LoadingStyleContext, riseDelay, Spinner, touchHold, useApproach, useBreath, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
+import { Arrive, Await, hasPromise, hint, isPromise, LoadingScope, Promised, RevealGroup, readChildren, readPromised, SkeletonOption, TextImprint, useArrival, useHasWaited, useReportWaiting, useScopeWaiting } from './suspense';
 
 /* ───────────────────────── Button ───────────────────────── */
 
@@ -46,18 +46,20 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
   const actionable = interactive && !!rest.onClick;
   const { style: depthStyle, ...depth } = useDepth({ settle, status, heldBy, relevance });
   const { lines = 3 } = hint(skeleton);
+  // Under breath a card is one unit: its parts land together, in one place in the attention budget.
+  const Unit = React.useContext(LoadingStyleContext) === 'breath' ? RevealGroup : React.Fragment;
   return <div ref={ref} className={cx('alt-card', interactive && 'alt-lift', className)}
     role={actionable ? 'button' : undefined} tabIndex={actionable ? 0 : undefined}
     onKeyDown={actionable ? (e) => { onKeyDown?.(e); if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (e.currentTarget as HTMLElement).click(); } } : onKeyDown}
     {...depth} style={{ ...depthStyle, ...style }} {...rest}>
-    <LoadingScope>
+    <LoadingScope><Unit>
       <Await shape="none" enabled={skeleton !== false} imprint={
         <span className="alt-await-card">
           <TextImprint className="alt-card-title" width="45%" />
           <TextImprint className="alt-await-card-body" lines={lines} />
         </span>
       }>{children}</Await>
-    </LoadingScope>
+    </Unit></LoadingScope>
   </div>;
 });
 export const CardHeader = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => <div className={cx('alt-card-header', className)} {...p} />;
@@ -807,6 +809,7 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
 const LINE_WIDTHS = ['100%', '94%', '82%', '97%', '64%'];
 /** An imprint of the content to come, pressed into the page; when the content arrives it rises out of its imprint. */
 export function Skeleton({ loaded, shape = 'block', lines = 3, width, height, radius, className, style, children, ...rest }: SkeletonProps) {
+  const breath = useBreath<HTMLDivElement>();
   const [reveal, setReveal] = React.useState<number | null>(null);
   const was = React.useRef(loaded);
   React.useEffect(() => { if (loaded && !was.current) setReveal(riseDelay()); if (!loaded) setReveal(null); was.current = loaded; }, [loaded]);
@@ -820,7 +823,7 @@ export function Skeleton({ loaded, shape = 'block', lines = 3, width, height, ra
   }
   if (shape === 'text') {
     return (
-      <div className={cx('alt-skeleton-lines', className)} aria-hidden="true" style={{ width, ...style }} {...rest}>
+      <div ref={breath} className={cx('alt-skeleton-lines', className)} aria-hidden="true" style={{ width, ...style }} {...rest}>
         {Array.from({ length: lines }, (_, i) => (
           <div key={i} className="alt-skeleton" data-shape="text" style={{ width: i === lines - 1 && lines > 1 ? '60%' : LINE_WIDTHS[i % LINE_WIDTHS.length], height: height ?? 12, ['--i' as any]: i }} />
         ))}
@@ -828,7 +831,7 @@ export function Skeleton({ loaded, shape = 'block', lines = 3, width, height, ra
     );
   }
   const d = shape === 'circle' ? (width ?? height ?? 40) : undefined;
-  return <div className={cx('alt-skeleton', className)} data-shape={shape} aria-hidden="true"
+  return <div ref={breath} className={cx('alt-skeleton', className)} data-shape={shape} aria-hidden="true"
     style={{ width: d ?? width, height: d ?? height ?? 14, borderRadius: radius, ...style }} {...rest} />;
 }
 
@@ -1174,7 +1177,7 @@ const move = <T,>(arr: T[], from: number, to: number) => { const a = arr.slice()
 export function SortableList<T>({ items, getKey, onReorder, renderItem, getLabel = (i) => String(getKey(i)), gap = 8, className, ...rest }: SortableListProps<T>) {
   const nodes = React.useRef(new Map<string, HTMLDivElement>());
   const before = React.useRef(new Map<string, number>());
-  const start = React.useRef<{ y: number; key: string; from: number; tops: number[]; hs: number[]; id: number } | null>(null);
+  const start = React.useRef<{ y: number; key: string; from: number; tops: number[]; hs: number[]; id: number; armed: boolean; release?: () => void } | null>(null);
   const [drag, setDrag] = React.useState<{ key: string; from: number; to: number; dy: number } | null>(null);
   const [kb, setKb] = React.useState<string | null>(null);
   const [msg, setMsg] = React.useState('');
@@ -1205,11 +1208,18 @@ export function SortableList<T>({ items, getKey, onReorder, renderItem, getLabel
   const keys = items.map(getKey);
   const onPointerDown = (e: React.PointerEvent, key: string, index: number) => {
     if (e.button !== 0) return;
+    start.current?.release?.();
     const els = keys.map((k) => nodes.current.get(k)!);
-    start.current = { y: e.clientY, key, from: index, tops: els.map((el) => el.offsetTop), hs: els.map((el) => el.offsetHeight), id: e.pointerId };
+    const s = { y: e.clientY, key, from: index, tops: els.map((el) => el.offsetTop), hs: els.map((el) => el.offsetHeight), id: e.pointerId, armed: true, release: undefined as undefined | (() => void) };
+    start.current = s;
+    // On touch the grip picks the row up at once; elsewhere on the row it takes a press-and-hold, so a swipe scrolls (#256).
+    if (e.pointerType === 'touch' && !(e.target as Element).closest('.alt-sort-grip')) {
+      s.armed = false;
+      s.release = touchHold(e, () => { if (start.current !== s) return; s.armed = true; setDrag({ key, from: index, to: index, dy: 0 }); });
+    }
   };
   const onPointerMove = (e: React.PointerEvent) => {
-    const s = start.current; if (!s) return;
+    const s = start.current; if (!s || !s.armed) return;
     const dy = e.clientY - s.y;
     if (!drag && Math.abs(dy) < 4) return;
     if (!drag) (e.currentTarget as HTMLElement).setPointerCapture(s.id);
@@ -1220,6 +1230,7 @@ export function SortableList<T>({ items, getKey, onReorder, renderItem, getLabel
   };
   const onPointerUp = () => {
     const s = start.current; start.current = null;
+    s?.release?.();
     if (!drag || !s) { setDrag(null); return; }
     const { from, to } = drag;
     if (from !== to) snapshot();

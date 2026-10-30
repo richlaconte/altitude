@@ -15,6 +15,8 @@ Every transition takes 100ms plus 40ms for each level it travels. A hover lift (
 | `dur-travel-4` | 260ms | Toasts, sheets. |
 | `dur-travel-5` | 300ms | Dialogs, and the page receding behind them. |
 | `dur-sweep` | 1600ms | Light passing over a skeleton imprint, and the indeterminate progress loop, per pass. |
+| `dur-breath` | 4800ms | One breath of a waiting imprint under `loading="breath"` (experimental): deepening over 40%, releasing over the rest. |
+| `dur-wave` | 1800ms | How long the breath's swell takes to cross the view from top to bottom. |
 
 Signal timings, each set from research or measurement (see **Research**):
 
@@ -26,6 +28,8 @@ Signal timings, each set from research or measurement (see **Research**):
 | `dur-hover` | 1800ms | One slow breath of a pending surface. Slower than any transition, so it reads as waiting, not as motion to follow. |
 | `dur-linger` | 2000ms | How long a removed item's receipt holds in its slot before the gap closes: about a second to read four words, and a second to act. A judgement, not yet measured; see **Research**. |
 | `dur-settle` | 8000ms | Afterglow: full strength for the first second, noticeable for about four, gone by eight (measured). |
+| `dur-arrive` | 1100ms | Under `loading="breath"`, raised content that lands rises a level past its rest and settles back over this long. A judgement from prototype review, not yet measured. |
+| `dur-plate` | 600ms | Under `loading="breath"`, the plate under content that arrives into a view already showing. Short and untinted, so it isn't read as an afterglow. |
 
 Exits run at 70% of their entry: attention has already moved on.
 
@@ -69,6 +73,7 @@ Exits run at 70% of their entry: attention has already moved on.
 - **Chosen, then settled.** An `InlineEdit` with `commit="on-choose"` saves as soon as its Select or Combobox reports a value. The list sinks and the field's floor rises flush first; only when that motion has finished does the editor settle back to the ground with its afterglow. The two never move at once, as in the Stepper.
 - **Changed where it sits.** A `PropertyList` value rises into its InlineEdit editor (`dur-travel-1`); with `commit="on-choose"` the picker's list rises from it with no editor row in between. An unset value's well fills flush when it's set (**Filled, not swapped**), then settles. Edit all lifts the list into one raised EditRegion.
 - **Imprinted, then risen.** A component's own imprint (shown while its content is undefined or a promise) waits `dur-grace` before it fades in, so a quick load shows nothing and lands without moving. A slower one rises 8px out of its imprint (`dur-travel-3`, `ease-rise`) as the imprint fills in behind it, within the attention budget; containers leave no imprint, their content just rises. In a `RevealGroup`, parts that land early stay imprints until the slowest arrives, then rise together.
+- **Breathed, then risen** (experimental, `AltitudeProvider loading="breath"`). No light sweeps the imprint; it breathes. Its floor deepens from `well` to `trench` over 40% of `dur-breath` and releases over the rest, slower and less even than a pending write's breath, so the two can't be confused. In Nightfall, where well and trench are nearly one tone, its back wall (`lip-top`) breathes instead. Every imprint takes its phase from one page clock, lagged by its height in the view, so imprints change in step (one moving thing for the attention budget) and a swell crosses the view in `dur-wave`. Ten seconds in, the breath calms to a shallow one; words stay with the app. When content lands, raised content (`Await settle="raised"`, a card) rises 8px to level 2 and settles to its rest over `dur-arrive`; flush content fills past the ground (its floor passes just above it in twice `dur-travel-3`, then fills in flush, carrying the text 1.5px past its line); content that arrives into a view already showing gets an untinted plate that dissolves over `dur-plate`. A card's parts land together, and a group takes one place in the budget, its parts 16ms apart. Chart, stat and meter imprints hold still, and a chart's marks still fade in place. Under reduced motion the breath stops and landings lose their travel.
 - **Pressed into the record.** Advancing a Stepper presses the current step to the ground (`ease-sink`) and stamps its check in, then, about 150ms later, raises the next step out of its imprint (`dur-travel-3`, `ease-rise`, within the attention budget). The two never move at once, so the eye follows the press and then the rise.
 - **Sunk in, never begging.** An `EmptyState` appears by sinking from flush to its well (`dur-travel-1`, `ease-sink`): the inverse of content arriving lifted. It never pulses or loops. Under reduced motion it still changes depth, as every surface does, but nothing travels.
 - **Lifted off.** Dismissing an alert lifts the sheet 8px as its shadow spreads, fades it, and only then closes the gap. In an `AlertStack` the next alert comes up from under it.
@@ -174,6 +179,14 @@ Openings respond to the pointer *before* it arrives; nothing else does. One shar
 Raised things never use it. A button, card, crumb, step, pile or board card stays exactly where it is until the pointer is on it, and then changes once (its hover state); it doesn't climb toward an approaching pointer or lean after it across its face. An earlier version did both, and in use it read as the control drifting on its own, as if something were wrong. An opening deepening is different: the field itself doesn't move, only its depth does, and that previews what focusing it will do.
 
 Approach only adds depth, never size or position, so nothing reflows. Values update once per frame and every response rides the element's existing transition. Mark your own element with `data-approach` (and call `useApproach()`) to use the same variables, and keep to the same rule: deepen openings, never move what's raised. `AltitudeProvider approach={false}` turns it off for a subtree.
+
+## Holding to pick up
+
+On touch a thing is picked up by a press-and-hold: 400ms without moving more than 8px. When the hold completes it lifts to level 3 on its usual `dur-travel-2` and `ease-rise`, the same lift a mouse pick-up gets, so the person knows they can move it; under reduced motion it lifts without travel. Moving before the hold completes gives the gesture to the page, which scrolls. See **Mobile**.
+
+## Answers in Markdown
+
+`Markdown` has no motion of its own: text arrives without per-word animation (Conversation's rule), and a table row that completes appears in place rather than rising. An image rises out of its imprint over `dur-travel-1` with `ease-rise` (2px of travel and its opacity); under reduced motion it appears in place.
 
 ## Reduced motion
 

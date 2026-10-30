@@ -22,6 +22,8 @@ Columns of cards you move between, a kanban: columns are receptacles that open w
 | `BoardColumn` | `id`, `title`, `collapsible`, `collapsed`/`defaultCollapsed`/`onCollapsedChange`, `onCreate`, `addLabel` |
 | `BoardCard` | `id`, `label` (for announcements), `heldBy`, `settle`, `onRename`, `value`/`renderEditor`/`onSave`/`onValueChange`; anything inside it |
 
+**On touch.** A swipe scrolls the board; a press-and-hold picks a card up, then a drag moves it. The card tools are always shown where there's no hover.
+
 **You provide:** the data and an `onMove` that moves the card in it (splice it out of `from.column` at `from.index`, into `to.column` at `to.index`); card content (a title, then a `small` line of detail); short column titles.
 
 - Do keep buttons and links inside cards: pressing them doesn't pick the card up.
