@@ -3426,6 +3426,40 @@ function App() {
   );
 }
 
+=== Question | <!-- @dsCard group="Feedback" height=900 subtitle="An agent asks before it carries on: raised until answered, then one line in the record" -->
+--- css
+.qs { display: flex; flex-direction: column; gap: 20px; max-width: 560px; }
+--- jsx
+function App() {
+  const [q, setQ] = React.useState({ state: 'asking' });
+  const [set, setSet] = React.useState({ state: 'asking' });
+  return (
+    <div className="qs">
+      <A.Question title="Which environment should I deploy to?" state={q.state} answer={q.answer} answeredAt={q.at} allowOther
+        answerLabel="Deploy" skipLabel="Let the assistant decide" onSkip={() => setQ({ state: 'expired' })}
+        onAnswer={(answer) => setQ({ state: 'answered', answer, at: Date.now() })}>
+        <A.QuestionOption value="staging" label="Staging" description="Resets nightly. Safe to try things." />
+        <A.QuestionOption value="production" label="Production" description="Customers will see it immediately." />
+      </A.Question>
+      <A.QuestionSet state={set.state} onAnswer={(answers) => setSet({ state: 'answered', answers })}>
+        <A.Question name="column" title="Keep the old status column, or drop it?" answer={set.answers?.column}>
+          <A.QuestionOption value="keep" label="Keep it" description="Writes go to both columns until you remove it." />
+          <A.QuestionOption value="drop" label="Drop it" description="The migration removes it after copying." />
+        </A.Question>
+        <A.Question name="notify" title="Who should hear about it?" multiple answer={set.answers?.notify}>
+          <A.QuestionOption value="eng" label="#eng-billing" />
+          <A.QuestionOption value="support" label="#support" />
+          <A.QuestionOption value="owner" label="The account owner" />
+        </A.Question>
+      </A.QuestionSet>
+      <A.Question title="Which layout should I use for the invoice?" state="answered" answer={{ values: ['compact'] }} answeredAt={Date.now() - 3 * 60000}>
+        <A.QuestionOption value="compact" label="Compact" />
+        <A.QuestionOption value="detailed" label="Detailed" />
+      </A.Question>
+    </div>
+  );
+}
+
 === Terminal | <!-- @dsCard group="Display" height=760 subtitle="A command's output as it runs: a dashed rule while running, then its exit in words" -->
 --- css
 .tm { display: flex; flex-direction: column; gap: 16px; max-width: 680px; }
