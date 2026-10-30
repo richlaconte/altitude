@@ -395,6 +395,16 @@ function Page() {
           </div>
         </section>
 
+        <section className="band agent-teaser" aria-labelledby="agent-teaser-title">
+          <div className="wrap">
+            <div className="section-head">
+              <h2 className="headline" id="agent-teaser-title">Building for agents?</h2>
+              <p className="lead">Watch one agent run through every state, a proposal that's raised and not pending, a streaming answer on a dashed rule, a failed step in a trench, a queued follow-up, in a complete harness. Jump to any moment.</p>
+            </div>
+            <a className="alt-btn" data-variant="secondary" data-size="md" href="agent.html"><span className="alt-btn-label">See Altitude for agents</span></a>
+          </div>
+        </section>
+
         <section className="band" id="workflows" aria-labelledby="workflows-title">
           <div className="wrap">
             <div className="section-head">

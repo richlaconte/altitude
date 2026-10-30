@@ -15,11 +15,15 @@ async function bundle(entry) {
     entryPoints: [entry], bundle: true, write: false, format: 'iife', minify: true, target: 'es2020', legalComments: 'none',
     jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment',
     define: { 'process.env.NODE_ENV': '"production"' },
+    // The agent page uses a pattern fixture, which imports the package by name.
+    // One React for both: the fixture would otherwise resolve build/'s copy.
+    alias: { 'altitude-design': './project/components/src/index.tsx', react: './node_modules/react', 'react-dom': './node_modules/react-dom' },
   });
   // An inline script ends at the first "</script", wherever it appears.
   return result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 }
 const js = await bundle('site/main.tsx');
+const agentJs = await bundle('site/agent.tsx');
 
 const components = readFileSync('project/components/bundle.css', 'utf8');
 const fontImport = (components.match(/^@import url\('([^']+)'\);/) || [])[1];
@@ -35,6 +39,9 @@ const early = `<script>(function(){var t=document.documentElement.getAttribute('
 const body = `${early}
 <div id="altitude-site"></div>
 <script>${js}</script>`;
+const agentBody = `${early}
+<div id="altitude-site"></div>
+<script>${agentJs}</script>`;
 
 const page = ({ title, description, css, body }) => `<!doctype html>
 <html lang="en">
@@ -56,6 +63,7 @@ ${body}
 </html>
 `;
 writeFileSync(`${out}/index.html`, page({ title, description, css, body }));
+writeFileSync(`${out}/agent.html`, page({ title: 'Altitude for agents', description: 'A scripted agent run through every state, in a complete harness built with Altitude.', css, body: agentBody }));
 
 writeFileSync(`${out}/artifact.html`, `<title>${title}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -65,4 +73,4 @@ ${css}
 </style>
 ${body}
 `);
-console.log('site ok', Math.round(js.length / 1024) + ' KB of script');
+console.log('site ok', Math.round(js.length / 1024) + ' KB of script;', 'agent page', Math.round(agentJs.length / 1024) + ' KB');
