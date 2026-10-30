@@ -711,6 +711,35 @@ export function useFitFloating(ref: React.RefObject<HTMLElement | null>, open: b
   }, [open]);
 }
 
+/** How a menu or list presents itself (#249): anchored to its trigger, or as a sheet at the bottom edge. */
+export type Presentation = 'auto' | 'anchored' | 'sheet';
+const sheetQuery = '(max-width: 639.98px) and (pointer: coarse)';
+/**
+ * Whether a menu or list opens as a bottom sheet: always for 'sheet', never for 'anchored', and for 'auto' on a narrow
+ * touch screen (under breakpoint-compact, with a coarse pointer), where the thumb is at the bottom of the screen.
+ */
+export function useSheetPresentation(presentation: Presentation = 'auto'): boolean {
+  const [narrowTouch, setNarrowTouch] = React.useState(false);
+  React.useEffect(() => {
+    if (presentation !== 'auto') return;
+    const mq = window.matchMedia?.(sheetQuery);
+    if (!mq) return;
+    const sync = () => setNarrowTouch(mq.matches);
+    sync(); mq.addEventListener?.('change', sync);
+    return () => mq.removeEventListener?.('change', sync);
+  }, [presentation]);
+  return presentation === 'sheet' || (presentation === 'auto' && narrowTouch);
+}
+/** A sheet-presented menu's head: its title, and a way to close it that doesn't need a tap outside. */
+export function SheetHead({ title, onClose }: { title?: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="alt-menu-sheet-head">
+      <span className="alt-menu-sheet-title">{title}</span>
+      <button type="button" className="alt-btn alt-menu-sheet-close" data-variant="ghost" data-size="sm" onClick={onClose}>Close</button>
+    </div>
+  );
+}
+
 /* ───────────────────────── Kbd ───────────────────────── */
 
 // Whether a keyboard is likely (#262): not on a touch-only device until a key is pressed, after which it is for the

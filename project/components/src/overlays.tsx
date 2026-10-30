@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, Layer, ModePlate, PrimaryScope, useControllable, useFitFloating, useIsoLayoutEffect, useKeyboardLikely, useOutside, usePresence } from './core';
+import { cx, Icons, Layer, ModePlate, PrimaryScope, SheetHead, useControllable, useFitFloating, useIsoLayoutEffect, useKeyboardLikely, useOutside, usePresence, useSheetPresentation, type Presentation } from './core';
 import { Button } from './controls';
 import { ModalOwner, modalDocument, tabbables, useAltitudeContext } from './modal-state';
 
@@ -107,16 +107,26 @@ export interface DropdownMenuProps {
   side?: 'top' | 'bottom';
   defaultOpen?: boolean;
   className?: string;
+  /**
+   * 'auto' (default): anchored to the trigger, or on a narrow touch screen a sheet at the bottom edge, with a title and
+   * Close, where the thumb is (#249). 'anchored' or 'sheet' forces one.
+   */
+  presentation?: Presentation;
+  /** The sheet's title. Default: the trigger's aria-label or text. */
+  title?: string;
 }
 /**
  * The menu itself, shared by DropdownMenu and ContextMenu: its items, the highlight that glides between them, the
  * keyboard, and choosing. `onClose(true)` asks the owner to close and give focus back.
  */
-export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', className, style, startFirst, onClose }: {
+export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', className, style, startFirst, onClose, sheet, title }: {
   items: MenuEntry[]; id: string; state: string; side?: 'top' | 'bottom'; align?: 'start' | 'end'; className?: string; style?: React.CSSProperties;
   /** Opened from the keyboard: the first item is active at once. */
   startFirst?: boolean;
   onClose: () => void;
+  /** Presented as a bottom sheet (#249), with this title. */
+  sheet?: boolean;
+  title?: React.ReactNode;
 }) {
   const enabled = items.map((it, i) => (!it.type || it.type === 'item') && !(it as any).disabled ? i : -1).filter((i) => i >= 0);
   const [active, setActive] = React.useState(startFirst ? enabled[0] ?? -1 : -1);
@@ -124,8 +134,8 @@ export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', 
   const keyboard = useKeyboardLikely();
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   const menu = React.useRef<HTMLDivElement>(null);
-  // On screen at any width (#248); the panel mounts only while open.
-  useFitFloating(menu, true);
+  // On screen at any width (#248); the panel mounts only while open. A sheet is placed by the bottom edge instead.
+  useFitFloating(menu, !sheet);
   const refs = React.useRef<(HTMLDivElement | null)[]>([]);
   useIsoLayoutEffect(() => {
     const el = active >= 0 ? refs.current[active] : null;
@@ -151,8 +161,8 @@ export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', 
   // When any item can be checked, every item keeps a slot for the check, so their labels line up.
   const checks = items.some((it: any) => it.checked !== undefined);
   const activeTone = active >= 0 ? (items[active] as any).tone : undefined;
-  return (
-    <div ref={menu} id={id} role="menu" tabIndex={-1} className={cx('alt-pop alt-menu', className)} data-state={state} data-side={side} data-align={align} style={style}
+  const list = (
+    <div ref={menu} id={id} role="menu" tabIndex={-1} className={cx(sheet ? 'alt-menu' : 'alt-pop alt-menu', className)} data-state={state} data-side={side} data-align={align} style={sheet ? undefined : style}
       data-ephemeral={items.some((it: any) => it.predicted) ? '' : undefined}
       aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined} onKeyDown={onKeyDown} onPointerLeave={() => setActive(-1)}>
       <span className="alt-menu-hl" aria-hidden="true" data-tone={activeTone}
@@ -174,9 +184,15 @@ export function MenuPanel({ items, id, state, side = 'bottom', align = 'start', 
       })}
     </div>
   );
+  // As a sheet (#249) the menu sits in a panel at the bottom edge, under a head with its title and Close.
+  return sheet
+    ? <div className="alt-pop alt-menu-sheet" data-presentation="sheet" data-state={state} style={style}><SheetHead title={title} onClose={onClose} />{list}</div>
+    : list;
 }
 
-export function DropdownMenu({ trigger, items, align = 'start', side = 'bottom', defaultOpen = false, className }: DropdownMenuProps) {
+export function DropdownMenu({ trigger, items, align = 'start', side = 'bottom', defaultOpen = false, className, presentation, title }: DropdownMenuProps) {
+  const sheet = useSheetPresentation(presentation);
+  const sheetTitle = title ?? trigger.props['aria-label'] ?? (typeof trigger.props.children === 'string' ? trigger.props.children : undefined);
   const [open, setOpen] = React.useState(defaultOpen);
   const [byKey, setByKey] = React.useState(false);
   const anchor = React.useRef<HTMLSpanElement>(null);
@@ -192,7 +208,7 @@ export function DropdownMenu({ trigger, items, align = 'start', side = 'bottom',
         onClick: (e: any) => { trigger.props.onClick?.(e); setByKey(false); setOpen(!open); },
         onKeyDown: (e: React.KeyboardEvent) => { trigger.props.onKeyDown?.(e); if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setByKey(true); setOpen(true); } },
       })}
-      {mounted && <MenuPanel items={items} id={id} state={state} side={side} align={align} className={className} startFirst={byKey} onClose={closeAndReturn} />}
+      {mounted && <MenuPanel items={items} id={id} state={state} side={side} align={align} className={className} startFirst={byKey} onClose={closeAndReturn} sheet={sheet} title={sheetTitle} />}
     </span>
   );
 }
