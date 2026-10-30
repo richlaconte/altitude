@@ -30,7 +30,8 @@ await page.mouse.move(box.x + box.width * 0.12, box.y + box.height * 0.5);
 await page.waitForTimeout(350);
 let s = await state();
 expect(s.open === 'open' && s.hidden === 'true', `pointing opens the readout, aria-hidden (${s.open}, ${s.hidden})`);
-expect(s.label === 'Jan 1, 2026' && s.rows.length === 4 && s.rows[0] === '40Free', `the readout names the x and lists every series: ${s.label} ${s.rows}`);
+// The preview focuses Team (#188), so it's listed first.
+expect(s.label === 'Jan 1, 2026' && s.rows.length === 4 && s.rows[0] === '34Team' && s.rows.includes('40Free'), `the readout names the x and lists every series, the focused one first: ${s.label} ${s.rows}`);
 expect(s.cross !== null && s.rings === 4, `a crosshair at that x and the four points ringed (${s.rings})`);
 expect(s.side === 'right', `near the left edge it opens to the right: ${s.side}`);
 

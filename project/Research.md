@@ -1203,6 +1203,102 @@ A design review of `takeaway` (#187): the BarChart and LineChart previews now le
 
 Not yet tested with people: whether readers check a takeaway against the marks, or take it on trust.
 
+### E103 · Does the frame's text rank below the data?
+
+A design review of axis text (#193): every chart preview at 960px and 360px in all four schemes, under forced colours and with `contrast="more"`, with `yLabels="inline"` on the "Response time" card. `checks/chart-axis-text.mjs` measures it.
+
+- **Weight before size.** Tick labels were 500 12.5px, the weight of a label on a control, so the axis read as something to press and competed with the marks. They're now 400 13px, the caption of `.alt-chart-desc`, still `ink-muted`, which holds 4.5:1 on every surface at that size. Gridlines stay `line`: visible but subtle is what Stone & Bartram measured, and there's no lighter grey to invent.
+- **The gutter is the cost.** In a 440px card the y labels took 56px: 15% of the plot at 960, 21% at 360. Inline labels, just above each gridline at the left (the FT and Economist convention), give it back.
+- **The unit once.** "250 ms" at the top, then "150" and "50": the numbers read faster without the repeated unit. Only shared symbols and spaced words are lifted out; a compact "K" is part of the number.
+- **Never on the data.** A label that would sit on a line, an area or a bar is left out, and its gridline stays (in the preview, 200 and 100 sit where the lines start). The readout and the table give the exact values. The ground line goes unlabelled, because it's zero, rather than sitting in the bars' way.
+- **Opt-in.** The default stays the gutter until people have used the inline layout.
+
+Not yet tested with people: whether leaving out labels that would cover the data slows reading compared with a full gutter.
+
+### E104 · How tall should a line chart be?
+
+A design review of `aspect="banked"` (#194): the LineChart preview's monthly revenue at the default and banked, in a card at 960px and 360px. `checks/chart-banking.mjs` measures each line's segments as drawn.
+
+- **The data chooses.** Every chart was 2:1, so a sharp rise and a gentle one filled the same box. People judge slopes best when segments average about 45° (Cleveland; Heer & Agrawala 2006 refined the criteria). The ratio is found by bisection on the mean absolute orientation, which falls as the plot widens.
+- **Measured.** The revenue line averaged 24.7° at the preview's 1.9 (a data area of 1.84); banked, the ratio wants to go below 1 and is held there, at 42.8°. A smooth sine banks to 45° within a degree.
+- **Clamped to 1–4.** A sawtooth wants a sliver and a gentle ramp a tower; neither fits a card.
+- **Steady.** The ratio is read from all shown series and kept while values glide, so the chart doesn't change height under the reader. New x values cross-fade as a new chart, and bank afresh then. Resizing never animates.
+
+Rejected for now: multi-scale banking (a chart per frequency band). It's an analysis, not a default; small multiples could carry it later.
+
+Not yet tested with people: whether readers notice that banked neighbours differ in height, and whether that reads as a difference in the data.
+
+### E105 · Can a chart say what matters without raising it?
+
+A design review of `focus` and `data-context` (#188): the deploys bar chart focused on the two teams its takeaway names, the stacked requests on Web, seats by plan on Team and the plan shares on Team, in all four schemes at 960px and 360px, under forced colours, with reduced motion and with `contrast="more"`. `checks/chart-focus.mjs` measures it; `build/palette.mjs` chooses and gates the token.
+
+- **Nothing in a chart could matter more.** Every series wore a saturated identity colour at full strength, so the grouped, stacked and multi-line previews read as any library's defaults. Marks can't rise, so importance has to be colour and words: one hue for the story, a neutral for the context, as Knaflic and the FT do; focus shaped what people remembered (Ajani et al., 2021), and authors can't judge salience for readers (Xiong et al., 2020), so it's declared.
+- **A neutral of its own.** `data-other` couldn't serve: in the light schemes it's near-black and emphasises. `data-context` is the most receding neutral that holds 3:1, in the ground's hue:
+
+| Scheme | `data-context` | L | C | Contrast, worst of ground and raised | ΔE from `line` | ΔE from `data-other` | Nearest slot ΔE |
+|---|---|---|---|---|---|---|---|
+| Daylight | `#898a8e` | 0.63 | 0.006 | 3.14:1 | 28.1 | 30.9 | 11.1 |
+| Nightfall | `#86888b` | 0.63 | 0.005 | 4.80:1 | 34.1 | 10.2 | 13.2 |
+| Mesa | `#8b8985` | 0.63 | 0.006 | 3.11:1 | 27.4 | 28.0 | 11.2 |
+| Alpine | `#848987` | 0.63 | 0.007 | 4.79:1 | 34.3 | 10.5 | 12.8 |
+
+- **Exempt from the slot gate, by measurement.** As E23 found, no neutral at 3:1 is ΔE 15 from every slot (the nearest is 11.1). It's exempt because a context series is never told apart by its colour: it's unlabelled or labelled in `ink-muted`, and the words say what's highlighted.
+- **Dark schemes climb past `data-other`.** There the most receding neutral at 3:1 *is* `data-other` (ΔE 0.8), so `data-context` steps lighter until it's ΔE 10 clear. It recedes by having no hue rather than by darkness.
+- **The rule it strains.** Charts rule 5 says colour follows the entity. Focus repaints the rest, but it isn't a filter: it's fixed by the author, and every repaint cross-fades. A reader's filter (`relevance`) still recedes misses to 35% of their own colour, so the two never read alike, and under forced colours context is `GrayText` at full strength while a miss is at 35%.
+
+Not yet tested with people: whether context series are still compared accurately against the focused one, or simply ignored.
+
+### E106 · How should a chart show the period before?
+
+A design review of `compare` (#189): seats by region against last quarter on a horizontal bar chart, daily signups against the two weeks before, and a stack against its earlier totals, in all four schemes at 960px and 360px, under forced colours and with `contrast="more"`. `checks/chart-compare.mjs` measures it.
+
+- **Superpose the shape, encode the number.** Of Gleicher's three comparison designs, juxtaposing doubles the chart and a second series competes as an equal in a categorical colour. The earlier period is superposed, quieter, and the difference is explicit in words: the readout ("38 · +11%"), each point's name, the table's "vs" column and the summary's count of what rose and fell.
+- **Bars: the bullet graph's tick.** A 2px `ink` tick across the bar, 4px past it each side (Few, 2006). A ghost bar beside each would double the bars, and a hollow bar already means projected (E37). A drop shows as empty space between the bar's end and its tick.
+- **Lines: a trace, not a reference.** The open question was whether a 1.5px `ink-muted` trace could be confused with a reference line, which is 1px `ink-muted` (E38). It can't, in practice: a reference is straight, spans the plot and is named for a value ("Target 99.9%"); the trace follows the data and is named for a period. It stays `ink-muted` rather than `line-control`, because `line-control` is the crosshair's rule (E27, #186), and a trace in it would read as the pointer. Solid, because dashes mean projected.
+- **The tick against the hover outline.** A clickable bar's hover outline (E41) traces the bar's edge; the tick crosses it and reaches past both sides. Side by side they don't read alike.
+- **Stacks compare their total.** A tick per segment would stack ticks on ticks. Shares don't compare at all: every total is 100%.
+- **Matched by position, before any sort.** A shifted period on a time axis has different x values, so `data` is matched by position, over the whole record before windowing or sorting.
+
+Not yet tested with people: whether readers prefer the tick to a delta label on each bar on small charts.
+
+### E107 · Can a reading be kept?
+
+A design review of `pinnable` (#190): two pinned readings on a line of issues opened, pinned by mouse, keyboard and touch, on a chart whose clicks select, and with controlled pins, in all four schemes at 960px and 360px and under forced colours. `checks/chart-pins.mjs` measures it.
+
+- **Live things settle.** The readout was the only way to read a value exactly, and it left with the pointer, so comparing two meant holding one in memory. A pin lands the live readout on the record as a plate, the way an afterglow settles or a pending write lands.
+- **Two pins compare, in words.** Gleicher's explicit encoding: a strip under the axis between them says "+24% over 28 days" (or the change per series), and the second pin says it aloud. More pins are allowed, but only a pair compares.
+- **Clicks that already act (open question 1).** Where marks select or drill, a click keeps its meaning and only P pins; the readout's action line says "P to pin" while the keyboard is on the chart.
+- **Touch (open question 2).** A button inside the readout would need the readout to stop being `aria-hidden` decoration. Instead, while the touch readout is open, a quick tap on the plot pins the reading there, and the readout says "Tap to pin". Holding to open it never pins.
+- **Is a pin the record? (open question 3).** It's the reader's note on the record, which is what a plate is (Elevation, Labels). A pin icon keeps it from reading as an author's `ChartAnnotation`, and its remove button is the one part that lifts.
+- **Escape order.** The last pin goes first, then a selection, then the keyboard goes up a level, so Escape always undoes the most recent thing.
+
+Not yet tested with people: whether readers find click-to-pin without being told, and whether two pins are enough.
+
+### E108 · What moved since I was last here?
+
+A design review of `since` (#191): queue depths against a morning snapshot (three changed) and an error rate against an earlier one (six changed), in all four schemes at 960px and 360px, under forced colours and with reduced motion. `checks/chart-since.mjs` measures it.
+
+- **Change blindness.** People don't find a change they didn't see happen (Rensink, O'Regan & Clark, 1997); a trace of the change makes it findable (Baudisch et al., Phosphor, 2006), which is what the afterglow already does for changes that arrive while you watch. `since` gives the same trace to changes that happened while you were away.
+- **The comparison's mark, at the old value.** A changed bar carries `compare`'s tick (E106); a line can't carry a tick at every point, so each changed point's old place is a small hollow ring, outside the line, never on it. A "New" badge per mark would put a raised-looking plate on the data, and colouring changed marks would give colour a second job (rule 5).
+- **Counted, then filtered.** "3 changed since Tuesday 09:00" is a `Switch`, as `pausable`'s is: it turns on the filter language for the changed records (35%, positions held), so "show me only what changed" needs no new reading.
+- **Arrival spends the budget once.** Up to four changed marks glow, the `live` choreography exactly; more, and the caption glows. A changed point then says how it changed in its name instead of a bare "Changed."
+- **The application owns the snapshot.** What a person last saw and when is persistence, which the framework leaves to the application, as elsewhere.
+
+Not decided: whether `since` should advance with `live` as the person acknowledges changes.
+
+Not yet tested with people: whether the rings are found without the switch.
+
+### E109 · How should a chart compare values that don't start at zero?
+
+A prototype review of `DotPlot` (#192): eight services' p95 with the 10th–90th percentile, sorted, and five teams' scores from Q2 to Q3 as a dumbbell, in all four schemes at 960px and 360px, under forced colours, with reduced motion and with `contrast="more"`. `checks/dot-plot.mjs` measures it.
+
+- **Bars must stand on zero.** Rule 2 is right, so a few percent between 180 and 240 ms became eight identical bars. A dot is position, so its axis can start where the data does (Cleveland & McGill's position judgements are the most accurate). With no zero, there's no ground line.
+- **Bars of averages mislead.** Readers judge values inside a bar likelier than values as far outside it (Newman & Scholl, 2012); dot plots reduced that error (Okan et al., 2018). The spread is the band `LineChart` already uses, after Correll & Gleicher, not error bars.
+- **Built from relatives.** The dots are ScatterChart's (8px, ringed in the plot's colour); the rows and label budget are horizontal BarChart's; the spread's words come from the container's band, the dumbbell's from `compare` (E106). Nothing new is invented for it.
+- **The dumbbell is a mode (open question 1).** It shares the rows, the keyboard path and the spread, so it's `from`/`to` on `DotPlot`, not a component.
+- **A hollow dot means projected elsewhere (open question 2).** A projected `LineChart` point is hollow too (E37). A `DotPlot` takes no `status`, so a dumbbell never has a projection to confuse with its "from" dot, and the link, the description and the names say which end is which. The risk stays for a reader who has just looked at a projected line; noted for testing.
+
+Not yet tested with people: whether readers take a dumbbell's direction from the filled end without the words.
 ### E110 · How large is a control on a phone?
 
 A measurement (#245): `checks/phone.mjs` (#247) opened every preview at 320 and 375 CSS px as a phone. Of the interactive targets, 1,205 were under 44×44 on touch and 167 under 24×24, the WCAG 2.5.8 minimum; heights were literals, and four layout switches used five widths (768, 640, 640, 560, 480).
