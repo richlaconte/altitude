@@ -1826,6 +1826,19 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-msg-name { margin: 0; font: 600 13px/18px var(--font-sans); color: var(--ink-muted); }
 .alt-msg-content { font: 400 15px/23px var(--font-sans); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
 
+/* ---- Suggestions (#272) ----
+   Prompts to start from or follow up with are things you press: small secondary buttons, raised at level 1 with their
+   wall, lifting to 2 when pointed at, never the view's level-2 primary (that's the composer's Send). Follow-ups merely
+   became available, so they cross-fade in under the answer; they don't rise. */
+.alt-suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
+.alt-suggestions[data-arrive] { animation: alt-fade-in var(--dur-onset) var(--ease-rise) both; }
+.alt-suggestion { max-width: 100%; }
+.alt-suggestion-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-msg .alt-suggestions { margin-top: 4px; }
+.alt-empty .alt-suggestions { justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .alt-suggestions[data-arrive] { animation: none; } }
+[data-motion="reduced"] .alt-suggestions[data-arrive] { animation: none; }
+
 /* ---- Markdown (#268) ----
    An answer's text set as the record: everything sits on the ground at level 0 and nothing here adds height. Code is
    CodeBlock, links are Link, [n] markers are InlineCitation (the only part that lifts, when pointed at), tables use

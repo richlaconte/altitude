@@ -3315,6 +3315,47 @@ function App() {
   );
 }
 
+=== Suggestions | <!-- @dsCard group="Inputs" height=640 subtitle="Prompts to start from, or follow up with: small raised buttons that fill the composer or send" -->
+--- css
+.sg { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 32px; max-width: 900px; align-items: start; }
+.sg .lbl { margin: 0 0 10px; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.sg .col { gap: 12px; }
+--- jsx
+function App() {
+  const [draft, setDraft] = React.useState('');
+  const [sent, setSent] = React.useState([]);
+  return (
+    <div className="sg">
+      <div className="col">
+        <p className="lbl">Starters in an empty conversation (fill the composer)</p>
+        <A.EmptyState title="Ask about this workspace" description="Pick a starting point, or write your own." size="sm">
+          <A.Suggestions aria-label="Start with" onChoose={setDraft}>
+            <A.Suggestion>Summarise last week's incidents</A.Suggestion>
+            <A.Suggestion>Draft a release note</A.Suggestion>
+            <A.Suggestion value="Which of my open pull requests are blocked, and by whom?">What's blocked?</A.Suggestion>
+          </A.Suggestions>
+        </A.EmptyState>
+        <A.PromptInput onSubmit={({ text }) => { setSent((s) => [...s, text]); setDraft(''); }} value={draft} onValueChange={setDraft}>
+          <A.PromptInputTextarea placeholder="Ask anything" />
+          <A.PromptInputToolbar><A.PromptInputSubmit /></A.PromptInputToolbar>
+        </A.PromptInput>
+      </div>
+      <div className="col">
+        <p className="lbl">Follow-ups under an answer (send at once)</p>
+        <A.Message from="assistant">
+          <A.MessageContent>Revenue grew 12% in Q3, led by the annual plan. Churn held at 2.1%.</A.MessageContent>
+          <A.Suggestions aria-label="Suggested follow-ups" mode="send" onChoose={(t) => setSent((s) => [...s, t])}>
+            <A.Suggestion>Compare with Q2</A.Suggestion>
+            <A.Suggestion>Make it shorter</A.Suggestion>
+            <A.Suggestion value="List the three biggest risks, with owners">Biggest risks</A.Suggestion>
+          </A.Suggestions>
+        </A.Message>
+        {sent.length > 0 && <p className="lbl">Sent: {sent[sent.length - 1]}</p>}
+      </div>
+    </div>
+  );
+}
+
 === Markdown | <!-- @dsCard group="Display" height=900 subtitle="An answer's Markdown set as the record, and mid-stream: an open fence writes, a half table waits for its row" -->
 --- css
 .md-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 32px; max-width: 920px; align-items: start; }

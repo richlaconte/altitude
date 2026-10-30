@@ -46,6 +46,8 @@ export type { SuggestionProps } from './controls';
 export { AILabel } from './ai-label';
 export type { AISource } from './ai-label';
 export { InlineCitation, Sources } from './inline-citation';
+export { Suggestions, Suggestion } from './suggestions';
+export type { SuggestionsProps, SuggestionItemProps } from './suggestions';
 export { Markdown, parseMarkdown, safeUrl } from './markdown';
 export type { MarkdownProps, MarkdownComponents } from './markdown';
 export type { CitationSource } from './inline-citation';
