@@ -1102,6 +1102,17 @@ A design review: `PromptInput` was rendered empty, with two lines, with a file u
 
 Not yet tested with people: whether the faint Send reads as "write something first" without a hint.
 
+### E94 · Is a streaming answer pending?
+
+A design review: `Conversation` was rendered with a settled exchange, an answer streaming in at six characters per 60ms, stopped, retried and completed, scrolled up mid-stream, in all four schemes and under forced colours. `checks/conversation.mjs` drives it.
+
+- **Not pending.** A pending write hovers because something you did is in flight and might fail. A streaming answer isn't yours, and drawing it hovering would say your message hadn't been sent. It's the record still being written, so it borrows charts' "not yet the record": a dashed rule.
+- **The arrival signal waits.** "New content arrives tinted and lifted, then settles" can't run for the 10 seconds an answer streams. The afterglow is held until completion, which is also when the answer becomes worth reading as a whole.
+- **Announce once.** `role="log"` announces every change, which for streamed text is a word-by-word stutter. The log's announcements are off; the completed answer is announced once, truncated.
+- **Let go when they scroll up.** Following to the bottom is right until someone scrolls back to read; then it stops and offers "Jump to latest".
+
+Not yet tested with people: whether screen reader users prefer sentence-by-sentence announcements for long answers.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

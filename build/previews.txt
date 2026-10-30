@@ -3032,6 +3032,56 @@ function App() {
   );
 }
 
+=== Conversation | <!-- @dsCard group="Display" height=620 subtitle="A thread with an assistant: answers stream in on a dashed rule, then settle" -->
+--- css
+.cv { display: flex; flex-direction: column; gap: 12px; max-width: 680px; height: 560px; }
+.cv .alt-convo { flex: 1; }
+--- jsx
+const answer = 'Last week the team shipped 14 changes. Two risks are open: the billing migration is two days behind, and the EU data residency review needs a decision from legal by Friday.';
+function App() {
+  const [msgs, setMsgs] = React.useState([
+    { id: 1, from: 'user', text: 'What changed in the Atlas workspace this month?' },
+    { id: 2, from: 'assistant', text: 'Atlas moved to the new permission model on 3 October, and its storage limit was raised to 2 TB. Three people joined: Maya, Theo and Ada.', status: 'complete' },
+  ]);
+  const [status, setStatus] = React.useState('ready');
+  const timer = React.useRef();
+  const stream = (id) => {
+    let n = 0;
+    const tick = () => {
+      n += 6;
+      setMsgs((ms) => ms.map((m) => (m.id === id ? { ...m, text: answer.slice(0, n), status: n >= answer.length ? 'complete' : 'streaming' } : m)));
+      if (n < answer.length) timer.current = setTimeout(tick, 60); else setStatus('ready');
+    };
+    tick();
+  };
+  const send = ({ text }) => {
+    const id = Date.now();
+    setMsgs((ms) => [...ms, { id: id - 1, from: 'user', text }, { id, from: 'assistant', text: '', status: 'streaming' }]);
+    setStatus('streaming');
+    stream(id);
+  };
+  const stop = () => { clearTimeout(timer.current); setStatus('ready'); setMsgs((ms) => ms.map((m) => (m.status === 'streaming' ? { ...m, status: 'stopped' } : m))); };
+  return (
+    <div className="cv">
+      <A.Conversation aria-label="Assistant">
+        <A.ConversationContent>
+          {msgs.map((m) => (
+            <A.Message key={m.id} from={m.from} status={m.status} onRetry={m.status === 'stopped' ? () => { setStatus('streaming'); stream(m.id); } : undefined}>
+              <A.MessageContent>{m.text}</A.MessageContent>
+              {m.from === 'assistant' && <A.MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />}
+            </A.Message>
+          ))}
+        </A.ConversationContent>
+        <A.ConversationScrollButton />
+      </A.Conversation>
+      <A.PromptInput onSubmit={send} status={status} onStop={stop}>
+        <A.PromptInputTextarea placeholder="Ask about this workspace" />
+        <A.PromptInputToolbar><A.PromptInputSubmit /></A.PromptInputToolbar>
+      </A.PromptInput>
+    </div>
+  );
+}
+
 === PromptInput | <!-- @dsCard group="Inputs" height=420 subtitle="Where a person writes to an agent: attachments, Send that becomes Stop" -->
 --- css
 .pi { max-width: 640px; }
