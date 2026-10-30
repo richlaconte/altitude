@@ -36,7 +36,7 @@ for (const name of names) {
   });
   const code = result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
   writeFileSync(join(out, name + '.js'), code);
-  for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) {
+  for (const scheme of ['daylight', 'nightfall']) {
     writeFileSync(join(out, `p-${name}-${scheme}.html`), `<!doctype html><html lang="en" data-theme="${scheme}" data-fixture-strict="${strict}"><head><meta charset="utf-8"><link rel="icon" href="data:,"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${name} — React ${version}${strict ? ' StrictMode' : ''}</title><style>${tokens}\n${componentCss}\n${common}\n${css}</style></head><body><div id="root"></div><script src="./${name}.js"></script></body></html>`);
   }
 }

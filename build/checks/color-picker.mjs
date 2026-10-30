@@ -26,22 +26,22 @@ const read = () => page.evaluate(() => {
 });
 
 let r = await read();
-expect(r.role === 'radiogroup' && r.names === 'Teal,Blue,Violet,Pink,Orange,Yellow', `named swatches in a radio group (${r.names})`);
+expect(r.role === 'radiogroup' && r.names === 'Teal,Blue,Plum,Rose,Ember,Ochre', `named swatches in a radio group (${r.names})`);
 expect(r.chosen === 'Teal' && r.markOn < 1 && r.stops === 1, `one mark, on the chosen swatch, one tab stop (${r.markOn})`);
 expect(r.checks.join(' | ') === 'White text fails: 4.3:1 | Dark text passes: 4.8:1', `white and dark text each get a verdict (${r.checks.join(' | ')})`);
 await page.focus('[aria-label="Teal"]');
 await page.keyboard.press('ArrowRight');
 await page.waitForTimeout(400);
 r = await read();
-expect(r.chosen === 'Blue' && r.hex === '2563eb' && r.markOn < 1, `arrows move and choose; the mark follows (${r.chosen}, ${r.markOn})`);
-expect(r.said === 'Blue, #2563eb', `the choice is announced by name (${r.said})`);
+expect(r.chosen === 'Blue' && r.hex === '2f5fd0' && r.markOn < 1, `arrows move and choose; the mark follows (${r.chosen}, ${r.markOn})`);
+expect(r.said === 'Blue, #2f5fd0', `the choice is announced by name (${r.said})`);
 expect(r.checks[0].startsWith('White text passes'), `the check follows the colour (${r.checks[0]})`);
 
 const hex = page.locator('.alt-color-hex input');
-await hex.fill('7c3aed');
+await hex.fill('7d3c6f');
 await page.waitForTimeout(400);
 r = await read();
-expect(r.chosen === 'Violet', `a typed hex chooses the matching swatch (${r.chosen})`);
+expect(r.chosen === 'Plum', `a typed hex chooses the matching swatch (${r.chosen})`);
 await hex.fill('0f8');
 await hex.blur();
 await page.waitForTimeout(200);

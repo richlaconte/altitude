@@ -95,7 +95,7 @@ function Panel({ scheme }: { scheme: BuiltInScheme }) {
 function App() {
   return (
     <main className="grid grid-cols-2 gap-px">
-      {(["daylight", "nightfall", "mesa", "alpine"] as const).map((scheme) => <Panel key={scheme} scheme={scheme} />)}
+      {(["daylight", "nightfall"] as const).map((scheme) => <Panel key={scheme} scheme={scheme} />)}
     </main>
   )
 }

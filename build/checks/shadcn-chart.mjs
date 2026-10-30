@@ -1,5 +1,5 @@
 // shadcn/ui chart on Altitude (#76): the example in examples/shadcn-chart, a shadcn ChartContainer over Recharts set up
-// as Theming.md ("With shadcn/ui") says, is read back in all four schemes, each nested in a daylight page. Series wear
+// as Theming.md ("With shadcn/ui") says, is read back in both schemes, each nested in a daylight page. Series wear
 // data-1 … data-5 through --chart-*; the grid is line, the ground line ink-muted, ticks ink-muted and never a series
 // colour; marks are flat (no gradient or filter); the readout is surface-floating at elev-3; the chart is keyboard
 // reachable; under reduced motion nothing travels. Writes test/shot-ShadcnChart-<scheme>.png. Build the package and
@@ -10,7 +10,7 @@ const browser = await chromium.launch(process.env.CHROME ? { executablePath: pro
 const T = new URL('../test/', import.meta.url).pathname;
 const APP = new URL('../../examples/shadcn-chart/out/index.html', import.meta.url).pathname;
 if (!existsSync(APP)) throw new Error('Build the example first: node examples/shadcn-chart/build.mjs');
-const SCHEMES = ['daylight', 'nightfall', 'mesa', 'alpine'];
+const SCHEMES = ['daylight', 'nightfall'];
 let pass = 0, fail = 0;
 const expect = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const open = async (media) => {
@@ -64,7 +64,7 @@ const read = (page) => page.evaluate((schemes) => schemes.map((scheme) => {
     expect(p.tabStops.length === 2 && p.tabStops.every((x) => x === '0'), `${s}: each chart is one tab stop (accessibilityLayer) (${p.tabStops})`);
   }
   // The schemes are really nested: each panel resolves its own palette, not the page's.
-  expect(new Set(panels.map((p) => p.tokens['data-1'])).size === 4, `four schemes, four data-1s (${panels.map((p) => p.tokens['data-1'])})`);
+  expect(new Set(panels.map((p) => p.tokens['data-1'])).size === SCHEMES.length, `one data-1 per scheme (${panels.map((p) => p.tokens['data-1'])})`);
 
   // The readout: surface-floating at elev-3, with the series named in ink, not its colour.
   for (const scheme of SCHEMES) {

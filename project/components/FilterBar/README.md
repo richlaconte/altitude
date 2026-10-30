@@ -54,7 +54,7 @@ What each condition means for your rows, and the results. Saved views and nested
 
 ## Demo and verification
 
-The `FilterBar` section of `build/previews.txt` filters an issue table in place. `node checks/filter-bar.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the one Tab stop and arrow keys, opening and closing pickers, changing a value and an operator, the announcement with its count, re-stamping, Add filter with its field-then-value sequence and the empty value opening, text and date-range values, Match all/any, removal with focus repair, the paired table's relevance, and 320/960px layouts in four schemes under reduced motion, forced colours and `contrast="more"`.
+The `FilterBar` section of `build/previews.txt` filters an issue table in place. `node checks/filter-bar.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the one Tab stop and arrow keys, opening and closing pickers, changing a value and an operator, the announcement with its count, re-stamping, Add filter with its field-then-value sequence and the empty value opening, text and date-range values, Match all/any, removal with focus repair, the paired table's relevance, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 
 ## Nested groups
 

@@ -48,7 +48,7 @@ labels: enhancement, needs-design
 - [ ] Behaviour implemented without changing existing behaviour
 - [ ] `index.d.ts`, the component's README and its `build/previews.txt` section updated
 - [ ] `Elevation.md` / `Motion.md` updated if a signal or choreography changed
-- [ ] `tsc` clean; `shoot.mjs` clean in all four schemes; interaction checked with `ACT`
+- [ ] `tsc` clean; `shoot.mjs` clean in both schemes; interaction checked with `ACT`
 - [ ] `node build.mjs && node previews.mjs` run and committed
 
 ## Alternatives considered (optional)

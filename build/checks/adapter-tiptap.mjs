@@ -1,4 +1,4 @@
-// altitude-design/adapters/tiptap.css with a real Tiptap editor: in all four schemes it renders with no page or console
+// altitude-design/adapters/tiptap.css with a real Tiptap editor: in both schemes it renders with no page or console
 // errors; an empty editor is a well and a filled one rises flush; focus lights the floor; Altitude's Toolbar toggles
 // latch with the selection; Tiptap's own keyboard support still works (⌘/Ctrl+B); @ opens the mention list floating at
 // level 3 and Enter inserts a flush mention plate; forced colours keep a border, more contrast and reduced motion
@@ -9,7 +9,7 @@ const expect = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m);
 const { open, close } = await adapterPages('.storybook/adapters/tiptap-example.jsx', 'TiptapExample');
 const editorStyle = (page) => page.evaluate(() => { const e = document.querySelector('.tiptap'), cs = getComputedStyle(e); return { bg: cs.backgroundColor, shadow: cs.boxShadow, border: cs.borderTopStyle, font: cs.fontFamily }; });
 
-for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) {
+for (const scheme of ['daylight', 'nightfall']) {
   const { page, errors } = await open({ scheme });
   const s = await editorStyle(page);
   const ground = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);

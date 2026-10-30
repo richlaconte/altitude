@@ -22,7 +22,7 @@ labels: bug
 | How it's loaded | npm ESM / npm CommonJS / `altitude.iife.js` / Storybook / design system preview |
 | React | |
 | Browser and OS | |
-| Schemes affected | daylight · nightfall · mesa · alpine (say which you checked) |
+| Schemes affected | daylight · nightfall (say which you checked) |
 | Modes affected | none · reduced motion · `contrast="more"` · forced colours · touch |
 
 ## Steps to reproduce

@@ -114,6 +114,8 @@
     "build-storybook": "node scripts/stories.mjs && storybook build -o storybook-static --quiet",
     "build-site": "node scripts/build-site.mjs",
     "check:guidance": "node build/checks/guidance.mjs",
+    "check:tells": "node build/checks/tells-freshness.mjs",
+    "check:tells-lint": "node build/checks/tells-lint.mjs",
     "check:agent-setup": "node build/checks/agent-setup.mjs",
     "check:framework": "node scripts/check-framework.mjs"
   },

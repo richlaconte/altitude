@@ -20,7 +20,7 @@ A brand colour for a white-label portal, a label or tag colour, a calendar colou
 
 ```tsx
 <ColorPicker label="Brand colour" value={brand} onValueChange={setBrand}
-  swatches={[{ value: '#0f8a6b', name: 'Teal' }, { value: '#2563eb', name: 'Blue' }]}
+  swatches={[{ value: '#0f8a6b', name: 'Teal' }, { value: '#2f5fd0', name: 'Blue' }]}
   allowCustom checkContrast />
 ```
 

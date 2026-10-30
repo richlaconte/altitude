@@ -84,7 +84,7 @@ try {
     check(await page.getByRole('combobox', { name: 'Skills' }).isDisabled() && await page.locator('.alt-field', { has: page.getByRole('combobox', { name: 'Skills' }) }).locator('.alt-tag-remove').count() === 0, 'TAG-26 a disabled TagInput has no remove buttons');
     await page.close(); }
 
-  for (const scheme of ['daylight', 'nightfall', 'mesa', 'alpine']) for (const width of [320, 960]) {
+  for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
       await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });

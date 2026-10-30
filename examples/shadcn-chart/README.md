@@ -1,6 +1,6 @@
 # shadcn/ui chart on Altitude
 
-A shadcn/ui `Chart` (Recharts 3 underneath) set up as [Theming](../../project/Theming.md) ("With shadcn/ui", "Charts") says: Tailwind's theme pointed at Altitude's tokens, `--chart-1` … `--chart-5` pointed at `data-1` … `data-5`, and the Recharts props that keep Altitude's chart rules. It renders a bar chart and a stacked area chart in all four schemes, each nested in a daylight page.
+A shadcn/ui `Chart` (Recharts 3 underneath) set up as [Theming](../../project/Theming.md) ("With shadcn/ui", "Charts") says: Tailwind's theme pointed at Altitude's tokens, `--chart-1` … `--chart-5` pointed at `data-1` … `data-5`, and the Recharts props that keep Altitude's chart rules. It renders a bar chart and a stacked area chart in both schemes, each nested in a daylight page.
 
 It isn't part of the package. It exists so the mapping stays honest: `build/checks/shadcn-chart.mjs` reads every colour back from the rendered charts and fails if the docs and the libraries drift apart.
 
