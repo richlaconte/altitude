@@ -1392,6 +1392,10 @@ A review (#249): at 375px a Select opened a 280px list under its trigger, with 3
 
 `checks/menu-sheet.mjs` drives each by touch, and with a mouse.
 
+### E120 · Does a backup code fit a phone?
+
+A measurement (#266): eight 40px slots with 6px gaps are 362px, so at 375 CSS px the preview's backup code ran past the edge. Slots now give way from 40px to 28px and the gaps tighten (3–6px), so eight characters fit a 320px screen; six-digit codes keep their full size. The phone check (#247) shows no overflow.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
