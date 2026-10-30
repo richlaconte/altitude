@@ -3203,13 +3203,13 @@ function App() {
 @media (max-width: 720px) { .cpk { grid-template-columns: minmax(0, 1fr); } }
 --- jsx
 const brand = [
-  { value: '#0f8a6b', name: 'Teal' }, { value: '#2563eb', name: 'Blue' }, { value: '#7c3aed', name: 'Violet' },
-  { value: '#db2777', name: 'Pink' }, { value: '#ea580c', name: 'Orange' }, { value: '#facc15', name: 'Yellow' },
+  { value: '#0f8a6b', name: 'Teal' }, { value: '#2f5fd0', name: 'Blue' }, { value: '#7d3c6f', name: 'Plum' },
+  { value: '#c23a6b', name: 'Rose' }, { value: '#c8571f', name: 'Ember' }, { value: '#d9a521', name: 'Ochre' },
 ];
-const labels = [{ value: '#64748b', name: 'Slate' }, { value: '#16a34a', name: 'Green' }, { value: '#dc2626', name: 'Red' }, { value: '#0891b2', name: 'Cyan' }];
+const labels = [{ value: '#66738a', name: 'Slate' }, { value: '#2f8f4e', name: 'Green' }, { value: '#c9372c', name: 'Red' }, { value: '#16869e', name: 'Cyan' }];
 function App() {
   const [color, setColor] = React.useState('#0f8a6b');
-  const [tag, setTag] = React.useState('#16a34a');
+  const [tag, setTag] = React.useState('#2f8f4e');
   return (
     <div className="cpk">
       <A.ColorPicker label="Brand colour" value={color} onValueChange={setColor} swatches={brand} allowCustom checkContrast />
