@@ -196,6 +196,10 @@ Restoring a checkpoint is a write: its label hovers as pending after `dur-grace`
 
 Follow-ups under an answer cross-fade in over `dur-onset` (opacity only); they don't rise, because they only became available. Starters in an empty conversation are simply there. Under reduced motion follow-ups appear at once.
 
+## Thinking
+
+Reasoning that's still arriving has no motion of its own: no shimmer, no pulsing dots, no counter ticking up. When it completes, "Thinking…" cross-fades to "Thought for 12s" over `dur-travel-1`; under reduced motion it swaps at once.
+
 ## Answers in Markdown
 
 `Markdown` has no motion of its own: text arrives without per-word animation (Conversation's rule), and a table row that completes appears in place rather than rising. An image rises out of its imprint over `dur-travel-1` with `ease-rise` (2px of travel and its opacity); under reduced motion it appears in place.

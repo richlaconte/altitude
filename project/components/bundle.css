@@ -2055,6 +2055,15 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-trace-tool code { font: 500 12.5px/18px var(--font-mono); }
 .alt-trace-io { display: flex; flex-direction: column; gap: var(--space-2); }
 .alt-trace-wait, .alt-trace-reasoning { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); white-space: pre-wrap; }
+/* Reasoning while it streams (#279): not yet the record, like a streaming answer: "Thinking…" on the lid, and a dashed
+   line-control rule down the open compartment. No shimmer, no pulsing dots, no ticking counter; the lid's words
+   cross-fade when it completes. */
+.alt-trace-thought-title { animation: alt-fade-in var(--dur-travel-1) var(--ease-rise) both; }
+.alt-trace-thought[data-status="streaming"] .alt-trace-reasoning { max-height: 240px; overflow-y: auto; padding-left: 10px; border-left: 1px dashed var(--line-control); overscroll-behavior: contain; }
+.alt-trace-reasoning-hidden { margin: 0; padding: 4px 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+@media (prefers-reduced-motion: reduce) { .alt-trace-thought-title { animation: none; } }
+[data-motion="reduced"] .alt-trace-thought-title { animation: none; }
+@media (forced-colors: active) { .alt-trace-thought[data-status="streaming"] .alt-trace-reasoning { border-left: 1px dotted CanvasText; } }
 .alt-trace-item:last-child .alt-step-line { display: none; }
 @media (forced-colors: active) { .alt-step[data-state="failed"] { border: 3px dashed CanvasText; } }
 
