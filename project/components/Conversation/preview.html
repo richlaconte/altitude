@@ -49,17 +49,30 @@ function App() {
     setStatus("streaming");
     stream(id);
   };
+  const edit = (id, text) => {
+    const i = msgs.findIndex((m2) => m2.id === id), m = msgs[i];
+    const versions = (m.versions ?? [{ text: m.text, files: m.files }]).map((v, k) => k === (m.v ?? 0) ? { ...v, rest: msgs.slice(i + 1) } : v);
+    const aid = Date.now();
+    setMsgs([...msgs.slice(0, i), { ...m, text, files: void 0, versions: [...versions, { text }], v: versions.length }, { id: aid, from: "assistant", text: "", status: "streaming" }]);
+    setStatus("streaming");
+    stream(aid);
+  };
+  const showVersion = (id, k) => {
+    const i = msgs.findIndex((m2) => m2.id === id), m = msgs[i];
+    const versions = m.versions.map((v, j) => j === m.v ? { ...v, rest: msgs.slice(i + 1) } : v);
+    setMsgs([...msgs.slice(0, i), { ...m, text: versions[k].text, files: versions[k].files, versions, v: k }, ...versions[k].rest ?? []]);
+  };
   const stop = () => {
     clearTimeout(timer.current);
     setStatus("ready");
     setMsgs((ms) => ms.map((m) => m.status === "streaming" ? { ...m, status: "stopped" } : m));
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "cv" }, /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Assistant" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, msgs.map((m) => /* @__PURE__ */ React.createElement(A.Message, { key: m.id, from: m.from, status: m.status, onRetry: m.status === "stopped" ? () => {
+  return /* @__PURE__ */ React.createElement("div", { className: "cv" }, /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Assistant" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, msgs.map((m) => /* @__PURE__ */ React.createElement(A.Message, { key: m.id, from: m.from, status: m.status, edited: m.v > 0, onRetry: m.status === "stopped" ? () => {
     setStatus("streaming");
     stream(m.id);
-  } : void 0 }, m.files && /* @__PURE__ */ React.createElement(A.MessageAttachments, { items: m.files }), /* @__PURE__ */ React.createElement(A.MessageContent, null, m.text), m.from === "assistant" && /* @__PURE__ */ React.createElement(A.MessageActions, { onCopy: true, onRegenerate: () => {
+  } : void 0 }, m.files && /* @__PURE__ */ React.createElement(A.MessageAttachments, { items: m.files }), /* @__PURE__ */ React.createElement(A.MessageContent, null, m.text), m.from === "assistant" ? /* @__PURE__ */ React.createElement(A.MessageActions, { onCopy: true, onRegenerate: () => {
   }, onFeedback: () => {
-  } })))), /* @__PURE__ */ React.createElement(A.ConversationScrollButton, null)), /* @__PURE__ */ React.createElement(A.PromptInput, { onSubmit: send, status, onStop: stop }, /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask about this workspace" }), /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))));
+  } }) : /* @__PURE__ */ React.createElement(A.MessageActions, { onEdit: (t) => edit(m.id, t), versions: m.versions && { index: m.v + 1, total: m.versions.length, onChange: (k) => showVersion(m.id, k - 1) } })))), /* @__PURE__ */ React.createElement(A.ConversationScrollButton, null)), /* @__PURE__ */ React.createElement(A.PromptInput, { onSubmit: send, status, onStop: stop }, /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask about this workspace" }), /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

@@ -1466,6 +1466,10 @@ A design review (#343): three rounds of standalone prototypes, built from Altitu
 
 Not yet tested with people: whether breath reads as loading, how long the wait feels compared with the sweep, comfort for people who report motion sensitivity, and whether arrivals are noticed. Until then it's opt-in.
 
+### E136 · Editing what you asked
+
+Every major harness lets a person edit an earlier message and resend it, starting a new branch while keeping the old one ("2 of 2"; assistant-ui's `EditComposer` and `BranchPicker`), but Altitude only versioned regenerated answers (#275). `MessageActions onEdit` opens the person's message in place, `InlineEdit`'s pattern for multi-line text: a Textarea well inside the sheet with Cancel and "Send edit" (secondary, so the composer's Send stays the view's one primary), Escape to cancel and Ctrl/⌘+Enter to send, and IME composition left alone. Sending hands the text to the app, which starts the branch; `versions` already had `onChange`, so the same switch moves between a person's branches and announces "Showing version 1 of 2". Focus goes back to Edit on cancel and to the composer after sending, where the new answer will be followed. Cross-fading the turns below on a switch is left to the app, which owns those turns. `checks/message-edit.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
