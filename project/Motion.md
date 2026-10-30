@@ -184,6 +184,10 @@ Approach only adds depth, never size or position, so nothing reflows. Values upd
 
 On touch a thing is picked up by a press-and-hold: 400ms without moving more than 8px. When the hold completes it lifts to level 3 on its usual `dur-travel-2` and `ease-rise`, the same lift a mouse pick-up gets, so the person knows they can move it; under reduced motion it lifts without travel. Moving before the hold completes gives the gesture to the page, which scrolls. See **Mobile**.
 
+## The queue
+
+A queued message appears in place, with no rise: it's the person's own act, and nothing has arrived in the record. When it's sent it leaves the queue and joins the log as a person's message.
+
 ## Answers in Markdown
 
 `Markdown` has no motion of its own: text arrives without per-word animation (Conversation's rule), and a table row that completes appears in place rather than rising. An image rises out of its imprint over `dur-travel-1` with `ease-rise` (2px of travel and its opacity); under reduced motion it appears in place.
