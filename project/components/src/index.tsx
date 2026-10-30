@@ -40,7 +40,7 @@ export { Conversation, ConversationContent, ConversationScrollButton, Message, M
 export type { MessageStatus } from './conversation';
 export { Confirmation } from './confirmation';
 export type { ConfirmationState } from './confirmation';
-export { Trace, TraceStep, TraceToolCall, TraceReasoning } from './trace';
+export { Trace, TraceParallel, TraceStep, TraceToolCall, TraceReasoning } from './trace';
 export type { TraceStepStatus } from './trace';
 export type { SuggestionProps } from './controls';
 export { AILabel } from './ai-label';

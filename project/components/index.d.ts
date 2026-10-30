@@ -3347,9 +3347,18 @@ export type TraceStepStatus = 'planned' | 'running' | 'done' | 'failed' | 'await
 export interface TraceProps extends React.OlHTMLAttributes<HTMLOListElement> { 'aria-label': string }
 /** An agent's steps as a vertical Stepper: done flush and stamped, running raised, planned imprinted, failed in a trench. */
 export declare function Trace(props: TraceProps): React.ReactElement;
+export interface TraceParallelProps {
+  /** What runs at once: "Subagents". */
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}
+/** Steps that run at once, in a labelled group with a bracket: "Subagents · 3 in parallel · 2 of 3 done". A Trace inside a TraceStep is a nested run behind a lid. */
+export declare function TraceParallel(props: TraceParallelProps): React.ReactElement;
 export interface TraceStepProps {
   title: string;
-  status: TraceStepStatus;
+  /** 'auto': derived from the steps inside (a nested Trace or TraceParallel): running while any runs, done only when all are. */
+  status: TraceStepStatus | 'auto';
   /** Milliseconds it took. */
   duration?: number;
   /** Why it failed. */
@@ -3520,7 +3529,7 @@ declare global {
       Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;
-      Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
+      Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
       Confirmation: typeof Confirmation;
       Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; ConversationCheckpoint: typeof ConversationCheckpoint; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;

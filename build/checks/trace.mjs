@@ -11,7 +11,7 @@ const page = await browser.newPage({ viewport: { width: 960, height: 800 } });
 await page.goto(`file://${T}p-Trace-daylight.html`);
 await page.waitForTimeout(300);
 
-const read = () => page.evaluate(() => [...document.querySelectorAll('.alt-trace-item')].map((li) => {
+const read = () => page.evaluate(() => [...document.querySelector('ol.alt-trace').querySelectorAll(':scope > .alt-trace-item')].map((li) => {
   const s = li.querySelector('.alt-step');
   return { state: s.dataset.state, status: li.dataset.trace, current: li.getAttribute('aria-current'), desc: li.querySelector('.alt-step-desc').textContent, shadow: getComputedStyle(s).boxShadow,
     spinner: !!li.querySelector('.alt-btn-spinner, [class*="spin"]'), error: li.querySelector('.alt-trace-error')?.textContent ?? null };
