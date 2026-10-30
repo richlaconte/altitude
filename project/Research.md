@@ -1146,6 +1146,17 @@ A design review: `Input` and `Textarea` were rendered with suggestions (a whole 
 
 Not yet tested with people: whether Tab-to-accept collides with expectations in forms where Tab always moves on.
 
+### E98 · Where does a proposed edit live?
+
+A design review: `PropertyList` was rendered as a deal with three proposed changes from an assistant (one whose save fails), accepted one by one, all at once and rejected, in all four schemes. `checks/property-proposals.mjs` drives it.
+
+- **In place, not elsewhere.** Proposals are usually shown in a side panel and copied over, or written straight into the record with an undo. The first loses the context of the current value; the second makes a proposal look like the record. Here each field shows both, current struck beside proposed, where the value lives.
+- **Raised, like any proposal.** A field with a proposal asks for action, so it's raised one level, as Confirmation (E95). It isn't pending: nothing has been sent.
+- **Saved through the same contract.** Accepting runs the item's own onSave, so the pending hover, failure and afterglow are InlineEdit's, and a failure keeps the proposal with Retry.
+- **Accept all staggers.** Several fields settling at once would glow together; riseDelay keeps at most four afterglows starting at once.
+
+Not yet tested with people: whether a long list of proposals needs a "review one by one" mode.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

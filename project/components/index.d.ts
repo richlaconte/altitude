@@ -911,6 +911,8 @@ export interface PropertyListProps<T extends Record<string, unknown> = Record<st
   shortcuts?: boolean;
   /** An “Edit all” button that lifts the whole list into one EditRegion. */
   editAll?: PropertyListEditAll<T>;
+  /** Who proposed the items' `proposed` values. Default "Assistant". */
+  proposedBy?: string;
   className?: string;
   children: React.ReactNode;
 }
@@ -931,6 +933,10 @@ export interface PropertyListItemProps<V> {
   isEqual?: (a: V, b: V) => boolean;
   /** A single key that opens this item while focus is in the list (with `shortcuts` on the list). Case doesn't matter. */
   shortcut?: string;
+  /** A proposed change: raised, current struck beside proposed, with Accept and Reject. Nothing is saved until accepted. */
+  proposed?: V;
+  /** Called once the proposal is accepted (and saved) or rejected: clear `proposed` here. */
+  onProposalResolved?: (accepted: boolean, value: V) => void;
   className?: string;
 }
 /** One record's properties as label–value pairs (a dl), each editable where it sits; unset values are openings. */

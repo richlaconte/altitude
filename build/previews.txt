@@ -3142,6 +3142,29 @@ function App() {
   );
 }
 
+=== PropertyProposals | <!-- @dsCard group="Display" height=520 subtitle="Proposed changes to a record, accepted or rejected field by field" -->
+--- css
+.pp { max-width: 560px; }
+--- jsx
+const stages = { qualified: 'Qualified', proposal: 'Proposal', won: 'Won' };
+const eur = (n) => (n == null ? '' : new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n));
+function App() {
+  const [deal, setDeal] = React.useState({ stage: 'qualified', amount: 12000, close: '', owner: 'Maya Chen' });
+  const [proposed, setProposed] = React.useState({ stage: 'proposal', amount: 18500, close: '30 Nov 2026' });
+  const save = (key) => (draft) => new Promise((r) => setTimeout(() => r(key === 'amount' && draft > 18000 && !window.__ok ? (window.__ok = true, { ok: false, error: 'Amounts over €18,000 need a manager.' }) : { ok: true, value: draft }), 700));
+  const resolve = (key) => (accepted, value) => { if (accepted) setDeal((d) => ({ ...d, [key]: value })); setProposed((p) => { const { [key]: _, ...rest } = p; return rest; }); };
+  return (
+    <div className="col pp">
+      <A.PropertyList aria-label="Deal" layout="inline" proposedBy="Assistant (from Jamie's email)">
+        <A.PropertyListItem label="Stage" value={deal.stage} renderValue={(v) => stages[v]} proposed={proposed.stage} onSave={save('stage')} onValueChange={(v) => setDeal((d) => ({ ...d, stage: v }))} onProposalResolved={resolve('stage')} />
+        <A.PropertyListItem label="Amount" value={deal.amount} renderValue={eur} proposed={proposed.amount} onSave={save('amount')} onValueChange={(v) => setDeal((d) => ({ ...d, amount: v }))} onProposalResolved={resolve('amount')} />
+        <A.PropertyListItem label="Close date" value={deal.close} proposed={proposed.close} onSave={save('close')} onValueChange={(v) => setDeal((d) => ({ ...d, close: v }))} onProposalResolved={resolve('close')} />
+        <A.PropertyListItem label="Owner" value={deal.owner} onSave={save('owner')} onValueChange={(v) => setDeal((d) => ({ ...d, owner: v }))} />
+      </A.PropertyList>
+    </div>
+  );
+}
+
 === InputSuggestion | <!-- @dsCard group="Inputs" height=460 subtitle="A suggested value is a ghost in the field: Tab accepts, Escape dismisses" -->
 --- css
 .sg { max-width: 520px; }
