@@ -3142,6 +3142,28 @@ function App() {
   );
 }
 
+=== AILabel | <!-- @dsCard group="Display" height=480 subtitle="Mark what AI made, and explain it when asked: a plate, never a glow" -->
+--- css
+.al { max-width: 600px; }
+.al .ttl { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 600 15px/21px var(--font-sans); }
+.al p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink); }
+--- jsx
+function App() {
+  return (
+    <div className="col al">
+      <div>
+        <h3 className="ttl">Summary <A.AILabel subject="Summary" model="Opus 5.5" generatedAt={new Date(Date.now() - 4 * 60000)} confidence="Medium: two sources disagreed about the renewal date"
+          sources={[{ title: 'Call with Jamie Lee, 28 Oct', url: '#/calls/28' }, { title: 'Contract v3.pdf', url: '#/files/contract' }]} /></h3>
+        <p>Jamie wants to move to annual billing in November and asked whether the 30-day refund applies to the remaining monthly period.</p>
+      </div>
+      <div>
+        <h3 className="ttl">Reply <A.AILabel subject="Reply" model="Opus 5.5" generatedAt={new Date(Date.now() - 3 * 3600000)} reviewedBy="Maya Chen" editedBy="Maya Chen" /></h3>
+        <p>Hi Jamie, thanks for getting in touch. Your full refund of €240 is on its way.</p>
+      </div>
+    </div>
+  );
+}
+
 === PropertyProposals | <!-- @dsCard group="Display" height=520 subtitle="Proposed changes to a record, accepted or rejected field by field" -->
 --- css
 .pp { max-width: 560px; }

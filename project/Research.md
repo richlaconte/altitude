@@ -1157,6 +1157,17 @@ A design review: `PropertyList` was rendered as a deal with three proposed chang
 
 Not yet tested with people: whether a long list of proposals needs a "review one by one" mode.
 
+### E99 · How should AI content be marked?
+
+A design review: `AILabel` was rendered on a generated summary (with sources and confidence) and a reviewed, edited reply, opened by pointer and keyboard, in all four schemes and under forced colours. `checks/ai-label.mjs` measures it.
+
+- **A plate, not a glow.** The common treatment is a gradient border, a glow or a shimmer. A glow lights the content from below, which breaks "the light never moves", and Carbon's own reviewers found gradient rims confused with focus. It's a Badge plate with a word.
+- **It explains.** Following Carbon, the label is the entry point: it opens what model made it, when, from what, and how confident it is, in words.
+- **Provenance persists.** Once reviewed, the label changes to "Drafted with AI" and records who reviewed it, rather than disappearing.
+- **No moving parts.** The icon is static; nothing animates to draw attention to AI content.
+
+Not yet tested with people: whether "AI" alone is understood, or a longer word ("AI-generated") is needed in some markets.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

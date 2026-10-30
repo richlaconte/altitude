@@ -1,0 +1,38 @@
+<!-- @dsCard group="Display" height=480 subtitle="Mark what AI made, and explain it when asked: a plate, never a glow" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AILabel — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.al { max-width: 600px; }
+.al .ttl { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 600 15px/21px var(--font-sans); }
+.al p { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "col al" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h3", { className: "ttl" }, "Summary ", /* @__PURE__ */ React.createElement(
+    A.AILabel,
+    {
+      subject: "Summary",
+      model: "Opus 5.5",
+      generatedAt: new Date(Date.now() - 4 * 6e4),
+      confidence: "Medium: two sources disagreed about the renewal date",
+      sources: [{ title: "Call with Jamie Lee, 28 Oct", url: "#/calls/28" }, { title: "Contract v3.pdf", url: "#/files/contract" }]
+    }
+  )), /* @__PURE__ */ React.createElement("p", null, "Jamie wants to move to annual billing in November and asked whether the 30-day refund applies to the remaining monthly period.")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h3", { className: "ttl" }, "Reply ", /* @__PURE__ */ React.createElement(A.AILabel, { subject: "Reply", model: "Opus 5.5", generatedAt: new Date(Date.now() - 3 * 36e5), reviewedBy: "Maya Chen", editedBy: "Maya Chen" })), /* @__PURE__ */ React.createElement("p", null, "Hi Jamie, thanks for getting in touch. Your full refund of \u20AC240 is on its way.")));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
