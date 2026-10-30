@@ -1992,6 +1992,10 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-confirm-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 .alt-confirm-who { margin-right: auto; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 [data-contrast="more"] .alt-confirm[data-state="requested"] { box-shadow: 0 3px 0 0 var(--ink), var(--elev-1); }
+.alt-confirm-scope { display: flex; flex-direction: column; gap: 1px; padding-block: 6px; white-space: normal; }
+.alt-menu:has(.alt-confirm-scope) { min-width: min(300px, calc(100vw - 16px)); }
+.alt-menu-item:has(.alt-confirm-scope) { height: auto; min-height: var(--size-row-md, 32px); }
+.alt-confirm-scope-desc { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 @media (forced-colors: active) { .alt-confirm { border: 1px solid CanvasText; } }
 /* Question (#270): Confirmation's raised card asking for an answer rather than approval. Options are trenches (radio or
    checkbox), "Your own answer" a well; Answer is the one primary. Answered, it presses to the ground as one muted line. */

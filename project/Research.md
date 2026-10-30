@@ -1484,6 +1484,10 @@ Coding agents run commands and the person watches output arrive and then reads h
 
 Agents stop to ask ("Which environment?", "Keep the column or drop it?"), and the person picks, or writes their own answer: MCP elicitation, Claude Code's AskUserQuestion, AI Elements' `Question` (#270). `Confirmation` only approves or rejects. `Question` takes Confirmation's reading: nothing has been dispatched, so it's raised, not pending, with no default and no focus taken. Options use the selection family (radio or checkbox trenches). Answered, it becomes one muted line in the record, like a resolved thread. `QuestionSet` answers several questions with one button (AskUserQuestion allows four). Building it found a bug in the selection family: radios in a group with nothing chosen match `:indeterminate`, which the checkbox's dash style also used, so every radio drew filled until one was picked; the rule is now for checkboxes only. Deferred: the issue proposed making the composer's Send secondary while a question is open (one primary per view). That changes `PromptInput` and `Confirmation` together, so it's left as its own change. `checks/question.mjs`.
 
+### E143 · Approve once, for the session, or always
+
+Approving `npm test` for the fifth time trains people to approve without reading, and never asking is unsafe; Claude Code's permission prompts and Cursor's allowlist offer a scope (#280). `Confirmation scopes` turns Approve into a `SplitButton` (an action with alternatives): the face approves once, the menu holds the wider scopes with their descriptions, and the scope is recorded in the resolved line and the announcement, because "allowed for this session" differs from "approved once". Scopes are ignored with `escalate`: whatever needs a hold or a dialog is consequential enough never to be pre-approved. No new elevation: the SplitButton and its menu keep their levels. `checks/confirm-scopes.mjs`.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
