@@ -123,10 +123,13 @@ try {
   for (const reduce of [false, true]) {
     const page = await open();
     if (reduce) await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.getByRole('button', { name: 'Remove Production' }).click();
+    // Both removals in the same task, so they really are due within the batch window (250ms) however slow the machine:
+    // separate clicks with waits between them drifted past it on CI's loaded runners.
+    await page.getByRole('button', { name: 'Remove Production' }).waitFor();
+    await page.evaluate(() => { for (const name of ['Remove Production', 'Remove Billing events']) [...document.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === name || b.textContent === name)?.click(); });
     await hooks(page).locator('li[data-item="h1"][data-removed]').waitFor();
-    await page.getByRole('button', { name: 'Remove Billing events' }).click();
     await hooks(page).locator('li[data-item="h3"][data-removed]').waitFor();
+    await page.evaluate(() => document.activeElement?.blur());
     await page.mouse.move(0, 0);
     const times = await page.evaluate(() => new Promise(resolve => {
       const at = {}, start = performance.now();
