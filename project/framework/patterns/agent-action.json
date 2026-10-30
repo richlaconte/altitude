@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "agent-action",
+  "version": 1,
+  "title": "Agent action",
+  "intents": [
+    "agent",
+    "ai assistant",
+    "assistant",
+    "tool approval",
+    "human in the loop",
+    "copilot",
+    "ai action"
+  ],
+  "purpose": "Let an agent propose, wait for approval, run, recover and leave provenance, with each state drawn as one reading.",
+  "useWhen": [
+    "An embedded agent takes actions (sends, edits, deletes, runs code) on someone's behalf."
+  ],
+  "avoidWhen": [
+    "An assistant that only answers in text; use Conversation and PromptInput."
+  ],
+  "alternatives": [
+    "Use Conversation for answers only, and the consequential-action contract for a person's own destructive actions."
+  ],
+  "requiredInputs": [
+    "the plan as steps with tool calls",
+    "each step's runtime state",
+    "each step's consequence class",
+    "approve, reject and retry handlers",
+    "provenance of every change"
+  ],
+  "states": [
+    "planned",
+    "running",
+    "approval-requested",
+    "approved",
+    "executing",
+    "done",
+    "failed",
+    "rejected",
+    "undone"
+  ],
+  "transitions": [
+    "planned → running → done for a reversible step, with Undo",
+    "running → approval-requested for an external or irreversible step",
+    "approval-requested → approved → executing → done or failed",
+    "approval-requested → rejected",
+    "failed → running on Retry"
+  ],
+  "rules": [
+    "ALT-AGENT-001",
+    "ALT-ACTION-001",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "altitude-elevation",
+    "task-review",
+    "wcag22"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Embedded agents that take actions on someone's behalf.",
+  "exceptions": [
+    "Require only states the agent runtime reports; what runs without approval is the application's decision."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/agent-action.md",
+  "implementation": "build/fixtures/patterns/agent-action.jsx",
+  "examples": [
+    "build/fixtures/patterns/agent-action.jsx"
+  ],
+  "verification": [
+    "build/checks/agent-action-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}

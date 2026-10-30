@@ -138,6 +138,7 @@ jobs:
           node ../scripts/record-check.mjs react18-import-pattern node checks/import-pattern.mjs
           node ../scripts/record-check.mjs react18-sync-pattern node checks/sync-pattern.mjs
           node ../scripts/record-check.mjs react18-developer-settings-pattern node checks/developer-settings-pattern.mjs
+          node ../scripts/record-check.mjs react18-agent-action-pattern node checks/agent-action-pattern.mjs
           node ../scripts/record-check.mjs react18-chart-patterns node checks/chart-patterns.mjs
           node ../scripts/record-check.mjs react18-bar-chart node checks/bar-chart.mjs
           node ../scripts/record-check.mjs react18-line-chart node checks/line-chart.mjs
