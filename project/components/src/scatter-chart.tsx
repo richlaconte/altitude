@@ -155,10 +155,13 @@ export function ScatterChart(props: ScatterChartProps) {
   const at = active ? all.find((q) => data[q.i] === active) : undefined;
   const top = at ? <ChartMarker className="alt-scatter-active" shape={encode(at.key).marker} x={at.px} y={at.py} size={sized(encode(at.key).marker, size) + 2} color={encode(at.key).stroke} {...ring} paintOrder="stroke" /> : null;
 
-  // The trend: least squares over the shown dots, across their x extent, named at its right end.
+  // The trend: least squares over the shown dots, across their x extent, named near its right end.
   let trend: React.ReactNode = null, trendWord: React.ReactNode = null;
-  // Words already on the plot, as boxes, so labels are placed clear of them.
+  // Words already on the plot, as boxes, so labels are placed clear of them; and the dots, with their rings, which no
+  // word may cover.
   const placed: Array<[number, number, number, number]> = [];
+  const half = size / 2 + 3;
+  const dotBoxes = all.map((q): [number, number, number, number] => [q.px - half, q.py - half, half * 2, half * 2]);
   if (p.trend && all.length > 2) {
     const fit = fitLine(all.map((q) => [data[q.i][p.x] as number, data[q.i][ctx.series.find((s) => s.key === q.key)!.key] as number]));
     if (fit) {
@@ -168,9 +171,23 @@ export function ScatterChart(props: ScatterChartProps) {
       const [a, b] = [P(x0), P(x1)];
       const word = typeof p.trend === 'string' ? p.trend : 'Trend';
       trend = <g className="alt-scatter-trend"><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} /></g>;
-      const tx = Math.min(b[0], width - 2), w = textWidth(word);
-      placed.push([tx - w, b[1] - 8 - 11, w, 14]);
-      trendWord = <g className="alt-scatter-trend"><text x={tx} y={b[1] - 8} textAnchor="end">{word}</text></g>;
+      // Named beside the line, never over a dot: above or below its right end, then stepping back along it, then its
+      // left end. Each try sits clear of the line over the word's own span, so a steep line doesn't cross it either.
+      const w = textWidth(word), h = 14;
+      const lineY = (px: number) => a[1] + ((b[1] - a[1]) * (px - a[0])) / ((b[0] - a[0]) || 1);
+      const tries: Array<[number, 'start' | 'end']> = [1, 0.9, 0.8, 0.7, 0.6, 0.5].map((t) => [a[0] + (b[0] - a[0]) * t, 'end'] as [number, 'end']);
+      tries.push([a[0], 'start']);
+      const spot = (at: number, anchor: 'start' | 'end', above: boolean) => {
+        const tx = anchor === 'end' ? Math.min(at, width - 2) : Math.max(at, 2), x0 = anchor === 'end' ? tx - w : tx;
+        const l0 = lineY(x0), l1 = lineY(x0 + w);
+        const ty = above ? Math.min(l0, l1) - 8 : Math.max(l0, l1) + 8 + 11;
+        return { tx, ty, anchor, box: [x0, ty - 11, w, h] as [number, number, number, number] };
+      };
+      const fits = (box: [number, number, number, number]) => box[0] >= 0 && box[0] + box[2] <= width + 8 && box[1] >= -6 && box[1] + box[3] <= height + 6
+        && dotBoxes.every(([x1, y1, w1, h1]) => box[0] > x1 + w1 || box[0] + box[2] < x1 || box[1] > y1 + h1 || box[1] + box[3] < y1);
+      const chosen = tries.flatMap(([at, anchor]) => [spot(at, anchor, true), spot(at, anchor, false)]).find((c) => fits(c.box)) ?? spot(b[0], 'end', true);
+      placed.push(chosen.box);
+      trendWord = <g className="alt-scatter-trend"><text x={chosen.tx} y={chosen.ty} textAnchor={chosen.anchor}>{word}</text></g>;
     }
   }
 
@@ -179,13 +196,17 @@ export function ScatterChart(props: ScatterChartProps) {
     const text = p.label!(sourceOf(props, ctx, data[i]));
     if (!text) return [];
     const w = textWidth(text), h = 14, r = size / 2 + 2;
-    // Above right, above left, beside, then below: the first that clears the plot's edges and the words placed so far.
+    // Above right, above left, beside, then below: the first that clears the plot's edges, the words placed so far and
+    // the dots.
     const spots: Array<[number, number, 'start' | 'end']> = [[px + 10, py - 10, 'start'], [px - 10, py - 10, 'end'], [px + r + 6, py + 4, 'start'], [px - r - 6, py + 4, 'end'], [px + 10, py + 22, 'start'], [px - 10, py + 22, 'end']];
-    for (const [tx, ty, anchor] of spots) {
-      const box: [number, number, number, number] = [anchor === 'start' ? tx : tx - w, ty - 11, w, h];
-      const clear = box[0] >= 0 && box[0] + w <= width + 8 && box[1] >= -6 && box[1] + h <= height + 6
-        && placed.every(([x1, y1, w1, h1]) => box[0] > x1 + w1 + 2 || box[0] + w < x1 - 2 || box[1] > y1 + h1 || box[1] + h < y1);
-      if (!clear) continue;
+    const boxOf = ([tx, ty, anchor]: [number, number, 'start' | 'end']): [number, number, number, number] => [anchor === 'start' ? tx : tx - w, ty - 11, w, h];
+    const clear = (box: [number, number, number, number]) => box[0] >= 0 && box[0] + w <= width + 8 && box[1] >= -6 && box[1] + h <= height + 6
+      && placed.every(([x1, y1, w1, h1]) => box[0] > x1 + w1 + 2 || box[0] + w < x1 - 2 || box[1] > y1 + h1 || box[1] + h < y1);
+    const bare = (box: [number, number, number, number]) => dotBoxes.every(([x1, y1, w1, h1]) => box[0] > x1 + w1 || box[0] + w < x1 || box[1] > y1 + h1 || box[1] + h < y1);
+    // Clear of the dots too; in a cloud too dense for that, the first spot that clears the words.
+    const found = spots.find((sp) => clear(boxOf(sp)) && bare(boxOf(sp))) ?? spots.find((sp) => clear(boxOf(sp)));
+    if (found) {
+      const [tx, ty, anchor] = found, box = boxOf(found);
       placed.push(box);
       // The leader runs from the dot's edge to the word's near end.
       const ex = anchor === 'start' ? tx - 2 : tx + 2, ey = ty - 4, len = Math.hypot(ex - px, ey - py) || 1;

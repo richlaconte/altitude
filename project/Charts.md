@@ -46,7 +46,7 @@ Choose by the job the data does, not by what looks rich.
 | The plot, gridlines and axes | ground | flat; gridlines are `line`, axis text `ink-muted` |
 | The zero baseline | ground | the ground line: 1px `ink-muted`, as under `Stepper` and `Drilldown` |
 | Marks (bars, lines, points, cells) | ground | flat ink in a series colour, no shadow, no wall, no sheen |
-| A scatter's dots | ground | flat `data-*` with a marker shape per group, ringed 2px in the plot's colour so overlaps stay apart; outliers named in `ink` with a 1px leader |
+| A scatter's dots | ground | flat `data-*` with a marker shape per group, ringed 2px in the plot's colour so overlaps stay apart; outliers named in `ink` with a 1px leader; no word, the trend's included, covers a dot |
 | A heatmap's cells | ground | flat `data-seq` (or `data-div`) steps parted by 2px of the plot's colour; no data is a 1px `line` outline, not a well |
 | A clickable mark, hovered | ground | a 2px `ink` outline and a pointer cursor; it never lifts |
 | The readout | floating, level 3 | a `Tooltip`, rising from the side facing its mark |
