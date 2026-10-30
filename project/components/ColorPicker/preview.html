@@ -24,16 +24,16 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 var A = window.Altitude;
 const brand = [
   { value: "#0f8a6b", name: "Teal" },
-  { value: "#2563eb", name: "Blue" },
-  { value: "#7c3aed", name: "Violet" },
-  { value: "#db2777", name: "Pink" },
-  { value: "#ea580c", name: "Orange" },
-  { value: "#facc15", name: "Yellow" }
+  { value: "#2f5fd0", name: "Blue" },
+  { value: "#7d3c6f", name: "Plum" },
+  { value: "#c23a6b", name: "Rose" },
+  { value: "#c8571f", name: "Ember" },
+  { value: "#d9a521", name: "Ochre" }
 ];
-const labels = [{ value: "#64748b", name: "Slate" }, { value: "#16a34a", name: "Green" }, { value: "#dc2626", name: "Red" }, { value: "#0891b2", name: "Cyan" }];
+const labels = [{ value: "#66738a", name: "Slate" }, { value: "#2f8f4e", name: "Green" }, { value: "#c9372c", name: "Red" }, { value: "#16869e", name: "Cyan" }];
 function App() {
   const [color, setColor] = React.useState("#0f8a6b");
-  const [tag, setTag] = React.useState("#16a34a");
+  const [tag, setTag] = React.useState("#2f8f4e");
   return /* @__PURE__ */ React.createElement("div", { className: "cpk" }, /* @__PURE__ */ React.createElement(A.ColorPicker, { label: "Brand colour", value: color, onValueChange: setColor, swatches: brand, allowCustom: true, checkContrast: true }), /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.ColorPicker, { label: "Label colour", value: tag, onValueChange: setTag, swatches: labels }), /* @__PURE__ */ React.createElement("div", { className: "demo" }, /* @__PURE__ */ React.createElement("span", { className: "cap" }, "Preview:"), /* @__PURE__ */ React.createElement(A.AltitudeProvider, { accent: color }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Upgrade plan"))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "The check says, for white text and for dark text, whether it reaches 4.5:1 on the colour. Arrow keys move the mark between swatches; Custom\u2026 opens a full picker.")));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));

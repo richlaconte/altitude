@@ -30,14 +30,14 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 
 | `detect` | What catches it |
 |---|---|
-| `lint` | Source text: hues, font families, `background-clip: text`, uppercase labels, easing, emoji, banned words ([#320](https://github.com/richlaconte/altitude/issues/320)) |
+| `lint` | Source text: hues, font families, `background-clip: text`, uppercase labels, easing, emoji, banned words. `build/checks/tells-lint.mjs` has a rule for each one, and fails if a rule and this file disagree. |
 | `render` | A rendered preview: equal-weight grids, spacing rhythm, contrast, unloaded fonts ([#321](https://github.com/richlaconte/altitude/issues/321)) |
 | `measure` | The distinctiveness benchmark: how far screens sit from what default tools generate ([#322](https://github.com/richlaconte/altitude/issues/322)) |
 | `human` | Review and the study with people ([#326](https://github.com/richlaconte/altitude/issues/326)) |
 
 ## Where Altitude stands
 
-As of the 2026-10-30 audit, 32 of 47 tells are clear, 11 are to watch, 3 are unchecked and 1 is exposed. The audit found 4 exposed; the two schemes and the landing page's labels were fixed the same day. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
+The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page's labels were fixed the same day. The tells lint (#320) then found one the audit couldn't: Artifact and Terminal, added afterwards, had a coloured failure stripe. That leaves 31 of 47 clear, 11 to watch, 3 unchecked and 2 exposed. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
 
 **Clear.** No purple, gradient text, coloured stripes, glows, bounce, count-ups, emoji, sparkles or marketese anywhere in the library or previews. The content rules, the forbidden light glows, the rejected severity bars (E8) and Charts' "the data is the record" already rule most of the tells out.
 
@@ -47,6 +47,7 @@ As of the 2026-10-30 audit, 32 of 47 tells are clear, 11 are to watch, 3 are unc
 
 **Exposed:**
 
+- **CM3, Artifact and Terminal** turn their left edge `critical` when they fail ([#374](https://github.com/richlaconte/altitude/issues/374)).
 - **LA5, the app skeleton** is the sidebar, top bar and table every generated dashboard uses, and agents copy it for every screen ([#323](https://github.com/richlaconte/altitude/issues/323)).
 
 **Watch:**
@@ -62,7 +63,7 @@ As of the 2026-10-30 audit, 32 of 47 tells are clear, 11 are to watch, 3 are unc
 
 | When | What | Gates? |
 |---|---|---|
-| Every push | The `lint` and `render` checks (#320, #321) | `lint` fails; equal-weight grids and flat spacing warn |
+| Every push | `checks/tells-lint.mjs` (`npm run check:tells-lint`), and the `render` checks once #321 lands | The lint fails; equal-weight grids and flat spacing will warn |
 | Every push | `npm run check:tells`: is the catalog due a review or audit? | Warns |
 | Every pull request that changes how something looks | The review list below | Reviewer |
 | Each release, and quarterly | The benchmark against a rebuilt baseline (#322) | Recorded, not gated |
@@ -75,6 +76,8 @@ For a pull request that changes how something looks, the reviewer asks:
 - Is every shadow a tier, with its word, icon, ARIA state or border?
 - Are the empty, loading and failed states designed, with words that name the object?
 - Is anything decorative (a gradient, a glow, an edge stripe, an animation) doing a job, or there to look designed?
+
+An intentional exception is marked where it is, with its reason: `/* tells-ignore: CM2 the scrim recedes the page behind a dialog */` on the line or the line above. A suppression without a reason doesn't count. Use one only when the pattern does a job (the ColorPicker's hue track is the whole spectrum, purple included), and never to hide a tell that's waiting on a decision without naming the issue (`tells-ignore: CM3 pending a decision in #374`).
 
 ## Keeping current
 
