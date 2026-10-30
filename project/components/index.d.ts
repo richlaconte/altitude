@@ -3192,6 +3192,41 @@ export interface SourcesProps { items: CitationSource[]; heading?: string; idPre
 /** The sources an answer cites, as a flush ordered list. */
 export declare function Sources(props: SourcesProps): React.ReactElement;
 
+export interface SettingsSectionProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  /** Every section has a heading; it names the region. */
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  /** 'critical': the danger zone. A critical rim and the same height as every other section. */
+  tone?: 'critical';
+  /** Default 2. */
+  headingLevel?: 2 | 3;
+  /** Why this person can't change these settings ("Only workspace admins can change billing details"). The rows are disabled and say why. */
+  readOnlyReason?: React.ReactNode;
+}
+/**
+ * One section of a settings page: a raised Card (level 1) with a heading and rows. The danger zone is the same card with
+ * a critical rim, never higher or louder: its consequences are said in its rows' words.
+ */
+export declare function SettingsSection(props: SettingsSectionProps): React.ReactElement;
+export interface SettingsRowProps extends DepthProps {
+  label: React.ReactNode;
+  /** What the setting does, beside its label. */
+  description?: React.ReactNode;
+  /** Replaces the description and marks the control invalid. */
+  error?: React.ReactNode;
+  /** The words for an apply-now control's write. Defaults: pending "Saving…", committed "Saved", failed "Couldn't save this change. Try again." */
+  statusText?: Partial<Record<'pending' | 'committed' | 'failed', React.ReactNode>>;
+  className?: string;
+  /** Exactly one control: Switch, Select, Input, Button… It's labelled and described by the row. */
+  children: React.ReactElement<any>;
+}
+/**
+ * A setting: label and description on the start side, the control on the end side, stacked when the section is narrow.
+ * A control that applies immediately reports its write through `status` (pending hovers, committed lands, failed drops
+ * into a trench), with the state in words. Fields saved together belong to one draft with a SaveBar instead.
+ */
+export declare function SettingsRow(props: SettingsRowProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -3211,6 +3246,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
       AILabel: typeof AILabel;
       Trace: typeof Trace; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;

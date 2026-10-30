@@ -4,10 +4,11 @@ Start from the person's task. Read only the relevant pattern below, its linked r
 
 | Intent | Focused contract |
 | --- | --- |
-| Edit settings or a record | [Edit record](patterns/edit-record.md) |
+| Edit a record | [Edit record](patterns/edit-record.md) |
 | Search, filter or browse records | [Async collection](patterns/async-collection.md) |
 | Delete, revoke, publish or recover | [Consequential action](patterns/consequential-action.md) |
 | Review answers and finish a process | [Review and submit](patterns/review-submit.md) |
+| A settings page: apply now, save together, danger zone | [Settings](patterns/settings.md) |
 
 Before implementation, capture a short design record in the application's normal documentation: user goal, audience, primary action, consequence, data shape, selected patterns, applicable states, and unresolved product decisions. Infer routine details from the existing product. Do not invent permissions, persistence, cancellation, rollback or undo. Ask only when an unknown changes consequences or the task itself.
 

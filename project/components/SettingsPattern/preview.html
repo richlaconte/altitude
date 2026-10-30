@@ -1,0 +1,98 @@
+<!-- @dsCard group="Patterns" height=1100 subtitle="Sections of rows: apply-now switches, fields saved together, a danger zone" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SettingsPattern — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+.st-page{max-width:680px;margin-inline:auto;display:grid;gap:20px;padding-bottom:96px;overflow-wrap:anywhere}.st-h{font:600 21px/28px var(--font-sans);margin:0}.st-nav{display:flex;flex-wrap:wrap;gap:6px 16px;font:500 14px/20px var(--font-sans)}.st-nav a{color:var(--ink-muted)}.st-form{display:grid;gap:16px}.st-page [role="status"]:empty{display:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+function App() {
+  const [failNext, setFailNext] = React.useState(false);
+  const fail = React.useRef(false);
+  fail.current = failNext;
+  const [saved, setSaved] = React.useState({ name: "Acme", url: "acme" });
+  const general = A.useEditRecord({
+    initialValue: saved,
+    validationMode: "submit",
+    validate: (d) => ({ ...d.name.trim() ? {} : { name: "Enter a workspace name." }, .../^[a-z0-9-]+$/.test(d.url) ? {} : { url: "Use lowercase letters, numbers and hyphens." } }),
+    save: async (draft) => {
+      await wait(800);
+      if (fail.current) return { ok: false, error: "We couldn\u2019t reach the server. Your changes are still here." };
+      setSaved(draft);
+      return { ok: true, value: draft };
+    }
+  });
+  const [prefs, setPrefs] = React.useState({ digest: true, mentions: true });
+  const [writes, setWrites] = React.useState({ digest: void 0, mentions: void 0 });
+  const apply = async (key, value) => {
+    setPrefs((p) => ({ ...p, [key]: value }));
+    setWrites((w) => ({ ...w, [key]: "pending" }));
+    await wait(900);
+    if (fail.current) {
+      setPrefs((p) => ({ ...p, [key]: !value }));
+      setWrites((w) => ({ ...w, [key]: "failed" }));
+    } else setWrites((w) => ({ ...w, [key]: "committed" }));
+  };
+  const [deleted, setDeleted] = React.useState(false);
+  const [typed, setTyped] = React.useState("");
+  const heading = React.useRef(null);
+  const remove = A.useConsequentialAction({
+    target: "Acme workspace",
+    consequence: "Delete Acme, its 12 projects and 1,204 files for all 8 members. This can\u2019t be undone.",
+    requiresConfirmation: true,
+    focusFallback: () => heading.current,
+    execute: async () => {
+      await wait(900);
+      if (fail.current) return { ok: false, error: "We couldn\u2019t delete the workspace. Nothing was removed. Try again." };
+      setDeleted(true);
+      return { ok: true, value: "acme" };
+    },
+    messages: { pending: "Deleting Acme workspace", succeeded: "Acme workspace deleted" }
+  });
+  const confirming = ["confirming", "pending", "failed"].includes(remove.phase);
+  const field = (key, label, hint) => /* @__PURE__ */ React.createElement(A.Field, { label, hint, error: general.errors[key] }, /* @__PURE__ */ React.createElement(A.Input, { id: "ws-" + key, value: general.draft[key], onChange: (e) => general.setField(key, e.target.value) }));
+  if (deleted) return /* @__PURE__ */ React.createElement("main", { className: "st-page" }, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "st-h" }, "Workspace deleted"), /* @__PURE__ */ React.createElement("p", null, "Acme and everything in it were deleted."), /* @__PURE__ */ React.createElement(A.WorkflowStatus, null, remove.status));
+  return /* @__PURE__ */ React.createElement("main", { className: "st-page" }, /* @__PURE__ */ React.createElement("h2", { ref: heading, tabIndex: -1, className: "st-h" }, "Workspace settings"), /* @__PURE__ */ React.createElement("nav", { "aria-label": "Settings sections", className: "st-nav" }, /* @__PURE__ */ React.createElement("a", { href: "#st-general" }, "General"), /* @__PURE__ */ React.createElement("a", { href: "#st-notify" }, "Notifications"), /* @__PURE__ */ React.createElement("a", { href: "#st-billing" }, "Billing"), /* @__PURE__ */ React.createElement("a", { href: "#st-danger" }, "Danger zone")), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next change fail", checked: failNext, onCheckedChange: setFailNext }), /* @__PURE__ */ React.createElement(A.SettingsSection, { id: "st-general", title: "General", description: "Saved together: change what you need, then save once." }, /* @__PURE__ */ React.createElement("form", { className: "st-form", noValidate: true, onSubmit: (e) => {
+    e.preventDefault();
+    void general.submit();
+  } }, /* @__PURE__ */ React.createElement(A.ErrorSummary, { errors: Object.entries(general.errors).map(([k, message]) => ({ id: "ws-" + k, label: k === "name" ? "Workspace name" : "Workspace URL", message })), focusKey: general.submitCount }), field("name", "Workspace name", "Shown to everyone in the workspace."), field("url", "Workspace URL", "altitude.app/" + general.draft.url))), /* @__PURE__ */ React.createElement(A.SettingsSection, { id: "st-notify", title: "Notifications", description: "Each change applies as soon as you make it." }, /* @__PURE__ */ React.createElement(A.SettingsRow, { label: "Weekly digest", description: "A summary of activity every Monday.", status: writes.digest }, /* @__PURE__ */ React.createElement(A.Switch, { checked: prefs.digest, onCheckedChange: (v) => apply("digest", v) })), /* @__PURE__ */ React.createElement(A.SettingsRow, { label: "Mentions", description: "Email me when someone mentions me.", status: writes.mentions }, /* @__PURE__ */ React.createElement(A.Switch, { checked: prefs.mentions, onCheckedChange: (v) => apply("mentions", v) }))), /* @__PURE__ */ React.createElement(A.SettingsSection, { id: "st-billing", title: "Billing", readOnlyReason: "Only workspace owners can change billing details. Ask Maya Chen." }, /* @__PURE__ */ React.createElement(A.SettingsRow, { label: "Billing email", description: "Invoices and receipts go here." }, /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "finance@acme.dev" }))), /* @__PURE__ */ React.createElement(A.SettingsSection, { id: "st-danger", title: "Danger zone", tone: "critical" }, /* @__PURE__ */ React.createElement(A.SettingsRow, { label: "Delete workspace", description: remove.consequence }, /* @__PURE__ */ React.createElement(A.Button, { variant: "danger", onClick: remove.request }, "Delete workspace"))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, null, general.status || remove.status), /* @__PURE__ */ React.createElement(A.SaveBar, { record: general }), /* @__PURE__ */ React.createElement(
+    A.Dialog,
+    {
+      open: confirming,
+      background: "stationary",
+      dismissible: remove.phase !== "pending",
+      onOpenChange: (o) => {
+        if (!o) {
+          remove.cancel();
+          setTyped("");
+        }
+      },
+      returnFocus: () => heading.current,
+      title: "Delete Acme workspace?",
+      description: remove.consequence,
+      footer: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { disabled: remove.phase === "pending", onClick: () => {
+        remove.cancel();
+        setTyped("");
+      } }, "Keep workspace"), /* @__PURE__ */ React.createElement(A.Button, { variant: "danger", disabled: typed !== "Acme" || remove.phase === "pending", onClick: remove.phase === "failed" ? remove.retry : remove.confirm }, remove.phase === "pending" ? "Deleting workspace" : remove.phase === "failed" ? "Try deleting again" : "Delete workspace"))
+    },
+    /* @__PURE__ */ React.createElement(A.Field, { label: "Type Acme to confirm" }, /* @__PURE__ */ React.createElement(A.Input, { value: typed, onChange: (e) => setTyped(e.target.value), autoComplete: "off" })),
+    remove.error && /* @__PURE__ */ React.createElement("p", { role: "alert" }, remove.error)
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

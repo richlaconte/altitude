@@ -54,6 +54,15 @@
       "status": "unvalidated-hypothesis",
       "applicability": "Scoped option only; no universal destructive-action mandate.",
       "reviewed": "2026-10-23"
+    },
+    {
+      "id": "nng-toggle",
+      "authority": "contextual-pattern",
+      "title": "Nielsen Norman Group: toggle-switch guidelines",
+      "url": "https://www.nngroup.com/articles/toggle-switch-guidelines/",
+      "status": "practice-guidance",
+      "applicability": "Binary settings that take effect immediately; settings saved with a form use checkboxes or other controls submitted together.",
+      "reviewed": "2026-10-30"
     }
   ]
 }
