@@ -3085,6 +3085,33 @@ export interface MessageActionsProps {
 }
 export declare function MessageActions(props: MessageActionsProps): React.ReactElement | null;
 
+export type ConfirmationState = 'requested' | 'approved' | 'running' | 'done' | 'failed' | 'rejected' | 'expired';
+export interface ConfirmationProps {
+  state: ConfirmationState;
+  title: React.ReactNode;
+  /** The concrete consequence, in words. */
+  consequence: React.ReactNode;
+  /** What exactly would change: a DiffView, a list, a preview. */
+  details?: React.ReactNode;
+  approveLabel?: string;
+  rejectLabel?: string;
+  runningLabel?: string;
+  doneLabel?: string;
+  failedLabel?: string;
+  /** Approving needs a hold, or a stationary Dialog for irreversible actions. */
+  escalate?: 'hold' | 'dialog';
+  resolvedBy?: string;
+  resolvedAt?: Date | string | number;
+  /** Who's asking. Default "The assistant". */
+  requestedBy?: string;
+  onApprove?: () => void;
+  onReject?: () => void;
+  onRetry?: () => void;
+  className?: string;
+}
+/** Approve or reject an agent's proposal: raised while requested, pending once approved, kept in the record when resolved. */
+export declare function Confirmation(props: ConfirmationProps): React.ReactElement;
+
 declare global {
   interface Window {
     Altitude: {
@@ -3104,6 +3131,7 @@ declare global {
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
+      Confirmation: typeof Confirmation;
       Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit;
       Tour: typeof Tour;

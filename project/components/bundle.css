@@ -1733,6 +1733,29 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   .alt-msg-caret { forced-color-adjust: none; background: CanvasText; }
 }
 
+/* ── Confirmation: a proposal from an agent, not yet dispatched. It's status that asks for action, so it's raised
+   (level 1, Alert's raised rule), never pending: hovering would say the action is already in flight. Approving turns it
+   into a pending write (hovers after dur-grace), which lands with the afterglow or drops to a trench. Rejected and
+   expired are flush and muted, kept in the record. ── */
+.alt-confirm {
+  display: flex; flex-direction: column; gap: 6px; padding: var(--space-4); border-radius: var(--radius-lg);
+  background: var(--surface-ground); box-shadow: inset 0 0 0 1px var(--line); max-width: 560px;
+  transition: background var(--dur-travel-2) var(--ease-rise), box-shadow var(--dur-travel-2) var(--ease-rise);
+}
+.alt-confirm[data-state="requested"] { background: var(--surface-raised); background-image: var(--alt-sheen); box-shadow: var(--elev-1); }
+.alt-confirm[data-state="rejected"], .alt-confirm[data-state="expired"] { color: var(--ink-muted); }
+.alt-confirm[data-state="rejected"] .alt-confirm-title, .alt-confirm[data-state="expired"] .alt-confirm-title { color: var(--ink-muted); }
+.alt-confirm-line { display: flex; align-items: center; gap: 6px; margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-confirm-line[data-tone="accent"] { color: var(--accent-ink); }
+.alt-confirm-line[data-tone="critical"] { color: var(--critical); }
+.alt-confirm-title { margin: 0; font: 600 15px/21px var(--font-sans); color: var(--ink); }
+.alt-confirm-consequence { margin: 0; font: 400 14px/20px var(--font-sans); color: inherit; }
+.alt-confirm-details { margin-top: var(--space-2); }
+.alt-confirm-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+.alt-confirm-who { margin-right: auto; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+[data-contrast="more"] .alt-confirm[data-state="requested"] { box-shadow: 0 3px 0 0 var(--ink), var(--elev-1); }
+@media (forced-colors: active) { .alt-confirm { border: 1px solid CanvasText; } }
+
 /* ── Pile: thickness says roughly how many (ordinal), the badge says exactly. Click a pile that has items and they
    slide out from under the top card, floating over the page below (level 3) without moving anything. Click the top,
    press Escape or click away and they slide back under. ── */

@@ -1113,6 +1113,17 @@ A design review: `Conversation` was rendered with a settled exchange, an answer 
 
 Not yet tested with people: whether screen reader users prefer sentence-by-sentence announcements for long answers.
 
+### E95 · Does a proposal hover?
+
+A design review: `Confirmation` was rendered as three proposals (plain, hold to approve, and a dialog for an irreversible one that fails), approved, rejected, failed and retried, in all four schemes. `checks/confirmation.mjs` drives it.
+
+- **Raised, not pending.** Commitment says a pending write hovers. Without a separate state for proposals, an agent would reasonably draw "awaiting approval" hovering, which tells the person being asked that it's already happening. Elevation.md now has a Proposed row: raised, like any status that asks for action.
+- **Pending begins at approval.** Only then is something in flight; then the commitment signal runs as usual.
+- **The consequence in words.** "214 Pro customers will receive…" rather than "Run tool send_email?", and Approve names the outcome.
+- **No default action.** Enter never approves, and nothing is focused when a proposal arrives, so typing in the composer can't approve it by accident.
+
+Not yet tested with people: whether "The assistant is asking" is needed when proposals appear inside a conversation.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.
