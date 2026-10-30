@@ -18,7 +18,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 72px; }
 body { margin: 0; background: var(--page-bg); color: var(--page-ink); }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface-ground); }
 .page { min-height: 100vh; }
-.page a:not(.alt-btn) { color: var(--page-link); text-underline-offset: 3px; }
+.page a:not(.alt-btn):not(.alt-sidebar-button) { color: var(--page-link); text-underline-offset: 3px; }
 .page a:focus-visible, .swatch:focus-visible, .code:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-xs); }
 .page code { font-family: var(--font-code); font-size: 0.88em; }
 .mono { font-family: var(--font-code); font-size: 13px; white-space: nowrap; }
@@ -177,3 +177,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .code-tabs .alt-tabs-trigger { padding: 0 var(--space-2); font-size: 13px; }
   .code-tabs [role="tabpanel"] { padding: var(--space-3); }
 }
+
+/* Altitude for agents (#286) */
+.skip { position: absolute; left: 12px; top: -40px; z-index: 10; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--surface-raised); box-shadow: var(--elev-2); color: var(--ink); }
+.skip:focus { top: 12px; }
+.agent-modes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin: 0 0 16px; }
+.agent-band .caption { margin-top: 12px; }
