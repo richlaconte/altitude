@@ -65,6 +65,43 @@ if (!only || only === 'SortableList') {
     await page.close();
   }
 }
+if (!only || only === 'Board') {
+  // Which column each card is in.
+  const where = (page) => page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-board-col]')].map((c) => [c.dataset.boardCol, [...c.querySelectorAll('[data-board-card]')].map((k) => k.textContent.slice(0, 10))])));
+  const first = (page) => page.evaluate(() => { const k = document.querySelector('[data-board-card]'); return { text: k.textContent.slice(0, 10), col: k.closest('[data-board-col]').dataset.boardCol }; });
+  {
+    const { ctx, page, gesture } = await phone('Board');
+    const card = await first(page);
+    const [x, y] = await centre(page, '[data-board-card]', 0);
+    const sx = () => page.evaluate(() => document.querySelector('.alt-board').scrollLeft);
+    await gesture([x, y], [x - 160, y]);
+    const scrolled = await sx();
+    const after = await first(page);
+    expect(scrolled > 40 && after.text === card.text && after.col === card.col, `Board: a swipe on a card scrolls the board and leaves the card (scrollLeft ${scrolled})`);
+    await page.evaluate(() => { document.querySelector('.alt-board').scrollLeft = 0; }); await page.waitForTimeout(200);
+    const cols = await page.evaluate(() => [...document.querySelectorAll('[data-board-col]')].map((c) => { const r = c.getBoundingClientRect(); return { id: c.dataset.boardCol, x: r.x + r.width / 2 }; }));
+    const [x1, y1] = await centre(page, '[data-board-card]', 0);
+    const target = cols.find((c) => c.id !== card.col && c.x < 375) ?? cols[1];
+    await gesture([x1, y1], [Math.min(target.x, 360), y1 + 10], 600);
+    const w = await where(page);
+    expect(Object.entries(w).some(([col, cards]) => col !== card.col && cards.some((t) => t === card.text)), `Board: press-and-hold, then drag, moves the card to another column (${JSON.stringify(w)})`);
+    const tools = await page.evaluate(() => { const t = document.querySelector('.alt-board-card-tools'); return t ? getComputedStyle(t).opacity : 'none'; });
+    expect(tools === '1' || tools === 'none', `Board: the card tools show on touch (opacity ${tools})`);
+    await ctx.close();
+  }
+  {
+    const page = await browser.newPage({ viewport: { width: 960, height: 700 } });
+    await page.goto(`file://${T}p-Board-daylight.html`); await page.waitForTimeout(400);
+    const card = await first(page);
+    const [x, y] = await centre(page, '[data-board-card]', 0);
+    await page.mouse.move(x, y); await page.mouse.down();
+    for (let i = 1; i <= 10; i++) { await page.mouse.move(x + i * 26, y + 4); await page.waitForTimeout(20); }
+    await page.mouse.up(); await page.waitForTimeout(400);
+    const w = await where(page);
+    expect(Object.entries(w).some(([col, cards]) => col !== card.col && cards.includes(card.text)), 'Board: a mouse drag still moves a card without a hold');
+    await page.close();
+  }
+}
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
 await browser.close();

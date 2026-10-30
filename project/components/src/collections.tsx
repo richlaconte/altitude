@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cssMs, cx, Icons, riseDelay, useControllable, useDepth, useIsoLayoutEffect } from './core';
+import { cssMs, cx, Icons, riseDelay, touchHold, useControllable, useDepth, useIsoLayoutEffect } from './core';
 import { Badge, Button, Checkbox, Input, SortableList } from './controls';
 import { Popover } from './overlays';
 import { ToggleGroup, ToggleGroupItem } from './toggle';
@@ -716,7 +716,7 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
   const [kb, setKb] = React.useState<BoardCtxT['kb']>(null);
   const [landing, setLanding] = React.useState<string | null>(null);
   const [said, setSaid] = React.useState('');
-  const start = React.useRef<{ x: number; y: number; id: string; cols?: SnapCol[]; from?: BoardPlace; card?: SnapCard } | null>(null);
+  const start = React.useRef<{ x: number; y: number; id: string; cols?: SnapCol[]; from?: BoardPlace; card?: SnapCard; armed: boolean; release?: () => void } | null>(null);
   const dragged = React.useRef(false);
   useCarry(root, '[data-board-card]', 'data-board-card');
   React.useEffect(() => { if (!landing) return; const t = setTimeout(() => setLanding(null), 450); return () => clearTimeout(t); }, [landing]);
@@ -735,29 +735,44 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
   const onPointerDown = (e: React.PointerEvent, id: string) => {
     if (e.button !== 0 || kb || (e.target as HTMLElement).closest('button, a, input, textarea, select, [contenteditable]')) return;
     if ((e.currentTarget as HTMLElement).hasAttribute('data-held-by')) return; // someone else has it
-    start.current = { x: e.clientX, y: e.clientY, id };
+    start.current?.release?.();
+    const s: NonNullable<typeof start.current> = { x: e.clientX, y: e.clientY, id, armed: true };
+    start.current = s;
     dragged.current = false;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    // On touch a card is picked up by press-and-hold, so a swipe still scrolls the board (#254).
+    if (e.pointerType === 'touch') {
+      s.armed = false;
+      s.release = touchHold(e, () => { if (start.current !== s || !pickUp(s)) return; s.armed = true; carryTo(s, 0, 0); });
+    }
+  };
+  const pickUp = (s: NonNullable<typeof start.current>) => {
+    s.cols = readBoard(root.current!);
+    for (const c of s.cols) { const i = c.cards.findIndex((k) => k.id === s.id); if (i >= 0) { s.from = { column: c.id, index: i }; s.card = c.cards[i]; } }
+    if (!s.from) { start.current = null; return false; }
+    dragged.current = true;
+    setSaid(`Picked up ${nameOf(s.id)}.`);
+    return true;
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const s = start.current;
-    if (!s || !root.current) return;
+    if (!s || !s.armed || !root.current) return;
     const dx = e.clientX - s.x, dy = e.clientY - s.y;
     if (!s.cols) {
       if (Math.hypot(dx, dy) < 5) return;
-      s.cols = readBoard(root.current);
-      for (const c of s.cols) { const i = c.cards.findIndex((k) => k.id === s.id); if (i >= 0) { s.from = { column: c.id, index: i }; s.card = c.cards[i]; } }
-      if (!s.from) { start.current = null; return; }
-      dragged.current = true;
-      setSaid(`Picked up ${nameOf(s.id)}.`);
+      if (!pickUp(s)) return;
     }
+    carryTo(s, dx, dy);
+  };
+  const carryTo = (s: NonNullable<typeof start.current>, dx: number, dy: number) => {
     const k = s.card!;
-    const p = plan(s.cols, s.id, k.x + k.w / 2 + dx, k.y + k.h / 2 + dy, k.h);
+    const p = plan(s.cols!, s.id, k.x + k.w / 2 + dx, k.y + k.h / 2 + dy, k.h);
     setCarry({ id: s.id, from: s.from!, to: p.to, dx, dy, h: k.h, gap: p.gap, shifts: p.shifts, slotTop: p.slotTop });
   };
   const onPointerUp = () => {
     const s = start.current;
     start.current = null;
+    s?.release?.();
     if (!s?.cols || !carry || !root.current) { setCarry(null); return; }
     // Where each card was drawn when it was let go, so the landing travels from there.
     const m = new Map<string, { x: number; y: number }>();
