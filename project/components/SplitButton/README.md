@@ -2,7 +2,7 @@
 
 One action with its alternatives: "Save changes ▾" (Save as draft, Save and close), "Merge ▾" (squash, rebase), "Deploy ▾" (to staging, to production).
 
-**Elevation.** It's one pressable action, so it's one slab: **two faces sharing one wall**, parted by a 1px notch (`line-control`, or a mix of `on-accent` into the accent on a primary slab). Each face lifts on its own when pointed at, because each does something different, and each has its own focus ring around its face and wall. The menu floats at level 3 (`DropdownMenu`). Placing a `Button` and a `DropdownMenu` side by side reads as two slabs of different importance. A SplitButton reads as one action with options.
+**Elevation.** It's one pressable action, so it's one slab: **two faces sharing one wall**, parted by a 1px notch (`line-control`, or a mix of `on-accent` into the accent on a primary slab). Being one slab, it moves as one: pointing at either face lifts the whole slab, and pressing either presses it all, so the faces never stand at two heights with a step between them. Which face you're on, and so what a click does, is a tint on that face alone. Each face has its own focus ring around its face and wall. The menu floats at level 3 (`DropdownMenu`). Placing a `Button` and a `DropdownMenu` side by side reads as two slabs of different importance. A SplitButton reads as one action with options.
 
 **Loading.** `loading` holds the action face pressed with its label kept, as a `Button` does. The chevron stays usable.
 

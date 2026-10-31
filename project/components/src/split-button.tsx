@@ -18,8 +18,9 @@ export interface SplitButtonProps extends Omit<ButtonProps, 'variant' | 'childre
   groupLabel?: string;
 }
 /**
- * One action with its alternatives: two faces on one slab, sharing one wall and parted by a line notch. Each face
- * lifts on its own when pointed at, because each does something different. Alt+Down on the action opens the menu.
+ * One action with its alternatives: two faces on one slab, sharing one wall and parted by a line notch. The slab lifts
+ * and presses as one whichever face is pointed at; the face under the pointer is tinted, so you can tell which action a
+ * click takes without the faces splitting into two heights. Alt+Down on the action opens the menu.
  */
 export const SplitButton = React.forwardRef<HTMLButtonElement, SplitButtonProps>(function SplitButton(
   { label, variant = 'primary', items, menuLabel = 'More options', groupLabel, size, disabled, className, style, onKeyDown, ...rest }, ref) {
