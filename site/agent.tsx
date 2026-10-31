@@ -1,12 +1,15 @@
 // "Altitude for agents" (site-dist/agent.html, #286): the scripted agent run from build/fixtures/patterns/agent-harness.jsx
 // in a complete harness, with the moment rail, notes, and the modes to check each moment in. The same file is the
-// AgentHarness story and its render in CI.
+// AgentHarness story and its render in CI. Below it, the orchestration view (build/fixtures/patterns/agent-orchestration.jsx):
+// seven agents on one job, supervised from one screen.
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { AltitudeProvider, Switch, Tabs, TabsList, TabsTrigger } from '../project/components/src/index';
 import type { BuiltInScheme } from '../project/components/src/index';
 // @ts-ignore: a checked .jsx fixture, shared with Storybook and CI
 import { App as Harness } from '../build/fixtures/patterns/agent-harness.jsx';
+// @ts-ignore: a checked .jsx fixture, shared with Storybook and CI
+import { App as Orchestration } from '../build/fixtures/patterns/agent-orchestration.jsx';
 
 const SCHEMES: { id: BuiltInScheme; label: string }[] = [
   { id: 'daylight', label: 'Daylight' }, { id: 'nightfall', label: 'Nightfall' },
@@ -43,6 +46,15 @@ function Page() {
             </div>
             <div id="moments"><Harness start={0} /></div>
             <p className="caption">The run is a list of events shaped like an AI SDK stream; seeking folds them up to the moment you choose, so every state is reachable on demand and is the same every time. No network, no key.</p>
+          </div>
+        </section>
+        <section className="band agent-band" aria-labelledby="orchestration-title">
+          <div className="wrap">
+            <div className="section-head">
+              <h2 className="headline" id="orchestration-title">Many agents at once</h2>
+              <p className="lead">A lead agent splits “Launch annual pricing” into six tasks and runs them side by side. Supervising them is a different job from talking to one: you need to see who's waiting on you, answer without opening each agent, catch two agents changing the same file or one going in circles, and see where the time went. The decisions waiting on you lead, oldest first; the roster says every agent's state in words; the lanes show how long agents waited on you.</p>
+            </div>
+            <div id="orchestration"><Orchestration start={2} /></div>
           </div>
         </section>
       </main>

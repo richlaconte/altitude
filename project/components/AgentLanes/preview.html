@@ -1,0 +1,38 @@
+<!-- @dsCard group="Charts" height=420 subtitle="Where each agent's time went on one clock, leading with the time they waited on you" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentLanes — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.al { max-width: 760px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const t0 = Date.UTC(2026, 9, 31, 14, 0), m = (n) => t0 + n * 6e4;
+const lanes = [
+  { id: "pricing", name: "Pricing page", segments: [{ from: m(3), to: m(20), state: "working" }, { from: m(20), to: m(25), state: "waiting" }] },
+  { id: "api", name: "Billing API", segments: [{ from: m(3), to: m(7), state: "working" }, { from: m(7), to: m(10), state: "waiting" }, { from: m(10), to: m(19), state: "working" }] },
+  { id: "emails", name: "Renewal emails", segments: [{ from: m(3), to: m(8), state: "working" }, { from: m(8), to: m(13), state: "waiting" }, { from: m(13), to: m(25), state: "working" }] },
+  { id: "qa", name: "QA", segments: [{ from: m(3), to: m(19), state: "blocked" }, { from: m(19), to: m(21), state: "working" }, { from: m(21), to: m(23), state: "failed" }, { from: m(23), to: m(29), state: "working" }] },
+  { id: "changelog", name: "Changelog", segments: [{ from: m(27), to: m(30), state: "working" }] }
+];
+function App() {
+  const [sel, setSel] = React.useState("qa");
+  return /* @__PURE__ */ React.createElement("div", { className: "al" }, /* @__PURE__ */ React.createElement(A.AgentLanes, { lanes, start: t0, now: m(31), selected: sel, onSelect: setSel }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

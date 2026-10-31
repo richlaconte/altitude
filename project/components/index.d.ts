@@ -3534,6 +3534,102 @@ export declare function ThreadList(props: ThreadListProps): React.ReactElement;
 export declare function ThreadListGroup(props: ThreadListGroupProps): React.ReactElement;
 export declare function ThreadListItem(props: ThreadListItemProps): React.ReactElement | null;
 export declare function ThreadListNew(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }): React.ReactElement;
+
+export type AgentState = 'queued' | 'working' | 'needs-input' | 'blocked' | 'stalled' | 'failed' | 'done' | 'stopped';
+export type AgentNeeds = 'approval' | 'question' | 'review';
+export interface AgentFleetProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Names the fleet. Default "Agents". */
+  'aria-label'?: string;
+  /** The time rows measure waits and runs from. Default: now, refreshed every 30 seconds. */
+  now?: Date | string | number;
+  /** The counts in words above the groups ("2 need you · 3 working · 4 done"; `summarizeFleet` writes it). */
+  summary?: React.ReactNode;
+  children: React.ReactNode;
+}
+export interface AgentFleetGroupProps {
+  label: string;
+  /** Default: the number of rows. null: no count. */
+  count?: number | null;
+  /** Folds the group under its heading: for finished agents. */
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  /** Said when the group is empty; without it an empty group isn't drawn. */
+  empty?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+}
+export interface AgentFleetItemProps {
+  name: string;
+  state: AgentState;
+  /** For 'needs-input'. Default 'approval'. */
+  needs?: AgentNeeds;
+  /** One line: what it's doing, the question it's asking, or what it finished with. */
+  activity?: React.ReactNode;
+  /** When it entered this state (waiting on you, stalled, blocked). */
+  since?: Date | string | number;
+  startedAt?: Date | string | number;
+  endedAt?: Date | string | number;
+  step?: { current: number; total: number };
+  /** For 'blocked': who or what it's waiting on. */
+  blockedBy?: string;
+  /** Another agent is changing the same file. */
+  conflict?: { file: string; with: string };
+  /** For 'stalled'. Default "No progress for <since>". */
+  stalledReason?: string;
+  /** Spend so far, formatted. */
+  cost?: string;
+  /** What it produced: a pull request plate, a link. */
+  output?: React.ReactNode;
+  selected?: boolean;
+  onSelect?: () => void;
+  /** Agents it started, as AgentFleetItems. */
+  children?: React.ReactNode;
+  className?: string;
+}
+export interface AgentRequestsProps extends React.HTMLAttributes<HTMLElement> {
+  /** Default "Needs you". */
+  title?: string;
+  now?: Date | string | number;
+  empty?: React.ReactNode;
+  /** AgentRequests, shown longest wait first. */
+  children?: React.ReactNode;
+}
+export interface AgentRequestProps {
+  agent: string;
+  kind: AgentNeeds | 'failed';
+  title: React.ReactNode;
+  detail?: React.ReactNode;
+  since: Date | string | number;
+  /** Secondary and ghost Buttons. */
+  actions?: React.ReactNode;
+  onOpen?: () => void;
+  className?: string;
+}
+export type AgentLaneState = 'working' | 'waiting' | 'blocked' | 'failed';
+export interface AgentLane { id: string; name: string; segments: { from: Date | string | number; to?: Date | string | number; state: AgentLaneState }[] }
+export interface AgentLanesProps extends Omit<React.HTMLAttributes<HTMLElement>, 'onSelect'> {
+  lanes: AgentLane[];
+  start?: Date | string | number;
+  now?: Date | string | number;
+  /** Default: how long agents waited on you, and the longest wait. */
+  takeaway?: React.ReactNode;
+  'aria-label'?: string;
+  selected?: string;
+  onSelect?: (id: string) => void;
+}
+export declare function AgentFleet(props: AgentFleetProps): React.ReactElement;
+export declare function AgentFleetGroup(props: AgentFleetGroupProps): React.ReactElement | null;
+export declare function AgentFleetItem(props: AgentFleetItemProps): React.ReactElement;
+export declare function AgentRequests(props: AgentRequestsProps): React.ReactElement;
+export declare function AgentRequest(props: AgentRequestProps): React.ReactElement;
+export declare function AgentLanes(props: AgentLanesProps): React.ReactElement;
+/** "2 need you · 3 working · 4 done". */
+export declare function summarizeFleet(states: AgentState[]): string;
+/** Needs you (longest wait first), working (stalled first), finished (newest first). */
+export declare function groupAgents<T>(agents: T[], get: (a: T) => { state: AgentState; since?: Date | string | number; endedAt?: Date | string | number }): { needsYou: T[]; working: T[]; finished: T[] };
+export declare function needsYou(state: AgentState): boolean;
+/** "under a minute", "4 min", "1 h 5 min". */
+export declare function formatSpan(ms: number): string;
 /** Today, Yesterday, Previous 7 days, Previous 30 days, then by month. */
 export declare function groupByDate<T>(threads: T[], getDate: (t: T) => Date | string | number, now?: Date | number, locale?: string): { label: string; threads: T[] }[];
 export type QuestionState = 'asking' | 'answered' | 'expired';
@@ -3713,6 +3809,7 @@ declare global {
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
       Artifact: typeof Artifact; ArtifactHeader: typeof ArtifactHeader; ArtifactVersions: typeof ArtifactVersions; ArtifactContent: typeof ArtifactContent; ArtifactReference: typeof ArtifactReference;
       ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate;
+      AgentFleet: typeof AgentFleet; AgentFleetGroup: typeof AgentFleetGroup; AgentFleetItem: typeof AgentFleetItem; AgentRequests: typeof AgentRequests; AgentRequest: typeof AgentRequest; AgentLanes: typeof AgentLanes; summarizeFleet: typeof summarizeFleet; groupAgents: typeof groupAgents; needsYou: typeof needsYou; formatSpan: typeof formatSpan;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;

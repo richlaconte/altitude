@@ -1,0 +1,41 @@
+<!-- @dsCard group="Feedback" height=760 subtitle="Every agent on a job, grouped by what they need from you, each saying its state in words" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentFleet — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.af { max-width: 420px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const now = Date.UTC(2026, 9, 31, 14, 20), min = 6e4;
+const seed = [
+  { id: "api", name: "Billing API", state: "needs-input", needs: "approval", activity: "Wants to run the migration on staging", since: now - 6 * min, startedAt: now - 17 * min, step: { current: 3, total: 4 }, cost: "$0.38" },
+  { id: "qa", name: "QA", state: "failed", activity: "2 of 14 checkout tests failed", since: now - 2 * min, startedAt: now - 5 * min, cost: "$0.11" },
+  { id: "docs", name: "Docs", state: "stalled", stalledReason: "Retried the same step 3 times", activity: "Link check timed out on /enterprise; retrying", since: now - 5 * min, startedAt: now - 17 * min, step: { current: 3, total: 3 }, cost: "$0.31" },
+  { id: "pricing", name: "Pricing page", state: "working", activity: "Writing the annual toggle in Pricing.tsx", startedAt: now - 17 * min, step: { current: 2, total: 4 }, cost: "$0.41", conflict: { file: "src/content/pricing.ts", with: "Docs" } },
+  { id: "changelog", name: "Changelog", state: "blocked", blockedBy: "Pricing page" },
+  { id: "emails", name: "Renewal emails", state: "done", activity: "Scheduled for Tuesday 9:00 to 1,240 customers", startedAt: now - 17 * min, endedAt: now - 3 * min, cost: "$0.29" }
+];
+function App() {
+  const [open, setOpen] = React.useState("pricing");
+  const g = A.groupAgents(seed, (a) => a);
+  const row = (a) => /* @__PURE__ */ React.createElement(A.AgentFleetItem, { key: a.id, ...a, selected: a.id === open, onSelect: () => setOpen(a.id) });
+  return /* @__PURE__ */ React.createElement("div", { className: "af" }, /* @__PURE__ */ React.createElement(A.AgentFleet, { now, summary: A.summarizeFleet(seed.map((a) => a.state)) }, /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Needs you", empty: "Nothing needs you." }, g.needsYou.map(row)), /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Working" }, g.working.map(row)), /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Done", collapsible: true }, g.finished.map(row))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

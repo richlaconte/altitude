@@ -50,6 +50,8 @@ export { Artifact, ArtifactHeader, ArtifactVersions, ArtifactContent, ArtifactRe
 export type { ArtifactProps, ArtifactHeaderProps, ArtifactVersionsProps, ArtifactContentProps, ArtifactReferenceProps, ArtifactStatus } from './artifact';
 export { ThreadList, ThreadListGroup, ThreadListItem, ThreadListNew, groupByDate } from './thread-list';
 export type { ThreadListProps, ThreadListItemProps, ThreadListGroupProps, ThreadStatus } from './thread-list';
+export { AgentFleet, AgentFleetGroup, AgentFleetItem, AgentRequests, AgentRequest, AgentLanes, summarizeFleet, groupAgents, needsYou, formatSpan } from './agent-fleet';
+export type { AgentFleetProps, AgentFleetGroupProps, AgentFleetItemProps, AgentRequestsProps, AgentRequestProps, AgentLanesProps, AgentLane, AgentLaneState, AgentState, AgentNeeds } from './agent-fleet';
 export { Question, QuestionOption, QuestionSet } from './question';
 export type { QuestionProps, QuestionOptionProps, QuestionSetProps, QuestionAnswer, QuestionState } from './question';
 export { Terminal } from './terminal';

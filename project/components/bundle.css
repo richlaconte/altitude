@@ -1497,6 +1497,112 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 .alt-thread:has(.alt-thread-more) .alt-thread-main { padding-right: 28px; }
 .alt-thread-rename { display: block; width: 100%; padding: 4px; }
 .alt-threads-new { width: 100%; justify-content: center; }
+/* AgentFleet: every agent in a run of work, grouped by what they need from you. Rows are the record, flush, with their
+   state in words on a plate (the lamp only repeats it); working never hovers. The open agent is selected: tinted and
+   raised one level, as a table's selected row. Finished agents are stamped: a check and muted ink. Agents an agent
+   started hang under it in a 1px line-control bracket, as TraceParallel's subagents do. */
+.alt-fleet { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.alt-fleet-summary { margin: 0; font: 500 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-fleet-group { display: flex; flex-direction: column; gap: 2px; }
+.alt-fleet-group-head { display: flex; align-items: center; gap: 6px; min-height: 28px; margin: 0; padding: 0 var(--space-2); border: 0; background: none; color: var(--ink-muted); font: 600 13px/18px var(--font-sans); text-align: start; }
+button.alt-fleet-group-head { cursor: pointer; border-radius: var(--radius-sm); }
+button.alt-fleet-group-head:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-fleet-chevron { transform: rotate(-90deg); transition: transform var(--dur-travel-1) var(--ease-glide); }
+.alt-fleet-group[data-open] .alt-fleet-chevron { transform: none; }
+.alt-fleet-group-count { font-variant-numeric: tabular-nums; font-weight: 500; }
+.alt-fleet-empty { margin: 0; padding: var(--space-1) var(--space-2); font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-fleet-list, .alt-agent-children { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.alt-fleet-list[hidden] { display: none; }
+.alt-agent-children { margin: 2px 0 2px 18px; padding-left: 8px; border-left: 1px solid var(--line-control); }
+.alt-agent-line { position: relative; }
+.alt-agent-row { --row-bg: transparent; --row-sh: var(--elev-0);
+  display: flex; flex-direction: column; gap: 3px; width: 100%; min-width: 0; padding: 8px var(--space-2); border: 0; border-radius: var(--radius-md);
+  background: var(--row-bg); box-shadow: var(--row-sh); color: var(--ink); font: 400 13px/18px var(--font-sans); text-align: start;
+  transition: transform var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise); }
+button.alt-agent-row { cursor: pointer; }
+@media (hover: hover) { button.alt-agent-row:hover { --row-bg: var(--surface-raised); --row-sh: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); } }
+button.alt-agent-row:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-agent[data-selected] > .alt-agent-line > .alt-agent-row { --row-bg: var(--accent-soft); --row-sh: var(--elev-1); }
+.alt-agent-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.alt-agent-line:has(.alt-agent-output) .alt-agent-head { padding-right: 64px; }
+.alt-agent-mark { display: inline-flex; flex: none; width: 14px; justify-content: center; color: var(--ink-muted); }
+.alt-agent-mark i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid currentColor; }
+.alt-agent[data-agent-state="working"] > .alt-agent-line .alt-agent-mark { color: var(--accent); }
+.alt-agent[data-agent-state="working"] > .alt-agent-line .alt-agent-mark i { background: currentColor; }
+.alt-agent[data-agent-state="needs-input"] > .alt-agent-line .alt-agent-mark, .alt-agent[data-agent-state="stalled"] > .alt-agent-line .alt-agent-mark { color: var(--caution); }
+.alt-agent[data-agent-state="needs-input"] > .alt-agent-line .alt-agent-mark i { background: currentColor; }
+.alt-agent[data-agent-state="failed"] > .alt-agent-line .alt-agent-mark { color: var(--critical); }
+.alt-agent[data-agent-state="done"] > .alt-agent-line .alt-agent-mark { color: var(--positive); }
+.alt-agent-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.alt-agent-time { flex: none; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.alt-agent-activity { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-left: 22px; color: var(--ink-muted); }
+.alt-agent-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding-left: 22px; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-agent-conflict { display: flex; align-items: flex-start; gap: 6px; margin-left: 22px; padding: 4px 8px; border-radius: var(--radius-sm); background: var(--caution-soft); color: var(--ink); font: 400 12px/16px var(--font-sans); }
+.alt-agent-conflict svg { flex: none; margin-top: 1px; color: var(--caution); }
+.alt-agent-conflict code { font: 400 11.5px/16px var(--font-code); }
+.alt-agent-output { position: absolute; top: 7px; right: var(--space-2); }
+.alt-agent:is([data-agent-state="done"], [data-agent-state="stopped"]) > .alt-agent-line .alt-agent-name { font-weight: 500; color: var(--ink-muted); }
+@media (forced-colors: active) {
+  .alt-agent[data-selected] > .alt-agent-line > .alt-agent-row { outline: 1px solid Highlight; }
+  .alt-agent-children { border-left-color: CanvasText; }
+  .alt-agent-conflict { border: 1px dashed CanvasText; }
+}
+/* AgentRequests: the decisions agents are waiting on, oldest first. Each asks for action, so it's a raised card (level
+   1) that arrives lifted and settles; nothing in it has been dispatched, so nothing hovers. Its answers are secondary
+   and ghost: the view's one primary stays where it is. With nothing waiting it says so, flush. */
+.alt-requests { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.alt-requests-head { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+.alt-requests-title { margin: 0; font: 600 14px/20px var(--font-sans); color: var(--ink); }
+.alt-requests-oldest { margin-left: auto; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-requests-empty { display: flex; align-items: center; gap: 8px; margin: 0; padding: var(--space-2) 0; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-requests-empty svg { flex: none; color: var(--positive); }
+.alt-requests-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.alt-request { display: flex; flex-direction: column; gap: 6px; padding: var(--space-3); border-radius: var(--radius-md); }
+.alt-request-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-request-agent { font-weight: 600; color: var(--ink); }
+.alt-request-time { margin-left: auto; font-variant-numeric: tabular-nums; }
+.alt-request-title { margin: 0; font: 600 14px/20px var(--font-sans); color: var(--ink); }
+.alt-request-detail { margin: 0; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-request-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: 2px; }
+.alt-request-actions > .alt-btn[data-variant="ghost"]:last-child { margin-left: auto; }
+/* AgentLanes: where each agent's time went, on one clock. A chart, so nothing here has height (Charts): stretches are
+   equal bars lying on each lane, told apart by fill and pattern and named in the key. Working is data-1; waiting on you
+   is caution hatched at 45°; waiting on another agent is a 1px dashed outline; failed is critical. "Now" is a 1px
+   line-control rule. The selected lane's name is accent-ink with aria-pressed; lanes never lift. */
+.alt-lanes { --lane-name: 132px; display: flex; flex-direction: column; gap: var(--space-2); margin: 0; min-width: 0; }
+.alt-lanes-takeaway { font: 500 14px/20px var(--font-sans); color: var(--ink); }
+.alt-lanes-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; list-style: none; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-lanes-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.alt-lane-swatch { display: inline-block; width: 14px; height: 10px; border-radius: 2px; }
+.alt-lanes-plot { position: relative; display: flex; flex-direction: column; gap: 6px; }
+.alt-lane { display: grid; grid-template-columns: var(--lane-name) 1fr; align-items: center; gap: var(--space-2); }
+.alt-lane-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0; border: 0; background: none; color: var(--ink); font: 500 12.5px/24px var(--font-sans); text-align: start; }
+button.alt-lane-name { cursor: pointer; text-decoration: underline transparent; text-underline-offset: 3px; border-radius: var(--radius-xs); }
+@media (hover: hover) { button.alt-lane-name:hover { text-decoration-color: currentColor; } }
+button.alt-lane-name:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-lane[data-selected] .alt-lane-name { color: var(--accent-ink); font-weight: 650; }
+.alt-lane-track { position: relative; height: 14px; border-bottom: 1px solid var(--line); }
+.alt-lane-bar { position: absolute; top: 1px; bottom: 1px; min-width: 2px; border-radius: 2px; }
+.alt-lane-swatch[data-lane="working"], .alt-lane-bar[data-lane="working"] { background: var(--data-1); }
+.alt-lane-swatch[data-lane="waiting"], .alt-lane-bar[data-lane="waiting"] { background: repeating-linear-gradient(45deg, var(--caution) 0 2px, var(--caution-soft) 2px 5px); box-shadow: inset 0 0 0 1px var(--caution); }
+.alt-lane-swatch[data-lane="blocked"], .alt-lane-bar[data-lane="blocked"] { background: transparent; box-shadow: none; border: 1px dashed var(--ink-muted); }
+.alt-lane-swatch[data-lane="failed"], .alt-lane-bar[data-lane="failed"] { background: var(--critical); }
+.alt-lanes-axis { display: grid; grid-template-columns: var(--lane-name) 1fr; gap: var(--space-2); }
+.alt-lanes-ticks { position: relative; height: 16px; font: 400 11.5px/16px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-lanes-ticks > span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.alt-lanes-ticks > span[data-edge="start"] { transform: none; }
+.alt-lanes-ticks > span[data-edge="end"] { transform: translateX(-100%); color: var(--ink); }
+.alt-lanes-now { position: absolute; top: 0; bottom: 18px; right: 0; width: 1px; background: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-lane-bar, .alt-lane-swatch { forced-color-adjust: none; }
+  .alt-lane-bar[data-lane="working"], .alt-lane-swatch[data-lane="working"] { background: CanvasText; }
+  .alt-lane-bar[data-lane="waiting"], .alt-lane-swatch[data-lane="waiting"] { background: repeating-linear-gradient(45deg, CanvasText 0 2px, Canvas 2px 5px); box-shadow: inset 0 0 0 1px CanvasText; }
+  .alt-lane-bar[data-lane="blocked"], .alt-lane-swatch[data-lane="blocked"] { border-color: CanvasText; }
+  .alt-lane-bar[data-lane="failed"], .alt-lane-swatch[data-lane="failed"] { background: repeating-linear-gradient(-45deg, CanvasText 0 1px, Canvas 1px 3px); border: 2px solid CanvasText; }
+  .alt-lanes-now { background: CanvasText; }
+}
+@media (max-width: 480px) { .alt-lanes { --lane-name: 88px; } }
+@media (pointer: coarse) { button.alt-fleet-group-head, button.alt-lane-name { min-height: 44px; } }
 /* In the rail only icons show: each destination is a square, and the rail lets its tooltips out to the right. */
 .alt-sidebar[data-rail], .alt-sidebar[data-rail] .alt-sidebar-content { overflow: visible; }
 .alt-sidebar[data-rail] .alt-sidebar-item .alt-tip-anchor { display: flex; flex: 1; }
