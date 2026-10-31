@@ -1,0 +1,7 @@
+.shipments { max-width: 78rem; margin: 0 auto; padding: 1.5rem clamp(1rem, 3vw, 2rem) 3rem; display: grid; gap: 1rem; }
+.shipments .search { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem; }
+.shipments .search > :first-child { flex: 1 1 22rem; max-width: 32rem; }
+.shipments .selection { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.shipments .ref { font-family: var(--font-mono, ui-monospace, monospace); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.shipments .demo-note { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; color: var(--ink-muted); font-size: .875rem; }
+.shipments .demo-note p { margin: 0; }

@@ -1,0 +1,5 @@
+.projects-page { max-width: 72rem; margin: 0 auto; padding: 1.5rem; display: grid; gap: 1rem; }
+.projects-search { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.5rem; }
+.projects-search > :first-child { flex: 1 1 18rem; max-width: 28rem; }
+.projects-selection { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.projects-selection p { margin: 0; overflow-wrap: anywhere; }

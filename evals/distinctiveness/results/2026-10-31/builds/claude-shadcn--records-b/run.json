@@ -1,0 +1,134 @@
+{
+  "id": "claude-shadcn--records-b",
+  "condition": "claude-shadcn",
+  "brief": "records-b",
+  "task": "records",
+  "domain": "freight",
+  "prompt": "Build a searchable records screen for a freight company's shipment tracker. Show the company's shipments, with a search box for finding shipments by reference and a way to select shipments. Include a refresh action and a way to clear the search. Use realistic sample data; there is no backend.\n\nBuild it in this project with the installed shadcn/ui components. `npm run build` must succeed.",
+  "promptSHA256": "bea5041bbaf78f286934dcdb4e21bbb96aefe6fcc0f693468111874783e2cfc3",
+  "model": "claude-opus-5-5",
+  "startedAt": "2026-10-31T00:37:04.435Z",
+  "toolVersion": "2.1.314 (Claude Code)",
+  "dependencies": {
+    "@base-ui/react": "^1.9.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.5.1",
+    "lucide-react": "^1.65.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "recharts": "^3.8.0",
+    "shadcn": "^4.23.0",
+    "sonner": "^2.0.8",
+    "tailwindcss": "^4.3.3",
+    "tw-animate-css": "^1.4.0"
+  },
+  "invocation": {
+    "command": "claude",
+    "args": [
+      "-p",
+      "--no-session-persistence",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--model",
+      "claude-opus-5-5",
+      "--permission-mode",
+      "acceptEdits",
+      "--allowedTools",
+      "Read,Write,Edit,Bash(npm run build),Bash(npx shadcn@latest add *),Bash(ls *),Bash(cat *),Bash(find *),Bash(pwd)",
+      "--setting-sources",
+      "project",
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}"
+    ]
+  },
+  "generation": "complete",
+  "elapsedMs": 111899,
+  "usage": {
+    "inputTokens": 24,
+    "outputTokens": 12167,
+    "cachedInputTokens": 297537,
+    "cacheCreationInputTokens": 26455,
+    "costUSD": 0.5145834,
+    "sourceEvents": 1,
+    "observedModels": [
+      "claude-opus-5-5"
+    ]
+  },
+  "session": {
+    "tools": [
+      "Task",
+      "Bash",
+      "CronCreate",
+      "CronDelete",
+      "CronList",
+      "DesignSync",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "PushNotification",
+      "Read",
+      "RemoteTrigger",
+      "ReportFindings",
+      "ScheduleWakeup",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "WebFetch",
+      "WebSearch",
+      "Write"
+    ],
+    "skills": [
+      "design",
+      "design-sync",
+      "dataviz",
+      "update-config",
+      "verify",
+      "debug",
+      "code-review",
+      "simplify",
+      "batch",
+      "fewer-permission-prompts",
+      "doctor",
+      "loop",
+      "schedule",
+      "claude-api",
+      "run",
+      "run-skill-generator",
+      "plugin-authoring"
+    ],
+    "plugins": [
+      {
+        "name": "cc-plugin-agents-md",
+        "path": "builtin",
+        "source": "cc-plugin-agents-md@builtin"
+      },
+      {
+        "name": "cc-plugin-telemetry",
+        "path": "builtin",
+        "source": "cc-plugin-telemetry@builtin"
+      },
+      {
+        "name": "cc-plugin-plugin-authoring",
+        "path": "builtin",
+        "source": "cc-plugin-plugin-authoring@builtin"
+      }
+    ],
+    "slashCommands": 53,
+    "model": "claude-opus-5-5"
+  },
+  "toolUse": {
+    "Bash": 9,
+    "Write": 3
+  },
+  "build": "passed",
+  "finishedAt": "2026-10-31T00:39:00.189Z"
+}

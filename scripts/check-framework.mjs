@@ -10,6 +10,7 @@ const steps=[
  ['build/checks/package-consumer.mjs'],
  ['evals/framework/harness.test.mjs'],
  ['evals/framework/evaluator/assess.test.mjs'],
+ ['evals/distinctiveness/briefs.test.mjs'],
  ['scripts/measure-framework.mjs'],
 ];
 for(const [file,extra] of steps)execFileSync(process.execPath,[...(file.endsWith('.test.mjs')?['--test']:[]),file],{stdio:'inherit',env:{...process.env,...extra}});

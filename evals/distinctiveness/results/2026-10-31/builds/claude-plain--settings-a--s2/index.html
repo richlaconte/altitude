@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workspace settings · Northwind Labs</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --border: #e3e6ea;
+    --border-strong: #c9ced6;
+    --text: #1d2330;
+    --muted: #5d6676;
+    --primary: #3b5bdb;
+    --primary-hover: #2f4bc0;
+    --primary-soft: #edf1ff;
+    --danger: #c92a2a;
+    --danger-soft: #fff1f1;
+    --success: #2b8a3e;
+    --radius: 8px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--primary); }
+  button, input { font: inherit; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    background: #151a26; color: #c3c9d4;
+    padding: 16px 12px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .ws-switch {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; margin-bottom: 12px; border-radius: var(--radius);
+  }
+  .ws-avatar {
+    width: 32px; height: 32px; border-radius: 6px; flex: none;
+    display: grid; place-items: center;
+    background: #4c6ef5; color: #fff; font-weight: 700; font-size: 13px;
+  }
+  .ws-switch .name { color: #fff; font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ws-switch .plan { font-size: 12px; color: #8c95a6; }
+  .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #6f7889; padding: 12px 10px 4px; }
+  .nav a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 6px;
+    color: inherit; text-decoration: none;
+  }
+  .nav a:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .nav a[aria-current="page"] { background: rgba(255,255,255,.1); color: #fff; }
+  .nav svg { width: 16px; height: 16px; flex: none; opacity: .85; }
+  .sidebar .me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 8px; font-size: 13px; }
+  .me .avatar { width: 28px; height: 28px; border-radius: 50%; background: #e64980; color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+
+  /* Main */
+  main { padding: 32px 40px 64px; min-width: 0; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .crumbs a { color: var(--muted); text-decoration: none; }
+  .crumbs a:hover { color: var(--text); text-decoration: underline; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+  .subtitle { color: var(--muted); margin: 0 0 28px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; box-shadow: var(--shadow);
+  }
+
+  /* Overview */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat { padding: 16px 18px; }
+  .stat .label { color: var(--muted); font-size: 13px; }
+  .stat .value { font-size: 24px; font-weight: 650; margin-top: 2px; }
+  .overview-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .card-head h2 { font-size: 15px; margin: 0; }
+  .projects { list-style: none; margin: 0; padding: 0; }
+  .projects li { display: grid; grid-template-columns: 1fr 140px 90px; gap: 16px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+  .projects li:last-child { border-bottom: 0; }
+  .projects .pname { font-weight: 550; }
+  .projects .owner { color: var(--muted); font-size: 13px; }
+  .bar { height: 6px; background: #eef0f3; border-radius: 3px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--primary); border-radius: 3px; }
+  .pct { font-size: 12px; color: var(--muted); text-align: right; }
+  .details { padding: 6px 18px 14px; margin: 0; }
+  .details dt { color: var(--muted); font-size: 12px; margin-top: 12px; }
+  .details dd { margin: 2px 0 0; word-break: break-word; }
+
+  /* Settings */
+  .settings { max-width: 760px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .tabs span {
+    padding: 8px 12px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tabs span.active { color: var(--text); border-color: var(--primary); font-weight: 600; }
+  .tabs span[aria-disabled="true"] { cursor: not-allowed; opacity: .6; }
+
+  .section { display: grid; grid-template-columns: 220px 1fr; gap: 24px; padding: 24px; }
+  .section + .section { border-top: 1px solid var(--border); }
+  .section h2 { font-size: 15px; margin: 0 0 4px; }
+  .section p.help { color: var(--muted); margin: 0; font-size: 13px; }
+  .field + .field { margin-top: 20px; }
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .req { color: var(--danger); margin-left: 2px; }
+  input[type="text"], input[type="email"] {
+    width: 100%; padding: 8px 12px; border: 1px solid var(--border-strong);
+    border-radius: 6px; background: #fff; color: var(--text);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input:hover { border-color: #aab1bd; }
+  input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 91, 219, .18); }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+  input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(201, 42, 42, .15); }
+  .hint-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: 12.5px; color: var(--muted); min-height: 19px; }
+  .error { color: var(--danger); display: flex; align-items: center; gap: 4px; }
+  .counter.over { color: var(--danger); font-weight: 600; }
+  .readonly-url { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; background: #f8f9fb; padding: 8px 12px; color: var(--muted); font-size: 13px; }
+
+  .actionbar {
+    display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+    padding: 14px 24px; border-top: 1px solid var(--border); background: #fafbfc;
+    border-radius: 0 0 10px 10px;
+  }
+  .actionbar .status { margin-right: auto; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #f59f00; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 16px; border-radius: 6px; border: 1px solid transparent;
+    font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: background .15s, border-color .15s, opacity .15s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; min-width: 120px; }
+  .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary { background: #fff; color: var(--text); border-color: var(--border-strong); }
+  .btn-secondary:hover { background: #f3f4f6; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #b02525; }
+  .btn-sm { padding: 5px 12px; font-size: 13px; }
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Dialog */
+  dialog {
+    border: 0; border-radius: 12px; padding: 0; width: min(420px, calc(100vw - 32px));
+    box-shadow: 0 20px 40px rgba(16, 24, 40, .2); color: var(--text);
+  }
+  dialog::backdrop { background: rgba(16, 20, 30, .45); }
+  .dialog-body { padding: 22px 24px 8px; }
+  .dialog-body h2 { font-size: 17px; margin: 0 0 6px; }
+  .dialog-body p { margin: 0; color: var(--muted); }
+  .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 24px 20px; }
+
+  /* Toast */
+  .toast-region { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+  .toast {
+    display: flex; align-items: center; gap: 10px;
+    background: #1d2330; color: #fff; padding: 12px 16px; border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(16, 24, 40, .25); font-size: 13.5px;
+    animation: toast-in .2s ease-out;
+  }
+  .toast svg { color: #69db7c; flex: none; }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    main { padding: 24px 16px 48px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .overview-grid { grid-template-columns: 1fr; }
+    .section { grid-template-columns: 1fr; gap: 12px; }
+    .projects li { grid-template-columns: 1fr 80px; }
+    .projects .pct { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" aria-label="Primary">
+    <div class="ws-switch">
+      <div class="ws-avatar" data-bind="initials" aria-hidden="true">NL</div>
+      <div style="min-width:0">
+        <div class="name" data-bind="name">Northwind Labs</div>
+        <div class="plan">Business plan · 24 members</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#overview" data-route="overview">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        Overview
+      </a>
+      <a href="#overview">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h10M3 12h6"/></svg>
+        My tasks
+      </a>
+      <a href="#overview">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>
+        Calendar
+      </a>
+      <div class="nav-label">Workspace</div>
+      <a href="#overview">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c.6-2.3 2.3-3.5 4.5-3.5s3.9 1.2 4.5 3.5M11 3.2a2.5 2.5 0 010 4.6M12.5 10.3c1 .5 1.7 1.6 2 3.2"/></svg>
+        Members
+      </a>
+      <a href="#settings" data-route="settings">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="me">
+      <div class="avatar" aria-hidden="true">PR</div>
+      <div>Priya Raman<br><span style="color:#8c95a6;font-size:12px">Admin</span></div>
+    </div>
+  </aside>
+
+  <main id="main" tabindex="-1">
+    <!-- Overview view -->
+    <section id="view-overview" hidden aria-labelledby="overview-title">
+      <div class="crumbs">Workspace</div>
+      <h1 id="overview-title"><span data-bind="name">Northwind Labs</span></h1>
+      <p class="subtitle">Overview of projects and activity across the workspace.</p>
+
+      <div class="stats">
+        <div class="card stat"><div class="label">Active projects</div><div class="value">12</div></div>
+        <div class="card stat"><div class="label">Open tasks</div><div class="value">148</div></div>
+        <div class="card stat"><div class="label">Due this week</div><div class="value">23</div></div>
+        <div class="card stat"><div class="label">Members</div><div class="value">24</div></div>
+      </div>
+
+      <div class="overview-grid">
+        <div class="card">
+          <div class="card-head"><h2>Active projects</h2></div>
+          <ul class="projects">
+            <li><div><div class="pname">Q4 mobile app release</div><div class="owner">Marcus Chen · due Nov 21</div></div><div class="bar" aria-hidden="true"><span style="width:72%"></span></div><div class="pct">72%</div></li>
+            <li><div><div class="pname">Customer onboarding revamp</div><div class="owner">Aisha Bello · due Dec 5</div></div><div class="bar" aria-hidden="true"><span style="width:45%"></span></div><div class="pct">45%</div></li>
+            <li><div><div class="pname">Billing service migration</div><div class="owner">Tomás Ortega · due Nov 14</div></div><div class="bar" aria-hidden="true"><span style="width:88%"></span></div><div class="pct">88%</div></li>
+            <li><div><div class="pname">Brand refresh 2027</div><div class="owner">Hannah Lindqvist · due Jan 30</div></div><div class="bar" aria-hidden="true"><span style="width:18%"></span></div><div class="pct">18%</div></li>
+            <li><div><div class="pname">Support knowledge base</div><div class="owner">Devon Park · due Dec 12</div></div><div class="bar" aria-hidden="true"><span style="width:60%"></span></div><div class="pct">60%</div></li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h2>Workspace details</h2>
+            <a class="btn btn-secondary btn-sm" href="#settings">Edit settings</a>
+          </div>
+          <dl class="details">
+            <dt>Name</dt><dd data-bind="name">Northwind Labs</dd>
+            <dt>Contact email</dt><dd data-bind="email">ops@northwindlabs.io</dd>
+            <dt>Workspace URL</dt><dd>app.trackwise.io/northwind-labs</dd>
+            <dt>Plan</dt><dd>Business · renews Mar 1, 2027</dd>
+            <dt>Last updated</dt><dd data-bind="updated">Oct 12, 2026 by Priya Raman</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings view -->
+    <section id="view-settings" class="settings" hidden aria-labelledby="settings-title">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#overview" data-bind="name">Northwind Labs</a> / Settings</nav>
+      <h1 id="settings-title">Workspace settings</h1>
+      <p class="subtitle">Manage how your workspace appears to members and where we send account notices.</p>
+
+      <div class="tabs" role="presentation">
+        <span class="active">General</span>
+        <span aria-disabled="true" title="Not available in this demo">Members</span>
+        <span aria-disabled="true" title="Not available in this demo">Billing</span>
+        <span aria-disabled="true" title="Not available in this demo">Integrations</span>
+      </div>
+
+      <form id="settings-form" class="card" novalidate>
+        <div class="section">
+          <div>
+            <h2>Workspace profile</h2>
+            <p class="help">Shown in the sidebar, invitations, and email notifications.</p>
+          </div>
+          <div>
+            <div class="field">
+              <label for="ws-name">Workspace name<span class="req" aria-hidden="true">*</span></label>
+              <input id="ws-name" name="name" type="text" required maxlength="80" autocomplete="organization"
+                     aria-describedby="ws-name-msg ws-name-count">
+              <div class="hint-row">
+                <span id="ws-name-msg">Use your team or company name.</span>
+                <span id="ws-name-count" class="counter" aria-live="polite"></span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="ws-url">Workspace URL</label>
+              <div class="readonly-url" id="ws-url">app.trackwise.io/northwind-labs</div>
+              <div class="hint-row"><span>Contact support to change your workspace URL.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div>
+            <h2>Contact</h2>
+            <p class="help">Billing receipts, security alerts, and plan changes go here.</p>
+          </div>
+          <div>
+            <div class="field">
+              <label for="ws-email">Contact email<span class="req" aria-hidden="true">*</span></label>
+              <input id="ws-email" name="email" type="email" required autocomplete="email" spellcheck="false"
+                     aria-describedby="ws-email-msg">
+              <div class="hint-row"><span id="ws-email-msg">A shared inbox works best, e.g. ops@yourcompany.com.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actionbar">
+          <span class="status" id="dirty-status" aria-live="polite"></span>
+          <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-btn" disabled>Save changes</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<dialog id="discard-dialog" aria-labelledby="discard-title" aria-describedby="discard-desc">
+  <div class="dialog-body">
+    <h2 id="discard-title">Discard unsaved changes?</h2>
+    <p id="discard-desc">Your edits to the workspace settings will be lost.</p>
+  </div>
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-secondary" value="keep" autofocus>Keep editing</button>
+    <button type="button" class="btn btn-danger" value="discard">Discard changes</button>
+  </div>
+</dialog>
+
+<div class="toast-region" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const STORAGE_KEY = "trackwise.workspace.v1";
+  const NAME_MAX = 50;
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  const defaults = {
+    name: "Northwind Labs",
+    email: "ops@northwindlabs.io",
+    updatedAt: "2026-10-12T15:42:00Z",
+    updatedBy: "Priya Raman",
+  };
+
+  let workspace = load();
+
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved && saved.name && saved.email) return { ...defaults, ...saved };
+    } catch (_) {}
+    return { ...defaults };
+  }
+  function persist() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace)); } catch (_) {}
+  }
+
+  const $ = (sel) => document.querySelector(sel);
+  const form = $("#settings-form");
+  const nameInput = $("#ws-name");
+  const emailInput = $("#ws-email");
+  const saveBtn = $("#save-btn");
+  const cancelBtn = $("#cancel-btn");
+  const dirtyStatus = $("#dirty-status");
+  const dialog = $("#discard-dialog");
+  const toastRegion = document.querySelector(".toast-region");
+
+  const nameHint = $("#ws-name-msg").textContent;
+  const emailHint = $("#ws-email-msg").textContent;
+  const touched = { name: false, email: false };
+  let saving = false;
+
+  // ---------- Rendering shared workspace data ----------
+  function initials(name) {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "W";
+  }
+  function renderWorkspace() {
+    const updated = new Date(workspace.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    document.querySelectorAll('[data-bind="name"]').forEach(el => el.textContent = workspace.name);
+    document.querySelectorAll('[data-bind="email"]').forEach(el => el.textContent = workspace.email);
+    document.querySelectorAll('[data-bind="initials"]').forEach(el => el.textContent = initials(workspace.name));
+    document.querySelectorAll('[data-bind="updated"]').forEach(el => el.textContent = `${updated} by ${workspace.updatedBy}`);
+  }
+
+  // ---------- Form state ----------
+  const values = () => ({ name: nameInput.value.trim(), email: emailInput.value.trim() });
+  const isDirty = () => {
+    const v = values();
+    return v.name !== workspace.name || v.email !== workspace.email;
+  };
+
+  function validate() {
+    const { name, email } = values();
+    const errors = {};
+    if (!name) errors.name = "Workspace name is required.";
+    else if (name.length > NAME_MAX) errors.name = `Keep it to ${NAME_MAX} characters or fewer.`;
+    if (!email) errors.email = "Contact email is required.";
+    else if (!EMAIL_RE.test(email)) errors.email = "Enter a valid email address, like name@company.com.";
+    return errors;
+  }
+
+  function showFieldState(input, msgEl, hint, error, show) {
+    if (show && error) {
+      input.setAttribute("aria-invalid", "true");
+      msgEl.className = "error";
+      msgEl.textContent = error;
+    } else {
+      input.removeAttribute("aria-invalid");
+      msgEl.className = "";
+      msgEl.textContent = hint;
+    }
+  }
+
+  function refresh() {
+    const errors = validate();
+    showFieldState(nameInput, $("#ws-name-msg"), nameHint, errors.name, touched.name);
+    showFieldState(emailInput, $("#ws-email-msg"), emailHint, errors.email, touched.email);
+
+    const len = nameInput.value.trim().length;
+    const counter = $("#ws-name-count");
+    counter.textContent = `${len}/${NAME_MAX}`;
+    counter.classList.toggle("over", len > NAME_MAX);
+
+    const dirty = isDirty();
+    saveBtn.disabled = saving || !dirty;
+    dirtyStatus.innerHTML = dirty && !saving ? '<span class="dot" aria-hidden="true"></span>Unsaved changes' : "";
+    return errors;
+  }
+
+  function resetForm() {
+    nameInput.value = workspace.name;
+    emailInput.value = workspace.email;
+    touched.name = touched.email = false;
+    refresh();
+  }
+
+  nameInput.addEventListener("input", refresh);
+  emailInput.addEventListener("input", refresh);
+  nameInput.addEventListener("blur", () => { touched.name = true; refresh(); });
+  emailInput.addEventListener("blur", () => { touched.email = true; refresh(); });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (saving || !isDirty()) return;
+    touched.name = touched.email = true;
+    const errors = refresh();
+    if (errors.name) return nameInput.focus();
+    if (errors.email) return emailInput.focus();
+
+    saving = true;
+    saveBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Saving…';
+    refresh();
+    nameInput.readOnly = emailInput.readOnly = true;
+
+    await new Promise(r => setTimeout(r, 700)); // simulated network request
+
+    const { name, email } = values();
+    workspace = { ...workspace, name, email, updatedAt: new Date().toISOString(), updatedBy: "Priya Raman" };
+    persist();
+    renderWorkspace();
+
+    saving = false;
+    nameInput.readOnly = emailInput.readOnly = false;
+    saveBtn.textContent = "Save changes";
+    resetForm();
+    render(); // refresh document title
+    toast("Workspace settings saved");
+  });
+
+  // Cmd/Ctrl+S saves while on settings
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s" && currentRoute() === "settings") {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  // ---------- Discard confirmation ----------
+  function confirmDiscard() {
+    return new Promise((resolve) => {
+      const onClick = (e) => {
+        const btn = e.target.closest("button[value]");
+        if (btn) dialog.close(btn.value);
+      };
+      const onClose = () => {
+        dialog.removeEventListener("click", onClick);
+        resolve(dialog.returnValue === "discard");
+      };
+      dialog.returnValue = "keep";
+      dialog.addEventListener("click", onClick);
+      dialog.addEventListener("close", onClose, { once: true });
+      dialog.showModal();
+    });
+  }
+
+  // Leave settings, asking first if there are unsaved edits.
+  async function leaveSettings(targetHash) {
+    if (saving) return;
+    if (isDirty() && !(await confirmDiscard())) return;
+    resetForm();
+    navigate(targetHash);
+  }
+
+  cancelBtn.addEventListener("click", () => leaveSettings("#overview"));
+
+  // Guard any in-app link while editing
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest('a[href^="#"]');
+    if (!link || currentRoute() !== "settings") return;
+    const target = link.getAttribute("href");
+    if (target === "#settings") return;
+    e.preventDefault();
+    leaveSettings(target);
+  });
+
+  window.addEventListener("beforeunload", (e) => {
+    if (currentRoute() === "settings" && isDirty()) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  // ---------- Toast ----------
+  function toast(message) {
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>';
+    el.append(message);
+    toastRegion.append(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  // ---------- Routing ----------
+  const routes = ["overview", "settings"];
+  let activeRoute = null;
+  const currentRoute = () => activeRoute;
+
+  function navigate(hash) {
+    if (location.hash === hash) render();
+    else location.hash = hash;
+  }
+
+  function render() {
+    const route = routes.includes(location.hash.slice(1)) ? location.hash.slice(1) : "overview";
+    // Browser back/forward away from dirty settings: confirm, and restore if declined.
+    if (activeRoute === "settings" && route !== "settings" && isDirty()) {
+      history.replaceState(null, "", "#settings");
+      leaveSettings("#" + route);
+      return;
+    }
+    const changed = route !== activeRoute;
+    activeRoute = route;
+    routes.forEach(r => $("#view-" + r).hidden = r !== route);
+    document.querySelectorAll(".nav a[data-route]").forEach(a => {
+      if (a.dataset.route === route) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    document.title = (route === "settings" ? "Workspace settings" : "Overview") + " · " + workspace.name;
+    if (changed) {
+      if (route === "settings") { resetForm(); nameInput.focus(); }
+      else $("#main").focus({ preventScroll: true });
+      window.scrollTo(0, 0);
+    }
+  }
+
+  window.addEventListener("hashchange", render);
+  renderWorkspace();
+  if (!location.hash) history.replaceState(null, "", "#settings");
+  render();
+})();
+</script>
+</body>
+</html>

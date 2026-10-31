@@ -1,0 +1,8 @@
+.vc-page { max-width: 64rem; margin: 0 auto; padding: 1.5rem 1rem 8rem; display: grid; gap: 1.5rem; }
+.vc-narrow { max-width: 44rem; }
+.vc-grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); align-items: start; }
+.vc-form { display: grid; gap: 1.25rem; }
+.vc-appointments { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.875rem; }
+.vc-appointments li { display: flex; gap: 1rem; align-items: baseline; }
+.vc-time { font-variant-numeric: tabular-nums; min-width: 3.5rem; }
+.vc-muted { opacity: 0.75; }

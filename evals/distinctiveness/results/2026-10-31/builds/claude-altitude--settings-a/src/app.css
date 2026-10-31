@@ -1,0 +1,30 @@
+.ws-page {
+  max-inline-size: 48rem;
+  margin-inline: auto;
+  padding: 2rem 1rem 8rem;
+  display: grid;
+  gap: 1.5rem;
+}
+.ws-form {
+  display: grid;
+  gap: 1rem;
+}
+.ws-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem 2rem;
+  margin: 0;
+}
+.ws-details dt {
+  color: var(--ink-muted, inherit);
+  font-size: 0.875rem;
+}
+.ws-details dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}
+.ws-meta {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-muted, inherit);
+}

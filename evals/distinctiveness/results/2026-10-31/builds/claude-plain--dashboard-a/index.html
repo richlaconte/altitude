@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subscription overview</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --wash:           rgba(11,11,11,0.04);
+    --series-1:       #2a78d6;
+    --series-2:       #eb6834;
+    --good-text:      #006300;
+    --bad-text:       #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #f0efec;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
+      --wash:           rgba(255,255,255,0.05);
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --good-text:      #0ca30c;
+      --bad-text:       #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --wash:           rgba(255,255,255,0.05);
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --good-text:      #0ca30c;
+    --bad-text:       #e66767;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 28px 24px 48px; }
+
+  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 2px; }
+  .sub { color: var(--text-secondary); margin: 0; }
+
+  button, select {
+    font: inherit; color: var(--text-primary);
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer;
+  }
+  button:hover, select:hover { background: var(--wash); }
+  :focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface-1); }
+  .seg button { border: 0; border-radius: 0; padding: 6px 14px; color: var(--text-secondary); }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button[aria-pressed="true"] { color: var(--text-primary); font-weight: 600; background: var(--wash); }
+  .filters label { color: var(--text-secondary); display: inline-flex; gap: 8px; align-items: center; }
+
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .kpis { display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .tile-label { color: var(--text-secondary); margin: 0 0 6px; }
+  .tile-value { font-size: 26px; font-weight: 600; margin: 0; line-height: 1.2; }
+  .hero .tile-value { font-size: 52px; letter-spacing: -0.01em; }
+  .hero-meta { color: var(--text-secondary); margin-top: 6px; }
+  .delta { display: inline-flex; gap: 4px; align-items: baseline; margin-top: 4px; font-size: 13px; color: var(--text-secondary); }
+  .delta strong { font-weight: 600; }
+  .delta.good strong { color: var(--good-text); }
+  .delta.bad strong  { color: var(--bad-text); }
+  .spark { display: block; margin-top: 10px; width: 100%; height: 30px; }
+  .spark .sl { fill: none; stroke: var(--text-muted); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+  .spark .sd { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; }
+
+  .charts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
+  .charts .wide { grid-column: 1 / -1; }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .card-head h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .card-head p { margin: 2px 0 0; color: var(--text-secondary); font-size: 13px; }
+  .card-tools { display: flex; gap: 14px; align-items: center; flex-shrink: 0; }
+  .card-tools button { padding: 3px 10px; font-size: 13px; }
+  .legend { display: flex; gap: 14px; color: var(--text-secondary); font-size: 13px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .chart { position: relative; }
+  .chart:focus-visible { outline-offset: 4px; border-radius: 4px; }
+  .chart svg { display: block; width: 100%; overflow: visible; }
+  .grid line { stroke: var(--grid); stroke-width: 1; shape-rendering: crispEdges; }
+  .baseline { stroke: var(--axis); stroke-width: 1; shape-rendering: crispEdges; }
+  .tick { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .end-label { fill: var(--text-primary); font-size: 12px; font-weight: 600; }
+  .line { fill: none; stroke: var(--series-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .area { fill: var(--series-1); opacity: 0.1; }
+  .dot  { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 2; }
+  .bar-new { fill: var(--series-1); }
+  .bar-cxl { fill: var(--series-2); }
+  .bars g { transition: opacity .12s; }
+  .bars.hovering g:not(.on) { opacity: 0.4; }
+  .crosshair { stroke: var(--axis); stroke-width: 1; shape-rendering: crispEdges; }
+
+  .tip {
+    position: absolute; pointer-events: none; z-index: 2;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; min-width: 140px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); font-size: 12px;
+  }
+  .tip[hidden] { display: none; }
+  .tip-title { color: var(--text-secondary); margin-bottom: 4px; }
+  .tip-row { display: flex; align-items: center; gap: 8px; }
+  .tip-row b { font-size: 13px; font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .tip-row span { color: var(--text-secondary); }
+  .tip-row i { width: 12px; height: 2px; border-radius: 1px; display: inline-block; }
+  .tip-row i.none { background: transparent; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-secondary); font-weight: 500; }
+  tbody tr:hover { background: var(--wash); }
+  .table-view { max-height: 300px; overflow: auto; }
+  .detail-head { margin-bottom: 6px; }
+
+  .note { color: var(--text-muted); font-size: 12px; margin-top: 16px; }
+
+  @media (max-width: 1000px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .kpis .hero { grid-column: 1 / -1; }
+    .charts { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Subscription overview</h1>
+      <p class="sub" id="period-label"></p>
+    </div>
+    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">Dark mode</button>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="seg" role="group" aria-label="Date range" id="range">
+      <button type="button" data-range="3">Last 3 months</button>
+      <button type="button" data-range="6">Last 6 months</button>
+      <button type="button" data-range="12" aria-pressed="true">Last 12 months</button>
+    </div>
+    <label>Plan
+      <select id="plan">
+        <option value="all">All plans</option>
+        <option value="starter">Starter</option>
+        <option value="growth">Growth</option>
+        <option value="enterprise">Enterprise</option>
+      </select>
+    </label>
+  </div>
+
+  <section class="kpis" aria-label="Key metrics">
+    <div class="card hero">
+      <p class="tile-label">Monthly recurring revenue</p>
+      <p class="tile-value" id="k-mrr"></p>
+      <div id="k-mrr-delta"></div>
+      <div class="hero-meta" id="k-mrr-meta"></div>
+    </div>
+    <div class="card" id="t-active"></div>
+    <div class="card" id="t-new"></div>
+    <div class="card" id="t-cxl"></div>
+    <div class="card" id="t-churn"></div>
+  </section>
+
+  <section class="charts">
+    <div class="card wide" data-card="mrr">
+      <div class="card-head">
+        <div><h2>Monthly recurring revenue</h2><p>End-of-month MRR</p></div>
+        <div class="card-tools"><button type="button" class="tbl-toggle" aria-pressed="false">Table</button></div>
+      </div>
+      <div class="chart" tabindex="0"></div>
+      <div class="table-view" hidden></div>
+    </div>
+
+    <div class="card" data-card="subs">
+      <div class="card-head">
+        <div><h2>New vs cancelled subscriptions</h2><p>New above the baseline, cancelled below</p></div>
+        <div class="card-tools">
+          <div class="legend"><span><i style="background:var(--series-1)"></i>New</span><span><i style="background:var(--series-2)"></i>Cancelled</span></div>
+          <button type="button" class="tbl-toggle" aria-pressed="false">Table</button>
+        </div>
+      </div>
+      <div class="chart" tabindex="0"></div>
+      <div class="table-view" hidden></div>
+    </div>
+
+    <div class="card" data-card="churn">
+      <div class="card-head">
+        <div><h2>Monthly churn rate</h2><p>Cancelled ÷ subscriptions at start of month</p></div>
+        <div class="card-tools"><button type="button" class="tbl-toggle" aria-pressed="false">Table</button></div>
+      </div>
+      <div class="chart" tabindex="0"></div>
+      <div class="table-view" hidden></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="detail-title">
+    <div class="card-head detail-head"><div><h2 id="detail-title">Monthly detail</h2><p>Most recent month first</p></div></div>
+    <div class="table-view" style="max-height:none" id="detail"></div>
+  </section>
+
+  <p class="note">Sample data, generated for demonstration. No backend is connected.</p>
+</div>
+
+<script>
+(() => {
+  // ---------- Sample data ----------
+  // 24 months ending Oct 2026: 12 to show, 12 more for prior-period comparisons.
+  const N = 24;
+  const months = Array.from({ length: N }, (_, i) => new Date(2026, 9 - (N - 1 - i), 1));
+
+  function rng(seed) {
+    return () => {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  // New-signup seasonality by calendar month (Jan..Dec)
+  const season = [1.14, 1.05, 1.06, 1.0, 0.98, 0.94, 0.88, 0.9, 1.1, 1.06, 1.0, 0.84];
+
+  const PLANS = {
+    starter:    { name: 'Starter',    subs0: 2150, arpa0: 29,   arpaG: 0.0015, new0: 150, newG: 0.010, churn: 0.050, seed: 11 },
+    growth:     { name: 'Growth',     subs0: 820,  arpa0: 109,  arpaG: 0.0030, new0: 40,  newG: 0.016, churn: 0.026, seed: 23 },
+    enterprise: { name: 'Enterprise', subs0: 64,   arpa0: 1450, arpaG: 0.0045, new0: 2.2, newG: 0.030, churn: 0.011, seed: 37 },
+  };
+  const PRICE_CHANGE = 16; // index of Mar 2026: Starter list price raised, brief churn bump
+
+  function simulate(p, key) {
+    const r = rng(p.seed);
+    let subs = p.subs0;
+    return months.map((d, i) => {
+      const start = subs;
+      const newSubs = Math.max(0, Math.round(p.new0 * (1 + p.newG) ** i * season[d.getMonth()] * (0.88 + 0.24 * r())));
+      const spike = key === 'starter' && (i === PRICE_CHANGE || i === PRICE_CHANGE + 1) ? (i === PRICE_CHANGE ? 1.45 : 1.2) : 1;
+      const cancelled = Math.round(start * p.churn * (0.82 + 0.36 * r()) * spike);
+      subs = start + newSubs - cancelled;
+      let arpa = p.arpa0 * (1 + p.arpaG) ** i;
+      if (key === 'starter' && i >= PRICE_CHANGE) arpa *= 1.1;
+      return { start, newSubs, cancelled, subs, mrr: Math.round(subs * arpa) };
+    });
+  }
+  const DATA = Object.fromEntries(Object.entries(PLANS).map(([k, p]) => [k, simulate(p, k)]));
+  DATA.all = months.map((_, i) => {
+    const o = { start: 0, newSubs: 0, cancelled: 0, subs: 0, mrr: 0 };
+    for (const k of Object.keys(PLANS)) for (const f in o) o[f] += DATA[k][i][f];
+    return o;
+  });
+  for (const k in DATA) DATA[k].forEach(m => { m.churn = m.start ? m.cancelled / m.start : 0; m.net = m.newSubs - m.cancelled; });
+
+  // ---------- Formatting ----------
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monShort = (d, i) => (i === 0 || d.getMonth() === 0) ? `${MON[d.getMonth()]} ’${String(d.getFullYear()).slice(2)}` : MON[d.getMonth()];
+  const monLong = d => `${MON[d.getMonth()]} ${d.getFullYear()}`;
+  const fmtInt = v => Math.round(v).toLocaleString('en-US');
+  const fmtSigned = v => (v > 0 ? '+' : v < 0 ? '−' : '') + fmtInt(Math.abs(v));
+  const fmtMoney = v => '$' + fmtInt(v);
+  const fmtMoneyC = v => {
+    const a = Math.abs(v);
+    if (a >= 1e6) return '$' + (v / 1e6).toFixed(a >= 1e7 ? 1 : 2).replace(/\.?0+$/, '') + 'M';
+    if (a >= 1e4) return '$' + (v / 1e3).toFixed(a >= 1e5 ? 0 : 1).replace(/\.0$/, '') + 'K';
+    return '$' + fmtInt(v);
+  };
+  const fmtCount = v => Math.abs(v) >= 1e4 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'K' : fmtInt(v);
+  const fmtPct = (v, d = 2) => (v * 100).toFixed(d) + '%';
+  const fmtPctAxis = v => (v * 100).toFixed(v * 100 % 1 ? 1 : 0) + '%';
+
+  // ---------- DOM helpers ----------
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs, parent) {
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function el(tag, props = {}, ...kids) {
+    const e = document.createElement(tag);
+    for (const k in props) {
+      if (k === 'text') e.textContent = props[k];
+      else if (k === 'class') e.className = props[k];
+      else e.setAttribute(k, props[k]);
+    }
+    kids.forEach(c => c && e.appendChild(c));
+    return e;
+  }
+  function niceStep(raw, integer) {
+    const p = 10 ** Math.floor(Math.log10(raw || 1));
+    const f = raw / p;
+    let s = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+    return integer ? Math.max(1, Math.round(s)) : s;
+  }
+  function textWidth(str, size = 11) { return str.length * size * 0.6; }
+
+  // Rounded data-end, square baseline
+  function barPath(x, w, base, end) {
+    const up = end < base;
+    const h = Math.abs(base - end);
+    const r = Math.min(4, h, w / 2);
+    if (h <= 0) return '';
+    const d = up ? 1 : -1;
+    return `M${x},${base} V${end + d * r} Q${x},${end} ${x + r},${end} H${x + w - r} Q${x + w},${end} ${x + w},${end + d * r} V${base} Z`;
+  }
+
+  function makeTip(container) {
+    const tip = el('div', { class: 'tip', role: 'status', 'aria-live': 'polite' });
+    tip.hidden = true;
+    container.appendChild(tip);
+    return {
+      show(x, y, title, rows) {
+        tip.replaceChildren(el('div', { class: 'tip-title', text: title }));
+        rows.forEach(r => {
+          const key = el('i', r.color ? {} : { class: 'none' });
+          if (r.color) key.style.background = r.color;
+          tip.appendChild(el('div', { class: 'tip-row' }, key, el('b', { text: r.value }), el('span', { text: r.label })));
+        });
+        tip.hidden = false;
+        const cw = container.clientWidth, tw = tip.offsetWidth;
+        let left = x + 14;
+        if (left + tw > cw) left = x - tw - 14;
+        tip.style.left = Math.max(0, left) + 'px';
+        tip.style.top = Math.max(0, y - tip.offsetHeight / 2) + 'px';
+      },
+      hide() { tip.hidden = true; },
+    };
+  }
+
+  // Shared keyboard + pointer wiring: index-based hover over n columns
+  function wireHover(container, overlay, n, xAt, onShow, onHide) {
+    let idx = -1;
+    const show = i => { idx = Math.max(0, Math.min(n - 1, i)); onShow(idx); };
+    overlay.addEventListener('pointermove', e => {
+      const box = overlay.getBoundingClientRect();
+      const mx = e.clientX - box.left + Number(overlay.getAttribute('x'));
+      let best = 0, bd = Infinity;
+      for (let i = 0; i < n; i++) { const dd = Math.abs(xAt(i) - mx); if (dd < bd) { bd = dd; best = i; } }
+      show(best);
+    });
+    overlay.addEventListener('pointerleave', () => { if (document.activeElement !== container) { idx = -1; onHide(); } });
+    container.onkeydown = e => {
+      if (e.key === 'ArrowRight') { show(idx < 0 ? n - 1 : idx + 1); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft') { show(idx < 0 ? n - 1 : idx - 1); e.preventDefault(); }
+      else if (e.key === 'Home') { show(0); e.preventDefault(); }
+      else if (e.key === 'End') { show(n - 1); e.preventDefault(); }
+      else if (e.key === 'Escape') { idx = -1; onHide(); }
+    };
+    container.onfocus = () => show(idx < 0 ? n - 1 : idx);
+    container.onblur = () => { idx = -1; onHide(); };
+  }
+
+  // ---------- Line chart (single series) ----------
+  function lineChart(container, { labels, values, fmt, axisFmt, name, integer }) {
+    container.replaceChildren();
+    const W = container.clientWidth, H = 250;
+    if (!W) return;
+    const n = values.length;
+    const max = Math.max(...values);
+    const step = niceStep(max / 4, integer);
+    const top = Math.ceil(max / step) * step || step;
+    const ticks = []; for (let v = 0; v <= top + 1e-9; v += step) ticks.push(v);
+
+    const endText = fmt(values[n - 1]);
+    const m = { l: Math.max(...ticks.map(t => textWidth(axisFmt(t)))) + 12, r: textWidth(endText, 12) + 16, t: 12, b: 26 };
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const x = i => m.l + (n === 1 ? pw / 2 : (i / (n - 1)) * pw);
+    const y = v => m.t + ph - (v / top) * ph;
+
+    const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': `${name}, ${labels[0]} to ${labels[n - 1]}. Latest ${endText}.` }, container);
+    const g = svgEl('g', { class: 'grid' }, svg);
+    ticks.forEach(t => {
+      if (t > 0) svgEl('line', { x1: m.l, x2: m.l + pw, y1: y(t), y2: y(t) }, g);
+      svgEl('text', { x: m.l - 8, y: y(t) + 4, 'text-anchor': 'end', class: 'tick' }, svg).textContent = axisFmt(t);
+    });
+    svgEl('line', { x1: m.l, x2: m.l + pw, y1: y(0), y2: y(0), class: 'baseline' }, svg);
+    const every = Math.ceil(n / Math.max(1, Math.floor(pw / 56)));
+    labels.forEach((l, i) => {
+      if ((n - 1 - i) % every) return;
+      svgEl('text', { x: x(i), y: H - 6, 'text-anchor': 'middle', class: 'tick' }, svg).textContent = l;
+    });
+
+    const pts = values.map((v, i) => `${x(i)},${y(v)}`).join(' L');
+    svgEl('path', { d: `M${x(0)},${y(0)} L${pts} L${x(n - 1)},${y(0)} Z`, class: 'area' }, svg);
+    svgEl('path', { d: `M${pts}`, class: 'line' }, svg);
+    svgEl('circle', { cx: x(n - 1), cy: y(values[n - 1]), r: 4, class: 'dot' }, svg);
+    svgEl('text', { x: x(n - 1) + 10, y: y(values[n - 1]) + 4, class: 'end-label' }, svg).textContent = endText;
+
+    const cross = svgEl('line', { y1: m.t, y2: m.t + ph, class: 'crosshair', visibility: 'hidden' }, svg);
+    const hdot = svgEl('circle', { r: 5, class: 'dot', visibility: 'hidden' }, svg);
+    const overlay = svgEl('rect', { x: m.l - 10, y: 0, width: pw + 20, height: H, fill: 'transparent' }, svg);
+    const tip = makeTip(container);
+    wireHover(container, overlay, n, x, i => {
+      cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i)); cross.setAttribute('visibility', 'visible');
+      hdot.setAttribute('cx', x(i)); hdot.setAttribute('cy', y(values[i])); hdot.setAttribute('visibility', 'visible');
+      tip.show(x(i), y(values[i]), labels[i].full, [{ value: fmt(values[i]), label: name, color: 'var(--series-1)' }]);
+    }, () => { cross.setAttribute('visibility', 'hidden'); hdot.setAttribute('visibility', 'hidden'); tip.hide(); });
+  }
+
+  // ---------- Mirrored columns: new (up) vs cancelled (down) ----------
+  function mirrorChart(container, { labels, up, down }) {
+    container.replaceChildren();
+    const W = container.clientWidth, H = 250;
+    if (!W) return;
+    const n = up.length;
+    const maxU = Math.max(...up, 1), maxD = Math.max(...down, 1);
+    const step = niceStep((maxU + maxD) / 5, true);
+    const top = Math.ceil(maxU / step) * step, bot = Math.ceil(maxD / step) * step;
+    const ticks = []; for (let v = -bot; v <= top; v += step) ticks.push(v);
+
+    const m = { l: Math.max(...ticks.map(t => textWidth(fmtCount(Math.abs(t))))) + 12, r: 8, t: 18, b: 26 };
+    const pw = W - m.l - m.r, ph = H - m.t - m.b;
+    const band = pw / n;
+    const bw = Math.min(24, band * 0.6);
+    const x = i => m.l + band * i + band / 2;
+    const y = v => m.t + ((top - v) / (top + bot)) * ph;
+    const base = y(0);
+
+    const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img',
+      'aria-label': `New and cancelled subscriptions by month. Latest month: ${fmtInt(up[n - 1])} new, ${fmtInt(down[n - 1])} cancelled.` }, container);
+    const g = svgEl('g', { class: 'grid' }, svg);
+    ticks.forEach(t => {
+      if (t !== 0) svgEl('line', { x1: m.l, x2: m.l + pw, y1: y(t), y2: y(t) }, g);
+      svgEl('text', { x: m.l - 8, y: y(t) + 4, 'text-anchor': 'end', class: 'tick' }, svg).textContent = fmtCount(Math.abs(t));
+    });
+    const every = Math.ceil(n / Math.max(1, Math.floor(pw / 48)));
+    labels.forEach((l, i) => {
+      if ((n - 1 - i) % every) return;
+      svgEl('text', { x: x(i), y: H - 6, 'text-anchor': 'middle', class: 'tick' }, svg).textContent = l;
+    });
+
+    const bars = svgEl('g', { class: 'bars' }, svg);
+    const cols = up.map((u, i) => {
+      const col = svgEl('g', {}, bars);
+      // 1px off the baseline each side = 2px surface gap between the touching bars
+      svgEl('path', { d: barPath(x(i) - bw / 2, bw, base - 1, Math.min(y(u), base - 1)), class: 'bar-new' }, col);
+      svgEl('path', { d: barPath(x(i) - bw / 2, bw, base + 1, Math.max(y(-down[i]), base + 1)), class: 'bar-cxl' }, col);
+      return col;
+    });
+    svgEl('line', { x1: m.l, x2: m.l + pw, y1: base, y2: base, class: 'baseline' }, svg);
+
+    // Direct labels on the latest month only
+    const li = n - 1;
+    svgEl('text', { x: x(li), y: y(up[li]) - 6, 'text-anchor': 'middle', class: 'end-label' }, svg).textContent = fmtInt(up[li]);
+    svgEl('text', { x: x(li), y: y(-down[li]) + 15, 'text-anchor': 'middle', class: 'end-label' }, svg).textContent = fmtInt(down[li]);
+
+    const overlay = svgEl('rect', { x: m.l, y: 0, width: pw, height: H, fill: 'transparent' }, svg);
+    const tip = makeTip(container);
+    wireHover(container, overlay, n, x, i => {
+      bars.classList.add('hovering');
+      cols.forEach((c, j) => c.classList.toggle('on', j === i));
+      tip.show(x(i) + bw / 2, base, labels[i].full, [
+        { value: fmtInt(up[i]), label: 'New', color: 'var(--series-1)' },
+        { value: fmtInt(down[i]), label: 'Cancelled', color: 'var(--series-2)' },
+        { value: fmtSigned(up[i] - down[i]), label: 'Net change' },
+      ]);
+    }, () => { bars.classList.remove('hovering'); cols.forEach(c => c.classList.remove('on')); tip.hide(); });
+  }
+
+  // ---------- Tables ----------
+  function table(headers, rows) {
+    const thead = el('thead', {}, el('tr', {}, ...headers.map(h => el('th', { scope: 'col', text: h }))));
+    const tbody = el('tbody');
+    rows.forEach(r => tbody.appendChild(el('tr', {}, ...r.map((c, i) => el(i ? 'td' : 'th', i ? { text: c } : { scope: 'row', text: c, style: 'font-weight:400' })))));
+    return el('table', {}, thead, tbody);
+  }
+
+  // ---------- Tiles ----------
+  function delta(cur, prev, { upGood, suffix, pts }) {
+    const diff = cur - prev;
+    let text;
+    if (pts) text = (diff >= 0 ? '+' : '−') + Math.abs(diff * 100).toFixed(2) + ' pts';
+    else if (!prev) text = '—';
+    else text = (diff >= 0 ? '+' : '−') + Math.abs(diff / prev * 100).toFixed(1) + '%';
+    const flat = Math.abs(pts ? diff * 100 : prev ? diff / prev * 100 : 0) < 0.05;
+    const good = flat ? null : (diff > 0) === upGood;
+    const arrow = flat ? '→' : diff > 0 ? '▲' : '▼';
+    const d = el('div', { class: 'delta' + (good === null ? '' : good ? ' good' : ' bad') });
+    d.appendChild(el('strong', { text: `${arrow} ${text}` }));
+    d.appendChild(el('span', { text: suffix }));
+    return d;
+  }
+  function sparkline(values) {
+    const w = 120, h = 30, n = values.length;
+    const min = Math.min(...values), max = Math.max(...values), span = max - min || 1;
+    const x = i => 4 + (i / (n - 1)) * (w - 8);
+    const y = v => 4 + (1 - (v - min) / span) * (h - 8);
+    const svg = svgEl('svg', { class: 'spark', viewBox: `0 0 ${w} ${h}`, preserveAspectRatio: 'none', 'aria-hidden': 'true' });
+    svgEl('polyline', { points: values.map((v, i) => `${x(i)},${y(v)}`).join(' '), class: 'sl', 'vector-effect': 'non-scaling-stroke' }, svg);
+    return { svg, last: [x(n - 1) / w, y(values[n - 1]) / h] };
+  }
+  function tile(node, label, value, deltaEl, series) {
+    const sp = sparkline(series);
+    // End dot drawn in HTML so it stays round with a stretched sparkline
+    const holder = el('div', { style: 'position:relative' }, sp.svg);
+    const dot = el('span', { style: `position:absolute;width:10px;height:10px;border-radius:50%;background:var(--series-1);border:2px solid var(--surface-1);left:calc(${sp.last[0] * 100}% - 5px);top:${10 + sp.last[1] * 30 - 5}px` });
+    holder.appendChild(dot);
+    node.replaceChildren(el('p', { class: 'tile-label', text: label }), el('p', { class: 'tile-value', text: value }), deltaEl, holder);
+  }
+
+  // ---------- State & render ----------
+  const state = { range: 12, plan: 'all' };
+  const cards = Object.fromEntries([...document.querySelectorAll('[data-card]')].map(c => [c.dataset.card, c]));
+
+  function render() {
+    const R = state.range, rows = DATA[state.plan];
+    const cur = rows.slice(N - R), prev = rows.slice(N - 2 * R, N - R);
+    const ms = months.slice(N - R);
+    const labels = ms.map((d, i) => Object.assign(new String(monShort(d, i)), { full: monLong(d) }));
+    const last = cur[R - 1], before = rows[N - R - 1];
+    const sum = (a, f) => a.reduce((s, m) => s + m[f], 0);
+    const per = `vs prior ${R} mo`;
+    const planName = state.plan === 'all' ? 'All plans' : PLANS[state.plan].name;
+
+    document.getElementById('period-label').textContent = `${planName} · ${monLong(ms[0])} – ${monLong(ms[R - 1])}`;
+
+    // Hero
+    document.getElementById('k-mrr').textContent = fmtMoney(last.mrr);
+    const hd = document.getElementById('k-mrr-delta');
+    hd.replaceChildren(
+      delta(last.mrr, before.mrr, { upGood: true, suffix: `over ${R} months` }),
+      delta(last.mrr, rows[N - 2].mrr, { upGood: true, suffix: 'vs last month' }));
+    hd.style.display = 'flex'; hd.style.gap = '16px'; hd.style.flexWrap = 'wrap';
+    document.getElementById('k-mrr-meta').textContent =
+      `ARR run-rate ${fmtMoneyC(last.mrr * 12)} · Avg revenue per subscription ${fmtMoney(last.mrr / last.subs)}`;
+
+    // Tiles
+    const newT = sum(cur, 'newSubs'), newP = sum(prev, 'newSubs');
+    const cxlT = sum(cur, 'cancelled'), cxlP = sum(prev, 'cancelled');
+    const churnAvg = cxlT / sum(cur, 'start'), churnPrev = cxlP / sum(prev, 'start');
+    tile(document.getElementById('t-active'), 'Active subscriptions', fmtCount(last.subs),
+      delta(last.subs, before.subs, { upGood: true, suffix: `over ${R} mo` }), cur.map(m => m.subs));
+    tile(document.getElementById('t-new'), `New subscriptions (${R} mo)`, fmtCount(newT),
+      delta(newT, newP, { upGood: true, suffix: per }), cur.map(m => m.newSubs));
+    tile(document.getElementById('t-cxl'), `Cancelled (${R} mo)`, fmtCount(cxlT),
+      delta(cxlT, cxlP, { upGood: false, suffix: per }), cur.map(m => m.cancelled));
+    tile(document.getElementById('t-churn'), 'Avg monthly churn', fmtPct(churnAvg),
+      delta(churnAvg, churnPrev, { upGood: false, suffix: per, pts: true }), cur.map(m => m.churn));
+
+    // Charts
+    lineChart(cards.mrr.querySelector('.chart'), { labels, values: cur.map(m => m.mrr), fmt: fmtMoneyC, axisFmt: fmtMoneyC, name: 'MRR' });
+    mirrorChart(cards.subs.querySelector('.chart'), { labels, up: cur.map(m => m.newSubs), down: cur.map(m => m.cancelled) });
+    lineChart(cards.churn.querySelector('.chart'), { labels, values: cur.map(m => m.churn), fmt: v => fmtPct(v), axisFmt: fmtPctAxis, name: 'Churn rate' });
+
+    // Chart table views
+    cards.mrr.querySelector('.table-view').replaceChildren(table(['Month', 'MRR'], ms.map((d, i) => [monLong(d), fmtMoney(cur[i].mrr)])));
+    cards.subs.querySelector('.table-view').replaceChildren(table(['Month', 'New', 'Cancelled', 'Net'],
+      ms.map((d, i) => [monLong(d), fmtInt(cur[i].newSubs), fmtInt(cur[i].cancelled), fmtSigned(cur[i].net)])));
+    cards.churn.querySelector('.table-view').replaceChildren(table(['Month', 'Churn rate'], ms.map((d, i) => [monLong(d), fmtPct(cur[i].churn)])));
+
+    // Detail table
+    const detail = ms.map((d, i) => {
+      const m = cur[i], p = rows[N - R + i - 1];
+      const mom = (m.mrr - p.mrr) / p.mrr * 100;
+      return [monLong(d), fmtMoney(m.mrr), (mom >= 0 ? '+' : '−') + Math.abs(mom).toFixed(1) + '%',
+        fmtInt(m.subs), fmtInt(m.newSubs), fmtInt(m.cancelled), fmtSigned(m.net), fmtPct(m.churn)];
+    }).reverse();
+    document.getElementById('detail').replaceChildren(
+      table(['Month', 'MRR', 'MRR change', 'Active', 'New', 'Cancelled', 'Net', 'Churn'], detail));
+  }
+
+  // ---------- Controls ----------
+  document.getElementById('range').addEventListener('click', e => {
+    const b = e.target.closest('button[data-range]'); if (!b) return;
+    state.range = Number(b.dataset.range);
+    document.querySelectorAll('#range button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    render();
+  });
+  document.querySelectorAll('#range button:not([aria-pressed])').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  document.getElementById('plan').addEventListener('change', e => { state.plan = e.target.value; render(); });
+
+  document.querySelectorAll('.tbl-toggle').forEach(btn => btn.addEventListener('click', () => {
+    const card = btn.closest('.card');
+    const on = btn.getAttribute('aria-pressed') !== 'true';
+    btn.setAttribute('aria-pressed', String(on));
+    btn.textContent = on ? 'Chart' : 'Table';
+    card.querySelector('.chart').hidden = on;
+    card.querySelector('.table-view').hidden = !on;
+    if (!on) render();
+  }));
+
+  const themeBtn = document.getElementById('theme-toggle');
+  const isDark = () => {
+    const t = document.documentElement.dataset.theme;
+    return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  };
+  const syncThemeBtn = () => { themeBtn.textContent = isDark() ? 'Light mode' : 'Dark mode'; };
+  themeBtn.addEventListener('click', () => { document.documentElement.dataset.theme = isDark() ? 'light' : 'dark'; syncThemeBtn(); });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncThemeBtn);
+  syncThemeBtn();
+
+  let lastW = 0;
+  new ResizeObserver(() => {
+    const w = document.querySelector('.charts').clientWidth;
+    if (w !== lastW) { lastW = w; render(); }
+  }).observe(document.querySelector('.charts'));
+})();
+</script>
+</body>
+</html>

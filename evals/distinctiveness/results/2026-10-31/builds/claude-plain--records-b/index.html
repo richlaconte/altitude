@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shipments · Northline Freight</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --border: #dfe3e8;
+    --border-strong: #c5ccd5;
+    --text: #1b2430;
+    --text-muted: #5b6878;
+    --accent: #1f5fbf;
+    --accent-hover: #194e9e;
+    --accent-soft: #e8f0fc;
+    --row-hover: #f8fafc;
+    --row-selected: #eef4fd;
+    --focus: #2b74e4;
+    --radius: 8px;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  /* App chrome */
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 24px; height: 52px;
+    background: #14233a; color: #fff;
+  }
+  .brand { font-weight: 650; letter-spacing: .2px; display: flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 26px; height: 26px; border-radius: 6px; background: #3b82f6;
+    display: grid; place-items: center; font-size: 13px; font-weight: 700;
+  }
+  .topbar nav { display: flex; gap: 4px; margin-left: 24px; }
+  .topbar nav a {
+    color: #b9c6d8; text-decoration: none; padding: 6px 10px; border-radius: 6px; font-size: 13px;
+  }
+  .topbar nav a[aria-current="page"] { color: #fff; background: rgba(255,255,255,.1); }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+    margin-bottom: 16px; flex-wrap: wrap;
+  }
+  h1 { font-size: 22px; margin: 0 0 2px; font-weight: 650; }
+  .subtle { color: var(--text-muted); font-size: 13px; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 34px; padding: 0 12px;
+    border: 1px solid var(--border-strong); border-radius: 6px;
+    background: var(--surface); color: var(--text);
+    font: inherit; font-weight: 550; cursor: pointer;
+  }
+  .btn:hover:not(:disabled) { background: #f1f4f7; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn-link {
+    background: none; border: 0; padding: 2px 4px; color: var(--accent);
+    font: inherit; font-weight: 550; cursor: pointer; border-radius: 4px;
+  }
+  .btn-link:hover { text-decoration: underline; }
+  .btn svg { width: 16px; height: 16px; flex: none; }
+  .spinning svg { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinning svg { animation: none; } }
+
+  /* Card */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .toolbar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .search {
+    position: relative; flex: 1 1 320px; max-width: 440px;
+  }
+  .search svg.icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;
+  }
+  .search input {
+    width: 100%; height: 36px; padding: 0 64px 0 34px;
+    border: 1px solid var(--border-strong); border-radius: 6px;
+    font: inherit; color: var(--text); background: var(--surface);
+  }
+  .search input::-webkit-search-cancel-button { display: none; }
+  .search input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(43,116,228,.2); }
+  .search .clear {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    height: 28px; padding: 0 8px; border: 0; border-radius: 4px;
+    background: transparent; color: var(--text-muted); font: inherit; font-size: 13px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .search .clear:hover { background: #eef1f5; color: var(--text); }
+  .search .clear[hidden] { display: none; }
+  .search .kbd {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    font-size: 11px; color: var(--text-muted); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0 5px; line-height: 18px; pointer-events: none;
+  }
+  .search .kbd[hidden] { display: none; }
+  .result-count { color: var(--text-muted); font-size: 13px; margin-left: auto; }
+
+  .selection-bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 8px 16px; background: var(--accent-soft); border-bottom: 1px solid #cfdcf3;
+    font-size: 13px;
+  }
+  .selection-bar[hidden] { display: none; }
+  .selection-bar strong { font-weight: 650; }
+  .selection-bar .spacer { flex: 1; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; position: relative; }
+  .table-wrap[aria-busy="true"] tbody { opacity: .5; transition: opacity .15s; }
+  table { width: 100%; border-collapse: collapse; }
+  caption { text-align: left; }
+  th, td { padding: 10px 12px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  thead th {
+    position: sticky; top: 0; background: #fafbfc; z-index: 1;
+    font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px;
+  }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--row-hover); }
+  tbody tr.selected { background: var(--row-selected); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.check, th.check { width: 44px; padding-right: 0; }
+  input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--accent); vertical-align: middle; }
+  .ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; font-weight: 600; }
+  .po { display: block; font-size: 12px; color: var(--text-muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  mark { background: #ffe58a; color: inherit; border-radius: 2px; padding: 0 1px; }
+  .lane { display: flex; align-items: center; gap: 6px; }
+  .lane .arrow { color: var(--text-muted); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--text-muted); }
+  .late { color: #b42318; font-weight: 550; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .st-booked     { background: #f1f3f6; color: #4a5565; border-color: #e1e5ea; }
+  .st-picked     { background: #eef2ff; color: #3e43b8; border-color: #dcdffb; }
+  .st-transit    { background: #e8f1fd; color: #1a58b0; border-color: #cfe0f8; }
+  .st-delayed    { background: #fff4e5; color: #a24f00; border-color: #fbdcb5; }
+  .st-delivered  { background: #e9f7ef; color: #146c3a; border-color: #c8ebd6; }
+  .st-exception  { background: #fdecec; color: #b42318; border-color: #f8cfcc; }
+
+  .empty { padding: 48px 16px; text-align: center; }
+  .empty h2 { font-size: 16px; margin: 0 0 4px; }
+  .empty p { margin: 0 0 14px; color: var(--text-muted); }
+
+  .flash { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: #fff7d1; } to { background: transparent; } }
+  @media (prefers-reduced-motion: reduce) { .flash { animation: none; } }
+
+  @media (max-width: 720px) {
+    main { padding: 16px; }
+    .topbar nav { display: none; }
+    .result-count { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark" aria-hidden="true">N</span> Northline Freight</div>
+  <nav aria-label="Primary">
+    <a href="#" aria-current="page">Shipments</a>
+    <a href="#">Carriers</a>
+    <a href="#">Customers</a>
+    <a href="#">Invoices</a>
+  </nav>
+</header>
+
+<main>
+  <div class="page-head">
+    <div>
+      <h1>Shipments</h1>
+      <div class="subtle" id="last-updated" aria-live="off"></div>
+    </div>
+    <button type="button" class="btn" id="refresh-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      <span class="label">Refresh</span>
+    </button>
+  </div>
+
+  <section class="card" aria-labelledby="table-caption">
+    <div class="toolbar" role="search">
+      <div class="search">
+        <label for="search" class="sr-only">Search shipments by reference</label>
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" autocomplete="off" spellcheck="false"
+               placeholder="Search by shipment or PO reference"
+               aria-describedby="search-hint">
+        <span class="kbd" id="search-kbd" aria-hidden="true">/</span>
+        <button type="button" class="clear" id="clear-search" hidden>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          Clear
+        </button>
+        <span id="search-hint" class="sr-only">Matches shipment reference or customer PO. Press Escape to clear.</span>
+      </div>
+      <div class="result-count" id="result-count"></div>
+    </div>
+
+    <div class="selection-bar" id="selection-bar" hidden>
+      <span><strong id="sel-count">0</strong> <span id="sel-noun">shipments</span> selected<span id="sel-hidden"></span></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn-link" id="copy-refs">Copy references</button>
+      <button type="button" class="btn-link" id="clear-selection">Clear selection</button>
+    </div>
+
+    <div class="table-wrap" id="table-wrap" aria-busy="false">
+      <table>
+        <caption id="table-caption" class="sr-only">Shipments</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="check">
+              <input type="checkbox" id="select-all" aria-label="Select all shown shipments">
+            </th>
+            <th scope="col">Reference</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Lane</th>
+            <th scope="col">Mode</th>
+            <th scope="col">Status</th>
+            <th scope="col">Pickup</th>
+            <th scope="col">ETA</th>
+            <th scope="col" class="num">Weight</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty" hidden>
+        <h2 id="empty-title">No shipments match</h2>
+        <p id="empty-text"></p>
+        <button type="button" class="btn" id="empty-clear">Clear search</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="live" class="sr-only" role="status" aria-live="polite"></div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---- Sample data -------------------------------------------------------
+  // [reference, customer PO, customer, origin, destination, mode, status, pickup, eta, weight lbs]
+  const SEED = [
+    ["NLF-2610418", "PO-884120", "Cascade Outdoor Supply", "Portland, OR", "Boise, ID", "FTL", "transit", "2026-10-28", "2026-10-31", 38420],
+    ["NLF-2610417", "PO-77031-B", "Midwest Grain Co-op", "Des Moines, IA", "Kansas City, MO", "FTL", "delivered", "2026-10-27", "2026-10-28", 44100],
+    ["NLF-2610415", "4500219876", "Halvorsen Appliances", "Louisville, KY", "Atlanta, GA", "LTL", "delayed", "2026-10-26", "2026-10-29", 6250],
+    ["NLF-2610412", "SO-55102", "Brightline Pharma", "Raleigh, NC", "Newark, NJ", "Reefer", "transit", "2026-10-29", "2026-10-30", 18900],
+    ["NLF-2610409", "PO-884097", "Cascade Outdoor Supply", "Portland, OR", "Sacramento, CA", "LTL", "picked", "2026-10-30", "2026-11-02", 3410],
+    ["NLF-2610406", "TX-2026-1188", "Lone Star Steelworks", "Houston, TX", "Tulsa, OK", "Flatbed", "transit", "2026-10-29", "2026-10-31", 46800],
+    ["NLF-2610404", "PO-31877", "Green Valley Produce", "Salinas, CA", "Phoenix, AZ", "Reefer", "delivered", "2026-10-25", "2026-10-26", 39200],
+    ["NLF-2610401", "PO-31876", "Green Valley Produce", "Salinas, CA", "Las Vegas, NV", "Reefer", "exception", "2026-10-25", "2026-10-26", 37650],
+    ["NLF-2610398", "4500219811", "Halvorsen Appliances", "Louisville, KY", "Nashville, TN", "FTL", "delivered", "2026-10-24", "2026-10-25", 31500],
+    ["NLF-2610395", "ORD-90412", "Keystone Paper Products", "Allentown, PA", "Columbus, OH", "FTL", "booked", "2026-11-02", "2026-11-03", 42000],
+    ["NLF-2610391", "SO-55088", "Brightline Pharma", "Raleigh, NC", "Charlotte, NC", "LTL", "delivered", "2026-10-23", "2026-10-24", 1280],
+    ["NLF-2610388", "PO-1192-0045", "Redwood Furniture Makers", "High Point, NC", "Dallas, TX", "LTL", "transit", "2026-10-27", "2026-11-01", 8840],
+    ["NLF-2610384", "PO-77019", "Midwest Grain Co-op", "Omaha, NE", "Minneapolis, MN", "FTL", "delayed", "2026-10-27", "2026-10-29", 45200],
+    ["NLF-2610380", "AZ-44871", "Sonoran Solar Systems", "Tempe, AZ", "Albuquerque, NM", "Flatbed", "picked", "2026-10-30", "2026-10-31", 22750],
+    ["NLF-2610377", "ORD-90398", "Keystone Paper Products", "Allentown, PA", "Baltimore, MD", "LTL", "delivered", "2026-10-22", "2026-10-23", 5120],
+    ["NLF-2610373", "PO-50233", "Northstar Auto Parts", "Detroit, MI", "Toledo, OH", "Expedited", "delivered", "2026-10-29", "2026-10-29", 960],
+    ["NLF-2610369", "PO-50229", "Northstar Auto Parts", "Detroit, MI", "Chicago, IL", "FTL", "transit", "2026-10-29", "2026-10-30", 28300],
+    ["NLF-2610366", "TX-2026-1171", "Lone Star Steelworks", "Houston, TX", "San Antonio, TX", "Flatbed", "delivered", "2026-10-21", "2026-10-22", 47300],
+    ["NLF-2610362", "PO-1192-0039", "Redwood Furniture Makers", "High Point, NC", "Orlando, FL", "LTL", "booked", "2026-11-03", "2026-11-06", 7400],
+    ["NLF-2610358", "INT-7781", "Bayview Electronics", "Oakland, CA", "Reno, NV", "LTL", "transit", "2026-10-28", "2026-10-30", 2190],
+    ["NLF-2610355", "INT-7779", "Bayview Electronics", "Long Beach, CA", "Denver, CO", "Intermodal", "transit", "2026-10-24", "2026-11-01", 41800],
+    ["NLF-2610351", "PO-31861", "Green Valley Produce", "Yuma, AZ", "Los Angeles, CA", "Reefer", "delivered", "2026-10-20", "2026-10-21", 40100],
+    ["NLF-2610347", "4500219760", "Halvorsen Appliances", "Louisville, KY", "St. Louis, MO", "FTL", "delivered", "2026-10-20", "2026-10-21", 33900],
+    ["NLF-2610344", "SO-55071", "Brightline Pharma", "Raleigh, NC", "Boston, MA", "Reefer", "delivered", "2026-10-19", "2026-10-21", 16400],
+    ["NLF-2610340", "AZ-44860", "Sonoran Solar Systems", "Tempe, AZ", "El Paso, TX", "Flatbed", "booked", "2026-11-04", "2026-11-05", 24600],
+    ["NLF-2610336", "PO-884051", "Cascade Outdoor Supply", "Seattle, WA", "Spokane, WA", "LTL", "delivered", "2026-10-18", "2026-10-19", 2870],
+    ["NLF-2610331", "ORD-90377", "Keystone Paper Products", "Scranton, PA", "Buffalo, NY", "FTL", "delivered", "2026-10-17", "2026-10-18", 43500],
+    ["NLF-2610327", "PO-50211", "Northstar Auto Parts", "Detroit, MI", "Indianapolis, IN", "LTL", "delivered", "2026-10-16", "2026-10-17", 4420],
+  ];
+
+  // Shipments that show up on refresh, to simulate new bookings arriving.
+  const INCOMING = [
+    ["NLF-2610421", "PO-50241", "Northstar Auto Parts", "Detroit, MI", "Grand Rapids, MI", "Expedited", "booked", "2026-10-31", "2026-10-31", 1340],
+    ["NLF-2610424", "PO-1192-0051", "Redwood Furniture Makers", "High Point, NC", "Richmond, VA", "LTL", "booked", "2026-11-03", "2026-11-04", 5980],
+  ];
+
+  const STATUS = {
+    booked:    { label: "Booked",     cls: "st-booked" },
+    picked:    { label: "Picked up",  cls: "st-picked" },
+    transit:   { label: "In transit", cls: "st-transit" },
+    delayed:   { label: "Delayed",    cls: "st-delayed" },
+    exception: { label: "Exception",  cls: "st-exception" },
+    delivered: { label: "Delivered",  cls: "st-delivered" },
+  };
+  const TODAY = "2026-10-30";
+
+  const toRecord = r => ({
+    id: r[0], ref: r[0], po: r[1], customer: r[2], origin: r[3], destination: r[4],
+    mode: r[5], status: r[6], pickup: r[7], eta: r[8], weight: r[9],
+  });
+
+  // ---- State -------------------------------------------------------------
+  let shipments = SEED.map(toRecord);
+  let incomingQueue = INCOMING.map(toRecord);
+  const selected = new Set();
+  let query = "";
+  let lastUpdated = new Date();
+  let anchorId = null;          // for shift-click range selection
+  let visible = [];             // currently rendered rows (filtered)
+  let refreshing = false;
+  let flashIds = new Set();
+
+  // ---- Elements ----------------------------------------------------------
+  const $ = id => document.getElementById(id);
+  const searchEl = $("search"), clearBtn = $("clear-search"), kbdEl = $("search-kbd");
+  const rowsEl = $("rows"), emptyEl = $("empty"), selectAll = $("select-all");
+  const resultCount = $("result-count"), live = $("live"), wrap = $("table-wrap");
+  const selBar = $("selection-bar"), refreshBtn = $("refresh-btn");
+
+  // ---- Helpers -----------------------------------------------------------
+  // Normalise so "nlf 2610418", "NLF2610418" and "nlf-2610418" all match.
+  const norm = s => s.toLowerCase().replace(/[\s\-_.\/]/g, "");
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Highlight the matched span in the original string, tolerating separators.
+  function highlight(text, q) {
+    const nq = norm(q);
+    if (!nq) return esc(text);
+    // Map each normalised char back to its index in the original string.
+    const map = [];
+    let flat = "";
+    for (let i = 0; i < text.length; i++) {
+      const n = norm(text[i]);
+      if (n) { flat += n; map.push(i); }
+    }
+    const at = flat.indexOf(nq);
+    if (at < 0) return esc(text);
+    const start = map[at], end = map[at + nq.length - 1] + 1;
+    return esc(text.slice(0, start)) + "<mark>" + esc(text.slice(start, end)) + "</mark>" + esc(text.slice(end));
+  }
+
+  const fmtDate = iso => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+  const fmtWeight = n => n.toLocaleString("en-US") + " lb";
+  const fmtTime = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const plural = (n, one, many) => n === 1 ? one : many;
+
+  function announce(msg) {
+    live.textContent = "";
+    // Defer so repeated identical messages are still announced.
+    setTimeout(() => { live.textContent = msg; }, 30);
+  }
+
+  // ---- Rendering ---------------------------------------------------------
+  function matches(s) {
+    const nq = norm(query);
+    return !nq || norm(s.ref).includes(nq) || norm(s.po).includes(nq);
+  }
+
+  function render() {
+    const q = query.trim();
+    visible = shipments.filter(matches);
+
+    rowsEl.innerHTML = visible.map(s => {
+      const st = STATUS[s.status];
+      const isSel = selected.has(s.id);
+      const overdue = s.status !== "delivered" && s.eta < TODAY;
+      return `<tr data-id="${esc(s.id)}" class="${isSel ? "selected" : ""}${flashIds.has(s.id) ? " flash" : ""}" aria-selected="${isSel}">
+        <td class="check"><input type="checkbox" ${isSel ? "checked" : ""} aria-label="Select shipment ${esc(s.ref)}"></td>
+        <td><span class="ref">${highlight(s.ref, q)}</span><span class="po">${highlight(s.po, q)}</span></td>
+        <td>${esc(s.customer)}</td>
+        <td><span class="lane">${esc(s.origin)} <span class="arrow" aria-label="to">→</span> ${esc(s.destination)}</span></td>
+        <td>${esc(s.mode)}</td>
+        <td><span class="badge ${st.cls}">${st.label}</span></td>
+        <td>${fmtDate(s.pickup)}</td>
+        <td class="${overdue ? "late" : ""}">${fmtDate(s.eta)}${overdue ? '<span class="sr-only"> (overdue)</span>' : ""}</td>
+        <td class="num">${fmtWeight(s.weight)}</td>
+      </tr>`;
+    }).join("");
+    flashIds = new Set();
+
+    // Empty state
+    const none = visible.length === 0;
+    emptyEl.hidden = !none;
+    if (none) {
+      if (q) {
+        $("empty-title").textContent = "No shipments match";
+        $("empty-text").textContent = `Nothing found for “${q}”. Check the reference and try again.`;
+        $("empty-clear").hidden = false;
+      } else {
+        $("empty-title").textContent = "No shipments yet";
+        $("empty-text").textContent = "New bookings will appear here.";
+        $("empty-clear").hidden = true;
+      }
+    }
+
+    // Counts
+    resultCount.textContent = q
+      ? `${visible.length} of ${shipments.length} ${plural(shipments.length, "shipment", "shipments")}`
+      : `${shipments.length} ${plural(shipments.length, "shipment", "shipments")}`;
+
+    // Search affordances
+    clearBtn.hidden = !query;
+    kbdEl.hidden = !!query || document.activeElement === searchEl;
+
+    renderSelection();
+    $("last-updated").textContent = `Updated ${fmtTime(lastUpdated)}`;
+  }
+
+  function renderSelection() {
+    // Header checkbox reflects only the rows currently shown.
+    const shownSel = visible.filter(s => selected.has(s.id)).length;
+    selectAll.checked = visible.length > 0 && shownSel === visible.length;
+    selectAll.indeterminate = shownSel > 0 && shownSel < visible.length;
+    selectAll.disabled = visible.length === 0;
+    selectAll.setAttribute("aria-label", query.trim()
+      ? `Select all ${visible.length} matching shipments`
+      : "Select all shipments");
+
+    const n = selected.size;
+    selBar.hidden = n === 0;
+    $("sel-count").textContent = n;
+    $("sel-noun").textContent = plural(n, "shipment", "shipments");
+    const hidden = n - shownSel;
+    $("sel-hidden").textContent = hidden > 0 ? ` (${hidden} not shown by current search)` : "";
+  }
+
+  // Update just the affected rows without re-rendering the table (keeps focus).
+  function syncRows(ids) {
+    for (const id of ids) {
+      const tr = rowsEl.querySelector(`tr[data-id="${CSS.escape(id)}"]`);
+      if (!tr) continue;
+      const on = selected.has(id);
+      tr.classList.toggle("selected", on);
+      tr.setAttribute("aria-selected", on);
+      tr.querySelector("input").checked = on;
+    }
+    renderSelection();
+  }
+
+  // ---- Selection ---------------------------------------------------------
+  function toggle(id, shift) {
+    const on = !selected.has(id);
+    let ids = [id];
+    if (shift && anchorId && anchorId !== id) {
+      const a = visible.findIndex(s => s.id === anchorId);
+      const b = visible.findIndex(s => s.id === id);
+      if (a >= 0 && b >= 0) {
+        ids = visible.slice(Math.min(a, b), Math.max(a, b) + 1).map(s => s.id);
+      }
+    }
+    ids.forEach(i => on ? selected.add(i) : selected.delete(i));
+    anchorId = id;
+    syncRows(ids);
+  }
+
+  rowsEl.addEventListener("click", e => {
+    const tr = e.target.closest("tr[data-id]");
+    if (!tr) return;
+    // Don't hijack text selection when the user is copying a reference.
+    if (e.target.type !== "checkbox" && String(window.getSelection())) return;
+    // The browser has already flipped a clicked checkbox; toggle() then sets it to match state.
+    // (Calling preventDefault here would make the browser revert our change afterwards.)
+    toggle(tr.dataset.id, e.shiftKey);
+  });
+
+  selectAll.addEventListener("change", () => {
+    const ids = visible.map(s => s.id);
+    const allOn = ids.every(id => selected.has(id));
+    ids.forEach(id => allOn ? selected.delete(id) : selected.add(id));
+    syncRows(ids);
+    announce(allOn
+      ? `Deselected ${ids.length} ${plural(ids.length, "shipment", "shipments")}`
+      : `Selected ${ids.length} ${plural(ids.length, "shipment", "shipments")}`);
+  });
+
+  $("clear-selection").addEventListener("click", () => {
+    const ids = [...selected];
+    selected.clear();
+    anchorId = null;
+    syncRows(ids);
+    announce("Selection cleared");
+    searchEl.focus();
+  });
+
+  $("copy-refs").addEventListener("click", async () => {
+    // Keep table order rather than click order.
+    const refs = shipments.filter(s => selected.has(s.id)).map(s => s.ref);
+    const btn = $("copy-refs");
+    try {
+      await navigator.clipboard.writeText(refs.join("\n"));
+      btn.textContent = "Copied";
+      announce(`Copied ${refs.length} ${plural(refs.length, "reference", "references")}`);
+    } catch {
+      btn.textContent = "Copy failed";
+      announce("Could not copy to clipboard");
+    }
+    setTimeout(() => { btn.textContent = "Copy references"; }, 1500);
+  });
+
+  // ---- Search ------------------------------------------------------------
+  let announceTimer;
+  searchEl.addEventListener("input", () => {
+    query = searchEl.value;
+    anchorId = null;
+    render();
+    clearTimeout(announceTimer);
+    announceTimer = setTimeout(() => {
+      if (!query.trim()) return;
+      announce(visible.length
+        ? `${visible.length} ${plural(visible.length, "shipment", "shipments")} found`
+        : "No shipments match");
+    }, 400);
+  });
+
+  function clearSearch() {
+    if (!query) return;
+    searchEl.value = "";
+    query = "";
+    render();
+    searchEl.focus();
+    announce(`Search cleared. Showing all ${shipments.length} shipments`);
+  }
+  clearBtn.addEventListener("click", clearSearch);
+  $("empty-clear").addEventListener("click", clearSearch);
+
+  searchEl.addEventListener("keydown", e => {
+    if (e.key === "Escape" && query) { e.preventDefault(); clearSearch(); }
+  });
+  searchEl.addEventListener("focus", () => { kbdEl.hidden = true; });
+  searchEl.addEventListener("blur", () => { kbdEl.hidden = !!query; });
+
+  // "/" jumps to search from anywhere except text inputs.
+  document.addEventListener("keydown", e => {
+    if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target;
+    if (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && t.type !== "checkbox") return;
+    e.preventDefault();
+    searchEl.focus();
+    searchEl.select();
+  });
+
+  // ---- Refresh -----------------------------------------------------------
+  // Simulates a fetch: statuses advance, and a new booking may arrive.
+  const NEXT = { booked: "picked", picked: "transit", transit: "delivered", delayed: "transit" };
+
+  function simulateServerUpdate() {
+    const changed = [];
+    // Advance a couple of active shipments, deterministic-ish but varied per call.
+    const active = shipments.filter(s => NEXT[s.status]);
+    const step = Math.max(1, Math.floor(active.length / 3));
+    const offset = Math.floor(Math.random() * step);
+    for (let i = offset; i < active.length && changed.length < 3; i += step) {
+      const s = active[i];
+      s.status = NEXT[s.status];
+      if (s.status === "delivered" && s.eta > TODAY) s.eta = TODAY;
+      changed.push(s.id);
+    }
+    const added = incomingQueue.shift();
+    if (added) {
+      shipments.unshift(added);
+      changed.push(added.id);
+    }
+    return { changed, added };
+  }
+
+  async function refresh() {
+    if (refreshing) return;
+    refreshing = true;
+    refreshBtn.disabled = true;
+    refreshBtn.classList.add("spinning");
+    refreshBtn.querySelector(".label").textContent = "Refreshing…";
+    wrap.setAttribute("aria-busy", "true");
+    announce("Refreshing shipments");
+
+    await new Promise(r => setTimeout(r, 700 + Math.random() * 500));
+
+    const { changed, added } = simulateServerUpdate();
+    lastUpdated = new Date();
+    flashIds = new Set(changed);
+    // Drop selections for shipments that no longer exist (none get removed here, but stay safe).
+    const ids = new Set(shipments.map(s => s.id));
+    [...selected].forEach(id => { if (!ids.has(id)) selected.delete(id); });
+
+    refreshing = false;
+    refreshBtn.disabled = false;
+    refreshBtn.classList.remove("spinning");
+    refreshBtn.querySelector(".label").textContent = "Refresh";
+    wrap.setAttribute("aria-busy", "false");
+    render();
+
+    const updates = changed.length - (added ? 1 : 0);
+    const parts = [];
+    if (added) parts.push("1 new shipment");
+    if (updates) parts.push(`${updates} ${plural(updates, "status update", "status updates")}`);
+    announce(`Shipments refreshed at ${fmtTime(lastUpdated)}. ${parts.length ? parts.join(", ") + "." : "No changes."}`);
+  }
+  refreshBtn.addEventListener("click", refresh);
+
+  render();
+})();
+</script>
+</body>
+</html>

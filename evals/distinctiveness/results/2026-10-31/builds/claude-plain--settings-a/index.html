@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workspace settings · Trellis</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --border: #e3e6eb;
+    --border-strong: #c9ced6;
+    --text: #1d2330;
+    --muted: #5f6878;
+    --accent: #3b5bdb;
+    --accent-hover: #2f4bc4;
+    --accent-soft: #edf1ff;
+    --danger: #c92a2a;
+    --danger-soft: #fff1f1;
+    --success: #2b8a3e;
+    --radius: 8px;
+    --focus: 0 0 0 3px rgba(59, 91, 219, .35);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+  }
+  a { color: var(--accent); }
+  :focus-visible { outline: none; box-shadow: var(--focus); }
+
+  .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    background: #1f2433;
+    color: #cfd4de;
+    padding: 20px 14px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .ws-switch { display: flex; align-items: center; gap: 10px; padding: 4px 8px; }
+  .ws-logo {
+    width: 34px; height: 34px; border-radius: 8px; flex: none;
+    background: linear-gradient(135deg, #5c7cfa, #845ef7);
+    color: #fff; font-weight: 700; display: grid; place-items: center; font-size: 15px;
+  }
+  .ws-switch .ws-name { color: #fff; font-weight: 600; font-size: 14px; line-height: 1.2; overflow-wrap: anywhere; }
+  .ws-switch .ws-plan { font-size: 12px; color: #9aa3b5; }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #8089a0; padding: 0 10px 6px; }
+  .nav a {
+    color: #cfd4de; text-decoration: none; padding: 7px 10px; border-radius: 6px;
+    display: flex; align-items: center; gap: 10px; font-size: 14px;
+  }
+  .nav a:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .nav a[aria-current="page"] { background: rgba(255,255,255,.1); color: #fff; font-weight: 500; }
+  .nav svg { width: 16px; height: 16px; flex: none; opacity: .85; }
+  .sidebar-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 8px; font-size: 13px; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+    font-size: 12px; font-weight: 600; color: #fff; flex: none;
+  }
+
+  /* Main */
+  main { padding: 32px 40px 64px; min-width: 0; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .crumbs a { color: var(--muted); text-decoration: none; }
+  .crumbs a:hover { color: var(--text); text-decoration: underline; }
+  h1 { font-size: 24px; margin: 0 0 4px; line-height: 1.25; overflow-wrap: anywhere; }
+  .subtitle { color: var(--muted); margin: 0 0 28px; }
+  .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .card-head { padding: 18px 22px 0; }
+  .card-head h2 { font-size: 16px; margin: 0 0 2px; }
+  .card-head p { margin: 0; color: var(--muted); font-size: 14px; }
+  .card-body { padding: 20px 22px; }
+
+  /* Buttons */
+  .btn {
+    font: inherit; font-size: 14px; font-weight: 500;
+    border-radius: 6px; padding: 8px 16px; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--text);
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none; line-height: 1.4;
+  }
+  .btn:hover { background: #f1f3f6; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn-primary[aria-disabled="true"], .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+  .btn-primary[aria-disabled="true"]:hover { background: var(--accent); }
+  .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #b02525; }
+  .spinner {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.45); border-top-color: #fff;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Overview */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat { padding: 16px 18px; }
+  .stat .k { font-size: 13px; color: var(--muted); }
+  .stat .v { font-size: 24px; font-weight: 600; margin-top: 2px; }
+  .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 0 0 8px; }
+  td { padding: 10px 0; border-top: 1px solid var(--border); vertical-align: middle; }
+  td + td, th + th { padding-left: 12px; }
+  .progress { height: 6px; background: #edf0f4; border-radius: 3px; overflow: hidden; width: 100px; display: inline-block; vertical-align: middle; }
+  .progress > span { display: block; height: 100%; background: var(--accent); }
+  .pill { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
+  .pill.on-track { background: #e6f6ea; color: #24733a; }
+  .pill.at-risk { background: #fff4e0; color: #9a5b00; }
+  .pill.done { background: #eef0f3; color: #4a5263; }
+  dl.details { margin: 0; display: grid; gap: 14px; }
+  dl.details dt { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  dl.details dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+  .members { display: flex; margin-top: 4px; }
+  .members .avatar { border: 2px solid #fff; margin-left: -6px; }
+  .members .avatar:first-child { margin-left: 0; }
+
+  /* Settings form */
+  .settings { max-width: 680px; }
+  .field { margin-bottom: 20px; }
+  .field:last-child { margin-bottom: 0; }
+  label { display: block; font-weight: 500; font-size: 14px; margin-bottom: 6px; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .hint-row { display: flex; justify-content: space-between; gap: 12px; }
+  .counter { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  input[type="text"], input[type="email"] {
+    font: inherit; width: 100%; padding: 9px 12px;
+    border: 1px solid var(--border-strong); border-radius: 6px; background: #fff; color: var(--text);
+  }
+  input:hover { border-color: #aab1bd; }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus); }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+  input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(201, 42, 42, .25); }
+  .error { color: var(--danger); font-size: 13px; margin-top: 6px; display: flex; gap: 6px; align-items: flex-start; }
+  .error[hidden] { display: none; }
+  .error svg { width: 14px; height: 14px; flex: none; margin-top: 3px; }
+  .form-actions {
+    display: flex; justify-content: flex-end; align-items: center; gap: 10px;
+    padding: 14px 22px; border-top: 1px solid var(--border); background: #fafbfc;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .form-actions .status { margin-right: auto; font-size: 13px; color: var(--muted); }
+  .error-summary {
+    background: var(--danger-soft); border: 1px solid #f3c2c2; color: #8a1f1f;
+    border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 14px;
+  }
+  .error-summary[hidden] { display: none; }
+  .error-summary ul { margin: 4px 0 0; padding-left: 18px; }
+  .error-summary a { color: inherit; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 20px);
+    background: #1f2433; color: #fff; padding: 10px 16px; border-radius: 8px;
+    font-size: 14px; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast svg { width: 16px; height: 16px; color: #69db7c; }
+
+  /* Dialog */
+  dialog {
+    border: none; border-radius: 10px; padding: 0; width: min(420px, calc(100vw - 32px));
+    box-shadow: 0 20px 50px rgba(0,0,0,.25); color: var(--text);
+  }
+  dialog::backdrop { background: rgba(20, 24, 35, .45); }
+  .dlg-body { padding: 22px 22px 8px; }
+  .dlg-body h2 { font-size: 17px; margin: 0 0 6px; }
+  .dlg-body p { margin: 0; color: var(--muted); font-size: 14px; }
+  .dlg-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 22px 20px; }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  [hidden] { display: none !important; }
+
+  @media (max-width: 960px) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: row; align-items: center; padding: 12px 16px; gap: 16px; overflow-x: auto; }
+    .nav { flex-direction: row; }
+    .nav-label, .sidebar-foot { display: none; }
+    main { padding: 24px 16px 48px; }
+    .form-actions { flex-wrap: wrap; }
+    .form-actions .status { flex-basis: 100%; }
+    .hide-sm { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toast { transition: none; }
+    .spinner { animation-duration: 2s; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" aria-label="Workspace navigation">
+    <div class="ws-switch">
+      <div class="ws-logo" aria-hidden="true" data-bind="initials">NH</div>
+      <div>
+        <div class="ws-name" data-bind="name">Northwind Health — Product</div>
+        <div class="ws-plan">Business plan</div>
+      </div>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <div class="nav-label">Workspace</div>
+      <a href="#overview" data-route="overview">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        Overview
+      </a>
+      <a href="#overview" data-route="none">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
+        Projects
+      </a>
+      <a href="#overview" data-route="none">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 14c.5-2.5 2.3-4 4.5-4s4 1.5 4.5 4"/><path d="M11 3.5a2.2 2.2 0 010 4.2M12.5 10c1.2.5 1.9 2 2 4"/></svg>
+        Members
+      </a>
+      <a href="#settings" data-route="settings">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="sidebar-foot">
+      <span class="avatar" style="background:#d6336c" aria-hidden="true">PS</span>
+      <div><div style="color:#fff">Priya Shah</div><div style="font-size:12px;color:#9aa3b5">Workspace admin</div></div>
+    </div>
+  </aside>
+
+  <main id="main" tabindex="-1">
+    <!-- ============ OVERVIEW ============ -->
+    <section id="view-overview" aria-labelledby="overview-title" hidden>
+      <div class="page-head">
+        <div>
+          <h1 id="overview-title" data-bind="name">Northwind Health — Product</h1>
+          <p class="subtitle">Workspace overview · Q4 2026 planning cycle</p>
+        </div>
+        <a class="btn" href="#settings">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>
+          Workspace settings
+        </a>
+      </div>
+
+      <div class="stats">
+        <div class="card stat"><div class="k">Active projects</div><div class="v">7</div></div>
+        <div class="card stat"><div class="k">Open tasks</div><div class="v">142</div></div>
+        <div class="card stat"><div class="k">Due this week</div><div class="v">18</div></div>
+        <div class="card stat"><div class="k">Members</div><div class="v">24</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><h2>Projects</h2><p>Most recently updated</p></div>
+          <div class="card-body">
+            <table>
+              <thead><tr><th>Project</th><th class="hide-sm">Lead</th><th>Progress</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Patient portal redesign</td><td class="hide-sm">Marcus Lee</td><td><span class="progress"><span style="width:68%"></span></span> 68%</td><td><span class="pill on-track">On track</span></td></tr>
+                <tr><td>Appointment reminders v2</td><td class="hide-sm">Ana Ruiz</td><td><span class="progress"><span style="width:41%"></span></span> 41%</td><td><span class="pill at-risk">At risk</span></td></tr>
+                <tr><td>HIPAA audit prep</td><td class="hide-sm">Priya Shah</td><td><span class="progress"><span style="width:85%"></span></span> 85%</td><td><span class="pill on-track">On track</span></td></tr>
+                <tr><td>Billing API migration</td><td class="hide-sm">Tomás Okafor</td><td><span class="progress"><span style="width:23%"></span></span> 23%</td><td><span class="pill at-risk">At risk</span></td></tr>
+                <tr><td>Clinician onboarding flow</td><td class="hide-sm">Jade Kim</td><td><span class="progress"><span style="width:100%"></span></span> 100%</td><td><span class="pill done">Done</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>Workspace details</h2></div>
+          <div class="card-body">
+            <dl class="details">
+              <div><dt>Name</dt><dd data-bind="name">Northwind Health — Product</dd></div>
+              <div><dt>Contact email</dt><dd><a data-bind="email" data-bind-href="mailto" href="mailto:product-ops@northwindhealth.com">product-ops@northwindhealth.com</a></dd></div>
+              <div><dt>Workspace URL</dt><dd>trellis.app/northwind-product</dd></div>
+              <div><dt>Created</dt><dd>March 14, 2024</dd></div>
+              <div>
+                <dt>Admins</dt>
+                <dd class="members" aria-label="Priya Shah, Marcus Lee, Ana Ruiz">
+                  <span class="avatar" style="background:#d6336c" title="Priya Shah" aria-hidden="true">PS</span>
+                  <span class="avatar" style="background:#1c7ed6" title="Marcus Lee" aria-hidden="true">ML</span>
+                  <span class="avatar" style="background:#2f9e44" title="Ana Ruiz" aria-hidden="true">AR</span>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SETTINGS ============ -->
+    <section id="view-settings" class="settings" aria-labelledby="settings-title" hidden>
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="#overview" data-bind="name">Northwind Health — Product</a> / Settings</nav>
+      <h1 id="settings-title">Workspace settings</h1>
+      <p class="subtitle">Manage how your workspace appears to members and where we send account notices.</p>
+
+      <form id="settings-form" class="card" novalidate>
+        <div class="card-head">
+          <h2>General</h2>
+          <p>These details are visible to everyone in the workspace.</p>
+        </div>
+        <div class="card-body">
+          <div class="error-summary" id="error-summary" role="alert" tabindex="-1" hidden>
+            <strong>Please fix the following before saving:</strong>
+            <ul id="error-list"></ul>
+          </div>
+
+          <div class="field">
+            <label for="ws-name">Workspace name</label>
+            <input type="text" id="ws-name" name="name" maxlength="60" autocomplete="organization"
+                   aria-describedby="ws-name-hint ws-name-error" required>
+            <div class="error" id="ws-name-error" hidden>
+              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 3.5a.9.9 0 00-.9.9v3.2a.9.9 0 001.8 0V5.4a.9.9 0 00-.9-.9zm0 6.1a1 1 0 100 2 1 1 0 000-2z"/></svg>
+              <span></span>
+            </div>
+            <div class="hint hint-row" id="ws-name-hint">
+              <span>Shown in the sidebar, invites, and email notifications.</span>
+              <span class="counter" id="ws-name-count" aria-hidden="true">0/60</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="ws-email">Contact email</label>
+            <input type="email" id="ws-email" name="email" maxlength="254" autocomplete="email" spellcheck="false"
+                   aria-describedby="ws-email-hint ws-email-error" required>
+            <div class="error" id="ws-email-error" hidden>
+              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 3.5a.9.9 0 00-.9.9v3.2a.9.9 0 001.8 0V5.4a.9.9 0 00-.9-.9zm0 6.1a1 1 0 100 2 1 1 0 000-2z"/></svg>
+              <span></span>
+            </div>
+            <div class="hint" id="ws-email-hint">Billing receipts, security alerts, and member requests go here.</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <span class="status" id="form-status" role="status" aria-live="polite"></span>
+          <button type="button" class="btn" id="cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-btn">Save changes</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8.5l3 3 7-7"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<dialog id="discard-dialog" aria-labelledby="discard-title" aria-describedby="discard-desc">
+  <div class="dlg-body">
+    <h2 id="discard-title">Discard unsaved changes?</h2>
+    <p id="discard-desc">You've edited the workspace settings. If you leave now, your changes won't be saved.</p>
+  </div>
+  <div class="dlg-actions">
+    <button type="button" class="btn" id="keep-editing" autofocus>Keep editing</button>
+    <button type="button" class="btn btn-danger" id="confirm-discard">Discard changes</button>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'trellis.workspace.v1';
+  const DEFAULTS = {
+    name: 'Northwind Health — Product',
+    email: 'product-ops@northwindhealth.com',
+  };
+  const NAME_MAX = 60;
+
+  // ---- State (no backend: persisted to localStorage so saves survive reloads) ----
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved && typeof saved.name === 'string' && typeof saved.email === 'string') return saved;
+    } catch (_) { /* ignore corrupt storage */ }
+    return { ...DEFAULTS };
+  }
+  function persist(ws) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ws)); } catch (_) { /* storage unavailable */ }
+  }
+  let workspace = load();
+
+  // ---- Elements ----
+  const $ = (id) => document.getElementById(id);
+  const views = { overview: $('view-overview'), settings: $('view-settings') };
+  const form = $('settings-form');
+  const nameInput = $('ws-name');
+  const emailInput = $('ws-email');
+  const nameCount = $('ws-name-count');
+  const saveBtn = $('save-btn');
+  const cancelBtn = $('cancel-btn');
+  const statusEl = $('form-status');
+  const summary = $('error-summary');
+  const errorList = $('error-list');
+  const dialog = $('discard-dialog');
+  const main = $('main');
+
+  let saving = false;
+  let submitAttempted = false;
+
+  // ---- Rendering workspace data everywhere it appears ----
+  function initials(name) {
+    const words = name.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '?';
+    return (words[0][0] + (words[1] ? words[1][0] : '')).toUpperCase();
+  }
+  function renderWorkspace() {
+    document.querySelectorAll('[data-bind="name"]').forEach(el => { el.textContent = workspace.name; });
+    document.querySelectorAll('[data-bind="email"]').forEach(el => {
+      el.textContent = workspace.email;
+      if (el.dataset.bindHref === 'mailto') el.href = 'mailto:' + workspace.email;
+    });
+    document.querySelectorAll('[data-bind="initials"]').forEach(el => { el.textContent = initials(workspace.name); });
+  }
+
+  // ---- Form helpers ----
+  const current = () => ({ name: nameInput.value.trim(), email: emailInput.value.trim() });
+  const isDirty = () => {
+    const c = current();
+    return c.name !== workspace.name || c.email !== workspace.email;
+  };
+
+  function fillForm() {
+    nameInput.value = workspace.name;
+    emailInput.value = workspace.email;
+    submitAttempted = false;
+    clearErrors();
+    statusEl.textContent = '';
+    updateUi();
+  }
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+  function validate() {
+    const { name, email } = current();
+    const errors = {};
+    if (!name) errors.name = 'Enter a workspace name.';
+    else if (name.length < 2) errors.name = 'Workspace name must be at least 2 characters.';
+    else if (name.length > NAME_MAX) errors.name = `Workspace name must be ${NAME_MAX} characters or fewer.`;
+    if (!email) errors.email = 'Enter a contact email.';
+    else if (!EMAIL_RE.test(email)) errors.email = 'Enter an email address like name@company.com.';
+    return errors;
+  }
+
+  function setFieldError(input, message) {
+    const err = $(input.id + '-error');
+    if (message) {
+      input.setAttribute('aria-invalid', 'true');
+      err.querySelector('span').textContent = message;
+      err.hidden = false;
+    } else {
+      input.removeAttribute('aria-invalid');
+      err.hidden = true;
+    }
+  }
+  function clearErrors() {
+    setFieldError(nameInput, null);
+    setFieldError(emailInput, null);
+    summary.hidden = true;
+    errorList.innerHTML = '';
+  }
+  function showErrors(errors) {
+    setFieldError(nameInput, errors.name);
+    setFieldError(emailInput, errors.email);
+    const entries = [['name', nameInput], ['email', emailInput]].filter(([k]) => errors[k]);
+    errorList.innerHTML = '';
+    entries.forEach(([k, input]) => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#' + input.id;
+      a.textContent = errors[k];
+      a.addEventListener('click', (e) => { e.preventDefault(); input.focus(); });
+      li.appendChild(a);
+      errorList.appendChild(li);
+    });
+    summary.hidden = entries.length === 0;
+  }
+
+  function updateUi() {
+    const len = nameInput.value.length;
+    nameCount.textContent = `${len}/${NAME_MAX}`;
+    const dirty = isDirty();
+    // Keep the button focusable; communicate "nothing to save" instead of hard-disabling.
+    saveBtn.setAttribute('aria-disabled', String(!dirty || saving));
+    if (!saving) statusEl.textContent = dirty ? 'You have unsaved changes' : '';
+  }
+
+  function onInput() {
+    // Only re-validate live after the person has tried to submit, so they aren't nagged mid-typing.
+    if (submitAttempted) {
+      const errors = validate();
+      showErrors(errors);
+      if (!Object.keys(errors).length) summary.hidden = true;
+    }
+    updateUi();
+  }
+  nameInput.addEventListener('input', onInput);
+  emailInput.addEventListener('input', onInput);
+  // Validate a field once someone leaves it with content, for early feedback.
+  [nameInput, emailInput].forEach(input => input.addEventListener('blur', () => {
+    if (submitAttempted || !input.value.trim()) return;
+    const errors = validate();
+    setFieldError(input, errors[input.name]);
+  }));
+
+  // ---- Save ----
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (saving) return;
+    if (!isDirty()) {
+      statusEl.textContent = 'No changes to save';
+      return;
+    }
+    submitAttempted = true;
+    const errors = validate();
+    if (Object.keys(errors).length) {
+      showErrors(errors);
+      statusEl.textContent = '';
+      (errors.name ? nameInput : emailInput).focus();
+      return;
+    }
+    clearErrors();
+
+    saving = true;
+    const label = saveBtn.textContent;
+    saveBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Saving…';
+    saveBtn.setAttribute('aria-disabled', 'true');
+    nameInput.readOnly = emailInput.readOnly = true;
+    statusEl.textContent = 'Saving…';
+
+    // Simulated network round-trip.
+    setTimeout(() => {
+      workspace = current();
+      persist(workspace);
+      renderWorkspace();
+      updateTitle();
+      saving = false;
+      saveBtn.textContent = label;
+      nameInput.readOnly = emailInput.readOnly = false;
+      fillForm();                       // normalize (trimmed) values back into the form
+      statusEl.textContent = 'All changes saved';
+      toast('Workspace settings saved');
+    }, 700);
+  });
+
+  // ---- Cancel / navigation guard ----
+  let pendingNav = null;
+  function requestLeave(onConfirm) {
+    if (saving) return;
+    if (!isDirty()) { onConfirm(); return; }
+    pendingNav = onConfirm;
+    dialog.showModal();
+  }
+  $('keep-editing').addEventListener('click', () => { pendingNav = null; dialog.close(); });
+  $('confirm-discard').addEventListener('click', () => {
+    const go = pendingNav;
+    dialog.close();
+    fillForm();          // discard edits
+    if (go) go();
+  });
+  // Esc closes the dialog natively; treat it as "Keep editing".
+  dialog.addEventListener('close', () => { pendingNav = null; });
+
+  cancelBtn.addEventListener('click', () => requestLeave(() => navigate('overview')));
+
+  // ---- Routing (hash-based so browser Back works) ----
+  const route = () => (location.hash === '#settings' ? 'settings' : 'overview');
+  let currentRoute = null;
+  let suppressHash = false;
+
+  function navigate(to) {
+    if (location.hash !== '#' + to) {
+      suppressHash = true;
+      location.hash = to;
+    }
+    show(to);
+  }
+  function updateTitle() {
+    document.title = (currentRoute === 'settings' ? 'Workspace settings' : 'Overview') + ' · ' + workspace.name + ' · Trellis';
+  }
+  function show(to) {
+    if (to === currentRoute) return;
+    const from = currentRoute;
+    currentRoute = to;
+    Object.entries(views).forEach(([k, el]) => { el.hidden = k !== to; });
+    document.querySelectorAll('.nav a').forEach(a => {
+      if (a.dataset.route === to) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+    updateTitle();
+    if (to === 'settings') fillForm();
+    if (from !== null) {
+      window.scrollTo(0, 0);
+      (to === 'settings' ? nameInput : main).focus({ preventScroll: true });
+    }
+  }
+
+  window.addEventListener('hashchange', () => {
+    if (suppressHash) { suppressHash = false; return; }
+    const target = route();
+    if (currentRoute === 'settings' && target !== 'settings' && (isDirty() || saving)) {
+      // Leaving via link or Back with unsaved edits: stay put and ask first.
+      suppressHash = true;
+      location.hash = 'settings';
+      requestLeave(() => navigate(target));
+      return;
+    }
+    show(target);
+  });
+
+  // Intercept in-app links to the overview so the unsaved-changes guard runs before the hash changes.
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href="#overview"]');
+    if (!a || currentRoute !== 'settings') return;
+    e.preventDefault();
+    requestLeave(() => navigate('overview'));
+  });
+
+  window.addEventListener('beforeunload', (e) => {
+    if (currentRoute === 'settings' && isDirty()) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  // ---- Toast ----
+  let toastTimer;
+  function toast(msg) {
+    const el = $('toast');
+    $('toast-msg').textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ---- Init ----
+  renderWorkspace();
+  if (!location.hash) history.replaceState(null, '', '#settings');
+  show(route());
+})();
+</script>
+</body>
+</html>
