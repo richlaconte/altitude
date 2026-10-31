@@ -68,6 +68,17 @@ Mean distance between a system's two domain builds of each task. Higher means it
 | claude-plain | 0.097 | 0.1199 | 6.3575 | 0.5173 |
 | claude-shadcn | 0.0561 | 0.1095 | 0.7025 | 0.5447 |
 
+## Proportions
+
+Medians over each system's screens: the share of the screen its content spans, characters per 10,000 px² of that content, the median control's height, the share of text at label weights (500–600) and the largest text. Descriptive, not distances.
+
+| System | Content fill | Text density | Control height (px) | Label-weight share | Largest text (px) |
+|---|---|---|---|---|---|
+| altitude-preview | 0.462 | 8.275 | 36 | 0.422 | 22.5 |
+| claude-altitude | 0.856 | 10.785 | 33 | 0.27 | 24 |
+| claude-plain | 0.988 | 10.07 | 36 | 0.242 | 25 |
+| claude-shadcn | 0.904 | 11.105 | 32 | 0.266 | 24 |
+
 ## Task range
 
 Mean distance between a system's builds of different tasks. Low layout here means every screen gets the same frame (tell LA5).

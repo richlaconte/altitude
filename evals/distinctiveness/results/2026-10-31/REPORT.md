@@ -32,6 +32,19 @@ Up close, Altitude builds are no further from the default than on the whole scre
 
 That doesn't by itself mean agents lose something the previews have. Side by side, the settings and members previews set their content in raised sections over the page's ground, and the settings builds use fewer of them (one or two cards against four sections). But the report, editor and records-frame previews have no raised surface at all, by design, and neither do their builds. Nor is it only how little the previews hold. They fill 48% of the capture, against 71–97% for the builds, but cropped to their content and re-measured, they still sit further from the centre (0.126 whole-screen UIClip, against the Altitude builds' 0.097 and plain Claude's 0.102 from shadcn; an ad-hoc check, not part of the benchmark). Something in the previews doesn't survive into what agents build with them, and it isn't raised surfaces (#383).
 
+## Proportions
+
+Also added later, to look for what doesn't survive from the previews into the builds. These are medians over each system's screens, read from the rendered page and not used as distances (full table in [tables.md](tables.md)):
+
+| | Content fill | Text density (chars / 10k px²) | Control height | Label-weight share |
+|---|---|---|---|---|
+| Altitude previews | 0.46 | 8.3 | 36px | 0.42 |
+| Claude + Altitude | 0.86 | 10.8 | 33px | 0.27 |
+| Claude + shadcn | 0.90 | 11.1 | 32px | 0.27 |
+| Claude + plain | 0.99 | 10.1 | 36px | 0.24 |
+
+The builds hold nearly twice as much as the previews, set denser, with less text at label weights. On each of these they sit with shadcn. Controls are the same size in builds and previews: Altitude's buttons render at 36px (md) and 30px (sm) in both, and an earlier count that read the builds' controls as smaller was counting tables' sort headers. These proportions don't separate design from content. Builds of records and dashboards carry tables full of 400-weight cells, which the compact previews don't, so a lower label share may be content, not a lost rule. They describe the gap; they don't explain it.
+
 ## What the builds did
 
 All 30 runs (24, plus a second sample of settings-a and dashboard-a in each condition) completed and built, for 21.52 USD and 1–5 minutes each. Every dashboard run in the plain and shadcn conditions, and the first Altitude dashboard run, called Claude Code's built-in `dataviz` skill; one shadcn run called `run`. These skills ship with Claude Code, so they are part of the default being measured, and each run records the skills it could see and the ones it called. Every Altitude run read the installed guidance before writing (the pattern docs, the type declarations, and twice `altitude patterns`), and most opened the matching pattern fixture (`screen-layout-report.jsx`, `settings.jsx`, `screen-layout-editor.jsx`) and worked from it. That is why Altitude builds sit closest to the previews.

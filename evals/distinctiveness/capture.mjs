@@ -80,6 +80,24 @@ const readLayout=()=>{
  };
  return visit(document.body)||{type:'container',children:[]};
 };
+// Proportions: how dense a screen is and how its text is weighted, read where Altitude's look is set (control
+// height, label weight, the title's size). Descriptive, beside the distances.
+const readProportions=()=>{
+ const H=innerHeight,walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+ let chars=0,label=0,title=0,top=1e9,bottom=0,left=1e9,right=0,node;
+ while((node=walker.nextNode())){
+  const text=node.textContent.trim(),el=node.parentElement;if(!text||!el)continue;
+  const box=el.getBoundingClientRect(),cs=getComputedStyle(el);
+  if(!box.width||box.top>=H||box.bottom<=0||cs.visibility==='hidden'||+cs.opacity===0)continue;
+  chars+=text.length;if(+cs.fontWeight>=500&&+cs.fontWeight<700)label+=text.length;
+  title=Math.max(title,parseFloat(cs.fontSize));
+  top=Math.min(top,box.top);bottom=Math.max(bottom,Math.min(box.bottom,H));left=Math.min(left,box.left);right=Math.max(right,box.right);
+ }
+ // A table's sort headers and a chart's focusable plot are controls too, but they'd measure what's on the screen, not the controls' size.
+ const controls=[...document.querySelectorAll('button,select,input:not([type=checkbox]):not([type=radio]):not([type=hidden]),[role=button],[role=combobox]')]
+  .filter(el=>!el.closest('th,[role=columnheader]')).map(el=>el.getBoundingClientRect()).filter(box=>box.height>=16&&box.height<=64&&box.top<H&&box.bottom>0).map(box=>Math.round(box.height)).sort((a,b)=>a-b);
+ return {chars,textDensity:chars?+(chars/((bottom-top)*(right-left))*1e4).toFixed(2):0,labelShare:chars?+(label/chars).toFixed(3):0,titlePx:title,controls:controls.length,controlHeight:controls.length?controls[controls.length>>1]:null};
+};
 const count=node=>1+node.children.reduce((n,child)=>n+count(child),0);
 const browser=await chromium.launch(process.env.CHROME?{executablePath:process.env.CHROME}:{});
 const index=[];
@@ -98,7 +116,8 @@ for(const screen of screens){
   await page.screenshot({path:join(out,`${screen.id}.png`)});
   const layout=await page.evaluate(readLayout);
   writeFileSync(join(out,`${screen.id}.layout.json`),JSON.stringify(layout));
-  index.push({id:screen.id,system:screen.system,brief:screen.brief,task:screen.task,domain:screen.domain,sample:screen.sample,nodes:count(layout),errors});
+  const proportions=await page.evaluate(readProportions);
+  index.push({id:screen.id,system:screen.system,brief:screen.brief,task:screen.task,domain:screen.domain,sample:screen.sample,nodes:count(layout),proportions,errors});
   console.log(screen.id,count(layout),'nodes',errors.length?`${errors.length} page errors`:'');
  }catch(error){console.warn(screen.id,'not captured:',error.message);}
  await page.close();server?.close();
