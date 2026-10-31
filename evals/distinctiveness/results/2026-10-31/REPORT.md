@@ -30,7 +30,7 @@ Added later on 2026-10-31 to test the detail reading above. Each screen is cut i
 
 Up close, Altitude builds are no further from the default than on the whole screen: if anything nearer (0.093 against the baselines' 0.099, inside the noise). They are nearer to shadcn's builds (0.092) than to Altitude's own previews (0.101). Only the previews stand apart, by about two thirds of a noise floor beyond the baselines' spread.
 
-That doesn't by itself mean agents lose something the previews have. Side by side, the settings and members previews set their content in raised sections over the page's ground, and the settings builds use fewer of them (one or two cards against four sections). But the report, editor and records-frame previews have no raised surface at all, by design, and neither do their builds. The previews' distance more likely comes from how they're framed: a 960-pixel preview, often filling only the top of the 1200-pixel capture (see *Limits*). Rendering the previews at full size, as screens, would separate the two (#383).
+That doesn't by itself mean agents lose something the previews have. Side by side, the settings and members previews set their content in raised sections over the page's ground, and the settings builds use fewer of them (one or two cards against four sections). But the report, editor and records-frame previews have no raised surface at all, by design, and neither do their builds. The previews' distance more likely comes from how little they hold: compact examples with a lot of empty ground (see *Limits*). Previews filled out to a built screen's content would separate the two (#383).
 
 ## What the builds did
 
@@ -40,7 +40,7 @@ All 30 runs (24, plus a second sample of settings-a and dashboard-a in each cond
 
 - **The baseline is only Claude.** v0 and Lovable need accounts. Until their builds are added under `baselines/`, "the centre" is two Claude conditions, and "distance from the centre" for each baseline is its distance to the other.
 - **One sample per cell,** apart from the two briefs built twice. The noise floor rests on six pairs.
-- **The previews are framed differently.** Each renders inside a 960-pixel preview frame, not as a full screen, which by itself puts some distance between them and the builds.
+- **The previews are compact examples.** They render at the full 1200-pixel width, but with less content than a built screen: a 680-pixel column for settings, and only the top half of the capture filled for the editor and the report. That alone may put distance between them and the builds. (An earlier version of this line said they rendered in a 960-pixel frame. That was wrong: `capture.mjs` loads them at 1200.)
 - **Layout is read from the DOM,** not parsed from pixels as Design Theater did with OmniParser, and repeated siblings are folded. Its scale isn't theirs, and neither is the colour scale (their pairwise means were 20.6–39.7). Compare these numbers with later runs of this benchmark, not with the papers.
 - **One model.** Every build is Claude Opus 5.5 (`claude-opus-5-5`), Claude Code 2.1.314, on 2026-10-31.
 
@@ -49,4 +49,4 @@ All 30 runs (24, plus a second sample of settings-a and dashboard-a in each cond
 1. Add v0, Lovable and Bolt builds of the eight briefs under `baselines/2026-10-31/`, then rerun capture and measure. This is the comparison the issue asks for, and the one this run is missing.
 2. Build every brief three times, so each cell has its own noise floor. That costs about 45 USD a run at today's prices.
 3. ~~A visual measure that sees detail.~~ Done the same day (*Tiles*). It found no hidden distance.
-4. Render the previews as full screens, so their distance isn't partly their frame, and measure whether elevation and leads survive from the pattern fixtures into what agents build (#383).
+4. Measure the previews filled out to a built screen's content, so their distance isn't partly empty ground, and measure whether elevation and leads survive from the pattern fixtures into what agents build (#383).
