@@ -21,15 +21,16 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 <div id="root"></div>
 <script>
 var A = window.Altitude;
-const now = Date.now(), min = 6e4, day = 864e5;
+const now = Date.now(), min = 6e4, hour = 36e5, day = 864e5;
+const today = new Date(now).setHours(0, 0, 0, 0);
 const seed = [
   { id: "a", title: "Q3 pricing comparison", at: now - 2 * min, status: "needs-input", needs: "approval" },
-  { id: "b", title: "Refactor the billing module", at: now - 9 * min, status: "working" },
-  { id: "c", title: "Summarise incident #4821", at: now - 40 * min, unread: true },
-  { id: "d", title: "Draft the release note", at: now - day - 3 * 36e5 },
-  { id: "e", title: "Migrate the users table", at: now - day - 5 * 36e5, status: "failed" },
-  { id: "f", title: "Onboarding email ideas", at: now - 4 * day },
-  { id: "g", title: "Competitor research", at: now - 12 * day, status: "stopped" }
+  { id: "b", title: "Refactor the billing module", at: Math.max(now - 9 * min, today), status: "working" },
+  { id: "c", title: "Summarise incident #4821", at: Math.max(now - 40 * min, today), unread: true },
+  { id: "d", title: "Draft the release note", at: today - 9 * hour },
+  { id: "e", title: "Migrate the users table", at: today - 11 * hour, status: "failed" },
+  { id: "f", title: "Onboarding email ideas", at: today - 3 * day - 12 * hour },
+  { id: "g", title: "Competitor research", at: today - 11 * day - 12 * hour, status: "stopped" }
 ];
 function App() {
   const [threads, setThreads] = React.useState(seed);

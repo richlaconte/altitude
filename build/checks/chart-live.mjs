@@ -91,10 +91,13 @@ const ink = async (page) => page.evaluate(() => { const d = document.createEleme
   // Pausing: the switch stops updates until it's turned off.
   const sw = page.getByRole('switch', { name: 'Pause updates' });
   await sw.click();
+  // A tick that was already gliding finishes after the click, so the paused path is read once it settles.
+  for (const t = Date.now(); (await state(page, 0)).stage && Date.now() - t < 1500;) await page.waitForTimeout(20);
   const paused = (await state(page, 0)).path;
   await page.waitForTimeout(2300);
   l = await state(page, 0);
-  expect(await sw.getAttribute('aria-checked') === 'true' && l.path === paused && /^Paused\. Updated .* · new data waiting$/.test(l.caption), `paused, nothing changes and the caption says so (${l.caption})`);
+  const pressed = await sw.getAttribute('aria-checked');
+  expect(pressed === 'true' && l.path === paused && /^Paused\. Updated .* · new data waiting$/.test(l.caption), `paused, nothing changes and the caption says so (${l.caption}; aria-checked ${pressed}; path ${l.path === paused ? 'held' : 'moved'})`);
   await sw.click();
   await page.waitForTimeout(500);
   expect((await state(page, 0)).path !== paused, 'unpausing applies what came');
