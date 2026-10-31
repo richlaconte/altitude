@@ -1,0 +1,50 @@
+<!-- @dsCard group="Feedback" height=620 subtitle="Every decision your agents are waiting on, oldest first, answered in place" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentRequests — Altitude</title>
+<style>
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+.ar { max-width: 440px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const now = Date.UTC(2026, 9, 31, 14, 20), min = 6e4;
+const seed = [
+  { id: "emails", agent: "Renewal emails", kind: "question", since: now - 4 * min, title: "Send the offer to every monthly customer, or only the active ones?", answers: ["Active only", "Everyone"] },
+  { id: "api", agent: "Billing API", kind: "approval", since: now - 9 * min, title: "Run the plans-table migration on staging?", detail: "Adds annual price columns to 4 plans on staging. Production isn't touched.", answers: ["Run migration"], decline: "Don't run" },
+  { id: "qa", agent: "QA", kind: "failed", since: now - 1 * min, title: "Checkout tests failed", detail: "2 of 14 failed: the annual total shows $290/yr, expected $290/year.", answers: ["Retry"] }
+];
+function App() {
+  const [left, setLeft] = React.useState(seed);
+  const done = (id) => setLeft((l) => l.filter((r) => r.id !== id));
+  return /* @__PURE__ */ React.createElement("div", { className: "ar" }, /* @__PURE__ */ React.createElement(A.AgentRequests, { now }, left.map((r) => /* @__PURE__ */ React.createElement(
+    A.AgentRequest,
+    {
+      key: r.id,
+      agent: r.agent,
+      kind: r.kind,
+      since: r.since,
+      title: r.title,
+      detail: r.detail,
+      onOpen: () => {
+      },
+      actions: /* @__PURE__ */ React.createElement(React.Fragment, null, r.answers.map((a) => /* @__PURE__ */ React.createElement(A.Button, { key: a, size: "sm", variant: "secondary", onClick: () => done(r.id) }, a)), r.decline && /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", onClick: () => done(r.id) }, r.decline))
+    }
+  ))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
