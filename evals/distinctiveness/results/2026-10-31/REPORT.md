@@ -28,7 +28,9 @@ Added later on 2026-10-31 to test the detail reading above. Each screen is cut i
 |---|---|---|---|---|
 | Tiles | 0.041–0.057 | 0.0934 | 0.1325 | 0.0994 |
 
-Up close, Altitude builds are no further from the default than on the whole screen: if anything nearer (0.093 against the baselines' 0.099, inside the noise). They are nearer to shadcn's builds (0.092) than to Altitude's own previews (0.101). Only the previews stand apart, by about two thirds of a noise floor beyond the baselines' spread. So the gap is between Altitude's previews and what agents build with it, not between Altitude and the default. Side by side, the previews set their content on a raised surface over the page's ground, and the builds mostly set it on the ground itself, flat. A rough count of drawn surfaces in the rendered pages agrees (1.4 raised surfaces a screen in Altitude builds, 2.3 in the previews), but that count isn't part of the benchmark and is filed for a proper measure.
+Up close, Altitude builds are no further from the default than on the whole screen: if anything nearer (0.093 against the baselines' 0.099, inside the noise). They are nearer to shadcn's builds (0.092) than to Altitude's own previews (0.101). Only the previews stand apart, by about two thirds of a noise floor beyond the baselines' spread.
+
+That doesn't by itself mean agents lose something the previews have. Side by side, the settings and members previews set their content in raised sections over the page's ground, and the settings builds use fewer of them (one or two cards against four sections). But the report, editor and records-frame previews have no raised surface at all, by design, and neither do their builds. The previews' distance more likely comes from how they're framed: a 960-pixel preview, often filling only the top of the 1200-pixel capture (see *Limits*). Rendering the previews at full size, as screens, would separate the two (#383).
 
 ## What the builds did
 
@@ -47,4 +49,4 @@ All 30 runs (24, plus a second sample of settings-a and dashboard-a in each cond
 1. Add v0, Lovable and Bolt builds of the eight briefs under `baselines/2026-10-31/`, then rerun capture and measure. This is the comparison the issue asks for, and the one this run is missing.
 2. Build every brief three times, so each cell has its own noise floor. That costs about 45 USD a run at today's prices.
 3. ~~A visual measure that sees detail.~~ Done the same day (*Tiles*). It found no hidden distance.
-4. Find out why agent builds come out flatter than the previews, and measure it: whether raised surfaces, elevation tiers and leads survive from the pattern fixtures into what agents build.
+4. Render the previews as full screens, so their distance isn't partly their frame, and measure whether elevation and leads survive from the pattern fixtures into what agents build (#383).
