@@ -22,7 +22,7 @@ runs.forEach((dir,i)=>{for(const name of readdirSync(dir).filter(name=>existsSyn
  if(existsSync(join(dir,name,'src')))cpSync(join(dir,name,'src'),join(dest,'src'),{recursive:true,filter:source=>{const twin=join(starter,relative(join(dir,name,'src'),source));return !(existsSync(twin)&&statSync(source).isFile()&&readFileSync(twin).equals(readFileSync(source)));}});
  if(existsSync(join(dir,name,'src.html')))cpSync(join(dir,name,'src.html'),join(dest,'index.html'));
 }});
-const measures={visual:'Visual (1 − UIClip cosine)',colour:'Colour (EMD, ΔE)',layout:'Layout (normalised tree edit distance)'};
+const measures={visual:'Visual (1 − UIClip cosine)',tiles:'Tiles (matched 3 × 3, 1 − cosine)',colour:'Colour (EMD, ΔE)',layout:'Layout (normalised tree edit distance)'};
 const systems=Object.keys(data.distanceFromCentre.visual);
 const cell=value=>value==null?'–':String(value);
 const table=(head,rows)=>[`| ${head.join(' | ')} |`,`|${head.map(()=>'---').join('|')}|`,...rows.map(row=>`| ${row.join(' | ')} |`)].join('\n');

@@ -2,6 +2,8 @@
 Design Creativity Bench (arXiv 2610.11539).
 
   visual  1 - cosine similarity of UIClip embeddings (Wu et al. 2024)
+  tiles   the same on a 3 x 3 grid of 400px tiles, each tile matched to its nearest counterpart (Hungarian), mean
+          of the matched distances: detail at close to UIClip's training scale, wherever on the screen it sits
   colour  Earth Mover's Distance between CIELCh histograms, ground distance in CIELAB (delta E 1976)
   layout  Zhang-Shasha tree edit distance between DOM layout trees (repeated siblings folded), divided by the larger tree's size
 
@@ -19,18 +21,33 @@ UICLIP = 'biglab/uiclip_jitteredwebsites-2-224-paraphrased_webpairs_humanpairs'
 PROCESSOR = 'openai/clip-vit-base-patch32'
 REFERENCE = ('claude-altitude', 'altitude-preview')  # systems built with Altitude; every other system is a baseline
 
-def embed(paths):
+GRID = 3
+
+def embed(images):
     import torch
     from transformers import CLIPModel, CLIPProcessor
     model, processor = CLIPModel.from_pretrained(UICLIP).eval(), CLIPProcessor.from_pretrained(PROCESSOR)
-    # The whole square screen is resized to 224, not centre-cropped, so nothing at the edges is lost.
-    images = [Image.open(p).convert('RGB').resize((224, 224), Image.BICUBIC) for p in paths]
+    out = []
     with torch.no_grad():
-        inputs = processor(images=images, return_tensors='pt', do_resize=False, do_center_crop=False)
-        features = model.get_image_features(**inputs)
-        features = getattr(features, 'pooler_output', features)
-    features = features / features.norm(dim=-1, keepdim=True)
-    return features.numpy()
+        for i in range(0, len(images), 32):
+            inputs = processor(images=images[i:i + 32], return_tensors='pt', do_resize=False, do_center_crop=False)
+            features = model.get_image_features(**inputs)
+            out.append(getattr(features, 'pooler_output', features))
+    features = torch.cat(out)
+    return (features / features.norm(dim=-1, keepdim=True)).numpy()
+
+def views(path):
+    """The whole screen resized to 224 (not centre-cropped, so nothing at the edges is lost), then its tiles."""
+    image = Image.open(path).convert('RGB')
+    w, h = image.size
+    tiles = [image.crop((x * w // GRID, y * h // GRID, (x + 1) * w // GRID, (y + 1) * h // GRID)) for y in range(GRID) for x in range(GRID)]
+    return [im.resize((224, 224), Image.BICUBIC) for im in [image, *tiles]]
+
+def tile_distance(a, b):
+    from scipy.optimize import linear_sum_assignment
+    cost = 1 - a @ b.T
+    rows, cols = linear_sum_assignment(cost)
+    return float(cost[rows, cols].mean())
 
 def lab(path):
     rgb = np.asarray(Image.open(path).convert('RGB').resize((200, 200), Image.BOX), dtype=np.float64) / 255
@@ -111,10 +128,14 @@ def main(captures, results):
     for s in screens:
         s.setdefault('sample', 1)
         s['png'], s['layout'] = captures / f"{s['id']}.png", fold(json.loads((captures / f"{s['id']}.layout.json").read_text()))
-    vectors = dict(zip([s['id'] for s in screens], embed([s['png'] for s in screens])))
+    n = 1 + GRID * GRID
+    features = embed([view for s in screens for view in views(s['png'])])
+    vectors = {s['id']: features[i * n] for i, s in enumerate(screens)}
+    tiles = {s['id']: features[i * n + 1:(i + 1) * n] for i, s in enumerate(screens)}
     hist = {s['id']: histogram(lab(s['png'])) for s in screens}
     def distance(a, b):
         return {'visual': round(float(1 - vectors[a['id']] @ vectors[b['id']]), 4),
+                'tiles': round(tile_distance(tiles[a['id']], tiles[b['id']]), 4),
                 'colour': round(emd(hist[a['id']], hist[b['id']]), 2),
                 'layout': round(layout_distance(a['layout'], b['layout']), 4)}
     pairs = []
@@ -125,7 +146,7 @@ def main(captures, results):
     noise_pairs = [{'system': a['system'], 'brief': a['brief'], 'a': a['id'], 'b': b['id'], **distance(a, b)}
                    for a, b in itertools.combinations(screens, 2) if a['brief'] and a['system'] == b['system'] and a['brief'] == b['brief']]
     systems = sorted({s['system'] for s in screens})
-    measures = ('visual', 'colour', 'layout')
+    measures = ('visual', 'tiles', 'colour', 'layout')
     matrix = {m: {x: {y: mean([p[m] for p in pairs if sorted([x, y]) == p['systems']]) for y in systems if y != x} for x in systems} for m in measures}
     baselines = [s for s in systems if s not in REFERENCE]
     # Distance from the centre: a system's mean distance to the baselines' builds of the same briefs.
@@ -146,7 +167,7 @@ def main(captures, results):
     task_range = {m: {x: mean([p[m] for p in task_pairs if p['system'] == x]) for x in systems} for m in measures}
     noise = {m: {x: mean([p[m] for p in noise_pairs if p['system'] == x]) for x in systems} for m in measures}
     Path(results).write_text(json.dumps({
-        'method': {'uiclip': UICLIP, 'processor': PROCESSOR, 'viewport': '1200x1200', 'colourBins': {'L': L_EDGES.tolist(), 'C': C_EDGES.tolist(), 'hue': HUE_BINS},
+        'method': {'uiclip': UICLIP, 'processor': PROCESSOR, 'viewport': '1200x1200', 'tiles': f'{GRID}x{GRID}, Hungarian-matched', 'colourBins': {'L': L_EDGES.tolist(), 'C': C_EDGES.tolist(), 'hue': HUE_BINS},
                    'layout': 'DOM layout tree (capture.mjs), repeated siblings folded, Zhang-Shasha with unit costs, divided by the larger tree', 'reference': list(REFERENCE)},
         'screens': [{k: s[k] for k in ('id', 'system', 'brief', 'task', 'domain', 'sample')} | {'nodes': size(s['layout'])} for s in screens],
         'pairs': pairs, 'matrix': matrix, 'baselines': baselines, 'distanceFromCentre': centre_distance,

@@ -3,6 +3,7 @@
   "uiclip": "biglab/uiclip_jitteredwebsites-2-224-paraphrased_webpairs_humanpairs",
   "processor": "openai/clip-vit-base-patch32",
   "viewport": "1200x1200",
+  "tiles": "3x3, Hungarian-matched",
   "colourBins": {
    "L": [
     0,
@@ -351,6 +352,7 @@
     "claude-plain"
    ],
    "visual": 0.0908,
+   "tiles": 0.0939,
    "colour": 3.53,
    "layout": 0.6452
   },
@@ -362,6 +364,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1317,
+   "tiles": 0.093,
    "colour": 3.24,
    "layout": 0.5625
   },
@@ -373,6 +376,7 @@
     "claude-altitude"
    ],
    "visual": 0.0508,
+   "tiles": 0.0912,
    "colour": 4.41,
    "layout": 0.5833
   },
@@ -384,6 +388,7 @@
     "claude-plain"
    ],
    "visual": 0.1061,
+   "tiles": 0.1147,
    "colour": 5.14,
    "layout": 0.6508
   },
@@ -395,6 +400,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0932,
+   "tiles": 0.1066,
    "colour": 1.42,
    "layout": 0.7387
   },
@@ -406,6 +412,7 @@
     "claude-altitude"
    ],
    "visual": 0.0629,
+   "tiles": 0.1031,
    "colour": 0.54,
    "layout": 0.6034
   },
@@ -417,6 +424,7 @@
     "claude-plain"
    ],
    "visual": 0.1478,
+   "tiles": 0.1202,
    "colour": 4.12,
    "layout": 0.6968
   },
@@ -428,6 +436,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0923,
+   "tiles": 0.0935,
    "colour": 0.73,
    "layout": 0.708
   },
@@ -439,6 +448,7 @@
     "claude-altitude"
    ],
    "visual": 0.0795,
+   "tiles": 0.1173,
    "colour": 1.31,
    "layout": 0.7523
   },
@@ -450,6 +460,7 @@
     "claude-plain"
    ],
    "visual": 0.1349,
+   "tiles": 0.1231,
    "colour": 3.68,
    "layout": 0.6091
   },
@@ -461,6 +472,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1022,
+   "tiles": 0.1176,
    "colour": 0.69,
    "layout": 0.6023
   },
@@ -472,6 +484,7 @@
     "claude-altitude"
    ],
    "visual": 0.0879,
+   "tiles": 0.0963,
    "colour": 0.84,
    "layout": 0.6712
   },
@@ -483,6 +496,7 @@
     "claude-plain"
    ],
    "visual": 0.0996,
+   "tiles": 0.1045,
    "colour": 1.09,
    "layout": 0.596
   },
@@ -494,6 +508,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0706,
+   "tiles": 0.0707,
    "colour": 0.28,
    "layout": 0.7105
   },
@@ -505,6 +520,7 @@
     "claude-altitude"
    ],
    "visual": 0.0518,
+   "tiles": 0.0849,
    "colour": 0.47,
    "layout": 0.7089
   },
@@ -516,6 +532,7 @@
     "claude-plain"
    ],
    "visual": 0.0751,
+   "tiles": 0.0874,
    "colour": 3.11,
    "layout": 0.7121
   },
@@ -527,6 +544,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0572,
+   "tiles": 0.1045,
    "colour": 0.36,
    "layout": 0.8409
   },
@@ -538,6 +556,7 @@
     "claude-altitude"
    ],
    "visual": 0.0789,
+   "tiles": 0.134,
    "colour": 1.61,
    "layout": 0.7121
   },
@@ -549,6 +568,7 @@
     "claude-plain"
    ],
    "visual": 0.0744,
+   "tiles": 0.0608,
    "colour": 16.03,
    "layout": 0.6667
   },
@@ -560,6 +580,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0792,
+   "tiles": 0.0871,
    "colour": 0.24,
    "layout": 0.7105
   },
@@ -571,6 +592,7 @@
     "claude-altitude"
    ],
    "visual": 0.066,
+   "tiles": 0.0872,
    "colour": 0.63,
    "layout": 0.7727
   },
@@ -582,6 +604,7 @@
     "claude-plain"
    ],
    "visual": 0.0869,
+   "tiles": 0.0556,
    "colour": 0.51,
    "layout": 0.75
   },
@@ -593,6 +616,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0692,
+   "tiles": 0.0612,
    "colour": 0.24,
    "layout": 0.5641
   },
@@ -604,6 +628,7 @@
     "claude-altitude"
    ],
    "visual": 0.0545,
+   "tiles": 0.0943,
    "colour": 0.47,
    "layout": 0.7955
   },
@@ -615,6 +640,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0541,
+   "tiles": 0.0804,
    "colour": 0.71,
    "layout": 0.6613
   },
@@ -626,6 +652,7 @@
     "claude-plain"
    ],
    "visual": 0.0992,
+   "tiles": 0.1267,
    "colour": 1.93,
    "layout": 0.6613
   },
@@ -637,6 +664,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0615,
+   "tiles": 0.0985,
    "colour": 3.95,
    "layout": 0.7027
   },
@@ -648,6 +676,7 @@
     "claude-plain"
    ],
    "visual": 0.1005,
+   "tiles": 0.1324,
    "colour": 5.54,
    "layout": 0.6667
   },
@@ -659,6 +688,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1375,
+   "tiles": 0.1168,
    "colour": 3.91,
    "layout": 0.5806
   },
@@ -670,6 +700,7 @@
     "claude-plain"
    ],
    "visual": 0.1825,
+   "tiles": 0.1661,
    "colour": 5.36,
    "layout": 0.8258
   },
@@ -681,6 +712,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0801,
+   "tiles": 0.1008,
    "colour": 3.01,
    "layout": 0.5636
   },
@@ -692,6 +724,7 @@
     "claude-plain"
    ],
    "visual": 0.1556,
+   "tiles": 0.1632,
    "colour": 4.47,
    "layout": 0.7727
   },
@@ -703,6 +736,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1154,
+   "tiles": 0.1105,
    "colour": 1.08,
    "layout": 0.7273
   },
@@ -714,6 +748,7 @@
     "claude-plain"
    ],
    "visual": 0.1302,
+   "tiles": 0.1476,
    "colour": 1.52,
    "layout": 0.6465
   },
@@ -725,6 +760,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0802,
+   "tiles": 0.1102,
    "colour": 3.04,
    "layout": 0.5424
   },
@@ -736,6 +772,7 @@
     "claude-plain"
    ],
    "visual": 0.1197,
+   "tiles": 0.1718,
    "colour": 4.66,
    "layout": 0.7089
   },
@@ -747,6 +784,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1245,
+   "tiles": 0.1069,
    "colour": 15.86,
    "layout": 0.7368
   },
@@ -758,6 +796,7 @@
     "claude-plain"
    ],
    "visual": 0.0572,
+   "tiles": 0.076,
    "colour": 15.76,
    "layout": 0.6364
   },
@@ -769,6 +808,7 @@
     "claude-shadcn"
    ],
    "visual": 0.096,
+   "tiles": 0.0709,
    "colour": 0.47,
    "layout": 0.6667
   },
@@ -780,6 +820,7 @@
     "claude-plain"
    ],
    "visual": 0.0728,
+   "tiles": 0.0902,
    "colour": 0.66,
    "layout": 0.7273
   },
@@ -791,6 +832,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1246,
+   "tiles": 0.1187,
    "colour": 1.59,
    "layout": 0.6364
   },
@@ -802,6 +844,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0754,
+   "tiles": 0.1235,
    "colour": 1.94,
    "layout": 0.7658
   },
@@ -813,6 +856,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1169,
+   "tiles": 0.1406,
    "colour": 1.62,
    "layout": 0.7522
   },
@@ -824,6 +868,7 @@
     "claude-shadcn"
    ],
    "visual": 0.122,
+   "tiles": 0.1691,
    "colour": 1.47,
    "layout": 0.7386
   },
@@ -835,6 +880,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0847,
+   "tiles": 0.1022,
    "colour": 0.56,
    "layout": 0.7595
   },
@@ -846,6 +892,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1232,
+   "tiles": 0.1569,
    "colour": 1.72,
    "layout": 0.7722
   },
@@ -857,6 +904,7 @@
     "claude-shadcn"
    ],
    "visual": 0.1179,
+   "tiles": 0.1198,
    "colour": 0.45,
    "layout": 0.6136
   },
@@ -868,6 +916,7 @@
     "claude-shadcn"
    ],
    "visual": 0.0983,
+   "tiles": 0.1156,
    "colour": 0.4,
    "layout": 0.6818
   }
@@ -893,6 +942,28 @@
     "altitude-preview": 0.1079,
     "claude-altitude": 0.0869,
     "claude-plain": 0.0937
+   }
+  },
+  "tiles": {
+   "altitude-preview": {
+    "claude-altitude": 0.101,
+    "claude-plain": 0.1343,
+    "claude-shadcn": 0.1308
+   },
+   "claude-altitude": {
+    "altitude-preview": 0.101,
+    "claude-plain": 0.095,
+    "claude-shadcn": 0.0918
+   },
+   "claude-plain": {
+    "altitude-preview": 0.1343,
+    "claude-altitude": 0.095,
+    "claude-shadcn": 0.0994
+   },
+   "claude-shadcn": {
+    "altitude-preview": 0.1308,
+    "claude-altitude": 0.0918,
+    "claude-plain": 0.0994
    }
   },
   "colour": {
@@ -951,6 +1022,12 @@
    "claude-plain": 0.0937,
    "claude-shadcn": 0.0937
   },
+  "tiles": {
+   "altitude-preview": 0.1325,
+   "claude-altitude": 0.0934,
+   "claude-plain": 0.0994,
+   "claude-shadcn": 0.0994
+  },
   "colour": {
    "altitude-preview": 3.1031,
    "claude-altitude": 2.7756,
@@ -971,6 +1048,7 @@
    "a": "claude-altitude--dashboard-a",
    "b": "claude-altitude--dashboard-b",
    "visual": 0.0674,
+   "tiles": 0.096,
    "colour": 3.95,
    "layout": 0.431
   },
@@ -980,6 +1058,7 @@
    "a": "claude-altitude--record-view-a",
    "b": "claude-altitude--record-view-b",
    "visual": 0.0468,
+   "tiles": 0.1029,
    "colour": 0.48,
    "layout": 0.6514
   },
@@ -989,6 +1068,7 @@
    "a": "claude-altitude--records-a",
    "b": "claude-altitude--records-b",
    "visual": 0.0498,
+   "tiles": 0.109,
    "colour": 1.16,
    "layout": 0.4545
   },
@@ -998,6 +1078,7 @@
    "a": "claude-altitude--settings-a",
    "b": "claude-altitude--settings-b",
    "visual": 0.0478,
+   "tiles": 0.0579,
    "colour": 0.49,
    "layout": 0.4062
   },
@@ -1007,6 +1088,7 @@
    "a": "claude-plain--dashboard-a",
    "b": "claude-plain--dashboard-b",
    "visual": 0.0499,
+   "tiles": 0.0914,
    "colour": 4.19,
    "layout": 0.4921
   },
@@ -1016,6 +1098,7 @@
    "a": "claude-plain--record-view-a",
    "b": "claude-plain--record-view-b",
    "visual": 0.216,
+   "tiles": 0.1772,
    "colour": 1.91,
    "layout": 0.6
   },
@@ -1025,6 +1108,7 @@
    "a": "claude-plain--records-a",
    "b": "claude-plain--records-b",
    "visual": 0.0533,
+   "tiles": 0.1523,
    "colour": 3.64,
    "layout": 0.6162
   },
@@ -1034,6 +1118,7 @@
    "a": "claude-plain--settings-a",
    "b": "claude-plain--settings-b",
    "visual": 0.0686,
+   "tiles": 0.0586,
    "colour": 15.69,
    "layout": 0.3611
   },
@@ -1043,6 +1128,7 @@
    "a": "claude-shadcn--dashboard-a",
    "b": "claude-shadcn--dashboard-b",
    "visual": 0.0679,
+   "tiles": 0.0961,
    "colour": 0.99,
    "layout": 0.7387
   },
@@ -1052,6 +1138,7 @@
    "a": "claude-shadcn--record-view-a",
    "b": "claude-shadcn--record-view-b",
    "visual": 0.0724,
+   "tiles": 0.1382,
    "colour": 0.35,
    "layout": 0.5575
   },
@@ -1061,6 +1148,7 @@
    "a": "claude-shadcn--records-a",
    "b": "claude-shadcn--records-b",
    "visual": 0.0415,
+   "tiles": 0.1153,
    "colour": 1.26,
    "layout": 0.3953
   },
@@ -1070,6 +1158,7 @@
    "a": "claude-shadcn--settings-a",
    "b": "claude-shadcn--settings-b",
    "visual": 0.0425,
+   "tiles": 0.0883,
    "colour": 0.21,
    "layout": 0.4872
   }
@@ -1080,6 +1169,12 @@
    "claude-altitude": 0.0529,
    "claude-plain": 0.097,
    "claude-shadcn": 0.0561
+  },
+  "tiles": {
+   "altitude-preview": null,
+   "claude-altitude": 0.0915,
+   "claude-plain": 0.1199,
+   "claude-shadcn": 0.1095
   },
   "colour": {
    "altitude-preview": null,
@@ -1100,6 +1195,7 @@
    "a": "claude-altitude--dashboard-a",
    "b": "claude-altitude--record-view-a",
    "visual": 0.1605,
+   "tiles": 0.1506,
    "colour": 3.56,
    "layout": 0.7339
   },
@@ -1108,6 +1204,7 @@
    "a": "claude-altitude--dashboard-a",
    "b": "claude-altitude--records-a",
    "visual": 0.1692,
+   "tiles": 0.1495,
    "colour": 4.34,
    "layout": 0.6842
   },
@@ -1116,6 +1213,7 @@
    "a": "claude-altitude--dashboard-a",
    "b": "claude-altitude--settings-a",
    "visual": 0.1855,
+   "tiles": 0.1503,
    "colour": 4.94,
    "layout": 0.7292
   },
@@ -1124,6 +1222,7 @@
    "a": "claude-altitude--dashboard-b",
    "b": "claude-altitude--record-view-b",
    "visual": 0.1465,
+   "tiles": 0.1298,
    "colour": 0.3,
    "layout": 0.7123
   },
@@ -1132,6 +1231,7 @@
    "a": "claude-altitude--dashboard-b",
    "b": "claude-altitude--records-b",
    "visual": 0.1363,
+   "tiles": 0.1572,
    "colour": 0.96,
    "layout": 0.7727
   },
@@ -1140,6 +1240,7 @@
    "a": "claude-altitude--dashboard-b",
    "b": "claude-altitude--settings-b",
    "visual": 0.1442,
+   "tiles": 0.1426,
    "colour": 0.9,
    "layout": 0.7069
   },
@@ -1148,6 +1249,7 @@
    "a": "claude-altitude--record-view-a",
    "b": "claude-altitude--records-a",
    "visual": 0.0608,
+   "tiles": 0.1063,
    "colour": 0.91,
    "layout": 0.6422
   },
@@ -1156,6 +1258,7 @@
    "a": "claude-altitude--record-view-a",
    "b": "claude-altitude--settings-a",
    "visual": 0.0648,
+   "tiles": 0.1046,
    "colour": 1.51,
    "layout": 0.8349
   },
@@ -1164,6 +1267,7 @@
    "a": "claude-altitude--record-view-b",
    "b": "claude-altitude--records-b",
    "visual": 0.0555,
+   "tiles": 0.1173,
    "colour": 1.03,
    "layout": 0.697
   },
@@ -1172,6 +1276,7 @@
    "a": "claude-altitude--record-view-b",
    "b": "claude-altitude--settings-b",
    "visual": 0.0577,
+   "tiles": 0.0937,
    "colour": 0.68,
    "layout": 0.6849
   },
@@ -1180,6 +1285,7 @@
    "a": "claude-altitude--records-a",
    "b": "claude-altitude--settings-a",
    "visual": 0.061,
+   "tiles": 0.0785,
    "colour": 0.69,
    "layout": 0.8158
   },
@@ -1188,6 +1294,7 @@
    "a": "claude-altitude--records-b",
    "b": "claude-altitude--settings-b",
    "visual": 0.0734,
+   "tiles": 0.1394,
    "colour": 1.7,
    "layout": 0.9091
   },
@@ -1196,6 +1303,7 @@
    "a": "claude-plain--dashboard-a",
    "b": "claude-plain--record-view-a",
    "visual": 0.1372,
+   "tiles": 0.1747,
    "colour": 4.09,
    "layout": 0.7419
   },
@@ -1204,6 +1312,7 @@
    "a": "claude-plain--dashboard-a",
    "b": "claude-plain--records-a",
    "visual": 0.1654,
+   "tiles": 0.1731,
    "colour": 1.3,
    "layout": 0.7071
   },
@@ -1212,6 +1321,7 @@
    "a": "claude-plain--dashboard-a",
    "b": "claude-plain--settings-a",
    "visual": 0.1948,
+   "tiles": 0.1749,
    "colour": 14.98,
    "layout": 0.6613
   },
@@ -1220,6 +1330,7 @@
    "a": "claude-plain--dashboard-b",
    "b": "claude-plain--record-view-b",
    "visual": 0.1894,
+   "tiles": 0.1768,
    "colour": 5.06,
    "layout": 0.6636
   },
@@ -1228,6 +1339,7 @@
    "a": "claude-plain--dashboard-b",
    "b": "claude-plain--records-b",
    "visual": 0.1257,
+   "tiles": 0.1997,
    "colour": 4.58,
    "layout": 0.746
   },
@@ -1236,6 +1348,7 @@
    "a": "claude-plain--dashboard-b",
    "b": "claude-plain--settings-b",
    "visual": 0.1903,
+   "tiles": 0.172,
    "colour": 5.58,
    "layout": 0.7619
   },
@@ -1244,6 +1357,7 @@
    "a": "claude-plain--record-view-a",
    "b": "claude-plain--records-a",
    "visual": 0.0993,
+   "tiles": 0.1327,
    "colour": 4.07,
    "layout": 0.6516
   },
@@ -1252,6 +1366,7 @@
    "a": "claude-plain--record-view-a",
    "b": "claude-plain--settings-a",
    "visual": 0.1313,
+   "tiles": 0.1392,
    "colour": 12.11,
    "layout": 0.8065
   },
@@ -1260,6 +1375,7 @@
    "a": "claude-plain--record-view-b",
    "b": "claude-plain--records-b",
    "visual": 0.154,
+   "tiles": 0.1826,
    "colour": 1.35,
    "layout": 0.6636
   },
@@ -1268,6 +1384,7 @@
    "a": "claude-plain--record-view-b",
    "b": "claude-plain--settings-b",
    "visual": 0.1713,
+   "tiles": 0.1601,
    "colour": 4.26,
    "layout": 0.8182
   },
@@ -1276,6 +1393,7 @@
    "a": "claude-plain--records-a",
    "b": "claude-plain--settings-a",
    "visual": 0.1179,
+   "tiles": 0.1482,
    "colour": 14.95,
    "layout": 0.7576
   },
@@ -1284,6 +1402,7 @@
    "a": "claude-plain--records-b",
    "b": "claude-plain--settings-b",
    "visual": 0.1643,
+   "tiles": 0.1861,
    "colour": 4.44,
    "layout": 0.7458
   },
@@ -1292,6 +1411,7 @@
    "a": "claude-shadcn--dashboard-a",
    "b": "claude-shadcn--record-view-a",
    "visual": 0.1893,
+   "tiles": 0.1481,
    "colour": 1.5,
    "layout": 0.7522
   },
@@ -1300,6 +1420,7 @@
    "a": "claude-shadcn--dashboard-a",
    "b": "claude-shadcn--records-a",
    "visual": 0.1801,
+   "tiles": 0.1304,
    "colour": 1.49,
    "layout": 0.6977
   },
@@ -1308,6 +1429,7 @@
    "a": "claude-shadcn--dashboard-a",
    "b": "claude-shadcn--settings-a",
    "visual": 0.1673,
+   "tiles": 0.1725,
    "colour": 1.94,
    "layout": 0.5
   },
@@ -1316,6 +1438,7 @@
    "a": "claude-shadcn--dashboard-b",
    "b": "claude-shadcn--record-view-b",
    "visual": 0.1544,
+   "tiles": 0.1617,
    "colour": 1.29,
    "layout": 0.7027
   },
@@ -1324,6 +1447,7 @@
    "a": "claude-shadcn--dashboard-b",
    "b": "claude-shadcn--records-b",
    "visual": 0.1439,
+   "tiles": 0.1568,
    "colour": 1.3,
    "layout": 0.7928
   },
@@ -1332,6 +1456,7 @@
    "a": "claude-shadcn--dashboard-b",
    "b": "claude-shadcn--settings-b",
    "visual": 0.1315,
+   "tiles": 0.1643,
    "colour": 2.09,
    "layout": 0.7658
   },
@@ -1340,6 +1465,7 @@
    "a": "claude-shadcn--record-view-a",
    "b": "claude-shadcn--records-a",
    "visual": 0.0622,
+   "tiles": 0.1016,
    "colour": 0.96,
    "layout": 0.7699
   },
@@ -1348,6 +1474,7 @@
    "a": "claude-shadcn--record-view-a",
    "b": "claude-shadcn--settings-a",
    "visual": 0.07,
+   "tiles": 0.1361,
    "colour": 1.5,
    "layout": 0.6903
   },
@@ -1356,6 +1483,7 @@
    "a": "claude-shadcn--record-view-b",
    "b": "claude-shadcn--records-b",
    "visual": 0.0927,
+   "tiles": 0.1397,
    "colour": 0.81,
    "layout": 0.7614
   },
@@ -1364,6 +1492,7 @@
    "a": "claude-shadcn--record-view-b",
    "b": "claude-shadcn--settings-b",
    "visual": 0.0833,
+   "tiles": 0.1445,
    "colour": 1.16,
    "layout": 0.625
   },
@@ -1372,6 +1501,7 @@
    "a": "claude-shadcn--records-a",
    "b": "claude-shadcn--settings-a",
    "visual": 0.0504,
+   "tiles": 0.1005,
    "colour": 0.55,
    "layout": 0.6977
   },
@@ -1380,6 +1510,7 @@
    "a": "claude-shadcn--records-b",
    "b": "claude-shadcn--settings-b",
    "visual": 0.0712,
+   "tiles": 0.1461,
    "colour": 1.58,
    "layout": 0.6154
   },
@@ -1388,6 +1519,7 @@
    "a": "altitude-preview--settings",
    "b": "altitude-preview--records",
    "visual": 0.0482,
+   "tiles": 0.0694,
    "colour": 0.41,
    "layout": 0.7089
   },
@@ -1396,6 +1528,7 @@
    "a": "altitude-preview--settings",
    "b": "altitude-preview--dashboard",
    "visual": 0.1514,
+   "tiles": 0.1179,
    "colour": 0.47,
    "layout": 0.7273
   },
@@ -1404,6 +1537,7 @@
    "a": "altitude-preview--settings",
    "b": "altitude-preview--record-view",
    "visual": 0.0835,
+   "tiles": 0.0901,
    "colour": 0.5,
    "layout": 0.6591
   },
@@ -1412,6 +1546,7 @@
    "a": "altitude-preview--records",
    "b": "altitude-preview--dashboard",
    "visual": 0.1015,
+   "tiles": 0.1051,
    "colour": 0.37,
    "layout": 0.7722
   },
@@ -1420,6 +1555,7 @@
    "a": "altitude-preview--records",
    "b": "altitude-preview--record-view",
    "visual": 0.0342,
+   "tiles": 0.0648,
    "colour": 0.24,
    "layout": 0.6962
   },
@@ -1428,6 +1564,7 @@
    "a": "altitude-preview--dashboard",
    "b": "altitude-preview--record-view",
    "visual": 0.0995,
+   "tiles": 0.1028,
    "colour": 0.52,
    "layout": 0.6136
   }
@@ -1438,6 +1575,12 @@
    "claude-altitude": 0.1096,
    "claude-plain": 0.1534,
    "claude-shadcn": 0.1164
+  },
+  "tiles": {
+   "altitude-preview": 0.0917,
+   "claude-altitude": 0.1266,
+   "claude-plain": 0.1683,
+   "claude-shadcn": 0.1419
   },
   "colour": {
    "altitude-preview": 0.4183,
@@ -1459,6 +1602,7 @@
    "a": "claude-altitude--dashboard-a",
    "b": "claude-altitude--dashboard-a--s2",
    "visual": 0.0167,
+   "tiles": 0.0401,
    "colour": 1.46,
    "layout": 0.3333
   },
@@ -1468,6 +1612,7 @@
    "a": "claude-altitude--settings-a",
    "b": "claude-altitude--settings-a--s2",
    "visual": 0.0247,
+   "tiles": 0.0418,
    "colour": 0.51,
    "layout": 0.5588
   },
@@ -1477,6 +1622,7 @@
    "a": "claude-plain--dashboard-a",
    "b": "claude-plain--dashboard-a--s2",
    "visual": 0.0424,
+   "tiles": 0.0761,
    "colour": 0.7,
    "layout": 0.4032
   },
@@ -1486,6 +1632,7 @@
    "a": "claude-plain--settings-a",
    "b": "claude-plain--settings-a--s2",
    "visual": 0.0166,
+   "tiles": 0.0371,
    "colour": 2.29,
    "layout": 0.3519
   },
@@ -1495,6 +1642,7 @@
    "a": "claude-shadcn--dashboard-a",
    "b": "claude-shadcn--dashboard-a--s2",
    "visual": 0.0468,
+   "tiles": 0.0685,
    "colour": 1.61,
    "layout": 0.5172
   },
@@ -1504,6 +1652,7 @@
    "a": "claude-shadcn--settings-a",
    "b": "claude-shadcn--settings-a--s2",
    "visual": 0.016,
+   "tiles": 0.0431,
    "colour": 0.04,
    "layout": 0.4872
   }
@@ -1514,6 +1663,12 @@
    "claude-altitude": 0.0207,
    "claude-plain": 0.0295,
    "claude-shadcn": 0.0314
+  },
+  "tiles": {
+   "altitude-preview": null,
+   "claude-altitude": 0.041,
+   "claude-plain": 0.0566,
+   "claude-shadcn": 0.0558
   },
   "colour": {
    "altitude-preview": null,
