@@ -41,43 +41,43 @@
 
 Mean distance from a system's screens to the baselines' (claude-plain, claude-shadcn) screens of the same briefs. Higher is further from the default.
 
-| System | Visual (1 − UIClip cosine) | Colour (EMD, ΔE) | Layout (normalised tree edit distance) |
-|---|---|---|---|
-| altitude-preview | 0.1113 | 3.1031 | 0.7104 |
-| claude-altitude | 0.0945 | 2.7756 | 0.6728 |
-| claude-plain | 0.0937 | 4.0038 | 0.6477 |
-| claude-shadcn | 0.0937 | 4.0038 | 0.6477 |
+| System | Visual (1 − UIClip cosine) | Tiles (matched 3 × 3, 1 − cosine) | Colour (EMD, ΔE) | Layout (normalised tree edit distance) |
+|---|---|---|---|---|
+| altitude-preview | 0.1113 | 0.1325 | 3.1031 | 0.7104 |
+| claude-altitude | 0.0945 | 0.0934 | 2.7756 | 0.6728 |
+| claude-plain | 0.0937 | 0.0994 | 4.0038 | 0.6477 |
+| claude-shadcn | 0.0937 | 0.0994 | 4.0038 | 0.6477 |
 
 ## Noise floor
 
 Mean distance between one system's repeat builds of the same prompt. A gap between systems smaller than this is noise.
 
-| System | Pairs | Visual (1 − UIClip cosine) | Colour (EMD, ΔE) | Layout (normalised tree edit distance) |
-|---|---|---|---|---|
-| claude-altitude | 2 | 0.0207 | 0.985 | 0.446 |
-| claude-plain | 2 | 0.0295 | 1.495 | 0.3775 |
-| claude-shadcn | 2 | 0.0314 | 0.825 | 0.5022 |
+| System | Pairs | Visual (1 − UIClip cosine) | Tiles (matched 3 × 3, 1 − cosine) | Colour (EMD, ΔE) | Layout (normalised tree edit distance) |
+|---|---|---|---|---|---|
+| claude-altitude | 2 | 0.0207 | 0.041 | 0.985 | 0.446 |
+| claude-plain | 2 | 0.0295 | 0.0566 | 1.495 | 0.3775 |
+| claude-shadcn | 2 | 0.0314 | 0.0558 | 0.825 | 0.5022 |
 
 ## Creative range
 
 Mean distance between a system's two domain builds of each task. Higher means it varies more with the product.
 
-| System | Visual (1 − UIClip cosine) | Colour (EMD, ΔE) | Layout (normalised tree edit distance) |
-|---|---|---|---|
-| claude-altitude | 0.0529 | 1.52 | 0.4858 |
-| claude-plain | 0.097 | 6.3575 | 0.5173 |
-| claude-shadcn | 0.0561 | 0.7025 | 0.5447 |
+| System | Visual (1 − UIClip cosine) | Tiles (matched 3 × 3, 1 − cosine) | Colour (EMD, ΔE) | Layout (normalised tree edit distance) |
+|---|---|---|---|---|
+| claude-altitude | 0.0529 | 0.0915 | 1.52 | 0.4858 |
+| claude-plain | 0.097 | 0.1199 | 6.3575 | 0.5173 |
+| claude-shadcn | 0.0561 | 0.1095 | 0.7025 | 0.5447 |
 
 ## Task range
 
 Mean distance between a system's builds of different tasks. Low layout here means every screen gets the same frame (tell LA5).
 
-| System | Visual (1 − UIClip cosine) | Colour (EMD, ΔE) | Layout (normalised tree edit distance) |
-|---|---|---|---|
-| altitude-preview | 0.0864 | 0.4183 | 0.6962 |
-| claude-altitude | 0.1096 | 1.7933 | 0.7436 |
-| claude-plain | 0.1534 | 6.3975 | 0.7271 |
-| claude-shadcn | 0.1164 | 1.3475 | 0.6976 |
+| System | Visual (1 − UIClip cosine) | Tiles (matched 3 × 3, 1 − cosine) | Colour (EMD, ΔE) | Layout (normalised tree edit distance) |
+|---|---|---|---|---|
+| altitude-preview | 0.0864 | 0.0917 | 0.4183 | 0.6962 |
+| claude-altitude | 0.1096 | 0.1266 | 1.7933 | 0.7436 |
+| claude-plain | 0.1534 | 0.1683 | 6.3975 | 0.7271 |
+| claude-shadcn | 0.1164 | 0.1419 | 1.3475 | 0.6976 |
 
 ## Visual (1 − UIClip cosine), system against system
 
@@ -87,6 +87,15 @@ Mean distance between a system's builds of different tasks. Low layout here mean
 | claude-altitude | 0.0665 | · | 0.1019 | 0.0869 |
 | claude-plain | 0.1147 | 0.1019 | · | 0.0937 |
 | claude-shadcn | 0.1079 | 0.0869 | 0.0937 | · |
+
+## Tiles (matched 3 × 3, 1 − cosine), system against system
+
+|  | altitude-preview | claude-altitude | claude-plain | claude-shadcn |
+|---|---|---|---|---|
+| altitude-preview | · | 0.101 | 0.1343 | 0.1308 |
+| claude-altitude | 0.101 | · | 0.095 | 0.0918 |
+| claude-plain | 0.1343 | 0.095 | · | 0.0994 |
+| claude-shadcn | 0.1308 | 0.0918 | 0.0994 | · |
 
 ## Colour (EMD, ΔE), system against system
 

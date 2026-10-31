@@ -9,6 +9,7 @@ How far do Altitude's screens, and the screens agents build with it, sit from wh
 | Measure | Here | Design Theater |
 |---|---|---|
 | Visual | 1 − cosine similarity of [UIClip](https://arxiv.org/abs/2403.01335) embeddings (`biglab/uiclip_jitteredwebsites-2-224-paraphrased_webpairs_humanpairs`, the whole screen resized to 224) | UIClip, checkpoint not named |
+| Tiles | The same UIClip distance on a 3 × 3 grid of 400px tiles, each resized to 224 (close to UIClip's training scale), each tile matched to its nearest counterpart with the Hungarian algorithm, then averaged: detail wherever on the screen it sits. Not in Design Theater; added to test whether systems differ in detail the whole-screen embedding can't resolve (E155) | – |
 | Colour | Earth Mover's Distance between CIELCh histograms (lightness in tens; chroma 0/5/15/30/50/80; 12 hue sectors; near-neutrals share one hue bin), ground distance ΔE 1976 | EMD on CIELCh histograms, bins not named |
 | Layout | Zhang–Shasha tree edit distance between layout trees, divided by the larger tree | Tree edit distance on OmniParser v2 detections |
 
