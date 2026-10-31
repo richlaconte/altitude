@@ -1308,7 +1308,11 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-code-tools { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
 .alt-code-writing { font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .alt-code-panel { border-radius: 0; animation-duration: var(--dur-travel-1); --alt-from-y: 0px; }
-.alt-code-scroll { overflow: auto; overscroll-behavior: contain; }
+/* Scrolling in the page chains: a region on the ground (CodeBlock, ScrollArea, Table, Conversation, Terminal,
+   streaming reasoning) hands the wheel or swipe to the page once it reaches its edge, so it never traps you. Only layers
+   above the page (the CommandPalette list, Sheet, a Select's list, a menu as a sheet) contain their overscroll, since
+   the page under them shouldn't move. */
+.alt-code-scroll { overflow: auto; }
 .alt-code-scroll:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-code-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); min-width: max-content; padding: var(--space-3) 0; }
 .alt-code-grid[data-numbers] { grid-template-columns: auto minmax(0, 1fr); }
@@ -1553,7 +1557,7 @@ button.alt-agent-row:focus-visible { outline: 2px solid var(--accent-ink); outli
 .alt-agent-time { flex: none; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .alt-agent-activity { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-left: 22px; color: var(--ink-muted); }
 .alt-agent-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding-left: 22px; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
-.alt-agent-conflict { display: flex; align-items: flex-start; gap: 6px; margin-left: 22px; padding: 4px 8px; border-radius: var(--radius-sm); background: var(--caution-soft); color: var(--ink); font: 400 12px/16px var(--font-sans); }
+.alt-agent-conflict { display: flex; align-items: flex-start; gap: 6px; margin: 3px 0 0 22px; padding: 4px 8px; border-radius: var(--radius-sm); background: var(--caution-soft); color: var(--ink); font: 400 12px/16px var(--font-sans); }
 .alt-agent-conflict svg { flex: none; margin-top: 1px; color: var(--caution); }
 .alt-agent-conflict code { font: 400 11.5px/16px var(--font-code); }
 .alt-agent-output { position: absolute; top: 7px; right: var(--space-2); }
@@ -2081,9 +2085,12 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    left edge, "Generating…" and a caret. Completing makes the rule solid and settles it once. "Jump to latest" floats at
    level 3 once you've scrolled up. ── */
 .alt-convo { position: relative; display: flex; flex-direction: column; min-height: 0; }
-.alt-convo-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; outline: none; border-radius: var(--radius-md); }
+.alt-convo-scroll { flex: 1; min-height: 0; overflow-y: auto; outline: none; border-radius: var(--radius-md); }
 .alt-convo-scroll:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
-.alt-convo-content { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-3) var(--space-1); }
+/* The scrollbar sits beside the messages, never over them: a classic bar gets a gutter of its own, and the content keeps
+   12px clear of the right edge, where an overlay bar (macOS, phones) is drawn. */
+.alt-convo-scroll { scrollbar-gutter: stable; scrollbar-width: thin; }
+.alt-convo-content { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-1); }
 .alt-msg { display: flex; flex-direction: column; gap: 4px; max-width: 72ch; border-radius: var(--radius-md); }
 .alt-msg[data-from="user"] { align-self: flex-end; max-width: min(72ch, 85%); padding: 10px 14px; background: var(--accent-soft); color: var(--ink); }
 /* Attachments (#274): part of the record, on the ground. Images are 64px thumbnails in a 1px line rim; files are the
@@ -2108,7 +2115,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-msg-thumb:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .alt-msg-file[data-acts]:active, :is(a, button).alt-msg-thumb:active { transform: none; box-shadow: none; transition-duration: var(--dur-press); }
 @media (forced-colors: active) { .alt-msg-thumb { border: 1px solid CanvasText; } }
-.alt-msg[data-from="assistant"] { border-radius: 0; padding: 2px 0 2px 14px; box-shadow: inset 2px 0 0 0 transparent; transition: box-shadow var(--dur-travel-2) var(--ease-rise); }
+.alt-msg[data-from="assistant"] { border-radius: 0; padding: 2px 14px 8px 14px; box-shadow: inset 2px 0 0 0 transparent; transition: box-shadow var(--dur-travel-2) var(--ease-rise); }
 .alt-msg[data-stream="streaming"] { box-shadow: none; background-image: linear-gradient(var(--line-control) 50%, transparent 50%); background-size: 2px 8px; background-repeat: repeat-y; background-position: left top; }
 .alt-msg[data-stream="complete"], .alt-msg[data-stream="stopped"], .alt-msg[data-stream="error"] { box-shadow: inset 2px 0 0 0 var(--line); }
 .alt-msg[data-stream="error"] { box-shadow: inset 2px 0 0 0 var(--critical); }
@@ -2124,7 +2131,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-term-cmd { min-width: 0; font: 500 13px/18px var(--font-mono); color: var(--ink); overflow-wrap: anywhere; }
 .alt-term-prompt { color: var(--ink-muted); }
 .alt-term-viewport { position: relative; }
-.alt-term-body { max-height: 320px; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; outline: none; }
+.alt-term-body { max-height: 320px; overflow: auto; scrollbar-width: thin; outline: none; }
 .alt-term-body:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-term-pre { margin: 0; padding: var(--space-3) var(--space-4); font: 400 13px/20px var(--font-mono); color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
 .alt-term-line { position: relative; display: block; min-height: 20px; }
@@ -2331,7 +2338,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    line-control rule down the open compartment. No shimmer, no pulsing dots, no ticking counter; the lid's words
    cross-fade when it completes. */
 .alt-trace-thought-title { animation: alt-fade-in var(--dur-travel-1) var(--ease-rise) both; }
-.alt-trace-thought[data-status="streaming"] .alt-trace-reasoning { max-height: 240px; overflow-y: auto; padding-left: 10px; border-left: 1px dashed var(--line-control); overscroll-behavior: contain; }
+.alt-trace-thought[data-status="streaming"] .alt-trace-reasoning { max-height: 240px; overflow-y: auto; padding-left: 10px; border-left: 1px dashed var(--line-control); }
 .alt-trace-reasoning-hidden { margin: 0; padding: 4px 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
 @media (prefers-reduced-motion: reduce) { .alt-trace-thought-title { animation: none; } }
 [data-motion="reduced"] .alt-trace-thought-title { animation: none; }
@@ -2454,7 +2461,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   transition: box-shadow var(--dur-travel-2) var(--ease-rise);
 }
 .alt-scroll[data-top] .alt-scroll-header { box-shadow: var(--elev-2); }
-.alt-scroll-body { overflow: auto; overscroll-behavior: contain; outline: none; scrollbar-width: thin; }
+.alt-scroll-body { overflow: auto; outline: none; scrollbar-width: thin; }
 .alt-scroll-body:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-scroll-lip { position: absolute; left: 0; right: 0; height: 24px; pointer-events: none; opacity: 0; transition: opacity var(--dur-travel-2) var(--ease-rise); z-index: 1; }
 .alt-scroll-lip[data-edge="top"] { top: 0; box-shadow: var(--lip-top); }
@@ -2834,7 +2841,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 /* At narrow widths the toolbar wraps (WCAG 1.4.10 Reflow): a field in it may shrink rather than push the row off the page. */
 .alt-table-tools-end > .alt-input { flex: 0 1 auto; min-width: 0; }
 .alt-table-tools-end > .alt-input input { min-width: 0; }
-.alt-table-wrap { position: relative; isolation: isolate; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; outline: none; }
+.alt-table-wrap { position: relative; isolation: isolate; overflow: auto; scrollbar-width: thin; outline: none; }
 .alt-table-wrap:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-md); }
 .alt-table-wrap::after { content: ""; position: sticky; z-index: 4; bottom: 0; display: block; height: 24px; margin-top: -24px; pointer-events: none; box-shadow: var(--lip-bottom); opacity: 0; transition: opacity var(--dur-travel-2) var(--ease-rise); }
 .alt-table-wrap[data-bottom]::after { opacity: 1; }
