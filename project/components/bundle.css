@@ -1194,8 +1194,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-split:has(:is(.alt-split-action, .alt-split-menu):focus-visible) :is(.alt-split-action, .alt-split-menu):not(:disabled) {
   background-image: var(--alt-sheen); box-shadow: 0 calc(var(--wall) + 1px) 0 0 var(--wall-c), var(--alt-sh-up); transform: translateY(calc(-1px * var(--alt-travel)));
 }
-.alt-split:has(:is(.alt-split-action, .alt-split-menu):active:not(:disabled)) :is(.alt-split-action, .alt-split-menu):not(:disabled),
-.alt-split:has(:is(.alt-split-action, .alt-split-menu):active:not(:disabled)) :is(.alt-split-action, .alt-split-menu):not(:disabled):hover {
+.alt-split:has(:is(.alt-split-action, .alt-split-menu):active:not(:disabled)) :is(.alt-split-action, .alt-split-menu):not(:disabled) {
   box-shadow: 0 0 0 0 var(--wall-c), var(--elev-0); background-image: none; transform: translateY(var(--wall));
   transition-duration: var(--dur-press); transition-timing-function: ease-out;
 }
