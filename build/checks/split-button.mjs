@@ -1,5 +1,6 @@
 // SplitButton: a role="group" named by the action, two faces whose inner corners are square and whose walls line up,
-// a notch between them, each face lifting alone on hover, the chevron a menu button named for what it offers that
+// a notch between them, the slab lifting and pressing as one whichever face is pointed at (the face under the pointer
+// tinted, not raised), the chevron a menu button named for what it offers that
 // opens with Enter or with Alt+Down on the action, and a loading action that leaves the chevron usable. Run after a
 // render of every preview (it opens test/p-SplitButton-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
@@ -15,7 +16,7 @@ const read = (i) => page.evaluate((i) => {
   const g = document.querySelectorAll('.alt-split')[i], a = g.querySelector('.alt-split-action'), m = g.querySelector('.alt-split-menu');
   const ca = getComputedStyle(a), cm = getComputedStyle(m), ra = a.getBoundingClientRect(), rm = m.getBoundingClientRect();
   return { role: g.getAttribute('role'), name: g.getAttribute('aria-label'), menuName: m.getAttribute('aria-label'), popup: m.getAttribute('aria-haspopup'), expanded: m.getAttribute('aria-expanded'),
-    aRight: ca.borderTopRightRadius, mLeft: cm.borderTopLeftRadius, gap: rm.left - ra.right, aTop: ra.top, mTop: rm.top, aShadow: ca.boxShadow, mShadow: cm.boxShadow,
+    aRight: ca.borderTopRightRadius, mLeft: cm.borderTopLeftRadius, gap: rm.left - ra.right, aTop: ra.top, mTop: rm.top, aShadow: ca.boxShadow, mShadow: cm.boxShadow, aBg: ca.backgroundColor, mBg: cm.backgroundColor,
     notch: getComputedStyle(m, '::before').width, busy: a.getAttribute('aria-busy'), mDisabled: m.disabled };
 }, i);
 
@@ -29,11 +30,18 @@ expect(save.notch === '1px', 'a 1px notch parts them');
 await page.hover('.alt-split-menu >> nth=0');
 await page.waitForTimeout(300);
 const hovered = await read(0);
-expect(hovered.mTop < hovered.aTop - 0.5 && hovered.mShadow !== hovered.aShadow, `pointing at the chevron lifts only the chevron (${hovered.aTop} vs ${hovered.mTop})`);
+expect(hovered.mTop < save.mTop - 0.5 && Math.abs(hovered.mTop - hovered.aTop) < 0.5 && hovered.mShadow === hovered.aShadow,
+  `pointing at the chevron lifts the whole slab, faces level (${save.aTop} → ${hovered.aTop} / ${hovered.mTop})`);
+expect(hovered.mBg !== hovered.aBg, `the chevron, under the pointer, is tinted (${hovered.mBg} vs ${hovered.aBg})`);
 await page.hover('.alt-split-action >> nth=0');
 await page.waitForTimeout(300);
 const hoveredA = await read(0);
-expect(hoveredA.aTop < hoveredA.mTop - 0.5, 'pointing at the action lifts only the action');
+expect(hoveredA.aTop < save.aTop - 0.5 && Math.abs(hoveredA.mTop - hoveredA.aTop) < 0.5, 'pointing at the action lifts the whole slab too');
+expect(hoveredA.aBg !== hoveredA.mBg, 'and the action, now under the pointer, takes the tint');
+await page.hover('.alt-split-menu >> nth=0'); await page.mouse.down(); await page.waitForTimeout(250);
+const pressed = await read(0);
+expect(pressed.mTop > save.mTop + 0.5 && Math.abs(pressed.mTop - pressed.aTop) < 0.5, `pressing the chevron presses the whole slab (${pressed.aTop} / ${pressed.mTop})`);
+await page.mouse.up(); await page.keyboard.press('Escape'); await page.waitForTimeout(200);
 
 await page.mouse.move(0, 0);
 await page.focus('.alt-split-action >> nth=0');

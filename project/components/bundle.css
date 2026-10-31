@@ -1181,7 +1181,24 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-split .alt-split-menu::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 1px; background: var(--line-control); pointer-events: none; }
 .alt-split[data-variant="primary"] .alt-split-menu::before { background: color-mix(in oklab, var(--on-accent) 45%, var(--accent)); }
 .alt-split .alt-split-action:focus-visible, .alt-split .alt-split-menu:focus-visible { z-index: 1; }
-@media (hover: hover) { .alt-split .alt-split-action:hover, .alt-split .alt-split-menu:hover { z-index: 1; } }
+/* One slab, so it moves as one: pointing at either face lifts both, and pressing either presses both, so the faces
+   never stand at two heights with a step between them. Which face you're on (and so what a click does) is said by a
+   tint on that face alone, not by height. */
+@media (hover: hover) {
+  .alt-split:has(:is(.alt-split-action, .alt-split-menu):hover:not(:disabled)) :is(.alt-split-action, .alt-split-menu):not(:disabled) {
+    background: var(--alt-bg-up); background-image: var(--alt-sheen);
+    box-shadow: 0 calc(var(--wall) + 1px) 0 0 var(--wall-c), var(--alt-sh-up); transform: translateY(calc(-1px * var(--alt-travel)));
+  }
+  .alt-split:has(:is(.alt-split-action, .alt-split-menu):hover:not(:disabled)) :is(.alt-split-action, .alt-split-menu):hover:not(:disabled) { background-color: color-mix(in oklab, var(--alt-bg-up), var(--alt-fg) 12%); }
+}
+.alt-split:has(:is(.alt-split-action, .alt-split-menu):focus-visible) :is(.alt-split-action, .alt-split-menu):not(:disabled) {
+  background-image: var(--alt-sheen); box-shadow: 0 calc(var(--wall) + 1px) 0 0 var(--wall-c), var(--alt-sh-up); transform: translateY(calc(-1px * var(--alt-travel)));
+}
+.alt-split:has(:is(.alt-split-action, .alt-split-menu):active:not(:disabled)) :is(.alt-split-action, .alt-split-menu):not(:disabled),
+.alt-split:has(:is(.alt-split-action, .alt-split-menu):active:not(:disabled)) :is(.alt-split-action, .alt-split-menu):not(:disabled):hover {
+  box-shadow: 0 0 0 0 var(--wall-c), var(--elev-0); background-image: none; transform: translateY(var(--wall));
+  transition-duration: var(--dur-press); transition-timing-function: ease-out;
+}
 @media (forced-colors: active) { .alt-split .alt-split-menu::before { background: CanvasText; } }
 
 /* ── NumberInput: an opening that fills, like Input, with two small raised steppers in its end cap: you press them,

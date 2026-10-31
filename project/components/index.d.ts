@@ -2540,7 +2540,7 @@ export interface SplitButtonProps extends Omit<ButtonProps, 'variant' | 'childre
   /** Names the group when label isn't plain text. */
   groupLabel?: string;
 }
-/** One action with its alternatives: two faces on one slab sharing one wall; each lifts on its own. */
+/** One action with its alternatives: two faces on one slab sharing one wall, lifting and pressing as one; the face under the pointer is tinted. */
 export declare const SplitButton: React.ForwardRefExoticComponent<SplitButtonProps & React.RefAttributes<HTMLButtonElement>>;
 
 /** Reads what was typed in the locale's own way: "1.000,5" is 1000.5 in German. Returns null for nothing, NaN for nonsense. */
