@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Braised Short Rib · Recipe Book</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f3ee;
+    --surface: #ffffff;
+    --ink: #1f1c18;
+    --ink-2: #5b554d;
+    --ink-3: #8a8379;
+    --line: #e4ded4;
+    --line-2: #efeae2;
+    --accent: #8a3b1f;
+    --accent-ink: #ffffff;
+    --accent-soft: #f6e8e1;
+    --ok: #2f6b3a;
+    --ok-soft: #e5f0e5;
+    --warn: #8a5a00;
+    --warn-soft: #fbf0d9;
+    --danger: #a12a22;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(31,28,24,.06), 0 1px 1px rgba(31,28,24,.04);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1, h2, h3 { font-family: Fraunces, Georgia, serif; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .num { font-variant-numeric: tabular-nums; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+  /* Top bar */
+  .topbar { background: var(--ink); color: #eae4da; }
+  .topbar-inner { max-width: 1180px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; gap: 16px; font-size: 13px; }
+  .topbar .brand { font-family: Fraunces, Georgia, serif; font-size: 16px; color: #fff; }
+  .topbar .spacer { flex: 1; }
+  .topbar .who { color: #bdb5a8; }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 20px 24px 64px; }
+
+  .crumbs { font-size: 13px; color: var(--ink-3); margin-bottom: 10px; }
+  .crumbs a { color: var(--ink-2); text-decoration: none; }
+  .crumbs a:hover { text-decoration: underline; }
+  .crumbs span[aria-hidden] { margin: 0 6px; }
+
+  /* Header */
+  .rhead { display: flex; gap: 20px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+  .rhead h1 { font-size: 32px; line-height: 1.15; }
+  .rmeta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-top: 8px; color: var(--ink-2); font-size: 13px; }
+  .rmeta .dot { color: var(--line); }
+  .actions { display: flex; gap: 8px; }
+
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.active { background: var(--ok-soft); color: var(--ok); }
+  .pill.seasonal { background: var(--accent-soft); color: var(--accent); }
+  .pill.testing { background: var(--warn-soft); color: var(--warn); }
+  .pill.archived { background: var(--line-2); color: var(--ink-3); }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px; }
+  .btn:hover { background: #faf8f4; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { background: #77321a; }
+  .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .btn svg { width: 16px; height: 16px; }
+
+  /* Key facts */
+  .facts { margin-top: 20px; display: grid; grid-template-columns: repeat(6, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .fact { padding: 14px 16px; border-left: 1px solid var(--line-2); min-width: 0; }
+  .fact:first-child { border-left: 0; }
+  .fact dt { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; font-weight: 500; }
+  .fact dd { margin: 4px 0 0; font-size: 18px; font-weight: 600; }
+  .fact dd small { display: block; font-size: 12px; font-weight: 400; color: var(--ink-2); margin-top: 1px; }
+  .fact dd.over { color: var(--warn); }
+
+  /* Layout */
+  .grid { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .card + .card { margin-top: 20px; }
+  .card-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line-2); flex-wrap: wrap; }
+  .card-h h2 { font-size: 19px; }
+  .card-b { padding: 16px 18px; }
+  .muted { color: var(--ink-2); }
+  .small { font-size: 13px; }
+
+  /* Ingredients */
+  .scale { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+  .scale input { width: 64px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; text-align: right; }
+  .scale .reset { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline; }
+  .scale-note { padding: 8px 18px; background: var(--warn-soft); color: var(--warn); font-size: 13px; border-bottom: 1px solid var(--line-2); }
+  table.ing { width: 100%; border-collapse: collapse; }
+  table.ing th { text-align: left; font-size: 12px; font-weight: 500; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; padding: 8px 18px; border-bottom: 1px solid var(--line-2); }
+  table.ing td { padding: 8px 18px; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+  table.ing tr.group td { background: #faf8f4; font-weight: 600; font-size: 13px; padding-top: 10px; padding-bottom: 6px; color: var(--ink); }
+  table.ing tr.group td .sub { font-weight: 400; color: var(--ink-3); margin-left: 6px; }
+  table.ing td.qty, table.ing th.qty { text-align: right; white-space: nowrap; width: 1%; padding-right: 6px; }
+  table.ing td.unit { color: var(--ink-2); width: 1%; white-space: nowrap; padding-left: 0; }
+  table.ing td.cost, table.ing th.cost { text-align: right; white-space: nowrap; width: 1%; color: var(--ink-2); }
+  table.ing .prep { color: var(--ink-3); font-size: 13px; }
+  table.ing a { color: var(--accent); }
+  table.ing tfoot td { font-weight: 600; border-bottom: 0; padding-top: 12px; padding-bottom: 14px; }
+  table.ing tfoot td.cost { color: var(--ink); }
+
+  /* Method */
+  ol.method { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+  ol.method li { counter-increment: step; position: relative; padding: 0 0 14px 40px; }
+  ol.method li:last-child { padding-bottom: 0; }
+  ol.method li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 13px; display: grid; place-items: center; }
+  ol.method h3 { font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0; }
+  ol.method p { margin: 2px 0 0; color: var(--ink-2); }
+  .ccp { display: inline-block; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--danger); background: #fbeae8; border-radius: 4px; padding: 1px 6px; }
+
+  /* Sidebar */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 13px; padding: 3px 10px; border-radius: 6px; background: #fbeae8; color: var(--danger); font-weight: 500; }
+  .chip.none { background: var(--line-2); color: var(--ink-2); }
+  dl.kv { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+  dl.kv dt { color: var(--ink-3); }
+  dl.kv dd { margin: 0; }
+  .notes { white-space: pre-wrap; margin: 0; }
+
+  /* Changes */
+  ul.changes { list-style: none; margin: 0; padding: 0; }
+  ul.changes > li { padding: 12px 18px; border-bottom: 1px solid var(--line-2); }
+  ul.changes > li:last-child { border-bottom: 0; }
+  ul.changes > li.new { background: #fffaf0; }
+  .ch-top { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+  .ch-who { font-weight: 600; }
+  .ch-role { color: var(--ink-3); font-weight: 400; }
+  .ch-when { color: var(--ink-3); white-space: nowrap; }
+  .ch-sum { margin: 4px 0 0; font-size: 14px; }
+  .ch-diff { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
+  .ch-diff li { margin-top: 3px; color: var(--ink-2); }
+  .ch-diff .f { color: var(--ink); font-weight: 500; }
+  .ch-diff del { color: var(--ink-3); }
+  .ch-diff ins { text-decoration: none; color: var(--ink); background: var(--ok-soft); padding: 0 3px; border-radius: 3px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 6px; vertical-align: 1px; }
+  .more { display: block; width: 100%; border: 0; border-top: 1px solid var(--line-2); background: none; padding: 10px; color: var(--accent); cursor: pointer; font-weight: 500; font-size: 13px; border-radius: 0 0 var(--radius) var(--radius); }
+  .more:hover { background: #faf8f4; }
+
+  /* Dialog */
+  dialog { border: 0; padding: 0; border-radius: 12px; width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); box-shadow: 0 20px 60px rgba(0,0,0,.25); color: var(--ink); }
+  dialog::backdrop { background: rgba(31,28,24,.45); }
+  dialog form { display: flex; flex-direction: column; max-height: calc(100vh - 32px); }
+  .d-h { padding: 16px 22px; border-bottom: 1px solid var(--line-2); display: flex; justify-content: space-between; align-items: center; }
+  .d-h h2 { font-size: 20px; }
+  .x { border: 0; background: none; cursor: pointer; padding: 6px; border-radius: 6px; color: var(--ink-2); }
+  .x:hover { background: var(--line-2); }
+  .d-b { padding: 18px 22px; overflow: auto; }
+  .d-f { padding: 14px 22px; border-top: 1px solid var(--line-2); display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
+  .d-f .hint { margin-right: auto; font-size: 13px; color: var(--ink-3); }
+  fieldset { border: 0; padding: 0; margin: 0 0 18px; }
+  legend { font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); margin-bottom: 10px; padding: 0; }
+  .fgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px 14px; }
+  .f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .f.c2 { grid-column: span 2; } .f.c3 { grid-column: span 3; } .f.c4 { grid-column: span 4; } .f.c6 { grid-column: span 6; }
+  .f label, .f .lbl { font-size: 13px; font-weight: 500; }
+  .f input, .f select, .f textarea { width: 100%; padding: 8px 10px; border: 1px solid #d6cfc3; border-radius: 7px; background: #fff; }
+  .f textarea { resize: vertical; min-height: 84px; }
+  .f .help { font-size: 12px; color: var(--ink-3); }
+  .f .err { font-size: 12px; color: var(--danger); display: none; }
+  .f.invalid input, .f.invalid select, .f.invalid textarea { border-color: var(--danger); }
+  .f.invalid .err { display: block; }
+  .affix { position: relative; }
+  .affix span { position: absolute; top: 50%; transform: translateY(-50%); color: var(--ink-3); font-size: 14px; pointer-events: none; }
+  .affix .pre { left: 10px; } .affix .post { right: 10px; }
+  .affix input.has-pre { padding-left: 22px; } .affix input.has-post { padding-right: 38px; }
+  .checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 12px; }
+  .checks label { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+  .checks input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+  /* Toast */
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 980px) {
+    .grid { grid-template-columns: 1fr; }
+    .facts { grid-template-columns: repeat(3, 1fr); }
+    .fact:nth-child(4) { border-left: 0; }
+    .fact:nth-child(n+4) { border-top: 1px solid var(--line-2); }
+  }
+  @media (max-width: 600px) {
+    .page { padding: 16px 14px 48px; }
+    .rhead h1 { font-size: 26px; }
+    .facts { grid-template-columns: repeat(2, 1fr); }
+    .fact:nth-child(odd) { border-left: 0; }
+    .fact:nth-child(4) { border-left: 1px solid var(--line-2); }
+    .fact:nth-child(n+3) { border-top: 1px solid var(--line-2); }
+    table.ing th, table.ing td { padding-left: 12px; padding-right: 12px; }
+    .fgrid { grid-template-columns: repeat(2, 1fr); }
+    .f.c2, .f.c3, .f.c4, .f.c6 { grid-column: span 2; }
+    .f.m1 { grid-column: span 1; }
+  }
+  @media print {
+    body { background: #fff; font-size: 12px; }
+    .topbar, .actions, .scale, .more, #changes-card, .crumbs { display: none !important; }
+    .card, .facts { box-shadow: none; break-inside: avoid; }
+    .grid { grid-template-columns: 1fr; }
+    .page { padding: 0; max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="brand">Harrow &amp; Vine</span>
+    <span>Recipe Book</span>
+    <span class="spacer"></span>
+    <span class="who">Signed in as Marisol Ortega · Executive Chef</span>
+  </div>
+</header>
+
+<main class="page">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a href="#">Recipe book</a><span aria-hidden="true">/</span><a href="#" id="crumb-section">Mains</a><span aria-hidden="true">/</span><span id="crumb-name" aria-current="page"></span>
+  </nav>
+
+  <section class="rhead" aria-labelledby="r-name">
+    <div>
+      <h1 id="r-name"></h1>
+      <div class="rmeta">
+        <span id="r-status" class="pill"></span>
+        <span class="dot" aria-hidden="true">•</span>
+        <span id="r-code"></span>
+        <span class="dot" aria-hidden="true">•</span>
+        <span id="r-station"></span>
+        <span class="dot" aria-hidden="true">•</span>
+        <span id="r-version"></span>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" type="button" onclick="window.print()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2M6 14h12v7H6z"/></svg>
+        Print card
+      </button>
+      <button class="btn primary" type="button" id="edit-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        Edit details
+      </button>
+    </div>
+  </section>
+
+  <dl class="facts" id="facts"></dl>
+
+  <div class="grid">
+    <div>
+      <section class="card" aria-labelledby="ing-h">
+        <div class="card-h">
+          <h2 id="ing-h">Ingredients</h2>
+          <div class="scale">
+            <label for="scale-input">Scale to</label>
+            <input id="scale-input" type="number" min="1" max="500" step="1" inputmode="numeric" class="num">
+            <span>portions</span>
+            <button type="button" class="reset" id="scale-reset" hidden>Reset</button>
+          </div>
+        </div>
+        <div class="scale-note" id="scale-note" hidden></div>
+        <table class="ing">
+          <thead>
+            <tr><th class="qty">Qty</th><th></th><th>Ingredient</th><th class="cost">Cost</th></tr>
+          </thead>
+          <tbody id="ing-body"></tbody>
+          <tfoot id="ing-foot"></tfoot>
+        </table>
+      </section>
+
+      <section class="card" aria-labelledby="method-h">
+        <div class="card-h"><h2 id="method-h">Method</h2></div>
+        <div class="card-b"><ol class="method" id="method"></ol></div>
+      </section>
+    </div>
+
+    <aside>
+      <section class="card" aria-labelledby="svc-h">
+        <div class="card-h"><h2 id="svc-h">Service details</h2></div>
+        <div class="card-b">
+          <h3 class="small muted" style="font-family:Inter,sans-serif;font-weight:500;margin-bottom:6px">Allergens</h3>
+          <div class="chips" id="allergens"></div>
+          <dl class="kv" id="svc" style="margin-top:16px"></dl>
+          <h3 class="small muted" style="font-family:Inter,sans-serif;font-weight:500;margin:16px 0 4px">Plating notes</h3>
+          <p class="notes" id="notes"></p>
+        </div>
+      </section>
+
+      <section class="card" id="changes-card" aria-labelledby="ch-h">
+        <div class="card-h"><h2 id="ch-h">Recent changes</h2><span class="small muted" id="ch-count"></span></div>
+        <ul class="changes" id="changes"></ul>
+        <button type="button" class="more" id="ch-more"></button>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<dialog id="edit" aria-labelledby="edit-h">
+  <form id="edit-form" novalidate>
+    <div class="d-h">
+      <h2 id="edit-h">Edit recipe details</h2>
+      <button type="button" class="x" data-close aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="d-b">
+      <fieldset>
+        <legend>General</legend>
+        <div class="fgrid">
+          <div class="f c4">
+            <label for="f-name">Recipe name</label>
+            <input id="f-name" name="name" required maxlength="90" autocomplete="off">
+            <span class="err" id="e-name">Enter a recipe name.</span>
+          </div>
+          <div class="f c2">
+            <label for="f-status">Status</label>
+            <select id="f-status" name="status">
+              <option>Active</option><option>Seasonal</option><option>Testing</option><option>Archived</option>
+            </select>
+          </div>
+          <div class="f c3">
+            <label for="f-section">Menu section</label>
+            <select id="f-section" name="section">
+              <option>Snacks</option><option>Starters</option><option>Mains</option><option>Sides</option><option>Desserts</option><option>Staff meal</option>
+            </select>
+          </div>
+          <div class="f c3">
+            <label for="f-station">Station</label>
+            <select id="f-station" name="station">
+              <option>Garde manger</option><option>Sauté</option><option>Grill</option><option>Braise &amp; roast</option><option>Pastry</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Yield &amp; timing</legend>
+        <div class="fgrid">
+          <div class="f c2 m1">
+            <label for="f-yield">Yield (portions)</label>
+            <input id="f-yield" name="yield" type="number" min="1" max="500" step="1" inputmode="numeric" required>
+            <span class="err">Whole number from 1 to 500.</span>
+          </div>
+          <div class="f c4">
+            <label for="f-portion">Portion size</label>
+            <input id="f-portion" name="portion" maxlength="60" required>
+            <span class="err">Describe the portion.</span>
+          </div>
+          <div class="f c2 m1">
+            <label for="f-prep">Active prep</label>
+            <div class="affix"><input id="f-prep" name="prep" type="number" min="0" max="2880" step="5" inputmode="numeric" class="has-post" required><span class="post">min</span></div>
+            <span class="err">0–2880 minutes.</span>
+          </div>
+          <div class="f c2 m1">
+            <label for="f-cook">Cook time</label>
+            <div class="affix"><input id="f-cook" name="cook" type="number" min="0" max="2880" step="5" inputmode="numeric" class="has-post" required><span class="post">min</span></div>
+            <span class="err">0–2880 minutes.</span>
+          </div>
+          <div class="f c2 m1">
+            <label for="f-shelf">Shelf life</label>
+            <div class="affix"><input id="f-shelf" name="shelf" type="number" min="0" max="30" step="1" inputmode="numeric" class="has-post" required><span class="post">days</span></div>
+            <span class="err">0–30 days.</span>
+          </div>
+          <div class="f c3">
+            <label for="f-hold">Hold / reheat</label>
+            <input id="f-hold" name="hold" maxlength="80">
+          </div>
+          <div class="f c3">
+            <label for="f-storage">Storage</label>
+            <input id="f-storage" name="storage" maxlength="80">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Pricing</legend>
+        <div class="fgrid">
+          <div class="f c2 m1">
+            <label for="f-price">Menu price</label>
+            <div class="affix"><span class="pre">$</span><input id="f-price" name="price" type="number" min="0" max="999" step="0.5" inputmode="decimal" class="has-pre" required></div>
+            <span class="err">Enter a price from $0 to $999.</span>
+          </div>
+          <div class="f c2 m1">
+            <label for="f-target">Target food cost</label>
+            <div class="affix"><input id="f-target" name="target" type="number" min="1" max="100" step="1" inputmode="numeric" class="has-post" required><span class="post">%</span></div>
+            <span class="err">1–100%.</span>
+          </div>
+          <div class="f c2">
+            <span class="lbl">Projected food cost</span>
+            <output id="f-proj" class="num" style="padding:8px 0;font-weight:600"></output>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Allergens</legend>
+        <div class="checks" id="f-allergens"></div>
+      </fieldset>
+
+      <fieldset style="margin-bottom:4px">
+        <legend>Notes</legend>
+        <div class="fgrid">
+          <div class="f c6">
+            <label for="f-notes">Plating notes</label>
+            <textarea id="f-notes" name="notes" rows="4" maxlength="800"></textarea>
+          </div>
+          <div class="f c6">
+            <label for="f-reason">Reason for change <span class="muted" style="font-weight:400">(optional)</span></label>
+            <input id="f-reason" name="reason" maxlength="140" placeholder="e.g. Spring menu repricing">
+            <span class="help">Shown in Recent changes so the team knows why.</span>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="d-f">
+      <span class="hint" id="dirty-hint"></span>
+      <button type="button" class="btn" data-close>Cancel</button>
+      <button type="submit" class="btn primary">Save changes</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const ALLERGENS = ["Celery","Cereals (gluten)","Crustaceans","Eggs","Fish","Lupin","Milk","Molluscs","Mustard","Tree nuts","Peanuts","Sesame","Soy","Sulphites"];
+  const ME = { name: "Marisol Ortega", role: "Executive Chef" };
+
+  const recipe = {
+    name: "Braised Short Rib, Celeriac Purée & Red Wine Jus",
+    code: "MN-014",
+    section: "Mains",
+    station: "Braise & roast",
+    status: "Active",
+    version: 14,
+    yield: 12,
+    portion: "1 bone-in rib, ~280 g cooked",
+    prep: 45,
+    cook: 210,
+    shelf: 3,
+    hold: "Reheat in jus, 160 °C oven, 12 min",
+    storage: "Walk-in, in braising liquid, labelled",
+    price: 38,
+    target: 30,
+    allergens: ["Celery", "Milk", "Sulphites"],
+    notes: "Warm bowl. 90 g purée swooshed off-centre, rib leaning on purée, 3 glazed carrots fanned at 2 o'clock. 45 ml jus spooned over rib at the pass, not before. Gremolata on top, pinch of Maldon, micro parsley last.",
+  };
+
+  const ingredients = [
+    { group: "Short rib braise", items: [
+      { q: 6, u: "kg", n: "Beef short rib, bone-in", p: "3-bone, cut into single ribs", c: 79.20 },
+      { q: 60, u: "g", n: "Kosher salt", p: "dry-brine overnight", c: 0.12 },
+      { q: 10, u: "g", n: "Black pepper", p: "coarsely cracked", c: 0.25 },
+      { q: 100, u: "ml", n: "Canola oil", c: 0.30 },
+      { q: 600, u: "g", n: "Yellow onion", p: "rough chop", c: 1.20 },
+      { q: 400, u: "g", n: "Carrot", p: "rough chop", c: 0.70 },
+      { q: 300, u: "g", n: "Celery", p: "rough chop", c: 0.75 },
+      { q: 2, u: "heads", n: "Garlic", p: "halved crosswise", c: 1.00 },
+      { q: 80, u: "g", n: "Tomato paste", c: 0.45 },
+      { q: 1.5, u: "L", n: "Red wine, Côtes du Rhône", c: 15.00 },
+      { q: 3, u: "L", n: "Veal stock", sub: true, c: 12.00 },
+      { q: 10, u: "sprigs", n: "Thyme", c: 0.80 },
+      { q: 4, u: "ea", n: "Bay leaf", c: 0.20 },
+    ]},
+    { group: "Celeriac purée", items: [
+      { q: 2, u: "kg", n: "Celeriac", p: "peeled, 2 cm dice", c: 6.40 },
+      { q: 1, u: "L", n: "Whole milk", c: 1.10 },
+      { q: 500, u: "ml", n: "Heavy cream (36%)", c: 2.60 },
+      { q: 200, u: "g", n: "Unsalted butter", p: "cubed, cold", c: 2.20 },
+      { q: null, u: "", n: "Kosher salt", p: "to taste", c: 0 },
+    ]},
+    { group: "Red wine jus", items: [
+      { q: 2, u: "L", n: "Braising liquid", p: "strained, defatted (from braise)", c: 0 },
+      { q: 150, u: "g", n: "Shallot", p: "thinly sliced", c: 0.90 },
+      { q: 500, u: "ml", n: "Red wine, Côtes du Rhône", c: 5.00 },
+      { q: 30, u: "ml", n: "Sherry vinegar", c: 0.35 },
+      { q: 100, u: "g", n: "Unsalted butter", p: "cubed, cold", c: 1.10 },
+    ]},
+    { group: "Garnish", items: [
+      { q: 36, u: "ea", n: "Baby carrots, rainbow", p: "peeled, glazed", c: 5.40 },
+      { q: 120, u: "g", n: "Gremolata", sub: true, c: 3.00 },
+      { q: 15, u: "g", n: "Maldon sea salt", c: 0.40 },
+      { q: 1, u: "clamshell", n: "Micro parsley", c: 4.50 },
+    ]},
+  ];
+
+  const method = [
+    { t: "Day before: season", d: "Salt and pepper ribs on all sides. Rack uncovered on sheet trays in the walk-in, 12–24 h." },
+    { t: "Sear", d: "Pat ribs dry. Sear hard in canola in a rondeau, in batches, until deep brown on all sides. Reserve on a tray." },
+    { t: "Build the braise", d: "Pour off all but 3 tbsp fat. Sweat onion, carrot, celery and garlic 8 min. Add tomato paste, cook out 2 min. Deglaze with wine and reduce by half. Add veal stock, thyme and bay." },
+    { t: "Braise", d: "Return ribs bone-side up, liquid ¾ of the way up. Cover with parchment and lid. 150 °C oven, 3 h 30 min, until a cake tester slides through with no resistance.", ccp: "CCP: cool from 57 °C to 21 °C within 2 h, then to 5 °C within 4 h" },
+    { t: "Celeriac purée", d: "Simmer celeriac in milk and cream until very soft, ~25 min. Drain, reserving liquid. Blend on high with butter, adding liquid to a smooth, spoonable consistency. Season. Pass through a tamis." },
+    { t: "Jus", d: "Sweat shallot, add wine and reduce to a glaze. Add braising liquid, reduce to ~700 ml (nappe). Off heat, mount with cold butter; finish with sherry vinegar. Strain." },
+    { t: "Service", d: "Reheat ribs to order in a little jus, 160 °C, 12 min, to a minimum internal 74 °C. Plate per notes.", ccp: "CCP: reheat to 74 °C internal" },
+  ];
+
+  const changes = [
+    { who: "Marisol Ortega", role: "Executive Chef", at: "2026-10-27T14:12", sum: "Autumn menu repricing", diff: [["Menu price", "$36.00", "$38.00"]] },
+    { who: "Price sync", role: "Sysco feed", at: "2026-10-23T05:00", auto: true, sum: "Supplier cost update", diff: [["Beef short rib, bone-in", "$12.40/kg", "$13.20/kg"]] },
+    { who: "Dev Patel", role: "Sous Chef", at: "2026-10-21T16:40", sum: "Swapped braising wine — Cabernet was going too tannic on the reduction", diff: [["Red wine (braise)", "Cabernet Sauvignon, 2 L", "Côtes du Rhône, 1.5 L"], ["Veal stock", "2.5 L", "3 L"]] },
+    { who: "Dev Patel", role: "Sous Chef", at: "2026-10-02T11:05", sum: "Jus needed lift at the end", diff: [["Sherry vinegar", "—", "30 ml"]] },
+    { who: "Marisol Ortega", role: "Executive Chef", at: "2026-09-18T09:30", sum: "Ribs still tight at 3 h in the new combi", diff: [["Cook time", "3 h 15 min", "3 h 30 min"], ["Hold / reheat", "Reheat in jus, 180 °C, 8 min", "Reheat in jus, 160 °C oven, 12 min"]] },
+    { who: "Ana Lucía Reyes", role: "Chef de Cuisine", at: "2026-09-04T15:22", sum: "Plating update for autumn menu", diff: [["Garnish", "Pickled pearl onions", "Glazed rainbow baby carrots"], ["Plating notes", "", "(rewritten)"]] },
+    { who: "Marisol Ortega", role: "Executive Chef", at: "2026-08-29T10:00", sum: "Moved onto autumn menu", diff: [["Status", "Testing", "Active"]] },
+  ];
+
+  /* ---------- helpers ---------- */
+  const $ = (s, r = document) => r.querySelector(s);
+  const el = (tag, attrs = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+    }
+    for (const k of kids) if (k != null) n.append(k);
+    return n;
+  };
+  const money = (v) => "$" + v.toFixed(2);
+  const mins = (m) => {
+    if (m < 60) return m + " min";
+    const h = Math.floor(m / 60), r = m % 60;
+    return r ? `${h} h ${r} min` : `${h} h`;
+  };
+  const fmtQty = (q) => {
+    if (q == null) return "";
+    if (q >= 100) return String(Math.round(q));
+    if (q >= 10) return String(Math.round(q * 10) / 10);
+    return String(Math.round(q * 100) / 100);
+  };
+  // Promote to the larger unit when scaling pushes past 1000 (and back down below 1).
+  const normUnit = (q, u) => {
+    if (q == null) return [q, u];
+    if (u === "g" && q >= 1000) return [q / 1000, "kg"];
+    if (u === "ml" && q >= 1000) return [q / 1000, "L"];
+    if (u === "kg" && q < 1) return [q * 1000, "g"];
+    if (u === "L" && q < 1) return [q * 1000, "ml"];
+    return [q, u];
+  };
+  const fmtWhen = (iso) => {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined });
+    const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    return { short: date, full: `${date}, ${time}` };
+  };
+  const batchCost = () => ingredients.reduce((s, g) => s + g.items.reduce((a, i) => a + i.c, 0), 0);
+  const perPortion = (y = recipe.yield) => batchCost() / y;
+  const foodPct = (price = recipe.price, y = recipe.yield) => price > 0 ? perPortion(y) / price * 100 : null;
+
+  let scaleTo = recipe.yield;
+  let showAll = false;
+  let newestId = null;
+
+  /* ---------- render ---------- */
+  function renderHeader() {
+    $("#r-name").textContent = recipe.name;
+    $("#crumb-name").textContent = recipe.name;
+    $("#crumb-section").textContent = recipe.section;
+    document.title = `${recipe.name} · Recipe Book`;
+    const st = $("#r-status");
+    st.textContent = recipe.status;
+    st.className = "pill " + recipe.status.toLowerCase();
+    $("#r-code").textContent = recipe.code;
+    $("#r-station").textContent = recipe.station + " station";
+    const last = changes[0];
+    $("#r-version").textContent = `v${recipe.version} · updated ${fmtWhen(last.at).short} by ${last.who}`;
+  }
+
+  function renderFacts() {
+    const pct = foodPct();
+    const over = pct != null && pct > recipe.target;
+    const facts = [
+      ["Yield", `${recipe.yield} portions`, null],
+      ["Portion", recipe.portion, null, true],
+      ["Active prep", mins(recipe.prep), null],
+      ["Cook time", mins(recipe.cook), `Total ${mins(recipe.prep + recipe.cook)}`],
+      ["Cost / portion", money(perPortion()), `Batch ${money(batchCost())}`],
+      ["Food cost", pct == null ? "—" : pct.toFixed(1) + "%", `Menu ${money(recipe.price)} · target ${recipe.target}%`, false, over],
+    ];
+    const dl = $("#facts");
+    dl.replaceChildren(...facts.map(([k, v, sub, small, warn]) => {
+      const dd = el("dd", { class: "num" + (warn ? " over" : "") }, v, sub ? el("small", { text: sub }) : null);
+      if (small) dd.style.fontSize = "15px";
+      if (warn) dd.title = "Above target food cost";
+      return el("div", { class: "fact" }, el("dt", { text: k }), dd);
+    }));
+  }
+
+  function renderIngredients() {
+    const factor = scaleTo / recipe.yield;
+    const scaled = factor !== 1;
+    $("#scale-input").value = scaleTo;
+    $("#scale-reset").hidden = !scaled;
+    const note = $("#scale-note");
+    note.hidden = !scaled;
+    if (scaled) note.textContent = `Scaled ×${(Math.round(factor * 100) / 100)} from the base yield of ${recipe.yield}. Season to taste; braising liquid quantities may not scale linearly in a different vessel.`;
+
+    const rows = [];
+    for (const g of ingredients) {
+      const gCost = g.items.reduce((a, i) => a + i.c, 0) * factor;
+      rows.push(el("tr", { class: "group" }, el("td", { colspan: "3" }, g.group, el("span", { class: "sub", text: `${g.items.length} items` })), el("td", { class: "cost num", text: money(gCost) })));
+      for (const i of g.items) {
+        const [q, u] = normUnit(i.q == null ? null : i.q * factor, i.u);
+        const name = i.sub ? el("a", { href: "#", title: "Open sub-recipe" }, i.n) : i.n;
+        const nameCell = el("td", {}, name, i.sub ? el("span", { class: "tag", text: "Sub-recipe" }) : null, i.p ? el("div", { class: "prep", text: i.p }) : null);
+        rows.push(el("tr", {},
+          el("td", { class: "qty num", text: fmtQty(q) }),
+          el("td", { class: "unit", text: u }),
+          nameCell,
+          el("td", { class: "cost num", text: i.c ? money(i.c * factor) : "—" })));
+      }
+    }
+    $("#ing-body").replaceChildren(...rows);
+    $("#ing-foot").replaceChildren(
+      el("tr", {}, el("td", { colspan: "3", text: `Batch total · ${scaleTo} portions` }), el("td", { class: "cost num", text: money(batchCost() * factor) })),
+    );
+  }
+
+  function renderMethod() {
+    $("#method").replaceChildren(...method.map(s =>
+      el("li", {}, el("h3", { text: s.t }), el("p", { text: s.d }), s.ccp ? el("span", { class: "ccp", text: s.ccp }) : null)));
+  }
+
+  function renderService() {
+    const box = $("#allergens");
+    box.replaceChildren(...(recipe.allergens.length
+      ? ALLERGENS.filter(a => recipe.allergens.includes(a)).map(a => el("span", { class: "chip", text: a }))
+      : [el("span", { class: "chip none", text: "None declared" })]));
+    const kv = [
+      ["Menu section", recipe.section],
+      ["Shelf life", recipe.shelf === 1 ? "1 day" : `${recipe.shelf} days`],
+      ["Hold / reheat", recipe.hold || "—"],
+      ["Storage", recipe.storage || "—"],
+    ];
+    $("#svc").replaceChildren(...kv.flatMap(([k, v]) => [el("dt", { text: k }), el("dd", { text: v })]));
+    $("#notes").textContent = recipe.notes || "No plating notes.";
+  }
+
+  function renderChanges() {
+    const LIMIT = 4;
+    const list = showAll ? changes : changes.slice(0, LIMIT);
+    $("#changes").replaceChildren(...list.map(c => {
+      const w = fmtWhen(c.at);
+      const diff = c.diff.length ? el("ul", { class: "ch-diff" }, ...c.diff.map(([f, a, b]) =>
+        el("li", {}, el("span", { class: "f", text: f + ": " }),
+          a ? el("del", { text: a }) : null,
+          a && b ? " → " : null,
+          b ? el("ins", { text: b }) : null))) : null;
+      return el("li", { class: c.id && c.id === newestId ? "new" : "" },
+        el("div", { class: "ch-top" },
+          el("span", {}, el("span", { class: "ch-who", text: c.who }), c.auto ? el("span", { class: "tag", text: "Auto" }) : el("span", { class: "ch-role", text: " · " + c.role })),
+          el("time", { class: "ch-when", datetime: c.at, title: w.full, text: w.short })),
+        c.sum ? el("p", { class: "ch-sum", text: c.sum }) : null,
+        diff);
+    }));
+    $("#ch-count").textContent = `${changes.length} in last 90 days`;
+    const more = $("#ch-more");
+    more.hidden = changes.length <= LIMIT;
+    more.textContent = showAll ? "Show fewer" : `Show all ${changes.length} changes`;
+    more.setAttribute("aria-expanded", String(showAll));
+  }
+
+  function renderAll() {
+    renderHeader(); renderFacts(); renderIngredients(); renderMethod(); renderService(); renderChanges();
+  }
+
+  /* ---------- scaling ---------- */
+  $("#scale-input").addEventListener("change", (e) => {
+    const v = Math.round(Number(e.target.value));
+    scaleTo = Number.isFinite(v) && v >= 1 ? Math.min(v, 500) : recipe.yield;
+    renderIngredients();
+  });
+  $("#scale-reset").addEventListener("click", () => { scaleTo = recipe.yield; renderIngredients(); $("#scale-input").focus(); });
+  $("#ch-more").addEventListener("click", () => { showAll = !showAll; renderChanges(); });
+
+  /* ---------- edit dialog ---------- */
+  const dlg = $("#edit");
+  const form = $("#edit-form");
+  const FIELDS = {
+    name:    { label: "Name" },
+    status:  { label: "Status" },
+    section: { label: "Menu section" },
+    station: { label: "Station" },
+    yield:   { label: "Yield", num: true, fmt: v => `${v} portions` },
+    portion: { label: "Portion size" },
+    prep:    { label: "Active prep", num: true, fmt: mins },
+    cook:    { label: "Cook time", num: true, fmt: mins },
+    shelf:   { label: "Shelf life", num: true, fmt: v => `${v} day${v === 1 ? "" : "s"}` },
+    hold:    { label: "Hold / reheat" },
+    storage: { label: "Storage" },
+    price:   { label: "Menu price", num: true, fmt: money },
+    target:  { label: "Target food cost", num: true, fmt: v => v + "%" },
+    notes:   { label: "Plating notes", long: true },
+  };
+
+  $("#f-allergens").replaceChildren(...ALLERGENS.map(a =>
+    el("label", {}, el("input", { type: "checkbox", name: "allergen", value: a }), a)));
+
+  let snapshot = "";
+  const serialize = () => JSON.stringify([...new FormData(form).entries()]);
+
+  function openEdit() {
+    for (const k of Object.keys(FIELDS)) form.elements[k].value = recipe[k];
+    form.elements.reason.value = "";
+    for (const cb of form.querySelectorAll('input[name="allergen"]')) cb.checked = recipe.allergens.includes(cb.value);
+    form.querySelectorAll(".f.invalid").forEach(f => f.classList.remove("invalid"));
+    updateProjection();
+    snapshot = serialize();
+    $("#dirty-hint").textContent = "";
+    dlg.showModal();
+    form.elements.name.focus();
+  }
+
+  function updateProjection() {
+    const price = Number(form.elements.price.value);
+    const y = Math.round(Number(form.elements.yield.value));
+    const target = Number(form.elements.target.value);
+    const out = $("#f-proj");
+    if (!(y >= 1) || !(price > 0)) { out.textContent = "—"; out.style.color = ""; return; }
+    const pct = foodPct(price, y);
+    out.textContent = `${pct.toFixed(1)}% · ${money(perPortion(y))}/portion`;
+    out.style.color = target && pct > target ? "var(--warn)" : "var(--ok)";
+  }
+
+  function isDirty() { return serialize() !== snapshot; }
+
+  function requestClose() {
+    if (isDirty() && !confirm("Discard your unsaved changes?")) return;
+    dlg.close();
+  }
+
+  form.addEventListener("input", (e) => {
+    updateProjection();
+    $("#dirty-hint").textContent = isDirty() ? "Unsaved changes" : "";
+    const f = e.target.closest(".f");
+    if (f && f.classList.contains("invalid") && e.target.checkValidity()) f.classList.remove("invalid");
+  });
+  dlg.addEventListener("cancel", (e) => { e.preventDefault(); requestClose(); });
+  dlg.addEventListener("close", () => $("#edit-btn").focus());
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) requestClose(); });
+  form.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", requestClose));
+  $("#edit-btn").addEventListener("click", openEdit);
+
+  function validate() {
+    let first = null;
+    const name = form.elements.name;
+    name.value = name.value.trim();
+    for (const input of form.querySelectorAll("input[required], select[required]")) {
+      let ok = input.checkValidity();
+      if (input.name === "yield" && ok) ok = Number.isInteger(Number(input.value));
+      input.closest(".f").classList.toggle("invalid", !ok);
+      input.setAttribute("aria-invalid", String(!ok));
+      if (!ok && !first) first = input;
+    }
+    if (first) first.focus();
+    return !first;
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const next = {};
+    for (const [k, def] of Object.entries(FIELDS)) {
+      const raw = form.elements[k].value;
+      next[k] = def.num ? Number(raw) : raw.trim();
+    }
+    next.allergens = [...form.querySelectorAll('input[name="allergen"]:checked')].map(c => c.value);
+
+    const diff = [];
+    for (const [k, def] of Object.entries(FIELDS)) {
+      if (next[k] === recipe[k]) continue;
+      if (def.long) { diff.push([def.label, "", "(updated)"]); continue; }
+      const f = def.fmt || (v => v === "" ? "—" : String(v));
+      diff.push([def.label, f(recipe[k]), f(next[k])]);
+    }
+    const added = next.allergens.filter(a => !recipe.allergens.includes(a));
+    const removed = recipe.allergens.filter(a => !next.allergens.includes(a));
+    if (added.length) diff.push(["Allergens added", "", added.join(", ")]);
+    if (removed.length) diff.push(["Allergens removed", removed.join(", "), ""]);
+
+    if (!diff.length) { dlg.close(); toast("No changes to save"); return; }
+
+    const yieldChanged = next.yield !== recipe.yield;
+    Object.assign(recipe, next);
+    recipe.version += 1;
+    if (yieldChanged) scaleTo = recipe.yield;
+
+    newestId = Date.now();
+    const now = new Date();
+    const iso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    changes.unshift({
+      id: newestId, who: ME.name, role: ME.role, at: iso,
+      sum: form.elements.reason.value.trim() || "Edited recipe details",
+      diff,
+    });
+
+    dlg.close();
+    renderAll();
+    toast(`Saved · v${recipe.version}`);
+  });
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>

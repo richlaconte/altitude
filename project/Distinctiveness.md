@@ -32,7 +32,7 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 |---|---|
 | `lint` | Source text: hues, font families, `background-clip: text`, uppercase labels, easing, emoji, banned words. `build/checks/tells-lint.mjs` has a rule for each one, and fails if a rule and this file disagree. |
 | `render` | A rendered preview: equal-weight grids and spacing rhythm (`build/checks/render-tells.mjs`, warnings only), and contrast (the existing checks) |
-| `measure` | The distinctiveness benchmark: how far screens sit from what default tools generate ([#322](https://github.com/richlaconte/altitude/issues/322)) |
+| `measure` | The [distinctiveness benchmark](https://github.com/richlaconte/altitude/blob/main/evals/distinctiveness/README.md): how far screens sit from what default tools generate ([#322](https://github.com/richlaconte/altitude/issues/322)) |
 | `human` | Review and the study with people ([#326](https://github.com/richlaconte/altitude/issues/326)) |
 
 ## Where Altitude stands
@@ -45,6 +45,8 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 
 **Fixed on the landing page.** The uppercase, letter-spaced kicker above every heading is gone, and its panel labels are in sentence case (TY4). Its accent swatches, which were Tailwind's orange-700, blue-700 and pink-700, are now its own: Harbor `#2a6f9e`, Rosewood `#b13a68` and Olive `#6b7d1e`, each at least 3:1 on both grounds (a graphite swatch was dropped: 1.9:1 on Nightfall).
 
+**Measured.** The benchmark's first run ([report](https://github.com/richlaconte/altitude/blob/main/evals/distinctiveness/results/2026-10-31/REPORT.md), E154) found that building with Altitude doesn't yet move Claude's screens measurably away from what plain Claude or shadcn produce: beyond the noise between repeat builds of one prompt, they sit no further from the baselines than the baselines sit from each other, on any of the three distances. They do move toward Altitude's own previews, because agents start from the pattern fixtures. On colour, Daylight and shadcn's neutral theme are the closest pair measured (CO8). The baseline so far is only Claude: v0 and Lovable builds are the next step.
+
 **Watch:**
 
 - **CO3, Nightfall:** periwinkle on dark.
@@ -53,7 +55,7 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 - **CM6:** props that mirror shadcn.
 - **CM2:** the dialog scrim's blur.
 - **Composition-dependent:** LA4 (equal-weight grids), LA7 (stat rows) and BH1 (design theater) depend on how apps compose the parts.
-- **LA5, one frame for every screen:** the app skeleton was the only frame offered, and agents copied it for every screen. [Screen layout](framework/patterns/screen-layout.md) now chooses the frame from the task (records, list and detail, focused editor, guided flow, decision, report), with the skeleton as the records frame ([#323](https://github.com/richlaconte/altitude/issues/323)). It stays on watch until the benchmark ([#322](https://github.com/richlaconte/altitude/issues/322)) measures it.
+- **LA5, one frame for every screen:** the app skeleton was the only frame offered, and agents copied it for every screen. [Screen layout](framework/patterns/screen-layout.md) now chooses the frame from the task (records, list and detail, focused editor, guided flow, decision, report), with the skeleton as the records frame ([#323](https://github.com/richlaconte/altitude/issues/323)). The benchmark's first run put task range (how far a system's frames differ between tasks) in Altitude's favour but within noise, so it stays on watch until runs with more samples per brief.
 
 ## How it's checked
 
@@ -62,7 +64,7 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 | Every push | `checks/tells-lint.mjs` (`npm run check:tells-lint`) and `checks/render-tells.mjs` | The lint fails; equal-weight grids and flat spacing warn on the run |
 | Every push | `npm run check:tells`: is the catalog due a review or audit? | Warns |
 | Every pull request that changes how something looks | The review list below | Reviewer |
-| Each release, and quarterly | The benchmark against a rebuilt baseline (#322) | Recorded, not gated |
+| Each release, and quarterly | The [benchmark](https://github.com/richlaconte/altitude/blob/main/evals/distinctiveness/README.md) against a rebuilt baseline | Recorded, not gated |
 | Yearly | The blind study with people (#326) | Recorded in Research |
 
 For a pull request that changes how something looks, the reviewer asks:
@@ -82,7 +84,7 @@ The look moves with each model release and each popular anti-slop prompt, so the
 | When | What | Output |
 |---|---|---|
 | Monthly | Read the practitioner catalogs (avoid-ai-design and others), the avoid-lists in the major frontend design skills (they say where generators will go next), new preprints on generative UI homogeneity, and design press | New tells added to `tells.json` with sources; `lastSeen` updated on the ones still common; new `lint` rules filed against #320 |
-| Quarterly, and after a major model release | Rebuild the benchmark baseline with current tools and models, rerun it, and re-audit the schemes, type and skeleton against the current defaults | The benchmark as a numbered experiment in Research; the audit in "Where Altitude stands"; status changes in `tells.json` |
+| Quarterly, after a major model release, and before each minor release | Rebuild the [benchmark](https://github.com/richlaconte/altitude/blob/main/evals/distinctiveness/README.md) baseline with current tools and models (the Claude conditions with `generate.mjs`, v0 and Lovable by hand under `baselines/<date>/`), rerun it, and re-audit the schemes, type and skeleton against the current defaults | The benchmark as a numbered experiment in Research; the audit in "Where Altitude stands"; status changes in `tells.json` |
 | Yearly | The study with people | A numbered experiment; new tells from what participants named |
 
 When you finish a review or an audit, set `refresh.reviewed` or `refresh.audited` to the date, in the same pull request as its changes. A major model release makes both due at once: set the dates back to say so.

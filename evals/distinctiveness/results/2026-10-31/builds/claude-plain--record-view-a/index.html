@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halvorsen Freight Systems · Accounts · Relay CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --border: #e3e6eb;
+    --border-strong: #cfd4dc;
+    --text: #1b1f26;
+    --text-2: #4d5562;
+    --text-3: #7a8291;
+    --accent: #2f5bea;
+    --accent-hover: #2249c9;
+    --accent-soft: #edf1fe;
+    --green: #17804d;
+    --green-soft: #e6f5ec;
+    --amber: #a8620a;
+    --amber-soft: #fdf3e2;
+    --red: #c4321f;
+    --red-soft: #fdecea;
+    --violet: #6a3fc8;
+    --violet-soft: #f1ecfc;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(20, 25, 35, .05);
+    --focus: 0 0 0 3px rgba(47, 91, 234, .28);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: none; box-shadow: var(--focus); border-radius: 6px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* App chrome */
+  .topbar {
+    height: 52px; background: #161a22; color: #e9ecf1;
+    display: flex; align-items: center; gap: 28px; padding: 0 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: -.01em; }
+  .brand-mark { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, #5b82ff, #2f5bea); }
+  .nav { display: flex; gap: 4px; }
+  .nav a { color: #aab2c0; padding: 6px 10px; border-radius: 6px; font-weight: 500; }
+  .nav a:hover { color: #fff; background: rgba(255,255,255,.06); text-decoration: none; }
+  .nav a[aria-current="page"] { color: #fff; background: rgba(255,255,255,.1); }
+  .topbar-user { margin-left: auto; display: flex; align-items: center; gap: 10px; color: #aab2c0; font-size: 13px; }
+
+  .page { max-width: 1280px; margin: 0 auto; padding: 20px 24px 64px; }
+  .crumbs { font-size: 13px; color: var(--text-3); margin-bottom: 14px; }
+  .crumbs a { color: var(--text-2); }
+
+  /* Header */
+  .account-head {
+    display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .logo {
+    width: 52px; height: 52px; border-radius: 12px; flex: none;
+    background: #0f3d3a; color: #fff; display: grid; place-items: center;
+    font-weight: 700; font-size: 18px; letter-spacing: .02em;
+  }
+  .head-main { flex: 1; min-width: 240px; }
+  .head-main h1 { font-size: 22px; line-height: 1.25; margin: 2px 0 6px; letter-spacing: -.015em; }
+  .head-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: var(--text-2); font-size: 13px; }
+  .head-meta .sep { color: var(--border-strong); }
+  .head-actions { display: flex; gap: 8px; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    background: #eef0f3; color: var(--text-2); white-space: nowrap;
+  }
+  .chip.green { background: var(--green-soft); color: var(--green); }
+  .chip.amber { background: var(--amber-soft); color: var(--amber); }
+  .chip.red { background: var(--red-soft); color: var(--red); }
+  .chip.blue { background: var(--accent-soft); color: var(--accent); }
+  .chip.violet { background: var(--violet-soft); color: var(--violet); }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 34px; padding: 0 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--surface);
+    font-weight: 500; white-space: nowrap;
+  }
+  .btn:hover { background: #f7f8fa; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--text-2); }
+  .btn.ghost:hover { background: #eef0f3; }
+  .btn.sm { height: 30px; padding: 0 10px; font-size: 13px; }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* Stats */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 20px; box-shadow: var(--shadow);
+  }
+  .stat { background: var(--surface); padding: 14px 18px; }
+  .stat-label { font-size: 12px; color: var(--text-3); font-weight: 500; }
+  .stat-value { font-size: 20px; font-weight: 600; letter-spacing: -.015em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .stat-sub { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+  .health-bar { height: 6px; border-radius: 3px; background: #eef0f3; margin-top: 8px; overflow: hidden; }
+  .health-bar span { display: block; height: 100%; background: var(--green); border-radius: 3px; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; align-items: start; }
+  .col { display: grid; gap: 20px; min-width: 0; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .card-head {
+    display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-head h2 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: -.005em; }
+  .card-head .count { color: var(--text-3); font-weight: 500; font-size: 13px; }
+  .card-head .spacer { flex: 1; }
+  .card-body { padding: 16px 18px; }
+
+  /* Details */
+  .detail-group + .detail-group { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .detail-group h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin: 0 0 10px; font-weight: 600; }
+  dl.details { margin: 0; display: grid; grid-template-columns: 112px 1fr; gap: 8px 12px; }
+  dl.details dt { color: var(--text-3); }
+  dl.details dd { margin: 0; overflow-wrap: anywhere; }
+  .empty-val { color: var(--text-3); font-style: italic; }
+  .description { color: var(--text-2); margin: 0; white-space: pre-wrap; }
+
+  /* Form */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: grid; gap: 4px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .field .req { color: var(--red); }
+  .input {
+    width: 100%; height: 34px; padding: 0 10px; border-radius: 7px;
+    border: 1px solid var(--border-strong); background: #fff;
+  }
+  textarea.input { height: auto; min-height: 84px; padding: 8px 10px; resize: vertical; }
+  select.input { padding-right: 6px; }
+  .input:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus); }
+  .input[aria-invalid="true"] { border-color: var(--red); }
+  .input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(196, 50, 31, .2); }
+  .field-error { font-size: 12px; color: var(--red); }
+  .field-error:empty { display: none; }
+  .form-actions {
+    display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px;
+    border-top: 1px solid var(--border); background: #fafbfc;
+    border-radius: 0 0 var(--radius) var(--radius);
+    position: sticky; bottom: 0;
+  }
+  .form-actions .hint { margin-right: auto; align-self: center; font-size: 12px; color: var(--text-3); }
+  .form-section-label { grid-column: 1 / -1; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; margin-top: 6px; }
+  .form-section-label:first-child { margin-top: 0; }
+
+  /* Contacts */
+  .contacts { width: 100%; border-collapse: collapse; }
+  .contacts th {
+    text-align: left; font-size: 12px; font-weight: 500; color: var(--text-3);
+    padding: 9px 18px; border-bottom: 1px solid var(--border); background: #fafbfc;
+  }
+  .contacts td { padding: 11px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .contacts tr:last-child td { border-bottom: 0; }
+  .contacts tbody tr:hover { background: #fafbfc; }
+  .person { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    font-size: 12px; font-weight: 600; color: #fff;
+  }
+  .person-name { font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .person-title { color: var(--text-3); font-size: 13px; }
+  .primary-badge { font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 0 6px; border-radius: 4px; }
+  .contact-links { display: grid; gap: 1px; font-size: 13px; }
+  .contact-links a { color: var(--text-2); }
+  .contact-links a:hover { color: var(--accent); }
+  .muted { color: var(--text-3); }
+  .nowrap { white-space: nowrap; }
+
+  /* Activity */
+  .composer { padding: 14px 18px; border-bottom: 1px solid var(--border); display: grid; gap: 10px; }
+  .composer-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .composer-row .input { width: auto; }
+  .composer-row .spacer { flex: 1; }
+  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; padding: 2px; background: #f7f8fa; }
+  .seg button {
+    border: 0; background: transparent; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+    font-size: 13px; color: var(--text-2); font-weight: 500;
+  }
+  .seg button[aria-pressed="true"] { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .seg button .n { color: var(--text-3); font-weight: 400; margin-left: 3px; }
+
+  .filters { padding: 10px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter {
+    border: 1px solid var(--border); background: #fff; border-radius: 999px;
+    padding: 3px 11px; font-size: 13px; cursor: pointer; color: var(--text-2);
+  }
+  .filter:hover { border-color: var(--border-strong); }
+  .filter[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: #fff; }
+  .filter .n { opacity: .65; margin-left: 4px; }
+
+  .timeline-section { padding: 4px 18px 8px; }
+  .timeline-label { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 600; padding: 12px 0 4px; }
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .event { display: grid; grid-template-columns: 32px 1fr; gap: 12px; position: relative; padding: 10px 0; }
+  .event::before {
+    content: ""; position: absolute; left: 15.5px; top: 44px; bottom: -10px;
+    width: 1px; background: var(--border);
+  }
+  .event:last-child::before { display: none; }
+  .event-icon { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; }
+  .event-icon svg { width: 15px; height: 15px; }
+  .ev-call .event-icon { background: var(--green-soft); color: var(--green); }
+  .ev-email .event-icon { background: var(--accent-soft); color: var(--accent); }
+  .ev-meeting .event-icon { background: var(--violet-soft); color: var(--violet); }
+  .ev-note .event-icon { background: var(--amber-soft); color: var(--amber); }
+  .ev-deal .event-icon, .ev-update .event-icon { background: #eef0f3; color: var(--text-2); }
+  .event-top { display: flex; gap: 10px; align-items: baseline; }
+  .event-title { font-weight: 500; flex: 1; min-width: 0; }
+  .event-time { color: var(--text-3); font-size: 12px; white-space: nowrap; }
+  .event-body { color: var(--text-2); margin-top: 2px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .event-meta { color: var(--text-3); font-size: 12px; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .event.upcoming .event-icon { box-shadow: inset 0 0 0 1.5px currentColor; }
+  .empty { padding: 28px 18px; text-align: center; color: var(--text-3); }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px);
+    background: #161a22; color: #fff; padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 1000px) {
+    .layout { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .page { padding: 16px 14px 48px; }
+    .topbar { padding: 0 14px; gap: 14px; }
+    .nav { display: none; }
+    .contacts thead { display: none; }
+    .contacts, .contacts tbody, .contacts tr, .contacts td { display: block; }
+    .contacts tr { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    .contacts tr:last-child { border-bottom: 0; }
+    .contacts td { padding: 2px 0 2px 42px; border: 0; }
+    .contacts td:first-child { padding-left: 0; padding-bottom: 6px; }
+    .contacts td[data-label]::before { content: attr(data-label) " · "; color: var(--text-3); font-size: 12px; }
+    .contacts td.c-links::before { display: none; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Relay</div>
+  <nav class="nav" aria-label="Primary">
+    <a href="#">Home</a>
+    <a href="#" aria-current="page">Accounts</a>
+    <a href="#">Contacts</a>
+    <a href="#">Deals</a>
+    <a href="#">Reports</a>
+  </nav>
+  <div class="topbar-user">
+    <span>Priya Raman</span>
+    <span class="avatar" style="background:#2f5bea;width:28px;height:28px;font-size:11px" aria-hidden="true">PR</span>
+  </div>
+</header>
+
+<main class="page">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="#">Accounts</a> / <span id="crumb-name"></span></nav>
+
+  <section class="account-head" aria-labelledby="account-name">
+    <div class="logo" id="logo" aria-hidden="true"></div>
+    <div class="head-main">
+      <h1 id="account-name"></h1>
+      <div class="head-meta" id="head-meta"></div>
+    </div>
+    <div class="head-actions">
+      <button class="btn" type="button" id="log-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Log activity
+      </button>
+      <button class="btn primary" type="button" id="edit-btn" aria-controls="details-card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        Edit details
+      </button>
+    </div>
+  </section>
+
+  <section class="stats" aria-label="Account summary" id="stats"></section>
+
+  <div class="layout">
+    <div class="col">
+      <section class="card" id="details-card" aria-labelledby="details-title">
+        <div class="card-head">
+          <h2 id="details-title">Account details</h2>
+          <span class="spacer"></span>
+          <button class="btn ghost sm" type="button" id="edit-inline-btn">Edit</button>
+        </div>
+        <div id="details-view" class="card-body"></div>
+        <form id="details-form" novalidate hidden></form>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card" aria-labelledby="contacts-title">
+        <div class="card-head">
+          <h2 id="contacts-title">Contacts <span class="count" id="contacts-count"></span></h2>
+        </div>
+        <table class="contacts">
+          <thead>
+            <tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Contact</th><th scope="col">Last contacted</th></tr>
+          </thead>
+          <tbody id="contacts-body"></tbody>
+        </table>
+      </section>
+
+      <section class="card" aria-labelledby="activity-title">
+        <div class="card-head">
+          <h2 id="activity-title">Activity</h2>
+        </div>
+        <form class="composer" id="composer" aria-label="Log activity">
+          <div class="composer-row">
+            <div class="seg" role="group" aria-label="Activity type" id="composer-type">
+              <button type="button" data-type="note" aria-pressed="true">Note</button>
+              <button type="button" data-type="call" aria-pressed="false">Call</button>
+              <button type="button" data-type="email" aria-pressed="false">Email</button>
+              <button type="button" data-type="meeting" aria-pressed="false">Meeting</button>
+            </div>
+            <label class="sr-only" for="composer-contact">Related contact</label>
+            <select class="input" id="composer-contact" style="height:30px"></select>
+          </div>
+          <label class="sr-only" for="composer-text">Activity details</label>
+          <textarea class="input" id="composer-text" rows="2" style="min-height:60px" placeholder="Add a note about this account…"></textarea>
+          <div class="composer-row">
+            <span class="muted" style="font-size:12px">⌘/Ctrl + Enter to save</span>
+            <span class="spacer"></span>
+            <button class="btn primary sm" type="submit">Log note</button>
+          </div>
+        </form>
+        <div class="filters" role="group" aria-label="Filter activity" id="filters"></div>
+        <div id="timeline"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  // ---------- Sample data ----------
+  const DAY = 86400000;
+  const now = Date.now();
+  const ago = (d, h = 0, m = 0) => new Date(now - d * DAY - h * 3600000 - m * 60000);
+  const ahead = (d, hour = 10) => { const t = new Date(now + d * DAY); t.setHours(hour, 0, 0, 0); return t; };
+  const isoDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+  const CURRENT_USER = "Priya Raman";
+  const OWNERS = ["Priya Raman", "Marcus Bell", "Dana Okafor", "Luis Ferreira"];
+  const STATUSES = ["Prospect", "Customer", "At risk", "Former customer"];
+  const TIERS = ["Enterprise", "Mid-market", "SMB"];
+  const INDUSTRIES = ["Transportation & Logistics", "Manufacturing", "Retail", "Wholesale Distribution", "Healthcare", "Financial Services", "Technology", "Other"];
+
+  const account = {
+    name: "Halvorsen Freight Systems",
+    status: "Customer",
+    tier: "Enterprise",
+    owner: "Priya Raman",
+    industry: "Transportation & Logistics",
+    website: "https://www.halvorsenfreight.com",
+    phone: "+1 (612) 555-0100",
+    employees: 1250,
+    revenue: 312000000,
+    street: "800 Washington Ave N, Suite 400",
+    city: "Minneapolis",
+    state: "MN",
+    postal: "55401",
+    country: "United States",
+    renewal: isoDate(ahead(74)),
+    customerSince: "March 2023",
+    description: "Regional LTL and cold-chain carrier operating 14 terminals across the Upper Midwest. Uses our route optimization and fleet telematics modules; evaluating expansion to the new Denver hub opening Q2 next year."
+  };
+
+  const summary = { arr: 486000, arrChange: 0.12, pipeline: 210000, openDeals: 2, health: 82 };
+
+  const contacts = [
+    { id: "c1", name: "Elena Vasquez", title: "VP of Operations", role: "Champion", primary: true, email: "elena.vasquez@halvorsenfreight.com", phone: "+1 (612) 555-0147", color: "#0f766e" },
+    { id: "c2", name: "Tom Becker", title: "Chief Financial Officer", role: "Economic buyer", email: "tom.becker@halvorsenfreight.com", phone: "+1 (612) 555-0112", color: "#7c3aed" },
+    { id: "c3", name: "Aisha Khan", title: "Director, IT Infrastructure", role: "Technical evaluator", email: "aisha.khan@halvorsenfreight.com", phone: "+1 (612) 555-0163", color: "#b45309" },
+    { id: "c4", name: "Jun Park", title: "Senior Integration Engineer", role: "User", email: "jun.park@halvorsenfreight.com", phone: "+1 (612) 555-0188", color: "#2563eb" },
+    { id: "c5", name: "Robert Lindqvist", title: "Procurement Manager", role: "Billing", email: "r.lindqvist@halvorsenfreight.com", phone: "+1 (612) 555-0131", color: "#475569" },
+    { id: "c6", name: "Gwen Harlow", title: "Regional Ops Manager, Denver", role: "Influencer", email: "gwen.harlow@halvorsenfreight.com", phone: "+1 (720) 555-0124", color: "#be185d" }
+  ];
+  const ROLE_CHIP = { "Champion": "green", "Economic buyer": "violet", "Technical evaluator": "blue", "Billing": "", "User": "", "Influencer": "amber" };
+
+  let nextId = 100;
+  const activities = [
+    { type: "meeting", title: "Q4 business review", body: "Agenda: renewal terms, Denver hub rollout plan, telematics adoption metrics.", at: ahead(3, 14), by: "Priya Raman", contacts: ["c1", "c2"], detail: "60 min · Zoom" },
+    { type: "email", title: "Sent revised renewal proposal", body: "3-year term with 6% annual uplift cap; Denver hub licenses priced as a separate line item per Tom's request.", at: ago(0, 2, 10), by: "Priya Raman", contacts: ["c1", "c2"] },
+    { type: "call", title: "Call with Tom Becker", body: "Budget for FY27 approved at board level. Wants multi-year pricing before committing to Denver expansion. Asked for a TCO comparison against their current in-house routing.", at: ago(1, 3), by: "Priya Raman", contacts: ["c2"], detail: "18 min · Outbound" },
+    { type: "note", title: "Legal review flagged data residency clause", body: "Their counsel wants telematics data stored in US regions only. Confirmed with our security team this is already the default — sending written confirmation.", at: ago(3, 5), by: "Marcus Bell", contacts: [] },
+    { type: "meeting", title: "Technical deep dive: route optimization API", body: "Walked through webhook retries and bulk shipment import. Jun to pilot the v3 endpoints in staging next sprint.", at: ago(5, 1), by: "Dana Okafor", contacts: ["c3", "c4"], detail: "45 min · Google Meet" },
+    { type: "email", title: "Re: API rate limits for nightly batch", body: "Jun asked whether the 600 req/min limit applies per API key or per tenant. Answered: per key; offered a temporary raise for the migration window.", at: ago(8, 2), by: "Dana Okafor", contacts: ["c4"] },
+    { type: "deal", title: "Deal moved to Proposal", body: "Denver hub expansion · $145,000 · expected close Dec 15", at: ago(12, 4), by: "Priya Raman", contacts: [] },
+    { type: "call", title: "Call with Robert Lindqvist", body: "PO for renewal must be raised 30 days before term end. Their procurement freeze runs Dec 20 – Jan 5.", at: ago(16, 6), by: "Priya Raman", contacts: ["c5"], detail: "12 min · Inbound" },
+    { type: "meeting", title: "Onsite visit — Minneapolis HQ", body: "Toured dispatch floor with Elena and Gwen. Dispatchers still re-keying exceptions manually; good fit for the exceptions workflow add-on.", at: ago(23, 2), by: "Priya Raman", contacts: ["c1", "c6"], detail: "Half day · In person" },
+    { type: "note", title: "Champion change", body: "Former VP Ops (Daniel Moore) left the company. Elena Vasquez promoted into the role and is supportive — previously ran the telematics pilot.", at: ago(31, 3), by: "Priya Raman", contacts: ["c1"] },
+    { type: "email", title: "Shared telematics adoption report", body: "Q3 adoption at 91% of active vehicles, up from 74% in Q2.", at: ago(40, 1), by: "Marcus Bell", contacts: ["c1", "c3"] }
+  ].map(a => ({ id: nextId++, ...a }));
+
+  // ---------- Helpers ----------
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const usd = (n, compact) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: compact ? 1 : 0, notation: compact ? "compact" : "standard" }).format(n);
+  const int = (n) => new Intl.NumberFormat("en-US").format(n);
+  const initials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+  const contactById = (id) => contacts.find(c => c.id === id);
+  const parseDate = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const fmtDate = (d, opts = { month: "short", day: "numeric", year: "numeric" }) => d.toLocaleDateString("en-US", opts);
+  const fmtFull = (d) => d.toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  const startOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+  const dayDiff = (d) => Math.round((startOfDay(d) - startOfDay(new Date())) / DAY);
+
+  function relTime(d) {
+    const diff = d - Date.now();
+    const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    if (diff > 0) {
+      const days = dayDiff(d);
+      if (days === 0) return `Today, ${time}`;
+      if (days === 1) return `Tomorrow, ${time}`;
+      return `${fmtDate(d, { weekday: "short", month: "short", day: "numeric" })}, ${time}`;
+    }
+    const mins = Math.round(-diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins} min ago`;
+    const days = -dayDiff(d);
+    if (days === 0) return `${Math.round(mins / 60)} hr ago`;
+    if (days === 1) return `Yesterday, ${time}`;
+    if (days < 7) return `${days} days ago`;
+    return fmtDate(d, d.getFullYear() === new Date().getFullYear() ? { month: "short", day: "numeric" } : undefined);
+  }
+
+  function lastContacted(id) {
+    const t = Date.now();
+    return activities
+      .filter(a => a.at <= t && a.contacts.includes(id) && ["call", "email", "meeting"].includes(a.type))
+      .reduce((max, a) => (!max || a.at > max ? a.at : max), null);
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const el = $("#toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+  }
+
+  const ICONS = {
+    call: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/>',
+    email: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
+    meeting: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    note: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+    deal: '<path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+    update: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'
+  };
+  const icon = (t) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[t]}</svg>`;
+  const TYPE_LABEL = { call: "Call", email: "Email", meeting: "Meeting", note: "Note", deal: "Deal update", update: "Record update" };
+  const STATUS_CHIP = { "Customer": "green", "Prospect": "blue", "At risk": "amber", "Former customer": "" };
+
+  // ---------- Header & stats ----------
+  function renderHeader() {
+    document.title = `${account.name} · Accounts · Relay CRM`;
+    $("#crumb-name").textContent = account.name;
+    $("#account-name").textContent = account.name;
+    $("#logo").textContent = initials(account.name);
+    const host = hostOf(account.website);
+    $("#head-meta").innerHTML = [
+      `<span class="chip ${STATUS_CHIP[account.status] ?? ""}"><span class="dot"></span>${esc(account.status)}</span>`,
+      `<span class="chip">${esc(account.tier)}</span>`,
+      account.industry && `<span>${esc(account.industry)}</span>`,
+      (account.city || account.state) && `<span>${esc([account.city, account.state].filter(Boolean).join(", "))}</span>`,
+      host && `<a href="${esc(account.website)}" target="_blank" rel="noopener">${esc(host)}</a>`,
+      `<span>Owner: <strong style="font-weight:500;color:var(--text)">${esc(account.owner)}</strong></span>`
+    ].filter(Boolean).join('<span class="sep" aria-hidden="true">•</span>');
+  }
+
+  function renderStats() {
+    const renewal = account.renewal ? parseDate(account.renewal) : null;
+    const days = renewal ? dayDiff(renewal) : null;
+    let renewalValue = "—", renewalSub = "No renewal date set";
+    if (renewal) {
+      renewalSub = fmtDate(renewal);
+      renewalValue = days > 0 ? `${days} days` : days === 0 ? "Today" : `${-days} days overdue`;
+    }
+    const renewalColor = days !== null && days <= 30 ? "var(--red)" : days !== null && days <= 90 ? "var(--amber)" : "inherit";
+    $("#stats").innerHTML = `
+      <div class="stat">
+        <div class="stat-label">Annual recurring revenue</div>
+        <div class="stat-value">${usd(summary.arr)}</div>
+        <div class="stat-sub"><span style="color:var(--green)">▲ ${Math.round(summary.arrChange * 100)}%</span> vs. last year</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Open pipeline</div>
+        <div class="stat-value">${usd(summary.pipeline)}</div>
+        <div class="stat-sub">${summary.openDeals} open deals</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Renewal</div>
+        <div class="stat-value" style="color:${renewalColor}">${esc(renewalValue)}</div>
+        <div class="stat-sub">${esc(renewalSub)}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Health score</div>
+        <div class="stat-value">${summary.health}<span style="font-size:13px;color:var(--text-3);font-weight:500"> / 100 · Healthy</span></div>
+        <div class="health-bar" role="img" aria-label="Health score ${summary.health} out of 100"><span style="width:${summary.health}%"></span></div>
+      </div>`;
+  }
+
+  function hostOf(url) {
+    if (!url) return "";
+    try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return url; }
+  }
+
+  // ---------- Details view ----------
+  const val = (v) => (v === "" || v == null ? '<span class="empty-val">Not set</span>' : esc(v));
+
+  function renderDetailsView() {
+    const cityLine = [account.city, [account.state, account.postal].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    const addr = [account.street, cityLine, account.country].filter(Boolean);
+    const renewal = account.renewal ? fmtDate(parseDate(account.renewal)) : "";
+    $("#details-view").innerHTML = `
+      <div class="detail-group">
+        <h3>Company</h3>
+        <dl class="details">
+          <dt>Industry</dt><dd>${val(account.industry)}</dd>
+          <dt>Website</dt><dd>${account.website ? `<a href="${esc(account.website)}" target="_blank" rel="noopener">${esc(hostOf(account.website))}</a>` : val("")}</dd>
+          <dt>Phone</dt><dd>${account.phone ? `<a href="tel:${esc(account.phone.replace(/[^\d+]/g, ""))}">${esc(account.phone)}</a>` : val("")}</dd>
+          <dt>Employees</dt><dd>${account.employees != null && account.employees !== "" ? int(account.employees) : val("")}</dd>
+          <dt>Annual revenue</dt><dd>${account.revenue != null && account.revenue !== "" ? usd(account.revenue, true) : val("")}</dd>
+        </dl>
+      </div>
+      <div class="detail-group">
+        <h3>Billing address</h3>
+        ${addr.length ? `<address style="font-style:normal">${addr.map(esc).join("<br>")}</address>` : val("")}
+      </div>
+      <div class="detail-group">
+        <h3>Relationship</h3>
+        <dl class="details">
+          <dt>Status</dt><dd><span class="chip ${STATUS_CHIP[account.status] ?? ""}"><span class="dot"></span>${esc(account.status)}</span></dd>
+          <dt>Tier</dt><dd>${esc(account.tier)}</dd>
+          <dt>Owner</dt><dd>${esc(account.owner)}</dd>
+          <dt>Customer since</dt><dd>${esc(account.customerSince)}</dd>
+          <dt>Renewal date</dt><dd>${val(renewal)}</dd>
+        </dl>
+      </div>
+      <div class="detail-group">
+        <h3>Description</h3>
+        ${account.description ? `<p class="description">${esc(account.description)}</p>` : val("")}
+      </div>`;
+  }
+
+  // ---------- Details edit ----------
+  const FIELDS = [
+    { section: "Company" },
+    { key: "name", label: "Account name", required: true, full: true },
+    { key: "industry", label: "Industry", type: "select", options: INDUSTRIES, full: true },
+    { key: "website", label: "Website", type: "url", full: true, placeholder: "example.com" },
+    { key: "phone", label: "Phone", type: "tel" },
+    { key: "employees", label: "Employees", type: "number" },
+    { key: "revenue", label: "Annual revenue (USD)", type: "money", full: true },
+    { section: "Billing address" },
+    { key: "street", label: "Street", full: true },
+    { key: "city", label: "City" },
+    { key: "state", label: "State / region" },
+    { key: "postal", label: "Postal code" },
+    { key: "country", label: "Country" },
+    { section: "Relationship" },
+    { key: "status", label: "Status", type: "select", options: STATUSES },
+    { key: "tier", label: "Tier", type: "select", options: TIERS },
+    { key: "owner", label: "Account owner", type: "select", options: OWNERS },
+    { key: "renewal", label: "Renewal date", type: "date" },
+    { key: "description", label: "Description", type: "textarea", full: true }
+  ];
+  const fieldDefs = FIELDS.filter(f => f.key);
+  const toInputValue = (f, v) => {
+    if (v == null) return "";
+    if (f.type === "money") return v === "" ? "" : int(v);
+    return String(v);
+  };
+
+  let editing = false;
+  let lastEditTrigger = null;
+
+  function renderForm() {
+    const form = $("#details-form");
+    form.innerHTML = `
+      <div class="card-body"><div class="form-grid">
+        ${FIELDS.map(f => {
+          if (f.section) return `<div class="form-section-label">${esc(f.section)}</div>`;
+          const id = `f-${f.key}`, err = `${id}-err`;
+          const v = toInputValue(f, account[f.key]);
+          const common = `id="${id}" name="${f.key}" class="input" aria-describedby="${err}" ${f.required ? "required" : ""}`;
+          let control;
+          if (f.type === "select") {
+            const opts = f.options.includes(v) || !v ? f.options : [v, ...f.options];
+            control = `<select ${common}>${f.key === "industry" ? '<option value="">—</option>' : ""}${opts.map(o => `<option${o === v ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+          } else if (f.type === "textarea") {
+            control = `<textarea ${common} rows="4" maxlength="1000">${esc(v)}</textarea>`;
+          } else {
+            const t = { url: "text", tel: "tel", number: "text", money: "text", date: "date" }[f.type] || "text";
+            const extra = f.type === "number" || f.type === "money" ? 'inputmode="numeric"' : f.type === "url" ? 'inputmode="url" autocomplete="url"' : f.type === "tel" ? 'autocomplete="tel"' : "";
+            control = `<input type="${t}" ${common} value="${esc(v)}" ${extra} ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ""}>`;
+          }
+          return `<div class="field${f.full ? " full" : ""}">
+            <label for="${id}">${esc(f.label)}${f.required ? ' <span class="req" aria-hidden="true">*</span>' : ""}</label>
+            ${control}
+            <div class="field-error" id="${err}"></div>
+          </div>`;
+        }).join("")}
+      </div></div>
+      <div class="form-actions">
+        <span class="hint">Esc to cancel</span>
+        <button type="button" class="btn" data-action="cancel">Cancel</button>
+        <button type="submit" class="btn primary">Save changes</button>
+      </div>`;
+  }
+
+  // Parse & validate the form. Returns { values, errors }.
+  function readForm() {
+    const form = $("#details-form");
+    const values = {}, errors = {};
+    for (const f of fieldDefs) {
+      let raw = form.elements[f.key].value.trim();
+      if (f.required && !raw) { errors[f.key] = `${f.label} is required.`; continue; }
+      if (f.type === "url" && raw) {
+        const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+        try {
+          const u = new URL(withScheme);
+          if (!u.hostname.includes(".")) throw 0;
+          raw = u.href.replace(/\/$/, "");
+        } catch { errors[f.key] = "Enter a valid web address, e.g. example.com"; continue; }
+      }
+      if (f.type === "tel" && raw && (!/^[\d\s()+.\-x]+$/i.test(raw) || raw.replace(/\D/g, "").length < 7)) {
+        errors[f.key] = "Enter a valid phone number."; continue;
+      }
+      if (f.type === "number") {
+        if (raw === "") { values[f.key] = ""; continue; }
+        const n = Number(raw.replace(/,/g, ""));
+        if (!Number.isInteger(n) || n < 0) { errors[f.key] = "Enter a whole number."; continue; }
+        values[f.key] = n; continue;
+      }
+      if (f.type === "money") {
+        if (raw === "") { values[f.key] = ""; continue; }
+        const n = Number(raw.replace(/[$,\s]/g, ""));
+        if (!Number.isFinite(n) || n < 0) { errors[f.key] = "Enter an amount in USD, e.g. 2,500,000"; continue; }
+        values[f.key] = Math.round(n); continue;
+      }
+      if (f.type === "date" && raw && isNaN(parseDate(raw))) { errors[f.key] = "Enter a valid date."; continue; }
+      values[f.key] = raw;
+    }
+    return { values, errors };
+  }
+
+  function showErrors(errors) {
+    const form = $("#details-form");
+    for (const f of fieldDefs) {
+      const el = form.elements[f.key];
+      const msg = errors[f.key] || "";
+      el.setAttribute("aria-invalid", msg ? "true" : "false");
+      $(`#f-${f.key}-err`).textContent = msg;
+    }
+  }
+
+  const changedKeys = (values) => fieldDefs.map(f => f.key).filter(k => k in values && String(values[k] ?? "") !== String(account[k] ?? ""));
+
+  function isDirty() {
+    if (!editing) return false;
+    const form = $("#details-form");
+    return fieldDefs.some(f => form.elements[f.key].value.trim() !== toInputValue(f, account[f.key]).trim());
+  }
+
+  function startEdit(trigger) {
+    if (editing) { $("#f-name").focus(); return; }
+    editing = true;
+    lastEditTrigger = trigger || $("#edit-btn");
+    renderForm();
+    $("#details-view").hidden = true;
+    $("#details-form").hidden = false;
+    $("#edit-inline-btn").hidden = true;
+    $("#edit-btn").disabled = true;
+    $("#details-card").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    $("#f-name").focus({ preventScroll: true });
+  }
+
+  function endEdit() {
+    editing = false;
+    $("#details-form").hidden = true;
+    $("#details-form").innerHTML = "";
+    $("#details-view").hidden = false;
+    $("#edit-inline-btn").hidden = false;
+    $("#edit-btn").disabled = false;
+    (lastEditTrigger || $("#edit-btn")).focus();
+  }
+
+  function cancelEdit() {
+    if (isDirty() && !confirm("Discard your unsaved changes?")) return;
+    endEdit();
+  }
+
+  function saveEdit(e) {
+    e.preventDefault();
+    const { values, errors } = readForm();
+    showErrors(errors);
+    const firstBad = fieldDefs.find(f => errors[f.key]);
+    if (firstBad) { $(`#f-${firstBad.key}`).focus(); return; }
+
+    const changed = changedKeys(values);
+    if (!changed.length) { endEdit(); toast("No changes to save"); return; }
+
+    Object.assign(account, values);
+    const labels = changed.map(k => fieldDefs.find(f => f.key === k).label.replace(/ \(USD\)$/, "").toLowerCase());
+    activities.push({
+      id: nextId++, type: "update", title: "Updated account details",
+      body: `Changed ${listJoin(labels)}.`, at: new Date(), by: CURRENT_USER, contacts: []
+    });
+    renderAll();
+    endEdit();
+    toast("Account details saved");
+  }
+
+  const listJoin = (arr) => arr.length < 3 ? arr.join(" and ") : `${arr.slice(0, -1).join(", ")} and ${arr[arr.length - 1]}`;
+
+  // ---------- Contacts ----------
+  function renderContacts() {
+    $("#contacts-count").textContent = contacts.length;
+    const sorted = [...contacts].sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
+    $("#contacts-body").innerHTML = sorted.map(c => {
+      const last = lastContacted(c.id);
+      return `<tr>
+        <td>
+          <div class="person">
+            <span class="avatar" style="background:${c.color}" aria-hidden="true">${esc(initials(c.name))}</span>
+            <div style="min-width:0">
+              <div class="person-name">${esc(c.name)}${c.primary ? '<span class="primary-badge">Primary</span>' : ""}</div>
+              <div class="person-title">${esc(c.title)}</div>
+            </div>
+          </div>
+        </td>
+        <td data-label="Role"><span class="chip ${ROLE_CHIP[c.role] ?? ""}">${esc(c.role)}</span></td>
+        <td class="c-links"><div class="contact-links">
+          <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>
+          <a href="tel:${esc(c.phone.replace(/[^\d+]/g, ""))}" class="nowrap">${esc(c.phone)}</a>
+        </div></td>
+        <td data-label="Last contacted" class="nowrap">${last ? `<time datetime="${last.toISOString()}" title="${esc(fmtFull(last))}">${esc(relTime(last))}</time>` : '<span class="muted">Never</span>'}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  // ---------- Activity ----------
+  const FILTERS = [
+    { key: "all", label: "All" },
+    { key: "email", label: "Emails" },
+    { key: "call", label: "Calls" },
+    { key: "meeting", label: "Meetings" },
+    { key: "note", label: "Notes" },
+    { key: "system", label: "Updates" }
+  ];
+  let filter = "all";
+  const matches = (a, key) => key === "all" || (key === "system" ? a.type === "deal" || a.type === "update" : a.type === key);
+
+  function renderFilters() {
+    $("#filters").innerHTML = FILTERS.map(f => {
+      const n = activities.filter(a => matches(a, f.key)).length;
+      return `<button type="button" class="filter" data-filter="${f.key}" aria-pressed="${f.key === filter}">${f.label}<span class="n">${n}</span></button>`;
+    }).join("");
+  }
+
+  function eventHTML(a, upcoming) {
+    const people = a.contacts.map(contactById).filter(Boolean).map(c => esc(c.name));
+    const meta = [
+      `<span>${esc(TYPE_LABEL[a.type])}${a.detail ? ` · ${esc(a.detail)}` : ""}</span>`,
+      people.length && `<span>With ${people.join(", ")}</span>`,
+      `<span>by ${esc(a.by === CURRENT_USER ? "You" : a.by)}</span>`
+    ].filter(Boolean).join("");
+    return `<li class="event ev-${a.type}${upcoming ? " upcoming" : ""}">
+      <span class="event-icon">${icon(a.type)}</span>
+      <div>
+        <div class="event-top">
+          <span class="event-title">${esc(a.title)}</span>
+          <time class="event-time" datetime="${a.at.toISOString()}" title="${esc(fmtFull(a.at))}">${esc(relTime(a.at))}</time>
+        </div>
+        ${a.body ? `<div class="event-body">${esc(a.body)}</div>` : ""}
+        <div class="event-meta">${meta}</div>
+      </div>
+    </li>`;
+  }
+
+  function renderTimeline() {
+    const t = Date.now();
+    const list = activities.filter(a => matches(a, filter));
+    const upcoming = list.filter(a => a.at > t).sort((a, b) => a.at - b.at);
+    const past = list.filter(a => a.at <= t).sort((a, b) => b.at - a.at);
+    if (!list.length) { $("#timeline").innerHTML = `<div class="empty">No ${esc(FILTERS.find(f => f.key === filter).label.toLowerCase())} logged yet.</div>`; return; }
+    $("#timeline").innerHTML =
+      (upcoming.length ? `<div class="timeline-section"><div class="timeline-label">Upcoming</div><ul class="timeline">${upcoming.map(a => eventHTML(a, true)).join("")}</ul></div>` : "") +
+      (past.length ? `<div class="timeline-section"><div class="timeline-label">Recent</div><ul class="timeline">${past.map(a => eventHTML(a, false)).join("")}</ul></div>` : "");
+  }
+
+  // Composer
+  let composerType = "note";
+  const COMPOSER_PLACEHOLDER = {
+    note: "Add a note about this account…",
+    call: "Summarize the call — outcomes, next steps…",
+    email: "Summarize the email you sent or received…",
+    meeting: "Who attended and what was decided…"
+  };
+  function renderComposerContacts() {
+    $("#composer-contact").innerHTML = `<option value="">No contact</option>` + contacts.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  }
+  function setComposerType(type) {
+    composerType = type;
+    document.querySelectorAll("#composer-type button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.type === type)));
+    $("#composer-text").placeholder = COMPOSER_PLACEHOLDER[type];
+    $("#composer button[type=submit]").textContent = `Log ${TYPE_LABEL[type].toLowerCase()}`;
+  }
+  function submitComposer(e) {
+    e.preventDefault();
+    const text = $("#composer-text").value.trim();
+    if (!text) { $("#composer-text").focus(); toast("Write something to log first"); return; }
+    const cid = $("#composer-contact").value;
+    const c = cid && contactById(cid);
+    const titles = {
+      note: "Note",
+      call: c ? `Call with ${c.name}` : "Logged a call",
+      email: c ? `Email with ${c.name}` : "Logged an email",
+      meeting: c ? `Meeting with ${c.name}` : "Logged a meeting"
+    };
+    activities.push({ id: nextId++, type: composerType, title: titles[composerType], body: text, at: new Date(), by: CURRENT_USER, contacts: cid ? [cid] : [] });
+    $("#composer-text").value = "";
+    if (!matches({ type: composerType }, filter)) filter = "all";
+    renderFilters(); renderTimeline(); renderContacts();
+    toast(`${TYPE_LABEL[composerType]} logged`);
+  }
+
+  function renderAll() {
+    renderHeader(); renderStats(); renderDetailsView();
+    renderContacts(); renderFilters(); renderTimeline();
+  }
+
+  // ---------- Wire up ----------
+  $("#edit-btn").addEventListener("click", (e) => startEdit(e.currentTarget));
+  $("#edit-inline-btn").addEventListener("click", (e) => startEdit(e.currentTarget));
+  $("#details-form").addEventListener("submit", saveEdit);
+  $("#details-form").addEventListener("click", (e) => { if (e.target.closest("[data-action=cancel]")) cancelEdit(); });
+  $("#details-form").addEventListener("keydown", (e) => { if (e.key === "Escape") { e.preventDefault(); cancelEdit(); } });
+  $("#details-form").addEventListener("input", (e) => {
+    // Clear a field's error as soon as the user edits it.
+    if (e.target.getAttribute("aria-invalid") === "true") {
+      e.target.setAttribute("aria-invalid", "false");
+      $(`#${e.target.id}-err`).textContent = "";
+    }
+  });
+  window.addEventListener("beforeunload", (e) => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
+
+  $("#filters").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-filter]");
+    if (!b) return;
+    filter = b.dataset.filter;
+    renderFilters(); renderTimeline();
+    $(`[data-filter="${filter}"]`).focus();
+  });
+
+  $("#composer-type").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-type]");
+    if (b) setComposerType(b.dataset.type);
+  });
+  $("#composer").addEventListener("submit", submitComposer);
+  $("#composer-text").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submitComposer(e);
+  });
+  $("#log-btn").addEventListener("click", () => {
+    $("#composer").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
+    $("#composer-text").focus({ preventScroll: true });
+  });
+
+  renderComposerContacts();
+  renderAll();
+  // Keep relative timestamps fresh.
+  setInterval(() => { renderContacts(); renderTimeline(); }, 60000);
+})();
+</script>
+</body>
+</html>

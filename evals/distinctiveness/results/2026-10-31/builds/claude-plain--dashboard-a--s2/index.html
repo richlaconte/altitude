@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview · Subscription metrics</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --axis:           #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --hover-wash:     rgba(11,11,11,0.04);
+    --series-1:       #2a78d6;  /* blue: MRR, new subscriptions */
+    --series-2:       #eb6834;  /* orange: cancelled subscriptions */
+    --delta-good:     #006300;
+    --delta-bad:      #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #f0efec;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --axis:           #383835;
+      --border:         rgba(255,255,255,0.10);
+      --hover-wash:     rgba(255,255,255,0.05);
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --delta-good:     #0ca30c;
+      --delta-bad:      #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --axis:           #383835;
+    --border:         rgba(255,255,255,0.10);
+    --hover-wash:     rgba(255,255,255,0.05);
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --delta-good:     #0ca30c;
+    --delta-bad:      #e66767;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 24px 48px; }
+
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 2px; }
+  .sub { color: var(--text-secondary); margin: 0; }
+
+  .filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-1); padding: 2px; }
+  .seg button {
+    font: inherit; color: var(--text-secondary); background: transparent; border: 0;
+    padding: 5px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .seg button:hover { background: var(--hover-wash); }
+  .seg button[aria-pressed="true"] { color: var(--text-primary); font-weight: 600; background: var(--hover-wash); box-shadow: inset 0 0 0 1px var(--border); }
+  .seg button:focus-visible, .icon-btn:focus-visible, .link-btn:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+  .filter-note { color: var(--text-muted); font-size: 13px; }
+  .icon-btn {
+    font: inherit; color: var(--text-secondary); background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer;
+  }
+  .icon-btn:hover { color: var(--text-primary); }
+
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+
+  /* KPI row */
+  .kpis { display: grid; grid-template-columns: 1.5fr repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 1000px) { .kpis { grid-template-columns: repeat(2, 1fr); } .kpis .hero { grid-column: 1 / -1; } }
+  @media (max-width: 520px)  { .kpis { grid-template-columns: 1fr; } }
+  .kpi-label { color: var(--text-secondary); font-size: 13px; margin: 0 0 6px; }
+  .kpi-value { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; }
+  .hero .kpi-value { font-size: 52px; letter-spacing: -0.02em; }
+  .kpi-delta { margin-top: 6px; font-size: 13px; color: var(--text-secondary); display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+  .kpi-delta .chg { font-weight: 600; }
+  .chg.good { color: var(--delta-good); }
+  .chg.bad  { color: var(--delta-bad); }
+  .chg.flat { color: var(--text-secondary); }
+  .hero { display: flex; flex-direction: column; justify-content: space-between; }
+  .hero-meta { display: flex; gap: 20px; margin-top: 14px; color: var(--text-secondary); font-size: 13px; flex-wrap: wrap; }
+  .hero-meta strong { color: var(--text-primary); font-weight: 600; }
+
+  /* Charts */
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+  .chart-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .chart-sub { color: var(--text-secondary); font-size: 13px; margin: 2px 0 0; }
+  .legend { display: flex; gap: 14px; font-size: 13px; color: var(--text-secondary); list-style: none; margin: 0; padding: 0; }
+  .legend li { display: flex; align-items: center; gap: 6px; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .chart { position: relative; width: 100%; }
+  .chart svg { display: block; width: 100%; overflow: visible; }
+  .chart svg text { font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .chart svg text.end-label { fill: var(--text-primary); font-weight: 600; font-variant-numeric: normal; }
+  .chart svg text.end-label-sub { fill: var(--text-secondary); }
+  .chart svg:focus { outline: none; }
+  .chart svg:focus-visible { outline: 2px solid var(--series-1); outline-offset: 4px; border-radius: 4px; }
+
+  .tooltip {
+    position: absolute; pointer-events: none; z-index: 5;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 8px 10px; min-width: 150px;
+    font-size: 13px; opacity: 0; transition: opacity 80ms;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .tt-title { color: var(--text-secondary); margin-bottom: 4px; }
+  .tooltip .tt-row { display: flex; align-items: center; gap: 8px; }
+  .tooltip .tt-key { width: 12px; height: 2px; border-radius: 1px; flex: none; }
+  .tooltip .tt-val { font-weight: 600; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .tooltip .tt-name { color: var(--text-secondary); }
+  .tooltip .tt-foot { color: var(--text-secondary); border-top: 1px solid var(--grid); margin-top: 6px; padding-top: 6px; }
+
+  /* Table */
+  .table-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .link-btn { font: inherit; font-size: 13px; color: var(--text-secondary); background: none; border: 0; cursor: pointer; padding: 2px 4px; border-radius: 4px; }
+  .link-btn:hover { color: var(--text-primary); text-decoration: underline; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-weight: 500; font-size: 12px; color: var(--text-secondary); }
+  tbody tr:hover { background: var(--hover-wash); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.pos { color: var(--delta-good); }
+  td.neg { color: var(--delta-bad); }
+  .sample-note { color: var(--text-muted); font-size: 12px; margin-top: 16px; }
+
+  .refreshing { opacity: 0.55; transition: opacity 120ms; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Overview</h1>
+      <p class="sub">Subscription revenue and customer movement</p>
+    </div>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle dark mode">Dark mode</button>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="seg" role="group" aria-label="Date range" id="rangeSeg">
+      <button type="button" data-months="3"  aria-pressed="false">Last 3 months</button>
+      <button type="button" data-months="6"  aria-pressed="false">Last 6 months</button>
+      <button type="button" data-months="12" aria-pressed="true">Last 12 months</button>
+    </div>
+    <span class="filter-note" id="rangeNote"></span>
+  </div>
+
+  <main id="content">
+    <section class="kpis" aria-label="Key metrics">
+      <div class="card hero">
+        <div>
+          <p class="kpi-label">Monthly recurring revenue</p>
+          <div class="kpi-value" id="kpiMrr">–</div>
+          <div class="kpi-delta" id="kpiMrrDelta"></div>
+        </div>
+        <div class="hero-meta">
+          <span>ARR run rate <strong id="kpiArr">–</strong></span>
+          <span>Avg. revenue per account <strong id="kpiArpa">–</strong></span>
+        </div>
+      </div>
+      <div class="card">
+        <p class="kpi-label">New subscriptions</p>
+        <div class="kpi-value" id="kpiNew">–</div>
+        <div class="kpi-delta" id="kpiNewDelta"></div>
+      </div>
+      <div class="card">
+        <p class="kpi-label">Cancelled subscriptions</p>
+        <div class="kpi-value" id="kpiCancel">–</div>
+        <div class="kpi-delta" id="kpiCancelDelta"></div>
+      </div>
+      <div class="card">
+        <p class="kpi-label">Active subscriptions</p>
+        <div class="kpi-value" id="kpiActive">–</div>
+        <div class="kpi-delta" id="kpiActiveDelta"></div>
+      </div>
+      <div class="card">
+        <p class="kpi-label">Avg. monthly churn</p>
+        <div class="kpi-value" id="kpiChurn">–</div>
+        <div class="kpi-delta" id="kpiChurnDelta"></div>
+      </div>
+    </section>
+
+    <section class="charts">
+      <div class="card">
+        <div class="chart-head">
+          <div>
+            <h2>Monthly recurring revenue</h2>
+            <p class="chart-sub">End-of-month MRR</p>
+          </div>
+        </div>
+        <div class="chart" id="mrrChart"></div>
+      </div>
+      <div class="card">
+        <div class="chart-head">
+          <div>
+            <h2>New vs. cancelled subscriptions</h2>
+            <p class="chart-sub">Subscriptions started and cancelled each month</p>
+          </div>
+          <ul class="legend" aria-label="Legend">
+            <li><span class="sw" style="background:var(--series-1)"></span>New</li>
+            <li><span class="sw" style="background:var(--series-2)"></span>Cancelled</li>
+          </ul>
+        </div>
+        <div class="chart" id="subsChart"></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="tableTitle">
+      <div class="table-head">
+        <h2 id="tableTitle">Monthly detail</h2>
+        <button class="link-btn" type="button" id="csvBtn">Download CSV</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Month</th>
+              <th scope="col">MRR</th>
+              <th scope="col">MRR change</th>
+              <th scope="col">New</th>
+              <th scope="col">Cancelled</th>
+              <th scope="col">Net change</th>
+              <th scope="col">Active at month end</th>
+              <th scope="col">Churn rate</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <p class="sample-note">Sample data for demonstration. Months shown are complete calendar months.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- Sample data ----------
+  // 24 complete months (Oct 2024 – Sep 2026) so every range has a prior period to compare against.
+  const MONTHS = 24;
+  const END = new Date(2026, 8, 1); // Sep 2026, the last complete month
+  const monthDates = Array.from({ length: MONTHS }, (_, i) => new Date(END.getFullYear(), END.getMonth() - (MONTHS - 1 - i), 1));
+
+  // New and cancelled subscriptions per month. January is a seasonal peak for both;
+  // a price change in April 2026 dents new sign-ups briefly and lifts ARPA.
+  const newSubs = [
+    318, 296, 281, 352, 337, 329, 341, 318, 306, 297, 322, 348,   // Oct 2024 – Sep 2025
+    371, 352, 334, 438, 419, 402, 371, 389, 402, 418, 451, 487    // Oct 2025 – Sep 2026
+  ];
+  const cancelled = [
+    142, 151, 168, 204, 171, 163, 159, 166, 171, 158, 149, 155,
+    161, 168, 189, 231, 197, 184, 212, 196, 188, 181, 176, 183
+  ];
+  // Average revenue per account (USD / month) at month end.
+  const arpa = [
+    71.20, 71.35, 71.60, 71.40, 71.75, 72.10, 72.30, 72.55, 72.80, 73.05, 73.30, 73.60,
+    73.85, 74.10, 74.40, 74.05, 74.50, 74.90, 78.60, 79.10, 79.45, 79.90, 80.30, 80.85
+  ];
+  const STARTING_ACTIVE = 4210; // active subscriptions on 1 Oct 2024
+
+  const data = [];
+  let active = STARTING_ACTIVE;
+  for (let i = 0; i < MONTHS; i++) {
+    const start = active;
+    active = start + newSubs[i] - cancelled[i];
+    data.push({
+      date: monthDates[i],
+      newSubs: newSubs[i],
+      cancelled: cancelled[i],
+      net: newSubs[i] - cancelled[i],
+      startActive: start,
+      active,
+      churn: cancelled[i] / start,
+      arpa: arpa[i],
+      mrr: Math.round(active * arpa[i])
+    });
+  }
+  data.forEach((d, i) => { d.mrrChange = i ? d.mrr - data[i - 1].mrr : null; });
+
+  // ---------- Formatting ----------
+  const nf0 = new Intl.NumberFormat("en-US");
+  const money0 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  const money2 = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+  const monShort = new Intl.DateTimeFormat("en-US", { month: "short" });
+  const monYear = new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" });
+  const monLong = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" });
+
+  function compactMoney(v) {
+    const a = Math.abs(v);
+    if (a >= 1e6) return "$" + (v / 1e6).toFixed(a >= 1e7 ? 1 : 2).replace(/\.?0+$/, "") + "M";
+    if (a >= 1e4) return "$" + Math.round(v / 1e3) + "K";
+    return money0.format(v);
+  }
+  const pct = (v, d = 1) => (v * 100).toFixed(d) + "%";
+  const signed = (v, fmt) => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt(Math.abs(v));
+
+  // ---------- State ----------
+  let rangeMonths = 12;
+  const slice = () => data.slice(MONTHS - rangeMonths);
+  const prior = () => data.slice(MONTHS - 2 * rangeMonths, MONTHS - rangeMonths);
+
+  // ---------- KPI tiles ----------
+  function setDelta(el, change, text, upIsGood, period) {
+    el.replaceChildren();
+    const chg = document.createElement("span");
+    const dir = change > 0 ? "up" : change < 0 ? "down" : "flat";
+    const arrow = dir === "up" ? "▲ " : dir === "down" ? "▼ " : "";
+    chg.className = "chg " + (dir === "flat" ? "flat" : ((dir === "up") === upIsGood ? "good" : "bad"));
+    chg.textContent = arrow + text;
+    const lbl = document.createElement("span");
+    lbl.textContent = period;
+    el.append(chg, lbl);
+  }
+
+  function renderKpis() {
+    const cur = slice(), prev = prior();
+    const last = cur[cur.length - 1];
+    const before = prev[prev.length - 1]; // month end immediately before the range
+    const periodLabel = `vs. previous ${rangeMonths} months`;
+    const sum = (arr, k) => arr.reduce((s, d) => s + d[k], 0);
+    const avg = (arr, k) => sum(arr, k) / arr.length;
+
+    document.getElementById("kpiMrr").textContent = money0.format(last.mrr);
+    const mrrChg = last.mrr - before.mrr;
+    setDelta(document.getElementById("kpiMrrDelta"), mrrChg,
+      `${signed(mrrChg, money0.format)} (${signed(mrrChg / before.mrr, v => pct(v))})`, true,
+      `since ${monYear.format(before.date)}`);
+    document.getElementById("kpiArr").textContent = compactMoney(last.mrr * 12);
+    document.getElementById("kpiArpa").textContent = money2.format(last.arpa);
+
+    const n = sum(cur, "newSubs"), np = sum(prev, "newSubs");
+    document.getElementById("kpiNew").textContent = nf0.format(n);
+    setDelta(document.getElementById("kpiNewDelta"), n - np, signed((n - np) / np, v => pct(v)), true, periodLabel);
+
+    const c = sum(cur, "cancelled"), cp = sum(prev, "cancelled");
+    document.getElementById("kpiCancel").textContent = nf0.format(c);
+    setDelta(document.getElementById("kpiCancelDelta"), c - cp, signed((c - cp) / cp, v => pct(v)), false, periodLabel);
+
+    document.getElementById("kpiActive").textContent = nf0.format(last.active);
+    const ac = last.active - before.active;
+    setDelta(document.getElementById("kpiActiveDelta"), ac, signed(ac, nf0.format), true, `since ${monYear.format(before.date)}`);
+
+    const ch = avg(cur, "churn"), chp = avg(prev, "churn");
+    document.getElementById("kpiChurn").textContent = pct(ch, 2);
+    const dpts = (ch - chp) * 100;
+    setDelta(document.getElementById("kpiChurnDelta"), Math.round(dpts * 100) / 100,
+      signed(dpts, v => v.toFixed(2) + " pts"), false, periodLabel);
+
+    const first = cur[0];
+    document.getElementById("rangeNote").textContent =
+      `${monYear.format(first.date)} – ${monYear.format(last.date)}`;
+  }
+
+  // ---------- Chart helpers ----------
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs = {}, parent) {
+    const n = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function niceTicks(min, max, count = 4) {
+    const span = max - min;
+    const raw = span / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= count) || 10 * mag;
+    const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+    const ticks = [];
+    for (let v = lo; v <= hi + step / 2; v += step) ticks.push(Math.round(v * 1e6) / 1e6);
+    return ticks;
+  }
+
+  function makeTooltip(container) {
+    let tt = container.querySelector(".tooltip");
+    if (!tt) { tt = document.createElement("div"); tt.className = "tooltip"; tt.setAttribute("role", "status"); container.appendChild(tt); }
+    return {
+      show(title, rows, foot, x, y) {
+        tt.replaceChildren();
+        const t = document.createElement("div"); t.className = "tt-title"; t.textContent = title; tt.appendChild(t);
+        rows.forEach(r => {
+          const row = document.createElement("div"); row.className = "tt-row";
+          if (r.color) { const k = document.createElement("span"); k.className = "tt-key"; k.style.background = r.color; row.appendChild(k); }
+          const v = document.createElement("span"); v.className = "tt-val"; v.textContent = r.value;
+          const nm = document.createElement("span"); nm.className = "tt-name"; nm.textContent = r.name;
+          row.append(v, nm); tt.appendChild(row);
+        });
+        if (foot) { const f = document.createElement("div"); f.className = "tt-foot"; f.textContent = foot; tt.appendChild(f); }
+        tt.classList.add("show");
+        const cw = container.clientWidth, tw = tt.offsetWidth;
+        let left = x + 14; if (left + tw > cw) left = x - tw - 14;
+        tt.style.left = Math.max(0, left) + "px";
+        tt.style.top = Math.max(0, y) + "px";
+      },
+      hide() { tt.classList.remove("show"); }
+    };
+  }
+
+  // Shared keyboard + pointer handling: pointer snaps to nearest month; arrows step.
+  function attachHover(svg, n, xAt, onShow, onHide) {
+    let idx = -1;
+    const pick = i => { idx = Math.max(0, Math.min(n - 1, i)); onShow(idx); };
+    svg.addEventListener("pointermove", e => {
+      const r = svg.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      let best = 0, bd = Infinity;
+      for (let i = 0; i < n; i++) { const d = Math.abs(xAt(i) - x); if (d < bd) { bd = d; best = i; } }
+      pick(best);
+    });
+    svg.addEventListener("pointerleave", () => { idx = -1; onHide(); });
+    svg.addEventListener("focus", () => pick(idx < 0 ? n - 1 : idx));
+    svg.addEventListener("blur", () => { idx = -1; onHide(); });
+    svg.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") { pick(idx - 1); e.preventDefault(); }
+      else if (e.key === "ArrowRight") { pick(idx + 1); e.preventDefault(); }
+      else if (e.key === "Home") { pick(0); e.preventDefault(); }
+      else if (e.key === "End") { pick(n - 1); e.preventDefault(); }
+      else if (e.key === "Escape") { onHide(); }
+    });
+  }
+
+  function xLabelEvery(n, w) {
+    const room = w / n;
+    return room >= 38 ? 1 : room >= 20 ? 2 : 3;
+  }
+  function xLabel(d, i, rows) {
+    // Show the year on the first label and whenever January starts a new year.
+    return (i === 0 || d.date.getMonth() === 0) ? monShort.format(d.date) + " ’" + String(d.date.getFullYear()).slice(2) : monShort.format(d.date);
+  }
+
+  // ---------- MRR line chart ----------
+  function renderMrr() {
+    const host = document.getElementById("mrrChart");
+    const rows = slice();
+    const W = host.clientWidth, H = 260;
+    const m = { top: 16, right: 76, bottom: 28, left: 52 };
+    const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
+
+    host.querySelector("svg")?.remove();
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, tabindex: 0, role: "img",
+      "aria-label": `Monthly recurring revenue, ${monYear.format(rows[0].date)} to ${monYear.format(rows[rows.length - 1].date)}: from ${money0.format(rows[0].mrr)} to ${money0.format(rows[rows.length - 1].mrr)}. Use arrow keys to read each month.` });
+    host.prepend(svg);
+
+    const vals = rows.map(d => d.mrr);
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const pad = (hi - lo) * 0.15 || hi * 0.05;
+    const ticks = niceTicks(lo - pad, hi + pad, 4);
+    const y0 = ticks[0], y1 = ticks[ticks.length - 1];
+    const x = i => m.left + (rows.length === 1 ? iw / 2 : (i / (rows.length - 1)) * iw);
+    const y = v => m.top + ih - ((v - y0) / (y1 - y0)) * ih;
+
+    const g = el("g", {}, svg);
+    ticks.forEach(t => {
+      el("line", { x1: m.left, x2: m.left + iw, y1: y(t), y2: y(t), stroke: t === y0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1, "shape-rendering": "crispEdges" }, g);
+      const tx = el("text", { x: m.left - 8, y: y(t), "text-anchor": "end", "dominant-baseline": "middle" }, g);
+      tx.textContent = compactMoney(t);
+    });
+    const every = xLabelEvery(rows.length, iw);
+    rows.forEach((d, i) => {
+      if ((rows.length - 1 - i) % every) return;
+      const tx = el("text", { x: x(i), y: H - 8, "text-anchor": "middle" }, g);
+      tx.textContent = xLabel(d, i, rows);
+    });
+
+    const linePts = rows.map((d, i) => `${x(i)},${y(d.mrr)}`).join(" L");
+    el("path", { d: `M${linePts} L${x(rows.length - 1)},${y(y0)} L${x(0)},${y(y0)} Z`, fill: "var(--series-1)", "fill-opacity": 0.1 }, g);
+    el("path", { d: `M${linePts}`, fill: "none", stroke: "var(--series-1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, g);
+
+    // End label
+    const li = rows.length - 1, last = rows[li];
+    el("circle", { cx: x(li), cy: y(last.mrr), r: 4, fill: "var(--series-1)", stroke: "var(--surface-1)", "stroke-width": 2 }, g);
+    const lbl = el("text", { x: x(li) + 10, y: y(last.mrr) - 2, class: "end-label", "dominant-baseline": "middle" }, g);
+    lbl.textContent = compactMoney(last.mrr);
+    const lbl2 = el("text", { x: x(li) + 10, y: y(last.mrr) + 14, class: "end-label-sub", "dominant-baseline": "middle" }, g);
+    lbl2.textContent = monShort.format(last.date);
+
+    // Hover layer
+    const cross = el("line", { y1: m.top, y2: m.top + ih, stroke: "var(--axis)", "stroke-width": 1, visibility: "hidden", "shape-rendering": "crispEdges" }, svg);
+    const dot = el("circle", { r: 5, fill: "var(--series-1)", stroke: "var(--surface-1)", "stroke-width": 2, visibility: "hidden" }, svg);
+    el("rect", { x: m.left - 10, y: m.top, width: iw + 20, height: ih, fill: "transparent" }, svg);
+    const tt = makeTooltip(host);
+    attachHover(svg, rows.length, x, i => {
+      const d = rows[i];
+      cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("visibility", "visible");
+      dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(d.mrr)); dot.setAttribute("visibility", "visible");
+      const idx = data.indexOf(d);
+      const ch = d.mrrChange;
+      tt.show(monLong.format(d.date),
+        [{ value: money0.format(d.mrr), name: "MRR", color: "var(--series-1)" }],
+        ch == null ? null : `${signed(ch, money0.format)} vs. ${monShort.format(data[idx - 1].date)} · ARPA ${money2.format(d.arpa)}`,
+        x(i), m.top);
+    }, () => { cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); tt.hide(); });
+  }
+
+  // ---------- New vs cancelled grouped columns ----------
+  function renderSubs() {
+    const host = document.getElementById("subsChart");
+    const rows = slice();
+    const W = host.clientWidth, H = 260;
+    const m = { top: 16, right: 12, bottom: 28, left: 44 };
+    const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
+
+    host.querySelector("svg")?.remove();
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, tabindex: 0, role: "img",
+      "aria-label": `New and cancelled subscriptions per month, ${monYear.format(rows[0].date)} to ${monYear.format(rows[rows.length - 1].date)}. Use arrow keys to read each month.` });
+    host.prepend(svg);
+
+    const hi = Math.max(...rows.map(d => Math.max(d.newSubs, d.cancelled)));
+    const ticks = niceTicks(0, hi * 1.08, 4);
+    const yMax = ticks[ticks.length - 1];
+    const y = v => m.top + ih - (v / yMax) * ih;
+    const band = iw / rows.length;
+    const cx = i => m.left + band * (i + 0.5);
+    const gap = 2;
+    const bw = Math.max(3, Math.min(24, (band * 0.62 - gap) / 2));
+
+    const g = el("g", {}, svg);
+    ticks.forEach(t => {
+      el("line", { x1: m.left, x2: m.left + iw, y1: y(t), y2: y(t), stroke: t === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1, "shape-rendering": "crispEdges" }, g);
+      const tx = el("text", { x: m.left - 8, y: y(t), "text-anchor": "end", "dominant-baseline": "middle" }, g);
+      tx.textContent = nf0.format(t);
+    });
+    const every = xLabelEvery(rows.length, iw);
+    rows.forEach((d, i) => {
+      if ((rows.length - 1 - i) % every) return;
+      const tx = el("text", { x: cx(i), y: H - 8, "text-anchor": "middle" }, g);
+      tx.textContent = xLabel(d, i, rows);
+    });
+
+    // Column with 4px rounded top, square base.
+    function col(x0, v, color) {
+      const top = y(v), base = y(0), h = base - top;
+      const r = Math.min(4, h, bw / 2);
+      const d = `M${x0},${base} L${x0},${top + r} Q${x0},${top} ${x0 + r},${top} L${x0 + bw - r},${top} Q${x0 + bw},${top} ${x0 + bw},${top + r} L${x0 + bw},${base} Z`;
+      return el("path", { d, fill: color }, g);
+    }
+    const hl = el("rect", { y: m.top, height: ih, fill: "var(--hover-wash)", visibility: "hidden", rx: 4 }, g);
+    g.insertBefore(hl, g.firstChild);
+    rows.forEach((d, i) => {
+      col(cx(i) - gap / 2 - bw, d.newSubs, "var(--series-1)");
+      col(cx(i) + gap / 2, d.cancelled, "var(--series-2)");
+    });
+
+    // Direct value labels on the latest month only.
+    const li = rows.length - 1, last = rows[li];
+    if (bw >= 10) {
+      const a = el("text", { x: cx(li) - gap / 2 - bw / 2, y: y(last.newSubs) - 6, "text-anchor": "middle", class: "end-label" }, g);
+      a.textContent = nf0.format(last.newSubs);
+      const b = el("text", { x: cx(li) + gap / 2 + bw / 2, y: y(last.cancelled) - 6, "text-anchor": "middle", class: "end-label" }, g);
+      b.textContent = nf0.format(last.cancelled);
+    }
+
+    el("rect", { x: m.left, y: m.top, width: iw, height: ih, fill: "transparent" }, svg);
+    const tt = makeTooltip(host);
+    attachHover(svg, rows.length, cx, i => {
+      const d = rows[i];
+      hl.setAttribute("x", cx(i) - band / 2 + 1); hl.setAttribute("width", band - 2); hl.setAttribute("visibility", "visible");
+      tt.show(monLong.format(d.date), [
+        { value: nf0.format(d.newSubs), name: "New", color: "var(--series-1)" },
+        { value: nf0.format(d.cancelled), name: "Cancelled", color: "var(--series-2)" }
+      ], `Net ${signed(d.net, nf0.format)} · churn ${pct(d.churn, 2)}`, cx(i), m.top);
+    }, () => { hl.setAttribute("visibility", "hidden"); tt.hide(); });
+  }
+
+  // ---------- Table ----------
+  function renderTable() {
+    const body = document.getElementById("tableBody");
+    body.replaceChildren();
+    slice().slice().reverse().forEach(d => {
+      const tr = document.createElement("tr");
+      const cells = [
+        [monLong.format(d.date)],
+        [money0.format(d.mrr)],
+        [signed(d.mrrChange, money0.format), d.mrrChange > 0 ? "pos" : d.mrrChange < 0 ? "neg" : ""],
+        [nf0.format(d.newSubs)],
+        [nf0.format(d.cancelled)],
+        [signed(d.net, nf0.format), d.net > 0 ? "pos" : d.net < 0 ? "neg" : ""],
+        [nf0.format(d.active)],
+        [pct(d.churn, 2)]
+      ];
+      cells.forEach(([text, cls], i) => {
+        const td = document.createElement(i === 0 ? "th" : "td");
+        if (i === 0) { td.scope = "row"; td.style.fontWeight = "400"; td.style.fontSize = "14px"; td.style.color = "var(--text-primary)"; }
+        td.textContent = text;
+        if (cls) td.className = cls;
+        tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+  }
+
+  document.getElementById("csvBtn").addEventListener("click", () => {
+    const head = ["Month", "MRR", "MRR change", "New", "Cancelled", "Net change", "Active at month end", "Churn rate"];
+    const lines = [head.join(",")].concat(slice().map(d => [
+      d.date.toISOString().slice(0, 7), d.mrr, d.mrrChange, d.newSubs, d.cancelled, d.net, d.active, (d.churn * 100).toFixed(2) + "%"
+    ].join(",")));
+    const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = `subscriptions-last-${rangeMonths}-months.csv`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  // ---------- Wiring ----------
+  function renderAll() { renderKpis(); renderMrr(); renderSubs(); renderTable(); }
+
+  document.getElementById("rangeSeg").addEventListener("click", e => {
+    const b = e.target.closest("button[data-months]");
+    if (!b) return;
+    rangeMonths = +b.dataset.months;
+    document.querySelectorAll("#rangeSeg button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+    const content = document.getElementById("content");
+    content.classList.add("refreshing");
+    requestAnimationFrame(() => { renderAll(); requestAnimationFrame(() => content.classList.remove("refreshing")); });
+  });
+
+  const themeBtn = document.getElementById("themeBtn");
+  const isDark = () => {
+    const t = document.documentElement.dataset.theme;
+    return t ? t === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  };
+  const syncThemeBtn = () => { themeBtn.textContent = isDark() ? "Light mode" : "Dark mode"; };
+  themeBtn.addEventListener("click", () => { document.documentElement.dataset.theme = isDark() ? "light" : "dark"; syncThemeBtn(); });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", syncThemeBtn);
+  syncThemeBtn();
+
+  let rT;
+  new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(() => { renderMrr(); renderSubs(); }, 60); })
+    .observe(document.querySelector(".charts"));
+
+  renderAll();
+})();
+</script>
+</body>
+</html>

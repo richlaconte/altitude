@@ -1,0 +1,31 @@
+.rp-page { max-width: 1200px; margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12); color: var(--ink); }
+.rp-outcome:not(:empty) { margin: var(--space-4) 0 0; color: var(--ink-muted); }
+.rp-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: var(--space-12); margin-top: var(--space-8); align-items: start; }
+.rp-h2 { font-size: 1.125rem; font-weight: 600; margin: 0 0 var(--space-3); }
+.rp-h3 { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-2); }
+.rp-quiet { color: var(--ink-muted); }
+.rp-lead-head { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.rp-lead-head .rp-h2 { font-size: 1.375rem; }
+.rp-lead-head p { margin: 0; }
+.rp-group { margin-top: var(--space-6); }
+.rp-table-scroll { overflow-x: auto; }
+.rp-table { min-width: 460px; width: 100%; }
+.rp-qty { white-space: nowrap; width: 7.5rem; font-variant-numeric: tabular-nums; }
+.rp-side { display: flex; flex-direction: column; gap: var(--space-2); }
+.rp-allergens { display: inline-flex; flex-wrap: wrap; gap: var(--space-1); }
+.rp-changes { margin-top: var(--space-8); }
+.rp-form { display: flex; flex-direction: column; min-height: 100%; }
+.rp-form-body { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) 0; flex: 1; }
+.rp-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.rp-discard { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); width: 100%; }
+.rp-discard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+.rp-discard-q { margin: 0 auto 0 0; font-weight: 600; }
+.rp-sheet-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 880px) {
+  .rp-body { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
+}
+@media (max-width: 480px) {
+  .rp-page { padding: var(--space-4) var(--space-3) var(--space-8); }
+  .rp-form-row { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,1531 @@
+{
+ "method": {
+  "uiclip": "biglab/uiclip_jitteredwebsites-2-224-paraphrased_webpairs_humanpairs",
+  "processor": "openai/clip-vit-base-patch32",
+  "viewport": "1200x1200",
+  "colourBins": {
+   "L": [
+    0,
+    10,
+    20,
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    100
+   ],
+   "C": [
+    0,
+    5,
+    15,
+    30,
+    50,
+    80,
+    200
+   ],
+   "hue": 12
+  },
+  "layout": "DOM layout tree (capture.mjs), repeated siblings folded, Zhang-Shasha with unit costs, divided by the larger tree",
+  "reference": [
+   "claude-altitude",
+   "altitude-preview"
+  ]
+ },
+ "screens": [
+  {
+   "id": "claude-altitude--dashboard-a",
+   "system": "claude-altitude",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "domain": "subscription software",
+   "sample": 1,
+   "nodes": 48
+  },
+  {
+   "id": "claude-altitude--dashboard-b",
+   "system": "claude-altitude",
+   "brief": "dashboard-b",
+   "task": "dashboard",
+   "domain": "public library",
+   "sample": 1,
+   "nodes": 58
+  },
+  {
+   "id": "claude-altitude--record-view-a",
+   "system": "claude-altitude",
+   "brief": "record-view-a",
+   "task": "record-view",
+   "domain": "sales CRM",
+   "sample": 1,
+   "nodes": 109
+  },
+  {
+   "id": "claude-altitude--record-view-b",
+   "system": "claude-altitude",
+   "brief": "record-view-b",
+   "task": "record-view",
+   "domain": "restaurant kitchen",
+   "sample": 1,
+   "nodes": 73
+  },
+  {
+   "id": "claude-altitude--records-a",
+   "system": "claude-altitude",
+   "brief": "records-a",
+   "task": "records",
+   "domain": "project management",
+   "sample": 1,
+   "nodes": 76
+  },
+  {
+   "id": "claude-altitude--records-b",
+   "system": "claude-altitude",
+   "brief": "records-b",
+   "task": "records",
+   "domain": "freight",
+   "sample": 1,
+   "nodes": 132
+  },
+  {
+   "id": "claude-altitude--settings-a",
+   "system": "claude-altitude",
+   "brief": "settings-a",
+   "task": "settings",
+   "domain": "project management",
+   "sample": 1,
+   "nodes": 19
+  },
+  {
+   "id": "claude-altitude--settings-b",
+   "system": "claude-altitude",
+   "brief": "settings-b",
+   "task": "settings",
+   "domain": "veterinary clinic",
+   "sample": 1,
+   "nodes": 32
+  },
+  {
+   "id": "claude-plain--dashboard-a",
+   "system": "claude-plain",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "domain": "subscription software",
+   "sample": 1,
+   "nodes": 62
+  },
+  {
+   "id": "claude-plain--dashboard-b",
+   "system": "claude-plain",
+   "brief": "dashboard-b",
+   "task": "dashboard",
+   "domain": "public library",
+   "sample": 1,
+   "nodes": 63
+  },
+  {
+   "id": "claude-plain--record-view-a",
+   "system": "claude-plain",
+   "brief": "record-view-a",
+   "task": "record-view",
+   "domain": "sales CRM",
+   "sample": 1,
+   "nodes": 155
+  },
+  {
+   "id": "claude-plain--record-view-b",
+   "system": "claude-plain",
+   "brief": "record-view-b",
+   "task": "record-view",
+   "domain": "restaurant kitchen",
+   "sample": 1,
+   "nodes": 110
+  },
+  {
+   "id": "claude-plain--records-a",
+   "system": "claude-plain",
+   "brief": "records-a",
+   "task": "records",
+   "domain": "project management",
+   "sample": 1,
+   "nodes": 99
+  },
+  {
+   "id": "claude-plain--records-b",
+   "system": "claude-plain",
+   "brief": "records-b",
+   "task": "records",
+   "domain": "freight",
+   "sample": 1,
+   "nodes": 59
+  },
+  {
+   "id": "claude-plain--settings-a",
+   "system": "claude-plain",
+   "brief": "settings-a",
+   "task": "settings",
+   "domain": "project management",
+   "sample": 1,
+   "nodes": 36
+  },
+  {
+   "id": "claude-plain--settings-b",
+   "system": "claude-plain",
+   "brief": "settings-b",
+   "task": "settings",
+   "domain": "veterinary clinic",
+   "sample": 1,
+   "nodes": 25
+  },
+  {
+   "id": "claude-shadcn--dashboard-a",
+   "system": "claude-shadcn",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "domain": "subscription software",
+   "sample": 1,
+   "nodes": 29
+  },
+  {
+   "id": "claude-shadcn--dashboard-b",
+   "system": "claude-shadcn",
+   "brief": "dashboard-b",
+   "task": "dashboard",
+   "domain": "public library",
+   "sample": 1,
+   "nodes": 111
+  },
+  {
+   "id": "claude-shadcn--record-view-a",
+   "system": "claude-shadcn",
+   "brief": "record-view-a",
+   "task": "record-view",
+   "domain": "sales CRM",
+   "sample": 1,
+   "nodes": 113
+  },
+  {
+   "id": "claude-shadcn--record-view-b",
+   "system": "claude-shadcn",
+   "brief": "record-view-b",
+   "task": "record-view",
+   "domain": "restaurant kitchen",
+   "sample": 1,
+   "nodes": 88
+  },
+  {
+   "id": "claude-shadcn--records-a",
+   "system": "claude-shadcn",
+   "brief": "records-a",
+   "task": "records",
+   "domain": "project management",
+   "sample": 1,
+   "nodes": 43
+  },
+  {
+   "id": "claude-shadcn--records-b",
+   "system": "claude-shadcn",
+   "brief": "records-b",
+   "task": "records",
+   "domain": "freight",
+   "sample": 1,
+   "nodes": 34
+  },
+  {
+   "id": "claude-shadcn--settings-a",
+   "system": "claude-shadcn",
+   "brief": "settings-a",
+   "task": "settings",
+   "domain": "project management",
+   "sample": 1,
+   "nodes": 38
+  },
+  {
+   "id": "claude-shadcn--settings-b",
+   "system": "claude-shadcn",
+   "brief": "settings-b",
+   "task": "settings",
+   "domain": "veterinary clinic",
+   "sample": 1,
+   "nodes": 39
+  },
+  {
+   "id": "claude-altitude--dashboard-a--s2",
+   "system": "claude-altitude",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "domain": "subscription software",
+   "sample": 2,
+   "nodes": 51
+  },
+  {
+   "id": "claude-altitude--settings-a--s2",
+   "system": "claude-altitude",
+   "brief": "settings-a",
+   "task": "settings",
+   "domain": "project management",
+   "sample": 2,
+   "nodes": 34
+  },
+  {
+   "id": "claude-plain--dashboard-a--s2",
+   "system": "claude-plain",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "domain": "subscription software",
+   "sample": 2,
+   "nodes": 53
+  },
+  {
+   "id": "claude-plain--settings-a--s2",
+   "system": "claude-plain",
+   "brief": "settings-a",
+   "task": "settings",
+   "domain": "project management",
+   "sample": 2,
+   "nodes": 54
+  },
+  {
+   "id": "claude-shadcn--dashboard-a--s2",
+   "system": "claude-shadcn",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "domain": "subscription software",
+   "sample": 2,
+   "nodes": 28
+  },
+  {
+   "id": "claude-shadcn--settings-a--s2",
+   "system": "claude-shadcn",
+   "brief": "settings-a",
+   "task": "settings",
+   "domain": "project management",
+   "sample": 2,
+   "nodes": 39
+  },
+  {
+   "id": "altitude-preview--settings",
+   "system": "altitude-preview",
+   "brief": null,
+   "task": "settings",
+   "domain": null,
+   "sample": 1,
+   "nodes": 44
+  },
+  {
+   "id": "altitude-preview--records",
+   "system": "altitude-preview",
+   "brief": null,
+   "task": "records",
+   "domain": null,
+   "sample": 1,
+   "nodes": 79
+  },
+  {
+   "id": "altitude-preview--dashboard",
+   "system": "altitude-preview",
+   "brief": null,
+   "task": "dashboard",
+   "domain": null,
+   "sample": 1,
+   "nodes": 44
+  },
+  {
+   "id": "altitude-preview--record-view",
+   "system": "altitude-preview",
+   "brief": null,
+   "task": "record-view",
+   "domain": null,
+   "sample": 1,
+   "nodes": 33
+  }
+ ],
+ "pairs": [
+  {
+   "a": "claude-altitude--dashboard-a",
+   "b": "claude-plain--dashboard-a",
+   "systems": [
+    "claude-altitude",
+    "claude-plain"
+   ],
+   "visual": 0.0908,
+   "colour": 3.53,
+   "layout": 0.6452
+  },
+  {
+   "a": "claude-altitude--dashboard-a",
+   "b": "claude-shadcn--dashboard-a",
+   "systems": [
+    "claude-altitude",
+    "claude-shadcn"
+   ],
+   "visual": 0.1317,
+   "colour": 3.24,
+   "layout": 0.5625
+  },
+  {
+   "a": "claude-altitude--dashboard-a",
+   "b": "altitude-preview--dashboard",
+   "systems": [
+    "altitude-preview",
+    "claude-altitude"
+   ],
+   "visual": 0.0508,
+   "colour": 4.41,
+   "layout": 0.5833
+  },
+  {
+   "a": "claude-altitude--dashboard-b",
+   "b": "claude-plain--dashboard-b",
+   "systems": [
+    "claude-altitude",
+    "claude-plain"
+   ],
+   "visual": 0.1061,
+   "colour": 5.14,
+   "layout": 0.6508
+  },
+  {
+   "a": "claude-altitude--dashboard-b",
+   "b": "claude-shadcn--dashboard-b",
+   "systems": [
+    "claude-altitude",
+    "claude-shadcn"
+   ],
+   "visual": 0.0932,
+   "colour": 1.42,
+   "layout": 0.7387
+  },
+  {
+   "a": "claude-altitude--dashboard-b",
+   "b": "altitude-preview--dashboard",
+   "systems": [
+    "altitude-preview",
+    "claude-altitude"
+   ],
+   "visual": 0.0629,
+   "colour": 0.54,
+   "layout": 0.6034
+  },
+  {
+   "a": "claude-altitude--record-view-a",
+   "b": "claude-plain--record-view-a",
+   "systems": [
+    "claude-altitude",
+    "claude-plain"
+   ],
+   "visual": 0.1478,
+   "colour": 4.12,
+   "layout": 0.6968
+  },
+  {
+   "a": "claude-altitude--record-view-a",
+   "b": "claude-shadcn--record-view-a",
+   "systems": [
+    "claude-altitude",
+    "claude-shadcn"
+   ],
+   "visual": 0.0923,
+   "colour": 0.73,
+   "layout": 0.708
+  },
+  {
+   "a": "claude-altitude--record-view-a",
+   "b": "altitude-preview--record-view",
+   "systems": [
+    "altitude-preview",
+    "claude-altitude"
+   ],
+   "visual": 0.0795,
+   "colour": 1.31,
+   "layout": 0.7523
+  },
+  {
+   "a": "claude-altitude--record-view-b",
+   "b": "claude-plain--record-view-b",
+   "systems": [
+    "claude-altitude",
+    "claude-plain"
+   ],
+   "visual": 0.1349,
+   "colour": 3.68,
+   "layout": 0.6091
+  },
+  {
+   "a": "claude-altitude--record-view-b",
+   "b": "claude-shadcn--record-view-b",
+   "systems": [
+    "claude-altitude",
+    "claude-shadcn"
+   ],
+   "visual": 0.1022,
+   "colour": 0.69,
+   "layout": 0.6023
+  },
+  {
+   "a": "claude-altitude--record-view-b",
+   "b": "altitude-preview--record-view",
+   "systems": [
+    "altitude-preview",
+    "claude-altitude"
+   ],
+   "visual": 0.0879,
+   "colour": 0.84,
+   "layout": 0.6712
+  },
+  {
+   "a": "claude-altitude--records-a",
+   "b": "claude-plain--records-a",
+   "systems": [
+    "claude-altitude",
+    "claude-plain"
+   ],
+   "visual": 0.0996,
+   "colour": 1.09,
+   "layout": 0.596
+  },
+  {
+   "a": "claude-altitude--records-a",
+   "b": "claude-shadcn--records-a",
+   "systems": [
+    "claude-altitude",
+    "claude-shadcn"
+   ],
+   "visual": 0.0706,
+   "colour": 0.28,
+   "layout": 0.7105
+  },
+  {
+   "a": "claude-altitude--records-a",
+   "b": "altitude-preview--records",
+   "systems": [
+    "altitude-preview",
+    "claude-altitude"
+   ],
+   "visual": 0.0518,
+   "colour": 0.47,
+   "layout": 0.7089
+  },
+  {
+   "a": "claude-altitude--records-b",
+   "b": "claude-plain--records-b",
+   "systems": [
+    "claude-altitude",
+    "claude-plain"
+   ],
+   "visual": 0.0751,
+   "colour": 3.11,
+   "layout": 0.7121
+  },
+  {
+   "a": "claude-altitude--records-b",
+   "b": "claude-shadcn--records-b",
+   "systems": [
+    "claude-altitude",
+    "claude-shadcn"
+   ],
+   "visual": 0.0572,
+   "colour": 0.36,
+   "layout": 0.8409
+  },
+  {
+   "a": "claude-altitude--records-b",
+   "b": "altitude-preview--records",
+   "systems": [
+    "altitude-preview",
+    "claude-altitude"
+   ],
+   "visual": 0.0789,
+   "colour": 1.61,
+   "layout": 0.7121
+  },
+  {
+   "a": "claude-altitude--settings-a",
+   "b": "claude-plain--settings-a",
+   "systems": [
+    "claude-altitude",
+    "claude-plain"
+   ],
+   "visual": 0.0744,
+   "colour": 16.03,
+   "layout": 0.6667
+  },
+  {
+   "a": "claude-altitude--settings-a",
+   "b": "claude-shadcn--settings-a",
+   "systems": [
+    "claude-altitude",
+    "claude-shadcn"
+   ],
+   "visual": 0.0792,
+   "colour": 0.24,
+   "layout": 0.7105
+  },
+  {
+   "a": "claude-altitude--settings-a",
+   "b": "altitude-preview--settings",
+   "systems": [
+    "altitude-preview",
+    "claude-altitude"
+   ],
+   "visual": 0.066,
+   "colour": 0.63,
+   "layout": 0.7727
+  },
+  {
+   "a": "claude-altitude--settings-b",
+   "b": "claude-plain--settings-b",
+   "systems": [
+    "claude-altitude",
+    "claude-plain"
+   ],
+   "visual": 0.0869,
+   "colour": 0.51,
+   "layout": 0.75
+  },
+  {
+   "a": "claude-altitude--settings-b",
+   "b": "claude-shadcn--settings-b",
+   "systems": [
+    "claude-altitude",
+    "claude-shadcn"
+   ],
+   "visual": 0.0692,
+   "colour": 0.24,
+   "layout": 0.5641
+  },
+  {
+   "a": "claude-altitude--settings-b",
+   "b": "altitude-preview--settings",
+   "systems": [
+    "altitude-preview",
+    "claude-altitude"
+   ],
+   "visual": 0.0545,
+   "colour": 0.47,
+   "layout": 0.7955
+  },
+  {
+   "a": "claude-plain--dashboard-a",
+   "b": "claude-shadcn--dashboard-a",
+   "systems": [
+    "claude-plain",
+    "claude-shadcn"
+   ],
+   "visual": 0.0541,
+   "colour": 0.71,
+   "layout": 0.6613
+  },
+  {
+   "a": "claude-plain--dashboard-a",
+   "b": "altitude-preview--dashboard",
+   "systems": [
+    "altitude-preview",
+    "claude-plain"
+   ],
+   "visual": 0.0992,
+   "colour": 1.93,
+   "layout": 0.6613
+  },
+  {
+   "a": "claude-plain--dashboard-b",
+   "b": "claude-shadcn--dashboard-b",
+   "systems": [
+    "claude-plain",
+    "claude-shadcn"
+   ],
+   "visual": 0.0615,
+   "colour": 3.95,
+   "layout": 0.7027
+  },
+  {
+   "a": "claude-plain--dashboard-b",
+   "b": "altitude-preview--dashboard",
+   "systems": [
+    "altitude-preview",
+    "claude-plain"
+   ],
+   "visual": 0.1005,
+   "colour": 5.54,
+   "layout": 0.6667
+  },
+  {
+   "a": "claude-plain--record-view-a",
+   "b": "claude-shadcn--record-view-a",
+   "systems": [
+    "claude-plain",
+    "claude-shadcn"
+   ],
+   "visual": 0.1375,
+   "colour": 3.91,
+   "layout": 0.5806
+  },
+  {
+   "a": "claude-plain--record-view-a",
+   "b": "altitude-preview--record-view",
+   "systems": [
+    "altitude-preview",
+    "claude-plain"
+   ],
+   "visual": 0.1825,
+   "colour": 5.36,
+   "layout": 0.8258
+  },
+  {
+   "a": "claude-plain--record-view-b",
+   "b": "claude-shadcn--record-view-b",
+   "systems": [
+    "claude-plain",
+    "claude-shadcn"
+   ],
+   "visual": 0.0801,
+   "colour": 3.01,
+   "layout": 0.5636
+  },
+  {
+   "a": "claude-plain--record-view-b",
+   "b": "altitude-preview--record-view",
+   "systems": [
+    "altitude-preview",
+    "claude-plain"
+   ],
+   "visual": 0.1556,
+   "colour": 4.47,
+   "layout": 0.7727
+  },
+  {
+   "a": "claude-plain--records-a",
+   "b": "claude-shadcn--records-a",
+   "systems": [
+    "claude-plain",
+    "claude-shadcn"
+   ],
+   "visual": 0.1154,
+   "colour": 1.08,
+   "layout": 0.7273
+  },
+  {
+   "a": "claude-plain--records-a",
+   "b": "altitude-preview--records",
+   "systems": [
+    "altitude-preview",
+    "claude-plain"
+   ],
+   "visual": 0.1302,
+   "colour": 1.52,
+   "layout": 0.6465
+  },
+  {
+   "a": "claude-plain--records-b",
+   "b": "claude-shadcn--records-b",
+   "systems": [
+    "claude-plain",
+    "claude-shadcn"
+   ],
+   "visual": 0.0802,
+   "colour": 3.04,
+   "layout": 0.5424
+  },
+  {
+   "a": "claude-plain--records-b",
+   "b": "altitude-preview--records",
+   "systems": [
+    "altitude-preview",
+    "claude-plain"
+   ],
+   "visual": 0.1197,
+   "colour": 4.66,
+   "layout": 0.7089
+  },
+  {
+   "a": "claude-plain--settings-a",
+   "b": "claude-shadcn--settings-a",
+   "systems": [
+    "claude-plain",
+    "claude-shadcn"
+   ],
+   "visual": 0.1245,
+   "colour": 15.86,
+   "layout": 0.7368
+  },
+  {
+   "a": "claude-plain--settings-a",
+   "b": "altitude-preview--settings",
+   "systems": [
+    "altitude-preview",
+    "claude-plain"
+   ],
+   "visual": 0.0572,
+   "colour": 15.76,
+   "layout": 0.6364
+  },
+  {
+   "a": "claude-plain--settings-b",
+   "b": "claude-shadcn--settings-b",
+   "systems": [
+    "claude-plain",
+    "claude-shadcn"
+   ],
+   "visual": 0.096,
+   "colour": 0.47,
+   "layout": 0.6667
+  },
+  {
+   "a": "claude-plain--settings-b",
+   "b": "altitude-preview--settings",
+   "systems": [
+    "altitude-preview",
+    "claude-plain"
+   ],
+   "visual": 0.0728,
+   "colour": 0.66,
+   "layout": 0.7273
+  },
+  {
+   "a": "claude-shadcn--dashboard-a",
+   "b": "altitude-preview--dashboard",
+   "systems": [
+    "altitude-preview",
+    "claude-shadcn"
+   ],
+   "visual": 0.1246,
+   "colour": 1.59,
+   "layout": 0.6364
+  },
+  {
+   "a": "claude-shadcn--dashboard-b",
+   "b": "altitude-preview--dashboard",
+   "systems": [
+    "altitude-preview",
+    "claude-shadcn"
+   ],
+   "visual": 0.0754,
+   "colour": 1.94,
+   "layout": 0.7658
+  },
+  {
+   "a": "claude-shadcn--record-view-a",
+   "b": "altitude-preview--record-view",
+   "systems": [
+    "altitude-preview",
+    "claude-shadcn"
+   ],
+   "visual": 0.1169,
+   "colour": 1.62,
+   "layout": 0.7522
+  },
+  {
+   "a": "claude-shadcn--record-view-b",
+   "b": "altitude-preview--record-view",
+   "systems": [
+    "altitude-preview",
+    "claude-shadcn"
+   ],
+   "visual": 0.122,
+   "colour": 1.47,
+   "layout": 0.7386
+  },
+  {
+   "a": "claude-shadcn--records-a",
+   "b": "altitude-preview--records",
+   "systems": [
+    "altitude-preview",
+    "claude-shadcn"
+   ],
+   "visual": 0.0847,
+   "colour": 0.56,
+   "layout": 0.7595
+  },
+  {
+   "a": "claude-shadcn--records-b",
+   "b": "altitude-preview--records",
+   "systems": [
+    "altitude-preview",
+    "claude-shadcn"
+   ],
+   "visual": 0.1232,
+   "colour": 1.72,
+   "layout": 0.7722
+  },
+  {
+   "a": "claude-shadcn--settings-a",
+   "b": "altitude-preview--settings",
+   "systems": [
+    "altitude-preview",
+    "claude-shadcn"
+   ],
+   "visual": 0.1179,
+   "colour": 0.45,
+   "layout": 0.6136
+  },
+  {
+   "a": "claude-shadcn--settings-b",
+   "b": "altitude-preview--settings",
+   "systems": [
+    "altitude-preview",
+    "claude-shadcn"
+   ],
+   "visual": 0.0983,
+   "colour": 0.4,
+   "layout": 0.6818
+  }
+ ],
+ "matrix": {
+  "visual": {
+   "altitude-preview": {
+    "claude-altitude": 0.0665,
+    "claude-plain": 0.1147,
+    "claude-shadcn": 0.1079
+   },
+   "claude-altitude": {
+    "altitude-preview": 0.0665,
+    "claude-plain": 0.1019,
+    "claude-shadcn": 0.0869
+   },
+   "claude-plain": {
+    "altitude-preview": 0.1147,
+    "claude-altitude": 0.1019,
+    "claude-shadcn": 0.0937
+   },
+   "claude-shadcn": {
+    "altitude-preview": 0.1079,
+    "claude-altitude": 0.0869,
+    "claude-plain": 0.0937
+   }
+  },
+  "colour": {
+   "altitude-preview": {
+    "claude-altitude": 1.285,
+    "claude-plain": 4.9875,
+    "claude-shadcn": 1.2188
+   },
+   "claude-altitude": {
+    "altitude-preview": 1.285,
+    "claude-plain": 4.6513,
+    "claude-shadcn": 0.9
+   },
+   "claude-plain": {
+    "altitude-preview": 4.9875,
+    "claude-altitude": 4.6513,
+    "claude-shadcn": 4.0038
+   },
+   "claude-shadcn": {
+    "altitude-preview": 1.2188,
+    "claude-altitude": 0.9,
+    "claude-plain": 4.0038
+   }
+  },
+  "layout": {
+   "altitude-preview": {
+    "claude-altitude": 0.6999,
+    "claude-plain": 0.7057,
+    "claude-shadcn": 0.715
+   },
+   "claude-altitude": {
+    "altitude-preview": 0.6999,
+    "claude-plain": 0.6658,
+    "claude-shadcn": 0.6797
+   },
+   "claude-plain": {
+    "altitude-preview": 0.7057,
+    "claude-altitude": 0.6658,
+    "claude-shadcn": 0.6477
+   },
+   "claude-shadcn": {
+    "altitude-preview": 0.715,
+    "claude-altitude": 0.6797,
+    "claude-plain": 0.6477
+   }
+  }
+ },
+ "baselines": [
+  "claude-plain",
+  "claude-shadcn"
+ ],
+ "distanceFromCentre": {
+  "visual": {
+   "altitude-preview": 0.1113,
+   "claude-altitude": 0.0945,
+   "claude-plain": 0.0937,
+   "claude-shadcn": 0.0937
+  },
+  "colour": {
+   "altitude-preview": 3.1031,
+   "claude-altitude": 2.7756,
+   "claude-plain": 4.0038,
+   "claude-shadcn": 4.0038
+  },
+  "layout": {
+   "altitude-preview": 0.7104,
+   "claude-altitude": 0.6728,
+   "claude-plain": 0.6477,
+   "claude-shadcn": 0.6477
+  }
+ },
+ "creativeRangePairs": [
+  {
+   "system": "claude-altitude",
+   "task": "dashboard",
+   "a": "claude-altitude--dashboard-a",
+   "b": "claude-altitude--dashboard-b",
+   "visual": 0.0674,
+   "colour": 3.95,
+   "layout": 0.431
+  },
+  {
+   "system": "claude-altitude",
+   "task": "record-view",
+   "a": "claude-altitude--record-view-a",
+   "b": "claude-altitude--record-view-b",
+   "visual": 0.0468,
+   "colour": 0.48,
+   "layout": 0.6514
+  },
+  {
+   "system": "claude-altitude",
+   "task": "records",
+   "a": "claude-altitude--records-a",
+   "b": "claude-altitude--records-b",
+   "visual": 0.0498,
+   "colour": 1.16,
+   "layout": 0.4545
+  },
+  {
+   "system": "claude-altitude",
+   "task": "settings",
+   "a": "claude-altitude--settings-a",
+   "b": "claude-altitude--settings-b",
+   "visual": 0.0478,
+   "colour": 0.49,
+   "layout": 0.4062
+  },
+  {
+   "system": "claude-plain",
+   "task": "dashboard",
+   "a": "claude-plain--dashboard-a",
+   "b": "claude-plain--dashboard-b",
+   "visual": 0.0499,
+   "colour": 4.19,
+   "layout": 0.4921
+  },
+  {
+   "system": "claude-plain",
+   "task": "record-view",
+   "a": "claude-plain--record-view-a",
+   "b": "claude-plain--record-view-b",
+   "visual": 0.216,
+   "colour": 1.91,
+   "layout": 0.6
+  },
+  {
+   "system": "claude-plain",
+   "task": "records",
+   "a": "claude-plain--records-a",
+   "b": "claude-plain--records-b",
+   "visual": 0.0533,
+   "colour": 3.64,
+   "layout": 0.6162
+  },
+  {
+   "system": "claude-plain",
+   "task": "settings",
+   "a": "claude-plain--settings-a",
+   "b": "claude-plain--settings-b",
+   "visual": 0.0686,
+   "colour": 15.69,
+   "layout": 0.3611
+  },
+  {
+   "system": "claude-shadcn",
+   "task": "dashboard",
+   "a": "claude-shadcn--dashboard-a",
+   "b": "claude-shadcn--dashboard-b",
+   "visual": 0.0679,
+   "colour": 0.99,
+   "layout": 0.7387
+  },
+  {
+   "system": "claude-shadcn",
+   "task": "record-view",
+   "a": "claude-shadcn--record-view-a",
+   "b": "claude-shadcn--record-view-b",
+   "visual": 0.0724,
+   "colour": 0.35,
+   "layout": 0.5575
+  },
+  {
+   "system": "claude-shadcn",
+   "task": "records",
+   "a": "claude-shadcn--records-a",
+   "b": "claude-shadcn--records-b",
+   "visual": 0.0415,
+   "colour": 1.26,
+   "layout": 0.3953
+  },
+  {
+   "system": "claude-shadcn",
+   "task": "settings",
+   "a": "claude-shadcn--settings-a",
+   "b": "claude-shadcn--settings-b",
+   "visual": 0.0425,
+   "colour": 0.21,
+   "layout": 0.4872
+  }
+ ],
+ "creativeRange": {
+  "visual": {
+   "altitude-preview": null,
+   "claude-altitude": 0.0529,
+   "claude-plain": 0.097,
+   "claude-shadcn": 0.0561
+  },
+  "colour": {
+   "altitude-preview": null,
+   "claude-altitude": 1.52,
+   "claude-plain": 6.3575,
+   "claude-shadcn": 0.7025
+  },
+  "layout": {
+   "altitude-preview": null,
+   "claude-altitude": 0.4858,
+   "claude-plain": 0.5173,
+   "claude-shadcn": 0.5447
+  }
+ },
+ "taskRangePairs": [
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--dashboard-a",
+   "b": "claude-altitude--record-view-a",
+   "visual": 0.1605,
+   "colour": 3.56,
+   "layout": 0.7339
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--dashboard-a",
+   "b": "claude-altitude--records-a",
+   "visual": 0.1692,
+   "colour": 4.34,
+   "layout": 0.6842
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--dashboard-a",
+   "b": "claude-altitude--settings-a",
+   "visual": 0.1855,
+   "colour": 4.94,
+   "layout": 0.7292
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--dashboard-b",
+   "b": "claude-altitude--record-view-b",
+   "visual": 0.1465,
+   "colour": 0.3,
+   "layout": 0.7123
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--dashboard-b",
+   "b": "claude-altitude--records-b",
+   "visual": 0.1363,
+   "colour": 0.96,
+   "layout": 0.7727
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--dashboard-b",
+   "b": "claude-altitude--settings-b",
+   "visual": 0.1442,
+   "colour": 0.9,
+   "layout": 0.7069
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--record-view-a",
+   "b": "claude-altitude--records-a",
+   "visual": 0.0608,
+   "colour": 0.91,
+   "layout": 0.6422
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--record-view-a",
+   "b": "claude-altitude--settings-a",
+   "visual": 0.0648,
+   "colour": 1.51,
+   "layout": 0.8349
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--record-view-b",
+   "b": "claude-altitude--records-b",
+   "visual": 0.0555,
+   "colour": 1.03,
+   "layout": 0.697
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--record-view-b",
+   "b": "claude-altitude--settings-b",
+   "visual": 0.0577,
+   "colour": 0.68,
+   "layout": 0.6849
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--records-a",
+   "b": "claude-altitude--settings-a",
+   "visual": 0.061,
+   "colour": 0.69,
+   "layout": 0.8158
+  },
+  {
+   "system": "claude-altitude",
+   "a": "claude-altitude--records-b",
+   "b": "claude-altitude--settings-b",
+   "visual": 0.0734,
+   "colour": 1.7,
+   "layout": 0.9091
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--dashboard-a",
+   "b": "claude-plain--record-view-a",
+   "visual": 0.1372,
+   "colour": 4.09,
+   "layout": 0.7419
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--dashboard-a",
+   "b": "claude-plain--records-a",
+   "visual": 0.1654,
+   "colour": 1.3,
+   "layout": 0.7071
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--dashboard-a",
+   "b": "claude-plain--settings-a",
+   "visual": 0.1948,
+   "colour": 14.98,
+   "layout": 0.6613
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--dashboard-b",
+   "b": "claude-plain--record-view-b",
+   "visual": 0.1894,
+   "colour": 5.06,
+   "layout": 0.6636
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--dashboard-b",
+   "b": "claude-plain--records-b",
+   "visual": 0.1257,
+   "colour": 4.58,
+   "layout": 0.746
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--dashboard-b",
+   "b": "claude-plain--settings-b",
+   "visual": 0.1903,
+   "colour": 5.58,
+   "layout": 0.7619
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--record-view-a",
+   "b": "claude-plain--records-a",
+   "visual": 0.0993,
+   "colour": 4.07,
+   "layout": 0.6516
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--record-view-a",
+   "b": "claude-plain--settings-a",
+   "visual": 0.1313,
+   "colour": 12.11,
+   "layout": 0.8065
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--record-view-b",
+   "b": "claude-plain--records-b",
+   "visual": 0.154,
+   "colour": 1.35,
+   "layout": 0.6636
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--record-view-b",
+   "b": "claude-plain--settings-b",
+   "visual": 0.1713,
+   "colour": 4.26,
+   "layout": 0.8182
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--records-a",
+   "b": "claude-plain--settings-a",
+   "visual": 0.1179,
+   "colour": 14.95,
+   "layout": 0.7576
+  },
+  {
+   "system": "claude-plain",
+   "a": "claude-plain--records-b",
+   "b": "claude-plain--settings-b",
+   "visual": 0.1643,
+   "colour": 4.44,
+   "layout": 0.7458
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--dashboard-a",
+   "b": "claude-shadcn--record-view-a",
+   "visual": 0.1893,
+   "colour": 1.5,
+   "layout": 0.7522
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--dashboard-a",
+   "b": "claude-shadcn--records-a",
+   "visual": 0.1801,
+   "colour": 1.49,
+   "layout": 0.6977
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--dashboard-a",
+   "b": "claude-shadcn--settings-a",
+   "visual": 0.1673,
+   "colour": 1.94,
+   "layout": 0.5
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--dashboard-b",
+   "b": "claude-shadcn--record-view-b",
+   "visual": 0.1544,
+   "colour": 1.29,
+   "layout": 0.7027
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--dashboard-b",
+   "b": "claude-shadcn--records-b",
+   "visual": 0.1439,
+   "colour": 1.3,
+   "layout": 0.7928
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--dashboard-b",
+   "b": "claude-shadcn--settings-b",
+   "visual": 0.1315,
+   "colour": 2.09,
+   "layout": 0.7658
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--record-view-a",
+   "b": "claude-shadcn--records-a",
+   "visual": 0.0622,
+   "colour": 0.96,
+   "layout": 0.7699
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--record-view-a",
+   "b": "claude-shadcn--settings-a",
+   "visual": 0.07,
+   "colour": 1.5,
+   "layout": 0.6903
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--record-view-b",
+   "b": "claude-shadcn--records-b",
+   "visual": 0.0927,
+   "colour": 0.81,
+   "layout": 0.7614
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--record-view-b",
+   "b": "claude-shadcn--settings-b",
+   "visual": 0.0833,
+   "colour": 1.16,
+   "layout": 0.625
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--records-a",
+   "b": "claude-shadcn--settings-a",
+   "visual": 0.0504,
+   "colour": 0.55,
+   "layout": 0.6977
+  },
+  {
+   "system": "claude-shadcn",
+   "a": "claude-shadcn--records-b",
+   "b": "claude-shadcn--settings-b",
+   "visual": 0.0712,
+   "colour": 1.58,
+   "layout": 0.6154
+  },
+  {
+   "system": "altitude-preview",
+   "a": "altitude-preview--settings",
+   "b": "altitude-preview--records",
+   "visual": 0.0482,
+   "colour": 0.41,
+   "layout": 0.7089
+  },
+  {
+   "system": "altitude-preview",
+   "a": "altitude-preview--settings",
+   "b": "altitude-preview--dashboard",
+   "visual": 0.1514,
+   "colour": 0.47,
+   "layout": 0.7273
+  },
+  {
+   "system": "altitude-preview",
+   "a": "altitude-preview--settings",
+   "b": "altitude-preview--record-view",
+   "visual": 0.0835,
+   "colour": 0.5,
+   "layout": 0.6591
+  },
+  {
+   "system": "altitude-preview",
+   "a": "altitude-preview--records",
+   "b": "altitude-preview--dashboard",
+   "visual": 0.1015,
+   "colour": 0.37,
+   "layout": 0.7722
+  },
+  {
+   "system": "altitude-preview",
+   "a": "altitude-preview--records",
+   "b": "altitude-preview--record-view",
+   "visual": 0.0342,
+   "colour": 0.24,
+   "layout": 0.6962
+  },
+  {
+   "system": "altitude-preview",
+   "a": "altitude-preview--dashboard",
+   "b": "altitude-preview--record-view",
+   "visual": 0.0995,
+   "colour": 0.52,
+   "layout": 0.6136
+  }
+ ],
+ "taskRange": {
+  "visual": {
+   "altitude-preview": 0.0864,
+   "claude-altitude": 0.1096,
+   "claude-plain": 0.1534,
+   "claude-shadcn": 0.1164
+  },
+  "colour": {
+   "altitude-preview": 0.4183,
+   "claude-altitude": 1.7933,
+   "claude-plain": 6.3975,
+   "claude-shadcn": 1.3475
+  },
+  "layout": {
+   "altitude-preview": 0.6962,
+   "claude-altitude": 0.7436,
+   "claude-plain": 0.7271,
+   "claude-shadcn": 0.6976
+  }
+ },
+ "noisePairs": [
+  {
+   "system": "claude-altitude",
+   "brief": "dashboard-a",
+   "a": "claude-altitude--dashboard-a",
+   "b": "claude-altitude--dashboard-a--s2",
+   "visual": 0.0167,
+   "colour": 1.46,
+   "layout": 0.3333
+  },
+  {
+   "system": "claude-altitude",
+   "brief": "settings-a",
+   "a": "claude-altitude--settings-a",
+   "b": "claude-altitude--settings-a--s2",
+   "visual": 0.0247,
+   "colour": 0.51,
+   "layout": 0.5588
+  },
+  {
+   "system": "claude-plain",
+   "brief": "dashboard-a",
+   "a": "claude-plain--dashboard-a",
+   "b": "claude-plain--dashboard-a--s2",
+   "visual": 0.0424,
+   "colour": 0.7,
+   "layout": 0.4032
+  },
+  {
+   "system": "claude-plain",
+   "brief": "settings-a",
+   "a": "claude-plain--settings-a",
+   "b": "claude-plain--settings-a--s2",
+   "visual": 0.0166,
+   "colour": 2.29,
+   "layout": 0.3519
+  },
+  {
+   "system": "claude-shadcn",
+   "brief": "dashboard-a",
+   "a": "claude-shadcn--dashboard-a",
+   "b": "claude-shadcn--dashboard-a--s2",
+   "visual": 0.0468,
+   "colour": 1.61,
+   "layout": 0.5172
+  },
+  {
+   "system": "claude-shadcn",
+   "brief": "settings-a",
+   "a": "claude-shadcn--settings-a",
+   "b": "claude-shadcn--settings-a--s2",
+   "visual": 0.016,
+   "colour": 0.04,
+   "layout": 0.4872
+  }
+ ],
+ "noiseFloor": {
+  "visual": {
+   "altitude-preview": null,
+   "claude-altitude": 0.0207,
+   "claude-plain": 0.0295,
+   "claude-shadcn": 0.0314
+  },
+  "colour": {
+   "altitude-preview": null,
+   "claude-altitude": 0.985,
+   "claude-plain": 1.495,
+   "claude-shadcn": 0.825
+  },
+  "layout": {
+   "altitude-preview": null,
+   "claude-altitude": 0.446,
+   "claude-plain": 0.3775,
+   "claude-shadcn": 0.5022
+  }
+ }
+}

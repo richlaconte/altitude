@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects · Northwind Product Team</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --border: #e3e6eb;
+    --border-strong: #cfd4dc;
+    --text: #1d2330;
+    --muted: #5f6b7d;
+    --accent: #3b5bdb;
+    --accent-weak: #edf1ff;
+    --row-hover: #f8f9fb;
+    --row-selected: #eef2ff;
+    --focus: 0 0 0 3px rgba(59, 91, 219, .35);
+    --radius: 8px;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .visually-hidden {
+    position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 32px 24px 48px; }
+
+  header.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+  h1 { font-size: 24px; margin: 0; letter-spacing: -.01em; }
+  .last-refreshed { color: var(--muted); font-size: 13px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 1px 2px rgba(16,24,40,.04); }
+
+  .toolbar { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .search { position: relative; flex: 1 1 320px; max-width: 440px; }
+  .search svg.icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .search input {
+    width: 100%; height: 36px; padding: 0 36px 0 34px;
+    border: 1px solid var(--border-strong); border-radius: 6px; font: inherit; color: inherit; background: #fff;
+  }
+  .search input::placeholder { color: #8a94a6; }
+  .search input:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus); }
+  .search input::-webkit-search-cancel-button { display: none; }
+  .clear-search {
+    position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+    width: 26px; height: 26px; border: 0; border-radius: 4px; background: transparent; color: var(--muted);
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .clear-search:hover { background: #eef0f4; color: var(--text); }
+  .clear-search:focus-visible { outline: none; box-shadow: var(--focus); }
+  .clear-search[hidden] { display: none; }
+  kbd {
+    font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 2px 5px; border: 1px solid var(--border-strong);
+    border-bottom-width: 2px; border-radius: 4px; color: var(--muted); background: #fafbfc;
+  }
+  .search-hint { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+  .search-hint[hidden] { display: none; }
+
+  .toolbar .spacer { flex: 1; }
+  .result-count { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px;
+    border: 1px solid var(--border-strong); border-radius: 6px; background: #fff; color: var(--text);
+    font: inherit; font-weight: 500; cursor: pointer; white-space: nowrap;
+  }
+  .btn:hover:not(:disabled) { background: #f3f4f7; }
+  .btn:focus-visible { outline: none; box-shadow: var(--focus); }
+  .btn:disabled { opacity: .6; cursor: progress; }
+  .btn-link { border: 0; background: none; padding: 0 4px; height: auto; color: var(--accent); font-weight: 500; }
+  .btn-link:hover:not(:disabled) { background: none; text-decoration: underline; }
+  .btn .spin { display: inline-block; }
+  .btn.loading .spin { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .selection-bar {
+    display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+    background: var(--accent-weak); border-bottom: 1px solid #d6defc; color: #2b3f9e; font-weight: 500;
+  }
+  .selection-bar[hidden] { display: none; }
+  .selection-bar .hidden-note { color: #5466b8; font-weight: 400; }
+
+  .table-wrap { overflow-x: auto; position: relative; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    position: sticky; top: 0; background: #fafbfc; text-align: left; font-size: 12px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: .03em; padding: 10px 12px; border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  th.sortable button {
+    all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border-radius: 3px;
+  }
+  th.sortable button:focus-visible { box-shadow: var(--focus); }
+  th.sortable button:hover { color: var(--text); }
+  .sort-ind { opacity: .35; font-size: 10px; }
+  th[aria-sort="ascending"] .sort-ind, th[aria-sort="descending"] .sort-ind { opacity: 1; color: var(--accent); }
+
+  tbody td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover td { background: var(--row-hover); }
+  tbody tr.selected td { background: var(--row-selected); }
+  .col-check { width: 44px; padding-left: 16px !important; padding-right: 4px !important; }
+  input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0; vertical-align: middle; }
+  input[type="checkbox"]:focus-visible { outline: none; box-shadow: var(--focus); border-radius: 3px; }
+
+  .proj-name { font-weight: 600; color: var(--text); }
+  .proj-key { color: var(--muted); font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  mark { background: #fff1a8; color: inherit; border-radius: 2px; padding: 0 1px; }
+
+  .status { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status.on-track { background: #e6f6ec; color: #1f7a42; }
+  .status.at-risk  { background: #fff4e0; color: #9a5b00; }
+  .status.off-track{ background: #fde8e8; color: #b42318; }
+  .status.planning { background: #eef0f4; color: #4a5568; }
+  .status.done     { background: #e8f0fe; color: #2f56c4; }
+
+  .owner { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; flex: none; }
+
+  .progress { display: flex; align-items: center; gap: 8px; min-width: 130px; }
+  .bar { flex: 1; height: 6px; background: #eceff3; border-radius: 999px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; background: var(--accent); border-radius: inherit; transition: width .4s ease; }
+  .progress .pct { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; width: 34px; text-align: right; }
+
+  .muted { color: var(--muted); }
+  .nowrap { white-space: nowrap; }
+  .overdue { color: #b42318; font-weight: 500; }
+
+  .empty { text-align: center; padding: 56px 16px; color: var(--muted); }
+  .empty h2 { font-size: 16px; color: var(--text); margin: 0 0 6px; }
+  .empty p { margin: 0 0 14px; }
+
+  .loading-overlay {
+    position: absolute; inset: 0; background: rgba(255,255,255,.6); display: none; align-items: flex-start; justify-content: center; padding-top: 48px;
+  }
+  .table-wrap.is-loading .loading-overlay { display: flex; }
+  .skeleton td div { height: 12px; border-radius: 4px; background: linear-gradient(90deg, #eef0f4 25%, #f7f8fa 50%, #eef0f4 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0;
+    background: #1d2330; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 13px; transition: .2s ease; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 760px) {
+    .col-updated, .col-due { display: none; }
+    .page { padding: 20px 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">Northwind · Product Team</p>
+      <h1>Projects</h1>
+    </div>
+    <div class="last-refreshed" id="lastRefreshed" aria-live="off"></div>
+  </header>
+
+  <section class="card" aria-labelledby="tableCaption">
+    <div class="toolbar" role="search">
+      <div class="search">
+        <label for="search" class="visually-hidden">Search projects by name</label>
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search projects by name…" autocomplete="off" spellcheck="false" aria-controls="projectTable">
+        <span class="search-hint" id="searchHint" aria-hidden="true"><kbd>/</kbd></span>
+        <button type="button" class="clear-search" id="clearSearch" aria-label="Clear search" title="Clear search (Esc)" hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <span class="result-count" id="resultCount" aria-live="polite"></span>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="refreshBtn">
+        <svg class="spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        <span class="label">Refresh</span>
+      </button>
+    </div>
+
+    <div class="selection-bar" id="selectionBar" hidden>
+      <span id="selectionText"></span>
+      <span class="spacer" style="flex:1"></span>
+      <button type="button" class="btn btn-link" id="clearSelection">Clear selection</button>
+    </div>
+
+    <div class="table-wrap" id="tableWrap">
+      <table id="projectTable" aria-describedby="resultCount">
+        <caption id="tableCaption" class="visually-hidden">Team projects</caption>
+        <thead>
+          <tr>
+            <th class="col-check" scope="col">
+              <input type="checkbox" id="selectAll" aria-label="Select all shown projects">
+            </th>
+            <th scope="col" class="sortable" data-key="name" aria-sort="ascending"><button type="button">Project <span class="sort-ind" aria-hidden="true">▲</span></button></th>
+            <th scope="col" class="sortable" data-key="status" aria-sort="none"><button type="button">Status <span class="sort-ind" aria-hidden="true">▲</span></button></th>
+            <th scope="col" class="sortable" data-key="owner" aria-sort="none"><button type="button">Owner <span class="sort-ind" aria-hidden="true">▲</span></button></th>
+            <th scope="col" class="sortable" data-key="progress" aria-sort="none"><button type="button">Progress <span class="sort-ind" aria-hidden="true">▲</span></button></th>
+            <th scope="col" class="sortable col-due" data-key="due" aria-sort="none"><button type="button">Due <span class="sort-ind" aria-hidden="true">▲</span></button></th>
+            <th scope="col" class="sortable col-updated" data-key="updated" aria-sort="none"><button type="button">Updated <span class="sort-ind" aria-hidden="true">▲</span></button></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyState" hidden>
+        <h2 id="emptyTitle">No projects match</h2>
+        <p id="emptyBody"></p>
+        <button type="button" class="btn" id="emptyClear">Clear search</button>
+      </div>
+      <div class="loading-overlay" aria-hidden="true"></div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- Sample data (stands in for an API) ----------
+  const PEOPLE = {
+    pk: { name: "Priya Kapoor",   color: "#7c3aed" },
+    mj: { name: "Marcus Johnson", color: "#0e7490" },
+    ln: { name: "Lena Novak",     color: "#c2410c" },
+    dt: { name: "Daniel Tanaka",  color: "#15803d" },
+    so: { name: "Sofia Ortega",   color: "#be185d" },
+    ab: { name: "Amara Bello",    color: "#1d4ed8" },
+    ew: { name: "Ethan Walsh",    color: "#a16207" },
+  };
+  const STATUS = {
+    "on-track":  { label: "On track",  order: 1 },
+    "at-risk":   { label: "At risk",   order: 2 },
+    "off-track": { label: "Off track", order: 3 },
+    "planning":  { label: "Planning",  order: 0 },
+    "done":      { label: "Done",      order: 4 },
+  };
+
+  const DAY = 86400000;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const d = (offsetDays) => new Date(today.getTime() + offsetDays * DAY);
+  const ago = (minutes) => new Date(Date.now() - minutes * 60000);
+
+  const SEED = [
+    { id: "p1",  key: "CHK",  name: "Checkout Redesign",              status: "on-track",  owner: "pk", progress: 68,  due: d(21),  updated: ago(14) },
+    { id: "p2",  key: "MOB",  name: "Mobile App 3.0",                 status: "at-risk",   owner: "mj", progress: 42,  due: d(9),   updated: ago(52) },
+    { id: "p3",  key: "SSO",  name: "SSO & SAML Integration",         status: "on-track",  owner: "dt", progress: 81,  due: d(12),  updated: ago(180) },
+    { id: "p4",  key: "ONB",  name: "Customer Onboarding Flow",       status: "off-track", owner: "ln", progress: 23,  due: d(-3),  updated: ago(35) },
+    { id: "p5",  key: "DSH",  name: "Analytics Dashboard v2",         status: "on-track",  owner: "so", progress: 57,  due: d(34),  updated: ago(300) },
+    { id: "p6",  key: "BIL",  name: "Billing Migration to Stripe",    status: "at-risk",   owner: "ab", progress: 61,  due: d(5),   updated: ago(8) },
+    { id: "p7",  key: "API",  name: "Public API Rate Limiting",       status: "done",      owner: "dt", progress: 100, due: d(-10), updated: ago(2880) },
+    { id: "p8",  key: "DSN",  name: "Design System Tokens",           status: "on-track",  owner: "so", progress: 74,  due: d(18),  updated: ago(95) },
+    { id: "p9",  key: "NTF",  name: "Notification Preferences",       status: "planning",  owner: "ew", progress: 5,   due: d(60),  updated: ago(1440) },
+    { id: "p10", key: "SRC",  name: "Search Relevance Tuning",        status: "on-track",  owner: "mj", progress: 49,  due: d(27),  updated: ago(220) },
+    { id: "p11", key: "A11Y", name: "Accessibility Audit Q4",         status: "at-risk",   owner: "ln", progress: 33,  due: d(15),  updated: ago(410) },
+    { id: "p12", key: "LOC",  name: "Localization: Japanese & Korean",status: "planning",  owner: "pk", progress: 10,  due: d(75),  updated: ago(4320) },
+    { id: "p13", key: "PRF",  name: "Web Performance Sprint",         status: "done",      owner: "ab", progress: 100, due: d(-21), updated: ago(10080) },
+    { id: "p14", key: "INV",  name: "Team Invites & Roles",           status: "on-track",  owner: "ew", progress: 88,  due: d(4),   updated: ago(27) },
+    { id: "p15", key: "DAT",  name: "Data Export (CSV & Parquet)",    status: "off-track", owner: "mj", progress: 18,  due: d(2),   updated: ago(640) },
+    { id: "p16", key: "CAL",  name: "Calendar Sync for Résumé Reviews", status: "planning", owner: "so", progress: 0,  due: d(90),  updated: ago(7200) },
+  ];
+
+  // Simulated fetch: returns a fresh copy with some realistic drift.
+  let fetchCount = 0;
+  function fetchProjects() {
+    fetchCount++;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const data = SEED.map((p) => ({ ...p }));
+        if (fetchCount > 1) {
+          for (const p of data) {
+            if (p.status === "done" || p.status === "planning") continue;
+            if (Math.random() < 0.45) {
+              p.progress = Math.min(99, p.progress + 1 + Math.floor(Math.random() * 4));
+              p.updated = ago(Math.floor(Math.random() * 3));
+            }
+          }
+          // Persist drift so successive refreshes keep moving forward.
+          data.forEach((p, i) => { SEED[i].progress = p.progress; SEED[i].updated = p.updated; });
+        }
+        resolve(data);
+      }, fetchCount === 1 ? 450 : 700 + Math.random() * 400);
+    });
+  }
+
+  // ---------- State ----------
+  const state = {
+    projects: [],
+    query: "",
+    selected: new Set(),
+    sort: { key: "name", dir: "asc" },
+    loading: false,
+    lastRefreshed: null,
+    anchorId: null, // for shift-click range selection
+  };
+
+  // ---------- Elements ----------
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    search: $("search"), clearSearch: $("clearSearch"), searchHint: $("searchHint"),
+    resultCount: $("resultCount"), refreshBtn: $("refreshBtn"), tbody: $("tbody"),
+    selectAll: $("selectAll"), selectionBar: $("selectionBar"), selectionText: $("selectionText"),
+    clearSelection: $("clearSelection"), emptyState: $("emptyState"), emptyTitle: $("emptyTitle"),
+    emptyBody: $("emptyBody"), emptyClear: $("emptyClear"), tableWrap: $("tableWrap"),
+    lastRefreshed: $("lastRefreshed"), toast: $("toast"), table: $("projectTable"),
+  };
+
+  // ---------- Helpers ----------
+  const normalize = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Highlight query in original text, matching accent/case-insensitively.
+  // NFD stripping can change string length, so map normalized indices back to original ones.
+  function highlight(text, query) {
+    if (!query) return escapeHtml(text);
+    let norm = "";
+    const map = [];
+    for (let i = 0; i < text.length; i++) {
+      const n = normalize(text[i]);
+      for (let j = 0; j < n.length; j++) { norm += n[j]; map.push(i); }
+    }
+    const q = normalize(query);
+    let out = "", last = 0, from = 0, idx;
+    while (q && (idx = norm.indexOf(q, from)) !== -1) {
+      const start = map[idx];
+      const end = map[idx + q.length - 1] + 1;
+      out += escapeHtml(text.slice(last, start)) + "<mark>" + escapeHtml(text.slice(start, end)) + "</mark>";
+      last = end;
+      from = idx + q.length;
+    }
+    return out + escapeHtml(text.slice(last));
+  }
+
+  const dateFmt = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" });
+  const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+
+  function relative(date) {
+    const mins = Math.round((date - Date.now()) / 60000);
+    if (Math.abs(mins) < 1) return "just now";
+    if (Math.abs(mins) < 60) return rtf.format(mins, "minute");
+    const hrs = Math.round(mins / 60);
+    if (Math.abs(hrs) < 24) return rtf.format(hrs, "hour");
+    return rtf.format(Math.round(hrs / 24), "day");
+  }
+
+  const initials = (name) => name.split(" ").map((w) => w[0]).join("").slice(0, 2);
+
+  function sortValue(p, key) {
+    switch (key) {
+      case "name": return normalize(p.name);
+      case "status": return STATUS[p.status].order;
+      case "owner": return PEOPLE[p.owner].name;
+      case "progress": return p.progress;
+      case "due": return p.due.getTime();
+      case "updated": return p.updated.getTime();
+    }
+  }
+
+  function visibleProjects() {
+    const q = normalize(state.query.trim());
+    const list = q ? state.projects.filter((p) => normalize(p.name).includes(q)) : state.projects.slice();
+    const { key, dir } = state.sort;
+    const mul = dir === "asc" ? 1 : -1;
+    list.sort((a, b) => {
+      const va = sortValue(a, key), vb = sortValue(b, key);
+      const c = typeof va === "string" ? va.localeCompare(vb) : va - vb;
+      return c * mul || a.name.localeCompare(b.name);
+    });
+    return list;
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => els.toast.classList.remove("show"), 2200);
+  }
+
+  // ---------- Render ----------
+  let currentVisible = [];
+
+  function render() {
+    const query = state.query.trim();
+    currentVisible = visibleProjects();
+    const total = state.projects.length;
+
+    // Search UI
+    els.clearSearch.hidden = state.query.length === 0;
+    els.searchHint.hidden = state.query.length > 0 || document.activeElement === els.search;
+
+    // Rows
+    if (state.loading && total === 0) {
+      els.tbody.innerHTML = Array.from({ length: 6 }, () =>
+        `<tr class="skeleton"><td class="col-check"></td>${'<td><div></div></td>'.repeat(4)}<td class="col-due"><div></div></td><td class="col-updated"><div></div></td></tr>`
+      ).join("");
+      els.resultCount.textContent = "Loading projects…";
+      els.emptyState.hidden = true;
+      els.selectAll.disabled = true;
+      return;
+    }
+
+    // Remember which row checkbox had focus so rebuilding rows doesn't drop it.
+    const focusedId = document.activeElement?.classList.contains("row-check")
+      ? document.activeElement.closest("tr")?.dataset.id : null;
+
+    els.tbody.innerHTML = currentVisible.map((p) => {
+      const person = PEOPLE[p.owner];
+      const sel = state.selected.has(p.id);
+      const overdue = p.due < today && p.status !== "done";
+      return `<tr data-id="${p.id}" class="${sel ? "selected" : ""}" aria-selected="${sel}">
+        <td class="col-check"><input type="checkbox" class="row-check" ${sel ? "checked" : ""} aria-label="Select ${escapeHtml(p.name)}"></td>
+        <td><div class="proj-name">${highlight(p.name, query)}</div><div class="proj-key">${p.key}</div></td>
+        <td><span class="status ${p.status}">${STATUS[p.status].label}</span></td>
+        <td><div class="owner"><span class="avatar" style="background:${person.color}" aria-hidden="true">${initials(person.name)}</span>${escapeHtml(person.name)}</div></td>
+        <td><div class="progress"><div class="bar" role="progressbar" aria-label="${escapeHtml(p.name)} progress" aria-valuenow="${p.progress}" aria-valuemin="0" aria-valuemax="100"><span style="width:${p.progress}%"></span></div><span class="pct">${p.progress}%</span></div></td>
+        <td class="col-due nowrap ${overdue ? "overdue" : ""}">${dateFmt.format(p.due)}${overdue ? " · Overdue" : ""}</td>
+        <td class="col-updated nowrap muted" title="${p.updated.toLocaleString()}">${relative(p.updated)}</td>
+      </tr>`;
+    }).join("");
+    if (focusedId) els.tbody.querySelector(`tr[data-id="${focusedId}"] .row-check`)?.focus();
+
+    // Count + empty state
+    if (query) {
+      els.resultCount.textContent = `${currentVisible.length} of ${total} project${total === 1 ? "" : "s"}`;
+    } else {
+      els.resultCount.textContent = `${total} project${total === 1 ? "" : "s"}`;
+    }
+    const empty = currentVisible.length === 0;
+    els.emptyState.hidden = !empty;
+    els.table.querySelector("thead").style.visibility = empty ? "hidden" : "";
+    if (empty) {
+      if (query) {
+        els.emptyTitle.textContent = "No projects match your search";
+        els.emptyBody.textContent = `Nothing named “${query}”. Check the spelling or try a shorter term.`;
+        els.emptyClear.hidden = false;
+      } else {
+        els.emptyTitle.textContent = "No projects yet";
+        els.emptyBody.textContent = "Projects your team creates will appear here.";
+        els.emptyClear.hidden = true;
+      }
+    }
+
+    // Select-all reflects only visible rows
+    const visibleSelected = currentVisible.filter((p) => state.selected.has(p.id)).length;
+    els.selectAll.disabled = empty;
+    els.selectAll.checked = !empty && visibleSelected === currentVisible.length;
+    els.selectAll.indeterminate = visibleSelected > 0 && visibleSelected < currentVisible.length;
+    els.selectAll.setAttribute("aria-label", query ? "Select all matching projects" : "Select all projects");
+
+    // Selection bar
+    const n = state.selected.size;
+    els.selectionBar.hidden = n === 0;
+    if (n) {
+      const hidden = n - visibleSelected;
+      els.selectionText.innerHTML = `${n} project${n === 1 ? "" : "s"} selected` +
+        (hidden > 0 ? ` <span class="hidden-note">(${hidden} hidden by search)</span>` : "");
+    }
+
+    // Sort headers
+    document.querySelectorAll("th.sortable").forEach((th) => {
+      const active = th.dataset.key === state.sort.key;
+      th.setAttribute("aria-sort", active ? (state.sort.dir === "asc" ? "ascending" : "descending") : "none");
+      th.querySelector(".sort-ind").textContent = active && state.sort.dir === "desc" ? "▼" : "▲";
+    });
+  }
+
+  function renderRefreshed() {
+    if (!state.lastRefreshed) return;
+    els.lastRefreshed.textContent = `Last refreshed ${timeFmt.format(state.lastRefreshed)}`;
+    els.lastRefreshed.title = state.lastRefreshed.toLocaleString();
+  }
+
+  // ---------- Actions ----------
+  async function refresh({ initial = false } = {}) {
+    if (state.loading) return;
+    state.loading = true;
+    els.refreshBtn.disabled = true;
+    els.refreshBtn.classList.add("loading");
+    els.refreshBtn.setAttribute("aria-busy", "true");
+    els.refreshBtn.querySelector(".label").textContent = "Refreshing…";
+    if (!initial) els.tableWrap.classList.add("is-loading");
+    render();
+
+    try {
+      const data = await fetchProjects();
+      state.projects = data;
+      // Drop selections for projects that no longer exist.
+      const ids = new Set(data.map((p) => p.id));
+      for (const id of state.selected) if (!ids.has(id)) state.selected.delete(id);
+      state.lastRefreshed = new Date();
+      if (!initial) toast("Projects refreshed");
+    } catch (err) {
+      toast("Couldn’t refresh projects. Try again.");
+    } finally {
+      state.loading = false;
+      els.refreshBtn.disabled = false;
+      els.refreshBtn.classList.remove("loading");
+      els.refreshBtn.removeAttribute("aria-busy");
+      els.refreshBtn.querySelector(".label").textContent = "Refresh";
+      els.tableWrap.classList.remove("is-loading");
+      renderRefreshed();
+      render();
+    }
+  }
+
+  function setQuery(q) {
+    state.query = q;
+    state.anchorId = null;
+    render();
+  }
+
+  function clearSearch({ focus = true } = {}) {
+    els.search.value = "";
+    setQuery("");
+    if (focus) els.search.focus();
+  }
+
+  function toggleRow(id, { shift = false } = {}) {
+    if (shift && state.anchorId && state.anchorId !== id) {
+      const ids = currentVisible.map((p) => p.id);
+      const a = ids.indexOf(state.anchorId), b = ids.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        const target = !state.selected.has(id);
+        const [lo, hi] = a < b ? [a, b] : [b, a];
+        for (let i = lo; i <= hi; i++) target ? state.selected.add(ids[i]) : state.selected.delete(ids[i]);
+        state.anchorId = id;
+        render();
+        return;
+      }
+    }
+    state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id);
+    state.anchorId = id;
+    render();
+  }
+
+  // ---------- Events ----------
+  els.search.addEventListener("input", (e) => setQuery(e.target.value));
+  els.search.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (state.query) { e.preventDefault(); clearSearch(); }
+      else els.search.blur();
+    }
+  });
+  els.search.addEventListener("focus", () => { els.searchHint.hidden = true; });
+  els.search.addEventListener("blur", () => { els.searchHint.hidden = state.query.length > 0; });
+  els.clearSearch.addEventListener("click", () => clearSearch());
+  els.emptyClear.addEventListener("click", () => clearSearch());
+  els.refreshBtn.addEventListener("click", () => refresh());
+
+  els.selectAll.addEventListener("change", () => {
+    const allSelected = currentVisible.every((p) => state.selected.has(p.id));
+    for (const p of currentVisible) allSelected ? state.selected.delete(p.id) : state.selected.add(p.id);
+    state.anchorId = null;
+    render();
+  });
+
+  els.clearSelection.addEventListener("click", () => {
+    state.selected.clear();
+    state.anchorId = null;
+    render();
+    els.selectAll.focus();
+  });
+
+  els.tbody.addEventListener("click", (e) => {
+    const tr = e.target.closest("tr[data-id]");
+    if (!tr) return;
+    // Don't toggle when the user is selecting text in a row.
+    if (e.target.tagName !== "INPUT" && window.getSelection().toString()) return;
+    toggleRow(tr.dataset.id, { shift: e.shiftKey });
+  });
+  // Prevent shift-click from highlighting text across rows.
+  els.tbody.addEventListener("mousedown", (e) => { if (e.shiftKey) e.preventDefault(); });
+
+  document.querySelectorAll("th.sortable button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.closest("th").dataset.key;
+      if (state.sort.key === key) state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
+      else state.sort = { key, dir: key === "updated" || key === "progress" ? "desc" : "asc" };
+      state.anchorId = null;
+      render();
+    });
+  });
+
+  // "/" focuses search from anywhere (unless typing in a field).
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey &&
+        !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName) &&
+        !document.activeElement.isContentEditable) {
+      e.preventDefault();
+      els.search.focus();
+      els.search.select();
+    }
+  });
+
+  // Keep relative "Updated" times fresh.
+  setInterval(() => { if (!state.loading) render(); }, 60000);
+
+  refresh({ initial: true });
+})();
+</script>
+</body>
+</html>

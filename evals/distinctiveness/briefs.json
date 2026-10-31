@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "note": "Each task is written for two product domains with the same goal, so one system's two builds can be compared (creative range). The text is the whole prompt for v0 and Lovable; the Claude conditions add only where to put the code (see conditions in generate.mjs).",
+  "briefs": [
+    {"id": "settings-a", "task": "settings", "domain": "project management", "text": "Build a workspace settings screen for a team project-management app. People should be able to change the workspace name and contact email and save them. Include a Cancel action that returns to the workspace overview. Use realistic sample data; there is no backend."},
+    {"id": "settings-b", "task": "settings", "domain": "veterinary clinic", "text": "Build a practice settings screen for a veterinary clinic's booking app. People should be able to change the practice name and contact email and save them. Include a Cancel action that returns to the practice overview. Use realistic sample data; there is no backend."},
+    {"id": "records-a", "task": "records", "domain": "project management", "text": "Build a searchable records screen for a team project-management app. Show the team's projects, with a search box for finding projects by name and a way to select projects. Include a refresh action and a way to clear the search. Use realistic sample data; there is no backend."},
+    {"id": "records-b", "task": "records", "domain": "freight", "text": "Build a searchable records screen for a freight company's shipment tracker. Show the company's shipments, with a search box for finding shipments by reference and a way to select shipments. Include a refresh action and a way to clear the search. Use realistic sample data; there is no backend."},
+    {"id": "dashboard-a", "task": "dashboard", "domain": "subscription software", "text": "Build the overview dashboard for a subscription software business. Show monthly recurring revenue, new and cancelled subscriptions, and how they have changed over the last twelve months. Use realistic sample data; there is no backend."},
+    {"id": "dashboard-b", "task": "dashboard", "domain": "public library", "text": "Build the overview dashboard for a city's public library service. Show loans, new members and visits across its branches, and how they have changed over the last twelve months. Use realistic sample data; there is no backend."},
+    {"id": "record-view-a", "task": "record-view", "domain": "sales CRM", "text": "Build the page for one customer account in a sales team's CRM. Show the account's details, its contacts and its recent activity, with a way to edit the details. Use realistic sample data; there is no backend."},
+    {"id": "record-view-b", "task": "record-view", "domain": "restaurant kitchen", "text": "Build the page for one recipe in a restaurant kitchen's recipe book. Show the recipe's details, its ingredients and its recent changes, with a way to edit the details. Use realistic sample data; there is no backend."}
+  ],
+  "previews": {
+    "note": "Altitude's own pattern previews, scored against every build of the task they answer. They are domain-free, so they have no creative range.",
+    "settings": "SettingsPattern",
+    "records": "MembersPattern",
+    "dashboard": "ScreenLayoutReport",
+    "record-view": "ScreenLayoutEditor"
+  }
+}

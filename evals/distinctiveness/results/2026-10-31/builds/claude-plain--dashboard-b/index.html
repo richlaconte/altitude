@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halbrook City Libraries · Service overview</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --wash:           rgba(11,11,11,0.04);
+    --series-1:       #2a78d6;
+    --series-2:       #eb6834;
+    --series-3:       #1baf7a;
+    --series-prior:   #a8a69e;
+    --bar-dim:        #cde2fb;
+    --up:             #006300;
+    --down:           #d03b3b;
+    --div-n3: #c23a39; --div-n2: #e8807f; --div-n1: #f5c4c3;
+    --div-mid: #f0efec;
+    --div-p1: #cde2fb; --div-p2: #86b6ef; --div-p3: #2a78d6;
+    --closed-ink:     #c3c2b7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #f0efec;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --wash:           rgba(255,255,255,0.05);
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --series-3:       #199e70;
+      --series-prior:   #6b6a65;
+      --bar-dim:        #1d3a5c;
+      --up:             #0ca30c;
+      --down:           #e66767;
+      --div-n3: #e66767; --div-n2: #a3403f; --div-n1: #5a2c2b;
+      --div-mid: #383835;
+      --div-p1: #1d3a5c; --div-p2: #2a63a8; --div-p3: #5598e7;
+      --closed-ink:     #55544f;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --wash:           rgba(255,255,255,0.05);
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --series-3:       #199e70;
+    --series-prior:   #6b6a65;
+    --bar-dim:        #1d3a5c;
+    --up:             #0ca30c;
+    --down:           #e66767;
+    --div-n3: #e66767; --div-n2: #a3403f; --div-n1: #5a2c2b;
+    --div-mid: #383835;
+    --div-p1: #1d3a5c; --div-p2: #2a63a8; --div-p3: #5598e7;
+    --closed-ink:     #55544f;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 24px 24px 48px; }
+
+  header.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+  header.top h1 { font-size: 22px; font-weight: 600; margin: 0 0 2px; letter-spacing: -0.01em; }
+  header.top p { margin: 0; color: var(--text-secondary); }
+
+  button, select { font: inherit; color: inherit; }
+  .btn {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 12px; cursor: pointer; color: var(--text-secondary);
+  }
+  .btn:hover { background: var(--wash); color: var(--text-primary); }
+  .btn:focus-visible, select:focus-visible, .tile:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--series-1); outline-offset: 2px;
+  }
+
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .filters label { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; }
+  .filters select {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 28px 6px 10px; color: var(--text-primary); cursor: pointer;
+  }
+  .seg { display: inline-flex; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 2px; }
+  .seg button {
+    border: 0; background: transparent; padding: 5px 12px; border-radius: 6px; cursor: pointer; color: var(--text-secondary);
+  }
+  .seg button:hover { background: var(--wash); }
+  .seg button[aria-pressed="true"] { background: var(--wash); color: var(--text-primary); font-weight: 600; box-shadow: inset 0 0 0 1px var(--border); }
+
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;
+    transition: opacity .15s;
+  }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .card .sub { color: var(--text-secondary); font-size: 13px; margin: 2px 0 0; }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr) 1.35fr; gap: 16px; margin-bottom: 16px; }
+  .tile { cursor: pointer; text-align: left; position: relative; width: 100%; }
+  .tile:hover { box-shadow: inset 0 0 0 1px var(--baseline); }
+  .tile[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--series-1); }
+  .tile .label { color: var(--text-secondary); font-size: 13px; }
+  .tile .value { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 2px 0 2px; }
+  .tile .delta { font-size: 13px; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+  .tile .delta .vs { color: var(--text-muted); }
+  .tile svg { display: block; }
+  .up { color: var(--up); } .down { color: var(--down); }
+  .delta-val { font-weight: 600; white-space: nowrap; }
+
+  .grid-2 { display: grid; grid-template-columns: 1.65fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .full { margin-bottom: 16px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .key-line { width: 16px; height: 2px; border-radius: 1px; display: inline-block; }
+  .key-rect { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .chart { position: relative; width: 100%; }
+  .chart svg { display: block; overflow: visible; }
+  svg text { font-family: inherit; }
+  .axis-text { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .label-text { fill: var(--text-secondary); font-size: 12px; }
+  .value-text { fill: var(--text-primary); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .seg-bar { display: flex; gap: 2px; height: 28px; margin: 12px 0 10px; }
+  .seg-bar div {
+    border-radius: 4px; color: #fff; font-size: 12px; font-weight: 600; line-height: 28px;
+    padding-left: 8px; white-space: nowrap; overflow: visible; min-width: 0; cursor: default;
+  }
+  .seg-bar div:hover, .seg-bar div:focus-visible { filter: brightness(1.08); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-weight: 600; color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+  th button { all: unset; cursor: pointer; }
+  th button:hover { color: var(--text-primary); }
+  th button:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; border-radius: 2px; }
+  tfoot td { font-weight: 600; border-bottom: 0; border-top: 1px solid var(--baseline); }
+  tr.hl td { background: var(--wash); }
+  .table-scroll { overflow-x: auto; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 10; min-width: 160px;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.14); padding: 8px 10px; font-size: 12px;
+    opacity: 0; transition: opacity .08s;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .tt-title { color: var(--text-secondary); margin-bottom: 4px; }
+  .tooltip .tt-row { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+  .tooltip .tt-row strong { font-variant-numeric: tabular-nums; font-size: 13px; }
+  .tooltip .tt-row .nm { color: var(--text-secondary); margin-left: auto; padding-left: 12px; }
+  .tooltip .tt-foot { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--grid); }
+
+  .note { color: var(--text-muted); font-size: 12px; margin: 10px 0 0; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 1100px) {
+    .tiles { grid-template-columns: repeat(3, 1fr); }
+    .tiles .format-card { grid-column: 1 / -1; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 680px) {
+    .tiles { grid-template-columns: 1fr; }
+    header.top { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Halbrook City Libraries</h1>
+      <p>Service overview · 9 branches · Data to 30 Sep 2026, refreshed nightly</p>
+    </div>
+    <button class="btn" id="themeBtn" type="button" aria-label="Toggle dark mode">Dark mode</button>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="seg" role="group" aria-label="Period" id="periodSeg">
+      <button type="button" data-p="12" aria-pressed="true">Last 12 months</button>
+      <button type="button" data-p="6" aria-pressed="false">Last 6 months</button>
+      <button type="button" data-p="3" aria-pressed="false">Last 3 months</button>
+    </div>
+    <label>Branch
+      <select id="branchSel"><option value="all">All branches</option></select>
+    </label>
+    <label>Measure
+      <select id="measureSel">
+        <option value="loans">Loans</option>
+        <option value="members">New members</option>
+        <option value="visits">Visits</option>
+      </select>
+    </label>
+  </div>
+
+  <section class="tiles" id="tiles" aria-label="Headline figures"></section>
+
+  <div class="grid-2">
+    <section class="card">
+      <div class="card-head">
+        <div><h2 id="trendTitle">Monthly loans</h2><p class="sub" id="trendSub"></p></div>
+        <button class="btn" type="button" data-toggle="trend">Show table</button>
+      </div>
+      <div class="legend" id="trendLegend"></div>
+      <div class="chart" id="trendChart"></div>
+      <div class="table-scroll" id="trendTable" hidden></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div><h2 id="branchTitle">Loans by branch</h2><p class="sub" id="branchSub"></p></div>
+      </div>
+      <div class="chart" id="branchChart"></div>
+      <p class="note" id="branchNote"></p>
+    </section>
+  </div>
+
+  <section class="card full">
+    <div class="card-head">
+      <div><h2 id="heatTitle">Change vs same month last year</h2><p class="sub" id="heatSub"></p></div>
+      <button class="btn" type="button" data-toggle="heat">Show table</button>
+    </div>
+    <div class="legend" id="heatLegend"></div>
+    <div class="chart" id="heatChart"></div>
+    <div class="table-scroll" id="heatTable" hidden></div>
+    <p class="note">Northgate closed 2 Feb – 3 May 2026 for refurbishment. Loans in those months are digital loans by Northgate members. Southside has opened on Sundays since January 2026.</p>
+  </section>
+
+  <section class="card full">
+    <div class="card-head">
+      <div><h2>Branch summary</h2><p class="sub" id="summarySub"></p></div>
+    </div>
+    <div class="table-scroll" id="summaryTable"></div>
+  </section>
+</div>
+
+<div class="tooltip" id="tooltip" aria-hidden="true"></div>
+
+<script>
+(() => {
+  // ---------- Sample data ----------
+  // 24 months: Oct 2024 (t=0) … Sep 2026 (t=23). Current window = last 12.
+  const MONTHS = [];
+  for (let t = 0; t < 24; t++) {
+    const d = new Date(2024, 9 + t, 1);
+    MONTHS.push({ y: d.getFullYear(), m: d.getMonth() });
+  }
+  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const monthLabel = (t, long) => long ? `${MN[MONTHS[t].m]} ${MONTHS[t].y}` : MN[MONTHS[t].m];
+
+  let seed = 20261030;
+  const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const noise = (amp) => 1 + (rnd() * 2 - 1) * amp;
+
+  // base = monthly loans; visitRatio = visits per loan; growth = annual trend
+  const BRANCHES = [
+    { id: "central",   name: "Central",    base: 78000, visitRatio: 1.05, growth:  0.03 },
+    { id: "riverside", name: "Riverside",  base: 38000, visitRatio: 0.72, growth:  0.02 },
+    { id: "northgate", name: "Northgate",  base: 32000, visitRatio: 0.70, growth:  0.01 },
+    { id: "westbrook", name: "Westbrook",  base: 30000, visitRatio: 0.68, growth:  0.04 },
+    { id: "eastfield", name: "Eastfield",  base: 27000, visitRatio: 0.80, growth:  0.14 },
+    { id: "oakwood",   name: "Oakwood",    base: 26000, visitRatio: 0.66, growth:  0.00 },
+    { id: "harbour",   name: "Harbour",    base: 22000, visitRatio: 0.74, growth: -0.07 },
+    { id: "southside", name: "Southside",  base: 20000, visitRatio: 0.85, growth:  0.03 },
+    { id: "millbrook", name: "Millbrook",  base: 18000, visitRatio: 0.62, growth:  0.06 },
+  ];
+  //                     Jan   Feb   Mar   Apr   May   Jun   Jul   Aug   Sep   Oct   Nov   Dec
+  const S_LOANS   = [1.03, 0.97, 1.01, 0.97, 0.95, 0.98, 1.17, 1.21, 0.99, 1.00, 0.96, 0.80];
+  const S_VISITS  = [0.98, 0.98, 1.02, 0.97, 0.97, 0.99, 1.10, 1.12, 1.02, 1.01, 0.97, 0.78];
+  const S_MEMBERS = [1.32, 1.04, 1.00, 0.95, 0.90, 0.93, 1.16, 1.10, 1.26, 1.00, 0.85, 0.58];
+
+  const isClosed = (b, t) => b.id === "northgate" && t >= 16 && t <= 18; // Feb–Apr 2026
+
+  const DATA = {};
+  BRANCHES.forEach(b => {
+    const r = { loans: [], visits: [], members: [], print: [], digital: [], av: [] };
+    for (let t = 0; t < 24; t++) {
+      const m = MONTHS[t].m;
+      let trend = Math.pow(1 + b.growth, t / 12);
+      if (b.id === "southside" && t >= 15) trend *= 1.16;            // Sunday opening
+      if (b.id === "northgate" && (t === 19 || t === 20)) trend *= 1.18; // reopening bump
+      const closed = isClosed(b, t);
+      const dShare = 0.225 + 0.05 * (t / 23);
+      const core = b.base * S_LOANS[m] * trend;
+      const digital = Math.round(core * dShare * noise(0.03));
+      const physical = closed ? 0 : core * (1 - dShare) * noise(0.035);
+      const av = Math.round(physical * (0.085 - 0.02 * t / 23));
+      const print = Math.round(physical) - av;
+      r.print.push(print); r.digital.push(digital); r.av.push(av);
+      r.loans.push(print + digital + av);
+      const vis = closed ? 0 : Math.round(b.base * b.visitRatio * S_VISITS[m] * trend * noise(0.04));
+      r.visits.push(vis);
+      const mem = closed
+        ? Math.round(b.base / 95 * S_MEMBERS[m] * 0.18 * noise(0.1))   // online sign-ups only
+        : Math.round(b.base * b.visitRatio / 75 * S_MEMBERS[m] * trend * noise(0.07));
+      r.members.push(mem);
+    }
+    DATA[b.id] = r;
+  });
+
+  // ---------- State ----------
+  const state = { period: 12, branch: "all", measure: "loans", show: { trend: false, heat: false } };
+  const MEASURES = {
+    loans:   { label: "Loans",       lower: "loans" },
+    members: { label: "New members", lower: "new members" },
+    visits:  { label: "Visits",      lower: "visits" },
+  };
+
+  const curIdx = () => Array.from({ length: state.period }, (_, i) => 24 - state.period + i);
+  const priorOf = (t) => t - 12;
+  const scopeBranches = () => state.branch === "all" ? BRANCHES : BRANCHES.filter(b => b.id === state.branch);
+  const sumSeries = (branches, key, t) => branches.reduce((s, b) => s + DATA[b.id][key][t], 0);
+  const sumRange = (branches, key, idx) => idx.reduce((s, t) => s + sumSeries(branches, key, t), 0);
+  const scopeName = () => state.branch === "all" ? "All branches" : BRANCHES.find(b => b.id === state.branch).name;
+  const periodText = () => {
+    const idx = curIdx();
+    return `${monthLabel(idx[0], true)} – ${monthLabel(idx[idx.length - 1], true)}`;
+  };
+
+  // ---------- Formatting ----------
+  const nf = new Intl.NumberFormat("en-GB");
+  const fmtFull = (v) => nf.format(Math.round(v));
+  const fmtCompact = (v) => {
+    const a = Math.abs(v);
+    if (a >= 1e6) return (v / 1e6).toFixed(a >= 1e7 ? 1 : 2).replace(/\.0+$/, "") + "M";
+    if (a >= 1e4) return (v / 1e3).toFixed(a >= 1e5 ? 0 : 1).replace(/\.0$/, "") + "K";
+    return fmtFull(v);
+  };
+  const pct = (cur, prev) => prev ? (cur - prev) / prev : null;
+  const fmtPct = (p) => p == null ? "–" : `${p >= 0 ? "+" : "−"}${Math.abs(p * 100).toFixed(1)}%`;
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  // DOM helpers – all labels go in via textContent.
+  const NS = "http://www.w3.org/2000/svg";
+  const svgEl = (tag, attrs = {}, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+  const h = (tag, props = {}, ...kids) => {
+    const e = document.createElement(tag);
+    for (const k in props) {
+      if (k === "class") e.className = props[k];
+      else if (k === "text") e.textContent = props[k];
+      else if (k === "style") e.style.cssText = props[k];
+      else e.setAttribute(k, props[k]);
+    }
+    kids.flat().forEach(c => c != null && e.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+    return e;
+  };
+  const deltaEl = (p, cls = "delta-val") => {
+    if (p == null) return h("span", { class: cls, text: "–" });
+    const up = p >= 0;
+    return h("span", { class: `${cls} ${up ? "up" : "down"}`, text: `${up ? "▲" : "▼"} ${fmtPct(p)}`,
+      "aria-label": `${up ? "up" : "down"} ${Math.abs(p * 100).toFixed(1)} percent` });
+  };
+
+  const niceTicks = (max, count = 4) => {
+    if (max <= 0) return [0, 1];
+    const raw = max / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw);
+    const top = Math.ceil(max / step) * step;
+    const out = [];
+    for (let v = 0; v <= top + 1e-9; v += step) out.push(v);
+    return out;
+  };
+  const axisFmt = (top) => (v) => top >= 10000 ? fmtCompact(v) : fmtFull(v);
+
+  // Bar path: square at baseline (left), 4px rounded at data end (right).
+  const hBarPath = (x, y, w, hgt, r = 4) => {
+    if (w <= 0) return "";
+    r = Math.min(r, w, hgt / 2);
+    return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + hgt - r}Q${x + w},${y + hgt} ${x + w - r},${y + hgt}H${x}Z`;
+  };
+
+  // ---------- Tooltip ----------
+  const tip = document.getElementById("tooltip");
+  const showTip = (title, rows, foot, x, y) => {
+    tip.replaceChildren();
+    tip.appendChild(h("div", { class: "tt-title", text: title }));
+    rows.forEach(r => {
+      const row = h("div", { class: "tt-row" });
+      if (r.color) row.appendChild(h("span", { class: r.rect ? "key-rect" : "key-line", style: `background:${r.color}` }));
+      row.appendChild(h("strong", { text: r.value }));
+      row.appendChild(h("span", { class: "nm", text: r.name }));
+      tip.appendChild(row);
+    });
+    if (foot) tip.appendChild(h("div", { class: "tt-foot" }, foot));
+    tip.classList.add("show");
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = x + 14, top = y + 14;
+    if (left + tw > innerWidth - 8) left = x - tw - 14;
+    if (top + th > innerHeight - 8) top = y - th - 14;
+    tip.style.left = Math.max(8, left) + "px";
+    tip.style.top = Math.max(8, top) + "px";
+  };
+  const hideTip = () => tip.classList.remove("show");
+  const rectCenter = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+
+  // ---------- Tiles ----------
+  function renderTiles() {
+    const root = document.getElementById("tiles");
+    root.replaceChildren();
+    const idx = curIdx(), bs = scopeBranches();
+    Object.entries(MEASURES).forEach(([key, m]) => {
+      const cur = sumRange(bs, key, idx);
+      const prev = sumRange(bs, key, idx.map(priorOf));
+      const series = idx.map(t => sumSeries(bs, key, t));
+      const tile = h("button", { class: "card tile", type: "button", "aria-pressed": String(state.measure === key),
+        "aria-label": `${m.label}: ${fmtFull(cur)}, ${fmtPct(pct(cur, prev))} vs same period last year. Show ${m.lower} in charts.` });
+      tile.appendChild(h("div", { class: "label", text: m.label }));
+      tile.appendChild(h("div", { class: "value", text: fmtCompact(cur), title: fmtFull(cur) }));
+      tile.appendChild(h("div", { class: "delta" }, deltaEl(pct(cur, prev)), h("span", { class: "vs", text: "vs same period last year" })));
+      tile.appendChild(sparkline(series));
+      tile.addEventListener("click", () => setState({ measure: key }));
+      root.appendChild(tile);
+    });
+    root.appendChild(formatCard(bs, idx));
+  }
+
+  function sparkline(series) {
+    const W = 200, H = 36, pad = 5;
+    const svg = svgEl("svg", { width: "100%", height: H, viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none", "aria-hidden": "true" });
+    const max = Math.max(...series), min = Math.min(...series);
+    const x = i => pad + i * (W - pad * 2) / Math.max(1, series.length - 1);
+    const y = v => H - pad - (max === min ? 0.5 : (v - min) / (max - min)) * (H - pad * 2);
+    svgEl("path", { d: series.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`).join(""), fill: "none",
+      stroke: css("--series-prior"), "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round",
+      "vector-effect": "non-scaling-stroke" }, svg);
+    // The svg stretches (preserveAspectRatio none), which would squash a circle, so the end dot is an HTML overlay.
+    const wrap = h("div", { style: "position:relative;margin-top:10px" });
+    wrap.appendChild(svg);
+    const last = series.length - 1;
+    const dot = h("span", { style: `position:absolute;width:10px;height:10px;border-radius:50%;background:${css("--series-1")};box-shadow:0 0 0 2px ${css("--surface-1")};left:calc(${(x(last) / W) * 100}% - 5px);top:${y(series[last]) - 5}px` });
+    wrap.appendChild(dot);
+    return wrap;
+  }
+
+  function formatCard(bs, idx) {
+    const card = h("div", { class: "card format-card" });
+    const parts = [
+      { key: "print",   name: "Print",                color: css("--series-1") },
+      { key: "digital", name: "E-books & e-audio",    color: css("--series-2") },
+      { key: "av",      name: "Audio-visual & other", color: css("--series-3") },
+    ];
+    const total = parts.reduce((s, p) => s + (p.v = sumRange(bs, p.key, idx)), 0);
+    const prevIdx = idx.map(priorOf);
+    const prevTotal = parts.reduce((s, p) => s + (p.pv = sumRange(bs, p.key, prevIdx)), 0);
+    const dig = parts[1];
+    card.appendChild(h("div", { class: "label", style: "color:var(--text-secondary);font-size:13px", text: "Loans by format" }));
+    card.appendChild(h("div", { style: "font-size:13px;margin-top:4px" },
+      "Digital share ", h("strong", { text: `${(dig.v / total * 100).toFixed(1)}%` }),
+      h("span", { style: "color:var(--text-muted)", text: `, up from ${(dig.pv / prevTotal * 100).toFixed(1)}% a year earlier` })));
+    const bar = h("div", { class: "seg-bar", role: "img",
+      "aria-label": "Loans by format: " + parts.map(p => `${p.name} ${fmtFull(p.v)} (${(p.v / total * 100).toFixed(0)}%)`).join(", ") });
+    parts.forEach(p => {
+      const share = p.v / total;
+      const blk = h("div", { style: `flex:${share} 1 0;background:${p.color}`, tabindex: "0",
+        "aria-label": `${p.name}: ${fmtFull(p.v)}, ${(share * 100).toFixed(1)}%` });
+      bar.appendChild(blk);
+      const txt = `${Math.round(share * 100)}%`;
+      requestAnimationFrame(() => { if (blk.clientWidth >= 44) blk.textContent = txt; });
+      const show = (x, y) => showTip(p.name, [
+        { value: fmtFull(p.v), name: "loans", color: p.color, rect: true },
+        { value: `${(share * 100).toFixed(1)}%`, name: "of all loans" },
+      ], h("span", {}, deltaEl(pct(p.v, p.pv)), h("span", { style: "color:var(--text-muted)", text: " vs last year" })), x, y);
+      blk.addEventListener("pointermove", e => show(e.clientX, e.clientY));
+      blk.addEventListener("pointerleave", hideTip);
+      blk.addEventListener("focus", () => show(...rectCenter(blk)));
+      blk.addEventListener("blur", hideTip);
+    });
+    card.appendChild(bar);
+    const lg = h("div", { class: "legend", style: "margin:0" });
+    parts.forEach(p => lg.appendChild(h("span", {}, h("span", { class: "key-rect", style: `background:${p.color}` }), p.name)));
+    card.appendChild(lg);
+    return card;
+  }
+
+  // ---------- Trend chart ----------
+  function renderTrend() {
+    const key = state.measure, m = MEASURES[key], bs = scopeBranches(), idx = curIdx();
+    const cur = idx.map(t => sumSeries(bs, key, t));
+    const prev = idx.map(t => sumSeries(bs, key, priorOf(t)));
+    document.getElementById("trendTitle").textContent = `Monthly ${m.lower}`;
+    document.getElementById("trendSub").textContent = `${scopeName()} · ${periodText()} compared with a year earlier`;
+
+    const c1 = css("--series-1"), cp = css("--series-prior");
+    const lg = document.getElementById("trendLegend");
+    lg.replaceChildren(
+      h("span", {}, h("span", { class: "key-line", style: `background:${c1}` }), periodText()),
+      h("span", {}, h("span", { class: "key-line", style: `background:${cp}` }), "Same months, year earlier"));
+
+    // Table twin
+    const tblWrap = document.getElementById("trendTable");
+    const tbl = h("table", {}, h("thead", {}, h("tr", {}, ["Month", m.label, "Year earlier", "Change"].map(t => h("th", { text: t })))));
+    const tb = h("tbody");
+    idx.forEach((t, i) => tb.appendChild(h("tr", {},
+      h("td", { text: monthLabel(t, true) }), h("td", { text: fmtFull(cur[i]) }), h("td", { text: fmtFull(prev[i]) }),
+      h("td", {}, deltaEl(pct(cur[i], prev[i]))))));
+    tbl.appendChild(tb);
+    tblWrap.replaceChildren(tbl);
+
+    const host = document.getElementById("trendChart");
+    host.hidden = state.show.trend; tblWrap.hidden = !state.show.trend;
+    lg.hidden = state.show.trend;
+    host.replaceChildren();
+    if (state.show.trend) return;
+
+    const W = host.clientWidth || 700, H = 300;
+    const M = { l: 48, r: 72, t: 12, b: 30 };
+    const iw = W - M.l - M.r, ih = H - M.t - M.b;
+    const ticks = niceTicks(Math.max(...cur, ...prev));
+    const top = ticks[ticks.length - 1];
+    const fmtA = axisFmt(top);
+    const n = idx.length;
+    const x = i => M.l + (n === 1 ? iw / 2 : i * iw / (n - 1));
+    const y = v => M.t + ih - v / top * ih;
+
+    const svg = svgEl("svg", { width: W, height: H, role: "img",
+      "aria-label": `Line chart of monthly ${m.lower} for ${scopeName()}, ${periodText()}, with the year-earlier months for comparison. Use the table view for exact values.` }, host);
+    ticks.forEach(v => {
+      svgEl("line", { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), stroke: v === 0 ? css("--baseline") : css("--grid"), "stroke-width": 1, "shape-rendering": "crispEdges" }, svg);
+      svgEl("text", { x: M.l - 8, y: y(v) + 4, "text-anchor": "end", class: "axis-text" }, svg).textContent = fmtA(v);
+    });
+    const minGap = 38;
+    const every = Math.max(1, Math.ceil(minGap / (iw / Math.max(1, n - 1))));
+    idx.forEach((t, i) => {
+      if (i % every && i !== n - 1) return;
+      const first = i === 0 || MONTHS[t].m === 0;
+      const tx = svgEl("text", { x: x(i), y: H - M.b + 18, "text-anchor": "middle", class: "axis-text" }, svg);
+      tx.textContent = first ? `${MN[MONTHS[t].m]} ’${String(MONTHS[t].y).slice(2)}` : MN[MONTHS[t].m];
+    });
+
+    const line = arr => arr.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`).join("");
+    svgEl("path", { d: `${line(cur)}L${x(n - 1)},${y(0)}L${x(0)},${y(0)}Z`, fill: c1, "fill-opacity": 0.1 }, svg);
+    svgEl("path", { d: line(prev), fill: "none", stroke: cp, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    svgEl("path", { d: line(cur), fill: "none", stroke: c1, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    svgEl("circle", { cx: x(n - 1), cy: y(cur[n - 1]), r: 4, fill: c1, stroke: css("--surface-1"), "stroke-width": 2 }, svg);
+
+    // End labels: current always; prior only if it doesn't collide.
+    const ly1 = y(cur[n - 1]), ly2 = y(prev[n - 1]);
+    svgEl("text", { x: x(n - 1) + 10, y: ly1 + 4, class: "value-text" }, svg).textContent = fmtCompact(cur[n - 1]);
+    if (Math.abs(ly1 - ly2) >= 16)
+      svgEl("text", { x: x(n - 1) + 10, y: ly2 + 4, class: "label-text" }, svg).textContent = fmtCompact(prev[n - 1]);
+
+    // Hover layer
+    const cross = svgEl("line", { y1: M.t, y2: M.t + ih, stroke: css("--baseline"), "stroke-width": 1, visibility: "hidden" }, svg);
+    const dPrev = svgEl("circle", { r: 4, fill: cp, stroke: css("--surface-1"), "stroke-width": 2, visibility: "hidden" }, svg);
+    const dCur = svgEl("circle", { r: 4, fill: c1, stroke: css("--surface-1"), "stroke-width": 2, visibility: "hidden" }, svg);
+    const overlay = svgEl("rect", { x: M.l - 12, y: M.t, width: iw + 24, height: ih, fill: "transparent", tabindex: 0,
+      "aria-label": "Monthly values. Use left and right arrow keys to step through months." }, svg);
+    let at = n - 1;
+    const show = (i, cx, cy) => {
+      at = i;
+      [cross].forEach(e => { e.setAttribute("x1", x(i)); e.setAttribute("x2", x(i)); e.setAttribute("visibility", "visible"); });
+      dCur.setAttribute("cx", x(i)); dCur.setAttribute("cy", y(cur[i])); dCur.setAttribute("visibility", "visible");
+      dPrev.setAttribute("cx", x(i)); dPrev.setAttribute("cy", y(prev[i])); dPrev.setAttribute("visibility", "visible");
+      const t = idx[i];
+      showTip(monthLabel(t, true), [
+        { value: fmtFull(cur[i]), name: monthLabel(t, true), color: c1 },
+        { value: fmtFull(prev[i]), name: monthLabel(priorOf(t), true), color: cp },
+      ], h("span", {}, deltaEl(pct(cur[i], prev[i])), h("span", { style: "color:var(--text-muted)", text: " vs year earlier" })), cx, cy);
+    };
+    const hide = () => { [cross, dCur, dPrev].forEach(e => e.setAttribute("visibility", "hidden")); hideTip(); };
+    overlay.addEventListener("pointermove", e => {
+      const r = svg.getBoundingClientRect();
+      const px = e.clientX - r.left;
+      const i = n === 1 ? 0 : Math.max(0, Math.min(n - 1, Math.round((px - M.l) / (iw / (n - 1)))));
+      show(i, e.clientX, e.clientY);
+    });
+    overlay.addEventListener("pointerleave", hide);
+    overlay.addEventListener("focus", () => { const r = svg.getBoundingClientRect(); show(at, r.left + x(at), r.top + y(cur[at])); });
+    overlay.addEventListener("blur", hide);
+    overlay.addEventListener("keydown", e => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      e.preventDefault();
+      const i = Math.max(0, Math.min(n - 1, at + (e.key === "ArrowRight" ? 1 : -1)));
+      const r = svg.getBoundingClientRect(); show(i, r.left + x(i), r.top + y(cur[i]));
+    });
+  }
+
+  // ---------- Branch ranking ----------
+  function renderBranches() {
+    const key = state.measure, m = MEASURES[key], idx = curIdx(), pidx = idx.map(priorOf);
+    document.getElementById("branchTitle").textContent = `${m.label} by branch`;
+    document.getElementById("branchSub").textContent = `${periodText()} · change vs year earlier`;
+    const rows = BRANCHES.map(b => {
+      const v = sumRange([b], key, idx), p = sumRange([b], key, pidx);
+      return { b, v, p, d: pct(v, p) };
+    }).sort((a, b) => b.v - a.v);
+
+    const host = document.getElementById("branchChart");
+    host.replaceChildren();
+    const W = host.clientWidth || 400, rowH = 32, barH = 16;
+    const nameW = 84, deltaW = 68, valW = 52;
+    const H = rows.length * rowH + 4;
+    const max = Math.max(...rows.map(r => r.v));
+    const bw = W - nameW - valW - deltaW - 8;
+    const svg = svgEl("svg", { width: W, height: H, role: "img",
+      "aria-label": `Bar chart of ${m.lower} by branch for ${periodText()}. Exact values are in the branch summary table.` }, host);
+    const c1 = css("--series-1"), dim = css("--bar-dim");
+    rows.forEach((r, i) => {
+      const y0 = i * rowH;
+      const sel = state.branch === "all" || state.branch === r.b.id;
+      const g = svgEl("g", { tabindex: 0, "aria-label": `${r.b.name}: ${fmtFull(r.v)} ${m.lower}, ${fmtPct(r.d)} vs year earlier` }, svg);
+      svgEl("rect", { x: 0, y: y0, width: W, height: rowH, fill: "transparent" }, g);
+      const nt = svgEl("text", { x: 0, y: y0 + rowH / 2 + 4, class: "label-text" }, g);
+      nt.textContent = r.b.name;
+      if (state.branch === r.b.id) nt.setAttribute("style", "font-weight:600;fill:var(--text-primary)");
+      const w = Math.max(2, r.v / max * bw);
+      svgEl("line", { x1: nameW, x2: nameW, y1: y0 + 6, y2: y0 + rowH - 6, stroke: css("--baseline"), "stroke-width": 1 }, g);
+      const bar = svgEl("path", { d: hBarPath(nameW, y0 + (rowH - barH) / 2, w, barH), fill: sel ? c1 : dim }, g);
+      svgEl("text", { x: nameW + w + 6, y: y0 + rowH / 2 + 4, class: "value-text" }, g).textContent = fmtCompact(r.v);
+      const dt = svgEl("text", { x: W, y: y0 + rowH / 2 + 4, "text-anchor": "end", style: `font-size:12px;font-weight:600;fill:${r.d >= 0 ? css("--up") : css("--down")}` }, g);
+      dt.textContent = `${r.d >= 0 ? "▲" : "▼"} ${fmtPct(r.d)}`;
+      const show = (cx, cy) => {
+        bar.setAttribute("fill-opacity", 0.8);
+        showTip(r.b.name, [
+          { value: fmtFull(r.v), name: periodText(), color: sel ? c1 : dim, rect: true },
+          { value: fmtFull(r.p), name: "Year earlier", color: css("--series-prior"), rect: true },
+        ], h("span", {}, deltaEl(r.d), h("span", { style: "color:var(--text-muted)", text: " vs year earlier" })), cx, cy);
+      };
+      const hide = () => { bar.removeAttribute("fill-opacity"); hideTip(); };
+      g.addEventListener("pointermove", e => show(e.clientX, e.clientY));
+      g.addEventListener("pointerleave", hide);
+      g.addEventListener("focus", () => show(...rectCenter(bar)));
+      g.addEventListener("blur", hide);
+      g.addEventListener("click", () => setState({ branch: state.branch === r.b.id ? "all" : r.b.id }));
+      g.style.cursor = "pointer";
+    });
+    const top = [...rows].sort((a, b) => b.d - a.d);
+    document.getElementById("branchNote").textContent =
+      `Fastest growth: ${top[0].b.name} (${fmtPct(top[0].d)}). Largest fall: ${top[top.length - 1].b.name} (${fmtPct(top[top.length - 1].d)}). Click a branch to focus it.`;
+  }
+
+  // ---------- Heatmap: YoY change by branch × month ----------
+  const BINS = [
+    { max: -0.15, v: "--div-n3", label: "≤ −15%" },
+    { max: -0.07, v: "--div-n2", label: "−15 to −7%" },
+    { max: -0.02, v: "--div-n1", label: "−7 to −2%" },
+    { max:  0.02, v: "--div-mid", label: "±2%" },
+    { max:  0.07, v: "--div-p1", label: "+2 to +7%" },
+    { max:  0.15, v: "--div-p2", label: "+7 to +15%" },
+    { max:  Infinity, v: "--div-p3", label: "≥ +15%" },
+  ];
+  const binOf = (d) => BINS.find(b => d < b.max) || BINS[BINS.length - 1];
+
+  function renderHeat() {
+    const key = state.measure, m = MEASURES[key], idx = curIdx();
+    document.getElementById("heatTitle").textContent = `${m.label}: change vs same month last year`;
+    document.getElementById("heatSub").textContent = `Each branch, ${periodText()}`;
+
+    const lg = document.getElementById("heatLegend");
+    lg.replaceChildren(...BINS.map(b => h("span", {}, h("span", { class: "key-rect", style: `background:${css(b.v)}` }), b.label)),
+      h("span", {}, closedSwatch(), "Closed"));
+
+    const cells = BRANCHES.map(b => idx.map(t => {
+      const v = DATA[b.id][key][t], p = DATA[b.id][key][priorOf(t)];
+      return { b, t, v, p, d: pct(v, p), closed: isClosed(b, t) };
+    }));
+
+    // Table twin
+    const tblWrap = document.getElementById("heatTable");
+    const tbl = h("table", {}, h("thead", {}, h("tr", {}, h("th", { text: "Branch" }), idx.map(t => h("th", { text: `${MN[MONTHS[t].m]} ’${String(MONTHS[t].y).slice(2)}` })))));
+    const tb = h("tbody");
+    cells.forEach(row => tb.appendChild(h("tr", { class: state.branch === row[0].b.id ? "hl" : "" },
+      h("td", { text: row[0].b.name }), row.map(c => h("td", { text: c.closed && key !== "loans" ? "Closed" : fmtPct(c.d) + (c.closed ? " (closed)" : "") })))));
+    tbl.appendChild(tb);
+    tblWrap.replaceChildren(tbl);
+
+    const host = document.getElementById("heatChart");
+    host.hidden = state.show.heat; tblWrap.hidden = !state.show.heat; lg.hidden = state.show.heat;
+    host.replaceChildren();
+    if (state.show.heat) return;
+
+    const W = host.clientWidth || 900, labelW = 92, rowH = 28, gap = 2, axisH = 22;
+    const n = idx.length;
+    const cw = (W - labelW) / n;
+    const H = BRANCHES.length * rowH + axisH;
+    const svg = svgEl("svg", { width: W, height: H, role: "img",
+      "aria-label": `Heatmap of the year-on-year change in ${m.lower} for each branch and month. Use the table view for exact values.` }, host);
+    const defs = svgEl("defs", {}, svg);
+    const pat = svgEl("pattern", { id: "hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+    svgEl("rect", { width: 6, height: 6, fill: css("--surface-1") }, pat);
+    svgEl("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: css("--closed-ink"), "stroke-width": 2 }, pat);
+
+    const every = Math.max(1, Math.ceil(44 / cw));
+    idx.forEach((t, j) => {
+      if (j % every) return;
+      const tx = svgEl("text", { x: labelW + j * cw + cw / 2, y: 14, "text-anchor": "middle", class: "axis-text" }, svg);
+      tx.textContent = (j === 0 || MONTHS[t].m === 0) ? `${MN[MONTHS[t].m]} ’${String(MONTHS[t].y).slice(2)}` : MN[MONTHS[t].m];
+    });
+    cells.forEach((row, i) => {
+      const y0 = axisH + i * rowH;
+      const focus = state.branch === "all" || state.branch === row[0].b.id;
+      const nt = svgEl("text", { x: 0, y: y0 + rowH / 2 + 3, class: "label-text" }, svg);
+      nt.textContent = row[0].b.name;
+      if (state.branch === row[0].b.id) nt.setAttribute("style", "font-weight:600;fill:var(--text-primary)");
+      row.forEach((c, j) => {
+        const g = svgEl("g", { tabindex: 0, opacity: focus ? 1 : 0.3,
+          "aria-label": `${c.b.name}, ${monthLabel(c.t, true)}: ${c.closed ? "closed" : fmtPct(c.d)}` }, svg);
+        const cx = labelW + j * cw;
+        const rect = svgEl("rect", { x: cx + gap / 2, y: y0 + gap / 2, width: Math.max(1, cw - gap), height: rowH - gap, rx: 3,
+          fill: c.closed ? "url(#hatch)" : css(binOf(c.d).v) }, g);
+        const show = (px, py) => {
+          rect.setAttribute("stroke", css("--text-primary")); rect.setAttribute("stroke-width", 1.5);
+          const foot = c.closed
+            ? h("span", { style: "color:var(--text-muted)", text: key === "loans" ? `Branch closed · digital loans only (${fmtPct(c.d)})` : "Branch closed for refurbishment" })
+            : h("span", {}, deltaEl(c.d), h("span", { style: "color:var(--text-muted)", text: " vs year earlier" }));
+          showTip(`${c.b.name} · ${monthLabel(c.t, true)}`, [
+            { value: fmtFull(c.v), name: monthLabel(c.t, true) },
+            { value: fmtFull(c.p), name: monthLabel(priorOf(c.t), true) },
+          ], foot, px, py);
+        };
+        const hide = () => { rect.removeAttribute("stroke"); hideTip(); };
+        g.addEventListener("pointermove", e => show(e.clientX, e.clientY));
+        g.addEventListener("pointerleave", hide);
+        g.addEventListener("focus", () => show(...rectCenter(rect)));
+        g.addEventListener("blur", hide);
+      });
+    });
+  }
+  function closedSwatch() {
+    const s = svgEl("svg", { width: 10, height: 10, "aria-hidden": "true" });
+    const defs = svgEl("defs", {}, s);
+    const p = svgEl("pattern", { id: "hatchKey", width: 4, height: 4, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+    svgEl("rect", { width: 4, height: 4, fill: css("--surface-1") }, p);
+    svgEl("line", { x1: 0, y1: 0, x2: 0, y2: 4, stroke: css("--closed-ink"), "stroke-width": 2 }, p);
+    svgEl("rect", { width: 10, height: 10, rx: 2, fill: "url(#hatchKey)", stroke: css("--closed-ink"), "stroke-width": 0.5 }, s);
+    return s;
+  }
+
+  // ---------- Summary table ----------
+  const sort = { key: "loans", dir: -1 };
+  function renderSummary() {
+    const idx = curIdx(), pidx = idx.map(priorOf);
+    document.getElementById("summarySub").textContent = `${periodText()} · change vs the same months a year earlier`;
+    const keys = ["loans", "members", "visits"];
+    const rows = BRANCHES.map(b => {
+      const r = { b };
+      keys.forEach(k => { r[k] = sumRange([b], k, idx); r[k + "P"] = sumRange([b], k, pidx); r[k + "D"] = pct(r[k], r[k + "P"]); });
+      r.lpv = r.visits ? r.loans / r.visits : 0;
+      return r;
+    });
+    rows.sort((a, b) => sort.key === "name" ? sort.dir * a.b.name.localeCompare(b.b.name) : sort.dir * ((a[sort.key] ?? 0) - (b[sort.key] ?? 0)));
+
+    const cols = [
+      { k: "name", t: "Branch" },
+      { k: "loans", t: "Loans" }, { k: "loansD", t: "vs last year" },
+      { k: "members", t: "New members" }, { k: "membersD", t: "vs last year" },
+      { k: "visits", t: "Visits" }, { k: "visitsD", t: "vs last year" },
+      { k: "lpv", t: "Loans per visit" },
+    ];
+    const thead = h("thead", {}, h("tr", {}, cols.map(c => {
+      const btn = h("button", { type: "button", text: c.t + (sort.key === c.k ? (sort.dir < 0 ? " ↓" : " ↑") : "") });
+      btn.addEventListener("click", () => { if (sort.key === c.k) sort.dir *= -1; else { sort.key = c.k; sort.dir = c.k === "name" ? 1 : -1; } renderSummary(); });
+      return h("th", { scope: "col", "aria-sort": sort.key === c.k ? (sort.dir < 0 ? "descending" : "ascending") : "none" }, btn);
+    })));
+    const tb = h("tbody");
+    rows.forEach(r => tb.appendChild(h("tr", { class: state.branch === r.b.id ? "hl" : "" },
+      h("th", { scope: "row", style: "text-align:left;font-weight:500;color:var(--text-primary)", text: r.b.name }),
+      h("td", { text: fmtFull(r.loans) }), h("td", {}, deltaEl(r.loansD)),
+      h("td", { text: fmtFull(r.members) }), h("td", {}, deltaEl(r.membersD)),
+      h("td", { text: fmtFull(r.visits) }), h("td", {}, deltaEl(r.visitsD)),
+      h("td", { text: r.lpv.toFixed(2) }))));
+    const T = {};
+    keys.forEach(k => { T[k] = rows.reduce((s, r) => s + r[k], 0); T[k + "P"] = rows.reduce((s, r) => s + r[k + "P"], 0); });
+    const tf = h("tfoot", {}, h("tr", {},
+      h("td", { text: "All branches" }),
+      h("td", { text: fmtFull(T.loans) }), h("td", {}, deltaEl(pct(T.loans, T.loansP))),
+      h("td", { text: fmtFull(T.members) }), h("td", {}, deltaEl(pct(T.members, T.membersP))),
+      h("td", { text: fmtFull(T.visits) }), h("td", {}, deltaEl(pct(T.visits, T.visitsP))),
+      h("td", { text: (T.loans / T.visits).toFixed(2) })));
+    document.getElementById("summaryTable").replaceChildren(h("table", {}, thead, tb, tf));
+  }
+
+  // ---------- Wiring ----------
+  const branchSel = document.getElementById("branchSel");
+  BRANCHES.forEach(b => branchSel.appendChild(h("option", { value: b.id, text: b.name })));
+  branchSel.addEventListener("change", () => setState({ branch: branchSel.value }));
+  const measureSel = document.getElementById("measureSel");
+  measureSel.addEventListener("change", () => setState({ measure: measureSel.value }));
+  document.querySelectorAll("#periodSeg button").forEach(btn =>
+    btn.addEventListener("click", () => setState({ period: +btn.dataset.p })));
+  document.querySelectorAll("[data-toggle]").forEach(btn => btn.addEventListener("click", () => {
+    const k = btn.dataset.toggle;
+    state.show[k] = !state.show[k];
+    btn.textContent = state.show[k] ? "Show chart" : "Show table";
+    render();
+  }));
+
+  const themeBtn = document.getElementById("themeBtn");
+  const isDark = () => document.documentElement.dataset.theme
+    ? document.documentElement.dataset.theme === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  const syncThemeBtn = () => { themeBtn.textContent = isDark() ? "Light mode" : "Dark mode"; };
+  themeBtn.addEventListener("click", () => {
+    document.documentElement.dataset.theme = isDark() ? "light" : "dark";
+    syncThemeBtn(); render();
+  });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { syncThemeBtn(); render(); });
+  syncThemeBtn();
+
+  function setState(patch) {
+    Object.assign(state, patch);
+    branchSel.value = state.branch;
+    measureSel.value = state.measure;
+    document.querySelectorAll("#periodSeg button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.p === state.period)));
+    render();
+  }
+
+  function render() {
+    hideTip();
+    renderTiles();
+    renderTrend();
+    renderBranches();
+    renderHeat();
+    renderSummary();
+  }
+
+  let rz;
+  new ResizeObserver(() => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { renderTrend(); renderBranches(); renderHeat(); }); })
+    .observe(document.querySelector(".wrap"));
+  render();
+})();
+</script>
+</body>
+</html>
