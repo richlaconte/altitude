@@ -3,7 +3,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, cpSync, existsSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { resolve, join } from 'node:path';
+import { resolve, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { claudeAllowedTools } from '../framework/protocol.mjs';
 import { runProcess, traceUsage, sha256 } from '../framework/support.mjs';
@@ -56,7 +56,8 @@ async function generate(condition,brief){
   setup(condition,workspace);
   execFileSync('git',['init','-q'],{cwd:workspace});
   meta.dependencies=existsSync(join(workspace,'package.json'))?JSON.parse(readFileSync(join(workspace,'package.json'),'utf8')).dependencies:{};
-  if(tarball&&condition==='claude-altitude')meta.tarballSHA256=sha256(readFileSync(tarball));
+  // The tarball is named, not located: its path is a local one, and its hash identifies it.
+  if(tarball&&condition==='claude-altitude'){meta.dependencies['altitude-design']=basename(tarball);meta.tarballSHA256=sha256(readFileSync(tarball));}
   const argv=['-p','--no-session-persistence','--output-format','stream-json','--verbose','--model',model,'--permission-mode','acceptEdits','--allowedTools',spec.tools.join(','),'--setting-sources','project','--strict-mcp-config','--mcp-config','{"mcpServers":{}}'];
   meta.invocation={command:'claude',args:argv};
   console.log(id,'generation-started',new Date().toISOString());

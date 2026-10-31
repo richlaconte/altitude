@@ -10,7 +10,7 @@
   "startedAt": "2026-10-31T00:42:16.490Z",
   "toolVersion": "2.1.314 (Claude Code)",
   "dependencies": {
-    "altitude-design": "/private/tmp/claude-501/-Users-richardlaconte/dbd30971-51dc-4967-a799-61033aeab938/scratchpad/altitude-design-0.2.1.tgz",
+    "altitude-design": "altitude-design-0.2.1.tgz",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
