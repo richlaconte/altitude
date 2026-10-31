@@ -17,6 +17,8 @@ The layout tree is read from the DOM rather than parsed from pixels, since every
 
 **Creative range, after Design Creativity Bench** ([arXiv 2610.11539](https://arxiv.org/abs/2610.11539)). Every task is written for two product domains with the same goal (`briefs.json`). A system's creative range on a measure is the mean distance between its two builds of each task. The benchmark's own similarity uses a learned projection that isn't published, so its 0.58 (models) and 0.90 (human designers) are a direction, not a target on this scale.
 
+**Proportions.** Each screen also gets descriptive measures, read from the rendered page: content fill (the share of the screen inside the box around everything that isn't the page's ground), text density (characters per 10,000 px² of the text's box), the median control's height (excluding table headers and anything taller than 64px), the share of text at label weights (500–600) and the largest text. They're reported as medians per system, not as distances.
+
 **Task range.** The mean distance between one system's builds of different tasks (each `-a` brief against the other `-a` briefs, and the same for `-b`). It answers tell LA5, every screen in the same frame: a system that varies its frame with the task scores higher on layout here.
 
 **Distance from the centre.** For each system, the mean distance from its builds to the baselines' builds of the same briefs. A system that drifts toward the generated centre shows here first.

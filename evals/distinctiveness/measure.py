@@ -9,6 +9,7 @@ Design Creativity Bench (arXiv 2610.11539).
 
 Across systems: each measure for builds of the same brief. Within a system: creative range (one task, two domains),
 task range (different tasks, -a briefs with -a, -b with -b) and the noise floor (repeat builds of one prompt).
+Proportions (content fill, text density, control height, label-weight share, title size) are reported as medians, not distances.
 
 Usage: python measure.py <captures dir> <results.json>   (setup: see README.md)
 """
@@ -110,6 +111,12 @@ def layout_distance(a, b):
     from zss import simple_distance
     return simple_distance(tree(a), tree(b)) / max(size(a), size(b))
 
+def content_fill(path):
+    """The share of the screen inside the box around everything that differs from the page's ground (its corner)."""
+    rgb = np.asarray(Image.open(path).convert('RGB'), dtype=int)
+    ys, xs = np.where(np.abs(rgb - rgb[4, 4]).sum(axis=2) > 12)
+    return round(float((xs.max() - xs.min() + 1) * (ys.max() - ys.min() + 1) / (rgb.shape[0] * rgb.shape[1])), 3) if len(xs) else 0.0
+
 def comparable(a, b):
     """Two builds of the same brief, or a domain-free preview and a build of its task. Only first samples are compared across systems."""
     if a['system'] == b['system'] or a['sample'] > 1 or b['sample'] > 1:
@@ -166,10 +173,16 @@ def main(captures, results):
                   if a['system'] == b['system'] and a['task'] != b['task'] and (not a['brief'] or a['brief'][-1] == b['brief'][-1])]
     task_range = {m: {x: mean([p[m] for p in task_pairs if p['system'] == x]) for x in systems} for m in measures}
     noise = {m: {x: mean([p[m] for p in noise_pairs if p['system'] == x]) for x in systems} for m in measures}
+    # Proportions: descriptive medians per system (first samples), from capture.mjs and the screenshot.
+    for s in screens:
+        s['proportions'] = {**s.get('proportions', {}), 'contentFill': content_fill(s['png'])}
+    keys = ('contentFill', 'textDensity', 'controlHeight', 'labelShare', 'titlePx')
+    proportions = {x: {k: (lambda v: round(float(np.median(v)), 3) if v else None)([s['proportions'][k] for s in screens if s['system'] == x and s['sample'] == 1 and s['proportions'].get(k) is not None]) for k in keys} for x in systems}
     Path(results).write_text(json.dumps({
         'method': {'uiclip': UICLIP, 'processor': PROCESSOR, 'viewport': '1200x1200', 'tiles': f'{GRID}x{GRID}, Hungarian-matched', 'colourBins': {'L': L_EDGES.tolist(), 'C': C_EDGES.tolist(), 'hue': HUE_BINS},
                    'layout': 'DOM layout tree (capture.mjs), repeated siblings folded, Zhang-Shasha with unit costs, divided by the larger tree', 'reference': list(REFERENCE)},
-        'screens': [{k: s[k] for k in ('id', 'system', 'brief', 'task', 'domain', 'sample')} | {'nodes': size(s['layout'])} for s in screens],
+        'screens': [{k: s[k] for k in ('id', 'system', 'brief', 'task', 'domain', 'sample', 'proportions')} | {'nodes': size(s['layout'])} for s in screens],
+        'proportions': proportions,
         'pairs': pairs, 'matrix': matrix, 'baselines': baselines, 'distanceFromCentre': centre_distance,
         'creativeRangePairs': range_pairs, 'creativeRange': creative_range, 'taskRangePairs': task_pairs, 'taskRange': task_range, 'noisePairs': noise_pairs, 'noiseFloor': noise}, indent=1) + '\n')
 

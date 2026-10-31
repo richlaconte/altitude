@@ -43,6 +43,15 @@
    "task": "dashboard",
    "domain": "subscription software",
    "sample": 1,
+   "proportions": {
+    "chars": 1330,
+    "textDensity": 10.54,
+    "labelShare": 0.411,
+    "titlePx": 28,
+    "controls": 5,
+    "controlHeight": 30,
+    "contentFill": 0.878
+   },
    "nodes": 48
   },
   {
@@ -52,6 +61,15 @@
    "task": "dashboard",
    "domain": "public library",
    "sample": 1,
+   "proportions": {
+    "chars": 1505,
+    "textDensity": 12.48,
+    "labelShare": 0.352,
+    "titlePx": 28,
+    "controls": 5,
+    "controlHeight": 30,
+    "contentFill": 0.834
+   },
    "nodes": 58
   },
   {
@@ -61,6 +79,15 @@
    "task": "record-view",
    "domain": "sales CRM",
    "sample": 1,
+   "proportions": {
+    "chars": 1449,
+    "textDensity": 11.03,
+    "labelShare": 0.234,
+    "titlePx": 24,
+    "controls": 5,
+    "controlHeight": 30,
+    "contentFill": 0.932
+   },
    "nodes": 109
   },
   {
@@ -70,6 +97,15 @@
    "task": "record-view",
    "domain": "restaurant kitchen",
    "sample": 1,
+   "proportions": {
+    "chars": 1191,
+    "textDensity": 8.9,
+    "labelShare": 0.264,
+    "titlePx": 24,
+    "controls": 5,
+    "controlHeight": 30,
+    "contentFill": 0.925
+   },
    "nodes": 73
   },
   {
@@ -79,6 +115,15 @@
    "task": "records",
    "domain": "project management",
    "sample": 1,
+   "proportions": {
+    "chars": 869,
+    "textDensity": 9.7,
+    "labelShare": 0.191,
+    "titlePx": 24,
+    "controls": 2,
+    "controlHeight": 38,
+    "contentFill": 0.623
+   },
    "nodes": 76
   },
   {
@@ -88,6 +133,15 @@
    "task": "records",
    "domain": "freight",
    "sample": 1,
+   "proportions": {
+    "chars": 2051,
+    "textDensity": 15.56,
+    "labelShare": 0.161,
+    "titlePx": 24,
+    "controls": 3,
+    "controlHeight": 36,
+    "contentFill": 0.917
+   },
    "nodes": 132
   },
   {
@@ -97,6 +151,15 @@
    "task": "settings",
    "domain": "project management",
    "sample": 1,
+   "proportions": {
+    "chars": 218,
+    "textDensity": 7.95,
+    "labelShare": 0.317,
+    "titlePx": 24,
+    "controls": 1,
+    "controlHeight": 36,
+    "contentFill": 0.207
+   },
    "nodes": 19
   },
   {
@@ -106,6 +169,15 @@
    "task": "settings",
    "domain": "veterinary clinic",
    "sample": 1,
+   "proportions": {
+    "chars": 571,
+    "textDensity": 11.12,
+    "labelShare": 0.275,
+    "titlePx": 24,
+    "controls": 1,
+    "controlHeight": 36,
+    "contentFill": 0.386
+   },
    "nodes": 32
   },
   {
@@ -115,6 +187,15 @@
    "task": "dashboard",
    "domain": "subscription software",
    "sample": 1,
+   "proportions": {
+    "chars": 835,
+    "textDensity": 6.18,
+    "labelShare": 0.311,
+    "titlePx": 52,
+    "controls": 8,
+    "controlHeight": 32,
+    "contentFill": 0.938
+   },
    "nodes": 62
   },
   {
@@ -124,6 +205,15 @@
    "task": "dashboard",
    "domain": "public library",
    "sample": 1,
+   "proportions": {
+    "chars": 1349,
+    "textDensity": 9.97,
+    "labelShare": 0.185,
+    "titlePx": 30,
+    "controls": 8,
+    "controlHeight": 32,
+    "contentFill": 0.941
+   },
    "nodes": 63
   },
   {
@@ -133,6 +223,15 @@
    "task": "record-view",
    "domain": "sales CRM",
    "sample": 1,
+   "proportions": {
+    "chars": 1723,
+    "textDensity": 12.56,
+    "labelShare": 0.285,
+    "titlePx": 22,
+    "controls": 15,
+    "controlHeight": 28,
+    "contentFill": 0.992
+   },
    "nodes": 155
   },
   {
@@ -142,6 +241,15 @@
    "task": "record-view",
    "domain": "restaurant kitchen",
    "sample": 1,
+   "proportions": {
+    "chars": 1732,
+    "textDensity": 12.86,
+    "labelShare": 0.253,
+    "titlePx": 32,
+    "controls": 3,
+    "controlHeight": 39,
+    "contentFill": 0.987
+   },
    "nodes": 110
   },
   {
@@ -151,6 +259,15 @@
    "task": "records",
    "domain": "project management",
    "sample": 1,
+   "proportions": {
+    "chars": 1344,
+    "textDensity": 10.17,
+    "labelShare": 0.435,
+    "titlePx": 24,
+    "controls": 2,
+    "controlHeight": 36,
+    "contentFill": 0.916
+   },
    "nodes": 99
   },
   {
@@ -160,6 +277,15 @@
    "task": "records",
    "domain": "freight",
    "sample": 1,
+   "proportions": {
+    "chars": 1901,
+    "textDensity": 13.89,
+    "labelShare": 0.232,
+    "titlePx": 22,
+    "controls": 2,
+    "controlHeight": 36,
+    "contentFill": 0.991
+   },
    "nodes": 59
   },
   {
@@ -169,6 +295,15 @@
    "task": "settings",
    "domain": "project management",
    "sample": 1,
+   "proportions": {
+    "chars": 471,
+    "textDensity": 4.34,
+    "labelShare": 0.172,
+    "titlePx": 24,
+    "controls": 4,
+    "controlHeight": 43,
+    "contentFill": 0.988
+   },
    "nodes": 36
   },
   {
@@ -178,6 +313,15 @@
    "task": "settings",
    "domain": "veterinary clinic",
    "sample": 1,
+   "proportions": {
+    "chars": 355,
+    "textDensity": 5.11,
+    "labelShare": 0.13,
+    "titlePx": 26,
+    "controls": 4,
+    "controlHeight": 45,
+    "contentFill": 0.99
+   },
    "nodes": 25
   },
   {
@@ -187,6 +331,15 @@
    "task": "dashboard",
    "domain": "subscription software",
    "sample": 1,
+   "proportions": {
+    "chars": 1099,
+    "textDensity": 8.28,
+    "labelShare": 0.198,
+    "titlePx": 30,
+    "controls": 0,
+    "controlHeight": null,
+    "contentFill": 0.918
+   },
    "nodes": 29
   },
   {
@@ -196,6 +349,15 @@
    "task": "dashboard",
    "domain": "public library",
    "sample": 1,
+   "proportions": {
+    "chars": 1416,
+    "textDensity": 10.52,
+    "labelShare": 0.361,
+    "titlePx": 30,
+    "controls": 7,
+    "controlHeight": 25,
+    "contentFill": 0.937
+   },
    "nodes": 111
   },
   {
@@ -205,6 +367,15 @@
    "task": "record-view",
    "domain": "sales CRM",
    "sample": 1,
+   "proportions": {
+    "chars": 2343,
+    "textDensity": 17.95,
+    "labelShare": 0.242,
+    "titlePx": 24,
+    "controls": 6,
+    "controlHeight": 25,
+    "contentFill": 0.926
+   },
    "nodes": 113
   },
   {
@@ -214,6 +385,15 @@
    "task": "record-view",
    "domain": "restaurant kitchen",
    "sample": 1,
+   "proportions": {
+    "chars": 1791,
+    "textDensity": 13.99,
+    "labelShare": 0.291,
+    "titlePx": 30,
+    "controls": 1,
+    "controlHeight": 32,
+    "contentFill": 0.89
+   },
    "nodes": 88
   },
   {
@@ -223,6 +403,15 @@
    "task": "records",
    "domain": "project management",
    "sample": 1,
+   "proportions": {
+    "chars": 933,
+    "textDensity": 10.81,
+    "labelShare": 0.454,
+    "titlePx": 18,
+    "controls": 2,
+    "controlHeight": 32,
+    "contentFill": 0.645
+   },
    "nodes": 43
   },
   {
@@ -232,6 +421,15 @@
    "task": "records",
    "domain": "freight",
    "sample": 1,
+   "proportions": {
+    "chars": 2671,
+    "textDensity": 20.14,
+    "labelShare": 0.184,
+    "titlePx": 18,
+    "controls": 2,
+    "controlHeight": 32,
+    "contentFill": 0.983
+   },
    "nodes": 34
   },
   {
@@ -241,6 +439,15 @@
    "task": "settings",
    "domain": "project management",
    "sample": 1,
+   "proportions": {
+    "chars": 515,
+    "textDensity": 10.7,
+    "labelShare": 0.46,
+    "titlePx": 24,
+    "controls": 1,
+    "controlHeight": 32,
+    "contentFill": 0.335
+   },
    "nodes": 38
   },
   {
@@ -250,6 +457,15 @@
    "task": "settings",
    "domain": "veterinary clinic",
    "sample": 1,
+   "proportions": {
+    "chars": 718,
+    "textDensity": 11.4,
+    "labelShare": 0.227,
+    "titlePx": 24,
+    "controls": 2,
+    "controlHeight": 32,
+    "contentFill": 0.488
+   },
    "nodes": 39
   },
   {
@@ -259,6 +475,15 @@
    "task": "dashboard",
    "domain": "subscription software",
    "sample": 2,
+   "proportions": {
+    "chars": 1109,
+    "textDensity": 8.6,
+    "labelShare": 0.373,
+    "titlePx": 28,
+    "controls": 4,
+    "controlHeight": 30,
+    "contentFill": 0.892
+   },
    "nodes": 51
   },
   {
@@ -268,6 +493,15 @@
    "task": "settings",
    "domain": "project management",
    "sample": 2,
+   "proportions": {
+    "chars": 333,
+    "textDensity": 9.13,
+    "labelShare": 0.213,
+    "titlePx": 24,
+    "controls": 1,
+    "controlHeight": 36,
+    "contentFill": 0.256
+   },
    "nodes": 34
   },
   {
@@ -277,6 +511,15 @@
    "task": "dashboard",
    "domain": "subscription software",
    "sample": 2,
+   "proportions": {
+    "chars": 1255,
+    "textDensity": 9.3,
+    "labelShare": 0.213,
+    "titlePx": 52,
+    "controls": 5,
+    "controlHeight": 30,
+    "contentFill": 0.933
+   },
    "nodes": 53
   },
   {
@@ -286,6 +529,15 @@
    "task": "settings",
    "domain": "project management",
    "sample": 2,
+   "proportions": {
+    "chars": 628,
+    "textDensity": 5.34,
+    "labelShare": 0.132,
+    "titlePx": 22,
+    "controls": 4,
+    "controlHeight": 39,
+    "contentFill": 0.99
+   },
    "nodes": 54
   },
   {
@@ -295,6 +547,15 @@
    "task": "dashboard",
    "domain": "subscription software",
    "sample": 2,
+   "proportions": {
+    "chars": 775,
+    "textDensity": 5.96,
+    "labelShare": 0.262,
+    "titlePx": 30,
+    "controls": 4,
+    "controlHeight": 25,
+    "contentFill": 0.918
+   },
    "nodes": 28
   },
   {
@@ -304,6 +565,15 @@
    "task": "settings",
    "domain": "project management",
    "sample": 2,
+   "proportions": {
+    "chars": 440,
+    "textDensity": 10.26,
+    "labelShare": 0.511,
+    "titlePx": 24,
+    "controls": 1,
+    "controlHeight": 32,
+    "contentFill": 0.309
+   },
    "nodes": 39
   },
   {
@@ -313,6 +583,15 @@
    "task": "settings",
    "domain": null,
    "sample": 1,
+   "proportions": {
+    "chars": 608,
+    "textDensity": 8.87,
+    "labelShare": 0.434,
+    "titlePx": 21,
+    "controls": 7,
+    "controlHeight": 36,
+    "contentFill": 0.491
+   },
    "nodes": 44
   },
   {
@@ -322,6 +601,15 @@
    "task": "records",
    "domain": null,
    "sample": 1,
+   "proportions": {
+    "chars": 579,
+    "textDensity": 9.38,
+    "labelShare": 0.427,
+    "titlePx": 21,
+    "controls": 9,
+    "controlHeight": 30,
+    "contentFill": 0.432
+   },
    "nodes": 79
   },
   {
@@ -331,6 +619,15 @@
    "task": "dashboard",
    "domain": null,
    "sample": 1,
+   "proportions": {
+    "chars": 652,
+    "textDensity": 7.68,
+    "labelShare": 0.417,
+    "titlePx": 28,
+    "controls": 1,
+    "controlHeight": 36,
+    "contentFill": 0.59
+   },
    "nodes": 44
   },
   {
@@ -340,9 +637,48 @@
    "task": "record-view",
    "domain": null,
    "sample": 1,
+   "proportions": {
+    "chars": 337,
+    "textDensity": 6.11,
+    "labelShare": 0.234,
+    "titlePx": 24,
+    "controls": 3,
+    "controlHeight": 38,
+    "contentFill": 0.393
+   },
    "nodes": 33
   }
  ],
+ "proportions": {
+  "altitude-preview": {
+   "contentFill": 0.462,
+   "textDensity": 8.275,
+   "controlHeight": 36.0,
+   "labelShare": 0.422,
+   "titlePx": 22.5
+  },
+  "claude-altitude": {
+   "contentFill": 0.856,
+   "textDensity": 10.785,
+   "controlHeight": 33.0,
+   "labelShare": 0.27,
+   "titlePx": 24.0
+  },
+  "claude-plain": {
+   "contentFill": 0.988,
+   "textDensity": 10.07,
+   "controlHeight": 36.0,
+   "labelShare": 0.242,
+   "titlePx": 25.0
+  },
+  "claude-shadcn": {
+   "contentFill": 0.904,
+   "textDensity": 11.105,
+   "controlHeight": 32.0,
+   "labelShare": 0.266,
+   "titlePx": 24.0
+  }
+ },
  "pairs": [
   {
    "a": "claude-altitude--dashboard-a",
