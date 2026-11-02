@@ -81,8 +81,13 @@ for (const [id, { kind }] of Object.entries(RULES)) {
 const cli = resolve(root, 'scripts/altitude-cli.mjs');
 const project = write({ 'package.json': '{"name":"fixture","private":true}', 'src/App.tsx': app('<Button variant="primary">OK</Button>') });
 try {
-  mkdirSync(join(project, 'node_modules'), { recursive: true });
-  execFileSync('ln', ['-s', root, join(project, 'node_modules/altitude-design')]);
+  // A minimal installed package: what the CLI reads to locate itself. CI's checks jobs don't build dist/, and this
+  // tests the command from source (the packed consumer check runs the built one).
+  const pkg = join(project, 'node_modules/altitude-design');
+  mkdirSync(join(pkg, 'dist/guidance'), { recursive: true });
+  writeFileSync(join(pkg, 'package.json'), JSON.stringify({ name: 'altitude-design', version: '0.0.0' }));
+  writeFileSync(join(pkg, 'dist/guidance/index.json'), JSON.stringify({ version: '0.0.0', patterns: [], components: [] }));
+  writeFileSync(join(pkg, 'dist/tokens.css'), ':root { --ink: #12161f; --accent: #2b56d6; }');
   let failed;
   try { execFileSync(process.execPath, [cli, 'check', '--json', '--cwd', project], { encoding: 'utf8' }); failed = false; }
   catch (e) { failed = true; const out = JSON.parse(e.stdout); assert.equal(out.ok, false); assert.ok(out.findings.some((f) => f.ruleId === 'ALT-COPY-001' && f.file === 'App.tsx' && f.line === 3)); assert.match(out.scope, /Not checked/); }
