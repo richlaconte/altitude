@@ -89,7 +89,7 @@ export const insideAwait = `export function Await({ imprint, shape, inline, enab
 //                               staggered by riseDelay(): four rises at a time
 //   inside a RevealGroup      → stay an imprint until the slowest part lands`;
 
-export const install = `npm install altitude-design`;
+const install = `npm install altitude-design`;
 
 export const installTabs = [
   { label: 'npm', language: 'sh', code: install },

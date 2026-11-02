@@ -16,8 +16,8 @@
 html { scroll-behavior: smooth; scroll-padding-top: 72px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body { margin: 0; background: var(--page-bg); color: var(--page-ink); }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface-ground); }
 .page { min-height: 100vh; }
+.nav-sentinel { position: absolute; top: 0; left: 0; width: 1px; height: 4px; pointer-events: none; }
 .page a:not(.alt-btn):not(.alt-sidebar-button) { color: var(--page-link); text-underline-offset: 3px; }
 .page a:not(.alt-btn):not(.alt-sidebar-button):hover { text-decoration-thickness: 2px; }
 .page a.alt-btn { text-decoration: none; }
@@ -32,7 +32,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .skip:focus { top: 12px; }
 
 /* ── Navigation: flush on the ground; it rises one level once content passes under it (a sticky PageHeader's rule). ── */
-.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface-ground); box-shadow: 0 1px 0 var(--page-rule);
+.nav { position: sticky; top: 0; padding-top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface-ground); box-shadow: 0 1px 0 var(--page-rule);
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
 .nav[data-raised] { background: var(--surface-raised); box-shadow: var(--elev-1); }
 .nav-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); height: 60px; }
@@ -45,7 +45,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .nav-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--space-2); font: 500 14px/20px var(--font-display); }
 .page .nav-links a:not(.alt-btn):not(.alt-sidebar-button) { display: inline-flex; align-items: center; min-height: 32px; padding: 0 var(--space-2); color: var(--page-muted); text-decoration: none; border-radius: var(--radius-sm); }
 @media (hover: hover) { .page .nav-links a:not(.alt-btn):hover { color: var(--page-ink); } }
-@media (pointer: coarse) { .page .nav-links a { min-height: 44px; } }
+@media (pointer: coarse) { .page .nav-links a:not(.alt-btn):not(.alt-sidebar-button) { min-height: 44px; } }
 @media (max-width: 640px) { .nav .nav-local { display: none !important; } }
 
 /* ── Type ── */
@@ -181,6 +181,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* ── Get started, footer ── */
 .start { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--space-8); align-items: start; }
 .start .section-head { margin: 0; }
+.start-code { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .start-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); }
 @media (max-width: 880px) { .start { grid-template-columns: minmax(0, 1fr); } }
 .foot { padding-block: var(--space-8); box-shadow: inset 0 1px 0 var(--page-rule); font: 400 13px/20px var(--font-display); color: var(--page-muted); }

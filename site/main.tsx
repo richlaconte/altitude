@@ -12,7 +12,8 @@ import {
   CodeBlock, ColorSwatchPicker, DataTable, Field, InlineEdit, Input, Kbd, Meter, RevealGroup, Select, Surface, Switch,
   Tabs, TabsList, TabsTrigger, Toaster, toast,
 } from '../project/components/src/index';
-import pkg from '../package.json';
+/** Injected by scripts/build-site.mjs, counted from the repository at build time. */
+declare const __SITE__: { version: string; experiments: number; checks: number; patterns: number };
 import type { BuiltInScheme } from '../project/components/src/index';
 type Level = NonNullable<React.ComponentProps<typeof Surface>['level']>;
 import { agentSetup, arrivalCode, insideAvatar, insideAwait, installTabs, quickStart, yourCode } from './snippets';
@@ -23,9 +24,7 @@ const LINKS = {
   github: REPO,
   guide: `${REPO}/blob/main/project/README.md`,
   elevation: `${REPO}/blob/main/project/Elevation.md`,
-  charts: `${REPO}/blob/main/project/Charts.md`,
   research: `${REPO}/blob/main/project/Research.md`,
-  distinctiveness: `${REPO}/blob/main/project/Distinctiveness.md`,
   framework: `${REPO}/blob/main/project/framework/README.md`,
   awaitDocs: `${REPO}/blob/main/project/components/Await/README.md`,
   benchmark: `${REPO}/blob/main/evals/distinctiveness/results/2026-10-31/REPORT.md`,
@@ -112,7 +111,7 @@ function OneValue() {
 const READINGS: { name: string; what: string }[] = [
   { name: 'Editing opens a well.', what: 'Things you fill are cut into the page; the text stays exactly where it was.' },
   { name: 'Saving hovers.', what: 'A write in flight is live, so it lifts, but only after 300ms: a fast save never shows as pending.' },
-  { name: 'Saved lands, and glows.', what: 'The accepted value settles back to the ground with an afterglow that fades over 8 seconds.' },
+  { name: 'Saved lands, and glows.', what: 'The accepted value settles back to the ground with an afterglow. It fades over 5 seconds, not the 8 a change you didn’t make gets, because you watched this one land.' },
   { name: 'Failing drops into a trench.', what: 'It says what happened in words and keeps your text for the retry.' },
 ];
 
@@ -282,6 +281,8 @@ const EVIDENCE: { rule: string; finding: string; source: string }[] = [
 const SCHEMES: { id: BuiltInScheme; label: string }[] = [
   { id: 'daylight', label: 'Daylight' }, { id: 'nightfall', label: 'Nightfall' },
 ];
+// The scheme's own accent is a swatch like the others, so one radio group is the only control for the accent.
+const SCHEME_ACCENT: Record<BuiltInScheme, string> = { daylight: '#2b56d6', nightfall: '#86a2ff' }; // tokens.json "accent"
 const ACCENTS = [
   { value: '#0f8a6b', name: 'Pine' },
   { value: '#2a6f9e', name: 'Harbor' },
@@ -343,9 +344,9 @@ function Theming({ look, setLook }: { look: Look; setLook: (f: (l: Look) => Look
         <div className="panel-block">
           <span className="panel-label" id="accent-label">Accent</span>
           <div className="accent-row">
-            <Switch label="Scheme default" checked={!look.accent} onCheckedChange={(on) => setLook((l) => ({ ...l, accent: on ? undefined : ACCENTS[0].value }))} />
-            <ColorSwatchPicker aria-label="Accent colour" swatches={ACCENTS} value={look.accent ?? null}
-              onValueChange={(v) => setLook((l) => ({ ...l, accent: v }))} />
+            <ColorSwatchPicker aria-labelledby="accent-label" value={look.accent ?? SCHEME_ACCENT[look.scheme]}
+              swatches={[{ value: SCHEME_ACCENT[look.scheme], name: `${look.scheme === 'daylight' ? 'Daylight' : 'Nightfall'} default` }, ...ACCENTS]}
+              onValueChange={(v) => setLook((l) => ({ ...l, accent: v === SCHEME_ACCENT[l.scheme] ? undefined : v }))} />
           </div>
         </div>
         <div className="panel-block switches">
@@ -368,23 +369,28 @@ function systemScheme(): BuiltInScheme {
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'nightfall' : 'daylight';
 }
 
-/** The nav lies on the ground and rises one level once content passes under it, as a sticky PageHeader does. */
-function useRaisedOnScroll() {
+/** The nav lies on the ground and rises one level once content passes under it, as a sticky PageHeader does: a
+ *  sentinel at the top of the page and an IntersectionObserver, so it changes only when the state does. */
+function useRaisedOnScroll(sentinel: React.RefObject<HTMLElement | null>) {
   const [raised, setRaised] = React.useState(false);
   React.useEffect(() => {
-    const on = () => setRaised(window.scrollY > 4);
-    on(); window.addEventListener('scroll', on, { passive: true });
-    return () => window.removeEventListener('scroll', on);
-  }, []);
+    const el = sentinel.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([e]) => setRaised(!e.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [sentinel]);
   return raised;
 }
 
 function Page() {
   const [look, setLook] = React.useState<Look>(() => ({ scheme: systemScheme(), reduced: false, more: false }));
-  const raised = useRaisedOnScroll();
+  const top = React.useRef<HTMLSpanElement>(null);
+  const raised = useRaisedOnScroll(top);
   React.useLayoutEffect(() => { document.body.setAttribute('data-theme', look.scheme); }, [look.scheme]);
   return (
     <AltitudeProvider scheme={look.scheme} accent={look.accent} motion={look.reduced ? 'reduced' : 'system'} contrast={look.more ? 'more' : 'system'} className="page">
+      <span ref={top} className="nav-sentinel" aria-hidden="true" />
       <a className="skip" href="#main">Skip to content</a>
       <header className="nav" data-raised={raised ? '' : undefined}>
         <div className="wrap nav-row">
@@ -405,7 +411,7 @@ function Page() {
         <section className="hero" id="top">
           <div className="wrap hero-grid">
             <div className="hero-copy">
-              <p className="hero-meta">React components and task guidance · v{pkg.version} · MIT licence</p>
+              <p className="hero-meta">React components and task guidance · v{__SITE__.version} · MIT licence</p>
               <h1 className="display">Height is the interface.</h1>
               <p className="lead">
                 Altitude is a design and HCI framework for the React apps agents build. It has one idea: <strong>the ground is the record.</strong> Settled
@@ -492,7 +498,7 @@ function Page() {
                   <li><a href={story('patterns-consequentialaction')}>Act with consequences</a><span>Name the target, confirm only where it matters, and offer recovery that’s real.</span></li>
                   <li><a href={story('patterns-reviewsubmit')}>Review and send</a><span>Correct earlier answers, keep what applies, and leave a receipt.</span></li>
                 </ul>
-                <p className="lede small">Twelve more contracts cover settings, members, billing, sign-in, import, sync and more: <a href={LINKS.framework}>the framework</a>.</p>
+                <p className="lede small">{__SITE__.patterns - 4} more contracts cover settings, members, billing, sign-in, import, sync and more: <a href={LINKS.framework}>the framework</a>.</p>
               </div>
               <div className="agents-side">
                 <CodeBlock title="Point your agent at the installed guidance" language="sh" code={agentSetup} syntax={syntax} />
@@ -507,7 +513,7 @@ function Page() {
           <div className="wrap">
             <div className="section-head">
               <h2 className="h2" id="evidence-title">Every rule has a reason.</h2>
-              <p className="lede">Altitude’s rules come from perception research and from 159 numbered experiments measured in its own rendering. 170 automated checks, nearly all of them in a real browser, hold the components to them on every push.</p>
+              <p className="lede">Altitude’s rules come from perception research and from {__SITE__.experiments} numbered experiments measured in its own rendering. {__SITE__.checks} automated checks, nearly all of them in a real browser, hold the components to them on every push.</p>
             </div>
             <dl className="evidence">
               {EVIDENCE.map((e) => (
@@ -544,7 +550,10 @@ function Page() {
                 <a href={LINKS.guide}>Read the design guide</a>
               </div>
             </div>
-            <CodeBlock title="App.tsx" language="tsx" code={quickStart} syntax={syntax} />
+            <div className="start-code">
+              <CodeBlock title="Install" tabs={installTabs} syntax={syntax} />
+              <CodeBlock title="App.tsx" language="tsx" code={quickStart} syntax={syntax} />
+            </div>
           </div>
         </section>
       </main>
