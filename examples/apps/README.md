@@ -4,12 +4,20 @@ Fictional but complete products built with Altitude, each on a simulated backend
 
 They aren't part of the package. Each app imports `altitude-design` by name, as a consumer would, and is type-checked against the public declarations (`project/components/index.d.ts`), so no app becomes a second source for component code.
 
+## The apps
+
+| App | Folder | What it shows |
+|---|---|---|
+| Team notes | `hello/` | the smallest app on the service: pending, landed, failed, reconciled, arrived |
+| Northwind admin console | `admin-console/` | settings, members, billing, API keys, security and the audit log on one workspace: every change is logged, conflicts come from other admins (#401) |
+
 ## Running them
 
 ```sh
 node scripts/build-examples.mjs                 # → site-dist/examples/<slug>.html, one self-contained page each
 npm run build-site                              # the same, as part of the landing page build
 cd build && node checks/example-service.mjs     # the service's unit checks, and Team notes driven in a browser
+cd build && node checks/example-admin-console.mjs   # the admin console driven through #401's fixtures
 ```
 
 `npm run typecheck` type-checks the apps along with the components.
@@ -52,12 +60,14 @@ A handler can `reject('invalid', 'Write the note first.', { field: 'text' })` as
 | Succeed | answers after 300–450 ms | the pending state is brief and lands |
 | Slow | answers after six times that | pending is visible and the app stays usable |
 | Fail | rejects; nothing saved | the person's input is kept, with a way to try again |
-| Lose the response | saves, then rejects 1.1 s later with `committed: true` | the app reconciles before retrying, and a retry can't duplicate |
+| Lose the response | a write saves, then rejects 1.1 s later with `committed: true`; reads answer | the app reads back to reconcile before retrying, and a retry can't duplicate |
 | Conflict | rejects writes with the current version; reads answer | the app shows both versions instead of overwriting |
 | Offline | rejects at once | the app says so and keeps the input |
 | Rate limited | rejects with `retryAfter: 30000` | the app says when to try again |
 
 "Only the next request" applies a mode once, then returns to Succeed. `service.external(label, change)` changes the store as someone else would; apps refetch when `externalRevision` moves. `reset()` reseeds and moves `resetRevision`.
+
+In React, `useDemoQuery(service, op, input)` reads through the service: it runs on mount, again when `externalRevision` or `resetRevision` moves, and on `reload()`; it keeps the last answer while a refresh is in flight or after one fails, ignores answers to superseded requests, and offers `setData` for an optimistic write.
 
 Jitter is seeded and a clock can be injected (`createManualClock`), so a check gets the same timings every run.
 

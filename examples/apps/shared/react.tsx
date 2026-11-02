@@ -16,6 +16,42 @@ export function useDemoService<S>(service: DemoService<S>): DemoSnapshot<S> {
   return React.useSyncExternalStore(service.subscribe, service.getSnapshot, service.getSnapshot);
 }
 
+export interface DemoQuery<T> {
+  /** The last answer. Kept while a refresh is in flight or after a refresh fails. */
+  data: T | undefined;
+  /** Why the last read failed. Cleared by the next answer. */
+  error: Error | undefined;
+  loading: boolean;
+  reload: () => Promise<void>;
+  /** Change the held answer in place, for an optimistic write. */
+  setData: (update: (data: T | undefined) => T | undefined) => void;
+}
+
+/**
+ * A read through the service: it runs on mount, again when something changes elsewhere (externalRevision) or the
+ * example is reset (resetRevision), and on reload. An answer that arrives after a newer request was sent is ignored.
+ */
+export function useDemoQuery<S, T>(service: DemoService<S>, op: string, input?: unknown): DemoQuery<T> {
+  const { externalRevision, resetRevision } = useDemoService(service);
+  const [state, setState] = React.useState<{ data: T | undefined; error: Error | undefined; loading: boolean }>({ data: undefined, error: undefined, loading: true });
+  const seq = React.useRef(0);
+  const key = JSON.stringify(input ?? null);
+  const reload = React.useCallback(async () => {
+    const id = ++seq.current;
+    setState((s) => ({ ...s, loading: true }));
+    try {
+      const data = await service.request<T>(op, input);
+      if (id === seq.current) setState({ data, error: undefined, loading: false });
+    } catch (e) {
+      if (id === seq.current) setState((s) => ({ ...s, error: e instanceof Error ? e : new Error(String(e)), loading: false }));
+    }
+  }, [service, op, key]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { if (resetRevision) setState({ data: undefined, error: undefined, loading: true }); }, [resetRevision]);
+  React.useEffect(() => { void reload(); }, [reload, externalRevision, resetRevision]);
+  const setData = React.useCallback((update: (data: T | undefined) => T | undefined) => setState((s) => ({ ...s, data: update(s.data) })), []);
+  return { ...state, reload, setData };
+}
+
 /** Something that happens outside the app, offered as a button in the drawer. */
 export interface ExternalEvent { label: string; run: () => void }
 
