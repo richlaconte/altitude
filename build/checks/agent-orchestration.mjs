@@ -69,16 +69,22 @@ for (const scheme of ['daylight', 'nightfall']) {
   }
   await page.click('.aoh-moment:text-is("Stalled")'); await page.waitForTimeout(150);
   expect(await page.evaluate(() => !!document.querySelector('.alt-agent[data-agent-state="stalled"]') && !document.querySelector('.alt-request') && !document.querySelector('.alt-lanes')), 'phone: only the chosen pane is shown');
-  await page.click('.alt-agent-row:has-text("Docs")'); await page.waitForTimeout(150);
+  await page.focus('.alt-agent-row:has-text("Docs")'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   expect(await page.evaluate(() => document.getElementById('ao-detail-title')?.textContent === 'Docs' && !document.querySelector('.alt-fleet-list')), 'phone: opening an agent shows it in place of the roster');
-  await page.click('.ao-back'); await page.waitForTimeout(150);
+  expect(await page.evaluate(() => document.activeElement?.id === 'ao-detail-title'), "phone: opening an agent moves focus to its name");
+  await page.focus('.ao-back'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   expect(await page.evaluate(() => !!document.querySelector('.alt-fleet-list') && !document.getElementById('ao-detail-title')), 'phone: "All agents" goes back to the roster');
+  expect(await page.evaluate(() => /Docs/.test(document.activeElement?.closest('.alt-agent-row')?.textContent ?? '')), 'phone: going back returns focus to the row that opened it');
   await page.click('.aoh-moment:text-is("Failed")'); await page.waitForTimeout(150);
   await page.click('.alt-request button[aria-label="Open QA"]'); await page.waitForTimeout(150);
   expect(await pane() === 'Agents' && await page.evaluate(() => document.getElementById('ao-detail-title')?.textContent) === 'QA', "phone: a request's Open shows its agent");
   const m = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, rows: new Set([...document.querySelectorAll('.aoh-moment')].map((b) => Math.round(b.offsetTop))).size }));
   expect(m.page <= 375 && m.rows === 1, `phone: one row of moments and no sideways scroll (${JSON.stringify(m)})`);
   expect(!errors.length, `phone: no page errors (${errors.slice(0, 2).join('; ')})`);
+  // Wherever the view is panes, the rail is one row (a large phone held sideways, a small tablet).
+  await page.setViewportSize({ width: 720, height: 812 }); await page.waitForTimeout(200);
+  const w = await page.evaluate(() => ({ panes: !!document.querySelector('.ao-panes'), rows: new Set([...document.querySelectorAll('.aoh-moment')].map((b) => Math.round(b.offsetTop))).size }));
+  expect(w.panes && w.rows === 1, `720px: panes with one row of moments (${JSON.stringify(w)})`);
   await ctx.close();
 }
 console.log(`Agent orchestration: ${pass} passed, ${fail} failed`);

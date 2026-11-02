@@ -176,11 +176,11 @@ function Harness({ k }) {
 const CSS = `.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
 .ah-frame .alt-shell-page{display:flex;flex-direction:column;overflow:hidden}.ah-frame .alt-inset{flex:1;min-height:0;display:flex;flex-direction:column}
 .ah-main{display:flex;flex-direction:column;gap:12px;flex:1;padding:12px 0;min-height:0}.ah-main .alt-convo{flex:1;min-height:0;margin:0 -12px 0 0}
-.ah-rail{display:flex;align-items:center;gap:8px 12px}.ah-moments{display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
+.ah-rail{display:flex;align-items:center;gap:8px 12px}.ah-moments{position:relative;display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
 .ah-rail>.alt-switch-row{flex:none}
 .ah-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);white-space:nowrap;cursor:pointer}
 .ah-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.ah-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px}
-@media (max-width:640px){
+@media (max-width:760px){
 .ah-rail{position:sticky;top:var(--demo-sticky-top,0px);z-index:3;margin:-6px 0;padding:6px 0;background:var(--surface-ground)}
 .ah-moments{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;scroll-padding:0 24px}.ah-moments::-webkit-scrollbar{display:none}
 .ah-moment{height:32px}
@@ -221,9 +221,19 @@ function App({ start = 3 }) {
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState('');
   const rail = useRail(k);
-  const go = (/** @type {number} */ i) => { setK(i); setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`); };
+  const root = React.useRef(/** @type {HTMLDivElement | null} */ (null));
+  const go = (/** @type {number} */ i) => {
+    setK(i); setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`);
+    // With the rail stuck to the top of a phone, the moment's change can be scrolled away above it: bring it back.
+    requestAnimationFrame(() => {
+      const r = root.current, rail = r?.querySelector('.ah-rail'), next = r?.querySelector('.ah-note') ?? r?.querySelector('.ah-frame');
+      if (!rail || !next) return;
+      const gap = next.getBoundingClientRect().top - rail.getBoundingClientRect().bottom;
+      if (gap < 0) scrollBy({ top: gap - 12, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  };
   return (
-    <div className="ah">
+    <div className="ah" ref={root}>
       <style>{CSS}</style>
       <nav className="ah-rail" aria-label="Moments in the run">
         <ol className="ah-moments" {...rail}>

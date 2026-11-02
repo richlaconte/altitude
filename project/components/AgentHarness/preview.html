@@ -219,11 +219,11 @@ function Harness({ k }) {
 const CSS = `.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
 .ah-frame .alt-shell-page{display:flex;flex-direction:column;overflow:hidden}.ah-frame .alt-inset{flex:1;min-height:0;display:flex;flex-direction:column}
 .ah-main{display:flex;flex-direction:column;gap:12px;flex:1;padding:12px 0;min-height:0}.ah-main .alt-convo{flex:1;min-height:0;margin:0 -12px 0 0}
-.ah-rail{display:flex;align-items:center;gap:8px 12px}.ah-moments{display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
+.ah-rail{display:flex;align-items:center;gap:8px 12px}.ah-moments{position:relative;display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
 .ah-rail>.alt-switch-row{flex:none}
 .ah-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);white-space:nowrap;cursor:pointer}
 .ah-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.ah-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px}
-@media (max-width:640px){
+@media (max-width:760px){
 .ah-rail{position:sticky;top:var(--demo-sticky-top,0px);z-index:3;margin:-6px 0;padding:6px 0;background:var(--surface-ground)}
 .ah-moments{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;scroll-padding:0 24px}.ah-moments::-webkit-scrollbar{display:none}
 .ah-moment{height:32px}
@@ -269,11 +269,21 @@ function App({ start = 3 }) {
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState("");
   const rail = useRail(k);
+  const root = React.useRef(
+    /** @type {HTMLDivElement | null} */
+    null
+  );
   const go = (i) => {
     setK(i);
     setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`);
+    requestAnimationFrame(() => {
+      const r = root.current, rail2 = r?.querySelector(".ah-rail"), next = r?.querySelector(".ah-note") ?? r?.querySelector(".ah-frame");
+      if (!rail2 || !next) return;
+      const gap = next.getBoundingClientRect().top - rail2.getBoundingClientRect().bottom;
+      if (gap < 0) scrollBy({ top: gap - 12, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "ah" }, /* @__PURE__ */ React.createElement("style", null, CSS), /* @__PURE__ */ React.createElement("nav", { className: "ah-rail", "aria-label": "Moments in the run" }, /* @__PURE__ */ React.createElement("ol", { className: "ah-moments", ...rail }, MOMENTS.map((m, i) => /* @__PURE__ */ React.createElement("li", { key: m.id }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "ah-moment", "aria-current": i === k ? "step" : void 0, onClick: () => go(i) }, m.name)))), /* @__PURE__ */ React.createElement(A.Switch, { checked: notes, onCheckedChange: setNotes, label: "Notes" })), notes && /* @__PURE__ */ React.createElement(A.Alert, { className: "ah-note", role: "note", title: MOMENTS[k].name }, MOMENTS[k].note), /* @__PURE__ */ React.createElement("div", { className: "ah-frame" }, /* @__PURE__ */ React.createElement(Harness, { k })), /* @__PURE__ */ React.createElement("span", { className: "alt-sr", role: "status" }, said));
+  return /* @__PURE__ */ React.createElement("div", { className: "ah", ref: root }, /* @__PURE__ */ React.createElement("style", null, CSS), /* @__PURE__ */ React.createElement("nav", { className: "ah-rail", "aria-label": "Moments in the run" }, /* @__PURE__ */ React.createElement("ol", { className: "ah-moments", ...rail }, MOMENTS.map((m, i) => /* @__PURE__ */ React.createElement("li", { key: m.id }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "ah-moment", "aria-current": i === k ? "step" : void 0, onClick: () => go(i) }, m.name)))), /* @__PURE__ */ React.createElement(A.Switch, { checked: notes, onCheckedChange: setNotes, label: "Notes" })), notes && /* @__PURE__ */ React.createElement(A.Alert, { className: "ah-note", role: "note", title: MOMENTS[k].name }, MOMENTS[k].note), /* @__PURE__ */ React.createElement("div", { className: "ah-frame" }, /* @__PURE__ */ React.createElement(Harness, { k })), /* @__PURE__ */ React.createElement("span", { className: "alt-sr", role: "status" }, said));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

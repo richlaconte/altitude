@@ -107,7 +107,7 @@ function Detail({ agent, onStop }) {
   return (
     <section className="ao-detail" aria-labelledby="ao-detail-title">
       <div className="ao-detail-head">
-        <h3 id="ao-detail-title">{agent.name}</h3>
+        <h3 id="ao-detail-title" tabIndex={-1}>{agent.name}</h3>
         {agent.state !== 'done' && agent.state !== 'stopped' && <A.Button size="sm" variant="ghost" onClick={onStop}>Stop {agent.name}</A.Button>}
       </div>
       <p className="ao-task">{agent.task}</p>
@@ -130,10 +130,11 @@ function Detail({ agent, onStop }) {
 }
 
 const NARROW = '(max-width: 760px)';
+const narrowQuery = typeof matchMedia === 'function' ? matchMedia(NARROW) : null;
+const subscribeNarrow = (/** @type {() => void} */ change) => { narrowQuery?.addEventListener('change', change); return () => narrowQuery?.removeEventListener('change', change); };
 /** True on a phone-width screen; false wherever there's no window to ask. */
 function useNarrow() {
-  return React.useSyncExternalStore((change) => { const m = matchMedia(NARROW); m.addEventListener('change', change); return () => m.removeEventListener('change', change); },
-    () => matchMedia(NARROW).matches, () => false);
+  return React.useSyncExternalStore(subscribeNarrow, () => narrowQuery?.matches ?? false, () => false);
 }
 
 /** The orchestration view at moment `k`. */
@@ -148,7 +149,17 @@ function Orchestration({ k }) {
   const [opened, setOpened] = React.useState(false);
   const [seen, setSeen] = React.useState(k);
   if (seen !== k) { setSeen(k); setPane(MOMENTS[k].pane); setOpened(false); }
-  const open = (/** @type {string} */ id) => { setPicked(id); setOpened(true); setPane('agents'); };
+  // Opening or leaving an agent on a phone replaces what was pressed, so focus goes where the person is now: to the
+  // agent's name on the way in, and back to its row on the way out.
+  const focusNext = React.useRef(/** @type {'detail' | 'row' | null} */ (null));
+  const frame = React.useRef(/** @type {HTMLDivElement | null} */ (null));
+  React.useEffect(() => {
+    const to = focusNext.current; focusNext.current = null;
+    if (to === 'detail') document.getElementById('ao-detail-title')?.focus();
+    else if (to === 'row') /** @type {HTMLElement | null | undefined} */ (frame.current?.querySelector('.alt-agent-row[aria-current]'))?.focus();
+  });
+  const open = (/** @type {string} */ id) => { setPicked(id); if (narrow) { setOpened(true); setPane('agents'); focusNext.current = 'detail'; } };
+  const back = () => { setOpened(false); focusNext.current = 'row'; };
   const agent = fleet.find((a) => a.id === picked) ?? fleet[0];
   const g = A.groupAgents(fleet.filter((a) => a.parent), (a) => a);
   const lead = fleet.find((a) => a.id === 'lead');
@@ -186,7 +197,7 @@ function Orchestration({ k }) {
   const meter = <A.Meter label="Spent on this launch" value={spent} max={5} high={4} format={money} />;
   const lanes = <A.AgentLanes now={now} start={T0} lanes={fleet.filter((a) => a.segments.length).map((a) => ({ id: a.id, name: a.name, segments: a.segments }))} selected={agent?.id} onSelect={open} />;
   if (narrow) return (
-    <div className="ao">
+    <div className="ao" ref={frame}>
       {header}
       <A.Tabs variant="segmented" className="ao-panes" value={pane} onValueChange={setPane}>
         <A.TabsList aria-label="Show">
@@ -197,7 +208,7 @@ function Orchestration({ k }) {
         <A.TabsContent value="needs"><A.AgentRequests now={now} title="Waiting on you">{requests}</A.AgentRequests></A.TabsContent>
         <A.TabsContent value="agents">
           {opened && agent
-            ? <div className="ao-opened"><A.Button size="sm" variant="ghost" className="ao-back" onClick={() => setOpened(false)}>← All agents</A.Button><Detail agent={agent} onStop={() => {}} /></div>
+            ? <div className="ao-opened"><A.Button size="sm" variant="ghost" className="ao-back" onClick={back}>← All agents</A.Button><Detail agent={agent} onStop={() => {}} /></div>
             : roster}
         </A.TabsContent>
         <A.TabsContent value="time"><div className="ao-time">{lanes}{meter}</div></A.TabsContent>
@@ -227,13 +238,14 @@ const CSS = `.aoh{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-
 .ao-detail{display:flex;flex-direction:column;gap:14px}.ao-detail-head{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .ao-facts{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;font:400 14px/20px var(--font-sans)}.ao-facts dt{color:var(--ink-muted)}.ao-facts dd{margin:0}
 .ao-detail-head h3{margin:0;font:600 16px/22px var(--font-sans)}.ao-task{margin:0;color:var(--ink-muted);font:400 14px/20px var(--font-sans)}
+@media (max-width:760px){.ao-body{grid-template-columns:minmax(0,1fr)}.ao-main{padding-left:0;border-left:0;padding-top:16px;border-top:1px solid var(--line)}}
 .ao-panes>.alt-tabs-list{align-self:stretch}.ao-panes .alt-tabs-trigger{flex:1 0 auto}
 .ao-opened,.ao-time{display:flex;flex-direction:column;gap:16px}.ao-back{align-self:flex-start;margin-left:-8px}
-.aoh-rail{display:flex;align-items:center;gap:8px 12px}.aoh-moments{display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
+.aoh-rail{display:flex;align-items:center;gap:8px 12px}.aoh-moments{position:relative;display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
 .aoh-rail>.alt-switch-row{flex:none}
 .aoh-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);white-space:nowrap;cursor:pointer}
 .aoh-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.aoh-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px}
-@media (max-width:640px){
+@media (max-width:760px){
 .aoh-rail{position:sticky;top:var(--demo-sticky-top,0px);z-index:3;margin:-6px 0;padding:6px 0;background:var(--surface-ground)}
 .aoh-moments{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;scroll-padding:0 24px}.aoh-moments::-webkit-scrollbar{display:none}
 .aoh-moment{height:32px}
@@ -273,9 +285,19 @@ function App({ start = 2 }) {
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState('');
   const rail = useRail(k);
-  const go = (/** @type {number} */ i) => { setK(i); setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`); };
+  const root = React.useRef(/** @type {HTMLDivElement | null} */ (null));
+  const go = (/** @type {number} */ i) => {
+    setK(i); setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`);
+    // With the rail stuck to the top of a phone, the moment's change can be scrolled away above it: bring it back.
+    requestAnimationFrame(() => {
+      const r = root.current, rail = r?.querySelector('.aoh-rail'), next = r?.querySelector('.aoh-note') ?? r?.querySelector('.aoh-frame');
+      if (!rail || !next) return;
+      const gap = next.getBoundingClientRect().top - rail.getBoundingClientRect().bottom;
+      if (gap < 0) scrollBy({ top: gap - 12, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  };
   return (
-    <div className="aoh">
+    <div className="aoh" ref={root}>
       <style>{CSS}</style>
       <nav className="aoh-rail" aria-label="Moments in the launch">
         <ol className="aoh-moments" {...rail}>
