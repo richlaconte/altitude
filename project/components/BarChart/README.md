@@ -45,3 +45,65 @@ The y axis always includes zero, whatever the container's `zero` says: a truncat
 - Do use `stack="expand"` only when the shares matter more than the totals, and say so in the title.
 - Don't label every bar: label the one the chart is about, and leave the rest to the readout and the table.
 - Don't colour bars by their value or give them a gradient; for polarity, a diverging ramp on a separate chart says it better.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`BarChart` as first used in its preview:
+
+```tsx
+import { BarChart } from 'altitude-design';
+
+<BarChart data={teams} x="team" sort="desc" labels="max" focus={(d) => d.team === 'Cedar' || d.team === 'Delta'} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`bc` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { BarChart, Card, CardContent, CardDescription, CardHeader, CardTitle, ChartContainer } from 'altitude-design';
+
+const teams = [{ team: 'Atlas', deploys: 42 }, { team: 'Birch', deploys: 35 }, { team: 'Cedar', deploys: 51 }, { team: 'Delta', deploys: 19 }, { team: 'Ember', deploys: 28 }];
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, api: 20 + ((i * 7) % 11), web: 14 + ((i * 5) % 9), jobs: 6 + ((i * 3) % 7) }));
+const net = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, change: [12, -8, 5, -15, 9, 18][i] }));
+const regions = [{ region: 'North America', seats: 1240, before: 1120 }, { region: 'Europe, Middle East and Africa', seats: 980, before: 1040 }, { region: 'Asia Pacific', seats: 610, before: 470 }, { region: 'Latin America', seats: 270, before: 240 }];
+const stack3 = { api: { label: 'API' }, web: { label: 'Web' }, jobs: { label: 'Jobs' } };
+function Chart({ id, title, sub, children, ...props }) {
+  // With a takeaway the figure names itself: the title becomes the label over the takeaway, the heading.
+  if (props.takeaway) return (
+    <Card>
+      <CardContent style={{ paddingTop: 'var(--space-5)' }}><ChartContainer title={title} description={sub} aspect={1.45} {...props}>{children}</ChartContainer></CardContent>
+    </Card>
+  );
+  return (
+    <Card>
+      <CardHeader><CardTitle id={id}>{title}</CardTitle><CardDescription>{sub}</CardDescription></CardHeader>
+      <CardContent><ChartContainer aria-labelledby={id} aspect={1.45} {...props}>{children}</ChartContainer></CardContent>
+    </Card>
+  );
+}
+export default function App() {
+  return (
+    <div className="bc">
+      <Chart id="b1" title="Deploys by team" takeaway="Cedar deployed nearly three times as often as Delta" sub='One series, sorted, labels="max"' config={{ deploys: { label: 'Deploys' } }} summary="Cedar deployed most, 51 times; Delta least, 19.">
+        <BarChart data={teams} x="team" sort="desc" labels="max" focus={(d) => d.team === 'Cedar' || d.team === 'Delta'} />
+      </Chart>
+      <Chart id="b2" title="Requests by service" sub="Grouped: three series side by side" config={stack3}>
+        <BarChart data={months.slice(3)} x="month" />
+      </Chart>
+      <Chart id="b3" title="Requests, all services" sub='Stacked, labels="last", focus={["web"]}' config={stack3}>
+        <BarChart data={months} x="month" stack labels="last" focus={['web']} />
+      </Chart>
+      <Chart id="b4" title="Share of requests" sub='stack="expand": parts of 100%' config={stack3}>
+        <BarChart data={months} x="month" stack="expand" />
+      </Chart>
+      <Chart id="b5" title="Net new customers" sub="Negative bars hang below the ground line" config={{ change: { label: 'Net change', format: (v) => (v > 0 ? '+' : '') + v } }}>
+        <BarChart data={net} x="month" />
+      </Chart>
+      <Chart id="b6" title="Seats by region" sub='layout="horizontal", against last quarter' config={{ seats: { label: 'Seats', format: (v) => v.toLocaleString('en') } }}>
+        <BarChart data={regions} x="region" layout="horizontal" compare={{ key: 'before', label: 'Q2' }} labels="max" />
+      </Chart>
+    </div>
+  );
+}
+```
+<!-- /example -->

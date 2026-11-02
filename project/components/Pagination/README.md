@@ -23,3 +23,36 @@ Moves through pages of a collection the server pages: invoices, members, audit e
 - Do show the summary; "Page 3 of 11" says less than "41–60 of 214".
 - Don't page short lists; show them whole.
 - Don't use it for steps in a process; that's a `Stepper`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Pagination` as first used in its preview:
+
+```tsx
+import { Pagination } from 'altitude-design';
+
+<Pagination page={page} pageCount={11} onPageChange={go} total={214} pageSize={20} noun="invoices" loading={loading} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Pagination } from 'altitude-design';
+
+export default function App() {
+  const [page, setPage] = React.useState(3);
+  const [loading, setLoading] = React.useState(false);
+  const [cursor, setCursor] = React.useState(1);
+  const go = (p) => { setPage(p); setLoading(true); setTimeout(() => setLoading(false), 500); };
+  return (
+    <div className="col">
+      <Pagination page={page} pageCount={11} onPageChange={go} total={214} pageSize={20} noun="invoices" loading={loading} />
+      <Pagination page={cursor} onPageChange={setCursor} hasNext={cursor < 4} aria-label="Audit log pages" />
+      <p className="cap">The current page is a raised thumb in the trench; it's held pressed while the next page loads. Without a page count it's Previous, Next and "Page 3".</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

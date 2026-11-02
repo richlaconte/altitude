@@ -25,3 +25,39 @@ The shadow list is always four layers (wall, occlusion, lip, halo; the halo is u
 - Don't add an accent focus ring or glow to fields, or a rim on click. Keyboard focus on buttons and choice controls is the `accent-ink` ring; on a field the lit floor is the focus, plus the dark rim when you arrived by keyboard.
 - Don't put a suggestion in the value: pass it as `suggestion`, so people can tell what they wrote from what was proposed.
 - Don't place inputs on `surface-well` backgrounds: a well inside a well disappears. Put forms on ground or raised surfaces.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Input` as first used in its preview:
+
+```tsx
+import { Input } from 'altitude-design';
+
+<Input type="email" placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `grid`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Field, Input, Kbd, Textarea } from 'altitude-design';
+
+export default function App() {
+  const [note, setNote] = React.useState('Ship the cold-start fix behind a flag first.');
+  const [email, setEmail] = React.useState('');
+  return (
+    <div className="col">
+      <div className="grid">
+        <Field label="Email address"><Input type="email" placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+        <Field label="Billing email"><Input type="email" defaultValue="mara@northwind.dev" /></Field>
+        <Field label="Search projects"><Input type="search" placeholder="Project name" leading={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>} trailing={<Kbd>/</Kbd>} /></Field>
+        <Field label="Invite by email" error="Enter an email address, like name@company.com."><Input type="email" defaultValue="not-an-email" /></Field>
+        <div style={{ gridColumn: '1 / -1' }}><Field label="Note"><Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={80} placeholder="Leave a note for your team…" /></Field></div>
+      </div>
+      <p className="cap">An empty field shows its inside wall below the top edge, and deepens as your pointer comes near. Type and the floor rises flush with the page. Invalid drops it to trench depth.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

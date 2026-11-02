@@ -24,3 +24,47 @@ A divider: between sections in a card, groups in a toolbar, items in a sidebar, 
 - Do make a separator between groups of toolbar buttons `decorative`.
 - Don't use it to fake a table's row lines; `Table` and `ItemGroup` draw their own (`ItemSeparator`).
 - Don't give it a colour, a thickness or a shadow.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Separator` as first used in its preview:
+
+```tsx
+import { Separator } from 'altitude-design';
+
+<Separator />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`sp`, `cap`, `col`, `bar`, `signin` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Separator } from 'altitude-design';
+
+export default function App() {
+  return (
+    <div className="sp">
+      <Card>
+        <CardHeader><CardTitle>Workspace</CardTitle><CardDescription>Name, URL and region</CardDescription></CardHeader>
+        <Separator />
+        <CardContent><p className="cap">Sections in a card are parted by a horizontal separator: role="separator", 1px of line.</p></CardContent>
+      </Card>
+      <div className="col">
+        <div className="bar">
+          <Button size="sm" variant="ghost">Bold</Button>
+          <Button size="sm" variant="ghost">Italic</Button>
+          <Separator orientation="vertical" decorative />
+          <Button size="sm" variant="ghost">Link</Button>
+        </div>
+        <div className="signin">
+          <Button variant="secondary">Continue with SSO</Button>
+          <Separator label="or" />
+          <Input placeholder="Email address" aria-label="Email address" />
+        </div>
+        <p className="cap">A vertical one between groups of buttons is decorative. "or" is read as a word; its lines are drawn.</p>
+      </div>
+    </div>
+  );
+}
+```
+<!-- /example -->

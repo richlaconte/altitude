@@ -24,3 +24,40 @@ A time of day: when a scheduled report is sent, quiet hours, business hours, a m
 - Do set `step` to the granularity you actually schedule at (15 minutes, not 1).
 - Don't use `<input type="time">`; it looks different in every browser and ignores the scheme.
 - Don't offer a long Select of times when people know the time they want.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`TimeInput` as first used in its preview:
+
+```tsx
+import { TimeInput } from 'altitude-design';
+
+<TimeInput value={report} onValueChange={setReport} step={15} hourCycle="h12" locale="en-US" timeZone="Europe/Berlin" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `ti`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Field, TimeInput } from 'altitude-design';
+
+export default function App() {
+  const [report, setReport] = React.useState('09:30');
+  const [quiet, setQuiet] = React.useState(null);
+  const [open, setOpen] = React.useState('08:00');
+  return (
+    <div className="col">
+      <div className="ti">
+        <Field label="Send the report at" hint={report ? `Stored as ${report}` : 'Not set'}><TimeInput value={report} onValueChange={setReport} step={15} hourCycle="h12" locale="en-US" timeZone="Europe/Berlin" /></Field>
+        <Field label="Quiet hours start" hint="24-hour clock"><TimeInput value={quiet} onValueChange={setQuiet} hourCycle="h23" /></Field>
+        <Field label="Opens at" hint="Between 06:00 and 12:00" error={open && (open < '06:00' || open > '12:00') ? 'Choose a time between 06:00 and 12:00.' : undefined}>
+          <TimeInput value={open} onValueChange={setOpen} min="06:00" max="12:00" hourCycle="h23" />
+        </Field>
+      </div>
+      <p className="cap">Type digits (they move on by themselves), or use Up and Down; minutes step by 15 in the first field. "a" or "p" sets AM or PM. The field fills only once the whole time is there.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

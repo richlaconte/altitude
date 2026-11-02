@@ -64,3 +64,53 @@ The set, its policy (what's allowed, the limit, normalizing), and any persistenc
 ## Demo and verification
 
 The `TagInput` section of `build/previews.txt` shows labels (suggestions, a limit of 6, coloured dots), recipients persisted one at a time (a fictional invite service rejects other domains), a disabled set and standalone `Tag`s. `node checks/tag-input.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers adding, suggestions, duplicates, double Backspace, focus after removal, editing, paste splitting, the limit, IME, pending and rejected adds, removal, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`TagInput` as first used in its preview:
+
+```tsx
+import { TagInput } from 'altitude-design';
+
+<TagInput value={labels} onValueChange={setLabels} suggestions={TAG_LABELS} max={6} noun={['label', 'labels']}
+  placeholder="Add a label" normalize={tag => tag.trim().toLowerCase()} validate={tag => tag.length <= 24 ? undefined : 'Use 24 characters or fewer.'}
+  renderTag={tag => <>{TAG_DOTS[tag] && <span className="tags-dot" style={{ '--dot': TAG_DOTS[tag] }} aria-hidden="true" />}{tag}</>} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`tags-demo`, `tags-dot`, `tags-caption`, `tags-row` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Field, Tag, TagInput } from 'altitude-design';
+
+const TAG_LABELS = ['bug', 'design', 'docs', 'performance', 'accessibility', 'onboarding', 'billing', 'mobile'];
+const TAG_DOTS = { bug: 'var(--critical)', design: 'var(--accent)', accessibility: 'var(--positive)', performance: 'var(--caution)' };
+const tagWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+export default function App() {
+  const [labels, setLabels] = React.useState(['design', 'accessibility']);
+  const [recipients, setRecipients] = React.useState(['mara@northwind.example']);
+  const [skills, setSkills] = React.useState(['Figma', 'Research', 'Writing']);
+  return <div className="tags-demo">
+    <Field label="Labels">
+      <TagInput value={labels} onValueChange={setLabels} suggestions={TAG_LABELS} max={6} noun={['label', 'labels']}
+        placeholder="Add a label" normalize={tag => tag.trim().toLowerCase()} validate={tag => tag.length <= 24 ? undefined : 'Use 24 characters or fewer.'}
+        renderTag={tag => <>{TAG_DOTS[tag] && <span className="tags-dot" style={{ '--dot': TAG_DOTS[tag] }} aria-hidden="true" />}{tag}</>} />
+    </Field>
+    <Field label="Share with">
+      <TagInput value={recipients} onValueChange={setRecipients} noun={['person', 'people']} placeholder="name@northwind.example"
+        validate={tag => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag) ? undefined : `${tag} isn’t an email address.`}
+        onAdd={async tag => { await tagWait(500); return tag.endsWith('@northwind.example') ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at northwind.example can be invited. ${tag} wasn’t added.` }; }}
+        onRemove={async () => { await tagWait(300); return { ok: true }; }} />
+    </Field>
+    <Field label="Skills">
+      <TagInput value={skills} onValueChange={setSkills} noun={['skill', 'skills']} disabled />
+    </Field>
+    <div>
+      <p className="tags-caption">Standalone tags</p>
+      <div className="tags-row"><Tag>Figma</Tag><Tag>Research</Tag><Tag onRemove={() => {}}>Writing</Tag></div>
+    </div>
+  </div>;
+}
+```
+<!-- /example -->

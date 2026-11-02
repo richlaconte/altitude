@@ -21,3 +21,34 @@ Copies a value and says so: API keys, install commands, invite links, IDs, webho
 - Do put it next to the value it copies, so people can see what they got.
 - Don't confirm a copy with a toast; the button says it where you're looking.
 - Don't make a primary CopyButton: copying is rarely the main thing on a page.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`CopyButton` as first used in its preview:
+
+```tsx
+import { CopyButton } from 'altitude-design';
+
+<CopyButton size="sm" value="sk_live_51Hc8x2Lw9Qe7TfR4mNpZa" label="Copy API key" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`cb`, `key`, `row`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import { CopyButton } from 'altitude-design';
+
+export default function App() {
+  return (
+    <div className="cb">
+      <div className="key"><code>sk_live_51Hc8x2Lw9Qe7TfR4mNpZa</code><CopyButton size="sm" value="sk_live_51Hc8x2Lw9Qe7TfR4mNpZa" label="Copy API key" /></div>
+      <div className="row">
+        <CopyButton variant="secondary" value={() => 'https://app.example.com/invite/7Fq2'}>Copy invite link</CopyButton>
+        <CopyButton value={() => Promise.reject(new Error('denied'))}>Copy install command</CopyButton>
+      </div>
+      <p className="cap">Copied: pressed to the ground with a check and "Copied" for two seconds, announced politely; the button keeps its name and its width. The last one fails on purpose, to show what a failure says.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

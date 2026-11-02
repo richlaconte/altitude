@@ -39,3 +39,77 @@ Reading a chart against something: an SLO target, a budget, a normal range, the 
 - Do keep annotations to a few words; the plate is a label, not a note.
 - Don't dash a reference line; a dash means "projected".
 - Don't use a reference band for data. A range in the data is an uncertainty band (`LineChart`'s `band`).
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`ChartReference` as first used in its preview:
+
+```tsx
+import { ChartReference } from 'altitude-design';
+
+<ChartReference y={[0.995, 1]} label="Normal range" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`cr`, `row` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { BarChart, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, ChartAnnotation, ChartContainer, ChartReference, LineChart } from 'altitude-design';
+
+const uptime = Array.from({ length: 30 }, (_, i) => ({ day: `2026-03-${String(i + 1).padStart(2, '0')}`, uptime: [0.9995, 0.9991, 0.9998, 0.9962, 0.9971, 0.9993, 0.9997, 0.9999, 0.9994, 0.9988, 0.9996, 0.9999, 0.9997, 0.9921, 0.9984, 0.9995, 0.9998, 0.9996, 0.9999, 0.9997, 0.9993, 0.9996, 0.9998, 0.9999, 0.9995, 0.9997, 0.9999, 0.9998, 0.9996, 0.9999][i] }));
+const pct = new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 2 });
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const weekA = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => ({ day, cost: [412, 455, 498, 430, 610, 220, 190][i] }));
+const weekB = weekA.map((d, i) => ({ ...d, cost: [520, 590, 640, 575, 780, 300, 260][i] }));
+const teams = [['Search', 92], ['Checkout', 81], ['Accounts', 74], ['Messaging', 66], ['Billing', 58]].map(([team, score]) => ({ team, score }));
+const deploys = Array.from({ length: 21 }, (_, i) => ({ day: `2026-04-${String(i + 1).padStart(2, '0')}`, latency: 180 + Math.round(30 * Math.sin(i / 3)) + (i > 9 ? -40 : 0) + (i === 14 ? 60 : 0) }));
+function Chart({ id, title, sub, children, ...props }) {
+  return (
+    <Card>
+      <CardHeader><CardTitle id={id}>{title}</CardTitle><CardDescription>{sub}</CardDescription></CardHeader>
+      <CardContent><ChartContainer aria-labelledby={id} aspect={1.9} {...props}>{children}</ChartContainer></CardContent>
+    </Card>
+  );
+}
+export default function App() {
+  const [later, setLater] = React.useState(false);
+  const [picked, setPicked] = React.useState(null);
+  return (
+    <div className="cr" data-tells-ignore="LA4 a gallery of references in each chart, to compare">
+      <Chart id="r1" title="Uptime" sub="March, against the SLO" config={{ uptime: { label: 'Uptime', format: pct.format } }}>
+        <LineChart data={uptime} x="day">
+          <ChartReference y={[0.995, 1]} label="Normal range" />
+          <ChartReference y={0.999} label="Target 99.9%" />
+          <ChartReference y={0.99} label="Limit 99%" tone="critical" />
+          <ChartAnnotation x="2026-03-14" label="DNS outage" />
+        </LineChart>
+      </Chart>
+      <Card>
+        <CardHeader><CardTitle id="r2">Cloud spend</CardTitle><CardDescription>Against the daily budget; the median moves with the week</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="r2" aspect={2.2} config={{ cost: { label: 'Cost', format: usd.format } }}>
+            <BarChart data={later ? weekB : weekA} x="day">
+              <ChartReference y={700} label="Budget $700" tone="caution" />
+              <ChartReference y="median" label="Median" />
+            </BarChart>
+          </ChartContainer>
+          <div className="row" style={{ marginTop: 12 }}><Button size="sm" onClick={() => setLater((v) => !v)}>{later ? 'Last week' : 'This week'}</Button></div>
+        </CardContent>
+      </Card>
+      <Chart id="r3" title="Accessibility score" sub="By team, against the bar of 75" config={{ score: { label: 'Score' } }}>
+        <BarChart data={teams} x="team" layout="horizontal"><ChartReference y={75} label="Bar 75" /></BarChart>
+      </Chart>
+      <Chart id="r4" title="p95 latency" sub={picked ? `Picked: ${picked}` : 'Events stack into rows where they would overlap'} config={{ latency: { label: 'p95', format: (v) => `${v} ms` } }}>
+        <LineChart data={deploys} x="day">
+          <ChartReference y="mean" label="Average" />
+          <ChartAnnotation x="2026-04-10" label="Cache rollout" onSelect={() => setPicked('Cache rollout')} />
+          <ChartAnnotation x="2026-04-11" label="v2 launch" onSelect={() => setPicked('v2 launch')} />
+          <ChartAnnotation x="2026-04-15" label="Incident 412" />
+        </LineChart>
+      </Chart>
+    </div>
+  );
+}
+```
+<!-- /example -->

@@ -33,3 +33,34 @@ Where you are in an app with routes: Settings › Members › Jane Doe, or Proje
 - Do use it for location in a hierarchy, not for history ("back").
 - Don't add separators between steps.
 - Don't use it inside a `Drilldown`, which has its own.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Breadcrumb` as first used in its preview:
+
+```tsx
+import { Breadcrumb } from 'altitude-design';
+
+<Breadcrumb items={[{ label: 'Settings', href: '#/settings' }, { label: 'Members', href: '#/settings/members' }, { label: 'Jane Doe' }]} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Breadcrumb } from 'altitude-design';
+
+const RouterLink = React.forwardRef(({ to, ...rest }, ref) => <a ref={ref} href={'#' + to} {...rest} />);
+export default function App() {
+  return (
+    <div className="col">
+      <Breadcrumb items={[{ label: 'Settings', href: '#/settings' }, { label: 'Members', href: '#/settings/members' }, { label: 'Jane Doe' }]} />
+      <Breadcrumb maxItems={4} renderLink={(item, props) => <RouterLink to={item.href.slice(1)} {...props}>{item.label}</RouterLink>}
+        items={[{ label: 'Projects', href: '#/projects' }, { label: 'Atlas', href: '#/projects/atlas' }, { label: 'Q4 launch', href: '#/projects/atlas/q4' }, { label: 'Issues', href: '#/projects/atlas/q4/issues' }, { label: 'Billing page', href: '#/projects/atlas/q4/issues/212' }, { label: 'Comments' }]} />
+      <p className="cap">Each step you can go back to lifts when pointed at; the current page is the tallest step and doesn't press. A deep path keeps its first and last steps, with the middle behind "…".</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

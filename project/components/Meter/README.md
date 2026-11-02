@@ -27,3 +27,55 @@ Where a reading sits in a known range: storage used of a quota, seats used of a 
 - Do use segments for parts of a whole instead of a pie or donut.
 - Don't give it more than six segments; fold the rest into "Other".
 - Don't colour a reading caution or critical yourself; set `high` and `critical`, so the words come with the colour.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Meter` as first used in its preview:
+
+```tsx
+import { Meter } from 'altitude-design';
+
+<Meter label="Storage" value={used} max={100} high={80} format={gb} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`mt`, `stack`, `row` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Meter } from 'altitude-design';
+
+const gb = (n) => `${n} GB`;
+export default function App() {
+  const [used, setUsed] = React.useState(62);
+  const [cpu, setCpu] = React.useState(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setCpu(37), 2400); return () => clearTimeout(t); }, []);
+  return (
+    <div className="mt">
+      <Card>
+        <CardHeader><CardTitle>Plan usage</CardTitle><CardDescription>Thresholds at 80% and the limit</CardDescription></CardHeader>
+        <CardContent className="stack">
+          <Meter label="Storage" value={used} max={100} high={80} format={gb} />
+          <Meter label="Seats" value={24} max={25} high={20} format={(n) => `${n}`} />
+          <Meter label="API calls today" value={11800} max={10000} high={8000} format={(n) => n.toLocaleString('en')} />
+          <Meter label="CPU" value={cpu} format={(n) => `${n}%`} />
+          <div className="row">
+            <Button size="sm" variant="secondary" onClick={() => setUsed((u) => Math.max(0, u - 15))}>Free 15 GB</Button>
+            <Button size="sm" variant="secondary" onClick={() => setUsed((u) => u + 15)}>Use 15 GB</Button>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Storage by type</CardTitle><CardDescription>Parts of a whole, instead of a donut</CardDescription></CardHeader>
+        <CardContent className="stack">
+          <Meter label="Storage" max={100} format={gb}
+            segments={[{ key: 'media', label: 'Media', value: 38 }, { key: 'docs', label: 'Documents', value: 14 }, { key: 'mail', label: 'Mail', value: 6 }, { key: 'other', label: 'Other', value: 4 }]} />
+          <Meter label="Team seats" max={50} high={45} format={(n) => `${n}`}
+            segments={[{ key: 'admin', label: 'Admins', value: 4 }, { key: 'members', label: 'Members', value: 31 }, { key: 'guests', label: 'Guests', value: 12 }]} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

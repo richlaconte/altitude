@@ -45,3 +45,65 @@ Change over time: latency over a day, revenue over a year, one series or a few c
 - Do use `monotone` for smooth measures, and `linear` when each point is a discrete count.
 - Don't fill the area under a line to make it look richer; that's `AreaChart`, for a total and its parts.
 - Don't put two measures of different scale on one plot; that's two charts.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`LineChart` as first used in its preview:
+
+```tsx
+import { LineChart } from 'altitude-design';
+
+<LineChart data={latency} x="t" y={{ format: (ms) => `${ms} ms` }} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`lc` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, ChartContainer, LineChart } from 'altitude-design';
+
+const t0 = Date.UTC(2026, 2, 14, 0, 0);
+const latency = Array.from({ length: 49 }, (_, i) => ({ t: t0 + i * 30 * 60e3, p50: 92 + Math.round(18 * Math.sin(i / 6) + (i % 5)), p95: 168 + Math.round(30 * Math.sin(i / 6 + 0.6) + (i % 7) * 3) }));
+const revenue = ['2025-07-01', '2025-08-01', '2025-09-01', '2025-10-01', '2025-11-01', '2025-12-01', '2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01']
+  .map((month, i) => ({ month, revenue: [61, 64, 63, 70, 74, 72, 79, 85, 83, 92, 98, 104][i] * 1000 }));
+const signups = Array.from({ length: 14 }, (_, i) => ({ day: `2026-04-${String(i + 1).padStart(2, '0')}`, signups: [42, 48, 51, null, null, 55, 61, 58, 63, null, 66, 70, 68, 74][i] }));
+const signupsBefore = [38, 41, 40, 44, 47, 45, 49, 52, 50, 53, 55, 54, 57, 58].map((signups) => ({ signups }));
+const plans = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'].map((month, i) => ({ month, free: 40 + i * 2, team: 34 + i * 3, business: 30 + i * 2.6, enterprise: 12 + i }));
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
+function Chart({ id, title, sub, children, ...props }) {
+  // With a takeaway the figure names itself: the title becomes the label over the takeaway, the heading.
+  if (props.takeaway) return (
+    <Card>
+      <CardContent style={{ paddingTop: 'var(--space-5)' }}><ChartContainer title={title} description={sub} aspect={1.9} {...props}>{children}</ChartContainer></CardContent>
+    </Card>
+  );
+  return (
+    <Card>
+      <CardHeader><CardTitle id={id}>{title}</CardTitle><CardDescription>{sub}</CardDescription></CardHeader>
+      <CardContent><ChartContainer aria-labelledby={id} aspect={1.9} {...props}>{children}</ChartContainer></CardContent>
+    </Card>
+  );
+}
+export default function App() {
+  return (
+    <div className="lc">
+      <Chart id="l1" title="Response time" sub='14 Mar, every 30 minutes; yLabels="inline"' yLabels="inline" config={{ p50: { label: 'p50' }, p95: { label: 'p95' } }}>
+        <LineChart data={latency} x="t" y={{ format: (ms) => `${ms} ms` }} />
+      </Chart>
+      <Chart id="l2" title="Monthly revenue" takeaway="Revenue rose 70% over the year" sub='curve="monotone": no overshoot' config={{ revenue: { label: 'Revenue', format: usd.format } }} summary="Revenue rose 70% over the year, with small dips in September, December and March.">
+        <LineChart data={revenue} x="month" curve="monotone" />
+      </Chart>
+      <Chart id="l3" title="Daily signups" sub="Gaps stay gaps; read against the two weeks before" config={{ signups: { label: 'Signups' } }}>
+        <LineChart data={signups} x="day" compare={{ data: signupsBefore, label: '2 weeks before' }} />
+      </Chart>
+      <Chart id="l4" title="Seats by plan" sub="Four series, focus on Team: the rest in data-context" config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }}>
+        <LineChart data={plans} x="month" focus={['team']} />
+      </Chart>
+      <Chart id="l5" title="Monthly revenue, banked" sub='aspect="banked": the segments average 45°' aspect="banked" config={{ revenue: { label: 'Revenue', format: usd.format } }}>
+        <LineChart data={revenue} x="month" curve="monotone" />
+      </Chart>
+    </div>
+  );
+}
+```
+<!-- /example -->

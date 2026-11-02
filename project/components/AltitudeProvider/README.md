@@ -46,3 +46,66 @@ Nothing moves: a mode is there from load. Entering it is announced once, politel
 
 Law 1 says the primary action rests at level 2, one per view. With `devChecks` (on by default when `process.env.NODE_ENV` isn't `'production'`), a `Button variant="primary"` registers with the provider while it's mounted. When more than one *visible* primary sits in the same view, one grouped warning names them and law 1. The page is one view, and each `Dialog`, `Sheet` and `Popover` is its own. Wrap independent parts (cards on a dashboard, each with its own task) in `<PrimaryScope>` to make them views of their own. The check is a warning only, it's gone from production builds, and the rule is `ALT-VISUAL-002` (`altitude explain ALT-VISUAL-002`). `PageHeader`'s `primary` slot is where a page's one primary belongs.
 
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`AltitudeProvider` as first used in its preview:
+
+```tsx
+import { AltitudeProvider, Badge, Button, Input, Switch } from 'altitude-design';
+
+<AltitudeProvider key={i} scheme={s} accent={accent} className="shell"><div className="scheme">
+  <h4>{typeof s === 'string' ? s[0].toUpperCase() + s.slice(1) : 'Custom'}</h4>
+  <small>{accent ? 'accent="' + accent + '"' : typeof s === 'string' ? 'scheme="' + s + '"' : 'scheme={paper}'}</small>
+  <Button variant="primary" size="sm">Publish</Button>
+  <Input size="sm" placeholder="Search" aria-label="Search" />
+  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Switch defaultChecked aria-label="Enabled" /><Badge tone="accent">Beta</Badge></div>
+  <div className="series">{[1, 2, 3, 4, 5, 6].map((n) => <span key={n} style={{ background: `var(--data-${n})` }} />)}<small>{accent ? 'data-1…6, led by the accent' : 'data-1…6'}</small></div>
+</div></AltitudeProvider>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`schemes`, `shell`, `scheme`, `series`, `density` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import { AltitudeProvider, Badge, Button, Input, Switch, Tabs, TabsList, TabsTrigger } from 'altitude-design';
+
+// A custom scheme: warm paper grounds and green ink laid over daylight. checkScheme() passes it.
+const paper = { name: 'paper', base: 'daylight', tokens: {
+  'surface-trench': '#e5e1d2', 'surface-well': '#edeadf', 'surface-ground': '#f5f3ea', 'surface-raised': '#fffdf7',
+  'surface-lifted': '#fffdf8', 'surface-floating': '#fffefa', 'surface-overlay': '#fffefb', 'surface-modal': '#fffefc',
+  ink: '#1f3329', 'ink-muted': '#4b5d53', 'ink-faint': '#949b8e', line: '#e2ded0', 'line-control': '#76806f',
+  accent: '#284d39', 'on-accent': '#ffffff', 'accent-ink': '#284d39', 'accent-soft': '#e1e9dc', positive: '#2c6e3f',
+} };
+const list = [['daylight'], ['nightfall'], ['daylight', '#0f8a6b'], [paper]];
+export default function App() {
+  return (
+    <>
+      <div className="schemes">
+      {list.map(([s, accent], i) => (
+        <AltitudeProvider key={i} scheme={s} accent={accent} className="shell"><div className="scheme">
+          <h4>{typeof s === 'string' ? s[0].toUpperCase() + s.slice(1) : 'Custom'}</h4>
+          <small>{accent ? 'accent="' + accent + '"' : typeof s === 'string' ? 'scheme="' + s + '"' : 'scheme={paper}'}</small>
+          <Button variant="primary" size="sm">Publish</Button>
+          <Input size="sm" placeholder="Search" aria-label="Search" />
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Switch defaultChecked aria-label="Enabled" /><Badge tone="accent">Beta</Badge></div>
+          <div className="series">{[1, 2, 3, 4, 5, 6].map((n) => <span key={n} style={{ background: `var(--data-${n})` }} />)}<small>{accent ? 'data-1…6, led by the accent' : 'data-1…6'}</small></div>
+        </div></AltitudeProvider>
+      ))}
+      </div>
+      {/* Density (#245): 'auto' follows the pointer; 'compact' pins the mouse sizes, 'comfortable' the touch sizes. */}
+      <div className="density">
+        {['compact', 'comfortable'].map((d) => (
+          <AltitudeProvider key={d} density={d} className="shell"><div className="scheme">
+            <h4>{d === 'compact' ? 'Compact' : 'Comfortable'}</h4>
+            <small>density="{d}"</small>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><Button variant="primary">Save</Button><Button>Cancel</Button></div>
+            <Input placeholder="Search" aria-label="Search" />
+            <Tabs defaultValue="a"><TabsList aria-label={'Sections, ' + d}><TabsTrigger value="a">General</TabsTrigger><TabsTrigger value="b">Members</TabsTrigger></TabsList></Tabs>
+          </div></AltitudeProvider>
+        ))}
+      </div>
+    </>
+  );
+}
+```
+<!-- /example -->

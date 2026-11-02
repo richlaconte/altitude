@@ -25,3 +25,57 @@ An agent asks the person something before it carries on: "Which environment shou
 - Do describe what each option means for the run.
 - Do offer a way to let the assistant decide when a default exists.
 - Don't preselect an option or move focus to the question.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Question` as first used in its preview:
+
+```tsx
+import { Question, QuestionOption } from 'altitude-design';
+
+<Question title="Which environment should I deploy to?" state={q.state} answer={q.answer} answeredAt={q.at} allowOther
+  answerLabel="Deploy" skipLabel="Let the assistant decide" onSkip={() => setQ({ state: 'expired' })}
+  onAnswer={(answer) => setQ({ state: 'answered', answer, at: Date.now() })}>
+  <QuestionOption value="staging" label="Staging" description="Resets nightly. Safe to try things." />
+  <QuestionOption value="production" label="Production" description="Customers will see it immediately." />
+</Question>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`qs` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Question, QuestionOption, QuestionSet } from 'altitude-design';
+
+export default function App() {
+  const [q, setQ] = React.useState({ state: 'asking' });
+  const [set, setSet] = React.useState({ state: 'asking' });
+  return (
+    <div className="qs">
+      <Question title="Which environment should I deploy to?" state={q.state} answer={q.answer} answeredAt={q.at} allowOther
+        answerLabel="Deploy" skipLabel="Let the assistant decide" onSkip={() => setQ({ state: 'expired' })}
+        onAnswer={(answer) => setQ({ state: 'answered', answer, at: Date.now() })}>
+        <QuestionOption value="staging" label="Staging" description="Resets nightly. Safe to try things." />
+        <QuestionOption value="production" label="Production" description="Customers will see it immediately." />
+      </Question>
+      <QuestionSet state={set.state} onAnswer={(answers) => setSet({ state: 'answered', answers })}>
+        <Question name="column" title="Keep the old status column, or drop it?" answer={set.answers?.column}>
+          <QuestionOption value="keep" label="Keep it" description="Writes go to both columns until you remove it." />
+          <QuestionOption value="drop" label="Drop it" description="The migration removes it after copying." />
+        </Question>
+        <Question name="notify" title="Who should hear about it?" multiple answer={set.answers?.notify}>
+          <QuestionOption value="eng" label="#eng-billing" />
+          <QuestionOption value="support" label="#support" />
+          <QuestionOption value="owner" label="The account owner" />
+        </Question>
+      </QuestionSet>
+      <Question title="Which layout should I use for the invoice?" state="answered" answer={{ values: ['compact'] }} answeredAt={Date.now() - 3 * 60000}>
+        <QuestionOption value="compact" label="Compact" />
+        <QuestionOption value="detailed" label="Detailed" />
+      </Question>
+    </div>
+  );
+}
+```
+<!-- /example -->

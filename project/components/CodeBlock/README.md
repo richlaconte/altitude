@@ -26,3 +26,47 @@ Code to read and copy: install commands, API examples in several languages, webh
 - Do use tabs for the same thing in several forms, not for different things.
 - Don't raise a code block into a card or give it a shadow.
 - Don't colour code with the chart palette.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`CodeBlock` as first used in its preview:
+
+```tsx
+import { CodeBlock } from 'altitude-design';
+
+<CodeBlock title="Install" tabs={[{ label: 'npm', language: 'sh', code: 'npm install altitude-design' }, { label: 'pnpm', language: 'sh', code: 'pnpm add altitude-design' }, { label: 'yarn', language: 'sh', code: 'yarn add altitude-design' }]} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`cbk` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { CodeBlock } from 'altitude-design';
+
+const payload = `{
+  "id": "evt_1Q8xZ2",
+  "type": "invoice.paid",
+  "created": 1793304000,
+  "data": {
+    "invoice": "INV-0042",
+    "amount": 4900,
+    "currency": "eur"
+  }
+}`;
+// A stand-in highlighter, to show the syntax prop: comments in ink-muted, keywords in accent-ink.
+const tiny = (code) => code.split(/(\/\/.*$|\b(?:const|await|import|from)\b)/m).map((part, i) => part.startsWith('//') ? <span key={i} className="tok-comment">{part}</span> : /^(const|await|import|from)$/.test(part) ? <span key={i} className="tok-keyword">{part}</span> : part);
+export default function App() {
+  const [streamed, setStreamed] = React.useState('');
+  const full = "import { Altitude } from 'altitude-design';\n// Verify the signature before trusting the event\nconst event = await verify(request, secret);";
+  React.useEffect(() => { let i = 0; const t = setInterval(() => { i = Math.min(full.length, i + 3); setStreamed(full.slice(0, i)); if (i >= full.length) clearInterval(t); }, 60); return () => clearInterval(t); }, []);
+  return (
+    <div className="cbk">
+      <CodeBlock title="Install" tabs={[{ label: 'npm', language: 'sh', code: 'npm install altitude-design' }, { label: 'pnpm', language: 'sh', code: 'pnpm add altitude-design' }, { label: 'yarn', language: 'sh', code: 'yarn add altitude-design' }]} />
+      <CodeBlock title="invoice.paid" language="json" code={payload} highlight={[3, 7]} lineNumbers maxHeight={220} />
+      <CodeBlock title="webhook.ts" language="ts" code={streamed} syntax={tiny} streaming={streamed.length < full.length} />
+    </div>
+  );
+}
+```
+<!-- /example -->

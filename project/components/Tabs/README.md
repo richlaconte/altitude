@@ -16,3 +16,58 @@ Arrow keys, Home and End move between tabs in both.
 - Don't use tabs for sequential steps; they imply the views are peers.
 
 `TabsContent` takes `forceMount` to keep an unchosen panel mounted (inert, hidden from assistive technology, `data-state="inactive"`), for views that hold state or cross-fade, as a chart's Chart | Table views do.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Tabs` as first used in its preview:
+
+```tsx
+import { Tabs, TabsContent, TabsList, TabsTrigger } from 'altitude-design';
+
+<Tabs defaultValue="overview">
+  <TabsList aria-label="Project">
+    <TabsTrigger value="overview">Overview</TabsTrigger>
+    <TabsTrigger value="activity">Activity</TabsTrigger>
+    <TabsTrigger value="settings">Settings</TabsTrigger>
+    <TabsTrigger value="members">Members</TabsTrigger>
+  </TabsList>
+  <TabsContent value="overview"><p className="body">Three deployments this week. Everything is healthy.</p></TabsContent>
+  <TabsContent value="activity"><p className="body">Mara merged “Faster cold starts” 2 hours ago.</p></TabsContent>
+  <TabsContent value="settings"><p className="body">Region, domains and environment variables.</p></TabsContent>
+  <TabsContent value="members"><p className="body">Six people have access to this project.</p></TabsContent>
+</Tabs>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`stack`, `body` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import { Tabs, TabsContent, TabsList, TabsTrigger } from 'altitude-design';
+
+export default function App() {
+  return (
+    <div className="stack">
+      <Tabs defaultValue="overview">
+        <TabsList aria-label="Project">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="members">Members</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview"><p className="body">Three deployments this week. Everything is healthy.</p></TabsContent>
+        <TabsContent value="activity"><p className="body">Mara merged “Faster cold starts” 2 hours ago.</p></TabsContent>
+        <TabsContent value="settings"><p className="body">Region, domains and environment variables.</p></TabsContent>
+        <TabsContent value="members"><p className="body">Six people have access to this project.</p></TabsContent>
+      </Tabs>
+      <Tabs defaultValue="week" variant="segmented">
+        <TabsList aria-label="Range">
+          <TabsTrigger value="day">Day</TabsTrigger>
+          <TabsTrigger value="week">Week</TabsTrigger>
+          <TabsTrigger value="month">Month</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+  );
+}
+```
+<!-- /example -->

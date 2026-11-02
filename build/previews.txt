@@ -3039,12 +3039,77 @@ function App() {
 .find { margin-left: auto; width: 280px; max-width: 100%; min-width: 0; flex: 0 1 auto; }
 --- jsx
 const I = {
-  up: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M7 17L17 7M9 7h8v8" })),
-  folder: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" })),
-  plus: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M12 5v14M5 12h14" })),
-  user: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "8", r: "4" }), /* @__PURE__ */ React.createElement("path", { d: "M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" })),
-  key: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("circle", { cx: "8", cy: "15", r: "4" }), /* @__PURE__ */ React.createElement("path", { d: "M11 12l9-9M17 6l3 3" })),
-  trash: /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", strokeLinejoin: "round" }, /* @__PURE__ */ React.createElement("path", { d: "M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" }))
+  up: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  <path d="M7 17L17 7M9 7h8v8" />
+</svg>,
+  folder: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinejoin="round"
+>
+  <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+</svg>,
+  plus: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+>
+  <path d="M12 5v14M5 12h14" />
+</svg>,
+  user: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+>
+  <circle cx="12" cy="8" r="4" />
+  <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+</svg>,
+  key: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  <circle cx="8" cy="15" r="4" />
+  <path d="M11 12l9-9M17 6l3 3" />
+</svg>,
+  trash: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+</svg>
 };
 const groups = [
   { label: "Recent", predicted: true, items: [
@@ -3067,7 +3132,19 @@ const groups = [
     { label: "Billing", icon: I.key, disabled: true }
   ] }
 ];
-const searchIcon = /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.75", strokeLinecap: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("circle", { cx: "11", cy: "11", r: "7" }), /* @__PURE__ */ React.createElement("path", { d: "M20 20l-3.5-3.5" }));
+const searchIcon = <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  aria-hidden="true"
+>
+  <circle cx="11" cy="11" r="7" />
+  <path d="M20 20l-3.5-3.5" />
+</svg>;
 function App() {
   const [open, setOpen] = React.useState(true);
   const [text, setText] = React.useState("");
@@ -3076,10 +3153,40 @@ function App() {
     setOpen(v);
     if (!v) setText("");
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("b", null, "Northwind"), /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Operational"), /* @__PURE__ */ React.createElement(A.Input, { className: "find", "aria-label": "Search or run a command", placeholder: "Search or run a command", value: text, leading: searchIcon, trailing: /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true" }, /* @__PURE__ */ React.createElement(A.Kbd, null, "\u2318"), /* @__PURE__ */ React.createElement(A.Kbd, null, "K")), onChange: (e) => {
+  return <div className="app">
+  <div className="bar">
+    <b>Northwind</b>
+    <A.Badge tone="positive">Operational</A.Badge>
+    <A.Input
+      className="find"
+      aria-label="Search or run a command"
+      placeholder="Search or run a command"
+      value={text}
+      leading={searchIcon}
+      trailing={<span aria-hidden="true"><A.Kbd>⌘</A.Kbd><A.Kbd>K</A.Kbd></span>}
+      onChange={(e) => {
     setText(e.target.value);
     if (e.target.value) setOpen(true);
-  } })), /* @__PURE__ */ React.createElement("div", { className: "grid", "data-tells-ignore": "LA4 placeholder page behind the overlay" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Chose \u201C${last}\u201D.` : "Type \u201Cdep\u201D: the best match moves to the top and the rows that stay travel there. Close it and type in the search field: the palette opens with what you typed."), /* @__PURE__ */ React.createElement(A.CommandPalette, { open, onOpenChange, query: text, onQueryChange: setText, items: groups, onSelect: (item) => setLast(item.label) }));
+  }}
+    />
+  </div>
+  <div className="grid" data-tells-ignore="LA4 placeholder page behind the overlay">
+    <A.Card />
+    <A.Card />
+    <A.Card />
+  </div>
+  <p className="cap">
+    {last ? `Chose \u201C${last}\u201D.` : "Type \u201Cdep\u201D: the best match moves to the top and the rows that stay travel there. Close it and type in the search field: the palette opens with what you typed."}
+  </p>
+  <A.CommandPalette
+    open={open}
+    onOpenChange={onOpenChange}
+    query={text}
+    onQueryChange={setText}
+    items={groups}
+    onSelect={(item) => setLast(item.label)}
+  />
+</div>;
 }
 
 === Sheet | <!-- @dsCard group="Overlays" height=480 subtitle="Level 4, risen at its edge; closing lifts it off" -->
@@ -3091,7 +3198,64 @@ function App() {
 --- jsx
 function App() {
   const [edit, setEdit] = React.useState(true);
-  return /* @__PURE__ */ React.createElement("div", { className: "page" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(true) }, "Edit project"), /* @__PURE__ */ React.createElement(A.Sheet, { side: "bottom", size: "sm", trigger: /* @__PURE__ */ React.createElement(A.Button, null, "Share") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Share Northwind"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Anyone with the link can view the latest deployment.")), /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "https://acme.dev/n/8dc01b2", readOnly: true, "aria-label": "Share link" }), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Copy link"))), /* @__PURE__ */ React.createElement(A.Sheet, { side: "left", size: "sm", modal: false, trigger: /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost" }, "Filters") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Filters"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "The page stays usable while this is open.")), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Production", defaultChecked: true }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Preview" }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Failed builds only" }))), /* @__PURE__ */ React.createElement("div", { className: "grid", "data-tells-ignore": "LA4 placeholder page behind the overlay" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement(A.Sheet, { open: edit, onOpenChange: setEdit }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Edit project"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Changes apply to every environment.")), /* @__PURE__ */ React.createElement("div", { className: "form" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Project name" }, /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "Northwind" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Description", hint: "Shown on the project's card." }, /* @__PURE__ */ React.createElement(A.Textarea, { placeholder: "What is this project for?" })), /* @__PURE__ */ React.createElement(A.Switch, { label: "Deploy previews for every branch", defaultChecked: true })), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => setEdit(false) }, "Cancel"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(false) }, "Save changes"))));
+  return <div className="page">
+  <div className="row">
+    <A.Button variant="primary" onClick={() => setEdit(true)}>Edit project</A.Button>
+    <A.Sheet side="bottom" size="sm" trigger={<A.Button>Share</A.Button>}>
+      <A.SheetHeader>
+        <A.SheetTitle>Share Northwind</A.SheetTitle>
+        <A.SheetDescription>
+          Anyone with the link can view the latest deployment.
+        </A.SheetDescription>
+      </A.SheetHeader>
+      <A.Input
+        defaultValue="https://acme.dev/n/8dc01b2"
+        readOnly={true}
+        aria-label="Share link"
+      />
+      <A.SheetFooter><A.Button variant="primary">Copy link</A.Button></A.SheetFooter>
+    </A.Sheet>
+    <A.Sheet
+      side="left"
+      size="sm"
+      modal={false}
+      trigger={<A.Button variant="ghost">Filters</A.Button>}
+    >
+      <A.SheetHeader>
+        <A.SheetTitle>Filters</A.SheetTitle>
+        <A.SheetDescription>The page stays usable while this is open.</A.SheetDescription>
+      </A.SheetHeader>
+      <A.Checkbox label="Production" defaultChecked={true} />
+      <A.Checkbox label="Preview" />
+      <A.Checkbox label="Failed builds only" />
+    </A.Sheet>
+  </div>
+  <div className="grid" data-tells-ignore="LA4 placeholder page behind the overlay">
+    <A.Card />
+    <A.Card />
+    <A.Card />
+    <A.Card />
+    <A.Card />
+    <A.Card />
+  </div>
+  <A.Sheet open={edit} onOpenChange={setEdit}>
+    <A.SheetHeader>
+      <A.SheetTitle>Edit project</A.SheetTitle>
+      <A.SheetDescription>Changes apply to every environment.</A.SheetDescription>
+    </A.SheetHeader>
+    <div className="form">
+      <A.Field label="Project name"><A.Input defaultValue="Northwind" /></A.Field>
+      <A.Field label="Description" hint="Shown on the project's card.">
+        <A.Textarea placeholder="What is this project for?" />
+      </A.Field>
+      <A.Switch label="Deploy previews for every branch" defaultChecked={true} />
+    </div>
+    <A.SheetFooter>
+      <A.Button variant="ghost" onClick={() => setEdit(false)}>Cancel</A.Button>
+      <A.Button variant="primary" onClick={() => setEdit(false)}>Save changes</A.Button>
+    </A.SheetFooter>
+  </A.Sheet>
+</div>;
 }
 
 === NumberInput | <!-- @dsCard group="Inputs" height=360 subtitle="A number field with steppers in its end cap, units, and the locale's own way of writing numbers" -->
@@ -4286,15 +4450,45 @@ const regions = [
 function App() {
   const [plan, setPlan] = React.useState("team");
   const [tz, setTz] = React.useState("");
-  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Region", hint: "Where your deployments run." }, /* @__PURE__ */ React.createElement(A.Select, { items: regions, placeholder: "Choose a region", name: "region" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Plan" }, /* @__PURE__ */ React.createElement(A.Select, { value: plan, onValueChange: setPlan }, /* @__PURE__ */ React.createElement(A.SelectItem, { value: "solo" }, "Solo"), /* @__PURE__ */ React.createElement(A.SelectItem, { value: "team" }, "Team"), /* @__PURE__ */ React.createElement(A.SelectItem, { value: "org" }, "Organization"))), /* @__PURE__ */ React.createElement(A.Field, { label: "Timezone", required: true, error: tz ? null : "Choose a timezone." }, /* @__PURE__ */ React.createElement(
-    A.Select,
-    {
-      value: tz,
-      onValueChange: setTz,
-      placeholder: "Choose a timezone",
-      items: [{ value: "utc", label: "UTC" }, { value: "lis", label: "Europe/Lisbon" }, { value: "nyc", label: "America/New_York" }]
-    }
-  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Runtime" }, /* @__PURE__ */ React.createElement(A.Select, { defaultValue: "node", defaultOpen: true, items: [{ value: "node", label: "Node.js 22" }, { value: "bun", label: "Bun 1.2" }, { value: "deno", label: "Deno 2" }, { value: "edge", label: "Edge (V8 isolates)" }] })), /* @__PURE__ */ React.createElement(A.Field, { label: "Owner" }, /* @__PURE__ */ React.createElement(A.Select, { disabled: true, defaultValue: "mara", items: [{ value: "mara", label: "Mara Quist" }] }))), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 150 } }, "Empty fields are holes with their back wall showing; choosing raises the floor flush. Type a letter on a focused field to jump to it."));
+  return <div className="col">
+  <div className="grid">
+    <A.Field label="Region" hint="Where your deployments run.">
+      <A.Select items={regions} placeholder="Choose a region" name="region" />
+    </A.Field>
+    <A.Field label="Plan">
+      <A.Select value={plan} onValueChange={setPlan}>
+        <A.SelectItem value="solo">Solo</A.SelectItem>
+        <A.SelectItem value="team">Team</A.SelectItem>
+        <A.SelectItem value="org">Organization</A.SelectItem>
+      </A.Select>
+    </A.Field>
+    <A.Field label="Timezone" required={true} error={tz ? null : "Choose a timezone."}>
+      <A.Select
+        value={tz}
+        onValueChange={setTz}
+        placeholder="Choose a timezone"
+        items={[{ value: "utc", label: "UTC" }, { value: "lis", label: "Europe/Lisbon" }, { value: "nyc", label: "America/New_York" }]}
+      />
+    </A.Field>
+    <A.Field label="Runtime">
+      <A.Select
+        defaultValue="node"
+        defaultOpen={true}
+        items={[{ value: "node", label: "Node.js 22" }, { value: "bun", label: "Bun 1.2" }, { value: "deno", label: "Deno 2" }, { value: "edge", label: "Edge (V8 isolates)" }]}
+      />
+    </A.Field>
+    <A.Field label="Owner">
+      <A.Select
+        disabled={true}
+        defaultValue="mara"
+        items={[{ value: "mara", label: "Mara Quist" }]}
+      />
+    </A.Field>
+  </div>
+  <p className="cap" style={{ marginTop: 150 }}>
+    Empty fields are holes with their back wall showing; choosing raises the floor flush. Type a letter on a focused field to jump to it.
+  </p>
+</div>;
 }
 
 === Combobox | <!-- @dsCard group="Inputs" height=400 subtitle="Type to filter; a query stays an opening until you choose" -->
@@ -4305,7 +4499,16 @@ const people = ["Ada Obi", "Eli Ward", "Ivy Chen", "Jon Reyes", "Kai Ito", "Lena
 const countries = ["Brazil", "Canada", "Germany", "Japan", "Peru", "Portugal", "Singapore", "Spain"].map((c) => ({ value: c.toLowerCase(), label: c }));
 function App() {
   const [who, setWho] = React.useState("");
-  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Assignee", hint: who ? "Assigned." : "Start typing a name." }, /* @__PURE__ */ React.createElement(A.Combobox, { items: people, value: who, onValueChange: setWho, placeholder: "Search people" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Country" }, /* @__PURE__ */ React.createElement(A.Combobox, { items: countries, defaultValue: "portugal", defaultOpen: true }))));
+  return <div className="col">
+  <div className="grid">
+    <A.Field label="Assignee" hint={who ? "Assigned." : "Start typing a name."}>
+      <A.Combobox items={people} value={who} onValueChange={setWho} placeholder="Search people" />
+    </A.Field>
+    <A.Field label="Country">
+      <A.Combobox items={countries} defaultValue="portugal" defaultOpen={true} />
+    </A.Field>
+  </div>
+</div>;
 }
 
 
@@ -4455,7 +4658,32 @@ const setup = [
 ];
 function App() {
   const [at, setAt] = React.useState(2);
-  return /* @__PURE__ */ React.createElement("div", { className: "wrap" }, /* @__PURE__ */ React.createElement(A.Stepper, { steps, current: at, onStepChange: setAt, orientation: "auto", "aria-label": "Workspace setup" }), /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", disabled: at === 0, onClick: () => setAt(at - 1) }, "Back"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", disabled: at === steps.length, onClick: () => setAt(at + 1) }, at >= steps.length - 1 ? "Finish" : "Continue"), /* @__PURE__ */ React.createElement("span", { className: "cap" }, "Continue presses the current step into the record and raises the next one; click a completed step to go back.")), /* @__PURE__ */ React.createElement("div", { className: "pair" }, /* @__PURE__ */ React.createElement(A.Stepper, { steps: setup, current: 1, orientation: "vertical", "aria-label": "Deployment setup" }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Vertical: the same plates, stacked. Completed steps are flush and checked, the current one stands on its wall, and steps to come are imprints.")));
+  return <div className="wrap">
+  <A.Stepper
+    steps={steps}
+    current={at}
+    onStepChange={setAt}
+    orientation="auto"
+    aria-label="Workspace setup"
+  />
+  <div className="row">
+    <A.Button variant="ghost" disabled={at === 0} onClick={() => setAt(at - 1)}>
+      Back
+    </A.Button>
+    <A.Button variant="primary" disabled={at === steps.length} onClick={() => setAt(at + 1)}>
+      {at >= steps.length - 1 ? "Finish" : "Continue"}
+    </A.Button>
+    <span className="cap">
+      Continue presses the current step into the record and raises the next one; click a completed step to go back.
+    </span>
+  </div>
+  <div className="pair">
+    <A.Stepper steps={setup} current={1} orientation="vertical" aria-label="Deployment setup" />
+    <p className="cap">
+      Vertical: the same plates, stacked. Completed steps are flush and checked, the current one stands on its wall, and steps to come are imprints.
+    </p>
+  </div>
+</div>;
 }
 
 === Table | <!-- @dsCard group="Display" height=470 subtitle="Rows are the record: only selected, matching and interactive rows rise" -->
@@ -4477,31 +4705,41 @@ function App() {
   const [rows, setRows] = React.useState(data);
   const [q, setQ] = React.useState("");
   const [opened, setOpened] = React.useState(null);
-  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 8 } }, /* @__PURE__ */ React.createElement(
-    A.DataTable,
-    {
-      "aria-label": "Projects",
-      rows,
-      onReorder: setRows,
-      getRowId: (r) => r.id,
-      getRowLabel: (r) => r.name,
-      selectable: true,
-      defaultSelected: ["bc", "ci"],
-      maxHeight: 300,
-      onRowClick: (r) => setOpened(r.name),
-      relevance: (r) => q ? r.name.toLowerCase().includes(q.toLowerCase()) || r.owner.toLowerCase().includes(q.toLowerCase()) ? "match" : "miss" : void 0,
-      actions: () => /* @__PURE__ */ React.createElement(A.Button, { size: "sm" }, "Archive"),
-      columnsMenu: true,
-      toolbar: /* @__PURE__ */ React.createElement("div", { className: "filter" }, /* @__PURE__ */ React.createElement(A.Input, { size: "sm", placeholder: "Filter in place", value: q, onChange: (e) => setQ(e.target.value), "aria-label": "Filter projects" })),
-      columns: [
+  return <div className="col" style={{ gap: 8 }}>
+  <A.DataTable
+    aria-label="Projects"
+    rows={rows}
+    onReorder={setRows}
+    getRowId={(r) => r.id}
+    getRowLabel={(r) => r.name}
+    selectable={true}
+    defaultSelected={["bc", "ci"]}
+    maxHeight={300}
+    onRowClick={(r) => setOpened(r.name)}
+    relevance={(r) => q ? r.name.toLowerCase().includes(q.toLowerCase()) || r.owner.toLowerCase().includes(q.toLowerCase()) ? "match" : "miss" : void 0}
+    actions={() => <A.Button size="sm">Archive</A.Button>}
+    columnsMenu={true}
+    toolbar={<div className="filter">
+      <A.Input
+        size="sm"
+        placeholder="Filter in place"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        aria-label="Filter projects"
+      />
+    </div>}
+    columns={[
         { key: "name", header: "Project", sortValue: (r) => r.name },
-        { key: "env", header: "Environment", cell: (r) => /* @__PURE__ */ React.createElement(A.Badge, { tone: tone[r.env] }, r.env), sortValue: (r) => r.env },
+        { key: "env", header: "Environment", cell: (r) => <A.Badge tone={tone[r.env]}>{r.env}</A.Badge>, sortValue: (r) => r.env },
         { key: "owner", header: "Owner", sortValue: (r) => r.owner },
         { key: "updated", header: "Updated", align: "end", sortValue: (r) => r.updated, cell: (r) => r.updated < 24 ? r.updated + "h ago" : Math.round(r.updated / 24) + "d ago" },
         { key: "req", header: "Requests", align: "end", sortValue: (r) => r.req, cell: (r) => r.req.toLocaleString("en-US") }
-      ]
-    }
-  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys. Columns shows, hides and reorders columns, and sets the row density."));
+      ]}
+  />
+  <p className="cap">
+    {opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys. Columns shows, hides and reorders columns, and sets the row density."}
+  </p>
+</div>;
 }
 
 
@@ -4881,9 +5119,33 @@ const people = {
   mara: { name: "Mara Quist", role: "Platform \xB7 Lisbon", bio: "Owns deploys and the edge runtime. Usually reviews within the hour.", s: [42, 6, 3] },
   jon: { name: "Jon Reyes", role: "Docs \xB7 Lima", bio: "Writes the release notes and keeps the changelog honest.", s: [18, 2, 5] }
 };
-const Card = ({ p }) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "who" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: p.name, size: 40, status: "active" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("b", null, p.name), /* @__PURE__ */ React.createElement("span", null, p.role))), /* @__PURE__ */ React.createElement("p", { className: "bio" }, p.bio), /* @__PURE__ */ React.createElement("div", { className: "stats" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[0]), " merged"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[1]), " open"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, p.s[2]), " projects")));
+const Card = ({ p }) => <>
+  <div className="who">
+    <A.Avatar name={p.name} size={40} status="active" />
+    <div><b>{p.name}</b><span>{p.role}</span></div>
+  </div>
+  <p className="bio">{p.bio}</p>
+  <div className="stats">
+    <span><b>{p.s[0]}</b>{" merged"}</span>
+    <span><b>{p.s[1]}</b>{" open"}</span>
+    <span><b>{p.s[2]}</b>{" projects"}</span>
+  </div>
+</>;
 function App() {
-  return /* @__PURE__ */ React.createElement("div", { className: "col", style: { gap: 18 } }, /* @__PURE__ */ React.createElement("p", { className: "para" }, "Merged by ", /* @__PURE__ */ React.createElement(A.HoverCard, { defaultOpen: true, trigger: /* @__PURE__ */ React.createElement("a", { href: "#mara" }, "Mara Quist") }, /* @__PURE__ */ React.createElement(Card, { p: people.mara })), " two hours ago, after review from ", /* @__PURE__ */ React.createElement(A.HoverCard, { trigger: /* @__PURE__ */ React.createElement("a", { href: "#jon" }, "Jon Reyes") }, /* @__PURE__ */ React.createElement(Card, { p: people.jon })), "."), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 160 } }, "Rest the pointer on a name; once one card has shown, the other opens at once. Focus a link with Tab to open it from the keyboard; Escape closes it."));
+  return <div className="col" style={{ gap: 18 }}>
+  <p className="para">
+    {"Merged by "}
+    <A.HoverCard defaultOpen={true} trigger={<a href="#mara">Mara Quist</a>}>
+      <Card p={people.mara} />
+    </A.HoverCard>
+    {" two hours ago, after review from "}
+    <A.HoverCard trigger={<a href="#jon">Jon Reyes</a>}><Card p={people.jon} /></A.HoverCard>
+    .
+  </p>
+  <p className="cap" style={{ marginTop: 160 }}>
+    Rest the pointer on a name; once one card has shown, the other opens at once. Focus a link with Tab to open it from the keyboard; Escape closes it.
+  </p>
+</div>;
 }
 
 === ActionsInPlace | <!-- @dsCard group="Patterns" height=850 page subtitle="Edit here, recover reliably, confirm consequences" -->

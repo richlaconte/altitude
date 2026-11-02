@@ -33,3 +33,46 @@ Names each series, and optionally lets people hide and show series. Every chart 
 - Do use `toggle` when people need to compare a few series out of many; otherwise a static legend is quieter.
 - Don't let colour be the only link between a key and its series: under forced colours the keys show each series' pattern.
 - Don't put the legend somewhere the chart's readout or summary can't be read alongside it.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`ChartLegend` as first used in its preview:
+
+```tsx
+import { ChartLegend, ChartLegendContent } from 'altitude-design';
+
+<ChartLegend content={<ChartLegendContent />} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`cl` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { BarChart, Card, CardContent, CardDescription, CardHeader, CardTitle, ChartContainer, ChartLegend, ChartLegendContent, LineChart } from 'altitude-design';
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, api: 20 + ((i * 7) % 11), web: 14 + ((i * 5) % 9), jobs: 6 + ((i * 3) % 7) }));
+const plans = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01'].map((month, i) => ({ month, free: 40 + i * 2, team: 34 + i * 3, business: 30 + i * 2.6, enterprise: 12 + i }));
+export default function App() {
+  return (
+    <div className="cl">
+      <Card>
+        <CardHeader><CardTitle id="g1">Requests, all services</CardTitle><CardDescription>A legend that only labels</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="g1" aspect={1.8} config={{ api: { label: 'API' }, web: { label: 'Web' }, jobs: { label: 'Jobs' } }}>
+            <BarChart data={months} x="month" stack><ChartLegend content={<ChartLegendContent />} /></BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle id="g2">Seats by plan</CardTitle><CardDescription>toggle: each key is a switch; Enterprise starts hidden</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="g2" aspect={1.8} config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }}>
+            <LineChart data={plans} x="month"><ChartLegend content={<ChartLegendContent toggle defaultHidden={['enterprise']} />} /></LineChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

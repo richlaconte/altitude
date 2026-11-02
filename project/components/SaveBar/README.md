@@ -25,3 +25,41 @@ const record = useEditRecord({ initialValue: settings, validate, validationMode:
 - Do keep the draft when a save fails.
 - Don't use it beside an `EditRegion`, which has its own Save.
 - Don't show it on the first keystroke.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`SaveBar` as first used in its preview:
+
+```tsx
+import { SaveBar } from 'altitude-design';
+
+<SaveBar record={record} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `sb`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Field, Input, SaveBar, Switch, useEditRecord } from 'altitude-design';
+
+export default function App() {
+  const [failNext, setFailNext] = React.useState(false);
+  const fail = React.useRef(false); fail.current = failNext;
+  const record = useEditRecord({
+    initialValue: { name: 'Acme Inc.', domain: 'acme.dev', seats: '25', region: 'Frankfurt' }, validationMode: 'submit',
+    validate: (d) => (d.name.trim() ? {} : { name: 'Enter a workspace name' }),
+    save: (draft) => new Promise((r) => setTimeout(() => r(fail.current ? { ok: false, error: "We couldn't reach the server." } : { ok: true, value: draft }), 900)),
+  });
+  const f = (key, label) => <Field label={label} error={record.errors[key]}><Input value={record.draft[key]} onChange={(e) => record.setDraft({ ...record.draft, [key]: e.target.value })} /></Field>;
+  return (
+    <div className="col">
+      <div className="sb">{f('name', 'Workspace name')}{f('domain', 'Domain')}{f('seats', 'Seats')}{f('region', 'Region')}</div>
+      <Switch label="Make the next save fail" checked={failNext} onCheckedChange={setFailNext} />
+      <p className="cap">Change a field: once the change settles, the bar rises from the bottom edge. ⌘S or Save hovers while saving and lowers away when saved; a failed save drops into a trench and keeps your changes.</p>
+      <SaveBar record={record} />
+    </div>
+  );
+}
+```
+<!-- /example -->

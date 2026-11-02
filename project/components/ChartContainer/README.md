@@ -150,3 +150,80 @@ function Target({ value }) {
 - Don't give marks a shadow, a wall, a sheen, a gradient or a lift.
 - Don't colour text with a series colour; labels and ticks wear `ink` and `ink-muted`.
 - Don't draw more than about 2,000 marks: SVG gets slow. Aggregate, or use a canvas library with Altitude's theme (#77).
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`ChartContainer` as first used in its preview:
+
+```tsx
+import { ChartContainer } from 'altitude-design';
+
+<ChartContainer aria-labelledby="rc" data={months} x="month" aspect={1.7} summary="Revenue rose 44% while costs held flat."
+  config={{ revenue: { label: 'Revenue', format: usd.format }, costs: { label: 'Costs', format: usd.format } }}>
+  <Lines />
+</ChartContainer>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`charts` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, ChartContainer, ChartMarker, useChart } from 'altitude-design';
+
+// Until the chart types land, these marks are drawn by hand with useChart(): the same scales the types will use.
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
+const months = [
+  { month: '2026-01-01', revenue: 8200, costs: 5100 }, { month: '2026-02-01', revenue: 8900, costs: 5000 },
+  { month: '2026-03-01', revenue: 9400, costs: 5300 }, { month: '2026-04-01', revenue: 9100, costs: 5200 },
+  { month: '2026-05-01', revenue: 10600, costs: 5400 }, { month: '2026-06-01', revenue: 11800, costs: 5300 },
+];
+const regions = [
+  { region: 'North', q2: 42, q3: 51 }, { region: 'South', q2: 35, q3: 31 }, { region: 'East', q2: 28, q3: 37 }, { region: 'West', q2: 19, q3: 24 },
+];
+// encode() draws a series by its slot: colour, and a dash, marker or hatch whenever patterns are on (forced colours, print).
+function Lines() {
+  const { series, data, xOf, y, encode, patterns, strokeWidth } = useChart();
+  return series.map((s) => {
+    const e = encode(s.key);
+    return <g key={s.key}>
+      <polyline fill="none" stroke={e.stroke} strokeDasharray={e.dash} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round"
+        points={data.map((d) => `${xOf(d)},${y(d[s.key])}`).join(' ')} />
+      {patterns && data.map((d, i) => <ChartMarker key={i} shape={e.marker} x={xOf(d)} y={y(d[s.key])} color={e.stroke} />)}
+    </g>;
+  });
+}
+function Bars() {
+  const { series, data, x, y, xKey, ground, alpha, encode, gap } = useChart();
+  const w = (x.bandwidth - gap * (series.length - 1)) / series.length;
+  return data.map((d) => series.map((s, i) => {
+    const v = d[s.key], top = Math.min(y(v), ground), e = encode(s.key);
+    return <rect key={d[xKey] + s.key} x={x(d[xKey]) + i * (w + gap)} y={top} width={w} height={Math.abs(y(v) - ground)}
+      fill={e.fill} stroke={e.edge} strokeWidth={e.edge ? 1 : undefined} opacity={alpha(d, s.key)} />;
+  }));
+}
+export default function App() {
+  return (
+    <div className="charts">
+      <Card>
+        <CardHeader><CardTitle id="rc">Revenue and costs</CardTitle><CardDescription>Jan to Jun 2026</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="rc" data={months} x="month" aspect={1.7} summary="Revenue rose 44% while costs held flat."
+            config={{ revenue: { label: 'Revenue', format: usd.format }, costs: { label: 'Costs', format: usd.format } }}>
+            <Lines />
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle id="dr">Deals closed by region</CardTitle><CardDescription>Q2 and Q3</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="dr" data={regions} x="region" aspect={1.7}
+            config={{ q2: { label: 'Q2' }, q3: { label: 'Q3' } }}>
+            <Bars />
+          </ChartContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

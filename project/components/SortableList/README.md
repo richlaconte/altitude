@@ -9,3 +9,37 @@ Pressing and dragging an item lifts it to level 3 (floating surface, `elev-3`), 
 **You provide:** `items`, `getKey`, `onReorder` (receives the new array), `renderItem` (the row content; the row itself and its grip are drawn for you), `getLabel` for announcements, `aria-label`.
 
 - Do keep rows short and uniform; the slot is sized to the item being moved.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`SortableList` as first used in its preview:
+
+```tsx
+import { Badge, SortableList } from 'altitude-design';
+
+<SortableList aria-label="Priorities" items={items} getKey={(i) => i.id} getLabel={(i) => i.t} onReorder={setItems}
+  renderItem={(i) => <div className="it">{i.t}<Badge tone={i.p === 'High' ? 'critical' : i.p === 'Med' ? 'caution' : 'neutral'}>{i.p}</Badge></div>} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `wrap`, `it`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Badge, SortableList } from 'altitude-design';
+
+export default function App() {
+  const [items, setItems] = React.useState([
+    { id: 'a', t: 'Write release notes', p: 'High' }, { id: 'b', t: 'Review pricing copy', p: 'Med' },
+    { id: 'c', t: 'Fix cold-start regression', p: 'High' }, { id: 'd', t: 'Update onboarding emails', p: 'Low' }, { id: 'e', t: 'Plan Q1 roadmap', p: 'Med' },
+  ]);
+  return (
+    <div className="col wrap">
+      <SortableList aria-label="Priorities" items={items} getKey={(i) => i.id} getLabel={(i) => i.t} onReorder={setItems}
+        renderItem={(i) => <div className="it">{i.t}<Badge tone={i.p === 'High' ? 'critical' : i.p === 'Med' ? 'caution' : 'neutral'}>{i.p}</Badge></div>} />
+      <p className="cap">Drag, or focus a row and press Space, then the arrow keys.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

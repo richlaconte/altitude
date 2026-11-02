@@ -69,3 +69,69 @@ The items, applying and persisting each op, and reversing ops for Undo.
 ## Demo and verification
 
 The `Checklist` section of `build/previews.txt` shows nested launch tasks (a fictional service refuses “TBD”) and a flat packing list with `sortDone`. `node checks/checklist.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers Enter, split and merge at the caret, Backspace on an empty line, Tab and Shift+Tab, Escape then Tab, ↑/↓, Alt+↑, Ctrl+Enter, IME Enter, a refused edit with Retry, remove and Ctrl+Z, the add line, task-list paste, `sortDone`, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Checklist` as first used in its preview:
+
+```tsx
+import { Checklist } from 'altitude-design';
+
+<Checklist aria-labelledby="cl-launch" nested {...props} {...launch} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`cl-demo` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Checklist } from 'altitude-design';
+
+// A tiny store that applies the Checklist's ops to nested items, and reverses them for Undo.
+const clStrip = (list, id) => { let found = null; const out = list.filter(x => { if (x.id === id) { found = x; return false; } return true; }).map(x => { if (found || !x.children) return x; const [kids, hit] = clStrip(x.children, id); if (hit) found = hit; return hit ? { ...x, children: kids } : x; }); return [out, found]; };
+const clInsert = (list, parentId, index, node) => parentId === null ? [...list.slice(0, index), node, ...list.slice(index)]
+  : list.map(x => x.id === parentId ? { ...x, children: [...(x.children || []).slice(0, index), node, ...(x.children || []).slice(index)] } : x.children ? { ...x, children: clInsert(x.children, parentId, index, node) } : x);
+const clUpdate = (list, id, patch) => list.map(x => x.id === id ? { ...x, ...patch } : x.children ? { ...x, children: clUpdate(x.children, id, patch) } : x);
+const clApply = (list, op) => {
+  if (op.type === 'add') return clInsert(list, op.parentId, op.index, { id: op.id, text: op.text, done: op.done });
+  if (op.type === 'edit') return clUpdate(list, op.id, { text: op.text });
+  if (op.type === 'toggle') return clUpdate(list, op.id, { done: op.done });
+  const [rest, node] = clStrip(list, op.id);
+  if (op.type === 'remove') return rest;
+  return clInsert(rest, op.parentId, op.index, node);
+};
+function useChecklist(seed, refuse) {
+  const [items, setItems] = React.useState(seed);
+  const removedNodes = React.useRef(new Map());
+  const onChange = op => {
+    if (refuse && refuse(op)) return { ok: false, error: refuse(op) };
+    if (op.type === 'remove') removedNodes.current.set(op.id, clStrip(items, op.id)[1]);
+    setItems(list => clApply(list, op));
+  };
+  const onUndo = op => setItems(list => {
+    if (op.type === 'add') return clStrip(list, op.id)[0];
+    if (op.type === 'remove') return clInsert(list, op.parentId, op.index, removedNodes.current.get(op.id));
+    const [rest, node] = clStrip(list, op.id); return clInsert(rest, op.from.parentId, op.from.index, node);
+  });
+  return { items, onChange, onUndo };
+}
+const CL_LAUNCH = [
+  { id: 'venue', text: 'Book the venue', done: true },
+  { id: 'invites', text: 'Send invitations', done: false, children: [
+    { id: 'list', text: 'Confirm the guest list', done: true }, { id: 'design', text: 'Design the card', done: false } ] },
+  { id: 'catering', text: 'Choose catering', done: false },
+];
+const CL_PACK = [{ id: 'p1', text: 'Passport', done: false }, { id: 'p2', text: 'Charger', done: true }, { id: 'p3', text: 'Rain jacket', done: false }];
+export default function App() {
+  const launch = useChecklist(CL_LAUNCH, op => op.type === 'edit' && /tbd/i.test(op.text) ? 'Write the task, not “TBD”.' : undefined);
+  const pack = useChecklist(CL_PACK);
+  const props = { getKey: t => t.id, getText: t => t.text, isDone: t => t.done, getChildren: t => t.children };
+  return <div className="cl-demo">
+    <section><h3 id="cl-launch">Launch tasks</h3><p>Nested: Tab and Shift+Tab indent and outdent. Backspace on an empty line removes it; Ctrl+Z (⌘Z) brings it back. Writing “TBD” is refused.</p>
+      <Checklist aria-labelledby="cl-launch" nested {...props} {...launch} /></section>
+    <section><h3 id="cl-pack">Packing</h3><p>Flat, done items last.</p>
+      <Checklist aria-labelledby="cl-pack" sortDone {...props} {...pack} placeholder="Add something to pack" /></section>
+  </div>;
+}
+```
+<!-- /example -->

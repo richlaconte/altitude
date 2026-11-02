@@ -74,3 +74,65 @@ To bulk-act on a filtered set larger than a page ("Archive all 2,341 inactive us
 
 `selected` and `onSelectedChange` keep working for selections of loaded rows. Report each record's outcome of a long bulk action in place (`RemovalReceipt`'s reading) and in a toast.
 
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `filter`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Badge, Button, DataTable, Input } from 'altitude-design';
+
+const data = [
+  { id: "nw", name: "Northwind", env: "Production", owner: "Mara Quist", updated: 2, req: 1240 },
+  { id: "bc", name: "Beacon", env: "Preview", owner: "Jon Reyes", updated: 5, req: 312 },
+  { id: "ci", name: "Cinder", env: "Production", owner: "Lena Park", updated: 26, req: 5906 },
+  { id: "dl", name: "Delta", env: "Staging", owner: "Sam Okafor", updated: 49, req: 88 },
+  { id: "em", name: "Ember", env: "Production", owner: "Ivy Chen", updated: 70, req: 2410 },
+  { id: "fb", name: "Fable", env: "Preview", owner: "Ada Obi", updated: 96, req: 19 },
+  { id: "gn", name: "Garnet", env: "Staging", owner: "Theo Marsh", updated: 120, req: 640 },
+  { id: "hb", name: "Harbor", env: "Production", owner: "Noa Levi", updated: 168, req: 3120 }
+];
+const tone = { Production: "positive", Preview: "accent", Staging: "neutral" };
+export default function App() {
+  const [rows, setRows] = React.useState(data);
+  const [q, setQ] = React.useState("");
+  const [opened, setOpened] = React.useState(null);
+  return <div className="col" style={{ gap: 8 }}>
+  <DataTable
+    aria-label="Projects"
+    rows={rows}
+    onReorder={setRows}
+    getRowId={(r) => r.id}
+    getRowLabel={(r) => r.name}
+    selectable={true}
+    defaultSelected={["bc", "ci"]}
+    maxHeight={300}
+    onRowClick={(r) => setOpened(r.name)}
+    relevance={(r) => q ? r.name.toLowerCase().includes(q.toLowerCase()) || r.owner.toLowerCase().includes(q.toLowerCase()) ? "match" : "miss" : void 0}
+    actions={() => <Button size="sm">Archive</Button>}
+    columnsMenu={true}
+    toolbar={<div className="filter">
+      <Input
+        size="sm"
+        placeholder="Filter in place"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        aria-label="Filter projects"
+      />
+    </div>}
+    columns={[
+        { key: "name", header: "Project", sortValue: (r) => r.name },
+        { key: "env", header: "Environment", cell: (r) => <Badge tone={tone[r.env]}>{r.env}</Badge>, sortValue: (r) => r.env },
+        { key: "owner", header: "Owner", sortValue: (r) => r.owner },
+        { key: "updated", header: "Updated", align: "end", sortValue: (r) => r.updated, cell: (r) => r.updated < 24 ? r.updated + "h ago" : Math.round(r.updated / 24) + "d ago" },
+        { key: "req", header: "Requests", align: "end", sortValue: (r) => r.req, cell: (r) => r.req.toLocaleString("en-US") }
+      ]}
+  />
+  <p className="cap">
+    {opened ? `Opened ${opened}.` : "Sort a column: rows travel to their places. Filter: matches rise, misses sink. Drag a handle, or focus it and press Space, then the arrow keys. Columns shows, hides and reorders columns, and sets the row density."}
+  </p>
+</div>;
+}
+```
+<!-- /example -->

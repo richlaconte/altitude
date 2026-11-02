@@ -38,3 +38,101 @@ Where a person writes to an assistant or agent: a textarea that grows, attachmen
 - Do return a promise from `onAttach` so an upload shows it's in flight.
 - Don't send on Enter during IME composition (it's handled; don't override `onKeyDown` to send).
 - Don't announce "Message sent".
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`PromptInput` as first used in its preview:
+
+```tsx
+import { PromptInput, PromptInputSubmit, PromptInputTextarea, PromptInputToolbar } from 'altitude-design';
+
+<PromptInput onSubmit={({ text, mentions, command }) => setSent(`${command ? `/${command} · ` : ''}${text}${mentions ? ` · context: ${mentions.map((m) => m.label).join(', ')}` : ''}`)}
+  mentionable={(q) => new Promise((r) => setTimeout(() => r(context.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()))), 250))}
+  commands={[{ name: 'review', description: 'Review the current changes' }, { name: 'compact', description: 'Summarise the conversation so far' }, { name: 'clear', description: 'Start a new conversation' }]}>
+  <PromptInputTextarea placeholder="@ to add context, / for commands" />
+  <PromptInputToolbar><PromptInputSubmit /></PromptInputToolbar>
+</PromptInput>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `cap`, `pi` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { PromptInput, PromptInputAttach, PromptInputAttachments, PromptInputDictate, PromptInputSubmit, PromptInputTextarea, PromptInputToolbar, Select } from 'altitude-design';
+
+const context = [
+  { id: 'f1', label: 'pricing.ts', kind: 'file', description: 'src/pricing.ts' },
+  { id: 'f2', label: 'plans.test.ts', kind: 'file', description: 'src/plans.test.ts' },
+  { id: 'r1', label: 'Q3 report', kind: 'record', description: 'Shared by Maya, 2 days ago' },
+  { id: 'p1', label: 'Maya Chen', kind: 'person', description: 'Billing team' },
+];
+function Pointed() {
+  const [sent, setSent] = React.useState('');
+  return (
+    <div className="col">
+      <PromptInput onSubmit={({ text, mentions, command }) => setSent(`${command ? `/${command} · ` : ''}${text}${mentions ? ` · context: ${mentions.map((m) => m.label).join(', ')}` : ''}`)}
+        mentionable={(q) => new Promise((r) => setTimeout(() => r(context.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()))), 250))}
+        commands={[{ name: 'review', description: 'Review the current changes' }, { name: 'compact', description: 'Summarise the conversation so far' }, { name: 'clear', description: 'Start a new conversation' }]}>
+        <PromptInputTextarea placeholder="@ to add context, / for commands" />
+        <PromptInputToolbar><PromptInputSubmit /></PromptInputToolbar>
+      </PromptInput>
+      <p className="cap">{sent ? `Sent: ${sent}` : 'Type @ to point at a file, record or person, or / at the start for a command.'}</p>
+    </div>
+  );
+}
+// Dictation: here a scripted transcriber stands in for the app's speech recognition.
+function Dictated() {
+  const [status, setStatus] = React.useState('idle');
+  const [interim, setInterim] = React.useState('');
+  const [final, setFinal] = React.useState();
+  const timers = React.useRef([]);
+  const start = () => {
+    setStatus('listening');
+    const words = 'Summarise the open risks and who owns each one'.split(' ');
+    words.forEach((_, k) => timers.current.push(setTimeout(() => setInterim(words.slice(0, k + 1).join(' ')), 180 * (k + 1))));
+    timers.current.push(setTimeout(() => { setFinal({ id: Date.now(), text: words.join(' ') + '.' }); setInterim(''); setStatus('idle'); }, 180 * words.length + 400));
+  };
+  const stop = () => { timers.current.forEach(clearTimeout); timers.current = []; setInterim(''); setStatus('idle'); };
+  return (
+    <div className="col">
+      <PromptInput onSubmit={() => {}}>
+        <PromptInputTextarea placeholder="Type, or press the microphone and speak" />
+        <PromptInputToolbar>
+          <PromptInputDictate status={status} interim={interim} final={final} onStart={start} onStop={stop} />
+          <PromptInputDictate status="denied" label="Dictate (blocked example)" />
+          <PromptInputSubmit />
+        </PromptInputToolbar>
+      </PromptInput>
+    </div>
+  );
+}
+export default function App() {
+  const [status, setStatus] = React.useState('ready');
+  const [last, setLast] = React.useState('');
+  const timer = React.useRef();
+  const send = ({ text, files }) => {
+    setLast(`Sent “${text}”${files.length ? ` with ${files.length} file${files.length > 1 ? 's' : ''}` : ''}.`);
+    setStatus('submitted');
+    timer.current = setTimeout(() => { setStatus('streaming'); timer.current = setTimeout(() => setStatus('ready'), 2500); }, 600);
+  };
+  return (
+    <div className="col pi">
+      <PromptInput onSubmit={send} status={status} onStop={() => { clearTimeout(timer.current); setStatus('ready'); }} accept="image/*,.pdf,.csv"
+        onAttach={() => new Promise((r) => setTimeout(r, 900))}>
+        <PromptInputAttachments />
+        <PromptInputTextarea placeholder="Ask about this workspace" />
+        <PromptInputToolbar>
+          <PromptInputAttach />
+          <Select size="sm" aria-label="Model" defaultValue="opus" items={[{ value: 'opus', label: 'Opus 5.5' }, { value: 'sonnet', label: 'Sonnet 5.5' }, { value: 'haiku', label: 'Haiku 5.5' }]} />
+          <PromptInputSubmit />
+        </PromptInputToolbar>
+      </PromptInput>
+      <p className="cap">{status === 'ready' ? (last || 'Enter sends, Shift+Enter adds a line. Paste or drop a file to attach it.') : status === 'submitted' ? 'Sending…' : 'Generating… Escape or Stop ends it.'}</p>
+      <Pointed />
+      <Dictated />
+    </div>
+  );
+}
+```
+<!-- /example -->

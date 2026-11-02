@@ -29,3 +29,70 @@ Columns of cards you move between, a kanban: columns are receptacles that open w
 - Do keep buttons and links inside cards: pressing them doesn't pick the card up.
 - Do collapse finished columns rather than hiding them; the pile keeps their weight visible.
 - Don't use a board for a single list you reorder; that's SortableList.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Board` as first used in its preview:
+
+```tsx
+import { Board, BoardCard, BoardColumn, Field, Input } from 'altitude-design';
+
+<Board onMove={move} aria-label="Launch board">
+  {Object.keys(titles).map(k => <BoardColumn key={k} id={k} title={titles[k]} collapsible={k === "done"} defaultCollapsed={k === "done"} onCreate={k === "done" ? undefined : create(k)}>
+    {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} onRename={rename(k, c.id)}
+      {...(k === "review" ? { value: { title: c.t, meta: c.m }, onValueChange: update(k, c.id),
+        renderEditor: field => <><Field label="Title"><Input {...field("title")} size="sm" /></Field><Field label="Details"><Input {...field("meta")} size="sm" /></Field></>,
+        onSave: async draft => { await wait(200); return refuse(draft.title) || { ok: true, value: draft }; } } : {})}>
+      {c.t}<small>{c.m}</small>
+    </BoardCard>)}
+  </BoardColumn>)}
+</Board>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Board, BoardCard, BoardColumn, Field, Input } from 'altitude-design';
+
+const start = {
+  todo: [{ id: "c1", t: "Write release notes", m: "Docs \xB7 Jon" }, { id: "c2", t: "Fix cold-start regression", m: "Runtime \xB7 Lena" }, { id: "c3", t: "Plan Q1 roadmap", m: "Planning \xB7 Ada" }],
+  doing: [{ id: "c4", t: "Pricing page copy", m: "Marketing \xB7 Mara", held: { name: "Mara", presence: 1 } }, { id: "c5", t: "Support macros", m: "Support \xB7 Ivy" }],
+  review: [{ id: "c6", t: "Brand voice", m: "Design \xB7 Ada" }],
+  done: Array.from({ length: 12 }, (_, i) => ({ id: "d" + i, t: "Shipped item " + (i + 1), m: "Done" }))
+};
+const titles = { todo: "To do", doing: "In progress", review: "Review", done: "Done" };
+export default function App() {
+  const [cols, setCols] = React.useState(start);
+  const [last, setLast] = React.useState(null);
+  const seq = React.useRef(0);
+  const move = ({ cardId, from, to }) => setCols((c) => {
+    const next = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.slice()]));
+    const [card] = next[from.column].splice(from.index, 1);
+    next[to.column].splice(to.index, 0, card);
+    setLast(`${card.t} \u2192 ${titles[to.column]}`);
+    return next;
+  });
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  // The demo service refuses titles with “TBD” in them.
+  const refuse = t => /tbd/i.test(t) ? { ok: false, error: "Write the task, not \u201cTBD\u201d." } : null;
+  const create = k => async t => { await wait(250); const no = refuse(t); if (no) return no; const card = { id: "n" + ++seq.current, t, m: "New" }; setCols(c => ({ ...c, [k]: [...c[k], card] })); return { ok: true, value: { id: card.id } }; };
+  const rename = (k, id) => async t => { await wait(200); const no = refuse(t); if (no) return no; setCols(c => ({ ...c, [k]: c[k].map(x => x.id === id ? { ...x, t } : x) })); return { ok: true, value: t }; };
+  const update = (k, id) => v => setCols(c => ({ ...c, [k]: c[k].map(x => x.id === id ? { ...x, t: v.title, m: v.meta } : x) }));
+  return <div className="col" style={{ gap: 4 }}>
+    <Board onMove={move} aria-label="Launch board">
+      {Object.keys(titles).map(k => <BoardColumn key={k} id={k} title={titles[k]} collapsible={k === "done"} defaultCollapsed={k === "done"} onCreate={k === "done" ? undefined : create(k)}>
+        {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} onRename={rename(k, c.id)}
+          {...(k === "review" ? { value: { title: c.t, meta: c.m }, onValueChange: update(k, c.id),
+            renderEditor: field => <><Field label="Title"><Input {...field("title")} size="sm" /></Field><Field label="Details"><Input {...field("meta")} size="sm" /></Field></>,
+            onSave: async draft => { await wait(200); return refuse(draft.title) || { ok: true, value: draft }; } } : {})}>
+          {c.t}<small>{c.m}</small>
+        </BoardCard>)}
+      </BoardColumn>)}
+    </Board>
+    <p className="cap">{last ? `Moved: ${last}.` : "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."}</p>
+  </div>;
+}
+```
+<!-- /example -->

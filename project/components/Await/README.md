@@ -78,3 +78,51 @@ A `Card`'s parts land together, and a `RevealGroup` takes one place in the atten
 - Don't use it for errors: a rejected promise throws to your nearest error boundary, where an `Alert` belongs.
 - Don't use `null` for "still loading"; it means there's nothing, and renders empty.
 - `Skeleton` with `loaded` is still the way for layouts of your own.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+The full preview, as rendered in Storybook and checked in CI (`card`, `who`, `id`, `col`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Avatar, Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from 'altitude-design';
+
+const USER = { name: 'Mara Quist', role: 'Platform engineer, Lisbon', bio: 'Merged “Faster cold starts” into main. Cold starts are down 38% across all regions.' };
+// Stands in for useQuery or useSWR: undefined until the data arrives.
+function useLoaded(value, ms) {
+  const [data, setData] = React.useState(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setData(value), ms); return () => clearTimeout(t); }, []);
+  return data;
+}
+function Member() {
+  const user = useLoaded(USER, 1200);
+  const status = useLoaded('On call', 1800);
+  return (
+    <Card className="card">
+      <CardHeader>
+        <div className="who">
+          <Avatar name={user?.name} size={44} status="active" />
+          <div className="id">
+            <CardTitle>{user?.name}</CardTitle>
+            <CardDescription skeleton={{ lines: 1, width: '70%' }}>{user?.role}</CardDescription>
+          </div>
+          <Badge tone="positive">{status}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent skeleton={{ lines: 2 }}>{user?.bio}</CardContent>
+    </Card>
+  );
+}
+export default function App() {
+  const [round, setRound] = React.useState(0);
+  React.useEffect(() => { const t = setTimeout(() => setRound((r) => r + 1), 4400); return () => clearTimeout(t); }, [round]);
+  return (
+    <div className="col">
+      <Member key={round} />
+      <p className="cap">No skeleton code: while user is undefined, each part imprints itself at its own size, and rises out of it when the data arrives.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

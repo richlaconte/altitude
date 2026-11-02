@@ -32,3 +32,80 @@ The slot of an item that can leave its list: a file archived, a webhook removed,
 - Don't hold the receipt for longer to "make sure": the person can stop it by pointing at it or focusing it.
 - Don't use it for a line removed while typing (an empty `Checklist` line); nothing was lost, and the hold would sit in the way. Checklist glides the line shut instead.
 - Don't use it for permanent deletion without saying so: a deletion's receipt has no Undo.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`RemovalReceipt` as first used in its preview:
+
+```tsx
+import { Button, RemovalReceipt, toast } from 'altitude-design';
+
+<RemovalReceipt as="li" key={hook.id} removed={!!receipt} pending={receipt?.pending} arrive={back === hook.id}
+  title={receipt?.undoing ? `Restoring ${hook.name}…` : receipt?.pending ? `Removing ${hook.name}…` : `${hook.name} removed.`}
+  action={receipt && (!receipt.pending || receipt.undoing) &&
+    <Button size="sm" loading={!!receipt.undoing} aria-label={`Undo removing ${hook.name}`} onClick={() => undo(hook)}>Undo</Button>}
+  onClosed={() => {
+    put(hook.id, null); setHooks((list) => list.filter((h) => h.id !== hook.id));
+    toast({ title: `${hook.name} removed.`, action: { label: 'Undo', onClick: () => restore(hook) } });
+  }}>
+  <div className="rr-body"><div className="rr-name">{hook.name}</div><div className="rr-url">{hook.url}</div></div>
+  <Button size="sm" variant="ghost" aria-label={`Remove ${hook.name}`} onClick={() => remove(hook)}>Remove</Button>
+</RemovalReceipt>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`rr`, `rr-hint`, `rr-body`, `rr-name`, `rr-url`, `rr-empty` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, RemovalReceipt, Toaster, toast } from 'altitude-design';
+
+const HOOKS = [
+  { id: 'h1', name: 'Deploy notifications', url: 'https://hooks.example.com/deploys' },
+  { id: 'h2', name: 'Billing events', url: 'https://hooks.example.com/billing' },
+  { id: 'h3', name: 'New sign-ups', url: 'https://hooks.example.com/signups' },
+  { id: 'h4', name: 'Error alerts', url: 'https://hooks.example.com/errors' },
+];
+// A fictional service: removing and restoring a webhook each take 400ms.
+const later = (value) => new Promise((resolve) => setTimeout(() => resolve(value), 400));
+export default function App() {
+  const [hooks, setHooks] = React.useState(HOOKS);
+  const [receipts, setReceipts] = React.useState({});
+  const [back, setBack] = React.useState(null);
+  const put = (id, value) => setReceipts((r) => { const next = { ...r }; if (value) next[id] = value; else delete next[id]; return next; });
+  const remove = async (hook) => { put(hook.id, { pending: true }); await later(); put(hook.id, { pending: false }); };
+  const undo = async (hook) => { put(hook.id, { pending: true, undoing: true }); await later(); put(hook.id, null); };
+  const restore = async (hook) => {
+    await later();
+    setHooks((list) => HOOKS.filter((h) => h.id === hook.id || list.some((x) => x.id === h.id)));
+    setBack(hook.id);
+  };
+  return (
+    <section className="rr" aria-labelledby="rr-title">
+      <h3 id="rr-title">Webhooks</h3>
+      <p className="rr-hint">Remove one: its result stays in its place, then the list closes up. Point at the result to keep it.</p>
+      <ul>
+        {hooks.map((hook) => {
+          const receipt = receipts[hook.id];
+          return (
+            <RemovalReceipt as="li" key={hook.id} removed={!!receipt} pending={receipt?.pending} arrive={back === hook.id}
+              title={receipt?.undoing ? `Restoring ${hook.name}…` : receipt?.pending ? `Removing ${hook.name}…` : `${hook.name} removed.`}
+              action={receipt && (!receipt.pending || receipt.undoing) &&
+                <Button size="sm" loading={!!receipt.undoing} aria-label={`Undo removing ${hook.name}`} onClick={() => undo(hook)}>Undo</Button>}
+              onClosed={() => {
+                put(hook.id, null); setHooks((list) => list.filter((h) => h.id !== hook.id));
+                toast({ title: `${hook.name} removed.`, action: { label: 'Undo', onClick: () => restore(hook) } });
+              }}>
+              <div className="rr-body"><div className="rr-name">{hook.name}</div><div className="rr-url">{hook.url}</div></div>
+              <Button size="sm" variant="ghost" aria-label={`Remove ${hook.name}`} onClick={() => remove(hook)}>Remove</Button>
+            </RemovalReceipt>
+          );
+        })}
+      </ul>
+      {!hooks.length && <p className="rr-empty">No webhooks.</p>}
+      <Toaster />
+    </section>
+  );
+}
+```
+<!-- /example -->

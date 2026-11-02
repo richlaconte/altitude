@@ -12,3 +12,41 @@ Cards take the same depth signals as `Surface`: `settle`, `status`, `heldBy` and
 
 - Do make the entire card the target when it navigates somewhere (a project tile).
 - Don't make a card interactive *and* put buttons inside it: nested targets break the press metaphor. Keep the card static and let its buttons lift.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Card` as first used in its preview:
+
+```tsx
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'altitude-design';
+
+<Card>
+  <CardHeader><CardTitle>Usage this month</CardTitle><CardDescription>Static: a grouping surface, it never lifts.</CardDescription></CardHeader>
+  <CardContent>18,240 requests · 62% of plan</CardContent>
+</Card>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`grid` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from 'altitude-design';
+
+export default function App() {
+  const [n, setN] = React.useState(0);
+  return (
+    <div className="grid">
+      <Card>
+        <CardHeader><CardTitle>Usage this month</CardTitle><CardDescription>Static: a grouping surface, it never lifts.</CardDescription></CardHeader>
+        <CardContent>18,240 requests · 62% of plan</CardContent>
+      </Card>
+      <Card interactive onClick={() => setN(n + 1)}>
+        <CardHeader><CardTitle>Open project</CardTitle><CardDescription>Interactive: the whole card is the target, so it lifts and presses.</CardDescription></CardHeader>
+        <CardContent>{n ? `Opened ${n}×` : 'Click or press Enter'}</CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

@@ -22,3 +22,35 @@ Numbered source markers in a grounded answer ("…renews monthly [2]"), with a p
 - Do include the excerpt the answer relied on.
 - Do mark sources you couldn't verify.
 - Don't render citations as bare numbers or superscripts with no name.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`InlineCitation` as first used in its preview:
+
+```tsx
+import { InlineCitation } from 'altitude-design';
+
+<InlineCitation index={1} source={sources[0]} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`ic` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { InlineCitation, Sources } from 'altitude-design';
+
+const sources = [
+  { title: 'Billing FAQ', url: 'https://help.example.com/billing/faq', excerpt: 'Annual plans can be refunded in full within 30 days of purchase.' },
+  { title: 'Plans and pricing', url: 'https://example.com/pricing', excerpt: 'Monthly plans renew on the same day each month.' },
+  { title: 'Forum post: “Refunds after 30 days?”', url: 'https://community.example.com/t/4821', unverified: true },
+];
+export default function App() {
+  return (
+    <div className="ic">
+      <p>Annual plans can be refunded in full within 30 days<InlineCitation index={1} source={sources[0]} />. Monthly plans renew on the same day each month<InlineCitation index={2} source={sources[1]} />, and some customers report partial refunds after that<InlineCitation index={3} source={sources[2]} />.</p>
+      <Sources items={sources} />
+    </div>
+  );
+}
+```
+<!-- /example -->
