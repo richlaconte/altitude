@@ -174,6 +174,7 @@ export const service = createDemoService<Store>({
           const billing = { ...b, scheduled: undefined, period: d.period };
           return { state: { ...s, billing, ...audit(s, ME, 'billing', `${ME} kept the ${PLAN_NAMES[b.plan]} plan, cancelling the change to ${PLAN_NAMES[b.scheduled.plan]}`) }, result: billing };
         }
+        if (b.scheduled?.plan === d.plan) reject('invalid', `The change to ${PLAN_NAMES[d.plan]} is already scheduled.`, { field: 'plan' });
         const down = rank(d.plan) < rank(b.plan);
         const billing: Billing = down ? { ...b, scheduled: { plan: d.plan, on: DOWNGRADE_DATE } } : { ...b, plan: d.plan, period: d.period, scheduled: undefined };
         const sentence = down ? `${ME} scheduled a downgrade from ${PLAN_NAMES[b.plan]} to ${PLAN_NAMES[d.plan]} on ${DOWNGRADE_DATE}` : `${ME} upgraded from ${PLAN_NAMES[b.plan]} to ${PLAN_NAMES[d.plan]}`;

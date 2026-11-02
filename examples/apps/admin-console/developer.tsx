@@ -113,7 +113,7 @@ export function Developer() {
       </Resource>
     </div>
     <WorkflowStatus>{status}</WorkflowStatus>
-    <CreateKey open={creating} onClose={() => setCreating(false)} onCreated={(k) => { q.setData((d) => (d ? { ...d, keys: [...d.keys, k] } : d)); setStatus(`The ${k.name} key was created.`); }} />
+    <CreateKey open={creating} onClose={() => { setCreating(false); void q.reload(); }} onCreated={(k) => { q.setData((d) => (d ? { ...d, keys: [...d.keys, k] } : d)); setStatus(`The ${k.name} key was created.`); }} />
     <Dialog open={!!revoking} background="stationary" size="sm" dismissible={!busy} onOpenChange={(o) => { if (!o) setRevoking(null); }}
       title={`Revoke the ${revoking?.name} key?`}
       description={revoking && revoking.usedBy.length ? `Requests that use it fail immediately. It’s used by ${revoking.usedBy.join(' and ')}.` : 'Requests that use it fail immediately. Nothing has used it recently.'}

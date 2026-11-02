@@ -68,7 +68,7 @@ export function App() {
             </SidebarGroup>
           </SidebarContent>
           <SidebarFooter>
-            <SidebarMenu><SidebarMenuItem><SidebarMenuButton href="#/general" icon={<Avatar name={ME} size={20} status="active" />}>{ME}</SidebarMenuButton></SidebarMenuItem></SidebarMenu>
+            <SidebarMenu><SidebarMenuItem><SidebarMenuButton href="#/security" icon={<Avatar name={ME} size={20} status="active" />} onClick={(e) => { e.preventDefault(); go('security'); }}>{ME}</SidebarMenuButton></SidebarMenuItem></SidebarMenu>
           </SidebarFooter>
         </Sidebar>
       }>

@@ -28,7 +28,8 @@ function PlanChange({ billing, onChanged, onAgain }: { billing: BillingData; onC
   const current = billing.plan;
   const flow = useReviewSubmit<{ plan: PlanId }, BillingData>({
     initialValue: { plan: billing.scheduled?.plan ?? current },
-    validate: (d) => (d.plan === current && !billing.scheduled ? { plan: 'Choose a plan you’re not on.' } : {}),
+    validate: (d) => (d.plan === current && !billing.scheduled ? { plan: 'Choose a plan you’re not on.' }
+      : d.plan === billing.scheduled?.plan ? { plan: `The change to ${PLAN_NAMES[d.plan]} is already scheduled for ${billing.scheduled.on}. To cancel it, choose ${PLAN_NAMES[current]}.` } : {}),
     submit: async (d) => {
       try { return { ok: true, receipt: await service.request<BillingData>('billing.change', { plan: d.plan, period }) }; }
       catch (e) {
