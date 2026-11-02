@@ -131,6 +131,9 @@ export function App() {
       {loadError && rows === null && (
         <Alert tone="critical" title="We couldn’t load the notes" action={<Button size="sm" onClick={() => void load()}>Try again</Button>}>{loadError}</Alert>
       )}
+      {loadError && rows !== null && (
+        <Alert tone="caution" title="We couldn’t refresh the notes" action={<Button size="sm" onClick={() => void load()}>Try again</Button>}>The list may be out of date. {loadError}</Alert>
+      )}
       {rows === null && !loadError && <p className="hello-loading" role="status">Loading notes…</p>}
       {rows !== null && rows.length === 0 && <EmptyState title="No notes yet" description="Notes you and your team add appear here." headingLevel={2} />}
       {rows !== null && rows.length > 0 && (

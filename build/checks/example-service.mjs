@@ -105,6 +105,11 @@ const watch = (p) => { const out = { settled: false }; p.then((v) => Object.assi
   const after = svc.getSnapshot();
   expect(after.state.items.join() === 'a' && after.mode === 'success' && after.resetRevision === 1, 'reset: fresh seed, success, counted');
   expect(after.log.length === 0 && r.settled, 'reset: the log stays empty when a request from before the reset settles');
+  // A write in flight across a reset isn't written into the new seed.
+  const w = watch(svc.request('items.add', 'late'));
+  svc.reset();
+  clock.advance(300); await flush();
+  expect(w.error?.kind === 'failed' && svc.getSnapshot().state.items.join() === 'a', 'reset: a write from before it is turned away, not saved into the new data');
 }
 { // persistence
   const mem = new Map(); const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: (k) => mem.delete(k) };
@@ -183,6 +188,15 @@ for (const scheme of ['daylight', 'nightfall']) {
     await page.waitForTimeout(700);
     const ext = await page.evaluate(() => ({ text: [...document.querySelectorAll('.hello-note .hello-text')].map((t) => t.textContent).join(' | '), focus: document.activeElement?.matches('.hello-add input'), said: document.querySelector('.hello-sr')?.textContent }));
     expect(/Deploy freeze/.test(ext.text ?? '') && ext.focus && /Priya adds a note/.test(ext.said ?? ''), `a teammate's note arrives, is announced and focus stays (${JSON.stringify(ext)})`);
+
+    // A refresh that fails keeps the list and says it may be out of date; Try again refreshes it.
+    await mode(page, 'Fail');
+    await page.locator('.ex-drawer button', { hasText: 'A teammate adds a note' }).click(); await page.waitForTimeout(700);
+    const stale = await page.evaluate(() => ({ alert: /couldn’t refresh/.test(document.querySelector('.hello .alt-alert')?.textContent ?? ''), notes: document.querySelectorAll('.hello-note').length }));
+    expect(stale.alert && stale.notes > 2, `a failed refresh keeps the list and says so (${JSON.stringify(stale)})`);
+    await mode(page, 'Succeed');
+    await page.locator('.hello .alt-alert button', { hasText: 'Try again' }).click(); await page.waitForTimeout(700);
+    expect(await page.locator('.hello .alt-alert').count() === 0, 'Try again refreshes it');
 
     // The log, then Reset.
     expect(await page.locator('.ex-log-row').count() > 5, 'the request log lists the requests');

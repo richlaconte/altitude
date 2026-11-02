@@ -207,7 +207,9 @@ export function createDemoService<S>(options: DemoServiceOptions<S>): DemoServic
       const at = (ms: number, fn: () => void) => { timers.push(clock.setTimeout(fn, ms)); };
 
       // Runs the handler against the current store. A handler's own rejection (invalid, not-found) comes back as a DemoError.
+      // A request from before a reset belongs to the old data: it's turned away rather than written into the new seed.
       const run = (): { ok: true; result: unknown; state?: S } | { ok: false; error: DemoError } => {
+        if (snapshot.resetRevision !== resetAt) return { ok: false, error: new DemoError('failed', 'The example was reset before the server answered. Nothing was changed.') };
         try {
           if (isWrite) {
             const out = (handler as WriteHandler<S>).write(snapshot.state, input);
