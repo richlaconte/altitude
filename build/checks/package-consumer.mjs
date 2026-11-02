@@ -26,6 +26,12 @@ for(const k of symbols)assert.ok(require('altitude-design')[k],k);
 for(const resource of ['altitude.css','altitude.no-fonts.css','fonts.css','tokens.css','tokens.json','altitude.iife.js','guidance','adapters/tiptap.css','adapters/codemirror','adapters/react-flow.css'])assert.ok(existsSync(require.resolve('altitude-design/'+resource)),resource);
 assert.ok(!readFileSync(require.resolve('altitude-design/altitude.no-fonts.css'),'utf8').includes('@import'));
 assert.equal(require('altitude-design/guidance').version,pkg.version);
+// An agent in a consumer project reads the design guide and each component's guide from the installed package.
+{const guidance=require('altitude-design/guidance'),dir=join(installed,'dist/guidance');
+ assert.ok(existsSync(join(dir,guidance.design)),'installed design guide');
+ assert.ok(guidance.components.length>=100,'installed component index');
+ for(const c of guidance.components)assert.ok(existsSync(join(dir,c.document)),`installed guide for ${c.name}`);
+ assert.match(readFileSync(join(dir,'components/Button/README.md'),'utf8'),/^# Button/,'Button guide readable from the install');}
 for(const fn of ['echartsTheme','chartjsDefaults','dataColors','readChartTokens','useChartTheme'])assert.equal(typeof require('altitude-design/chart-themes')[fn],'function','chart-themes CJS '+fn);
 writeFileSync(join(consumer,'themes.mjs'),`import assert from 'node:assert/strict';import {echartsTheme} from 'altitude-design/chart-themes';assert.equal(echartsTheme({'data-1':'#123456'}).color[0],'#123456');console.log('chart-themes ESM passed');`);
 execFileSync(process.execPath,['themes.mjs'],{cwd:consumer,stdio:'inherit'});
