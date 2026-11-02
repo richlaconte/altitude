@@ -43,6 +43,9 @@ export class DemoError extends Error {
   }
 }
 
+/** Whether a request failed for this reason. */
+export const isDemoError = (e: unknown, kind: DemoErrorKind): e is DemoError => e instanceof DemoError && e.kind === kind;
+
 /** Throw from a handler to reject a request the way a server would (a duplicate, a missing record). */
 export const reject = (kind: 'invalid' | 'not-found' | 'conflict', message: string, extra?: { field?: string; current?: unknown }): never => {
   throw new DemoError(kind, message, extra);

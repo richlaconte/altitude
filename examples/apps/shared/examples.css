@@ -17,4 +17,5 @@
 .ex-log-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--line); }
 .ex-log-op { font-family: var(--font-mono); font-size: 13px; }
 .ex-log-outcome { flex: 1 1 16ch; }
+.ex-loading { padding: var(--space-4) 0; }
 .ex-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
