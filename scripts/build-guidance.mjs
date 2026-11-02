@@ -47,7 +47,9 @@ function relink(destination, version, sourceOf) {
 const designGuides = () => readdirSync(resolve(root,'project')).filter(f => f.endsWith('.md') && !/Validation\.md$/.test(f)).sort();
 export function buildGuidance(destination = resolve(root,'dist/guidance')) {
   const {base,patterns,refs,version} = inputs();
-  const components = componentIndex();
+  // Ordered by group, then name, so readers of index.json (the CLI's instruction block) can keep its order.
+  const rank = g => { const i = groupOrder.indexOf(g); return i < 0 ? groupOrder.length : i; };
+  const components = componentIndex().sort((a,b) => rank(a.group)-rank(b.group) || a.group.localeCompare(b.group) || a.name.localeCompare(b.name));
   mkdirSync(destination,{recursive:true});
   cpSync(base,destination,{recursive:true});
   cpSync(resolve(root,'docs/framework/AGENT-SETUP.md'),resolve(destination,'agent-setup.md'));

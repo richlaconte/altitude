@@ -10,6 +10,7 @@ No package version bump, npm publish or deployment is part of this change. The e
 - Clean packed consumer checks for runtime exports, resources and ESM/CommonJS/Bundler/NodeNext declarations; meaningful-state accessibility and responsive tests.
 - Reproducible three-condition agent evaluation harness and separate manual validation protocol.
 - The installed guidance carries the visual layer: every design guide under `dist/guidance/visual/` (the design guide, Elevation, Charts, Motion, Mobile, Theming, Distinctiveness, Fundamentals, Actions in place, Research) and every component's guide under `dist/guidance/components/<Name>/README.md`. `index.json` lists the components with their group, summary and guide, and the guidance README routes to them. Links between guides resolve inside the package; a link to a file the package doesn't ship goes to GitHub at the release tag.
+- The `altitude init` block now carries a compact component index (every component by group, and where its guide is), the rules that hold on every screen, and a reminder to prefer the installed docs and declarations to memory. It stays under 8 KB. Rerun `npm exec -- altitude init --client <client> --apply` after upgrading to refresh it.
 
 ## Changed
 
