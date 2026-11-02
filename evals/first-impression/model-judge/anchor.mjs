@@ -21,14 +21,17 @@ export const ANCHOR = {
   },
 };
 
-// Brand and date text only. Each rule is recorded in the run's README as a deviation from "as shipped".
+// Brand and date text only, and only in visible text: tags, attributes, scripts and styles are left as shipped, so no
+// asset path breaks. The two logo marks are swapped for the neutral name in plain text. README, "The anchor".
 export const NEUTRAL = 'Fieldline';
+const text = (t) => t.replace(/AdminLTE v3|AdminLTE 3|AdminLTE|\btabler\b/gi, NEUTRAL).replace(/^(\s*)Source code(\s*)$/, '$1Help$2').replace(/\b20(1\d|2[01])\b/g, '2026');
 export function neutralise(html) {
-  return html
-    .replace('<img src="./demo/brand/tabler.svg" class="header-brand-img" alt="tabler logo">', `<span style="font:600 18px/32px inherit;color:#495057">${NEUTRAL}</span>`)
-    .replace(/>Source code<\/a>/g, '>Help</a>')
-    .replace(/AdminLTE v3|AdminLTE 3|AdminLTE/g, NEUTRAL)
-    .replace(/\b(2018|2019|2020)\b/g, '2026');
+  return html.replace(/<(script|style)\b[\s\S]*?<\/\1>|<!--[\s\S]*?-->|<[^>]+>|[^<]+/gi, (token) => {
+    if (/^<title\b/i.test(token)) return token;
+    if (/^<img\b[^>]*(tabler\.svg|AdminLTELogo)/i.test(token)) return /tabler\.svg/i.test(token) ? `<span style="font:600 18px/32px inherit;color:#495057">${NEUTRAL}</span>` : '';
+    // value and placeholder are visible text too
+    return token.startsWith('<') ? token.replace(/\b(value|placeholder)="([^"]*)"/gi, (_, k, v) => `${k}="${text(v)}"`) : text(token);
+  });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
