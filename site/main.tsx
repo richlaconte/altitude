@@ -63,21 +63,32 @@ const RUNGS: { level: Level; tier: string; what: string }[] = [
   { level: -1, tier: 'Sunk', what: 'An empty field, a slot' },
   { level: -2, tier: 'Sunk', what: 'An invalid field, a trench' },
 ];
+// Rungs grouped by tier, so each tier's name stands beside its own rungs on a 1px bracket at every width, rather
+// than stacking between them on a phone. The step still counts every rung, so the staircase climbs across tiers.
+const TIERS = RUNGS.reduce<{ tier: string; rungs: { rung: (typeof RUNGS)[number]; step: number }[] }[]>((groups, rung, i) => {
+  const last = groups[groups.length - 1];
+  const entry = { rung, step: RUNGS.length - 1 - i };
+  if (last && last.tier === rung.tier) last.rungs.push(entry); else groups.push({ tier: rung.tier, rungs: [entry] });
+  return groups;
+}, []);
 function Ladder() {
   return (
     <ol className="ladder" aria-label="The elevation ladder, from level 5 down to level −2">
-      {RUNGS.map((r, i) => {
-        const startsTier = i === 0 || RUNGS[i - 1].tier !== r.tier;
-        return (
-          <li key={r.level} className="rung" data-tier={r.tier.toLowerCase()} style={{ ['--step' as string]: 7 - i }}>
-            <span className="rung-tier" aria-hidden={!startsTier}>{startsTier ? r.tier : ''}</span>
-            <Surface level={r.level} className="rung-face">
-              <span className="rung-level">{r.level > 0 ? '+' : r.level < 0 ? '−' : ''}{Math.abs(r.level)}</span>
-              <span className="rung-what">{r.what}</span>
-            </Surface>
-          </li>
-        );
-      })}
+      {TIERS.map((t) => (
+        <li key={t.tier} className="tier" data-tier={t.tier.toLowerCase()}>
+          <span className="tier-name" id={`tier-${t.tier.toLowerCase()}`}>{t.tier}</span>
+          <ol className="tier-rungs" aria-labelledby={`tier-${t.tier.toLowerCase()}`}>
+            {t.rungs.map(({ rung: r, step }) => (
+              <li key={r.level} className="rung" style={{ ['--step' as string]: step }}>
+                <Surface level={r.level} className="rung-face">
+                  <span className="rung-level">{r.level > 0 ? '+' : r.level < 0 ? '−' : ''}{Math.abs(r.level)}</span>
+                  <span className="rung-what">{r.what}</span>
+                </Surface>
+              </li>
+            ))}
+          </ol>
+        </li>
+      ))}
     </ol>
   );
 }
