@@ -45,6 +45,30 @@ Also added later, to look for what doesn't survive from the previews into the bu
 
 The builds hold nearly twice as much as the previews, set denser, with less text at label weights. On each of these they sit with shadcn. Controls are the same size in builds and previews: Altitude's buttons render at 36px (md) and 30px (sm) in both, and an earlier count that read the builds' controls as smaller was counting tables' sort headers. These proportions don't separate design from content. Builds of records and dashboards carry tables full of 400-weight cells, which the compact previews don't, so a lower label share may be content, not a lost rule. They describe the gap; they don't explain it.
 
+## Elevation
+
+Added 2026-11-01 for #383. The builds were rebuilt from the evidence in [builds/](builds/), with the run's own package (hash-checked), and captured again. On these captures every measure above reproduced to within 0.001. The figures are mean shares of each screen's text by what it sits on ([elevation.json](elevation.json); method in the README):
+
+| | Raised | Sunk | Outlined | Filled | Ground | Screens with a raised surface |
+|---|---|---|---|---|---|---|
+| Altitude previews | 0.34 | 0.11 | 0.08 | 0 | 0.48 | 2 of 4 |
+| Claude + Altitude | 0.18 | 0 | 0.04 | 0 | **0.78** | 2 of 8 |
+| Claude + shadcn | 0 | 0 | **0.92** | 0 | 0.08 | 0 of 8 |
+| Claude + plain | 0.12 | 0 | **0.68** | 0.04 | 0.16 | 3 of 8 |
+
+**Agents don't lose Altitude's elevation; they carry it frame by frame.**
+
+| Frame | Preview | Builds |
+|---|---|---|
+| Settings | 0.87 raised (`elev-1`) | 0.72 raised (`elev-1`) |
+| Report (dashboard) | 1.00 ground | 0.98 ground |
+| Editor (record view) | 0.42 sunk: its text is in an open field | 0.88 ground: the brief asks to view the account, with editing as an action, so no field is open |
+| Records | 0.48 raised: the Members preview's invite card | 1.00 ground: the briefs' records screens have no form |
+
+The records mapping compares a members screen with records screens, so that row says little.
+
+What stands out is the baselines, not the previews. shadcn puts 92% of its text inside outlined boxes (its current Card is a 1px ring, with no shadow), and plain Claude 68%. Altitude builds put 78% on the ground, as Elevation's model asks: the ground is the record. On this measure the Altitude builds are the furthest from the generated centre of any system. The whole-screen and tile embeddings don't register the difference: on UIClip they sit nearest to shadcn's builds.
+
 ## What the builds did
 
 All 30 runs (24, plus a second sample of settings-a and dashboard-a in each condition) completed and built, for 21.52 USD and 1–5 minutes each. Every dashboard run in the plain and shadcn conditions, and the first Altitude dashboard run, called Claude Code's built-in `dataviz` skill; one shadcn run called `run`. These skills ship with Claude Code, so they are part of the default being measured, and each run records the skills it could see and the ones it called. Every Altitude run read the installed guidance before writing (the pattern docs, the type declarations, and twice `altitude patterns`), and most opened the matching pattern fixture (`screen-layout-report.jsx`, `settings.jsx`, `screen-layout-editor.jsx`) and worked from it. That is why Altitude builds sit closest to the previews.
@@ -62,4 +86,4 @@ All 30 runs (24, plus a second sample of settings-a and dashboard-a in each cond
 1. Add v0, Lovable and Bolt builds of the eight briefs under `baselines/2026-10-31/`, then rerun capture and measure. This is the comparison the issue asks for, and the one this run is missing.
 2. Build every brief three times, so each cell has its own noise floor. That costs about 45 USD a run at today's prices.
 3. ~~A visual measure that sees detail.~~ Done the same day (*Tiles*). It found no hidden distance.
-4. Find what in the previews doesn't survive into the builds, and measure whether elevation and leads survive from the pattern fixtures into what agents build (#383).
+4. ~~Measure whether elevation survives from the pattern fixtures into what agents build (#383).~~ Done 2026-11-01 (*Elevation*): it does. What's left between the previews and the builds is the amount and density of content (*Proportions*). Whether the lead and its takeaway survive is still judged by eye.

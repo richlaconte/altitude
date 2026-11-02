@@ -98,6 +98,55 @@ const readProportions=()=>{
   .filter(el=>!el.closest('th,[role=columnheader]')).map(el=>el.getBoundingClientRect()).filter(box=>box.height>=16&&box.height<=64&&box.top<H&&box.bottom>0).map(box=>Math.round(box.height)).sort((a,b)=>a-b);
  return {chars,textDensity:chars?+(chars/((bottom-top)*(right-left))*1e4).toFixed(2):0,labelShare:chars?+(label/chars).toFixed(3):0,titlePx:title,controls:controls.length,controlHeight:controls.length?controls[controls.length>>1]:null};
 };
+// Elevation (#383): what each character of text sits on. Its surface is the nearest ancestor of at least 120 x 60 that draws
+// something different from the page's ground, and the surface's class is read from how it draws: sunk (an inset shadow
+// with blur: a field or well, even with a light lip under it), raised (an outer shadow with blur), outlined (a border, or
+// a ring or hard line with no blur), filled (a fill alone), or ground (no surface). Where Altitude's tokens resolve on the page, the surface's tier is read too: the
+// --elev-N or --well its box-shadow begins with. Shares are of characters, so a raised card full of text counts for more
+// than an empty one.
+const readElevation=()=>{
+ const H=innerHeight,probe=document.createElement('div');document.body.appendChild(probe);
+ const tiers=[];
+ for(const name of ['elev-0','elev-1','elev-2','elev-3','elev-4','elev-5','well']){probe.style.boxShadow=`var(--${name})`;const value=getComputedStyle(probe).boxShadow;if(value&&value!=='none')tiers.push([value,name]);}
+ probe.remove();tiers.sort((a,b)=>b[0].length-a[0].length);
+ // Colours are resolved through a 1 x 1 canvas, so oklch, oklab, color-mix and hex all compare as rgba.
+ const ctx=Object.assign(document.createElement('canvas'),{width:1,height:1}).getContext('2d',{willReadFrequently:true}),seen=new Map();
+ const rgba=colour=>{if(seen.has(colour))return seen.get(colour);ctx.clearRect(0,0,1,1);ctx.fillStyle='rgba(0,0,0,0)';ctx.fillStyle=colour;ctx.fillRect(0,0,1,1);const [r,g,b,a]=ctx.getImageData(0,0,1,1).data;const value=[r,g,b,a/255];seen.set(colour,value);return value;};
+ const alpha=colour=>rgba(colour)[3];
+ const same=(a,b)=>{const x=rgba(a),y=rgba(b);return x.every((v,i)=>Math.abs(v-y[i])<(i===3?0.02:3));};
+ const COLOUR=/(?:[a-z-]+\((?:[^()]|\([^()]*\))*\)|#[0-9a-f]{3,8}\b|\btransparent\b|\bcurrentcolor\b)/i;
+ const layers=value=>value==='none'?[]:value.split(/,(?![^(]*\))/).map(layer=>{const colour=(layer.match(COLOUR)||['rgb(0,0,0)'])[0];const n=layer.replace(colour,'').match(/-?[\d.]+(?:px)?(?=\s|$)/g)?.map(parseFloat)||[];return {inset:/\binset\b/.test(layer),a:alpha(colour),x:n[0]||0,y:n[1]||0,blur:n[2]||0,spread:n[3]||0};}).filter(l=>l.a>0);
+ // The ground is the fill of the deepest element that covers the screen (a page wrapper often paints it, not the body).
+ const W=innerWidth,covers=el=>{if(el===document.body||el===document.documentElement)return true;const b=el.getBoundingClientRect();return b.left<=W*0.025&&b.right>=W*0.975&&b.top<=8&&b.bottom>=Math.min(H,document.documentElement.scrollHeight)*0.9;};
+ const ground=(()=>{let colour='rgb(255, 255, 255)';for(const el of [document.documentElement,document.body,...document.body.querySelectorAll('*')]){if(!covers(el))continue;const bg=getComputedStyle(el).backgroundColor;if(alpha(bg)>0.5)colour=bg;}return colour;})();
+ const cache=new Map();
+ const classify=el=>{
+  if(cache.has(el))return cache.get(el);
+  let result=null;const box=el.getBoundingClientRect();
+  if(box.width>=120&&box.height>=60&&!covers(el)){
+   const cs=getComputedStyle(el),shadow=layers(cs.boxShadow),bg=cs.backgroundColor;
+   const tier=cs.boxShadow==='none'?null:(tiers.find(([value])=>cs.boxShadow.startsWith(value))||[])[1]||null;
+   const border=['Top','Right','Bottom','Left'].some(side=>parseFloat(cs[`border${side}Width`])>0&&cs[`border${side}Style`]!=='none'&&alpha(cs[`border${side}Color`])>0);
+   const filled=alpha(bg)>0&&!same(bg,ground);
+   const kind=shadow.some(l=>l.inset&&l.blur>0)?'sunk':shadow.some(l=>!l.inset&&l.blur>0)?'raised':border||shadow.some(l=>!l.inset&&l.spread>0)?'outlined':filled?'filled':null;
+   if(kind)result={kind,tier,box};
+  }
+  cache.set(el,result);return result;
+ };
+ const share={raised:0,sunk:0,outlined:0,filled:0,ground:0},tierShare={};let chars=0;const raised=new Set();
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let node;
+ while((node=walker.nextNode())){
+  const text=node.textContent.trim(),el=node.parentElement;if(!text||!el)continue;
+  const box=el.getBoundingClientRect(),cs=getComputedStyle(el);
+  if(!box.width||box.top>=H||box.bottom<=0||cs.visibility==='hidden'||+cs.opacity===0)continue;
+  let surface=null;for(let at=el;at&&!surface;at=at.parentElement)surface=classify(at);
+  chars+=text.length;share[surface?surface.kind:'ground']+=text.length;
+  if(surface?.tier)tierShare[surface.tier]=(tierShare[surface.tier]||0)+text.length;
+  if(surface?.kind==='raised'&&surface.box.top<H)raised.add(surface);
+ }
+ const round=n=>chars?+(n/chars).toFixed(3):0;
+ return {chars,tokens:tiers.length>0,...Object.fromEntries(Object.entries(share).map(([k,v])=>[k,round(v)])),tiers:Object.fromEntries(Object.entries(tierShare).map(([k,v])=>[k,round(v)])),raisedSurfaces:raised.size};
+};
 const count=node=>1+node.children.reduce((n,child)=>n+count(child),0);
 const browser=await chromium.launch(process.env.CHROME?{executablePath:process.env.CHROME}:{});
 const index=[];
@@ -117,7 +166,8 @@ for(const screen of screens){
   const layout=await page.evaluate(readLayout);
   writeFileSync(join(out,`${screen.id}.layout.json`),JSON.stringify(layout));
   const proportions=await page.evaluate(readProportions);
-  index.push({id:screen.id,system:screen.system,brief:screen.brief,task:screen.task,domain:screen.domain,sample:screen.sample,nodes:count(layout),proportions,errors});
+  const elevation=await page.evaluate(readElevation);
+  index.push({id:screen.id,system:screen.system,brief:screen.brief,task:screen.task,domain:screen.domain,sample:screen.sample,nodes:count(layout),proportions,elevation,errors});
   console.log(screen.id,count(layout),'nodes',errors.length?`${errors.length} page errors`:'');
  }catch(error){console.warn(screen.id,'not captured:',error.message);}
  await page.close();server?.close();
