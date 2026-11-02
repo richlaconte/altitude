@@ -641,7 +641,7 @@
         "altitude-elevation",
         "deceptive-patterns-llm"
       ],
-      "repair": "Remove countdowns and scarcity claims with no real limit; make declining a button as findable as accepting, named plainly and never shaming; pre-select nothing that costs money, shares data or subscribes; give every overlay a close button and Escape; put prices and terms beside their action at body size; let people leave in no more steps than they joined; show only real reviews and counts, saying how they were chosen.",
+      "repair": "Remove countdowns and scarcity claims with no real limit; in offers the product makes, make declining at least a secondary button, as findable as accepting, named plainly and never shaming; pre-select nothing that costs money, shares data or subscribes; let every overlay close with Escape, and give anything that blocks the page a visible close or Cancel; put prices and terms beside their action at body size; let people leave in no more steps than they joined; show only real reviews and counts, saying how they were chosen.",
       "verification": [
         "manual: review revenue, retention and data-collection flows for each deceptive pattern type, comparing the steps to accept and to decline"
       ],

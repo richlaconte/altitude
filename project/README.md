@@ -23,7 +23,7 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 - An icon-only button's accessible name says the action and its object ("Delete invoice"), the words a visible label would use.
 - Every field has a visible label (`Field label`). A placeholder is an example of the answer, not a label: it disappears when typing starts. A search field with only an icon still takes an `aria-label`.
 - Alt text says what an image shows, in its context. A decorative image takes `alt=""`. Never "image", "photo" or a file name.
-- Headings describe the section under them. One `h1` per view (`PageHeader` draws it), levels never skip, and the page has `header`, `nav` and `main` landmarks.
+- Headings describe the section under them. One `h1` per view (`PageHeader` draws it), levels never skip, and the page has a `main` landmark, with `header` and `nav` where it has them.
 - Show real data or say there's none. Never fill a screen with invented figures, ratings, names or testimonials presented as real.
 
 ## Honesty
@@ -31,9 +31,9 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 Generated interfaces add deceptive patterns nobody asked for (see [Fundamentals](Fundamentals.md)). Emphasis serves the person's task, so:
 
 - Urgency only when a real deadline exists, and say the deadline ("Your trial ends on 12 March"). No countdowns, "only 3 left" or "limited time" without a real limit behind them.
-- Declining is as easy to find as accepting. The choice the business prefers isn't the primary by default; when one choice is primary, the other is still a button, never a ghost, a faint link or a small grey word. Name it plainly ("Don't subscribe"), never with shame ("No thanks, I like paying full price").
+- Declining is as easy to find as accepting. In an offer or request the product makes (subscribe, upgrade, consent, share), the choice the business prefers isn't the primary by default; when one choice is primary, the decline is still a secondary button, never a ghost, a faint link or a small grey word. Name it plainly ("Don't subscribe"), never with shame ("No thanks, I like paying full price").
 - Nothing that costs money, shares data or subscribes someone is pre-selected.
-- Every overlay can be dismissed with a close button and Escape. A decision the person must make has both choices as buttons.
+- Every overlay can be dismissed: Escape always, and anything that blocks the page or asks for something (a dialog, a sheet, a prompt) has a visible way out, a close button or a Cancel. A decision the person must make has both choices as buttons.
 - Prices, terms and conditions sit beside the action they apply to, at body size. A total includes every charge the service has quoted.
 - Leaving takes no more steps than joining did. A cancellation can say what will be lost (as a downgrade's review does), never plead or offer a discount the person didn't get when they joined.
 - Reviews, ratings and counts shown as real are real, and say how they were chosen ("Most recent", "Highest rated").
@@ -66,7 +66,7 @@ Generated interfaces add deceptive patterns nobody asked for (see [Fundamentals]
 
 - Keyboard focus is a 2px solid `accent-ink` ring, 2px offset, on every control you press or switch; on walled controls (buttons, breadcrumb steps) it wraps the face and the wall together. Fields are the exception: a focused field, or an open select, is held, not targeted, so its floor lights; when you reached it by keyboard its own rim also darkens to a 2px neutral (`--alt-rim-held`), with no accent and no halo. A field you clicked into needs no rim, since you know where you clicked and the caret is there. Keyboard focus is never removed or replaced by a shadow alone. Focus also triggers the same one-level lift as hover, so keyboard and pointer users get the same feedback.
 - Hover: +1 level. Press: down to 0, sheen flattened. Selected: raised out of its well. Disabled: flush, `ink-faint`, no shadow. Invalid: sunk to trench depth on `critical-soft` with a `critical` rim. Loading: held pressed. Pending: hovering. Failed: dropped into a trench.
-- Everything that looks pressable does something. A raised, walled or underlined element with no action is a false signifier; make it flat text.
+- Everything that looks pressable does something. A wall, an underline or a hover lift on something with no action is a false signifier; make it flat (a raised card that only holds content is fine, since it carries no wall and doesn't lift).
 - Don't disable a submit button to say a form isn't valid yet: a disabled button can't explain itself and keyboard users may never reach it. Let it be pressed and list what's missing (`ErrorSummary`). Disable it only while the submission is in flight, so it can't be sent twice.
 - Use `presence-1`–`presence-3` only for other people (their holds, cursors, selections), never for status or decoration.
 

@@ -45,7 +45,7 @@ So "it renders and looks finished" proves nothing. Each rule below has to be che
 |---|---|---|
 | **1.4.3 Contrast**, **1.4.1 Use of colour** | Muted text that fails AA; status by colour alone | Every text token clears 4.5:1 on all eight surfaces; law 7; CO7 |
 | **2.4.4 Link purpose**, **2.4.6 Headings and labels**, **2.5.3 Label in name**, **1.1.1 Non-text content**, **3.3.2 Labels** | "Submit", "Click", "Learn more", "Read more", `alt="image"`, "Field 1", headings unrelated to their section | Buttons start with a verb; and now links, icon-only buttons, images, fields and headings each name what they are (Content, added); `ALT-SEM-002`; CP5 lint |
-| **1.3.1 Info and relationships** | No landmarks, no heading order, sections that are only visual | One `h1` per view, levels that don't skip, `header`, `nav`, `main` (Content, added) |
+| **1.3.1 Info and relationships** | No landmarks, no heading order, sections that are only visual | One `h1` per view, levels that don't skip, a `main` landmark (Content, added) |
 | **2.4.7 Focus visible** | Focus rings removed for looks | The focus rules; CM7 |
 | **4.1.3 Status messages** | Changes announced only visually | `ALT-STATUS-001`, `WorkflowStatus` |
 | **1.4.4 Resize**, **1.4.10 Reflow** | Fixed-width layouts that break at 320px or 200% | The framework's journey checks; Mobile; `checks/phone.mjs` |
@@ -60,7 +60,7 @@ So "it renders and looks finished" proves nothing. Each rule below has to be che
 ## What this added
 
 - **Law 1**: importance is the person's task, never the business's preference.
-- **Honesty**, a new section in the design guide: real deadlines only, declining as findable as accepting, nothing costly pre-selected, every overlay dismissable, terms beside the action, leaving no harder than joining, real reviews and numbers.
+- **Honesty**, a new section in the design guide: real deadlines only, declining as findable as accepting in any offer the product makes, nothing costly pre-selected, every overlay dismissable with a visible way out, terms beside the action, leaving no harder than joining, real reviews and numbers.
 - **Content**: links name where they go; icon-only buttons name the action; every field has a visible label; alt text describes the image; headings describe their section, with one `h1` and landmarks; real data or none.
 - **Type**: prose runs 45 to 75 characters a line.
 - **States**: don't disable submit to say a form is invalid; everything that looks pressable does something.
