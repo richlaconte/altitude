@@ -66,6 +66,39 @@ export declare const ModeContext: React.Context<AppMode | null>;
 
 /** Sets the scheme, accent and motion for everything inside it, and hosts dialogs and toasts. Wrap your app once. */
 export declare function AltitudeProvider(props: AltitudeProviderProps): React.ReactElement;
+/** The provider's host element, or null outside an AltitudeProvider. */
+export declare function useAltitude(): {
+  host: HTMLElement | null;
+  /** @deprecated Internal visual-only compatibility helper; use Dialog or Sheet for modal behavior. */
+  pushLayer: () => () => void;
+} | null;
+
+/** One of the line icons the components ship: a 24px grid at 1.75 stroke in currentColor. `size` is in pixels (default 16). */
+export type IconComponent = (props: React.SVGProps<SVGSVGElement> & { size?: number }) => React.ReactElement;
+/** Renders into the provider's layer host (inside the theme, outside the receding stage), else document.body. */
+export declare function Layer(props: { children: React.ReactNode }): React.ReactPortal | null;
+/**
+ * Mount/unmount with an exit animation. Returns `mounted` (render or not) and `state` ("open" | "closed") for the
+ * data-state attribute. The element first renders in its closed pose, then flips to open two frames later so CSS
+ * transitions run; on close it stays mounted for `exitMs`.
+ */
+export declare function usePresence(open: boolean, exitMs: number): { mounted: boolean; state: 'open' | 'closed' };
+/**
+ * Attention budget: the delay, in milliseconds, before a rise that starts now. Rises that start together are staggered
+ * so no more than four begin within any 250ms window, since people track only about four moving things at once.
+ */
+export declare function riseDelay(): number;
+/** The components' loading spinner, in currentColor. `size` is in pixels (default 16). */
+export declare function Spinner(props: { size?: number }): React.ReactElement;
+
+/** The handful of icons the components use. For anything else use Lucide, which shares the grid and stroke. */
+export declare const Icons: {
+  Check: IconComponent; ChevronDown: IconComponent; X: IconComponent; Info: IconComponent; Pencil: IconComponent;
+  CircleCheck: IconComponent; AlertCircle: IconComponent; Copy: IconComponent; ArrowUp: IconComponent; Stop: IconComponent;
+  Paperclip: IconComponent; ThumbsUp: IconComponent; ThumbsDown: IconComponent; Refresh: IconComponent; ArrowDown: IconComponent;
+  Spark: IconComponent; Lock: IconComponent; Pin: IconComponent; Bell: IconComponent; Eye: IconComponent; EyeOff: IconComponent;
+  Clock: IconComponent; PanelLeft: IconComponent; More: IconComponent; ExternalLink: IconComponent; AlertTriangle: IconComponent;
+};
 
 /** Depth signals, accepted by Surface and Card and available to any element through useDepth. */
 export interface DepthProps {
@@ -501,9 +534,18 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLSpanElement> {
   lamp?: boolean;
   /** false: no imprint. An undefined name renders an empty face; a promised one suspends to your own boundary. */
   skeleton?: boolean;
+  /** `circle` (default) for a person; `square` for a team, an organisation, a bot or an agent. */
+  shape?: 'circle' | 'square';
 }
 export declare function Avatar(props: AvatarProps): React.ReactElement;
-export declare function AvatarGroup(props: React.HTMLAttributes<HTMLDivElement> & { max?: number }): React.ReactElement;
+export interface AvatarGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Show at most this many faces; the rest become a "+N" plate that names them. */
+  max?: number;
+  /** In pixels, for every face that doesn't set its own. Default: the first face's size, or 36. */
+  size?: number;
+}
+/** Faces standing on one ground line, each cut out of the one before it. */
+export declare function AvatarGroup(props: AvatarGroupProps): React.ReactElement;
 
 export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   /** When it turns true, the children rise out of the imprint into place. */
@@ -3789,7 +3831,7 @@ export declare function SettingsRow(props: SettingsRowProps): React.ReactElement
 declare global {
   interface Window {
     Altitude: {
-      AltitudeProvider: typeof AltitudeProvider; Surface: typeof Surface; Button: typeof Button;
+      AltitudeProvider: typeof AltitudeProvider; useAltitude: typeof useAltitude; Icons: typeof Icons; Surface: typeof Surface; Button: typeof Button;
       Card: typeof Card; CardHeader: typeof CardHeader; CardTitle: typeof CardTitle; CardDescription: typeof CardDescription; CardContent: typeof CardContent; CardFooter: typeof CardFooter;
       Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; ItemGroup: typeof ItemGroup; RemovalReceipt: typeof RemovalReceipt; Item: typeof Item; ItemMedia: typeof ItemMedia; ItemContent: typeof ItemContent; ItemTitle: typeof ItemTitle; ItemDescription: typeof ItemDescription; ItemActions: typeof ItemActions; ItemSeparator: typeof ItemSeparator; PropertyList: typeof PropertyList; PropertyListItem: typeof PropertyListItem; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;

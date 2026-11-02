@@ -30,14 +30,7 @@ const all = examples();
 // "<Example>: <fragment of the message>" → the issue that tracks it.
 const targets = [
   { label: 'package', declarations: 'project/components/src/index.tsx', known: {} },
-  { label: 'design system', declarations: 'project/components/index.d.ts', known: {
-    "Button: no exported member 'Icons'": '#424',
-    "ContextMenu: no exported member 'Icons'": '#424',
-    "DropdownMenu: no exported member 'Icons'": '#424',
-    "Dialog: no exported member 'useAltitude'": '#424',
-    "Avatar: Property 'shape' does not exist on type 'IntrinsicAttributes & AvatarProps'": '#424',
-    "Avatar: Property 'size' does not exist on type 'IntrinsicAttributes & HTMLAttributes<HTMLDivElement>": '#424 (AvatarGroup)',
-  } },
+  { label: 'design system', declarations: 'project/components/index.d.ts', known: {} },
 ];
 
 // The example's source line an error points at. A required prop passed through {...props} from an untyped helper
