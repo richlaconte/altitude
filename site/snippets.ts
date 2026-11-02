@@ -89,7 +89,18 @@ export const insideAwait = `export function Await({ imprint, shape, inline, enab
 //                               staggered by riseDelay(): four rises at a time
 //   inside a RevealGroup      → stay an imprint until the slowest part lands`;
 
-export const install = `npm install altitude-design`;
+const install = `npm install altitude-design`;
+
+export const installTabs = [
+  { label: 'npm', language: 'sh', code: install },
+  { label: 'pnpm', language: 'sh', code: 'pnpm add altitude-design' },
+  { label: 'yarn', language: 'sh', code: 'yarn add altitude-design' },
+];
+
+export const agentSetup = `# Preview the change, then apply it
+npx altitude init --client claude
+npx altitude init --client claude --apply
+# Codex: --client codex. Both: --client all.`;
 
 export const quickStart = `import { AltitudeProvider, Button, Field, Input } from 'altitude-design';
 import 'altitude-design/altitude.css';
