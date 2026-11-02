@@ -8,6 +8,13 @@
   --alt-travel: 1;
   /* Convexity cue: a 2–5 L* light-to-dark face gradient on things you press (measured; see Research). Pressing flattens it. */
   --alt-sheen: linear-gradient(to bottom, rgb(255 255 255 / 0.06), rgb(0 0 0 / 0.03));
+  /* Insets that step down on a phone (Mobile, M11), so a small screen doesn't stack a desktop's padding at every level
+     of nesting. Each is full from the compact breakpoint (640px) up and eases to space-4 below it: the page's gutter and
+     an overlay's inset from space-6 (16px by 427px), a card's from space-5 (16px by 512px). They follow the viewport,
+     like a density, so a narrow card in a desktop grid keeps its padding; what changes form in a narrow slot still
+     follows its container. */
+  --alt-inset-page: clamp(var(--space-4), 3.75vw, var(--space-6));
+  --alt-inset-box: clamp(var(--space-4), 3.125vw, var(--space-5));
 }
 :root, [data-theme] {
   /* The hairline that outlines a slab, face and wall together, so its edges read on light grounds. */
@@ -151,12 +158,12 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 .alt-card.alt-lift:focus-visible { transform: translateY(calc(-2px * var(--alt-travel))); }
 @media (hover: hover) { .alt-card.alt-lift:hover { transform: translateY(calc(-2px * var(--alt-travel))); } }
-.alt-card-header { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-5) var(--space-5) 0; }
+.alt-card-header { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--alt-inset-box) var(--alt-inset-box) 0; }
 .alt-card-title { margin: 0; font: 600 17px/24px var(--font-sans); letter-spacing: -0.01em; }
 .alt-card-desc { margin: 0; font: 400 14px/20px var(--font-sans); color: var(--ink-muted); }
-.alt-card-content { padding: var(--space-4) var(--space-5) var(--space-5); font: 400 15px/23px var(--font-sans); }
-.alt-card-header + .alt-card-footer { padding-top: var(--space-5); }
-.alt-card-footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); padding: 0 var(--space-5) var(--space-5); }
+.alt-card-content { padding: var(--space-4) var(--alt-inset-box) var(--alt-inset-box); font: 400 15px/23px var(--font-sans); }
+.alt-card-header + .alt-card-footer { padding-top: var(--alt-inset-box); }
+.alt-card-footer { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); padding: 0 var(--alt-inset-box) var(--alt-inset-box); }
 
 /* ── Input / Textarea: a field is an opening cut into the page, and its depth says whether it still needs filling.
    One camera for everything: under a raised face you see its front wall; inside an opening you see its back wall,
@@ -368,7 +375,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    hairline); the others, and a tab dropping back, sit behind the sheet. */
 .alt-tabs[data-variant="folder"] > .alt-tabs-list {
   /* It scrolls when narrow (#259), so the tab's shadow above and its 1px reach into the panel sit in its padding. */
-  --r: 10px; align-self: stretch; z-index: auto; gap: var(--space-1); margin: -6px 0 -2px; padding: 6px var(--space-5) 1px;
+  --r: 10px; align-self: stretch; z-index: auto; gap: var(--space-1); margin: -6px 0 -2px; padding: 6px var(--alt-inset-box) 1px;
   border: 0; border-radius: 0; background: none; box-shadow: none;
 }
 .alt-tabs[data-variant="folder"] .alt-tabs-indicator { display: none; }
@@ -400,7 +407,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   transition: opacity var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-2) var(--ease-settle);
 } }
 .alt-tabs[data-variant="folder"] > .alt-tabs-content {
-  position: relative; z-index: 1; padding: var(--space-5); border-radius: var(--radius-lg);
+  position: relative; z-index: 1; padding: var(--alt-inset-box); border-radius: var(--radius-lg);
   background: var(--surface-raised); box-shadow: var(--elev-2); color: var(--ink);
   animation: alt-sheet-surface var(--dur-travel-3) var(--ease-rise);
 }
@@ -613,7 +620,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 /* Text imprints are as tall as the text they stand for: one line-height of the surrounding type per line. */
 .alt-await-lines { display: flex; flex-direction: column; justify-content: space-around; height: calc(var(--lines, 1) * 1lh); max-width: 100%; }
 .alt-await-lines > .alt-skeleton { flex: none; height: 0.6em; }
-.alt-await-card { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
+.alt-await-card { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--alt-inset-box); }
 .alt-await-card-body { font: 400 15px/23px var(--font-sans); }
 
 /* ── Breath (AltitudeProvider loading="breath", #343). Instead of light sweeping over it, the imprint breathes: its floor
@@ -903,14 +910,14 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 
 /* ── Dialog: level 5. The page recedes, the scrim veils it, the dialog rises with its shadow growing. ── */
 /* The modal roots cover the visible viewport (#251), not the largest one, so a footer is never under the keyboard. */
-.alt-dialog-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-modal); display: grid; place-items: center; padding: var(--space-6); padding: calc(var(--space-6) + env(safe-area-inset-top, 0px)) calc(var(--space-6) + env(safe-area-inset-right, 0px)) calc(var(--space-6) + env(safe-area-inset-bottom, 0px)) calc(var(--space-6) + env(safe-area-inset-left, 0px)); }
+.alt-dialog-root { position: fixed; inset: 0; top: var(--alt-vv-top, 0px); bottom: auto; height: var(--alt-vvh, 100dvh); z-index: var(--z-modal); display: grid; place-items: center; padding: var(--alt-inset-page); padding: calc(var(--alt-inset-page) + env(safe-area-inset-top, 0px)) calc(var(--alt-inset-page) + env(safe-area-inset-right, 0px)) calc(var(--alt-inset-page) + env(safe-area-inset-bottom, 0px)) calc(var(--alt-inset-page) + env(safe-area-inset-left, 0px)); }
 .alt-scrim {
   position: absolute; inset: 0; background: var(--scrim); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); /* tells-ignore: CM2 the scrim recedes the page behind a dialog (Elevation), not decoration */
   transition: opacity var(--dur-travel-5) var(--ease-rise);
 }
 .alt-dialog {
-  position: relative; width: min(100%, 460px); max-height: calc(100vh - 48px); max-height: calc(var(--alt-vvh, 100dvh) - 48px); overflow: auto; outline: none;
-  padding: var(--space-6); border-radius: var(--radius-xl); background: var(--surface-modal); box-shadow: var(--elev-5); color: var(--ink);
+  position: relative; width: min(100%, 460px); max-height: calc(100vh - 48px); max-height: calc(var(--alt-vvh, 100dvh) - 2 * var(--alt-inset-page)); overflow: auto; outline: none;
+  padding: var(--alt-inset-page); border-radius: var(--radius-xl); background: var(--surface-modal); box-shadow: var(--elev-5); color: var(--ink);
   transition: opacity var(--dur-travel-5) var(--ease-rise), transform var(--dur-travel-5) var(--ease-rise), box-shadow var(--dur-travel-5) var(--ease-rise);
 }
 .alt-dialog[data-size="sm"] { width: min(100%, 380px); }
@@ -1635,7 +1642,7 @@ button.alt-lane-name:focus-visible { outline: 2px solid var(--accent-ink); outli
 .alt-topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: var(--space-2); height: 52px; padding: 0 var(--space-4); border-bottom: 1px solid var(--line); background: var(--surface-ground); transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
 .alt-topbar[data-under] { background: var(--surface-raised); box-shadow: var(--elev-1); }
 .alt-shell-sentinel { display: block; height: 1px; margin-bottom: -1px; }
-.alt-inset { --alt-page-pad: var(--space-6); display: block; padding: 0 var(--alt-page-pad) var(--space-6); outline: none; }
+.alt-inset { --alt-page-pad: var(--alt-inset-page); display: block; padding: 0 var(--alt-page-pad) var(--alt-page-pad); outline: none; }
 @media (prefers-reduced-motion: reduce) { .alt-sidebar { transition: none; } .alt-sidebar-pill[data-ready] { transition: opacity var(--dur-travel-1); } }
 [data-motion="reduced"] .alt-sidebar { transition: none; }
 [data-motion="reduced"] .alt-sidebar-pill[data-ready] { transition: opacity var(--dur-travel-1); }
@@ -1798,7 +1805,8 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-diff-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: 6px 6px 6px var(--space-4); border-bottom: 1px solid var(--line); }
 .alt-diff-caption { font: 500 13px/18px var(--font-sans); color: var(--ink); }
 .alt-diff-summary { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
-.alt-diff-nav { display: inline-flex; gap: 2px; margin-left: auto; }
+/* The buttons wrap rather than run past the frame, which clips them (a review's four don't fit a phone on one line). */
+.alt-diff-nav { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px; margin-left: auto; min-width: 0; }
 .alt-diff-body { overflow: auto; max-height: 420px; padding: var(--space-2) 0; }
 .alt-diff-lines { min-width: max-content; font: 400 13px/20px var(--font-mono); }
 .alt-diff-line { display: flex; padding-right: var(--space-4); outline: none; }
@@ -1865,7 +1873,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    never higher. A row is flush, label and description on the start side, the control on the end side, stacked when
    the section is narrow. An apply-now control's write is the row's: pending hovers it, committed lands, failed drops
    it into a trench, with the state in words beside the control. ── */
-.alt-settings-section { container-type: inline-size; padding: var(--space-5); gap: var(--space-3); }
+.alt-settings-section { container-type: inline-size; padding: var(--alt-inset-box); gap: var(--space-3); }
 .alt-settings-section[data-tone="critical"] { box-shadow: var(--elev-1), inset 0 0 0 1px var(--critical); }
 .alt-settings-head { display: flex; flex-direction: column; gap: var(--space-1); }
 .alt-settings-title { margin: 0; font: 600 17px/24px var(--font-sans); letter-spacing: -0.01em; }
@@ -2115,7 +2123,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-msg-thumb:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .alt-msg-file[data-acts]:active, :is(a, button).alt-msg-thumb:active { transform: none; box-shadow: none; transition-duration: var(--dur-press); }
 @media (forced-colors: active) { .alt-msg-thumb { border: 1px solid CanvasText; } }
-.alt-msg[data-from="assistant"] { border-radius: 0; padding: 2px 14px 8px 14px; box-shadow: inset 2px 0 0 0 transparent; transition: box-shadow var(--dur-travel-2) var(--ease-rise); }
+.alt-msg[data-from="assistant"] { border-radius: 0; padding: 2px 0 8px 14px; box-shadow: inset 2px 0 0 0 transparent; transition: box-shadow var(--dur-travel-2) var(--ease-rise); }
 .alt-msg[data-stream="streaming"] { box-shadow: none; background-image: linear-gradient(var(--line-control) 50%, transparent 50%); background-size: 2px 8px; background-repeat: repeat-y; background-position: left top; }
 .alt-msg[data-stream="complete"], .alt-msg[data-stream="stopped"], .alt-msg[data-stream="error"] { box-shadow: inset 2px 0 0 0 var(--line); }
 .alt-msg[data-stream="error"] { box-shadow: inset 2px 0 0 0 var(--critical); }
@@ -2172,9 +2180,10 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    the heading style, never the title (which belongs to the page). Rims and rules are line; under contrast="more"
    they're line-control, and in forced colours CanvasText. */
 .alt-md { font: 400 15px/23px var(--font-sans); color: var(--ink); white-space: normal; overflow-wrap: anywhere; }
+.alt-md :is(p, .alt-md-list, .alt-md-quote, .alt-md-pre, .alt-md-table, .alt-md-html) { margin: 0 0 12px; }
+/* After the block margins: at equal specificity the later rule wins, so the last block doesn't carry 12px out of the answer. */
 .alt-md > :first-child { margin-top: 0; }
 .alt-md > :last-child { margin-bottom: 0; }
-.alt-md :is(p, .alt-md-list, .alt-md-quote, .alt-md-pre, .alt-md-table, .alt-md-html) { margin: 0 0 12px; }
 .alt-md :is(li, blockquote) > :last-child { margin-bottom: 0; }
 .alt-md-h { margin: 20px 0 8px; color: var(--ink); font: 600 15px/23px var(--font-sans); }
 .alt-md-h[data-depth="1"] { font-size: 19px; line-height: 26px; letter-spacing: -0.01em; }
@@ -2320,7 +2329,9 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-trace .alt-step[data-state="failed"] .alt-step-mark { background: var(--critical); color: var(--on-critical); }
 .alt-trace-live { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--accent); }
 .alt-trace-error { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: 4px; font: 400 13px/18px var(--font-sans); color: var(--ink); }
-.alt-trace-detail { display: flex; flex-direction: column; gap: var(--space-2); margin: 6px 0 0 40px; }
+/* Indented to the step's text where there's room; in a narrow trace (under 480px) one small step in, so tool calls and
+   approvals keep the width (a percentage margin reads the step's width: 40px at 480px, 12px from 452px down). */
+.alt-trace-detail { display: flex; flex-direction: column; gap: var(--space-2); margin: 6px 0 0 clamp(var(--space-3), 100% - 440px, 40px); }
 /* Subagents (#278): a nested run is a nested list behind an Accordion lid that says how it's going; steps that run at
    once sit in a labelled group with a 1px line-control bracket, several raised at once because each is in play. */
 .alt-trace-nested-title { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
@@ -2471,7 +2482,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 
 /* ── DropZone: flush until a file is in flight anywhere, then it opens; over it, it deepens. ── */
 .alt-drop {
-  display: grid; place-items: center; gap: var(--space-2); min-height: 132px; padding: var(--space-5); text-align: center;
+  display: grid; place-items: center; gap: var(--space-2); min-height: 132px; padding: var(--alt-inset-box); text-align: center;
   border: 1.5px dashed var(--line-control); border-radius: var(--radius-lg); background: var(--surface-ground); box-shadow: var(--elev-0);
   color: var(--ink-muted); font: 500 14px/20px var(--font-sans); cursor: pointer;
   transition: background-color var(--dur-travel-2) var(--ease-rise), box-shadow var(--dur-travel-2) var(--ease-rise), border-color var(--dur-travel-2), transform var(--dur-travel-2) var(--ease-settle);
@@ -2488,7 +2499,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    It sinks in when it appears (flush to well, dur-travel-1, ease-sink), the inverse of content arriving lifted,
    and it never pulses. ── */
 .alt-empty {
-  display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-8) var(--space-6); text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-8) var(--alt-inset-page); text-align: center;
   border: 1.5px dashed var(--line-control); border-radius: var(--radius-lg); background: var(--surface-well); box-shadow: var(--well);
   color: var(--ink-muted); font: 400 15px/23px var(--font-sans);
   animation: alt-empty-sink var(--dur-travel-1) var(--ease-sink);
@@ -2684,19 +2695,19 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   transition-duration: calc(var(--dur-travel-4) * 0.7); transition-timing-function: var(--ease-sink);
 }
 .alt-sheet-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-.alt-sheet-inner { display: flex; flex-direction: column; gap: var(--space-4); min-height: 100%; padding: 0 var(--space-6); }
+.alt-sheet-inner { display: flex; flex-direction: column; gap: var(--space-4); min-height: 100%; padding: 0 var(--alt-inset-page); }
 .alt-sheet-header {
-  position: sticky; top: 0; z-index: 2; display: flex; flex-direction: column; gap: 6px; margin: 0 calc(-1 * var(--space-6));
-  padding: var(--space-6) calc(var(--space-6) + 36px) var(--space-2) var(--space-6); background: var(--surface-overlay); box-shadow: var(--elev-0);
+  position: sticky; top: 0; z-index: 2; display: flex; flex-direction: column; gap: 6px; margin: 0 calc(-1 * var(--alt-inset-page));
+  padding: var(--alt-inset-page) calc(var(--alt-inset-page) + 36px) var(--space-2) var(--alt-inset-page); background: var(--surface-overlay); box-shadow: var(--elev-0);
   transition: box-shadow var(--dur-travel-2) var(--ease-rise);
 }
 .alt-sheet[data-top] .alt-sheet-header { box-shadow: var(--elev-2); }
 .alt-sheet-title { margin: 0; font: 600 19px/26px var(--font-sans); letter-spacing: -0.01em; }
 .alt-sheet-desc { margin: 0; font: 400 14px/21px var(--font-sans); color: var(--ink-muted); }
-.alt-sheet-inner > :last-child:not(.alt-sheet-footer) { margin-bottom: var(--space-6); }
+.alt-sheet-inner > :last-child:not(.alt-sheet-footer) { margin-bottom: var(--alt-inset-page); }
 .alt-sheet-footer {
-  position: sticky; bottom: 0; z-index: 2; display: flex; justify-content: flex-end; gap: var(--space-2); margin: auto calc(-1 * var(--space-6)) 0;
-  padding: var(--space-4) var(--space-6) var(--space-6); background: var(--surface-overlay);
+  position: sticky; bottom: 0; z-index: 2; display: flex; justify-content: flex-end; gap: var(--space-2); margin: auto calc(-1 * var(--alt-inset-page)) 0;
+  padding: var(--space-4) var(--alt-inset-page) var(--alt-inset-page); background: var(--surface-overlay);
 }
 .alt-sheet-footer::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 24px; pointer-events: none; box-shadow: var(--lip-bottom); opacity: 0; transition: opacity var(--dur-travel-2) var(--ease-rise); }
 .alt-sheet[data-bottom] .alt-sheet-footer::before { opacity: 1; }

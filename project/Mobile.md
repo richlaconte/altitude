@@ -15,6 +15,7 @@ Altitude assumed a mouse in places the guide never said: hover was the first sig
 7. **Fields don't move the page.** Field text is at least 16px on touch, so the browser never zooms on focus, with no `maximum-scale` workaround. Overlays size to what's visible above the keyboard.
 8. **Hints match the hands.** Keyboard shortcuts are shown where there's a keyboard. Behaviour is never removed: the shortcut still works when its hint is hidden.
 9. **Height still reads small.** Tiers, shadows and the attention budget don't shrink on a phone.
+10. **Space steps down; it doesn't stack.** A desktop's insets, repeated at every level of nesting (page, frame, card, message, indent), leave a phone's text a column down the middle. Below the compact breakpoint each inset eases one step toward `space-4`: the page gutter, a dialog and a sheet from 24px, a card from 20px. An indent that aligns detail to a heading gives way to one small step in a narrow slot. Gaps between components stay as they are: grouping is meaning, padding is chrome.
 
 ## The constraints
 
@@ -32,6 +33,7 @@ Each is testable, and each names what holds it.
 | **M8** | Overlays size to the visible viewport. | `--alt-vvh` and `--alt-vv-top` from `visualViewport`, falling back to `100dvh` | `checks/visible-viewport.mjs` |
 | **M9** | Fixed layers add `env(safe-area-inset-*)`. | `Toaster`, `SaveBar`, `Sheet`, `Dialog` | `checks/safe-area.mjs` |
 | **M10** | Components respond to their container at the shared narrow width, not the viewport. | `breakpoint-narrow` (480px) and `breakpoint-compact` (640px); only these appear in width queries | `checks/density.mjs` |
+| **M11** | Insets step down on a phone: the page gutter, a dialog's and a sheet's inset 16px, a card's 16px, at 375 CSS px; unchanged from 640px up, a narrow card included. What reaches through an inset (a page header, a sheet's header and footer, a folder tab strip) lines up with it. | `--alt-inset-page` and `--alt-inset-box`, which follow the viewport like a density; Trace detail's indent follows its step's width | `checks/narrow-insets.mjs` |
 
 ## Narrow forms
 
