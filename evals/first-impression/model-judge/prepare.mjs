@@ -7,7 +7,7 @@
 //
 // Writes <out>/stimuli/<id>.png, <out>/sessions.json (no conditions in it) and <out>/key.json.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { load, random, VIEW } from '../stimuli.mjs';
 
@@ -60,6 +60,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   mkdirSync(join(out, 'stimuli'), { recursive: true });
   await crop(keyed, join(out, 'stimuli'));
   writeFileSync(join(out, 'sessions.json'), JSON.stringify({ seed, crop: VIEW.crop, sessions: orders }, null, 2) + '\n');
-  writeFileSync(join(out, 'key.json'), JSON.stringify({ seed, sources: from, screens: keyed.map(({ image, ...s }) => s) }, null, 2) + '\n');
+  writeFileSync(join(out, 'key.json'), JSON.stringify({ seed, sources: from.map((d) => relative(process.cwd(), d)), screens: keyed.map(({ image, ...s }) => s) }, null, 2) + '\n');
   console.log(`${keyed.length} stimuli, ${sessions} sessions → ${out}`);
 }

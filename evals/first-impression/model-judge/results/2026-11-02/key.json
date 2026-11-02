@@ -1,0 +1,341 @@
+{
+  "seed": "2026-11-02",
+  "sources": [
+    "evals/distinctiveness/results/2026-10-31",
+    "evals/first-impression/model-judge/results/2026-11-02/anchor"
+  ],
+  "screens": [
+    {
+      "stimulus": "s882",
+      "id": "tabler-2018--dashboard-a",
+      "condition": "human",
+      "brief": "dashboard-a",
+      "task": "dashboard",
+      "domain": "subscription software",
+      "contentFill": null,
+      "source": "tabler-2018"
+    },
+    {
+      "stimulus": "s750",
+      "id": "claude-plain--dashboard-a",
+      "condition": "claude-plain",
+      "brief": "dashboard-a",
+      "task": "dashboard",
+      "domain": "subscription software",
+      "contentFill": 0.938
+    },
+    {
+      "stimulus": "s894",
+      "id": "tabler-2018--settings-a",
+      "condition": "human",
+      "brief": "settings-a",
+      "task": "settings",
+      "domain": "project management",
+      "contentFill": null,
+      "source": "tabler-2018"
+    },
+    {
+      "stimulus": "s839",
+      "id": "claude-shadcn--settings-b",
+      "condition": "claude-shadcn",
+      "brief": "settings-b",
+      "task": "settings",
+      "domain": "veterinary clinic",
+      "contentFill": 0.488
+    },
+    {
+      "stimulus": "s812",
+      "id": "altitude-preview--dashboard",
+      "condition": "altitude-preview",
+      "brief": null,
+      "task": "dashboard",
+      "domain": null,
+      "contentFill": 0.59
+    },
+    {
+      "stimulus": "s369",
+      "id": "claude-altitude--dashboard-a",
+      "condition": "claude-altitude",
+      "brief": "dashboard-a",
+      "task": "dashboard",
+      "domain": "subscription software",
+      "contentFill": 0.878
+    },
+    {
+      "stimulus": "s443",
+      "id": "claude-plain--records-a",
+      "condition": "claude-plain",
+      "brief": "records-a",
+      "task": "records",
+      "domain": "project management",
+      "contentFill": 0.916
+    },
+    {
+      "stimulus": "s323",
+      "id": "claude-plain--records-b",
+      "condition": "claude-plain",
+      "brief": "records-b",
+      "task": "records",
+      "domain": "freight",
+      "contentFill": 0.991
+    },
+    {
+      "stimulus": "s497",
+      "id": "claude-altitude--dashboard-b",
+      "condition": "claude-altitude",
+      "brief": "dashboard-b",
+      "task": "dashboard",
+      "domain": "public library",
+      "contentFill": 0.834
+    },
+    {
+      "stimulus": "s182",
+      "id": "adminlte-2020--settings-b",
+      "condition": "human",
+      "brief": "settings-b",
+      "task": "settings",
+      "domain": "veterinary clinic",
+      "contentFill": null,
+      "source": "adminlte-2020"
+    },
+    {
+      "stimulus": "s464",
+      "id": "adminlte-2020--dashboard-b",
+      "condition": "human",
+      "brief": "dashboard-b",
+      "task": "dashboard",
+      "domain": "public library",
+      "contentFill": null,
+      "source": "adminlte-2020"
+    },
+    {
+      "stimulus": "s635",
+      "id": "claude-shadcn--dashboard-a",
+      "condition": "claude-shadcn",
+      "brief": "dashboard-a",
+      "task": "dashboard",
+      "domain": "subscription software",
+      "contentFill": 0.918
+    },
+    {
+      "stimulus": "s577",
+      "id": "altitude-preview--record-view",
+      "condition": "altitude-preview",
+      "brief": null,
+      "task": "record-view",
+      "domain": null,
+      "contentFill": 0.393
+    },
+    {
+      "stimulus": "s140",
+      "id": "adminlte-2020--records-b",
+      "condition": "human",
+      "brief": "records-b",
+      "task": "records",
+      "domain": "freight",
+      "contentFill": null,
+      "source": "adminlte-2020"
+    },
+    {
+      "stimulus": "s892",
+      "id": "claude-plain--settings-a",
+      "condition": "claude-plain",
+      "brief": "settings-a",
+      "task": "settings",
+      "domain": "project management",
+      "contentFill": 0.988
+    },
+    {
+      "stimulus": "s236",
+      "id": "claude-plain--record-view-a",
+      "condition": "claude-plain",
+      "brief": "record-view-a",
+      "task": "record-view",
+      "domain": "sales CRM",
+      "contentFill": 0.992
+    },
+    {
+      "stimulus": "s669",
+      "id": "claude-altitude--record-view-a",
+      "condition": "claude-altitude",
+      "brief": "record-view-a",
+      "task": "record-view",
+      "domain": "sales CRM",
+      "contentFill": 0.932
+    },
+    {
+      "stimulus": "s374",
+      "id": "claude-altitude--settings-a",
+      "condition": "claude-altitude",
+      "brief": "settings-a",
+      "task": "settings",
+      "domain": "project management",
+      "contentFill": 0.207
+    },
+    {
+      "stimulus": "s634",
+      "id": "claude-altitude--records-b",
+      "condition": "claude-altitude",
+      "brief": "records-b",
+      "task": "records",
+      "domain": "freight",
+      "contentFill": 0.917
+    },
+    {
+      "stimulus": "s364",
+      "id": "claude-plain--record-view-b",
+      "condition": "claude-plain",
+      "brief": "record-view-b",
+      "task": "record-view",
+      "domain": "restaurant kitchen",
+      "contentFill": 0.987
+    },
+    {
+      "stimulus": "s143",
+      "id": "claude-shadcn--records-b",
+      "condition": "claude-shadcn",
+      "brief": "records-b",
+      "task": "records",
+      "domain": "freight",
+      "contentFill": 0.983
+    },
+    {
+      "stimulus": "s571",
+      "id": "tabler-2018--records-a",
+      "condition": "human",
+      "brief": "records-a",
+      "task": "records",
+      "domain": "project management",
+      "contentFill": null,
+      "source": "tabler-2018"
+    },
+    {
+      "stimulus": "s800",
+      "id": "altitude-preview--records",
+      "condition": "altitude-preview",
+      "brief": null,
+      "task": "records",
+      "domain": null,
+      "contentFill": 0.432
+    },
+    {
+      "stimulus": "s433",
+      "id": "claude-plain--dashboard-b",
+      "condition": "claude-plain",
+      "brief": "dashboard-b",
+      "task": "dashboard",
+      "domain": "public library",
+      "contentFill": 0.941
+    },
+    {
+      "stimulus": "s907",
+      "id": "claude-shadcn--settings-a",
+      "condition": "claude-shadcn",
+      "brief": "settings-a",
+      "task": "settings",
+      "domain": "project management",
+      "contentFill": 0.335
+    },
+    {
+      "stimulus": "s261",
+      "id": "claude-shadcn--record-view-b",
+      "condition": "claude-shadcn",
+      "brief": "record-view-b",
+      "task": "record-view",
+      "domain": "restaurant kitchen",
+      "contentFill": 0.89
+    },
+    {
+      "stimulus": "s940",
+      "id": "claude-shadcn--records-a",
+      "condition": "claude-shadcn",
+      "brief": "records-a",
+      "task": "records",
+      "domain": "project management",
+      "contentFill": 0.645
+    },
+    {
+      "stimulus": "s484",
+      "id": "claude-altitude--records-a",
+      "condition": "claude-altitude",
+      "brief": "records-a",
+      "task": "records",
+      "domain": "project management",
+      "contentFill": 0.623
+    },
+    {
+      "stimulus": "s134",
+      "id": "claude-altitude--settings-b",
+      "condition": "claude-altitude",
+      "brief": "settings-b",
+      "task": "settings",
+      "domain": "veterinary clinic",
+      "contentFill": 0.386
+    },
+    {
+      "stimulus": "s753",
+      "id": "claude-altitude--record-view-b",
+      "condition": "claude-altitude",
+      "brief": "record-view-b",
+      "task": "record-view",
+      "domain": "restaurant kitchen",
+      "contentFill": 0.925
+    },
+    {
+      "stimulus": "s620",
+      "id": "altitude-preview--settings",
+      "condition": "altitude-preview",
+      "brief": null,
+      "task": "settings",
+      "domain": null,
+      "contentFill": 0.491
+    },
+    {
+      "stimulus": "s820",
+      "id": "claude-shadcn--dashboard-b",
+      "condition": "claude-shadcn",
+      "brief": "dashboard-b",
+      "task": "dashboard",
+      "domain": "public library",
+      "contentFill": 0.937
+    },
+    {
+      "stimulus": "s474",
+      "id": "claude-plain--settings-b",
+      "condition": "claude-plain",
+      "brief": "settings-b",
+      "task": "settings",
+      "domain": "veterinary clinic",
+      "contentFill": 0.99
+    },
+    {
+      "stimulus": "s652",
+      "id": "claude-shadcn--record-view-a",
+      "condition": "claude-shadcn",
+      "brief": "record-view-a",
+      "task": "record-view",
+      "domain": "sales CRM",
+      "contentFill": 0.926
+    },
+    {
+      "stimulus": "s762",
+      "id": "adminlte-2020--record-view-b",
+      "condition": "human",
+      "brief": "record-view-b",
+      "task": "record-view",
+      "domain": "restaurant kitchen",
+      "contentFill": null,
+      "source": "adminlte-2020"
+    },
+    {
+      "stimulus": "s780",
+      "id": "tabler-2018--record-view-a",
+      "condition": "human",
+      "brief": "record-view-a",
+      "task": "record-view",
+      "domain": "sales CRM",
+      "contentFill": null,
+      "source": "tabler-2018"
+    }
+  ]
+}
