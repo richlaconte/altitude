@@ -1,10 +1,12 @@
 // Builds the landing page into site-dist/ from site/ and the design system's own sources.
 //   site-dist/index.html      the page served at the GitHub Pages root (a full document; everything inlined)
 //   site-dist/artifact.html   the same page as a fragment, for a hosted preview that adds its own document skeleton
+//   site-dist/llms.txt        the index for agents, with the Markdown it links to (see scripts/build-llms.mjs)
 // CI then copies Storybook into site-dist/storybook/ (see .github/workflows/ci.yml).
 import { build } from 'esbuild';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tokensCss } from './tokens-css.mjs';
+import { buildLlms } from './build-llms.mjs';
 
 const out = 'site-dist';
 rmSync(out, { recursive: true, force: true });
@@ -61,6 +63,7 @@ const page = ({ title, description, css, body }) => `<!doctype html>
 <meta name="description" content="${description}">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
+<link rel="describedby" href="llms.txt">
 ${fonts}
 <style>
 ${css}
@@ -82,5 +85,7 @@ ${css}
 </style>
 ${body}
 `);
+const llms = buildLlms(out);
+console.log('llms ok', `${llms.llms} KB llms.txt, ${llms.full} KB llms-full.txt, ${llms.files} files`);
 console.log('site facts', JSON.stringify(site));
 console.log('site ok', Math.round(js.length / 1024) + ' KB of script;', 'agent page', Math.round(agentJs.length / 1024) + ' KB');

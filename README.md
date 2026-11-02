@@ -3,6 +3,7 @@
 A design and HCI framework for agent-built React web applications, with a component foundation where **height is the interface**. Its one idea: the ground is the record. Settled content sits on the ground; anything live rises above it; anything waiting to receive sinks below it.
 
 - **Site:** https://richlaconte.github.io/altitude/
+- **For agents:** https://richlaconte.github.io/altitude/llms.txt, an index of the guides, task patterns and every component's guide as plain Markdown ([llmstxt.org](https://llmstxt.org)), and `llms-full.txt` beside it with every guide in one file
 - **Storybook:** every component, with its guidelines and a live preview in both schemes: https://richlaconte.github.io/altitude/storybook/
 - **The design guide:** [`project/README.md`](https://github.com/richlaconte/altitude/blob/main/project/README.md), then [Elevation](https://github.com/richlaconte/altitude/blob/main/project/Elevation.md), [Motion](https://github.com/richlaconte/altitude/blob/main/project/Motion.md), [Charts](https://github.com/richlaconte/altitude/blob/main/project/Charts.md), [Theming](https://github.com/richlaconte/altitude/blob/main/project/Theming.md), [Fundamentals](https://github.com/richlaconte/altitude/blob/main/project/Fundamentals.md), [Distinctiveness](https://github.com/richlaconte/altitude/blob/main/project/Distinctiveness.md) and [Research](https://github.com/richlaconte/altitude/blob/main/project/Research.md)
 
