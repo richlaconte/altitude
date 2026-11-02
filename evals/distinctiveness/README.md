@@ -19,6 +19,8 @@ The layout tree is read from the DOM rather than parsed from pixels, since every
 
 **Proportions.** Each screen also gets descriptive measures, read from the rendered page: content fill (the share of the screen inside the box around everything that isn't the page's ground), text density (characters per 10,000 px² of the text's box), the median control's height (excluding table headers and anything taller than 64px), the share of text at label weights (500–600) and the largest text. They're reported as medians per system, not as distances.
 
+**Elevation.** What each screen's text sits on, read from the rendered page (#383). A character's surface is its nearest ancestor of at least 120 × 60 that draws something other than the page's ground (the fill of the deepest element covering the screen). It is classed by how it draws: *sunk* (an inset shadow with blur: a field or well), *raised* (an outer shadow with blur), *outlined* (a border, or a ring with no blur, as Tailwind's `ring-1` computes), *filled* (a fill alone), or *ground* (no surface). Where Altitude's tokens resolve on the page, the surface's tier is also recorded: the `--elev-N` or `--well` its `box-shadow` begins with. Colours are compared through a canvas, so `oklch`, `oklab` and hex compare alike. The measure is reported as mean shares of characters per system and per task, plus the share of screens with any raised surface. It is descriptive, not a distance.
+
 **Task range.** The mean distance between one system's builds of different tasks (each `-a` brief against the other `-a` briefs, and the same for `-b`). It answers tell LA5, every screen in the same frame: a system that varies its frame with the task scores higher on layout here.
 
 **Distance from the centre.** For each system, the mean distance from its builds to the baselines' builds of the same briefs. A system that drifts toward the generated centre shows here first.
@@ -52,6 +54,13 @@ node evals/distinctiveness/capture.mjs --runs build/test/distinctiveness/<date>,
   --baselines evals/distinctiveness/baselines/<date> --out build/test/distinctiveness/<date>-captures
 ~/.cache/altitude-evals/venv/bin/python evals/distinctiveness/measure.py build/test/distinctiveness/<date>-captures \
   evals/distinctiveness/results/<date>/results.json
+```
+
+A measure added after a run can be read from the same builds without generating them again. `rebuild.mjs` recreates each build's workspace from its evidence (`results/<date>/builds/`), the same way `generate.mjs` set it up, then builds it into the folder `capture.mjs` reads. Pass the run's own tarball; it's checked against the hash in each `run.json`:
+
+```sh
+node evals/distinctiveness/rebuild.mjs --results evals/distinctiveness/results/<date> --tarball <the run's .tgz> --out build/test/distinctiveness/<date>-rebuilt
+node evals/distinctiveness/capture.mjs --runs build/test/distinctiveness/<date>-rebuilt,build/test/distinctiveness/<date>-rebuilt-s2 --previews build/test --out …
 ```
 
 `generate.mjs` takes `--conditions`, `--only <text>`, `--seconds` (default 600), `--model` (default `claude-opus-5-5`) and `--parallel` (default 4). A run that already has a `run.json` is kept, so an interrupted batch resumes. Workspaces are made in the OS temp directory, outside this repository.

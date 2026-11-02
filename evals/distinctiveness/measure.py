@@ -178,11 +178,17 @@ def main(captures, results):
         s['proportions'] = {**s.get('proportions', {}), 'contentFill': content_fill(s['png'])}
     keys = ('contentFill', 'textDensity', 'controlHeight', 'labelShare', 'titlePx')
     proportions = {x: {k: (lambda v: round(float(np.median(v)), 3) if v else None)([s['proportions'][k] for s in screens if s['system'] == x and s['sample'] == 1 and s['proportions'].get(k) is not None]) for k in keys} for x in systems}
+    # Elevation (#383): the share of each screen's text on each kind of surface (capture.mjs), as means per system and per
+    # task, since most screens have none of some kinds and a median would hide the ones that do.
+    kinds = ('raised', 'sunk', 'outlined', 'filled', 'ground')
+    firsts = [s for s in screens if s['sample'] == 1 and s.get('elevation')]
+    elevation = {x: {k: mean([s['elevation'][k] for s in firsts if s['system'] == x]) for k in kinds} | {'screensWithRaised': mean([1.0 if s['elevation']['raisedSurfaces'] else 0.0 for s in firsts if s['system'] == x])} for x in systems}
+    elevation_by_task = {t: {x: {k: mean([s['elevation'][k] for s in firsts if s['system'] == x and s['task'] == t]) for k in kinds} for x in systems} for t in sorted({s['task'] for s in firsts})}
     Path(results).write_text(json.dumps({
         'method': {'uiclip': UICLIP, 'processor': PROCESSOR, 'viewport': '1200x1200', 'tiles': f'{GRID}x{GRID}, Hungarian-matched', 'colourBins': {'L': L_EDGES.tolist(), 'C': C_EDGES.tolist(), 'hue': HUE_BINS},
                    'layout': 'DOM layout tree (capture.mjs), repeated siblings folded, Zhang-Shasha with unit costs, divided by the larger tree', 'reference': list(REFERENCE)},
-        'screens': [{k: s[k] for k in ('id', 'system', 'brief', 'task', 'domain', 'sample', 'proportions')} | {'nodes': size(s['layout'])} for s in screens],
-        'proportions': proportions,
+        'screens': [{k: s[k] for k in ('id', 'system', 'brief', 'task', 'domain', 'sample', 'proportions')} | {'elevation': s.get('elevation'), 'nodes': size(s['layout'])} for s in screens],
+        'proportions': proportions, 'elevation': elevation, 'elevationByTask': elevation_by_task,
         'pairs': pairs, 'matrix': matrix, 'baselines': baselines, 'distanceFromCentre': centre_distance,
         'creativeRangePairs': range_pairs, 'creativeRange': creative_range, 'taskRangePairs': task_pairs, 'taskRange': task_range, 'noisePairs': noise_pairs, 'noiseFloor': noise}, indent=1) + '\n')
 

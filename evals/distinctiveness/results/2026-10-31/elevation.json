@@ -1,0 +1,646 @@
+{
+ "note": "Elevation (#383), added 2026-11-01. Read from the same builds, rebuilt from the evidence in builds/ with rebuild.mjs (the run's own altitude-design-0.2.1.tgz, sha256 d8890a4f\u2026), and captured again with capture.mjs; the previews from main at the time. On the rebuilt captures every measure in results.json reproduced to within 0.001. Shares are of each screen's characters of text.",
+ "method": "capture.mjs readElevation: a surface is the nearest ancestor of at least 120 x 60 that draws something other than the ground; sunk = inset shadow with blur, raised = outer shadow with blur, outlined = border or ring, filled = fill alone; tier = the Altitude token its box-shadow begins with",
+ "screens": [
+  {
+   "id": "claude-altitude--dashboard-a",
+   "system": "claude-altitude",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "elevation": {
+    "chars": 1330,
+    "tokens": true,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 1,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-altitude--dashboard-b",
+   "system": "claude-altitude",
+   "brief": "dashboard-b",
+   "task": "dashboard",
+   "elevation": {
+    "chars": 1505,
+    "tokens": true,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.037,
+    "filled": 0,
+    "ground": 0.963,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-altitude--record-view-a",
+   "system": "claude-altitude",
+   "brief": "record-view-a",
+   "task": "record-view",
+   "elevation": {
+    "chars": 1447,
+    "tokens": true,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.245,
+    "filled": 0,
+    "ground": 0.755,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-altitude--record-view-b",
+   "system": "claude-altitude",
+   "brief": "record-view-b",
+   "task": "record-view",
+   "elevation": {
+    "chars": 1192,
+    "tokens": true,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 1,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-altitude--records-a",
+   "system": "claude-altitude",
+   "brief": "records-a",
+   "task": "records",
+   "elevation": {
+    "chars": 869,
+    "tokens": true,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 1,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-altitude--records-b",
+   "system": "claude-altitude",
+   "brief": "records-b",
+   "task": "records",
+   "elevation": {
+    "chars": 2051,
+    "tokens": true,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 1,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-altitude--settings-a",
+   "system": "claude-altitude",
+   "brief": "settings-a",
+   "task": "settings",
+   "elevation": {
+    "chars": 218,
+    "tokens": true,
+    "raised": 0.633,
+    "sunk": 0,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 0.367,
+    "tiers": {
+     "elev-1": 0.633
+    },
+    "raisedSurfaces": 1
+   }
+  },
+  {
+   "id": "claude-altitude--settings-b",
+   "system": "claude-altitude",
+   "brief": "settings-b",
+   "task": "settings",
+   "elevation": {
+    "chars": 571,
+    "tokens": true,
+    "raised": 0.809,
+    "sunk": 0,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 0.191,
+    "tiers": {
+     "elev-1": 0.809
+    },
+    "raisedSurfaces": 2
+   }
+  },
+  {
+   "id": "claude-plain--dashboard-a",
+   "system": "claude-plain",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "elevation": {
+    "chars": 835,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.874,
+    "filled": 0,
+    "ground": 0.126,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-plain--dashboard-b",
+   "system": "claude-plain",
+   "brief": "dashboard-b",
+   "task": "dashboard",
+   "elevation": {
+    "chars": 1349,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.885,
+    "filled": 0,
+    "ground": 0.115,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-plain--record-view-a",
+   "system": "claude-plain",
+   "brief": "record-view-a",
+   "task": "record-view",
+   "elevation": {
+    "chars": 1723,
+    "tokens": false,
+    "raised": 0.224,
+    "sunk": 0,
+    "outlined": 0.559,
+    "filled": 0.08,
+    "ground": 0.137,
+    "tiers": {},
+    "raisedSurfaces": 3
+   }
+  },
+  {
+   "id": "claude-plain--record-view-b",
+   "system": "claude-plain",
+   "brief": "record-view-b",
+   "task": "record-view",
+   "elevation": {
+    "chars": 1732,
+    "tokens": false,
+    "raised": 0.546,
+    "sunk": 0,
+    "outlined": 0.293,
+    "filled": 0,
+    "ground": 0.161,
+    "tiers": {},
+    "raisedSurfaces": 4
+   }
+  },
+  {
+   "id": "claude-plain--records-a",
+   "system": "claude-plain",
+   "brief": "records-a",
+   "task": "records",
+   "elevation": {
+    "chars": 1344,
+    "tokens": false,
+    "raised": 0.177,
+    "sunk": 0,
+    "outlined": 0.783,
+    "filled": 0,
+    "ground": 0.04,
+    "tiers": {},
+    "raisedSurfaces": 1
+   }
+  },
+  {
+   "id": "claude-plain--records-b",
+   "system": "claude-plain",
+   "brief": "records-b",
+   "task": "records",
+   "elevation": {
+    "chars": 1900,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.956,
+    "filled": 0,
+    "ground": 0.044,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-plain--settings-a",
+   "system": "claude-plain",
+   "brief": "settings-a",
+   "task": "settings",
+   "elevation": {
+    "chars": 471,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.488,
+    "filled": 0.229,
+    "ground": 0.282,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-plain--settings-b",
+   "system": "claude-plain",
+   "brief": "settings-b",
+   "task": "settings",
+   "elevation": {
+    "chars": 355,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.611,
+    "filled": 0,
+    "ground": 0.389,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-shadcn--dashboard-a",
+   "system": "claude-shadcn",
+   "brief": "dashboard-a",
+   "task": "dashboard",
+   "elevation": {
+    "chars": 1099,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.944,
+    "filled": 0,
+    "ground": 0.056,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-shadcn--dashboard-b",
+   "system": "claude-shadcn",
+   "brief": "dashboard-b",
+   "task": "dashboard",
+   "elevation": {
+    "chars": 1416,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.898,
+    "filled": 0,
+    "ground": 0.102,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-shadcn--record-view-a",
+   "system": "claude-shadcn",
+   "brief": "record-view-a",
+   "task": "record-view",
+   "elevation": {
+    "chars": 2343,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.941,
+    "filled": 0,
+    "ground": 0.059,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-shadcn--record-view-b",
+   "system": "claude-shadcn",
+   "brief": "record-view-b",
+   "task": "record-view",
+   "elevation": {
+    "chars": 1791,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.935,
+    "filled": 0,
+    "ground": 0.065,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-shadcn--records-a",
+   "system": "claude-shadcn",
+   "brief": "records-a",
+   "task": "records",
+   "elevation": {
+    "chars": 932,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 1,
+    "filled": 0,
+    "ground": 0,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-shadcn--records-b",
+   "system": "claude-shadcn",
+   "brief": "records-b",
+   "task": "records",
+   "elevation": {
+    "chars": 2670,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.987,
+    "filled": 0,
+    "ground": 0.013,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-shadcn--settings-a",
+   "system": "claude-shadcn",
+   "brief": "settings-a",
+   "task": "settings",
+   "elevation": {
+    "chars": 515,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.783,
+    "filled": 0,
+    "ground": 0.217,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "claude-shadcn--settings-b",
+   "system": "claude-shadcn",
+   "brief": "settings-b",
+   "task": "settings",
+   "elevation": {
+    "chars": 718,
+    "tokens": false,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0.872,
+    "filled": 0,
+    "ground": 0.128,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "altitude-preview--settings",
+   "system": "altitude-preview",
+   "brief": null,
+   "task": "settings",
+   "elevation": {
+    "chars": 608,
+    "tokens": true,
+    "raised": 0.867,
+    "sunk": 0,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 0.133,
+    "tiers": {
+     "elev-1": 0.867
+    },
+    "raisedSurfaces": 4
+   }
+  },
+  {
+   "id": "altitude-preview--records",
+   "system": "altitude-preview",
+   "brief": null,
+   "task": "records",
+   "elevation": {
+    "chars": 579,
+    "tokens": true,
+    "raised": 0.478,
+    "sunk": 0,
+    "outlined": 0.32,
+    "filled": 0,
+    "ground": 0.202,
+    "tiers": {
+     "elev-1": 0.478
+    },
+    "raisedSurfaces": 1
+   }
+  },
+  {
+   "id": "altitude-preview--dashboard",
+   "system": "altitude-preview",
+   "brief": null,
+   "task": "dashboard",
+   "elevation": {
+    "chars": 652,
+    "tokens": true,
+    "raised": 0,
+    "sunk": 0,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 1,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  },
+  {
+   "id": "altitude-preview--record-view",
+   "system": "altitude-preview",
+   "brief": null,
+   "task": "record-view",
+   "elevation": {
+    "chars": 337,
+    "tokens": true,
+    "raised": 0,
+    "sunk": 0.421,
+    "outlined": 0,
+    "filled": 0,
+    "ground": 0.579,
+    "tiers": {},
+    "raisedSurfaces": 0
+   }
+  }
+ ],
+ "elevation": {
+  "altitude-preview": {
+   "raised": 0.3362,
+   "sunk": 0.1052,
+   "outlined": 0.08,
+   "filled": 0.0,
+   "ground": 0.4785,
+   "screensWithRaised": 0.5
+  },
+  "claude-altitude": {
+   "raised": 0.1803,
+   "sunk": 0.0,
+   "outlined": 0.0352,
+   "filled": 0.0,
+   "ground": 0.7845,
+   "screensWithRaised": 0.25
+  },
+  "claude-plain": {
+   "raised": 0.1184,
+   "sunk": 0.0,
+   "outlined": 0.6811,
+   "filled": 0.0386,
+   "ground": 0.1618,
+   "screensWithRaised": 0.375
+  },
+  "claude-shadcn": {
+   "raised": 0.0,
+   "sunk": 0.0,
+   "outlined": 0.92,
+   "filled": 0.0,
+   "ground": 0.08,
+   "screensWithRaised": 0.0
+  }
+ },
+ "elevationByTask": {
+  "dashboard": {
+   "altitude-preview": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.0,
+    "filled": 0.0,
+    "ground": 1.0
+   },
+   "claude-altitude": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.0185,
+    "filled": 0.0,
+    "ground": 0.9815
+   },
+   "claude-plain": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.8795,
+    "filled": 0.0,
+    "ground": 0.1205
+   },
+   "claude-shadcn": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.921,
+    "filled": 0.0,
+    "ground": 0.079
+   }
+  },
+  "record-view": {
+   "altitude-preview": {
+    "raised": 0.0,
+    "sunk": 0.421,
+    "outlined": 0.0,
+    "filled": 0.0,
+    "ground": 0.579
+   },
+   "claude-altitude": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.1225,
+    "filled": 0.0,
+    "ground": 0.8775
+   },
+   "claude-plain": {
+    "raised": 0.385,
+    "sunk": 0.0,
+    "outlined": 0.426,
+    "filled": 0.04,
+    "ground": 0.149
+   },
+   "claude-shadcn": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.938,
+    "filled": 0.0,
+    "ground": 0.062
+   }
+  },
+  "records": {
+   "altitude-preview": {
+    "raised": 0.478,
+    "sunk": 0.0,
+    "outlined": 0.32,
+    "filled": 0.0,
+    "ground": 0.202
+   },
+   "claude-altitude": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.0,
+    "filled": 0.0,
+    "ground": 1.0
+   },
+   "claude-plain": {
+    "raised": 0.0885,
+    "sunk": 0.0,
+    "outlined": 0.8695,
+    "filled": 0.0,
+    "ground": 0.042
+   },
+   "claude-shadcn": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.9935,
+    "filled": 0.0,
+    "ground": 0.0065
+   }
+  },
+  "settings": {
+   "altitude-preview": {
+    "raised": 0.867,
+    "sunk": 0.0,
+    "outlined": 0.0,
+    "filled": 0.0,
+    "ground": 0.133
+   },
+   "claude-altitude": {
+    "raised": 0.721,
+    "sunk": 0.0,
+    "outlined": 0.0,
+    "filled": 0.0,
+    "ground": 0.279
+   },
+   "claude-plain": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.5495,
+    "filled": 0.1145,
+    "ground": 0.3355
+   },
+   "claude-shadcn": {
+    "raised": 0.0,
+    "sunk": 0.0,
+    "outlined": 0.8275,
+    "filled": 0.0,
+    "ground": 0.1725
+   }
+  }
+ }
+}
