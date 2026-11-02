@@ -199,3 +199,6 @@ body { margin: 0; background: var(--page-bg); color: var(--page-ink); }
 /* Altitude for agents (#286) */
 .agent-modes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin: 0 0 16px; }
 .agent-band .caption { margin-top: 12px; }
+/* The examples' moment rails stick under the site's 60px nav on a phone. */
+.agent-band { --demo-sticky-top: calc(60px + env(safe-area-inset-top, 0px)); }
+@media (max-width: 520px) { .agent-band .section-head { margin-bottom: var(--space-5); } .agent-modes { gap: 10px 16px; } }

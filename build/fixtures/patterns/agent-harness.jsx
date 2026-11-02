@@ -173,39 +173,78 @@ function Harness({ k }) {
   );
 }
 
-const CSS = `.ah{display:grid;gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
+const CSS = `.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
 .ah-frame .alt-shell-page{display:flex;flex-direction:column;overflow:hidden}.ah-frame .alt-inset{flex:1;min-height:0;display:flex;flex-direction:column}
 .ah-main{display:flex;flex-direction:column;gap:12px;flex:1;padding:12px 0;min-height:0}.ah-main .alt-convo{flex:1;min-height:0;margin:0 -12px 0 0}
-.ah-rail{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.ah-moments{display:flex;flex-wrap:wrap;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
-.ah-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);cursor:pointer}
-.ah-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.ah-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}`;
-/** The rail of moments, Play / Pause, and the note for the moment shown. */
+.ah-rail{display:flex;align-items:center;gap:8px 12px}.ah-moments{position:relative;display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
+.ah-rail>.alt-switch-row{flex:none}
+.ah-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);white-space:nowrap;cursor:pointer}
+.ah-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.ah-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px}
+@media (max-width:760px){
+.ah-rail{position:sticky;top:var(--demo-sticky-top,0px);z-index:3;margin:-6px 0;padding:6px 0;background:var(--surface-ground)}
+.ah-moments{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;scroll-padding:0 24px}.ah-moments::-webkit-scrollbar{display:none}
+.ah-moment{height:32px}
+.ah-moments[data-more-end]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+.ah-moments[data-more-start]{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent)}
+.ah-moments[data-more-start][data-more-end]{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+.ah-frame{height:clamp(460px,calc(100svh - var(--demo-sticky-top,0px) - 200px),640px)}}`;
+/** On a phone the rail scrolls sideways: keep the current moment in view (without scrolling the page) and fade the edge
+ * that has more, as a narrow TabsList does. */
+function useRail(k) {
+  const rail = React.useRef(/** @type {HTMLOListElement | null} */ (null));
+  const [edges, setEdges] = React.useState({ start: false, end: false });
+  const scan = React.useCallback(() => {
+    const l = rail.current;
+    if (!l) return;
+    const more = l.scrollWidth - l.clientWidth > 1, n = { start: more && l.scrollLeft > 1, end: more && l.scrollLeft < l.scrollWidth - l.clientWidth - 1 };
+    setEdges((p) => (p.start === n.start && p.end === n.end ? p : n));
+  }, []);
+  React.useLayoutEffect(() => {
+    const l = rail.current, el = /** @type {HTMLElement | null | undefined} */ (l?.children[k]);
+    if (l && el && l.scrollWidth > l.clientWidth + 1) {
+      const left = el.offsetLeft - 28, right = el.offsetLeft + el.offsetWidth + 28 - l.clientWidth;
+      if (l.scrollLeft > left) l.scrollLeft = Math.max(0, left); else if (l.scrollLeft < right) l.scrollLeft = right;
+    }
+    scan();
+  }, [k, scan]);
+  React.useEffect(() => {
+    const l = rail.current;
+    if (!l) return;
+    const ro = new ResizeObserver(scan); ro.observe(l);
+    return () => ro.disconnect();
+  }, [scan]);
+  return { ref: rail, onScroll: scan, 'data-more-start': edges.start ? '' : undefined, 'data-more-end': edges.end ? '' : undefined };
+}
+/** The rail of moments above the harness, and the note for the moment shown. */
 function App({ start = 3 }) {
   const [k, setK] = React.useState(start);
-  const [playing, setPlaying] = React.useState(false);
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState('');
-  React.useEffect(() => {
-    if (!playing) return;
-    if (k >= MOMENTS.length - 1) { setPlaying(false); return; }
-    const t = setTimeout(() => setK(k + 1), 2400);
-    return () => clearTimeout(t);
-  }, [playing, k]);
-  const go = (/** @type {number} */ i) => { setK(i); setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`); };
+  const rail = useRail(k);
+  const root = React.useRef(/** @type {HTMLDivElement | null} */ (null));
+  const go = (/** @type {number} */ i) => {
+    setK(i); setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`);
+    // With the rail stuck to the top of a phone, the moment's change can be scrolled away above it: bring it back.
+    requestAnimationFrame(() => {
+      const r = root.current, rail = r?.querySelector('.ah-rail'), next = r?.querySelector('.ah-note') ?? r?.querySelector('.ah-frame');
+      if (!rail || !next) return;
+      const gap = next.getBoundingClientRect().top - rail.getBoundingClientRect().bottom;
+      if (gap < 0) scrollBy({ top: gap - 12, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  };
   return (
-    <div className="ah">
+    <div className="ah" ref={root}>
       <style>{CSS}</style>
-      <div className="ah-frame"><Harness k={k} /></div>
       <nav className="ah-rail" aria-label="Moments in the run">
-        <A.Button size="sm" variant="secondary" onClick={() => { if (k >= MOMENTS.length - 1) setK(0); setPlaying(!playing); }}>{playing ? 'Pause' : 'Play'}</A.Button>
-        <ol className="ah-moments">
+        <ol className="ah-moments" {...rail}>
           {MOMENTS.map((m, i) => (
-            <li key={m.id}><button type="button" className="ah-moment" aria-current={i === k ? 'step' : undefined} onClick={() => { setPlaying(false); go(i); }}>{m.name}</button></li>
+            <li key={m.id}><button type="button" className="ah-moment" aria-current={i === k ? 'step' : undefined} onClick={() => go(i)}>{m.name}</button></li>
           ))}
         </ol>
         <A.Switch checked={notes} onCheckedChange={setNotes} label="Notes" />
       </nav>
       {notes && <A.Alert className="ah-note" role="note" title={MOMENTS[k].name}>{MOMENTS[k].note}</A.Alert>}
+      <div className="ah-frame"><Harness k={k} /></div>
       <span className="alt-sr" role="status">{said}</span>
     </div>
   );

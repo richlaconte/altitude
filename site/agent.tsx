@@ -35,7 +35,7 @@ function Page() {
           <div className="wrap">
             <div className="section-head">
               <h1 className="display" id="agent-title">Altitude for agents</h1>
-              <p className="lead">One agent run, “Add annual pricing to the pricing page”, played through a complete harness. The states that matter most only show up mid-run, for a second: jump to any of them below, or press Play. Every moment is drawn by the components as they ship; nothing here is a mock-up.</p>
+              <p className="lead">One agent run, “Add annual pricing to the pricing page”, played through a complete harness. The states that matter most only show up mid-run, for a second: pick any of them below. Every moment is drawn by the components as they ship; nothing here is a mock-up.</p>
             </div>
             <div className="agent-modes" role="group" aria-label="Modes">
               <Tabs variant="segmented" value={scheme} onValueChange={(v) => setScheme(v as BuiltInScheme)}>
@@ -52,7 +52,7 @@ function Page() {
           <div className="wrap">
             <div className="section-head">
               <h2 className="h2" id="orchestration-title">Many agents at once</h2>
-              <p className="lead">A lead agent splits “Launch annual pricing” into six tasks and runs them side by side. Supervising them is a different job from talking to one: you need to see who's waiting on you, answer without opening each agent, catch two agents changing the same file or one going in circles, and see where the time went. The decisions waiting on you lead, oldest first; the roster says every agent's state in words; the lanes show how long agents waited on you.</p>
+              <p className="lead">A lead agent splits “Launch annual pricing” into six tasks and runs them side by side. Supervising them is a different job from talking to one: see who's waiting on you, answer without opening each agent, catch two agents changing the same file or one going in circles, and see where the time went.</p>
             </div>
             <div id="orchestration"><Orchestration start={2} /></div>
           </div>
