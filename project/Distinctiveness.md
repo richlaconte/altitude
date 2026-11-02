@@ -2,7 +2,7 @@
 
 Interfaces built by agents now have a look people recognise and distrust: purple gradients, Inter, a centred hero, three icon cards, a sidebar and a grid of equal cards on every screen. Altitude is made for apps that agents write, so it can fall into that look twice: through its own defaults, and through what agents compose from them. This chapter says how it stays out, and how we keep checking, because the look keeps moving.
 
-The evidence is in **Research** ("Generated interfaces converge"). Every tell, with its sources and where Altitude stands, is in [`tells.json`](tells.json).
+The evidence is in **Research** ("Generated interfaces converge"). Every tell, with its sources and where Altitude stands, is in [`tells.json`](tells.json). Looking generated is half the problem; the other half is breaking established rules (hierarchy, labelling, recovery, honesty), which [Fundamentals](Fundamentals.md) covers.
 
 ## Why it happens
 
@@ -37,7 +37,7 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 
 ## Where Altitude stands
 
-The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page's labels were fixed the same day. The tells lint (#320) then found one the audit couldn't: Artifact and Terminal, added afterwards, had a coloured failure stripe. The rendered check (#321) then cleared LA6, and the stripe was removed (#374). The screen layout pattern (#323) moved LA5 from exposed to watch. That leaves 33 of 47 clear, 12 to watch, 2 unchecked and none exposed. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
+The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page's labels were fixed the same day. The tells lint (#320) then found one the audit couldn't: Artifact and Terminal, added afterwards, had a coloured failure stripe. The rendered check (#321) then cleared LA6, and the stripe was removed (#374). The screen layout pattern (#323) moved LA5 from exposed to watch. That left 33 of 47 clear, 12 to watch, 2 unchecked and none exposed. On 2026-11-01 Fundamentals added five tells from research on the rules generated interfaces break (CP5, CP6, CM9, BH3, BH4): 34 of 52 are clear, 15 to watch, 2 unchecked and 1 exposed. Nothing was rendered for it: it read `tokens.json`, `bundle.css`, `build/previews.txt`, `components/src` and `site/` at commit `6d40bf2`, with a regex prototype for the `lint` tells and the rest by hand.
 
 **Clear.** No purple, gradient text, coloured stripes, glows, bounce, count-ups, emoji, sparkles or marketese anywhere in the library or previews. The content rules, the forbidden light glows, the rejected severity bars (E8) and Charts' "the data is the record" already rule most of the tells out.
 
@@ -47,6 +47,8 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 
 **Measured.** The benchmark's first run ([report](https://github.com/richlaconte/altitude/blob/main/evals/distinctiveness/results/2026-10-31/REPORT.md), E154) found that building with Altitude doesn't yet move Claude's screens measurably away from what plain Claude or shadcn produce: beyond the noise between repeat builds of one prompt, they sit no further from the baselines than the baselines sit from each other, on any of the three distances. They do move toward Altitude's own previews, because agents start from the pattern fixtures. Up close (E155), the builds are no more distinct, and nearer to shadcn's builds than to the previews. On colour, Daylight and shadcn's neutral theme are the closest pair measured (CO8). The baseline so far is only Claude: v0 and Lovable builds are the next step.
 
+**Exposed: CM9, placeholders as labels.** `Field` gives every input a visible label, but several previews render a bare `Input` with only a placeholder (the scheme and density galleries, the Input preview, the invite popover). Agents copy previews, so it's exposed until they're fixed.
+
 **Watch:**
 
 - **CO3, Nightfall:** periwinkle on dark.
@@ -54,7 +56,7 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 - **TY2 and IC3:** Instrument Sans and Lucide, kept after review ([#325](https://github.com/richlaconte/altitude/issues/325)). Instrument Sans isn't on the catalogued lists; its serif sibling is, as the display accent Altitude doesn't use. The type rules (labels at 500, titles at 600, never 700, tracking that tightens with size, no all-caps labels) already differ from the generated defaults. Lucide is there because it shares the shipped icons' 24px grid and 1.75 stroke, and the icon tells that matter (CM4 icons in tinted squares, IC2 sparkles) are clear. Changing either would change every app built on Altitude, on practitioner evidence alone. Each quarterly audit checks whether generators have started reaching for either one.
 - **CM6:** props that mirror shadcn.
 - **CM2:** the dialog scrim's blur.
-- **Composition-dependent:** LA4 (equal-weight grids), LA7 (stat rows) and BH1 (design theater) depend on how apps compose the parts.
+- **Composition-dependent:** LA4 (equal-weight grids), LA7 (stat rows), BH1 (design theater), BH3 (deceptive patterns), BH4 (controls that do nothing) and CP6 (invented data) depend on how apps compose the parts.
 - **LA5, one frame for every screen:** the app skeleton was the only frame offered, and agents copied it for every screen. [Screen layout](framework/patterns/screen-layout.md) now chooses the frame from the task (records, list and detail, focused editor, guided flow, decision, report), with the skeleton as the records frame ([#323](https://github.com/richlaconte/altitude/issues/323)). The benchmark's first run put task range (how far a system's frames differ between tasks) in Altitude's favour but within noise, so it stays on watch until runs with more samples per brief.
 
 ## How it's checked
@@ -73,6 +75,7 @@ For a pull request that changes how something looks, the reviewer asks:
 - Does the screen have one focal point and one primary action?
 - Is every shadow a tier, with its word, icon, ARIA state or border?
 - Are the empty, loading and failed states designed, with words that name the object?
+- Does every link, button, field, image and heading name what it is? Can the person decline, close or leave as easily as they accept ([Fundamentals](Fundamentals.md))?
 - Is anything decorative (a gradient, a glow, an edge stripe, an animation) doing a job, or there to look designed?
 
 An intentional exception is marked where it is, with its reason: `/* tells-ignore: CM2 the scrim recedes the page behind a dialog */` on the line or the line above. A suppression without a reason doesn't count. In a preview or a page, a rendered warning is suppressed the same way, as an attribute on the element that contains it: `data-tells-ignore="LA4 a gallery of states, to compare"`. Use one only when the pattern does a job (the ColorPicker's hue track is the whole spectrum, purple included), and never to hide a tell that's waiting on a decision without naming its issue (`tells-ignore: CM3 pending a decision in #374`).

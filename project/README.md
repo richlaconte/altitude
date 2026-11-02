@@ -1,10 +1,10 @@
 Altitude is a design and HCI framework with React components where **height is the interface**. Its one idea: **the ground is the record.** Settled content sits on the ground. Anything live rises above it (something to press, something in your hand, something waiting to be confirmed, something that just changed), and the higher it goes, the more temporary it is and the more it asks of you. Anything that's waiting to receive sinks below it (a field, a slot, a track, a problem to fix). Motion only ever travels along that axis. Color schemes are swappable and the accent can be any color; the elevation language is the same in all of them.
 
-Read **Elevation** for the model and every signal height carries, **Motion** before animating anything, **Charts** before drawing data, **Mobile** before laying anything out for touch or a small screen, **Research** for the evidence and measurements behind each rule, **Theming** for schemes, custom accents and shadcn/ui, and **Distinctiveness** before composing a screen, so it doesn't read as generated.
+Read **Elevation** for the model and every signal height carries, **Motion** before animating anything, **Charts** before drawing data, **Mobile** before laying anything out for touch or a small screen, **Research** for the evidence and measurements behind each rule, **Theming** for schemes, custom accents and shadcn/ui, **Distinctiveness** before composing a screen, so it doesn't read as generated, and **Fundamentals** for the established design laws generated interfaces break, and where Altitude answers each.
 
 ## The laws
 
-1. **Altitude is importance.** The more something matters right now, the higher it sits. The primary action rests at level 2; one thing at level 5, ever.
+1. **Altitude is importance.** The more something matters right now, the higher it sits. The primary action rests at level 2; one thing at level 5, ever. Importance is the person's: what their task needs now, never what the business would rather they chose.
 2. **Push up, fill down.** Things you press are raised slabs whose height you can see (a wall under the face, a convex sheen); things you fill are openings cut into the page, their back wall showing until they're filled. Every choice control is built like the Switch: a trench, a raised thumb, and the accent pouring in behind it. Never style an input as raised or a button as sunk.
 3. **Tiers carry meaning, levels carry motion.** People read four tiers (sunk, ground, raised, floating) at a glance; the eight levels exist so hover and press can be *felt*. Never make two things mean different things by putting them one level apart.
 4. **Only what moves, moves.** A surface lifts on hover only if clicking it does something, and nothing raised moves until the pointer is on it: no climbing toward an approaching pointer, no leaning after it. Only openings anticipate (an empty field deepens as a hand comes near). Pressing returns it to ground; disabled things stay flush.
@@ -19,6 +19,24 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 - Speak to the person as "you"; the product speaks as "we" only in errors it caused ("We couldn't reach the server").
 - Errors say what happened and what to do, in one or two short sentences: "Use at least 5 characters." No "Oops", no exclamation marks, no emoji.
 - Status always carries a word and an icon, never color alone: "Operational", "Degraded", "Outage".
+- Links name where they go: "View March invoice", not "Learn more", "Read more" or "Click here". A link has to make sense read on its own, because screen readers list them that way.
+- An icon-only button's accessible name says the action and its object ("Delete invoice"), the words a visible label would use.
+- Every field has a visible label (`Field label`). A placeholder is an example of the answer, not a label: it disappears when typing starts. A search field with only an icon still takes an `aria-label`.
+- Alt text says what an image shows, in its context. A decorative image takes `alt=""`. Never "image", "photo" or a file name.
+- Headings describe the section under them. One `h1` per view (`PageHeader` draws it), levels never skip, and the page has `header`, `nav` and `main` landmarks.
+- Show real data or say there's none. Never fill a screen with invented figures, ratings, names or testimonials presented as real.
+
+## Honesty
+
+Generated interfaces add deceptive patterns nobody asked for (see [Fundamentals](Fundamentals.md)). Emphasis serves the person's task, so:
+
+- Urgency only when a real deadline exists, and say the deadline ("Your trial ends on 12 March"). No countdowns, "only 3 left" or "limited time" without a real limit behind them.
+- Declining is as easy to find as accepting. The choice the business prefers isn't the primary by default; when one choice is primary, the other is still a button, never a ghost, a faint link or a small grey word. Name it plainly ("Don't subscribe"), never with shame ("No thanks, I like paying full price").
+- Nothing that costs money, shares data or subscribes someone is pre-selected.
+- Every overlay can be dismissed with a close button and Escape. A decision the person must make has both choices as buttons.
+- Prices, terms and conditions sit beside the action they apply to, at body size. A total includes every charge the service has quoted.
+- Leaving takes no more steps than joining did. A cancellation can say what will be lost (as a downgrade's review does), never plead or offer a discount the person didn't get when they joined.
+- Reviews, ratings and counts shown as real are real, and say how they were chosen ("Most recent", "Highest rated").
 
 ## Color
 
@@ -36,6 +54,7 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 - `text-title` for page titles, `text-heading` for section, card and dialog titles, `text-body` for paragraphs, `text-label` for every control, `text-caption` for hints and metadata. `text-display` once per view, at most.
 - Weight carries hierarchy before size does: labels are 500, titles 600. Never use 700 in the interface.
 - Tracking tightens as size grows (−0.025em at 44px, −0.01em at 19px, 0 at 15px and below).
+- Prose runs 45 to 75 characters a line: cap paragraphs at `max-width: 70ch`, as `PageHeader`'s description does. Tables, code and data are exempt.
 
 ## Spacing and radius
 
@@ -47,6 +66,8 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 
 - Keyboard focus is a 2px solid `accent-ink` ring, 2px offset, on every control you press or switch; on walled controls (buttons, breadcrumb steps) it wraps the face and the wall together. Fields are the exception: a focused field, or an open select, is held, not targeted, so its floor lights; when you reached it by keyboard its own rim also darkens to a 2px neutral (`--alt-rim-held`), with no accent and no halo. A field you clicked into needs no rim, since you know where you clicked and the caret is there. Keyboard focus is never removed or replaced by a shadow alone. Focus also triggers the same one-level lift as hover, so keyboard and pointer users get the same feedback.
 - Hover: +1 level. Press: down to 0, sheen flattened. Selected: raised out of its well. Disabled: flush, `ink-faint`, no shadow. Invalid: sunk to trench depth on `critical-soft` with a `critical` rim. Loading: held pressed. Pending: hovering. Failed: dropped into a trench.
+- Everything that looks pressable does something. A raised, walled or underlined element with no action is a false signifier; make it flat text.
+- Don't disable a submit button to say a form isn't valid yet: a disabled button can't explain itself and keyboard users may never reach it. Let it be pressed and list what's missing (`ErrorSummary`). Disable it only while the submission is in flight, so it can't be sent twice.
 - Use `presence-1`–`presence-3` only for other people (their holds, cursors, selections), never for status or decoration.
 
 ## Iconography

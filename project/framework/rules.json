@@ -591,6 +591,63 @@
       "criteria": [],
       "reviewedAt": "2026-10-30",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-SEM-002",
+      "title": "Links, buttons, fields, images and headings name what they are",
+      "authority": "normative-standard",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Every link, button (including icon-only ones), form field, informative image and heading in a view.",
+      "exceptions": [
+        "A decorative image takes an empty alt and needs no name.",
+        "Repeated links in a list (\"Edit\") are acceptable when their accessible name adds the object (\"Edit invoice 1043\")."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "wcag22",
+        "altitude-fundamentals"
+      ],
+      "repair": "Name links by destination, not \"Learn more\" or \"Click here\"; name buttons by verb and object; give every field a visible label, never a placeholder alone; describe what an image shows or mark it decorative; make each heading describe its section, with one h1 per view, no skipped levels, and header, nav and main landmarks.",
+      "verification": [
+        "build/checks/tells-lint.mjs",
+        "manual: read the view's links, buttons and headings out of context with a screen reader's rotor or list"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#link-purpose-in-context",
+        "https://www.w3.org/TR/WCAG22/#headings-and-labels",
+        "https://www.w3.org/TR/WCAG22/#label-in-name",
+        "https://www.w3.org/TR/WCAG22/#non-text-content",
+        "https://www.w3.org/TR/WCAG22/#labels-or-instructions",
+        "https://www.w3.org/TR/WCAG22/#info-and-relationships"
+      ],
+      "reviewedAt": "2026-11-01",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-HONEST-001",
+      "title": "Emphasis serves the person's task: no false urgency, hidden terms, pre-selected costs or traps",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Sign-up, subscription, upgrade, checkout, discount, newsletter, consent and cancellation flows, and any overlay that asks for a decision.",
+      "exceptions": [
+        "A real deadline (a trial end, a session timeout) is stated with its time.",
+        "A recommendation is shown as a plate or a sentence, not with extra height or size."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-fundamentals",
+        "altitude-elevation",
+        "deceptive-patterns-llm"
+      ],
+      "repair": "Remove countdowns and scarcity claims with no real limit; make declining a button as findable as accepting, named plainly and never shaming; pre-select nothing that costs money, shares data or subscribes; give every overlay a close button and Escape; put prices and terms beside their action at body size; let people leave in no more steps than they joined; show only real reviews and counts, saying how they were chosen.",
+      "verification": [
+        "manual: review revenue, retention and data-collection flows for each deceptive pattern type, comparing the steps to accept and to decline"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-01",
+      "owner": "Altitude maintainers"
     }
   ]
 }
