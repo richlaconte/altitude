@@ -64,12 +64,11 @@ So "it renders and looks finished" proves nothing. Each rule below has to be che
 - **Content**: links name where they go; icon-only buttons name the action; every field has a visible label; alt text describes the image; headings describe their section, with one `h1` and landmarks; real data or none.
 - **Type**: prose runs 45 to 75 characters a line.
 - **States**: don't disable submit to say a form is invalid; everything that looks pressable does something.
-- **Tells**: CP5 (generic link and button names, linted), CM9 (placeholder as the only label), BH3 (deceptive patterns), BH4 (controls that look live but do nothing), CP6 (invented data presented as real).
+- **Tells**: CP5 (generic link and button names, linted), CM9 (placeholder as the only label; the previews that broke it were fixed in #394), BH3 (deceptive patterns), BH4 (controls that look live but do nothing), CP6 (invented data presented as real).
 - **Framework rules** `ALT-HONEST-001` and `ALT-SEM-002`, so agents using the installed guidance get them too.
 
 ## Still open
 
-- **Previews with placeholder-only fields.** Several previews in `build/previews.txt` render an `Input` with a placeholder and no label (the theme and density galleries, the Input preview, the invite popover). Agents copy previews, so CM9 is `exposed` until they're fixed. That fix is a separate issue.
 - **Deceptive patterns and heading structure have no automated check.** They're reviewed by people. A render check for overlays without a close control is a candidate.
 - **None of this is tested with people.** The study in Distinctiveness (#326) should include whether people find Altitude screens' decline and cancel paths as quickly as their accept paths.
 
