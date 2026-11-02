@@ -2,7 +2,10 @@
 
 > Altitude is a design and HCI framework for React web applications built by agents, published on npm as `altitude-design` (MIT, React 18.2 or 19). Its one idea: height is the interface, and the ground is the record. Settled content sits on the ground, anything live rises above it, and anything waiting to receive (a field, a slot, a track) sinks below it. It ships components, design tokens, task patterns with workflow hooks, and the rules for using them.
 
-This file covers {{base}} and describes version {{version}} as of {{date}}. Every link below is a plain Markdown, JSON or TypeScript file served from this site and rebuilt from the repository's `main` branch on each deploy. In a project that already has the package installed, `node_modules/altitude-design/dist/guidance/README.md` holds the same task guidance matched to the installed version, and `npx altitude patterns "<what you're building>"` finds the right contract.
+This file covers {{base}}. It describes the repository's `main` branch as of {{date}} (`package.json` version {{version}}), and every link below is a plain Markdown, JSON or TypeScript file served from this site and rebuilt from `main` on each deploy. The published npm package can be older than `main`, so in a project that has it installed, the installed package is the authority:
+
+- Check `node_modules/altitude-design/package.json` for the version, and the installed declarations (`node_modules/altitude-design/dist/types/index.d.ts`) for what it exports. If a component or hook listed here isn't exported there, the installed version predates it: don't import it or imitate it; use what's installed, or upgrade the package.
+- If `node_modules/altitude-design/dist/guidance/README.md` exists, it holds the task guidance matched to the installed version, and `npm exec -- altitude patterns "<what you're building>"` finds the right contract. Older versions ship neither.
 
 Rules agents most often get wrong (each is explained in the linked guides):
 
