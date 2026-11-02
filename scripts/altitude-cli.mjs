@@ -4,6 +4,7 @@ import { existsSync, lstatSync, readFileSync, writeFileSync, unlinkSync } from '
 import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
 import { resolve, dirname, relative, basename } from 'node:path';
+import { scan } from './source-check.mjs';
 const sha = value => createHash('sha256').update(value).digest('hex');
 const args=process.argv.slice(2);
 const command=args.shift() || 'help';
@@ -45,6 +46,7 @@ function block({pkg,guidance,index},created) {
     `On every screen: one AltitudeProvider around the app and altitude-design/altitude.css imported once; inputs sunk and buttons raised, never the reverse; one primary action per view; no amount carried by height (charts are flat ink on a ground line: no shadows, 3D, pie or donut); status never colour alone (a word and an icon too); colours, shadows and radii from the tokens, never hard-coded.\n`+
     `Discover tasks with npm exec -- altitude patterns "your intent"; explain a rule with npm exec -- altitude explain RULE-ID.\n`+
     `Record applicable states and application-owned persistence, permissions and navigation.\n`+
+    `After changing UI, run npm exec -- altitude check and fix its errors; it reports Altitude's rules that are certain from source (hard-coded colours, the stylesheet and provider, pie charts, OK and Submit labels) and lists likely problems for review.\n`+
     `Run the pattern checks and application service fixtures; distinguish deterministic defects, integration obligations and contextual review.\n`+
     `Use npm exec -- altitude doctor --json after package upgrades, and rerun npm exec -- altitude init to refresh this versioned pointer.\n`+
     components;
@@ -109,12 +111,28 @@ function doctor(context) {
   emit({command:'doctor',packageVersion:context.pkg.version,guidanceVersion:context.index.version,ok,scope:'Installation and managed pointers only; not accessibility or usability certification.',findings});
   if(!ok)process.exitCode=1;
 }
+function check(context) {
+  const target=resolve(cwd,args.find((v,i)=>!v.startsWith('--') && args[i-1]!=='--cwd') || (existsSync(resolve(cwd,'src'))?'src':'.'));
+  if(!existsSync(target)) throw new Error(`No such directory: ${target}`);
+  const tokensCss=resolve(context.guidance,'..','tokens.css');
+  const tokenNames=new Set(existsSync(tokensCss)?[...readFileSync(tokensCss,'utf8').matchAll(/--([\w-]+)\s*:/g)].map(m=>m[1]):[]);
+  const {files,findings}=scan(target,{tokenNames});
+  const ok=!findings.some(f=>f.kind==='deterministic');
+  const scope='Altitude rules certain from source text only. Not checked: anything that needs the page rendered (contrast, overflow, focus) or a person (accessibility, usability).';
+  if(json) emit({command:'check',version:context.pkg.version,target:relative(cwd,target)||'.',files,ok,scope,findings});
+  else {
+    for(const f of findings) console.log(`${f.ruleId} ${f.kind==='deterministic'?'error ':'review'} ${f.file?`${f.file}${f.line?':'+f.line:''}`:'(project)'}  ${f.observed}\n  ${f.repair}`);
+    console.log(`${findings.filter(f=>f.kind==='deterministic').length} errors, ${findings.filter(f=>f.kind!=='deterministic').length} to review in ${files} files. ${scope} Explain a rule: npm exec -- altitude explain RULE-ID`);
+  }
+  if(!ok)process.exitCode=1;
+}
 try {
-  if(command==='help'||command==='--help') console.log('altitude init --client codex|claude|all [--apply] [--remove]\naltitude patterns [intent] [--json]\naltitude explain RULE-ID [--json]\naltitude doctor [--json]\nAll commands resolve the installed package from --cwd PATH (default current directory).');
+  if(command==='help'||command==='--help') console.log('altitude init --client codex|claude|all [--apply] [--remove]\naltitude patterns [intent] [--json]\naltitude explain RULE-ID [--json]\naltitude doctor [--json]\naltitude check [dir] [--json]\nAll commands resolve the installed package from --cwd PATH (default current directory).');
   else {
     const context=installed();
     if(command==='init')init(context);
     else if(command==='doctor')doctor(context);
+    else if(command==='check')check(context);
     else if(command==='patterns') {
       const words=args.filter((v,i)=>!v.startsWith('--') && args[i-1]!=='--cwd').join(' ').toLowerCase().split(/\W+/).filter(Boolean);
       const patterns=context.index.patterns.map(p=>({...p,score:words.reduce((n,w)=>n+(p.intents.some(i=>i===w||i.startsWith(w))?1:0),0)})).filter(p=>!words.length||p.score).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));

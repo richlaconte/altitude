@@ -9,6 +9,7 @@ npm exec -- altitude init --client claude --apply
 npm exec -- altitude patterns "edit settings" --json
 npm exec -- altitude explain ALT-EDIT-001
 npm exec -- altitude doctor --json
+npm exec -- altitude check --json
 npm exec -- altitude init --client codex --remove
 npm exec -- altitude init --client codex --remove --apply
 ```
@@ -19,4 +20,4 @@ The Codex adapter writes a compact routing block to project `AGENTS.md` (or an e
 
 Mechanisms verified against official documentation on 2026-10-23: [Codex AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md) describes root-to-working-directory instruction discovery, override precedence and size limits; [Claude Code memory](https://code.claude.com/docs/en/memory) documents project `CLAUDE.md` loading and `/context` inspection. The adapter tests verify files and round trips, not successful behavior of every client release. Claude Code also documents AGENTS.md support; CLAUDE.md remains the explicit adapter target.
 
-`doctor` reports stable rule IDs, observed evidence, expected behavior, repairs and verification. It returns a failing exit code only for deterministic installation/setup defects; service integration and contextual obligations remain visibly unverified. It does not inspect an application's service behavior or certify accessibility. Guidance remains usable offline through `altitude-design/guidance`, `altitude-design/guidance/*`, and physical `node_modules/altitude-design/dist/guidance` files. Tooling stays outside browser imports.
+`doctor` reports stable rule IDs, observed evidence, expected behavior, repairs and verification. It returns a failing exit code only for deterministic installation/setup defects; service integration and contextual obligations remain visibly unverified. It does not inspect an application's service behavior or certify accessibility. `check [dir]` (default `src`, else the project) scans an application's own source for Altitude's rules that are certain from text: hard-coded colours instead of tokens (`ALT-TOKEN-001`), the stylesheet and `AltitudeProvider` (`ALT-SETUP-002`, `ALT-SETUP-003`), pie and donut charts (`ALT-CHART-001`) and buttons labelled OK or Submit (`ALT-COPY-001`). Those fail the run. Several primary buttons in one file (`ALT-PRIMARY-001`) and elevation overrides on controls (`ALT-VISUAL-004`) are listed for review and never fail. A finding a team keeps is marked `altitude-ignore: <ID> <reason>` on its line or the line above. It reads text only: nothing that needs the page rendered or a person is checked. Guidance remains usable offline through `altitude-design/guidance`, `altitude-design/guidance/*`, and physical `node_modules/altitude-design/dist/guidance` files. Tooling stays outside browser imports.

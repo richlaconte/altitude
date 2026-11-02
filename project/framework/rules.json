@@ -648,6 +648,161 @@
       "criteria": [],
       "reviewedAt": "2026-11-01",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-TOKEN-001",
+      "title": "Colours come from the tokens, not literals",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Colour values in an application's CSS declarations, inline styles and colour props.",
+      "exceptions": [
+        "Defining tokens: a custom property (--brand: #…) or a custom scheme's token entries.",
+        "AltitudeProvider accent, which takes a colour literal by design.",
+        "A colour that must be literal (a third-party brand mark), marked altitude-ignore: ALT-TOKEN-001 with the reason."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-design-guide"
+      ],
+      "repair": "Use a token (var(--ink-muted), var(--accent), var(--surface-raised)). A brand colour goes to AltitudeProvider accent; a full palette to a custom scheme.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-02",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-SETUP-002",
+      "title": "Altitude's stylesheet is imported",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "An application that imports components from altitude-design.",
+      "exceptions": [
+        "A page that loads the stylesheet with a <link> outside the scanned sources."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-design-guide"
+      ],
+      "repair": "Import altitude-design/altitude.css (or altitude.no-fonts.css) once at the app's entry.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-02",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-SETUP-003",
+      "title": "The app is wrapped in AltitudeProvider",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "An application that imports components from altitude-design.",
+      "exceptions": [
+        "Several providers on purpose (separate React roots, previews): reported for review, not as an error."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-design-guide"
+      ],
+      "repair": "Render one AltitudeProvider around the whole app; it sets the scheme and hosts dialogs and toasts.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-02",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CHART-001",
+      "title": "No pie or donut charts",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Charts drawn with recharts, react-chartjs-2, Chart.js, ECharts or Nivo in an Altitude application.",
+      "exceptions": [],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-charts"
+      ],
+      "repair": "Show a part of a whole as a stacked BarChart or a segmented Meter: angle and area are read less accurately than length.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-02",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-COPY-001",
+      "title": "Buttons name their outcome, never OK or Submit",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Button labels written as literal text.",
+      "exceptions": [
+        "A label computed at runtime is not checked."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-design-guide"
+      ],
+      "repair": "Start with a verb and name the outcome: \"Save changes\", \"Send invite\".",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-02",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-PRIMARY-001",
+      "title": "One primary action per view",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Files with more than one primary Button; they may or may not be on screen together.",
+      "exceptions": [
+        "Primary buttons in different views, steps or dialogs that are never shown together."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-design-guide",
+        "altitude-elevation"
+      ],
+      "repair": "Keep one primary, the action the task leads to; make the others secondary or ghost.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-02",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-VISUAL-004",
+      "title": "Controls keep Altitude's elevation",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Shadow or transform overrides on Input, Textarea, Select, Combobox, Button, Switch or Checkbox.",
+      "exceptions": [
+        "An override that doesn't change the control's apparent height."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-elevation"
+      ],
+      "repair": "Remove the override: a control's height says whether you press it or fill it. Use its variant and size props.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-02",
+      "owner": "Altitude maintainers"
     }
   ]
 }
