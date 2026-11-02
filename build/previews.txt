@@ -117,7 +117,7 @@ function App() {
           <h4>{typeof s === 'string' ? s[0].toUpperCase() + s.slice(1) : 'Custom'}</h4>
           <small>{accent ? 'accent="' + accent + '"' : typeof s === 'string' ? 'scheme="' + s + '"' : 'scheme={paper}'}</small>
           <A.Button variant="primary" size="sm">Publish</A.Button>
-          <A.Input size="sm" placeholder="Search" />
+          <A.Input size="sm" placeholder="Search" aria-label="Search" />
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><A.Switch defaultChecked aria-label="Enabled" /><A.Badge tone="accent">Beta</A.Badge></div>
           <div className="series">{[1, 2, 3, 4, 5, 6].map((n) => <span key={n} style={{ background: `var(--data-${n})` }} />)}<small>{accent ? 'data-1…6, led by the accent' : 'data-1…6'}</small></div>
         </div></A.AltitudeProvider>
@@ -130,7 +130,7 @@ function App() {
             <h4>{d === 'compact' ? 'Compact' : 'Comfortable'}</h4>
             <small>density="{d}"</small>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><A.Button variant="primary">Save</A.Button><A.Button>Cancel</A.Button></div>
-            <A.Input placeholder="Search" />
+            <A.Input placeholder="Search" aria-label="Search" />
             <A.Tabs defaultValue="a"><A.TabsList aria-label={'Sections, ' + d}><A.TabsTrigger value="a">General</A.TabsTrigger><A.TabsTrigger value="b">Members</A.TabsTrigger></A.TabsList></A.Tabs>
           </div></A.AltitudeProvider>
         ))}
@@ -200,7 +200,7 @@ function App() {
   );
 }
 
-=== Input | <!-- @dsCard group="Inputs" height=320 subtitle="An opening: you see its wall until it's filled" -->
+=== Input | <!-- @dsCard group="Inputs" height=440 subtitle="An opening: you see its wall until it's filled" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 640px; }
 --- jsx
@@ -210,11 +210,11 @@ function App() {
   return (
     <div className="col">
       <div className="grid">
-        <A.Input placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <A.Input defaultValue="mara@northwind.dev" />
-        <A.Input placeholder="Search projects" leading={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>} trailing={<A.Kbd>/</A.Kbd>} />
-        <A.Input defaultValue="not-an-email" invalid />
-        <div style={{ gridColumn: '1 / -1' }}><A.Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={80} placeholder="Leave a note for your team…" /></div>
+        <A.Field label="Email address"><A.Input type="email" placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} /></A.Field>
+        <A.Field label="Billing email"><A.Input type="email" defaultValue="mara@northwind.dev" /></A.Field>
+        <A.Field label="Search projects"><A.Input type="search" placeholder="Project name" leading={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>} trailing={<A.Kbd>/</A.Kbd>} /></A.Field>
+        <A.Field label="Invite by email" error="Enter an email address, like name@company.com."><A.Input type="email" defaultValue="not-an-email" /></A.Field>
+        <div style={{ gridColumn: '1 / -1' }}><A.Field label="Note"><A.Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={80} placeholder="Leave a note for your team…" /></A.Field></div>
       </div>
       <p className="cap">An empty field shows its inside wall below the top edge, and deepens as your pointer comes near. Type and the floor rises flush with the page. Invalid drops it to trench depth.</p>
     </div>
@@ -769,7 +769,7 @@ function App() {
     <A.Popover defaultOpen aria-label="Share" trigger={<A.Button>Share</A.Button>}>
       <div className="col" style={{ width: 280, gap: 12 }}>
         <b style={{ font: '600 14px/20px var(--font-sans)' }}>Invite to project</b>
-        <A.Input size="sm" placeholder="name@company.com" />
+        <A.Field label="Email address"><A.Input size="sm" type="email" placeholder="name@company.com" /></A.Field>
         <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}><A.Button size="sm" variant="primary">Send invite</A.Button></div>
       </div>
     </A.Popover>
@@ -1138,7 +1138,7 @@ function App() {
       </div>
       <div className="cell">
         <h4>Relevance · focus+context</h4>
-        <A.Input size="sm" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter" />
+        <A.Input size="sm" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter" aria-label="Filter projects" />
         <div className="tiles">{names.map((n) => <A.Surface key={n} level={1} className="tile" relevance={!q ? undefined : n.toLowerCase().includes(q.toLowerCase()) ? 'match' : 'miss'}>{n}</A.Surface>)}</div>
       </div>
     </div>
@@ -1158,7 +1158,7 @@ function App() {
 function Ladder() {
   return <>
     <div className="row5">{[-2, -1, 0, 1, 2, 3, 5].map((l) => <A.Surface key={l} level={l} className="t">{l}</A.Surface>)}</div>
-    <div className="ctl"><A.Button variant="primary" size="sm">Publish</A.Button><A.Button size="sm">Preview</A.Button><A.Input size="sm" placeholder="Search" style={{ width: 104 }} /><A.Switch defaultChecked aria-label="On" /></div>
+    <div className="ctl"><A.Button variant="primary" size="sm">Publish</A.Button><A.Button size="sm">Preview</A.Button><A.Input size="sm" placeholder="Search" aria-label="Search" style={{ width: 104 }} /><A.Switch defaultChecked aria-label="On" /></div>
   </>;
 }
 function App() {
@@ -3091,7 +3091,7 @@ function App() {
 --- jsx
 function App() {
   const [edit, setEdit] = React.useState(true);
-  return /* @__PURE__ */ React.createElement("div", { className: "page" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(true) }, "Edit project"), /* @__PURE__ */ React.createElement(A.Sheet, { side: "bottom", size: "sm", trigger: /* @__PURE__ */ React.createElement(A.Button, null, "Share") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Share Northwind"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Anyone with the link can view the latest deployment.")), /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "https://acme.dev/n/8dc01b2", readOnly: true }), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Copy link"))), /* @__PURE__ */ React.createElement(A.Sheet, { side: "left", size: "sm", modal: false, trigger: /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost" }, "Filters") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Filters"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "The page stays usable while this is open.")), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Production", defaultChecked: true }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Preview" }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Failed builds only" }))), /* @__PURE__ */ React.createElement("div", { className: "grid", "data-tells-ignore": "LA4 placeholder page behind the overlay" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement(A.Sheet, { open: edit, onOpenChange: setEdit }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Edit project"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Changes apply to every environment.")), /* @__PURE__ */ React.createElement("div", { className: "form" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Project name" }, /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "Northwind" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Description", hint: "Shown on the project's card." }, /* @__PURE__ */ React.createElement(A.Textarea, { placeholder: "What is this project for?" })), /* @__PURE__ */ React.createElement(A.Switch, { label: "Deploy previews for every branch", defaultChecked: true })), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => setEdit(false) }, "Cancel"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(false) }, "Save changes"))));
+  return /* @__PURE__ */ React.createElement("div", { className: "page" }, /* @__PURE__ */ React.createElement("div", { className: "row" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(true) }, "Edit project"), /* @__PURE__ */ React.createElement(A.Sheet, { side: "bottom", size: "sm", trigger: /* @__PURE__ */ React.createElement(A.Button, null, "Share") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Share Northwind"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Anyone with the link can view the latest deployment.")), /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "https://acme.dev/n/8dc01b2", readOnly: true, "aria-label": "Share link" }), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Copy link"))), /* @__PURE__ */ React.createElement(A.Sheet, { side: "left", size: "sm", modal: false, trigger: /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost" }, "Filters") }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Filters"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "The page stays usable while this is open.")), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Production", defaultChecked: true }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Preview" }), /* @__PURE__ */ React.createElement(A.Checkbox, { label: "Failed builds only" }))), /* @__PURE__ */ React.createElement("div", { className: "grid", "data-tells-ignore": "LA4 placeholder page behind the overlay" }, /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null), /* @__PURE__ */ React.createElement(A.Card, null)), /* @__PURE__ */ React.createElement(A.Sheet, { open: edit, onOpenChange: setEdit }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Edit project"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Changes apply to every environment.")), /* @__PURE__ */ React.createElement("div", { className: "form" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Project name" }, /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "Northwind" })), /* @__PURE__ */ React.createElement(A.Field, { label: "Description", hint: "Shown on the project's card." }, /* @__PURE__ */ React.createElement(A.Textarea, { placeholder: "What is this project for?" })), /* @__PURE__ */ React.createElement(A.Switch, { label: "Deploy previews for every branch", defaultChecked: true })), /* @__PURE__ */ React.createElement(A.SheetFooter, null, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: () => setEdit(false) }, "Cancel"), /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => setEdit(false) }, "Save changes"))));
 }
 
 === NumberInput | <!-- @dsCard group="Inputs" height=360 subtitle="A number field with steppers in its end cap, units, and the locale's own way of writing numbers" -->
