@@ -15,6 +15,26 @@ export function inputs() {
   const refs = [...new Set([...patterns.flatMap(p=>[p.implementation,...p.examples,...p.verification]), ...rules.flatMap(r=>r.verification).filter(p=>!p.startsWith('manual:'))])].sort();
   return { base, patterns, refs, version: JSON.parse(readFileSync(resolve(root,'package.json'),'utf8')).version };
 }
+// Relative Markdown links: [text](target), not URLs, mailto or in-page anchors.
+export const relativeLinks = text => [...text.matchAll(/\]\((?!https?:|mailto:|#)([^)\s]+)\)/g)].map(m => ({ all: m[0], target: m[1] }));
+// A shipped document may link to a file the package doesn't ship. Such a link points at the same file on GitHub,
+// at this version's release tag, so it still matches the installed version. A link broken in the source fails.
+function relink(destination, version, sourceOf) {
+  const repo = JSON.parse(readFileSync(resolve(root,'package.json'),'utf8')).repository.url.replace(/^git\+/,'').replace(/\.git$/,'');
+  for (const path of listFiles(destination).filter(p => p.endsWith('.md'))) {
+    const file = relative(destination, path).replaceAll('\\','/');
+    let text = readFileSync(path,'utf8'), changed = false;
+    for (const { all, target } of relativeLinks(text)) {
+      const [pathPart, hash] = target.split('#');
+      if (existsSync(resolve(dirname(path), pathPart))) continue;
+      const source = relative(root, resolve(root, dirname(sourceOf(file)), pathPart)).replaceAll('\\','/');
+      if (!existsSync(resolve(root, source))) throw new Error(`${sourceOf(file)} links to ${target}, which doesn't exist`);
+      text = text.replace(all, `](${repo}/blob/v${version}/${source}${hash ? '#' + hash : ''})`);
+      changed = true;
+    }
+    if (changed) writeFileSync(path, text);
+  }
+}
 export function buildGuidance(destination = resolve(root,'dist/guidance')) {
   const {base,patterns,refs,version} = inputs();
   mkdirSync(destination,{recursive:true});
@@ -30,6 +50,10 @@ export function buildGuidance(destination = resolve(root,'dist/guidance')) {
     cpSync(resolve(root,ref),resolve(destination,target));
     snapshots[ref]=target;
   }
+  relink(destination, version, (file) => file.startsWith('references/') ? file.slice('references/'.length)
+    : file.startsWith('visual/') ? `project/${file.slice('visual/'.length)}`
+    : file === 'agent-setup.md' ? 'docs/framework/AGENT-SETUP.md'
+    : `project/framework/${file}`);
   const sourceFiles = [...listFiles(base),...refs.map(p=>resolve(root,p)),resolve(root,'project/Elevation.md'),resolve(root,'project/Research.md'),resolve(root,'project/Fundamentals.md'),resolve(root,'docs/framework/AGENT-SETUP.md')].sort();
   const sourceHashes = Object.fromEntries(sourceFiles.map(p=>[relative(root,p).replaceAll('\\','/'),hash(readFileSync(p))]));
   const index = { schemaVersion:1,package:'altitude-design',version,entry:'README.md',patterns:patterns.map(p=>({id:p.id,title:p.title,intents:p.intents,purpose:p.purpose,document:p.document,metadata:`patterns/${p.id}.json`,rules:p.rules})), references:snapshots,sourceHashes };
