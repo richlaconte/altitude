@@ -51,7 +51,7 @@ function Page() {
         <section className="band agent-band" aria-labelledby="orchestration-title">
           <div className="wrap">
             <div className="section-head">
-              <h2 className="headline" id="orchestration-title">Many agents at once</h2>
+              <h2 className="h2" id="orchestration-title">Many agents at once</h2>
               <p className="lead">A lead agent splits “Launch annual pricing” into six tasks and runs them side by side. Supervising them is a different job from talking to one: you need to see who's waiting on you, answer without opening each agent, catch two agents changing the same file or one going in circles, and see where the time went. The decisions waiting on you lead, oldest first; the roster says every agent's state in words; the lanes show how long agents waited on you.</p>
             </div>
             <div id="orchestration"><Orchestration start={2} /></div>

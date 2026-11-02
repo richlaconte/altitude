@@ -1,58 +1,55 @@
+// The landing page. Its design record (Distinctiveness rule 2, screen layout):
+//   Task:    a React developer, or an agent working for one, decides whether Altitude fits their app, then installs it.
+//   Lead:    the one idea, the ground is the record, shown working in real components, not described.
+//   Primary: Browse components (one per view; the install command is a CodeBlock with its own ghost CopyButton).
+//   Next:    install, or read the guide.
+// Everything on it is built from the shipped components and tokens. It adds no tier: bands are the ground, parted by
+// `line`; code is flush (CodeBlock); copying confirms in its button (CopyButton); choices are switches (ColorSwatchPicker).
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   AltitudeProvider, Avatar, AvatarGroup, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle,
-  DataTable, Field, Input, Kbd, Progress, RevealGroup, Select, Surface, Switch, Tabs, TabsContent, TabsList, TabsTrigger,
-  Toaster, toast,
+  CodeBlock, ColorSwatchPicker, DataTable, Field, InlineEdit, Input, Kbd, Meter, RevealGroup, Select, Surface, Switch,
+  Tabs, TabsList, TabsTrigger, Toaster, toast,
 } from '../project/components/src/index';
+import pkg from '../package.json';
 import type { BuiltInScheme } from '../project/components/src/index';
 type Level = NonNullable<React.ComponentProps<typeof Surface>['level']>;
-import { arrivalCode, insideAvatar, insideAwait, install, quickStart, yourCode } from './snippets';
+import { agentSetup, arrivalCode, insideAvatar, insideAwait, installTabs, quickStart, yourCode } from './snippets';
 
+const REPO = 'https://github.com/richlaconte/altitude';
 const LINKS = {
   storybook: 'https://richlaconte.github.io/altitude/storybook/',
-  github: 'https://github.com/richlaconte/altitude',
-  guide: 'https://github.com/richlaconte/altitude/blob/main/project/README.md',
-  awaitDocs: 'https://github.com/richlaconte/altitude/blob/main/project/components/Await/README.md',
+  github: REPO,
+  guide: `${REPO}/blob/main/project/README.md`,
+  elevation: `${REPO}/blob/main/project/Elevation.md`,
+  charts: `${REPO}/blob/main/project/Charts.md`,
+  research: `${REPO}/blob/main/project/Research.md`,
+  distinctiveness: `${REPO}/blob/main/project/Distinctiveness.md`,
+  framework: `${REPO}/blob/main/project/framework/README.md`,
+  awaitDocs: `${REPO}/blob/main/project/components/Await/README.md`,
+  benchmark: `${REPO}/blob/main/evals/distinctiveness/results/2026-10-31/REPORT.md`,
   npm: 'https://www.npmjs.com/package/altitude-design',
 };
+const story = (id: string) => `${LINKS.storybook}?path=/story/${id}--preview`;
 
-/* ───────────── a small TSX highlighter: comments, strings, keywords, tags ───────────── */
+/* ───────────── code: CodeBlock is the record; Altitude ships no highlighter, so this small one returns its tok-* classes ───────────── */
 
-const TOKEN = /(\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*)|('[^'\n]*'|"[^"\n]*"|`[^`]*`)|(<\/?)([A-Za-z][\w.]*)|\b(export|default|function|const|let|return|if|import|from|throw|as|type|new|null|true|false)\b|\b(\d[\d_]*(?:ms|px)?)\b/g;
-function Code({ code, label }: { code: string; label: string }) {
+const TOKEN = /(\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*|^#[^\n]*)|('[^'\n]*'|"[^"\n]*"|`[^`]*`)|(<\/?)([A-Za-z][\w.]*)|\b(export|default|function|const|let|return|if|import|from|throw|as|type|new|null|true|false)\b/gm;
+function syntax(code: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
   let last = 0, m: RegExpExecArray | null, i = 0;
   TOKEN.lastIndex = 0;
   while ((m = TOKEN.exec(code))) {
     if (m.index > last) parts.push(code.slice(last, m.index));
-    if (m[1]) parts.push(<span key={i++} className="tk-c">{m[1]}</span>);
-    else if (m[2]) parts.push(<span key={i++} className="tk-s">{m[2]}</span>);
-    else if (m[4]) parts.push(m[3], <span key={i++} className={/^[A-Z]/.test(m[4]) ? 'tk-t' : 'tk-h'}>{m[4]}</span>);
-    else if (m[5]) parts.push(<span key={i++} className="tk-k">{m[5]}</span>);
-    else if (m[6]) parts.push(<span key={i++} className="tk-n">{m[6]}</span>);
+    if (m[1]) parts.push(<span key={i++} className="tok-comment">{m[1]}</span>);
+    else if (m[2]) parts.push(<span key={i++} className="tok-string">{m[2]}</span>);
+    else if (m[4]) parts.push(m[3], <span key={i++} className="tok-keyword">{m[4]}</span>);
+    else if (m[5]) parts.push(<span key={i++} className="tok-keyword">{m[5]}</span>);
     last = TOKEN.lastIndex;
   }
   parts.push(code.slice(last));
-  return <pre className="code" tabIndex={0} aria-label={label}><code>{parts}</code></pre>;
-}
-
-function CopyLine({ text }: { text: string }) {
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(text); toast({ title: 'Copied to your clipboard', description: text, tone: 'positive', duration: 2400 }); }
-    catch {
-      const r = document.createRange(); const el = document.getElementById('install-line');
-      if (el) { r.selectNodeContents(el); const s = getSelection(); s?.removeAllRanges(); s?.addRange(r); }
-      toast({ title: 'Press ⌘C or Ctrl+C to copy', duration: 2400 });
-    }
-  };
-  return (
-    <div className="install">
-      <span className="install-prompt" aria-hidden="true">$</span>
-      <code id="install-line">{text}</code>
-      <Button size="sm" variant="ghost" onClick={copy}>Copy</Button>
-    </div>
-  );
+  return parts;
 }
 
 /* ───────────── hero: the ladder itself ───────────── */
@@ -61,9 +58,9 @@ const RUNGS: { level: Level; tier: string; what: string }[] = [
   { level: 5, tier: 'Floating', what: 'Dialog: one thing at the summit, ever' },
   { level: 4, tier: 'Floating', what: 'Sheet, toast' },
   { level: 3, tier: 'Floating', what: 'Menu, popover, a card in your hand' },
-  { level: 2, tier: 'Raised', what: 'Primary action, hover' },
+  { level: 2, tier: 'Raised', what: 'The primary action, a hover' },
   { level: 1, tier: 'Raised', what: 'Card, button' },
-  { level: 0, tier: 'Ground', what: 'The record: rows, badges, alerts' },
+  { level: 0, tier: 'Ground', what: 'The record: rows, labels, settled text' },
   { level: -1, tier: 'Sunk', what: 'An empty field, a slot' },
   { level: -2, tier: 'Sunk', what: 'An invalid field, a trench' },
 ];
@@ -86,7 +83,50 @@ function Ladder() {
   );
 }
 
-/* ───────────── the Suspense demo ───────────── */
+/* ───────────── the idea, working: one value through every reading ───────────── */
+
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+function OneValue() {
+  const [title, setTitle] = React.useState('Faster cold starts');
+  const [fail, setFail] = React.useState(false);
+  const [slow, setSlow] = React.useState(true);
+  return (
+    <div className="idea-demo">
+      <div className="idea-record">
+        <p className="idea-record-meta">Release note · Week 44</p>
+        <InlineEdit label="Release title" trigger="field" hint="seam" value={title} onValueChange={setTitle} required maxLength={60}
+          onSave={async (draft) => {
+            await wait(slow ? 1400 : 120);
+            return fail ? { ok: false, error: 'We couldn’t reach the server. Your text is kept; try again.' } : { ok: true, value: draft.trim() };
+          }} />
+        <p className="idea-record-body">Cold starts are down 38% across all regions.</p>
+      </div>
+      <div className="idea-controls">
+        <Switch label="Slow network" checked={slow} onCheckedChange={setSlow} />
+        <Switch label="Make the next save fail" checked={fail} onCheckedChange={setFail} />
+      </div>
+    </div>
+  );
+}
+
+const READINGS: { name: string; what: string }[] = [
+  { name: 'Editing opens a well.', what: 'Things you fill are cut into the page; the text stays exactly where it was.' },
+  { name: 'Saving hovers.', what: 'A write in flight is live, so it lifts, but only after 300ms: a fast save never shows as pending.' },
+  { name: 'Saved lands, and glows.', what: 'The accepted value settles back to the ground with an afterglow that fades over 8 seconds.' },
+  { name: 'Failing drops into a trench.', what: 'It says what happened in words and keeps your text for the retry.' },
+];
+
+const LAWS = [
+  ['Altitude is importance.', 'The primary action rests at level 2; one thing at level 5, ever.'],
+  ['Push up, fill down.', 'Things you press are raised slabs with a wall; things you fill are openings.'],
+  ['Tiers carry meaning, levels carry motion.', 'People read four tiers at a glance; the eight levels make hover and press felt.'],
+  ['Only what moves, moves.', 'A surface lifts on hover only if clicking it does something.'],
+  ['Live things are above, settled things are on the ground.', 'New content arrives lifted and settles; pending writes hover until they land.'],
+  ['The light never moves.', 'One light, straight above. Shadows fall down and are always darker than the ground.'],
+  ['Height never travels alone.', 'Every signal also has a word, an icon, an ARIA state or a border.'],
+];
+
+/* ───────────── loading: skeletons you don't write ───────────── */
 
 type Latency = 'fast' | 'typical' | 'slow' | 'uneven';
 type PartKey = 'user' | 'presence' | 'deploys';
@@ -218,7 +258,7 @@ function SuspenseDemo() {
         </p>
         <div className="panel-actions">
           <Switch label="Land together" checked={together} onCheckedChange={(on) => { setTogether(on); reload(); }} />
-          <Button variant="primary" onClick={() => reload()} aria-describedby="reload-state">Reload data</Button>
+          <Button variant="secondary" onClick={() => reload()} aria-describedby="reload-state">Reload data</Button>
           <span id="reload-state" className="alt-sr" aria-live="polite">{all ? 'All parts landed.' : ''}</span>
         </div>
       </Surface>
@@ -226,70 +266,69 @@ function SuspenseDemo() {
   );
 }
 
-function CodeTabs() {
-  return (
-    <Tabs defaultValue="yours" className="code-tabs">
-      <TabsList aria-label="Code">
-        <TabsTrigger value="yours">Your code</TabsTrigger>
-        <TabsTrigger value="avatar">Avatar</TabsTrigger>
-        <TabsTrigger value="arrival">useArrival</TabsTrigger>
-        <TabsTrigger value="await">Await</TabsTrigger>
-      </TabsList>
-      <TabsContent value="yours"><Code label="Your code" code={yourCode} /></TabsContent>
-      <TabsContent value="avatar"><Code label="Inside Avatar" code={insideAvatar} /></TabsContent>
-      <TabsContent value="arrival"><Code label="useArrival" code={arrivalCode} /></TabsContent>
-      <TabsContent value="await"><Code label="Await" code={insideAwait} /></TabsContent>
-    </Tabs>
-  );
-}
+/* ───────────── evidence: each rule with the finding behind it ───────────── */
 
-/* ───────────── the laws, each with a specimen ───────────── */
-
-function Laws() {
-  const [opened, setOpened] = React.useState(0);
-  return (
-    <div className="laws">
-      <Card className="law">
-        <CardHeader><CardTitle>Push up, fill down</CardTitle><CardDescription>Things you press are raised slabs with a wall under them. Things you fill are openings cut into the page.</CardDescription></CardHeader>
-        <CardContent><div className="specimen"><Input aria-label="Project name" placeholder="Project name" /><Button>Create</Button></div></CardContent>
-      </Card>
-      <Card className="law">
-        <CardHeader><CardTitle>Altitude is importance</CardTitle><CardDescription>The primary action rests at level 2, secondary at 1, ghost on the ground. Wall thickness says which is which.</CardDescription></CardHeader>
-        <CardContent><div className="specimen"><Button variant="primary">Publish</Button><Button>Preview</Button><Button variant="ghost">Discard</Button></div></CardContent>
-      </Card>
-      <Card className="law">
-        <CardHeader><CardTitle>Only what moves, moves</CardTitle><CardDescription>A surface lifts on hover only if clicking it does something. Point at both of these.</CardDescription></CardHeader>
-        <CardContent>
-          <div className="specimen specimen-cards">
-            <Surface level={1} className="mini">Static</Surface>
-            <Surface level={1} interactive className="mini" role="button" onClick={() => setOpened((n) => n + 1)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpened((n) => n + 1); } }}>
-              {opened ? `Opened ${opened}×` : 'Opens'}
-            </Surface>
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="law">
-        <CardHeader><CardTitle>Height never travels alone</CardTitle><CardDescription>Every signal also has a word, an icon, an ARIA state or a border, so it survives screen readers and forced colours.</CardDescription></CardHeader>
-        <CardContent><div className="specimen"><Badge tone="positive">Operational</Badge><Badge tone="caution">Degraded</Badge><Badge tone="critical">Outage</Badge></div></CardContent>
-      </Card>
-    </div>
-  );
-}
+const EVIDENCE: { rule: string; finding: string; source: string }[] = [
+  { rule: 'Buttons show their height.', finding: 'On flat pages people missed 35.8% of clickable elements against 26.0% on pages with depth, and took twice as long to find flat icons.', source: 'Burmistrov et al., 2015' },
+  { rule: 'Four tiers carry meaning, not eight levels.', finding: 'Measured in Altitude’s own rendering, adjacent levels in one tier can differ by less than one just-noticeable difference.', source: 'Experiment E1' },
+  { rule: 'A fast save never shows as pending.', finding: 'About 0.1s feels instant and about 1s keeps flow, so a write that confirms within 300ms stays invisible.', source: 'Nielsen; dur-grace' },
+  { rule: 'An afterglow lasts 8 seconds.', finding: 'Measured: full strength for the first second, noticeable for about four, gone by eight.', source: 'Experiment E6; Baudisch et al., 2006' },
+  { rule: 'Shadows are never a light glow.', finding: 'Shadows are read before attention only when they’re darker than the ground; lighter ones lose the effect.', source: 'Rensink & Cavanagh, 1993' },
+  { rule: 'In a chart, bars never lift.', finding: 'Depth cues on bar graphs make estimates of their values less accurate, so chart marks are flat ink on a ground line.', source: 'Zacks et al., 1998' },
+];
 
 /* ───────────── theming: drives the whole page ───────────── */
 
 const SCHEMES: { id: BuiltInScheme; label: string }[] = [
   { id: 'daylight', label: 'Daylight' }, { id: 'nightfall', label: 'Nightfall' },
 ];
-const ACCENTS: { id: string; label: string; hex: string | undefined }[] = [
-  { id: 'scheme', label: 'Scheme default', hex: undefined },
-  { id: 'pine', label: 'Pine', hex: '#0f8a6b' },
-  { id: 'harbor', label: 'Harbor', hex: '#2a6f9e' },
-  { id: 'rosewood', label: 'Rosewood', hex: '#b13a68' },
-  { id: 'olive', label: 'Olive', hex: '#6b7d1e' },
+const ACCENTS = [
+  { value: '#0f8a6b', name: 'Pine' },
+  { value: '#2a6f9e', name: 'Harbor' },
+  { value: '#b13a68', name: 'Rosewood' },
+  { value: '#6b7d1e', name: 'Olive' },
 ];
 type Look = { scheme: BuiltInScheme; accent?: string; reduced: boolean; more: boolean };
+
+/** The sample form works, honestly: it validates, and says that nothing was sent (Fundamentals: nothing pressable is inert). */
+function InviteSample() {
+  const [email, setEmail] = React.useState('');
+  const [error, setError] = React.useState<string | undefined>();
+  const send = () => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Enter an email address, like ana@northwind.studio.'); return; }
+    setError(undefined);
+    toast({ title: 'This is a sample, so no invite was sent', description: `It would have gone to ${email.trim()}.` });
+  };
+  return (
+    <Card className="sample">
+      <CardHeader><CardTitle>Invite your team</CardTitle><CardDescription>A sample form. Seats are billed monthly, and you can remove people at any time.</CardDescription></CardHeader>
+      <CardContent>
+        <form className="sample-body" noValidate onSubmit={(e) => { e.preventDefault(); send(); }}>
+          <Field label="Email address" hint="We'll send them a link that works for 7 days." error={error}>
+            <Input type="email" placeholder="ana@northwind.studio" value={email} onChange={(e) => { setEmail(e.target.value); if (error) setError(undefined); }} />
+          </Field>
+          <Field label="Role">
+            <Select aria-label="Role" defaultValue="editor" items={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }, { value: 'admin', label: 'Admin' }]} />
+          </Field>
+          <div className="seats">
+            <AvatarGroup max={4}>
+              <Avatar name="Mara Quist" status="active" size={30} />
+              <Avatar name="Tomás Reyes" status="idle" size={30} />
+              <Avatar name="Ines Park" status="active" size={30} />
+              <Avatar name="Dev Olsen" status="offline" size={30} />
+              <Avatar name="Lu Chen" size={30} />
+            </AvatarGroup>
+            <Meter className="seats-meter" label="Seats" value={7} max={10} high={9} format={(n) => `${n}`} />
+          </div>
+          <div className="sample-actions">
+            <Button type="button" variant="secondary" onClick={() => { setEmail(''); setError(undefined); }}>Clear</Button>
+            <Button type="submit" variant="primary">Send invite</Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
 
 function Theming({ look, setLook }: { look: Look; setLook: (f: (l: Look) => Look) => void }) {
   return (
@@ -303,12 +342,10 @@ function Theming({ look, setLook }: { look: Look; setLook: (f: (l: Look) => Look
         </div>
         <div className="panel-block">
           <span className="panel-label" id="accent-label">Accent</span>
-          <div className="swatches" role="group" aria-labelledby="accent-label">
-            {ACCENTS.map((a) => (
-              <button key={a.id} type="button" className="swatch" aria-pressed={look.accent === a.hex} aria-label={a.label} title={a.label}
-                data-default={a.hex ? undefined : ''} style={a.hex ? { ['--sw' as string]: a.hex } : undefined}
-                onClick={() => setLook((l) => ({ ...l, accent: a.hex }))} />
-            ))}
+          <div className="accent-row">
+            <Switch label="Scheme default" checked={!look.accent} onCheckedChange={(on) => setLook((l) => ({ ...l, accent: on ? undefined : ACCENTS[0].value }))} />
+            <ColorSwatchPicker aria-label="Accent colour" swatches={ACCENTS} value={look.accent ?? null}
+              onValueChange={(v) => setLook((l) => ({ ...l, accent: v }))} />
           </div>
         </div>
         <div className="panel-block switches">
@@ -317,28 +354,7 @@ function Theming({ look, setLook }: { look: Look; setLook: (f: (l: Look) => Look
         </div>
         <p className="panel-note">These change the whole page. A custom accent derives its own text, fill and tint colours, checked for contrast on every surface of the scheme.</p>
       </Surface>
-      <Card className="sample">
-        <CardHeader><CardTitle>Invite your team</CardTitle><CardDescription>Seats are billed monthly. You can remove people at any time.</CardDescription></CardHeader>
-        <CardContent>
-          <div className="sample-body">
-            <Field label="Email address" hint="We'll send them a link that works for 7 days."><Input type="email" placeholder="ana@northwind.studio" /></Field>
-            <Field label="Role">
-              <Select aria-label="Role" defaultValue="editor" items={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }, { value: 'admin', label: 'Admin' }]} />
-            </Field>
-            <div className="seats">
-              <AvatarGroup max={4}>
-                <Avatar name="Mara Quist" status="active" size={30} />
-                <Avatar name="Tomás Reyes" status="idle" size={30} />
-                <Avatar name="Ines Park" status="active" size={30} />
-                <Avatar name="Dev Olsen" status="offline" size={30} />
-                <Avatar name="Lu Chen" size={30} />
-              </AvatarGroup>
-              <div className="seats-meter"><span className="seats-text">7 of 10 seats used</span><Progress value={70} aria-label="Seats used" /></div>
-            </div>
-            <div className="sample-actions"><Button variant="ghost">Cancel</Button><Button variant="primary">Send invite</Button></div>
-          </div>
-        </CardContent>
-      </Card>
+      <InviteSample />
     </div>
   );
 }
@@ -352,118 +368,167 @@ function systemScheme(): BuiltInScheme {
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'nightfall' : 'daylight';
 }
 
+/** The nav lies on the ground and rises one level once content passes under it, as a sticky PageHeader does. */
+function useRaisedOnScroll() {
+  const [raised, setRaised] = React.useState(false);
+  React.useEffect(() => {
+    const on = () => setRaised(window.scrollY > 4);
+    on(); window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, []);
+  return raised;
+}
+
 function Page() {
   const [look, setLook] = React.useState<Look>(() => ({ scheme: systemScheme(), reduced: false, more: false }));
+  const raised = useRaisedOnScroll();
   React.useLayoutEffect(() => { document.body.setAttribute('data-theme', look.scheme); }, [look.scheme]);
   return (
     <AltitudeProvider scheme={look.scheme} accent={look.accent} motion={look.reduced ? 'reduced' : 'system'} contrast={look.more ? 'more' : 'system'} className="page">
-      <header className="nav">
+      <a className="skip" href="#main">Skip to content</a>
+      <header className="nav" data-raised={raised ? '' : undefined}>
         <div className="wrap nav-row">
           <a className="brand" href="#top" aria-label="Altitude, back to top">
             <span className="mark" aria-hidden="true"><i /><i /><i /></span>Altitude
           </a>
           <nav className="nav-links" aria-label="Site">
-            <a href="#workflows">Workflows</a>
-            <a href="#loading">Loading</a>
-            <a href="#theming">Theming</a>
+            <a className="nav-local" href="#idea">The idea</a>
+            <a className="nav-local" href="#agents">For agents</a>
+            <a className="nav-local" href="#evidence">Evidence</a>
             <a href={LINKS.storybook}>Components</a>
             <a href={LINKS.github}>GitHub</a>
           </nav>
         </div>
       </header>
 
-      <main id="top">
-        <section className="hero">
+      <main id="main">
+        <section className="hero" id="top">
           <div className="wrap hero-grid">
             <div className="hero-copy">
-              <p className="hero-meta">Design and HCI framework · React · MIT licence</p>
+              <p className="hero-meta">React components and task guidance · v{pkg.version} · MIT licence</p>
               <h1 className="display">Height is the interface.</h1>
               <p className="lead">
-                Altitude is a framework for agent-built web applications with one idea: <strong>the ground is the record.</strong> Settled content sits on the
-                ground. Anything live rises above it. Anything waiting to be filled sinks below it.
+                Altitude is a design and HCI framework for the React apps agents build. It has one idea: <strong>the ground is the record.</strong> Settled
+                content sits on the ground. Anything live rises above it. Anything waiting to be filled sinks below it.
               </p>
               <div className="hero-actions">
                 <a className="alt-btn" data-variant="primary" data-size="lg" href={LINKS.storybook}><span className="alt-btn-label">Browse components</span></a>
                 <a className="alt-btn" data-variant="secondary" data-size="lg" href={LINKS.guide}><span className="alt-btn-label">Read the design guide</span></a>
               </div>
-              <CopyLine text={install} />
+              <CodeBlock className="hero-install" title="Install" tabs={installTabs} syntax={syntax} />
             </div>
             <div className="hero-art">
               <Ladder />
-              <p className="caption">People read four tiers at a glance. The eight levels exist so hover and press can be felt.</p>
+              <p className="caption">Every surface sits on one of these. People read the four tiers at a glance; the eight levels exist so hover and press can be felt.</p>
             </div>
           </div>
         </section>
 
-        <section className="band agent-teaser" aria-labelledby="agent-teaser-title">
+        <section className="band" id="idea" aria-labelledby="idea-title">
           <div className="wrap">
             <div className="section-head">
-              <h2 className="headline" id="agent-teaser-title">Building for agents?</h2>
-              <p className="lead">Watch one agent run through every state, a proposal that's raised and not pending, a streaming answer on a dashed rule, a failed step in a trench, a queued follow-up, in a complete harness. Jump to any moment.</p>
+              <h2 className="h2" id="idea-title">One value, every reading.</h2>
+              <p className="lede">Height in Altitude isn’t decoration: it says what state something is in. Edit this title, save it, then make a save fail. It’s the shipped <code>InlineEdit</code>, unchanged.</p>
             </div>
-            <a className="alt-btn" data-variant="secondary" data-size="md" href="agent.html"><span className="alt-btn-label">See Altitude for agents</span></a>
+            <div className="idea">
+              <OneValue />
+              <dl className="readings">
+                {READINGS.map((r) => <div key={r.name} className="reading"><dt>{r.name}</dt><dd>{r.what}</dd></div>)}
+              </dl>
+            </div>
+            <div className="laws-block">
+              <h3 className="h3">The seven laws</h3>
+              <ol className="laws">
+                {LAWS.map(([law, why]) => <li key={law}><strong>{law}</strong> {why}</li>)}
+              </ol>
+              <p className="lede small"><a href={LINKS.elevation}>Elevation</a> lists every signal height carries, from a saved view to a fleet of agents, with the word, icon or ARIA state that carries each one without height.</p>
+            </div>
           </div>
         </section>
 
-        <section className="band" id="workflows" aria-labelledby="workflows-title">
-          <div className="wrap">
-            <div className="section-head">
-              <h2 className="h2" id="workflows-title">Build the whole workflow.</h2>
-              <p className="lede">Ask for settings, search, a consequential action or a request process. Altitude supplies focused design guidance, small workflow hooks and checks for the states between the first click and the actual outcome.</p>
-            </div>
-            <div className="laws">
-              {[
-                ['Edit a record', 'Validate, preserve edits after failure, retry and report the actual save outcome.', 'EditRecord'],
-                ['Find records', 'Distinguish loading, refresh, first-use emptiness, no results and failure.', 'AsyncCollection'],
-                ['Act with consequences', 'Explain the target, confirm intent where needed and offer real recovery.', 'ConsequentialAction'],
-                ['Review and send', 'Correct earlier answers, retain applicable data and keep a confirmation receipt.', 'ReviewSubmit'],
-              ].map(([title, description, story]) => <Card key={story} className="law"><CardHeader><CardTitle>{title}</CardTitle><CardDescription>{description}</CardDescription></CardHeader><CardContent><a href={LINKS.storybook + '?path=/story/patterns-' + story.toLowerCase() + '--preview'}>Try the workflow</a></CardContent></Card>)}
-            </div>
-            <div className="code-head"><h3 className="h3">Connect your agent to the installed guidance.</h3><p className="lede small">Explicit setup previews a small project instruction block. It preserves your instructions and routes the agent to the version you installed.</p></div>
-            <Code label="Preview and apply agent setup" code={'npx altitude init --client codex\n# Review the preview, then apply:\nnpx altitude init --client codex --apply\n# Claude Code: use --client claude'} />
-            <p className="lede small">Workflow patterns are experimental. Applications supply persistence, authorization, business validation, navigation and any real undo. Automated checks cover specific contracts; contextual design decisions and assistive-technology validation still need review.</p>
-          </div>
-        </section>
-
-        <section className="band band-sunk" id="loading" aria-labelledby="loading-title">
+        <section className="band" id="loading" aria-labelledby="loading-title">
           <div className="wrap">
             <div className="section-head">
               <h2 className="h2" id="loading-title">Skeletons you don't write.</h2>
               <p className="lede">
                 Pass your data the way you already do. While it's still undefined, each component shows its own imprint at its own
-                size, drawn from the same props and tokens, so nothing jumps. When the data arrives, the content rises out of the
-                imprint. Change the network below and reload.
+                size, so nothing jumps. When the data arrives, the content rises out of the imprint. Change the network and reload.
               </p>
             </div>
             <SuspenseDemo />
-            <div className="code-head">
-              <h3 className="h3">How it's handled</h3>
-              <p className="lede small">Undefined means "not here yet". The component turns that into a suspension inside its own Suspense boundary, whose fallback is its own imprint. A component that never waits takes the old path: no boundary, no extra element. <a href={LINKS.awaitDocs}>Read the loading guide</a>.</p>
+            <div className="split">
+              <div className="code-head">
+                <h3 className="h3">How it's handled</h3>
+                <p className="lede small">Undefined means "not here yet". The component turns that into a suspension inside its own Suspense boundary, whose fallback is its own imprint. A component that never waits takes the old path: no boundary, no extra element. <a href={LINKS.awaitDocs}>Read the loading guide</a>.</p>
+                <ul className="facts">
+                  <li><strong>Undefined means not here yet.</strong> Pass <code>user?.name</code> while your query loads. <code>null</code> means there's nothing, and renders empty.</li>
+                  <li><strong>Optional parts wait with their card.</strong> A missing description never leaves a skeleton behind.</li>
+                  <li><strong>Under 300ms, nothing shows.</strong> The imprint waits out <Kbd>dur-grace</Kbd>, so fast loads never flash.</li>
+                  <li><strong>Promises work too.</strong> From a server component, pass a promise instead of the value, on React 18 or 19.</li>
+                </ul>
+              </div>
+              <CodeBlock title="Loading, from your code to the component" syntax={syntax} maxHeight={520} tabs={[
+                { label: 'Your code', language: 'tsx', code: yourCode },
+                { label: 'Avatar', language: 'tsx', code: insideAvatar },
+                { label: 'useArrival', language: 'tsx', code: arrivalCode },
+                { label: 'Await', language: 'tsx', code: insideAwait },
+              ]} />
             </div>
-            <CodeTabs />
-            <ul className="facts">
-              <li><strong>Undefined means not here yet.</strong> Pass <code>user?.name</code> while your query loads. <code>null</code> means there's nothing, and renders empty.</li>
-              <li><strong>Optional parts wait with their card.</strong> An undefined description or body waits only while the card's required parts do, so a missing field never leaves a skeleton behind.</li>
-              <li><strong>Under 300ms, nothing shows.</strong> The imprint waits out <Kbd>dur-grace</Kbd> before fading in, so fast loads never flash.</li>
-              <li><strong>Promises work too.</strong> From a server component, pass a promise instead of the value; React 18 and 19 both work.</li>
-            </ul>
           </div>
         </section>
 
-        <section className="band" aria-labelledby="laws-title">
+        <section className="band" id="agents" aria-labelledby="agents-title">
           <div className="wrap">
             <div className="section-head">
-              <h2 className="h2" id="laws-title">Every component speaks the same physics.</h2>
+              <h2 className="h2" id="agents-title">Made for the apps agents write.</h2>
+              <p className="lede">Agents skip the states between the first click and the actual outcome. Altitude gives them task contracts, small workflow hooks and checks for those states, and components for the agent’s own interface: proposals, streaming answers, traces, a fleet of agents.</p>
             </div>
-            <Laws />
+            <div className="split">
+              <div>
+                <h3 className="h3">Four task patterns</h3>
+                <ul className="patterns">
+                  <li><a href={story('patterns-editrecord')}>Edit a record</a><span>Validate, keep edits after a failure, retry, and report the save that actually happened.</span></li>
+                  <li><a href={story('patterns-asynccollection')}>Find records</a><span>Tell loading, refreshing, a first empty view, no results and failure apart.</span></li>
+                  <li><a href={story('patterns-consequentialaction')}>Act with consequences</a><span>Name the target, confirm only where it matters, and offer recovery that’s real.</span></li>
+                  <li><a href={story('patterns-reviewsubmit')}>Review and send</a><span>Correct earlier answers, keep what applies, and leave a receipt.</span></li>
+                </ul>
+                <p className="lede small">Twelve more contracts cover settings, members, billing, sign-in, import, sync and more: <a href={LINKS.framework}>the framework</a>.</p>
+              </div>
+              <div className="agents-side">
+                <CodeBlock title="Point your agent at the installed guidance" language="sh" code={agentSetup} syntax={syntax} />
+                <p className="lede small">Setup previews a small block of project instructions, keeps yours, and routes the agent to the version you installed. Nothing runs on install.</p>
+                <p className="lede small"><a href="agent.html">Watch one agent run through every state</a>: a proposal that’s raised and not pending, an answer streaming on a dashed rule, a failed step in a trench, seven agents on one job.</p>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="band band-sunk" id="theming" aria-labelledby="theming-title">
+        <section className="band" id="evidence" aria-labelledby="evidence-title">
+          <div className="wrap">
+            <div className="section-head">
+              <h2 className="h2" id="evidence-title">Every rule has a reason.</h2>
+              <p className="lede">Altitude’s rules come from perception research and from 159 numbered experiments measured in its own rendering. 170 automated checks, nearly all of them in a real browser, hold the components to them on every push.</p>
+            </div>
+            <dl className="evidence">
+              {EVIDENCE.map((e) => (
+                <div key={e.rule} className="evidence-row">
+                  <dt>{e.rule}</dt>
+                  <dd>{e.finding} <span className="evidence-source">{e.source}</span></dd>
+                </div>
+              ))}
+            </dl>
+            <div className="unproven">
+              <h3 className="h3">What isn’t proven yet</h3>
+              <p className="lede small">The workflow patterns are experimental: engineering checks cover their contracts, and studies with people are still to come. The first <a href={LINKS.benchmark}>distinctiveness benchmark</a> found that building with Altitude doesn’t yet move an agent’s screens measurably away from what plain tools produce. Automated checks don’t establish accessibility on their own. <a href={LINKS.research}>Research</a> keeps the record, including what was tried and dropped.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="band" id="theming" aria-labelledby="theming-title">
           <div className="wrap">
             <div className="section-head">
               <h2 className="h2" id="theming-title">Two schemes, one ladder.</h2>
-              <p className="lede">Swap the scheme, bring your own accent, or turn on reduced motion and more contrast. The elevation language holds in all of them.</p>
+              <p className="lede">Swap the scheme, bring your own accent, or turn on reduced motion and more contrast. The elevation language holds in all of them, and under forced colours every tier falls back to a border.</p>
             </div>
             <Theming look={look} setLook={setLook} />
           </div>
@@ -473,17 +538,20 @@ function Page() {
           <div className="wrap start">
             <div className="section-head">
               <h2 className="h2" id="start-title">Install it, wrap your app once.</h2>
-              <p className="lede">Render <code>AltitudeProvider</code> once around your app and import the stylesheet. The props mirror shadcn/ui, so most of it will feel familiar.</p>
-              <CopyLine text={install} />
+              <p className="lede">Render <code>AltitudeProvider</code> once around your app and import the stylesheet. React 18.2 or 19. The props mirror shadcn/ui, so most of it will feel familiar.</p>
+              <div className="start-links">
+                <a className="alt-btn" data-variant="primary" data-size="md" href={LINKS.storybook}><span className="alt-btn-label">Browse components</span></a>
+                <a href={LINKS.guide}>Read the design guide</a>
+              </div>
             </div>
-            <Code label="Quick start" code={quickStart} />
+            <CodeBlock title="App.tsx" language="tsx" code={quickStart} syntax={syntax} />
           </div>
         </section>
       </main>
 
       <footer className="foot">
         <div className="wrap foot-row">
-          <span>Altitude · MIT licence · built with Altitude</span>
+          <span>Altitude · MIT licence · this page is built with Altitude</span>
           <nav className="nav-links" aria-label="Elsewhere">
             <a href={LINKS.storybook}>Storybook</a>
             <a href={LINKS.npm}>npm</a>
