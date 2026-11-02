@@ -1,0 +1,68 @@
+# Example apps
+
+Fictional but complete products built with Altitude, each on a simulated backend (#399). They have two jobs: testing components together in real state (slow, failed, lost, conflicting, offline), and showing what Altitude is for in products people recognise.
+
+They aren't part of the package. Each app imports `altitude-design` by name, as a consumer would, and is type-checked against the public declarations (`project/components/index.d.ts`), so no app becomes a second source for component code.
+
+## Running them
+
+```sh
+node scripts/build-examples.mjs                 # → site-dist/examples/<slug>.html, one self-contained page each
+npm run build-site                              # the same, as part of the landing page build
+cd build && node checks/example-service.mjs     # the service's unit checks, and Team notes driven in a browser
+```
+
+`npm run typecheck` type-checks the apps along with the components.
+
+## Adding an app
+
+A folder in `examples/apps/<slug>/` with:
+
+- `main.tsx`: mounts the app into `#example`, inside `ExampleFrame`;
+- `app.tsx`: the app, starting with its design record (task, lead, primary action, next; see [screen layout](../../project/framework/patterns/screen-layout.md));
+- `app.json`: `{ "title": "…", "description": "…" }` for the page;
+- `app.css`: optional, tokens only.
+
+`hello/` (Team notes) is the smallest complete one. Copy it.
+
+## The simulated service
+
+`shared/service.ts` holds the store in memory (and optionally `localStorage`), and answers `request(op, input)` after a latency, shaped by the mode chosen in the fixtures drawer.
+
+```ts
+const service = createDemoService({
+  name: 'notes',                         // the log's name and the storage key's prefix
+  seed: () => ({ notes: [] }),           // fresh data; Reset calls it again
+  persist: true,                         // keep a copy in localStorage
+  handlers: {
+    'notes.list': { read: (s) => s.notes },
+    'notes.add': {
+      write: (s, note) => ({ state: { notes: [note, ...s.notes] }, result: note }),
+      current: (s) => s.notes,           // what a conflict hands back
+    },
+  },
+});
+await service.request('notes.add', note, { signal });
+```
+
+A handler can `reject('invalid', 'Write the note first.', { field: 'text' })` as a server would. Failures reject with a `DemoError` whose `kind` is one of `failed`, `offline`, `conflict`, `rate-limited`, `lost-response`, `invalid` or `not-found`.
+
+| Mode | What happens | What it proves the app does |
+|---|---|---|
+| Succeed | answers after 300–450 ms | the pending state is brief and lands |
+| Slow | answers after six times that | pending is visible and the app stays usable |
+| Fail | rejects; nothing saved | the person's input is kept, with a way to try again |
+| Lose the response | saves, then rejects 1.1 s later with `committed: true` | the app reconciles before retrying, and a retry can't duplicate |
+| Conflict | rejects writes with the current version; reads answer | the app shows both versions instead of overwriting |
+| Offline | rejects at once | the app says so and keeps the input |
+| Rate limited | rejects with `retryAfter: 30000` | the app says when to try again |
+
+"Only the next request" applies a mode once, then returns to Succeed. `service.external(label, change)` changes the store as someone else would; apps refetch when `externalRevision` moves. `reset()` reseeds and moves `resetRevision`.
+
+Jitter is seeded and a clock can be injected (`createManualClock`), so a check gets the same timings every run.
+
+**What it doesn't prove.** A timer standing in for a server proves nothing about real persistence, permissions, concurrency or recovery. An app that handles every mode here still needs its real service's behaviour verified.
+
+## The frame and the drawer
+
+`ExampleFrame` renders the one `AltitudeProvider`, the app, and then `FixturesDrawer` below it, outside the app's `main`: the server's mode, events from elsewhere, the page's scheme, accent, reduced motion and contrast, the request log and Reset. It's collapsed by default and says the service is simulated.
