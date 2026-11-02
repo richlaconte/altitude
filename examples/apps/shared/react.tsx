@@ -3,7 +3,7 @@
 // Built only from the public altitude-design API.
 import * as React from 'react';
 import {
-  Accordion, AltitudeProvider, Badge, Button, Radio, RadioGroup, Select, Switch, Tabs, TabsList, TabsTrigger,
+  Accordion, Alert, AltitudeProvider, Badge, Button, Radio, RadioGroup, Select, Skeleton, Switch, Tabs, TabsList, TabsTrigger,
 } from 'altitude-design';
 import type { BuiltInScheme, Tone } from 'altitude-design';
 import { DEMO_MODES } from './service';
@@ -50,6 +50,26 @@ export function useDemoQuery<S, T>(service: DemoService<S>, op: string, input?: 
   React.useEffect(() => { void reload(); }, [reload, externalRevision, resetRevision]);
   const setData = React.useCallback((update: (data: T | undefined) => T | undefined) => setState((s) => ({ ...s, data: update(s.data) })), []);
   return { ...state, reload, setData };
+}
+
+/** The words of a failed request. */
+export const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/**
+ * A read's states, around what it renders. While the first answer is on its way: an imprint. If it fails: what happened
+ * and Try again. If a refresh fails after an answer: the answer stays, with a note that it may be out of date.
+ */
+export function DemoResource<T>({ query, noun, children }: { query: DemoQuery<T>; noun: string; children: (data: T) => React.ReactNode }) {
+  if (query.data === undefined) {
+    if (query.error) {
+      return <Alert tone="critical" title={`We couldn’t load ${noun}`} action={<Button size="sm" onClick={() => void query.reload()}>Try again</Button>}>{errorMessage(query.error)}</Alert>;
+    }
+    return <div className="ex-loading" role="status" aria-label={`Loading ${noun}`}><Skeleton shape="text" lines={4} /></div>;
+  }
+  return <>
+    {query.error && <Alert tone="caution" title={`We couldn’t refresh ${noun}`} action={<Button size="sm" onClick={() => void query.reload()}>Try again</Button>}>What you see may be out of date. {errorMessage(query.error)}</Alert>}
+    {children(query.data)}
+  </>;
 }
 
 /** Something that happens outside the app, offered as a button in the drawer. */

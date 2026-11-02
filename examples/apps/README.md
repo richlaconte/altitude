@@ -10,6 +10,7 @@ They aren't part of the package. Each app imports `altitude-design` by name, as 
 |---|---|---|
 | Team notes | `hello/` | the smallest app on the service: pending, landed, failed, reconciled, arrived |
 | Northwind admin console | `admin-console/` | settings, members, billing, API keys, security and the audit log on one workspace: every change is logged, conflicts come from other admins (#401) |
+| Sprint 24 planning | `planning-board/` | a board, table, schedule and epics over one record: moves that hover until they land and go back with a reason when the server refuses (#402) |
 
 ## Running them
 
@@ -18,6 +19,7 @@ node scripts/build-examples.mjs                 # → site-dist/examples/<slug>.
 npm run build-site                              # the same, as part of the landing page build
 cd build && node checks/example-service.mjs     # the service's unit checks, and Team notes driven in a browser
 cd build && node checks/example-admin-console.mjs   # the admin console driven through #401's fixtures
+cd build && node checks/example-planning-board.mjs  # the planning board driven through #402's fixtures
 ```
 
 `npm run typecheck` type-checks the apps along with the components.
@@ -67,7 +69,7 @@ A handler can `reject('invalid', 'Write the note first.', { field: 'text' })` as
 
 "Only the next request" applies a mode once, then returns to Succeed. `service.external(label, change)` changes the store as someone else would; apps refetch when `externalRevision` moves. `reset()` reseeds and moves `resetRevision`.
 
-In React, `useDemoQuery(service, op, input)` reads through the service: it runs on mount, again when `externalRevision` or `resetRevision` moves, and on `reload()`; it keeps the last answer while a refresh is in flight or after one fails, ignores answers to superseded requests, and offers `setData` for an optimistic write.
+In React, `useDemoQuery(service, op, input)` reads through the service: it runs on mount, again when `externalRevision` or `resetRevision` moves, and on `reload()`; it keeps the last answer while a refresh is in flight or after one fails, ignores answers to superseded requests, and offers `setData` for an optimistic write. `DemoResource` renders a query's states around its content: an imprint while the first answer is on its way, the failure with Try again, and a note when a refresh fails after an answer.
 
 Jitter is seeded and a clock can be injected (`createManualClock`), so a check gets the same timings every run.
 

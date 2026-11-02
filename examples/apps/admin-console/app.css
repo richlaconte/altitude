@@ -22,5 +22,4 @@
 .ac-losses ul { margin: var(--space-2) 0 0; padding-left: var(--space-5); }
 .ac-hook { display: grid; gap: var(--space-3); padding: var(--space-5); }
 .ac-hook .ac-field { max-width: 280px; }
-.ac-loading { padding: var(--space-4) 0; }
 .ac-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
