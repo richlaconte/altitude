@@ -87,7 +87,7 @@ Every push and pull request runs the checks: the bundle and previews are rebuilt
 A push to `main` then also:
 
 - deploys the landing page to GitHub Pages, with Storybook under `/storybook/`;
-- publishes to npm **if the version in `package.json` isn't published yet**, and tags the commit `v<version>`. To release, bump the version (`npm version patch`, `minor` or `major`) and push.
+- publishes to npm **whenever the package itself changed**, and tags the commit `v<version>`. [`scripts/release.mjs`](scripts/release.mjs) builds the package as the latest published version and compares it with what's on npm. If nothing that ships differs (a docs, evals or site change), nothing is published; otherwise the next patch is. The version in `package.json` is the floor of the release line: raise it (`npm pkg set version=0.4.0`) to start a new minor or major, and that version is published next. So `package.json` can be behind npm; `npm view altitude-design version` is the current release.
 
 ## Found a bug, or need something it doesn't do?
 

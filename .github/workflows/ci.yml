@@ -5,7 +5,8 @@
 #   checks:     every preview rendered in every scheme and every interaction check (React 18, React 19, StrictMode),
 #               split into shards of about equal time by scripts/ci-checks.mjs from build/checks/ci.json. Each shard
 #               runs its share one after another, exactly as the single job used to, on a runner of its own.
-#   Pushes to main then also: deploy the landing page and Storybook (under /storybook/) to GitHub Pages, and publish to npm if package.json has a new version.
+#   Pushes to main then also: deploy the landing page and Storybook (under /storybook/) to GitHub Pages, and publish to npm whenever the
+#               package itself changed (scripts/release.mjs picks the version; see README, "What happens on push").
 name: CI
 
 on:
@@ -314,28 +315,23 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
-      - name: Is this version new?
+      - name: Install
+        run: npm ci
+
+      # Builds the package as the latest published version and compares it with npm. A push that changes nothing in
+      # the package publishes nothing; otherwise the next patch (or package.json's version, when that's higher).
+      - name: Plan the release
         id: version
-        run: |
-          name=$(node -p "require('./package.json').name")
-          version=$(node -p "require('./package.json').version")
-          echo "name=$name" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          if npm view "$name@$version" version > /dev/null 2>&1; then
-            echo "new=false" >> "$GITHUB_OUTPUT"
-            echo "$name@$version is already on npm; bump the version in package.json to publish."
-          else
-            echo "new=true" >> "$GITHUB_OUTPUT"
-          fi
+        run: node scripts/release.mjs
 
       - name: Build
-        if: steps.version.outputs.new == 'true'
+        if: steps.version.outputs.publish == 'true'
         run: |
-          npm ci
+          npm pkg set "version=${{ steps.version.outputs.version }}"
           npm run build
 
       - name: Publish to npm
-        if: steps.version.outputs.new == 'true'
+        if: steps.version.outputs.publish == 'true'
         run: |
           # Trusted publishing needs npm 11.5.1 or later.
           npm install -g npm@12.2.0
@@ -344,7 +340,7 @@ jobs:
           npm publish --access public
 
       - name: Tag the release
-        if: steps.version.outputs.new == 'true'
+        if: steps.version.outputs.publish == 'true'
         run: |
           git tag "v${{ steps.version.outputs.version }}"
           git push origin "v${{ steps.version.outputs.version }}"
