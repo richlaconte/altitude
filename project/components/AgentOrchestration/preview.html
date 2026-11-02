@@ -23,14 +23,14 @@ var A = window.Altitude;
 const T0 = Date.UTC(2026, 9, 31, 14, 0);
 const at = (m) => T0 + m * 6e4;
 const MOMENTS = [
-  { id: "planned", name: "Planned", t: 1, note: "The lead agent reads the brief and splits the launch into tasks. One agent, working: a lamp plate says so, never a spinner." },
-  { id: "fanned", name: "Fanned out", t: 4, note: "Four agents work at once. Working never hovers: a lamp plate says it. QA waits on two others, and says which." },
-  { id: "asking", name: "Two need you", t: 9, note: "Decisions gather in one queue, oldest first, each a raised card you can answer in place. The fleet leads with the same agents." },
-  { id: "overlap", name: "Overlap", t: 12, note: "Two agents are changing the same file. The row says so before either merges, so you can steer one away early." },
-  { id: "stalled", name: "Stalled", t: 17, note: "An agent still running but making no progress is a suspicion, not a request: a caution plate in the working group, not a card." },
-  { id: "failed", name: "Failed", t: 22, note: "A failed agent waits on you like a question does: it joins the queue with Retry. A finished pull request asks for review." },
-  { id: "reviewing", name: "Reviewed", t: 26, note: "Answered requests leave the queue; finished agents fold away, stamped with a check and how long they took." },
-  { id: "done", name: "All done", t: 31, note: "The lanes show where the time went. The takeaway leads with the time agents spent waiting on you." }
+  { id: "planned", name: "Planned", t: 1, pane: "agents", note: "The lead agent reads the brief and splits the launch into tasks. One agent, working: a lamp plate says so, never a spinner." },
+  { id: "fanned", name: "Fanned out", t: 4, pane: "agents", note: "Four agents work at once. Working never hovers: a lamp plate says it. QA waits on two others, and says which." },
+  { id: "asking", name: "Two need you", t: 9, pane: "needs", note: "Decisions gather in one queue, oldest first, each a raised card you can answer in place. The fleet leads with the same agents." },
+  { id: "overlap", name: "Overlap", t: 12, pane: "agents", note: "Two agents are changing the same file. The row says so before either merges, so you can steer one away early." },
+  { id: "stalled", name: "Stalled", t: 17, pane: "agents", note: "An agent still running but making no progress is a suspicion, not a request: a caution plate in the working group, not a card." },
+  { id: "failed", name: "Failed", t: 22, pane: "needs", note: "A failed agent waits on you like a question does: it joins the queue with Retry. A finished pull request asks for review." },
+  { id: "reviewing", name: "Reviewed", t: 26, pane: "agents", note: "Answered requests leave the queue; finished agents fold away, stamped with a check and how long they took." },
+  { id: "done", name: "All done", t: 31, pane: "time", note: "The lanes show where the time went. The takeaway leads with the time agents spent waiting on you." }
 ];
 const AGENTS = [
   {
@@ -167,10 +167,36 @@ function Detail({ agent, onStop }) {
   } : void 0 }))), /* @__PURE__ */ React.createElement("dl", { className: "ao-facts" }, /* @__PURE__ */ React.createElement("dt", null, "Now"), /* @__PURE__ */ React.createElement("dd", null, agent.activity ?? (agent.blockedBy ? `Waiting on ${agent.blockedBy}` : "Not started")), agent.pr && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("dt", null, "Made"), /* @__PURE__ */ React.createElement("dd", null, /* @__PURE__ */ React.createElement(A.Link, { href: "#pr-" + agent.pr }, "Pull request #", agent.pr))), /* @__PURE__ */ React.createElement("dt", null, "Spent"), /* @__PURE__ */ React.createElement("dd", null, agent.cost ? money(agent.cost) : "\u2014")), /* @__PURE__ */ React.createElement(A.PromptInput, { status: "ready", onSubmit: () => {
   }, "aria-label": `Message ${agent.name}` }, /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: `Steer ${agent.name}: say what to change, where, and why` }), /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))));
 }
+const NARROW = "(max-width: 760px)";
+function useNarrow() {
+  return React.useSyncExternalStore(
+    (change) => {
+      const m = matchMedia(NARROW);
+      m.addEventListener("change", change);
+      return () => m.removeEventListener("change", change);
+    },
+    () => matchMedia(NARROW).matches,
+    () => false
+  );
+}
 function Orchestration({ k }) {
   const t = MOMENTS[k].t, now = at(t);
   const fleet = fleetAt(t);
   const [picked, setPicked] = React.useState("pricing");
+  const narrow = useNarrow();
+  const [pane, setPane] = React.useState(MOMENTS[k].pane);
+  const [opened, setOpened] = React.useState(false);
+  const [seen, setSeen] = React.useState(k);
+  if (seen !== k) {
+    setSeen(k);
+    setPane(MOMENTS[k].pane);
+    setOpened(false);
+  }
+  const open = (id) => {
+    setPicked(id);
+    setOpened(true);
+    setPane("agents");
+  };
   const agent = fleet.find((a) => a.id === picked) ?? fleet[0];
   const g = A.groupAgents(fleet.filter((a) => a.parent), (a) => a);
   const lead = fleet.find((a) => a.id === "lead");
@@ -193,7 +219,7 @@ function Orchestration({ k }) {
       cost: a.cost ? money(a.cost) : void 0,
       output: a.pr ? /* @__PURE__ */ React.createElement(A.Badge, { tone: a.state === "done" ? "positive" : "caution", variant: "soft" }, "#", a.pr) : void 0,
       selected: a.id === agent?.id,
-      onSelect: () => setPicked(a.id)
+      onSelect: () => open(a.id)
     }
   );
   const requests = g.needsYou.map((a) => /* @__PURE__ */ React.createElement(
@@ -203,14 +229,15 @@ function Orchestration({ k }) {
       agent: a.name,
       kind: a.state === "failed" ? "failed" : a.needs,
       since: a.since,
-      onOpen: () => setPicked(a.id),
+      onOpen: () => open(a.id),
       title: a.state === "failed" ? "Checkout tests failed" : a.needs === "approval" ? "Run the plans-table migration on staging?" : a.needs === "review" ? `Review pull request #${a.pr}` : a.activity,
       detail: a.state === "failed" ? a.activity : a.needs === "approval" ? "Adds annual price columns to 4 plans on staging. Production isn't touched." : a.needs === "review" ? a.activity : void 0,
       actions: a.state === "failed" ? /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Retry") : a.needs === "approval" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Run migration"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost" }, "Don't run")) : a.needs === "question" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Active only"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Everyone")) : /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Review changes")
     }
   ));
-  return /* @__PURE__ */ React.createElement("div", { className: "ao" }, /* @__PURE__ */ React.createElement(A.PageHeader, { actions: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Start an agent"), overflow: [{ label: "Stop every agent", tone: "critical", onSelect: () => {
-  } }] }, /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, "Launch annual pricing"), /* @__PURE__ */ React.createElement(A.PageHeaderDescription, null, A.summarizeFleet(fleet.map((a) => a.state)))), /* @__PURE__ */ React.createElement("div", { className: "ao-body" }, /* @__PURE__ */ React.createElement("div", { className: "ao-side" }, /* @__PURE__ */ React.createElement(A.AgentFleet, { now, "aria-label": "Agents on this launch" }, lead && /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Lead agent", count: null }, /* @__PURE__ */ React.createElement(
+  const header = /* @__PURE__ */ React.createElement(A.PageHeader, { actions: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary" }, "Start an agent"), overflow: [{ label: "Stop every agent", tone: "critical", onSelect: () => {
+  } }] }, /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, "Launch annual pricing"), /* @__PURE__ */ React.createElement(A.PageHeaderDescription, null, A.summarizeFleet(fleet.map((a) => a.state))));
+  const roster = /* @__PURE__ */ React.createElement(A.AgentFleet, { now, "aria-label": "Agents on this launch" }, lead && /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Lead agent", count: null }, /* @__PURE__ */ React.createElement(
     A.AgentFleetItem,
     {
       name: lead.name,
@@ -220,47 +247,79 @@ function Orchestration({ k }) {
       endedAt: lead.endedAt,
       step: lead.state !== "done" ? { current: lead.step, total: lead.plan.length } : void 0,
       selected: lead.id === agent?.id,
-      onSelect: () => setPicked("lead")
+      onSelect: () => open("lead")
     }
-  )), /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Needs you" }, g.needsYou.map(row)), /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Working" }, g.working.map(row)), /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Done", collapsible: true, defaultOpen: false }, g.finished.map(row))), /* @__PURE__ */ React.createElement(A.Meter, { label: "Spent on this launch", value: spent, max: 5, high: 4, format: money })), /* @__PURE__ */ React.createElement("div", { className: "ao-main" }, /* @__PURE__ */ React.createElement(A.AgentRequests, { now }, requests), /* @__PURE__ */ React.createElement(A.Separator, null), agent && /* @__PURE__ */ React.createElement(Detail, { agent, onStop: () => {
-  } }))), /* @__PURE__ */ React.createElement(A.AgentLanes, { now, start: T0, lanes: fleet.filter((a) => a.segments.length).map((a) => ({ id: a.id, name: a.name, segments: a.segments })), selected: agent?.id, onSelect: setPicked }));
+  )), /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Needs you" }, g.needsYou.map(row)), /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Working" }, g.working.map(row)), /* @__PURE__ */ React.createElement(A.AgentFleetGroup, { label: "Done", collapsible: true, defaultOpen: false }, g.finished.map(row)));
+  const meter = /* @__PURE__ */ React.createElement(A.Meter, { label: "Spent on this launch", value: spent, max: 5, high: 4, format: money });
+  const lanes = /* @__PURE__ */ React.createElement(A.AgentLanes, { now, start: T0, lanes: fleet.filter((a) => a.segments.length).map((a) => ({ id: a.id, name: a.name, segments: a.segments })), selected: agent?.id, onSelect: open });
+  if (narrow) return /* @__PURE__ */ React.createElement("div", { className: "ao" }, header, /* @__PURE__ */ React.createElement(A.Tabs, { variant: "segmented", className: "ao-panes", value: pane, onValueChange: setPane }, /* @__PURE__ */ React.createElement(A.TabsList, { "aria-label": "Show" }, /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "needs" }, g.needsYou.length ? `Needs you (${g.needsYou.length})` : "Needs you"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "agents" }, "Agents"), /* @__PURE__ */ React.createElement(A.TabsTrigger, { value: "time" }, "Timeline")), /* @__PURE__ */ React.createElement(A.TabsContent, { value: "needs" }, /* @__PURE__ */ React.createElement(A.AgentRequests, { now, title: "Waiting on you" }, requests)), /* @__PURE__ */ React.createElement(A.TabsContent, { value: "agents" }, opened && agent ? /* @__PURE__ */ React.createElement("div", { className: "ao-opened" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "ghost", className: "ao-back", onClick: () => setOpened(false) }, "\u2190 All agents"), /* @__PURE__ */ React.createElement(Detail, { agent, onStop: () => {
+  } })) : roster), /* @__PURE__ */ React.createElement(A.TabsContent, { value: "time" }, /* @__PURE__ */ React.createElement("div", { className: "ao-time" }, lanes, meter))));
+  return /* @__PURE__ */ React.createElement("div", { className: "ao" }, header, /* @__PURE__ */ React.createElement("div", { className: "ao-body" }, /* @__PURE__ */ React.createElement("div", { className: "ao-side" }, roster, meter), /* @__PURE__ */ React.createElement("div", { className: "ao-main" }, /* @__PURE__ */ React.createElement(A.AgentRequests, { now }, requests), /* @__PURE__ */ React.createElement(A.Separator, null), agent && /* @__PURE__ */ React.createElement(Detail, { agent, onStop: () => {
+  } }))), lanes);
 }
-const CSS = `.aoh{display:grid;gap:12px;max-width:1100px}.aoh-frame{border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;background:var(--surface-ground)}
+const CSS = `.aoh{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.aoh-frame{border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;background:var(--surface-ground)}
 .ao{display:flex;flex-direction:column;gap:16px}.ao .alt-page-header{padding:0}
 .ao-body{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:20px;align-items:start}
 .ao-side{display:flex;flex-direction:column;gap:16px;min-width:0}.ao-main{display:flex;flex-direction:column;gap:16px;min-width:0;padding-left:20px;border-left:1px solid var(--line)}
 .ao-detail{display:flex;flex-direction:column;gap:14px}.ao-detail-head{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .ao-facts{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;font:400 14px/20px var(--font-sans)}.ao-facts dt{color:var(--ink-muted)}.ao-facts dd{margin:0}
 .ao-detail-head h3{margin:0;font:600 16px/22px var(--font-sans)}.ao-task{margin:0;color:var(--ink-muted);font:400 14px/20px var(--font-sans)}
-@media (max-width:760px){.ao-body{grid-template-columns:1fr}.ao-main{padding-left:0;border-left:0;padding-top:16px;border-top:1px solid var(--line)}}
-.aoh-rail{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.aoh-moments{display:flex;flex-wrap:wrap;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
-.aoh-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);cursor:pointer}
-.aoh-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.aoh-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}`;
+.ao-panes>.alt-tabs-list{align-self:stretch}.ao-panes .alt-tabs-trigger{flex:1 0 auto}
+.ao-opened,.ao-time{display:flex;flex-direction:column;gap:16px}.ao-back{align-self:flex-start;margin-left:-8px}
+.aoh-rail{display:flex;align-items:center;gap:8px 12px}.aoh-moments{display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
+.aoh-rail>.alt-switch-row{flex:none}
+.aoh-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);white-space:nowrap;cursor:pointer}
+.aoh-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.aoh-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px}
+@media (max-width:640px){
+.aoh-rail{position:sticky;top:var(--demo-sticky-top,0px);z-index:3;margin:-6px 0;padding:6px 0;background:var(--surface-ground)}
+.aoh-moments{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;scroll-padding:0 24px}.aoh-moments::-webkit-scrollbar{display:none}
+.aoh-moment{height:32px}
+.aoh-moments[data-more-end]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+.aoh-moments[data-more-start]{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent)}
+.aoh-moments[data-more-start][data-more-end]{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent)}.aoh-frame{padding:12px}}`;
+function useRail(k) {
+  const rail = React.useRef(
+    /** @type {HTMLOListElement | null} */
+    null
+  );
+  const [edges, setEdges] = React.useState({ start: false, end: false });
+  const scan = React.useCallback(() => {
+    const l = rail.current;
+    if (!l) return;
+    const more = l.scrollWidth - l.clientWidth > 1, n = { start: more && l.scrollLeft > 1, end: more && l.scrollLeft < l.scrollWidth - l.clientWidth - 1 };
+    setEdges((p) => p.start === n.start && p.end === n.end ? p : n);
+  }, []);
+  React.useLayoutEffect(() => {
+    const l = rail.current, el = (
+      /** @type {HTMLElement | null | undefined} */
+      l?.children[k]
+    );
+    if (l && el && l.scrollWidth > l.clientWidth + 1) {
+      const left = el.offsetLeft - 28, right = el.offsetLeft + el.offsetWidth + 28 - l.clientWidth;
+      if (l.scrollLeft > left) l.scrollLeft = Math.max(0, left);
+      else if (l.scrollLeft < right) l.scrollLeft = right;
+    }
+    scan();
+  }, [k, scan]);
+  React.useEffect(() => {
+    const l = rail.current;
+    if (!l) return;
+    const ro = new ResizeObserver(scan);
+    ro.observe(l);
+    return () => ro.disconnect();
+  }, [scan]);
+  return { ref: rail, onScroll: scan, "data-more-start": edges.start ? "" : void 0, "data-more-end": edges.end ? "" : void 0 };
+}
 function App({ start = 2 }) {
   const [k, setK] = React.useState(start);
-  const [playing, setPlaying] = React.useState(false);
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState("");
-  React.useEffect(() => {
-    if (!playing) return;
-    if (k >= MOMENTS.length - 1) {
-      setPlaying(false);
-      return;
-    }
-    const t = setTimeout(() => setK(k + 1), 2400);
-    return () => clearTimeout(t);
-  }, [playing, k]);
+  const rail = useRail(k);
   const go = (i) => {
     setK(i);
     setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`);
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "aoh" }, /* @__PURE__ */ React.createElement("style", null, CSS), /* @__PURE__ */ React.createElement("div", { className: "aoh-frame" }, /* @__PURE__ */ React.createElement(Orchestration, { k })), /* @__PURE__ */ React.createElement("nav", { className: "aoh-rail", "aria-label": "Moments in the launch" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: () => {
-    if (k >= MOMENTS.length - 1) setK(0);
-    setPlaying(!playing);
-  } }, playing ? "Pause" : "Play"), /* @__PURE__ */ React.createElement("ol", { className: "aoh-moments" }, MOMENTS.map((m, i) => /* @__PURE__ */ React.createElement("li", { key: m.id }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "aoh-moment", "aria-current": i === k ? "step" : void 0, onClick: () => {
-    setPlaying(false);
-    go(i);
-  } }, m.name)))), /* @__PURE__ */ React.createElement(A.Switch, { checked: notes, onCheckedChange: setNotes, label: "Notes" })), notes && /* @__PURE__ */ React.createElement(A.Alert, { className: "aoh-note", role: "note", title: MOMENTS[k].name }, MOMENTS[k].note), /* @__PURE__ */ React.createElement("span", { className: "alt-sr", role: "status" }, said));
+  return /* @__PURE__ */ React.createElement("div", { className: "aoh" }, /* @__PURE__ */ React.createElement("style", null, CSS), /* @__PURE__ */ React.createElement("nav", { className: "aoh-rail", "aria-label": "Moments in the launch" }, /* @__PURE__ */ React.createElement("ol", { className: "aoh-moments", ...rail }, MOMENTS.map((m, i) => /* @__PURE__ */ React.createElement("li", { key: m.id }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "aoh-moment", "aria-current": i === k ? "step" : void 0, onClick: () => go(i) }, m.name)))), /* @__PURE__ */ React.createElement(A.Switch, { checked: notes, onCheckedChange: setNotes, label: "Notes" })), notes && /* @__PURE__ */ React.createElement(A.Alert, { className: "aoh-note", role: "note", title: MOMENTS[k].name }, MOMENTS[k].note), /* @__PURE__ */ React.createElement("div", { className: "aoh-frame" }, /* @__PURE__ */ React.createElement(Orchestration, { k })), /* @__PURE__ */ React.createElement("span", { className: "alt-sr", role: "status" }, said));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

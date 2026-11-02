@@ -2,7 +2,8 @@
 // without page errors, and shows its state: asked, thinking (reasoning streaming), searching (subagents in parallel),
 // writing (a streaming answer), approval (a requested Confirmation), question (asking), test failed (a failed step,
 // "Exited with 1"), retried ("Exited with 0"), queued, reviewing (an undecided hunk), rewound (a checkpoint), done (a
-// complete answer with follow-ups). The rail marks the current moment and announces it; Play advances. Run after a
+// complete answer with follow-ups). The rail marks the current moment and announces it; on a phone it's one row that
+// scrolls within itself and keeps the current moment in view, and the page never scrolls sideways. Run after a
 // render of every preview (it opens test/p-AgentHarness-<scheme>.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
@@ -41,11 +42,25 @@ for (const scheme of ['daylight', 'nightfall']) {
     // Keyboard: the rail's moments are buttons in the tab order.
     await page.focus('.ah-moment >> nth=4'); await page.keyboard.press('Enter'); await page.waitForTimeout(120);
     expect(await page.evaluate(() => document.querySelector('.ah-moment[aria-current="step"]')?.textContent) === 'Approval needed', 'Enter on a moment jumps to it');
-    await page.click('.ah-rail > button'); await page.waitForTimeout(2700);
-    expect(await page.evaluate(() => document.querySelector('.ah-moment[aria-current="step"]')?.textContent) === 'Question', 'Play advances to the next moment');
-    await page.click('.ah-rail > button');
+    expect(await page.evaluate(() => !document.querySelector('.ah-rail button:not(.ah-moment):not([role="switch"])')), 'the rail is only the moments and Notes');
   }
   await page.close();
+}
+// On a phone: the rail is one row above the harness, scrolls within itself, keeps the current moment in view, and the
+// harness fits the screen under it.
+{
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  await page.goto(`file://${T}p-AgentHarness-daylight.html`); await page.waitForTimeout(400);
+  await page.click('.ah-moment:text-is("Done")'); await page.waitForTimeout(150);
+  const m = await page.evaluate(() => { const l = document.querySelector('.ah-moments'), cur = document.querySelector('.ah-moment[aria-current]').getBoundingClientRect(), r = l.getBoundingClientRect();
+    const tops = new Set([...l.querySelectorAll('.ah-moment')].map((b) => Math.round(b.offsetTop)));
+    return { rows: tops.size, inView: cur.left >= r.left - 1 && cur.right <= r.right + 1, fades: l.hasAttribute('data-more-start'), page: document.documentElement.scrollWidth,
+      above: l.getBoundingClientRect().bottom <= document.querySelector('.ah-frame').getBoundingClientRect().top, frame: document.querySelector('.ah-frame').getBoundingClientRect().height }; });
+  expect(m.rows === 1 && m.inView && m.fades && m.above, `phone: the rail is one row above the harness, with the current moment in view and a fade where there's more (${JSON.stringify(m)})`);
+  expect(m.page <= 375, `phone: the page doesn't scroll sideways (${m.page})`);
+  expect(m.frame <= 640, `phone: the harness is no taller than on a desktop (${m.frame})`);
+  await ctx.close();
 }
 console.log(`Agent harness: ${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;

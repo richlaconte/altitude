@@ -4,7 +4,9 @@
 // catch trouble before it lands (two agents changing one file, an agent making no progress), see what each is doing in
 // a line, open one to steer it, and see where the time went, above all the time agents spent waiting on you.
 // The roster sits on the left, needing you first; the decisions waiting on you lead the main column, above the agent
-// that's open, so you can answer them in a row without opening each one.
+// that's open, so you can answer them in a row without opening each one. On a phone the regions are three panes (Needs
+// you, Agents, Timeline) shown one at a time: each moment opens the pane its change is in, and opening an agent shows it
+// in place of the roster, with a way back.
 // Like the agent harness, the run is a script: each agent's history is a list of state changes at minutes from the
 // start, and a moment is the fold of every history up to its minute, so every state is reachable on demand and is the
 // same every time. The site's agent page, the "AgentOrchestration" story and its render in CI all use this file.
@@ -17,16 +19,16 @@ import * as A from 'altitude-design';
 /** Minute 0 of the run, fixed so every render is identical. */
 const T0 = Date.UTC(2026, 9, 31, 14, 0);
 const at = (/** @type {number} */ m) => T0 + m * 60000;
-/** The moments the rail can jump to: the minute each happens at, and why the view looks as it does. */
+/** The moments the rail can jump to: the minute each happens at, why the view looks as it does, and (on a phone) the pane it shows. */
 const MOMENTS = [
-  { id: 'planned', name: 'Planned', t: 1, note: 'The lead agent reads the brief and splits the launch into tasks. One agent, working: a lamp plate says so, never a spinner.' },
-  { id: 'fanned', name: 'Fanned out', t: 4, note: 'Four agents work at once. Working never hovers: a lamp plate says it. QA waits on two others, and says which.' },
-  { id: 'asking', name: 'Two need you', t: 9, note: 'Decisions gather in one queue, oldest first, each a raised card you can answer in place. The fleet leads with the same agents.' },
-  { id: 'overlap', name: 'Overlap', t: 12, note: 'Two agents are changing the same file. The row says so before either merges, so you can steer one away early.' },
-  { id: 'stalled', name: 'Stalled', t: 17, note: 'An agent still running but making no progress is a suspicion, not a request: a caution plate in the working group, not a card.' },
-  { id: 'failed', name: 'Failed', t: 22, note: 'A failed agent waits on you like a question does: it joins the queue with Retry. A finished pull request asks for review.' },
-  { id: 'reviewing', name: 'Reviewed', t: 26, note: 'Answered requests leave the queue; finished agents fold away, stamped with a check and how long they took.' },
-  { id: 'done', name: 'All done', t: 31, note: 'The lanes show where the time went. The takeaway leads with the time agents spent waiting on you.' },
+  { id: 'planned', name: 'Planned', t: 1, pane: 'agents', note: 'The lead agent reads the brief and splits the launch into tasks. One agent, working: a lamp plate says so, never a spinner.' },
+  { id: 'fanned', name: 'Fanned out', t: 4, pane: 'agents', note: 'Four agents work at once. Working never hovers: a lamp plate says it. QA waits on two others, and says which.' },
+  { id: 'asking', name: 'Two need you', t: 9, pane: 'needs', note: 'Decisions gather in one queue, oldest first, each a raised card you can answer in place. The fleet leads with the same agents.' },
+  { id: 'overlap', name: 'Overlap', t: 12, pane: 'agents', note: 'Two agents are changing the same file. The row says so before either merges, so you can steer one away early.' },
+  { id: 'stalled', name: 'Stalled', t: 17, pane: 'agents', note: 'An agent still running but making no progress is a suspicion, not a request: a caution plate in the working group, not a card.' },
+  { id: 'failed', name: 'Failed', t: 22, pane: 'needs', note: 'A failed agent waits on you like a question does: it joins the queue with Retry. A finished pull request asks for review.' },
+  { id: 'reviewing', name: 'Reviewed', t: 26, pane: 'agents', note: 'Answered requests leave the queue; finished agents fold away, stamped with a check and how long they took.' },
+  { id: 'done', name: 'All done', t: 31, pane: 'time', note: 'The lanes show where the time went. The takeaway leads with the time agents spent waiting on you.' },
 ];
 /**
  * Each agent: its plan (the steps the detail shows) and its history, [minute, change] pairs folded in order.
@@ -127,11 +129,26 @@ function Detail({ agent, onStop }) {
   );
 }
 
+const NARROW = '(max-width: 760px)';
+/** True on a phone-width screen; false wherever there's no window to ask. */
+function useNarrow() {
+  return React.useSyncExternalStore((change) => { const m = matchMedia(NARROW); m.addEventListener('change', change); return () => m.removeEventListener('change', change); },
+    () => matchMedia(NARROW).matches, () => false);
+}
+
 /** The orchestration view at moment `k`. */
 function Orchestration({ k }) {
   const t = MOMENTS[k].t, now = at(t);
   const fleet = fleetAt(t);
   const [picked, setPicked] = React.useState('pricing');
+  // On a phone the three regions are panes, one at a time: each moment opens the pane where its change is, and opening
+  // an agent shows it in place of the roster, with a way back.
+  const narrow = useNarrow();
+  const [pane, setPane] = React.useState(MOMENTS[k].pane);
+  const [opened, setOpened] = React.useState(false);
+  const [seen, setSeen] = React.useState(k);
+  if (seen !== k) { setSeen(k); setPane(MOMENTS[k].pane); setOpened(false); }
+  const open = (/** @type {string} */ id) => { setPicked(id); setOpened(true); setPane('agents'); };
   const agent = fleet.find((a) => a.id === picked) ?? fleet[0];
   const g = A.groupAgents(fleet.filter((a) => a.parent), (a) => a);
   const lead = fleet.find((a) => a.id === 'lead');
@@ -140,10 +157,10 @@ function Orchestration({ k }) {
     <A.AgentFleetItem key={a.id} name={a.name} state={a.state} needs={a.needs} activity={a.activity} since={a.since} startedAt={a.startedAt} endedAt={a.endedAt}
       step={a.step && !['done', 'queued', 'blocked'].includes(a.state) ? { current: a.step, total: a.plan.length } : undefined} blockedBy={a.blockedBy} conflict={a.conflict ?? undefined}
       stalledReason={a.stalledReason} cost={a.cost ? money(a.cost) : undefined} output={a.pr ? <A.Badge tone={a.state === 'done' ? 'positive' : 'caution'} variant="soft">#{a.pr}</A.Badge> : undefined}
-      selected={a.id === agent?.id} onSelect={() => setPicked(a.id)} />
+      selected={a.id === agent?.id} onSelect={() => open(a.id)} />
   );
   const requests = g.needsYou.map((a) => (
-    <A.AgentRequest key={a.id + a.since} agent={a.name} kind={a.state === 'failed' ? 'failed' : a.needs} since={a.since} onOpen={() => setPicked(a.id)}
+    <A.AgentRequest key={a.id + a.since} agent={a.name} kind={a.state === 'failed' ? 'failed' : a.needs} since={a.since} onOpen={() => open(a.id)}
       title={a.state === 'failed' ? 'Checkout tests failed' : a.needs === 'approval' ? 'Run the plans-table migration on staging?' : a.needs === 'review' ? `Review pull request #${a.pr}` : a.activity}
       detail={a.state === 'failed' ? a.activity : a.needs === 'approval' ? 'Adds annual price columns to 4 plans on staging. Production isn\'t touched.' : a.needs === 'review' ? a.activity : undefined}
       actions={a.state === 'failed' ? <A.Button size="sm" variant="secondary">Retry</A.Button>
@@ -151,72 +168,125 @@ function Orchestration({ k }) {
         : a.needs === 'question' ? <><A.Button size="sm" variant="secondary">Active only</A.Button><A.Button size="sm" variant="secondary">Everyone</A.Button></>
         : <A.Button size="sm" variant="secondary">Review changes</A.Button>} />
   ));
+  const header = (
+    <A.PageHeader actions={<A.Button size="sm" variant="secondary">Start an agent</A.Button>} overflow={[{ label: 'Stop every agent', tone: 'critical', onSelect: () => {} }]}>
+      <A.PageHeaderTitle>Launch annual pricing</A.PageHeaderTitle>
+      <A.PageHeaderDescription>{A.summarizeFleet(fleet.map((a) => a.state))}</A.PageHeaderDescription>
+    </A.PageHeader>
+  );
+  const roster = (
+    <A.AgentFleet now={now} aria-label="Agents on this launch">
+      {lead && <A.AgentFleetGroup label="Lead agent" count={null}><A.AgentFleetItem name={lead.name} state={lead.state} activity={lead.activity} startedAt={lead.startedAt} endedAt={lead.endedAt}
+        step={lead.state !== 'done' ? { current: lead.step, total: lead.plan.length } : undefined} selected={lead.id === agent?.id} onSelect={() => open('lead')} /></A.AgentFleetGroup>}
+      <A.AgentFleetGroup label="Needs you">{g.needsYou.map(row)}</A.AgentFleetGroup>
+      <A.AgentFleetGroup label="Working">{g.working.map(row)}</A.AgentFleetGroup>
+      <A.AgentFleetGroup label="Done" collapsible defaultOpen={false}>{g.finished.map(row)}</A.AgentFleetGroup>
+    </A.AgentFleet>
+  );
+  const meter = <A.Meter label="Spent on this launch" value={spent} max={5} high={4} format={money} />;
+  const lanes = <A.AgentLanes now={now} start={T0} lanes={fleet.filter((a) => a.segments.length).map((a) => ({ id: a.id, name: a.name, segments: a.segments }))} selected={agent?.id} onSelect={open} />;
+  if (narrow) return (
+    <div className="ao">
+      {header}
+      <A.Tabs variant="segmented" className="ao-panes" value={pane} onValueChange={setPane}>
+        <A.TabsList aria-label="Show">
+          <A.TabsTrigger value="needs">{g.needsYou.length ? `Needs you (${g.needsYou.length})` : 'Needs you'}</A.TabsTrigger>
+          <A.TabsTrigger value="agents">Agents</A.TabsTrigger>
+          <A.TabsTrigger value="time">Timeline</A.TabsTrigger>
+        </A.TabsList>
+        <A.TabsContent value="needs"><A.AgentRequests now={now} title="Waiting on you">{requests}</A.AgentRequests></A.TabsContent>
+        <A.TabsContent value="agents">
+          {opened && agent
+            ? <div className="ao-opened"><A.Button size="sm" variant="ghost" className="ao-back" onClick={() => setOpened(false)}>← All agents</A.Button><Detail agent={agent} onStop={() => {}} /></div>
+            : roster}
+        </A.TabsContent>
+        <A.TabsContent value="time"><div className="ao-time">{lanes}{meter}</div></A.TabsContent>
+      </A.Tabs>
+    </div>
+  );
   return (
     <div className="ao">
-      <A.PageHeader actions={<A.Button size="sm" variant="secondary">Start an agent</A.Button>} overflow={[{ label: 'Stop every agent', tone: 'critical', onSelect: () => {} }]}>
-        <A.PageHeaderTitle>Launch annual pricing</A.PageHeaderTitle>
-        <A.PageHeaderDescription>{A.summarizeFleet(fleet.map((a) => a.state))}</A.PageHeaderDescription>
-      </A.PageHeader>
+      {header}
       <div className="ao-body">
-        <div className="ao-side">
-          <A.AgentFleet now={now} aria-label="Agents on this launch">
-            {lead && <A.AgentFleetGroup label="Lead agent" count={null}><A.AgentFleetItem name={lead.name} state={lead.state} activity={lead.activity} startedAt={lead.startedAt} endedAt={lead.endedAt}
-              step={lead.state !== 'done' ? { current: lead.step, total: lead.plan.length } : undefined} selected={lead.id === agent?.id} onSelect={() => setPicked('lead')} /></A.AgentFleetGroup>}
-            <A.AgentFleetGroup label="Needs you">{g.needsYou.map(row)}</A.AgentFleetGroup>
-            <A.AgentFleetGroup label="Working">{g.working.map(row)}</A.AgentFleetGroup>
-            <A.AgentFleetGroup label="Done" collapsible defaultOpen={false}>{g.finished.map(row)}</A.AgentFleetGroup>
-          </A.AgentFleet>
-          <A.Meter label="Spent on this launch" value={spent} max={5} high={4} format={money} />
-        </div>
+        <div className="ao-side">{roster}{meter}</div>
         <div className="ao-main">
           <A.AgentRequests now={now}>{requests}</A.AgentRequests>
           <A.Separator />
           {agent && <Detail agent={agent} onStop={() => {}} />}
         </div>
       </div>
-      <A.AgentLanes now={now} start={T0} lanes={fleet.filter((a) => a.segments.length).map((a) => ({ id: a.id, name: a.name, segments: a.segments }))} selected={agent?.id} onSelect={setPicked} />
+      {lanes}
     </div>
   );
 }
 
-const CSS = `.aoh{display:grid;gap:12px;max-width:1100px}.aoh-frame{border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;background:var(--surface-ground)}
+const CSS = `.aoh{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.aoh-frame{border:1px solid var(--line);border-radius:var(--radius-lg);padding:16px;background:var(--surface-ground)}
 .ao{display:flex;flex-direction:column;gap:16px}.ao .alt-page-header{padding:0}
 .ao-body{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:20px;align-items:start}
 .ao-side{display:flex;flex-direction:column;gap:16px;min-width:0}.ao-main{display:flex;flex-direction:column;gap:16px;min-width:0;padding-left:20px;border-left:1px solid var(--line)}
 .ao-detail{display:flex;flex-direction:column;gap:14px}.ao-detail-head{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .ao-facts{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;font:400 14px/20px var(--font-sans)}.ao-facts dt{color:var(--ink-muted)}.ao-facts dd{margin:0}
 .ao-detail-head h3{margin:0;font:600 16px/22px var(--font-sans)}.ao-task{margin:0;color:var(--ink-muted);font:400 14px/20px var(--font-sans)}
-@media (max-width:760px){.ao-body{grid-template-columns:1fr}.ao-main{padding-left:0;border-left:0;padding-top:16px;border-top:1px solid var(--line)}}
-.aoh-rail{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.aoh-moments{display:flex;flex-wrap:wrap;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
-.aoh-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);cursor:pointer}
-.aoh-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.aoh-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:1px}`;
-/** The rail of moments, Play / Pause, and the note for the moment shown. */
+.ao-panes>.alt-tabs-list{align-self:stretch}.ao-panes .alt-tabs-trigger{flex:1 0 auto}
+.ao-opened,.ao-time{display:flex;flex-direction:column;gap:16px}.ao-back{align-self:flex-start;margin-left:-8px}
+.aoh-rail{display:flex;align-items:center;gap:8px 12px}.aoh-moments{display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
+.aoh-rail>.alt-switch-row{flex:none}
+.aoh-moment{height:28px;padding:0 10px;border:0;border-radius:var(--radius-sm);background:none;color:var(--ink-muted);font:500 12.5px/1 var(--font-sans);white-space:nowrap;cursor:pointer}
+.aoh-moment[aria-current]{background:var(--surface-raised);box-shadow:var(--elev-1);color:var(--ink)}.aoh-moment:focus-visible{outline:2px solid var(--accent-ink);outline-offset:-2px}
+@media (max-width:640px){
+.aoh-rail{position:sticky;top:var(--demo-sticky-top,0px);z-index:3;margin:-6px 0;padding:6px 0;background:var(--surface-ground)}
+.aoh-moments{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;scroll-padding:0 24px}.aoh-moments::-webkit-scrollbar{display:none}
+.aoh-moment{height:32px}
+.aoh-moments[data-more-end]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+.aoh-moments[data-more-start]{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 28px),transparent)}
+.aoh-moments[data-more-start][data-more-end]{-webkit-mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,transparent,#000 28px,#000 calc(100% - 28px),transparent)}.aoh-frame{padding:12px}}`;
+/** On a phone the rail scrolls sideways: keep the current moment in view (without scrolling the page) and fade the edge
+ * that has more, as a narrow TabsList does. */
+function useRail(k) {
+  const rail = React.useRef(/** @type {HTMLOListElement | null} */ (null));
+  const [edges, setEdges] = React.useState({ start: false, end: false });
+  const scan = React.useCallback(() => {
+    const l = rail.current;
+    if (!l) return;
+    const more = l.scrollWidth - l.clientWidth > 1, n = { start: more && l.scrollLeft > 1, end: more && l.scrollLeft < l.scrollWidth - l.clientWidth - 1 };
+    setEdges((p) => (p.start === n.start && p.end === n.end ? p : n));
+  }, []);
+  React.useLayoutEffect(() => {
+    const l = rail.current, el = /** @type {HTMLElement | null | undefined} */ (l?.children[k]);
+    if (l && el && l.scrollWidth > l.clientWidth + 1) {
+      const left = el.offsetLeft - 28, right = el.offsetLeft + el.offsetWidth + 28 - l.clientWidth;
+      if (l.scrollLeft > left) l.scrollLeft = Math.max(0, left); else if (l.scrollLeft < right) l.scrollLeft = right;
+    }
+    scan();
+  }, [k, scan]);
+  React.useEffect(() => {
+    const l = rail.current;
+    if (!l) return;
+    const ro = new ResizeObserver(scan); ro.observe(l);
+    return () => ro.disconnect();
+  }, [scan]);
+  return { ref: rail, onScroll: scan, 'data-more-start': edges.start ? '' : undefined, 'data-more-end': edges.end ? '' : undefined };
+}
+/** The rail of moments above the view, and the note for the moment shown. */
 function App({ start = 2 }) {
   const [k, setK] = React.useState(start);
-  const [playing, setPlaying] = React.useState(false);
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState('');
-  React.useEffect(() => {
-    if (!playing) return;
-    if (k >= MOMENTS.length - 1) { setPlaying(false); return; }
-    const t = setTimeout(() => setK(k + 1), 2400);
-    return () => clearTimeout(t);
-  }, [playing, k]);
+  const rail = useRail(k);
   const go = (/** @type {number} */ i) => { setK(i); setSaid(`${MOMENTS[i].name}: ${MOMENTS[i].note}`); };
   return (
     <div className="aoh">
       <style>{CSS}</style>
-      <div className="aoh-frame"><Orchestration k={k} /></div>
       <nav className="aoh-rail" aria-label="Moments in the launch">
-        <A.Button size="sm" variant="secondary" onClick={() => { if (k >= MOMENTS.length - 1) setK(0); setPlaying(!playing); }}>{playing ? 'Pause' : 'Play'}</A.Button>
-        <ol className="aoh-moments">
+        <ol className="aoh-moments" {...rail}>
           {MOMENTS.map((m, i) => (
-            <li key={m.id}><button type="button" className="aoh-moment" aria-current={i === k ? 'step' : undefined} onClick={() => { setPlaying(false); go(i); }}>{m.name}</button></li>
+            <li key={m.id}><button type="button" className="aoh-moment" aria-current={i === k ? 'step' : undefined} onClick={() => go(i)}>{m.name}</button></li>
           ))}
         </ol>
         <A.Switch checked={notes} onCheckedChange={setNotes} label="Notes" />
       </nav>
       {notes && <A.Alert className="aoh-note" role="note" title={MOMENTS[k].name}>{MOMENTS[k].note}</A.Alert>}
+      <div className="aoh-frame"><Orchestration k={k} /></div>
       <span className="alt-sr" role="status">{said}</span>
     </div>
   );
