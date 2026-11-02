@@ -96,6 +96,7 @@ const rules = [
     bad: 'Seamlessly sync your files', good: 'Sync your files' },
   { id: 'CP2', files: MARKUP, test: (l) => /Welcome back!|Something went wrong|\bOops\b|>\s*(?:OK|Submit)\s*</.test(l), bad: '<Button>Submit</Button>', good: '<Button>Send invite</Button>' },
   { id: 'CP3', files: MARKUP, test: (l) => /<(Button|Link|a)\b[^>]*>[^<]*(?:→|->)\s*<\/\1>/.test(l), bad: '<Button>Get started →</Button>', good: '<Button>Create workspace</Button>' },
+  { id: 'CP5', files: MARKUP, test: (l) => /<(Button|Link|a)\b[^>]*>\s*(?:Learn more|Read more|Click here|See more|More|Here)\s*<\/\1>/i.test(l), bad: '<Link href="/pricing">Learn more</Link>', good: '<Link href="/pricing">Compare plans</Link>' },
   { id: 'CP4', files: MARKUP, test: (l) => /\bAI-powered\b/i.test(l), bad: 'The AI-powered inbox for modern teams', good: 'Sort your inbox by who is waiting' },
   { id: 'CN1', files: /\.css$/, test: (l) => /(?:^|[{;\s])font-family:(?!\s*(?:var\(|inherit|initial|unset))/.test(l) && !/^\s*--/.test(l), bad: '.title { font-family: "Fraunces", serif; }', good: '.title { font-family: var(--font-sans); }' },
 ];

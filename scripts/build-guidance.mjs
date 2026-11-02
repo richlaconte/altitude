@@ -21,7 +21,7 @@ export function buildGuidance(destination = resolve(root,'dist/guidance')) {
   cpSync(base,destination,{recursive:true});
   cpSync(resolve(root,'docs/framework/AGENT-SETUP.md'),resolve(destination,'agent-setup.md'));
   mkdirSync(resolve(destination,'visual'),{recursive:true});
-  for (const name of ['Elevation.md','Research.md']) cpSync(resolve(root,'project',name),resolve(destination,'visual',name));
+  for (const name of ['Elevation.md','Research.md','Fundamentals.md']) cpSync(resolve(root,'project',name),resolve(destination,'visual',name));
   const snapshots = {};
   for (const ref of refs) {
     if (!existsSync(resolve(root,ref))) throw new Error(`Missing guidance reference: ${ref}`);
@@ -30,7 +30,7 @@ export function buildGuidance(destination = resolve(root,'dist/guidance')) {
     cpSync(resolve(root,ref),resolve(destination,target));
     snapshots[ref]=target;
   }
-  const sourceFiles = [...listFiles(base),...refs.map(p=>resolve(root,p)),resolve(root,'project/Elevation.md'),resolve(root,'project/Research.md'),resolve(root,'docs/framework/AGENT-SETUP.md')].sort();
+  const sourceFiles = [...listFiles(base),...refs.map(p=>resolve(root,p)),resolve(root,'project/Elevation.md'),resolve(root,'project/Research.md'),resolve(root,'project/Fundamentals.md'),resolve(root,'docs/framework/AGENT-SETUP.md')].sort();
   const sourceHashes = Object.fromEntries(sourceFiles.map(p=>[relative(root,p).replaceAll('\\','/'),hash(readFileSync(p))]));
   const index = { schemaVersion:1,package:'altitude-design',version,entry:'README.md',patterns:patterns.map(p=>({id:p.id,title:p.title,intents:p.intents,purpose:p.purpose,document:p.document,metadata:`patterns/${p.id}.json`,rules:p.rules})), references:snapshots,sourceHashes };
   writeFileSync(resolve(destination,'index.json'),JSON.stringify(index,null,2)+'\n');
