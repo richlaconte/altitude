@@ -13,9 +13,10 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 
-const SOURCE = new Set(['.tsx', '.jsx', '.ts', '.js', '.mjs', '.css', '.scss']);
+const SOURCE = new Set(['.tsx', '.jsx', '.ts', '.js', '.mjs', '.css', '.scss', '.html']);
 const SKIP = new Set(['node_modules', 'dist', 'build', 'out', '.next', '.git', 'coverage', 'storybook-static']);
 const COLOUR = /#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\(/;
+const TAILWIND_COLOUR = /(?:^|[\s"'`:])(?:text|bg|border|ring|outline|fill|stroke|from|via|to|divide|placeholder|decoration|caret|accent)-(?:(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)|white|black|\[(?:#|rgb|hsl|oklch))/;
 
 function files(dir) {
   const out = [];
@@ -54,7 +55,8 @@ export function scan(root, { tokenNames = new Set() } = {}) {
     const raw = readFileSync(file, 'utf8');
     const text = uncomment(raw);
     const lines = text.split('\n'), rawLines = raw.split('\n');
-    const css = /\.s?css$/.test(file);
+    // HTML is read like CSS: its <style> blocks and style="" attributes hold declarations.
+    const css = /\.(s?css|html)$/.test(file);
     if (/from\s+['"]altitude-design['"]|require\(\s*['"]altitude-design['"]\s*\)/.test(text)) usesAltitude = true;
     if (/['"]altitude-design\/altitude(\.no-fonts)?\.css['"]/.test(text)) stylesheet = true;
     lines.forEach((line, i) => {
@@ -65,10 +67,13 @@ export function scan(root, { tokenNames = new Set() } = {}) {
       if (COLOUR.test(line) && !skip('ALT-TOKEN-001')) {
         const definesToken = /^\s*--[\w-]+\s*:/.test(line) || [...line.matchAll(/['"]?([a-z][\w-]*)['"]?\s*:\s*['"`]?(?:#|rgb|hsl|oklch)/g)].some((m) => tokenNames.has(m[1]));
         const accent = /\baccent\s*=\s*\{?\s*['"`]#/.test(line);
-        // In CSS, any declaration other than a custom property's whose value holds a colour.
-        const inStyle = css ? [...line.matchAll(/(?:^|[{;])\s*([a-z-]+)\s*:\s*([^;{}]+)/g)].some((m) => !m[1].startsWith('--') && COLOUR.test(m[2]))
+        // In CSS (and HTML's style="" attributes), any declaration other than a custom property's whose value holds a colour.
+        const inStyle = css ? [...line.matchAll(/(?:^|[{;"'])\s*([a-z-]+)\s*:\s*([^;{}"']+)/g)].some((m) => !m[1].startsWith('--') && COLOUR.test(m[2]))
           : /\bstyle=\{\{|(?:color|background|backgroundColor|borderColor|fill|stroke|boxShadow|outlineColor)\s*[:=]/.test(line);
         if (!definesToken && !accent && inStyle) add('ALT-TOKEN-001', file, at, line.trim().slice(0, 160), 'Use a token instead: var(--ink-muted), var(--accent), var(--surface-raised) and the rest of tokens.css. A brand colour goes to AltitudeProvider accent, and a full palette to a custom scheme.');
+      } else if (!css && TAILWIND_COLOUR.test(line) && /\bclass(Name)?=/.test(line) && !skip('ALT-TOKEN-001')) {
+        // A Tailwind palette class (text-zinc-500, bg-white, bg-[#fafafa]) bypasses the tokens just as a literal does.
+        add('ALT-TOKEN-001', file, at, line.trim().slice(0, 160), 'Use a token instead of a palette class: style={{ color: "var(--ink-muted)" }} or a class whose CSS uses the tokens.');
       }
       if (css) return;
       // ALT-CHART-001: pie and donut charts from the usual libraries.
