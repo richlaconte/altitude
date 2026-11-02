@@ -1,0 +1,11 @@
+/* Team notes (#400). One column; the list is the lead. */
+.hello { max-width: 720px; margin: 0 auto; padding: var(--space-8) var(--space-4); display: grid; gap: var(--space-6); }
+.hello-add { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: var(--space-3); }
+@media (max-width: 480px) { .hello-add { grid-template-columns: 1fr; } }
+.hello-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.hello-note { display: grid; gap: var(--space-1); padding: var(--space-4) var(--space-5); }
+.hello-text { margin: 0; font: 400 15px/23px var(--font-sans); }
+.hello-meta, .hello-loading { margin: 0; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+.hello-failed { color: var(--critical); }
+.hello-retry { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: var(--space-2); }
+.hello-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
