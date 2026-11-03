@@ -4253,7 +4253,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    proposal is approved its commitment belongs to the card (applying: the card is pending; not applied: its trench), so
    the slip lies flush: two things never hover at once. Stale is flush and muted, with Dismiss only. */
 .alt-board-proposals { position: relative; display: grid; gap: var(--space-2); margin-top: var(--space-2); }
-.alt-board-proposal { display: grid; gap: var(--space-1); padding: var(--space-2); border-radius: var(--radius-md); font: 400 12.5px/17px var(--font-sans); color: var(--ink); cursor: default; }
+.alt-board-proposal { display: grid; gap: var(--space-1); padding: var(--space-2) var(--space-2) var(--space-3); border-radius: var(--radius-md); font: 400 12.5px/17px var(--font-sans); color: var(--ink); cursor: default; }
 .alt-board-proposal[data-status="proposed"] { background: var(--surface-raised); background-image: var(--alt-sheen); box-shadow: var(--elev-1);
   animation: alt-board-proposal-rise var(--dur-travel-1) var(--ease-rise) var(--alt-rise-delay, 0ms) both; }
 .alt-board-proposal:not([data-status="proposed"]) { padding: var(--space-2) 0 0; border-top: 1px solid var(--line); border-radius: 0; }
