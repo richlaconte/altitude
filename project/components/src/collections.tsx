@@ -1010,7 +1010,7 @@ function CardRename({ label, onRename, onDone }: { label: string; onRename: (dra
 }
 
 export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(function BoardCard({ id, label, heldBy, settle, status, onRename, value, renderEditor, onSave, onValueChange,
-  className, style, onClickCapture, onKeyDown, children, ...rest }, ref) {
+  className, style, onClickCapture, onKeyDown, onFocus, children, ...rest }, ref) {
   const ctx = React.useContext(BoardCtx);
   const [mode, setMode] = React.useState<'rename' | 'edit' | null>(null);
   const self = React.useRef<HTMLDivElement | null>(null);
@@ -1055,7 +1055,7 @@ export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(functi
       {...depth} style={{ ...depth.style, ...style, ...(transform ? { transform } : null) }}
       onPointerDown={(e) => ctx?.onPointerDown(e, id)} onPointerMove={ctx?.onPointerMove} onPointerUp={ctx?.onPointerUp} onPointerCancel={ctx?.onPointerUp}
       // Focus given to the card (a press on its text, Board's refocus, an app's card.focus()) goes to its face.
-      onFocus={(e) => { if (e.target === e.currentTarget) (e.currentTarget.querySelector(':scope > .alt-board-card-face') as HTMLElement | null)?.focus({ preventScroll: true }); }}
+      onFocus={(e) => { onFocus?.(e); if (e.target === e.currentTarget) (e.currentTarget.querySelector(':scope > .alt-board-card-face') as HTMLElement | null)?.focus({ preventScroll: true }); }}
       onKeyDown={(e) => {
         // F2 edits; Space and Enter keep picking the card up (Board's model), so they can't also start an edit.
         const onFace = (e.target as HTMLElement).matches?.('.alt-board-card-face');
