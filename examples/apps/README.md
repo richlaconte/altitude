@@ -58,7 +58,7 @@ const service = createDemoService({
 await service.request('notes.add', note, { signal });
 ```
 
-A handler can `reject('invalid', 'Write the note first.', { field: 'text' })` as a server would. Failures reject with a `DemoError` whose `kind` is one of `failed`, `offline`, `conflict`, `rate-limited`, `lost-response`, `invalid` or `not-found`.
+A handler can `reject('invalid', 'Write the note first.', { field: 'text' })` as a server would (`invalid`, `not-found`, `conflict` or `unauthorized`). Failures reject with a `DemoError` whose `kind` is one of `failed`, `offline`, `conflict`, `rate-limited`, `lost-response`, `invalid`, `not-found` or `unauthorized`.
 
 | Mode | What happens | What it proves the app does |
 |---|---|---|
@@ -70,7 +70,15 @@ A handler can `reject('invalid', 'Write the note first.', { field: 'text' })` as
 | Offline | rejects at once | the app says so and keeps the input |
 | Rate limited | rejects with `retryAfter: 30000` | the app says when to try again |
 
-"Only the next request" applies a mode once, then returns to Succeed. `service.external(label, change)` changes the store as someone else would; apps refetch when `externalRevision` moves. `reset()` reseeds and moves `resetRevision`.
+"Only the next request" applies a mode once, then returns to Succeed.
+
+**One operation, not all of them.** `setMode('fail', { ops: ['metrics.errors'] })` applies the mode to those operations (handler names, listed in `service.ops`) and lets every other request succeed: one panel fails while the rest load, autosave fails while Publish works. With `once`, it's the next of those operations. The drawer's "Applies to" picks one, and the log records the mode each request actually got.
+
+**A session that ends.** `endSession()` refuses every write as `unauthorized` (reads still answer) until the app calls `signIn()`: the app keeps the person's work and asks them to sign in again. Give `ExampleFrame` `session` to offer "End the session" in the drawer. Reset signs back in.
+
+**Connectivity.** `service.onConnectivity((online) => …)` stands in for `window`'s `online` and `offline` events, and `service.isOnline()` for `navigator.onLine`: false when every request starts failing as offline, true when they stop (a once-only offline ends after its request). An offline mode limited to some operations isn't a lost connection, so it doesn't fire. An app's offline queue listens to this, never to the drawer's mode, which a real app couldn't read.
+
+`service.external(label, change)` changes the store as someone else would; apps refetch when `externalRevision` moves. `reset()` reseeds and moves `resetRevision`.
 
 In React, `useDemoQuery(service, op, input)` reads through the service: it runs on mount, again when `externalRevision` or `resetRevision` moves, and on `reload()`; it keeps the last answer while a refresh is in flight or after one fails, ignores answers to superseded requests, and offers `setData` for an optimistic write. `DemoResource` renders a query's states around its content: an imprint while the first answer is on its way, the failure with Try again, and a note when a refresh fails after an answer.
 
@@ -80,4 +88,6 @@ Jitter is seeded and a clock can be injected (`createManualClock`), so a check g
 
 ## The frame and the drawer
 
-`ExampleFrame` renders the one `AltitudeProvider`, the app, and then `FixturesDrawer` below it, outside the app's `main`: the server's mode, events from elsewhere, the page's scheme, accent, reduced motion and contrast, the request log and Reset. It's collapsed by default and says the service is simulated.
+`ExampleFrame` renders the one `AltitudeProvider`, the app, and then `FixturesDrawer` below it, outside the app's `main`: the server's mode (and which operations it applies to), events from elsewhere, the page's scheme, accent, reduced motion and contrast, the request log and Reset. It's collapsed by default and says the service is simulated.
+
+An app's own fixtures that are state rather than events, like whose view it is or whether live data is on, go in `controls`, a "This example" section above "Elsewhere": `<ExampleFrame service={service} controls={<Switch label="Live updates" checked={live} onCheckedChange={setLive} />}>`. Like the rest of the drawer, they stay outside the app's `main`, so the app never depends on them being there.
