@@ -6,6 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AgentActionPattern — Altitude</title>
 <style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
 #root { padding: 20px 24px; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .col { display: flex; flex-direction: column; gap: 14px; }
@@ -13,6 +16,14 @@
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
 /* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
 summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .ag-page{max-width:680px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:break-word}.ag-ask{justify-self:end;max-width:80%;padding:10px 14px;border-radius:var(--radius-lg);background:var(--surface-raised);box-shadow:var(--elev-1)}.ag-ask p{margin:2px 0 0;font:400 15px/23px var(--font-sans)}.ag-who,.ag-muted{font:500 12.5px/17px var(--font-sans);color:var(--ink-muted)}.ag-muted{margin:0}.ag-demo{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.ag-receipt{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font:400 14px/20px var(--font-sans)}.ag-record{display:grid;gap:6px;padding-top:12px;border-top:1px solid var(--line)}.ag-sub{font:600 17px/24px var(--font-sans);margin:0}.ag-line{margin:0;display:flex;gap:8px;align-items:center;font:400 15px/23px var(--font-sans)}
 </style>
 </head>
@@ -72,7 +83,7 @@ function App() {
   };
   const stepFor = (c) => c === "requested" ? "awaiting-approval" : c === "running" || c === "approved" ? "running" : c === "failed" ? "failed" : "done";
   const ready = archive === "done";
-  return /* @__PURE__ */ React.createElement("main", { className: "ag-page" }, /* @__PURE__ */ React.createElement("div", { className: "ag-ask" }, /* @__PURE__ */ React.createElement("span", { className: "ag-who" }, "You asked"), /* @__PURE__ */ React.createElement("p", null, "Clean up leads nobody has touched since July, and tell their owners.")), /* @__PURE__ */ React.createElement("div", { className: "ag-demo" }, /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next step fail", checked: failNext, onCheckedChange: setFailNext }), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: restart }, "Run again")), /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Assistant run: clean up stale leads" }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("main", { className: "ag-page" }, /* @__PURE__ */ React.createElement("div", { className: "ag-ask" }, /* @__PURE__ */ React.createElement("span", { className: "ag-who" }, "You asked"), /* @__PURE__ */ React.createElement("p", null, "Clean up leads nobody has touched since July, and tell their owners.")), /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Assistant run: clean up stale leads" }, /* @__PURE__ */ React.createElement(
     A.TraceStep,
     {
       title: "Find leads untouched since July",
@@ -114,7 +125,7 @@ function App() {
       onApprove: () => resolve(setPurge, true),
       onReject: () => setPurge("rejected")
     }
-  ))), email === "done" && /* @__PURE__ */ React.createElement("section", { className: "ag-record", "aria-labelledby": "ag-rec-h" }, /* @__PURE__ */ React.createElement("h3", { id: "ag-rec-h", className: "ag-sub" }, "Northwind Traders"), /* @__PURE__ */ React.createElement("p", { className: "ag-line" }, "Status: Archived ", /* @__PURE__ */ React.createElement(A.AILabel, { subject: "Change", model: "Opus 5.5", reviewedBy: "Maya Chen", generatedAt: "2026-10-30T09:00:00Z" })), /* @__PURE__ */ React.createElement("p", { className: "ag-muted" }, "Archived by the assistant, approved by Maya Chen.")));
+  ))), email === "done" && /* @__PURE__ */ React.createElement("section", { className: "ag-record", "aria-labelledby": "ag-rec-h" }, /* @__PURE__ */ React.createElement("h3", { id: "ag-rec-h", className: "ag-sub" }, "Northwind Traders"), /* @__PURE__ */ React.createElement("p", { className: "ag-line" }, "Status: Archived ", /* @__PURE__ */ React.createElement(A.AILabel, { subject: "Change", model: "Opus 5.5", reviewedBy: "Maya Chen", generatedAt: "2026-10-30T09:00:00Z" })), /* @__PURE__ */ React.createElement("p", { className: "ag-muted" }, "Archived by the assistant, approved by Maya Chen."))), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement("div", { className: "ag-demo" }, /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next step fail", checked: failNext, onCheckedChange: setFailNext }), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: restart }, "Run again"))));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

@@ -438,12 +438,9 @@ export default function FilesApp() {
 .aip-target span { color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
 .aip-documentation { margin-top: var(--space-6); border-top: 1px solid var(--line); padding-top: var(--space-4); font: 400 12.5px/17px var(--font-sans); }
 .aip a { color: var(--accent-ink); }
-.aip-harness { margin-top: var(--space-4); color: var(--ink-muted); }
-.aip-harness summary { cursor: pointer; }
-.aip-harness label { display: grid; gap: var(--space-2); }
-.aip-harness select { max-width: 100%; font: inherit; padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-sm); }
-.aip-harness-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
-.aip-harness pre { overflow: auto; max-height: 220px; font: 12px/1.5 var(--font-mono); }
+.preview-fixtures label { display: grid; gap: var(--space-2); }
+.preview-fixtures select { max-width: 100%; font: inherit; padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-sm); }
+.preview-fixtures pre { overflow: auto; max-height: 220px; font: 12px/1.5 var(--font-mono); }
 @media (max-width: 600px) { #root { padding: 16px; } .aip-list > li { align-items: stretch; flex-direction: column; gap: var(--space-2); } .aip-row-actions { align-self: flex-start; } .aip-toolbar > .alt-input { max-width: none; } .aip-header > .aip-meta { display: none; } .aip-recovery .alt-alert-inner, .aip-file .alt-alert-inner { flex-wrap: wrap; } .aip-recovery .alt-alert-body, .aip-file .alt-alert-body { flex-basis: calc(100% - 60px); } .aip-recovery .alt-alert-action, .aip-file .alt-alert-action { width: 100%; } }
 ```
 <!-- recipe-css:end -->

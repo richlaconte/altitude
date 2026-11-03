@@ -6,6 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SaveBar — Altitude</title>
 <style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
 #root { padding: 20px 24px; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .col { display: flex; flex-direction: column; gap: 14px; }
@@ -13,6 +16,14 @@
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
 /* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
 summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .sb { display: grid; grid-template-columns: repeat(2, minmax(0, 260px)); gap: 16px 24px; padding-bottom: 80px; }
 @media (max-width: 600px) { .sb { grid-template-columns: minmax(0, 1fr); } }
 </style>
@@ -32,7 +43,7 @@ function App() {
     save: (draft) => new Promise((r) => setTimeout(() => r(fail.current ? { ok: false, error: "We couldn't reach the server." } : { ok: true, value: draft }), 900))
   });
   const f = (key, label) => /* @__PURE__ */ React.createElement(A.Field, { label, error: record.errors[key] }, /* @__PURE__ */ React.createElement(A.Input, { value: record.draft[key], onChange: (e) => record.setDraft({ ...record.draft, [key]: e.target.value }) }));
-  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "sb" }, f("name", "Workspace name"), f("domain", "Domain"), f("seats", "Seats"), f("region", "Region")), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next save fail", checked: failNext, onCheckedChange: setFailNext }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Change a field: once the change settles, the bar rises from the bottom edge. \u2318S or Save hovers while saving and lowers away when saved; a failed save drops into a trench and keeps your changes."), /* @__PURE__ */ React.createElement(A.SaveBar, { record }));
+  return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement("div", { className: "sb" }, f("name", "Workspace name"), f("domain", "Domain"), f("seats", "Seats"), f("region", "Region")), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "Change a field: once the change settles, the bar rises from the bottom edge. \u2318S or Save hovers while saving and lowers away when saved; a failed save drops into a trench and keeps your changes."), /* @__PURE__ */ React.createElement(A.SaveBar, { record }), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next save fail", checked: failNext, onCheckedChange: setFailNext })));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

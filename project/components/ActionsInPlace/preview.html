@@ -6,6 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ActionsInPlace — Altitude</title>
 <style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
 #root { padding: 20px 24px; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .col { display: flex; flex-direction: column; gap: 14px; }
@@ -13,6 +16,14 @@
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
 /* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
 summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .aip { max-width: 880px; margin: 0 auto; }
 .aip-product { color: var(--ink); overflow-wrap: anywhere; }
 .aip-header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); }
@@ -41,12 +52,9 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 .aip-target span { color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
 .aip-documentation { margin-top: var(--space-6); border-top: 1px solid var(--line); padding-top: var(--space-4); font: 400 12.5px/17px var(--font-sans); }
 .aip a { color: var(--accent-ink); }
-.aip-harness { margin-top: var(--space-4); color: var(--ink-muted); }
-.aip-harness summary { cursor: pointer; }
-.aip-harness label { display: grid; gap: var(--space-2); }
-.aip-harness select { max-width: 100%; font: inherit; padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-sm); }
-.aip-harness-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
-.aip-harness pre { overflow: auto; max-height: 220px; font: 12px/1.5 var(--font-mono); }
+.preview-fixtures label { display: grid; gap: var(--space-2); }
+.preview-fixtures select { max-width: 100%; font: inherit; padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-sm); }
+.preview-fixtures pre { overflow: auto; max-height: 220px; font: 12px/1.5 var(--font-mono); }
 @media (max-width: 600px) { #root { padding: 16px; } .aip-list > li { align-items: stretch; flex-direction: column; gap: var(--space-2); } .aip-row-actions { align-self: flex-start; } .aip-toolbar > .alt-input { max-width: none; } .aip-header > .aip-meta { display: none; } .aip-recovery .alt-alert-inner, .aip-file .alt-alert-inner { flex-wrap: wrap; } .aip-recovery .alt-alert-body, .aip-file .alt-alert-body { flex-basis: calc(100% - 60px); } .aip-recovery .alt-alert-action, .aip-file .alt-alert-action { width: 100%; } }
 </style>
 </head>
@@ -488,7 +496,7 @@ function App() {
     setRun((old) => ({ fixture, key: old.key + 1 }));
     setTrace("No requests yet.");
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "aip" }, /* @__PURE__ */ React.createElement(FilesExample, { key: run.key, service, full }), /* @__PURE__ */ React.createElement(A.Toaster, null), /* @__PURE__ */ React.createElement("div", { className: "aip-documentation" }, /* @__PURE__ */ React.createElement("a", { href: full ? "#" : "#files" }, full ? "Show focused recovery example" : "Open complete Files example"), /* @__PURE__ */ React.createElement("details", { className: "aip-harness" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures and source"), /* @__PURE__ */ React.createElement("p", null, "Fictional local records. Select a fixture, then reset to mount the same example with that service behavior."), /* @__PURE__ */ React.createElement("label", null, "Service fixture ", /* @__PURE__ */ React.createElement("select", { "aria-label": "Service fixture", value: fixture, onChange: (event) => setFixture(event.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "success-100" }, "Success \xB7 100 ms"), /* @__PURE__ */ React.createElement("option", { value: "success-1200" }, "Slow success \xB7 1,200 ms"), /* @__PURE__ */ React.createElement("option", { value: "fail-once" }, "Fail once, then retry"), /* @__PURE__ */ React.createElement("option", { value: "conflict" }, "Record changes before save"), /* @__PURE__ */ React.createElement("option", { value: "interrupted-after-save" }, "Connection interrupted after save"))), /* @__PURE__ */ React.createElement("div", { className: "aip-harness-actions" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: reset }, "Reset example"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => {
+  return /* @__PURE__ */ React.createElement("div", { className: "aip" }, /* @__PURE__ */ React.createElement(FilesExample, { key: run.key, service, full }), /* @__PURE__ */ React.createElement(A.Toaster, null), /* @__PURE__ */ React.createElement("div", { className: "aip-documentation" }, /* @__PURE__ */ React.createElement("a", { href: full ? "#" : "#files" }, full ? "Show focused recovery example" : "Open complete Files example"), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement("p", null, "Fictional local records. Select a fixture, then reset to mount the same example with that service behavior."), /* @__PURE__ */ React.createElement("label", null, "Service fixture ", /* @__PURE__ */ React.createElement("select", { "aria-label": "Service fixture", value: fixture, onChange: (event) => setFixture(event.target.value) }, /* @__PURE__ */ React.createElement("option", { value: "success-100" }, "Success \xB7 100 ms"), /* @__PURE__ */ React.createElement("option", { value: "success-1200" }, "Slow success \xB7 1,200 ms"), /* @__PURE__ */ React.createElement("option", { value: "fail-once" }, "Fail once, then retry"), /* @__PURE__ */ React.createElement("option", { value: "conflict" }, "Record changes before save"), /* @__PURE__ */ React.createElement("option", { value: "interrupted-after-save" }, "Connection interrupted after save"))), /* @__PURE__ */ React.createElement("div", { className: "preview-fixtures-actions" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: reset }, "Reset example"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => {
     service.change("file-brand", { name: "Brand guidelines updated.pdf" });
     window.__filesDemo?.sync("file-brand");
   } }, "Change Brand on server"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => {

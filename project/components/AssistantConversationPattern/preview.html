@@ -6,6 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AssistantConversationPattern — Altitude</title>
 <style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
 #root { padding: 20px 24px; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .col { display: flex; flex-direction: column; gap: 14px; }
@@ -13,6 +16,14 @@
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
 /* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
 summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .ac{max-width:680px;gap:12px}.ac .alt-convo{height:300px}.ac-note{margin:4px 0 0;font:400 12.5px/17px var(--font-sans);color:var(--critical)}.ac-context{flex:1;max-width:220px}
 </style>
 </head>
@@ -49,10 +60,7 @@ function Thread({ restored }) {
   React.useEffect(() => {
     if (turn.state === "complete") setUsed((u) => Math.min(99, u + 9));
   }, [turn.state]);
-  return /* @__PURE__ */ React.createElement("div", { className: "col ac" }, /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "single", size: "sm", "aria-label": "Make the next send fail", value: failure, onValueChange: (v) => setFailure(
-    /** @type {any} */
-    v || "none"
-  ) }, /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "none" }, "Works"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "offline" }, "Offline"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "rate-limited" }, "Rate limited"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "context-full" }, "Context full")), /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Assistant" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, turn.input !== void 0 && /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, turn.input)), (turn.text || turn.state === "streaming" || turn.state === "interrupted") && /* @__PURE__ */ React.createElement(A.Message, { from: "assistant", status: turn.messageStatus, onRetry: turn.state === "stopped" || turn.state === "interrupted" ? turn.retry : void 0 }, /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, { streaming: turn.state === "streaming" }, turn.text)), turn.state === "interrupted" && /* @__PURE__ */ React.createElement("p", { className: "ac-note" }, "Interrupted: the page reloaded before this answer finished.")))), turn.state === "failed" && /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { className: "col ac" }, /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Assistant" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, turn.input !== void 0 && /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, turn.input)), (turn.text || turn.state === "streaming" || turn.state === "interrupted") && /* @__PURE__ */ React.createElement(A.Message, { from: "assistant", status: turn.messageStatus, onRetry: turn.state === "stopped" || turn.state === "interrupted" ? turn.retry : void 0 }, /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, { streaming: turn.state === "streaming" }, turn.text)), turn.state === "interrupted" && /* @__PURE__ */ React.createElement("p", { className: "ac-note" }, "Interrupted: the page reloaded before this answer finished.")))), turn.state === "failed" && /* @__PURE__ */ React.createElement(
     A.Alert,
     {
       tone: turn.error?.kind === "context-full" ? "caution" : "critical",
@@ -75,7 +83,10 @@ function Thread({ restored }) {
     },
     /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask about the release" }),
     /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.Meter, { className: "ac-context", label: "Context", value: used, max: 100, high: 80, critical: 95, format: (v) => `${v}% of context used` }), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
-  ));
+  ), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "single", size: "sm", "aria-label": "Make the next send fail", value: failure, onValueChange: (v) => setFailure(
+    /** @type {any} */
+    v || "none"
+  ) }, /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "none" }, "Works"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "offline" }, "Offline"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "rate-limited" }, "Rate limited"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "context-full" }, "Context full"))));
 }
 function App() {
   const [reloaded, setReloaded] = React.useState(false);
