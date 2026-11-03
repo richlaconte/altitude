@@ -33,6 +33,9 @@ const code=`import * as React from 'react';
 import {useEditRecord,useConsequentialAction,useReviewSubmit,ErrorSummary} from 'altitude-design';
 import {echartsTheme,chartjsDefaults,useChartTheme,type ChartTokens} from 'altitude-design/chart-themes';
 const tokens:ChartTokens={'data-1':'#123456'};const themed:string[]=echartsTheme(tokens).color;void [themed,chartjsDefaults(tokens).animation,useChartTheme];
+// Column definitions can be typed before they're passed (#427).
+import type {DataTableColumn} from 'altitude-design';
+const columns:DataTableColumn<{name:string}>[]=[{key:'name',header:'Project'}];void columns;
 function Example(){const form=useEditRecord({initialValue:{name:''},validationMode:'submit',validate:value=>value.name?{}:{name:'Enter a name'},save:async value=>({ok:true,value})});return React.createElement(ErrorSummary,{errors:[{id:'name',label:'Name',message:form.errors.name||''}]});}
 // @ts-expect-error validation policy is required
 useEditRecord({initialValue:{name:''},validate:()=>({}),save:async value=>({ok:true,value})});
