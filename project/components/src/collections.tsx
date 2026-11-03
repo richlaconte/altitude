@@ -808,7 +808,7 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
     setSaid(`${titleOf(to.column)}, position ${to.index + 1} of ${n}.`);
   };
   const onKeyDown = (e: React.KeyboardEvent, id: string) => {
-    if (e.target !== e.currentTarget) return;
+    if (!(e.target as HTMLElement).matches?.('.alt-board-card-face')) return; // the card's own keys, not its buttons'
     const at = locate(id);
     if (!at) return;
     if (e.key === ' ' || e.key === 'Enter') {
@@ -841,7 +841,7 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
   // Focus leaving a card you're holding (not because it moved column) puts it down where it is.
   const onBlur = (id: string) => {
     if (kb?.id !== id) return;
-    setTimeout(() => { if (!(document.activeElement as HTMLElement | null)?.matches?.(`[data-board-card="${CSS.escape(id)}"]`)) setKb((x) => (x?.id === id ? null : x)); }, 80);
+    setTimeout(() => { if (!(document.activeElement as HTMLElement | null)?.matches?.(`[data-board-card="${CSS.escape(id)}"] > .alt-board-card-face`)) setKb((x) => (x?.id === id ? null : x)); }, 80);
   };
   const swallowClick = () => { const d = dragged.current; dragged.current = false; return d; };
   const ctx: BoardCtxT = { carry, kb, landing, hintId, onPointerDown, onPointerMove, onPointerUp, onKeyDown, onBlur, swallowClick };
@@ -955,7 +955,7 @@ export function BoardColumn({ id, title, collapsed, defaultCollapsed = false, on
 
 export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   id: string;
-  /** How announcements name the card. Default: its first line of text. */
+  /** The card's name: its group and its draggable face are named by it, and so are announcements. Default: its first line of text. */
   label?: string;
   /** A collaborator is holding it: lifted, wearing their colour and name. It can't be picked up meanwhile. */
   heldBy?: { name: string; presence?: 1 | 2 | 3 };
@@ -1010,11 +1010,19 @@ function CardRename({ label, onRename, onDone }: { label: string; onRename: (dra
 }
 
 export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(function BoardCard({ id, label, heldBy, settle, status, onRename, value, renderEditor, onSave, onValueChange,
-  className, style, onClickCapture, onKeyDown, children, ...rest }, ref) {
+  className, style, onClickCapture, onKeyDown, onFocus, children, ...rest }, ref) {
   const ctx = React.useContext(BoardCtx);
   const [mode, setMode] = React.useState<'rename' | 'edit' | null>(null);
   const self = React.useRef<HTMLDivElement | null>(null);
-  const name = label ?? id;
+  // Without a label the card is named by its first line: the first thing written on it, as announcements read it.
+  const [firstLine, setFirstLine] = React.useState<string | undefined>(undefined);
+  useIsoLayoutEffect(() => {
+    if (label || !self.current) return;
+    const first = Array.from(self.current.children).find((c) => !c.matches('.alt-board-card-face, .alt-board-card-tools'));
+    const t = first?.textContent?.trim() || undefined;
+    setFirstLine((p) => (p === t ? p : t));
+  });
+  const name = label ?? firstLine ?? id;
   const depth = useDepth({ heldBy, settle, status });
   // Back from editing: focus returns to the card.
   const refocus = React.useRef(false);
@@ -1034,21 +1042,31 @@ export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(functi
   const shift = carry?.shifts[id];
   const transform = following ? `translate(${carry!.dx}px, ${carry!.dy}px)` : shift ? `translateY(${shift}px)` : undefined;
   const editable = !!onRename || !!(value && renderEditor);
+  // The card is a group: its face is the draggable button, and what's written on it and its buttons are the face's
+  // siblings, never its children. A button's children are presentational, so a Rename or Details inside one would fold
+  // into its name ("Write release notes Docs · Jon Rename …") and some screen readers wouldn't reach it (#457). The face
+  // lies under the content (z-index −1 in the card's own stacking context), so a press anywhere on the card reaches the
+  // card's pointer handlers and the card's buttons stay on top.
+  const content = mode === 'rename' && onRename ? <CardRename label={name} onRename={onRename} onDone={done} /> : children;
   return (
     <div ref={(el) => { self.current = el; if (typeof ref === 'function') ref(el); else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = el; }}
-      className={cx('alt-board-card', className)} data-board-card={id} data-label={label} tabIndex={0} role="button" data-editing={mode ? '' : undefined}
-      aria-roledescription="draggable card" aria-describedby={ctx?.hintId} aria-pressed={ctx?.kb?.id === id ? true : undefined}
+      className={cx('alt-board-card', className)} data-board-card={id} data-label={label} role="group" aria-label={name} tabIndex={-1} data-editing={mode ? '' : undefined}
       data-carried={carried ? '' : undefined} data-following={following ? '' : undefined} data-landing={ctx?.landing === id ? '' : undefined}
       {...depth} style={{ ...depth.style, ...style, ...(transform ? { transform } : null) }}
       onPointerDown={(e) => ctx?.onPointerDown(e, id)} onPointerMove={ctx?.onPointerMove} onPointerUp={ctx?.onPointerUp} onPointerCancel={ctx?.onPointerUp}
+      // Focus given to the card (a press on its text, Board's refocus, an app's card.focus()) goes to its face.
+      onFocus={(e) => { onFocus?.(e); if (e.target === e.currentTarget) (e.currentTarget.querySelector(':scope > .alt-board-card-face') as HTMLElement | null)?.focus({ preventScroll: true }); }}
       onKeyDown={(e) => {
         // F2 edits; Space and Enter keep picking the card up (Board's model), so they can't also start an edit.
-        if (e.key === 'F2' && e.target === e.currentTarget && editable && !ctx?.kb) { e.preventDefault(); setMode(onRename ? 'rename' : 'edit'); return; }
+        const onFace = (e.target as HTMLElement).matches?.('.alt-board-card-face');
+        if (e.key === 'F2' && onFace && editable && !ctx?.kb) { e.preventDefault(); setMode(onRename ? 'rename' : 'edit'); return; }
         onKeyDown?.(e);
         if (!mode) ctx?.onKeyDown(e, id);
       }} onBlur={() => ctx?.onBlur(id)}
       onClickCapture={(e) => { if (ctx?.swallowClick()) { e.preventDefault(); e.stopPropagation(); } else onClickCapture?.(e); }} {...rest}>
-      {mode === 'rename' && onRename ? <CardRename label={name} onRename={onRename} onDone={done} /> : children}
+      {!mode && <div className="alt-board-card-face" role="button" tabIndex={0} aria-roledescription="draggable card" aria-label={name}
+        aria-describedby={ctx?.hintId} aria-pressed={ctx?.kb?.id === id ? true : undefined} />}
+      {content}
       {editable && !mode && <span className="alt-board-card-tools">
         {onRename && <Button size="sm" variant="ghost" aria-label={`Rename ${name}`} onClick={() => setMode('rename')}>Rename</Button>}
         {value && renderEditor && <Button size="sm" variant="ghost" aria-label={`Edit ${name}`} onClick={() => setMode('edit')}>Edit</Button>}

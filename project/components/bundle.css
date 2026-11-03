@@ -2969,11 +2969,15 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-board-card {
   position: relative; padding: 10px 12px; border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--elev-1);
   color: var(--ink); font: 500 14px/20px var(--font-sans); cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; outline: none;
+  isolation: isolate;
   transition: box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1), transform var(--dur-travel-2) var(--ease-settle),
     rotate var(--dur-travel-2) var(--ease-settle), scale var(--dur-travel-2) var(--ease-settle);
 }
+/* The face is the card's draggable button (#457): it covers the card under what's written on it, inside the card's own
+   stacking context, so it takes focus and presses while the card's buttons stay above it. Its focus ring is the card's. */
+.alt-board-card-face { position: absolute; inset: 0; z-index: -1; border-radius: inherit; outline: none; }
 @media (hover: hover) { .alt-board-card:hover:not([data-carried]):not([data-held]):not([data-status="failed"]) { box-shadow: var(--elev-2); } }
-.alt-board-card:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-board-card:has(> .alt-board-card-face:focus-visible) { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .alt-board-card[data-carried] { z-index: 10; cursor: grabbing; background: var(--surface-floating); box-shadow: var(--elev-3); rotate: calc(-1.2deg * var(--alt-travel)); scale: calc(1 + 0.015 * var(--alt-travel)); }
 .alt-board-card[data-carried]:not([data-following]) { transform: translateY(calc(-3px * var(--alt-travel))); }
 .alt-board-card[data-following] { transition: box-shadow var(--dur-travel-1), background-color var(--dur-travel-1), rotate var(--dur-travel-2) var(--ease-settle), scale var(--dur-travel-2) var(--ease-settle); }
@@ -2982,7 +2986,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 /* A write about the card (#438): the shared commitment readings, restated here because the card's own surface and shadow
    share their specificity and come later. Pending's hover is an animation, which wins anyway; failed needs the trench. */
 .alt-board-card[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench); outline: 1px solid var(--critical); outline-offset: -1px; }
-.alt-board-card[data-status="failed"]:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; } /* focus stays visible on a refused card */
+.alt-board-card[data-status="failed"]:has(> .alt-board-card-face:focus-visible) { outline: 2px solid var(--accent-ink); outline-offset: 2px; } /* focus stays visible on a refused card */
 /* Reduced motion: pending is a shadow without the hover's travel, as everywhere, restated over the card's own elev-1. */
 @media (prefers-reduced-motion: reduce) { .alt-board-card[data-status="pending"] { box-shadow: var(--elev-2); transition: box-shadow var(--dur-travel-1) var(--ease-rise) var(--dur-grace); } }
 [data-motion="reduced"] .alt-board-card[data-status="pending"] { box-shadow: var(--elev-2); transition: box-shadow var(--dur-travel-1) var(--ease-rise) var(--dur-grace); }
@@ -4235,7 +4239,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-board-rename { display: grid; gap: var(--space-1); }
 .alt-board-card[data-editing] { cursor: default; }
 .alt-board-card-tools { position: absolute; top: 4px; right: 4px; display: inline-flex; gap: 2px; opacity: 0; transition: opacity var(--dur-travel-1); }
-.alt-board-card:focus-within .alt-board-card-tools, .alt-board-card:focus-visible .alt-board-card-tools { opacity: 1; }
+.alt-board-card:focus-within .alt-board-card-tools { opacity: 1; }
 @media (hover: hover) { .alt-board-card:hover .alt-board-card-tools { opacity: 1; } }
 /* Without hover the tools are always there, or a finger could never find them (#254). */
 @media (hover: none) { .alt-board-card-tools { opacity: 1; } }
