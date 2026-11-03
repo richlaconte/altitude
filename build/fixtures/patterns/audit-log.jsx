@@ -15,7 +15,7 @@ const SEED = Array.from({ length: 22 }, /** @returns {AuditEvent} */ (_, i) => {
   const actor = ACTORS[i % 3].value, kind = ACTIONS[i % 3].value, day = String(28 - Math.floor(i / 3)).padStart(2, '0');
   const at = `2026-10-${day}T${String(17 - (i % 3) * 3).padStart(2, '0')}:${String((i * 7) % 60).padStart(2, '0')}:00Z`;
   if (kind === 'role') return { id: 'e' + i, actor, action: kind, resource: 'Ines Duarte', sentence: `${actor} changed Ines Duarte’s role from Member to Admin`, at, ip: '81.2.69.' + (10 + i), before: { role: 'Member' }, after: { role: 'Admin' } };
-  if (kind === 'invite') return { id: 'e' + i, actor, action: kind, resource: `guest${i}@acme.dev`, sentence: `${actor} invited guest${i}@acme.dev as a Viewer`, at, ip: '81.2.69.' + (10 + i), before: { invited: 'No' }, after: { invited: 'Yes, as Viewer' } };
+  if (kind === 'invite') return { id: 'e' + i, actor, action: kind, resource: `guest${i}@saltmarsh.example`, sentence: `${actor} invited guest${i}@saltmarsh.example as a Viewer`, at, ip: '81.2.69.' + (10 + i), before: { invited: 'No' }, after: { invited: 'Yes, as Viewer' } };
   return { id: 'e' + i, actor, action: kind, resource: 'Production key', sentence: `${actor} rotated the Production API key`, at, ip: '81.2.69.' + (10 + i), before: { key: 'ak_live_EXAMPLE…4f2a' }, after: { key: 'ak_live_EXAMPLE…9c1d' } };
 });
 /** @type {A.FilterField[]} */
@@ -49,7 +49,7 @@ function App() {
   return (
     <main className="al-page">
       <h2 className="al-h">Audit log</h2>
-      <p className="al-note">Every change in the Acme workspace, kept for 90 days on the Pro plan. Older events are deleted.</p>
+      <p className="al-note">Every change in the Saltmarsh workspace, kept for 90 days on the Pro plan. Older events are deleted.</p>
       <div className="al-tools">
         <A.FilterBar aria-label="Filter events" fields={FIELDS} value={filters} onValueChange={(f) => { setFilters(f); setPage(1); }} resultCount={matching.length} />
         <A.Button onClick={runExport} disabled={exporting !== null}>Export CSV</A.Button>

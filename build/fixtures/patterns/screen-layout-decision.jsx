@@ -18,7 +18,7 @@ function App() {
   const outcome = React.useRef(/** @type {HTMLDivElement | null} */ (null));
   const [sending, setSending] = React.useState(/** @type {'approved' | 'declined' | null} */ (null));
   const decide = (result) => {
-    if (result === 'declined' && !reason.trim()) { setReasonError('Say why, so Support can tell Northwind.'); document.getElementById('ld-reason')?.focus(); return; }
+    if (result === 'declined' && !reason.trim()) { setReasonError('Say why, so Support can tell Quarry Lane Vets.'); document.getElementById('ld-reason')?.focus(); return; }
     setSending(result); setPhase('sending');
     window.setTimeout(() => { setPhase(result); requestAnimationFrame(() => outcome.current?.focus()); }, 600);
   };
@@ -27,20 +27,20 @@ function App() {
   return (
     <main className="ld-page">
       <A.PageHeader breadcrumb={<A.Breadcrumb items={[{ label: 'Refund requests', href: '#/refunds' }, { label: 'R-1042' }]} />}>
-        <A.PageHeaderTitle>Refund €420 to Northwind?</A.PageHeaderTitle>
+        <A.PageHeaderTitle>Refund €420 to Quarry Lane Vets?</A.PageHeaderTitle>
         <A.PageHeaderDescription>Asked by Jon Park in Support, today at 09:12.</A.PageHeaderDescription>
       </A.PageHeader>
       {done ? (
         <div className="ld-choice" role="status" tabIndex={-1} ref={outcome}>
-          <p className="ld-consequence">{phase === 'approved' ? 'Refund approved. €420 goes back to the card ending 4242 in 5–10 days, and the October invoice is marked refunded.' : 'Refund declined. Jon has your reason to send to Northwind.'}</p>
+          <p className="ld-consequence">{phase === 'approved' ? 'Refund approved. €420 goes back to the card ending 4242 in 5–10 days, and the October invoice is marked refunded.' : 'Refund declined. Jon has your reason to send to Quarry Lane Vets.'}</p>
           <div><A.Link href="#/refunds/R-1043">Next request: Halcyon, €96 (2 more waiting)</A.Link></div>
         </div>
       ) : (
         <section className="ld-choice" aria-labelledby="ld-choice-h">
           <h2 id="ld-choice-h" className="ld-sr">Your decision</h2>
-          <p className="ld-consequence">Approving sends €420 back to Northwind’s card ending 4242 in 5–10 days and marks their October invoice refunded. A refund can’t be taken back once it’s sent.</p>
+          <p className="ld-consequence">Approving sends €420 back to Quarry Lane Vets’s card ending 4242 in 5–10 days and marks their October invoice refunded. A refund can’t be taken back once it’s sent.</p>
           {phase === 'declining' || (phase === 'sending' && sending === 'declined') ? <>
-            <A.Field label="Why decline?" hint="Jon sends this to Northwind." error={reasonError || undefined}>
+            <A.Field label="Why decline?" hint="Jon sends this to Quarry Lane Vets." error={reasonError || undefined}>
               <A.Textarea id="ld-reason" rows={3} value={reason} onChange={(e) => { setReason(e.target.value); setReasonError(''); }}
                 onKeyDown={(e) => { if (e.key === 'Escape') cancel(); }} />
             </A.Field>

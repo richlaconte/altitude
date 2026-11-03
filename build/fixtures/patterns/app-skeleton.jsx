@@ -51,7 +51,7 @@ function Customers() {
   </>;
 }
 function Settings() {
-  const general = A.useEditRecord({ initialValue: { name: 'Acme', url: 'acme' }, validationMode: 'submit',
+  const general = A.useEditRecord({ initialValue: { name: 'Hollis Legal', url: 'hollis-legal' }, validationMode: 'submit',
     validate: (d) => (d.name.trim() ? {} : { name: 'Enter a workspace name.' }), save: async (d) => { await new Promise((r) => setTimeout(r, 600)); return { ok: true, value: d }; } });
   const [digest, setDigest] = React.useState(true);
   return <>
@@ -77,7 +77,7 @@ function App() {
     <div className="sk-frame">
       <A.AppShell
         sidebar={<A.Sidebar>
-          <A.SidebarHeader><span className="sk-ws"><A.Avatar name="Acme" size={24} /><span className="alt-sidebar-text">Acme</span></span></A.SidebarHeader>
+          <A.SidebarHeader><span className="sk-ws"><A.Avatar name="Hollis Legal" size={24} /><span className="alt-sidebar-text">Hollis Legal</span></span></A.SidebarHeader>
           <A.SidebarContent><A.SidebarGroup label="Workspace"><A.SidebarMenu>{item('customers', 'Customers')}{item('reports', 'Reports')}{item('settings', 'Settings')}</A.SidebarMenu></A.SidebarGroup></A.SidebarContent>
           <A.SidebarFooter><A.SidebarMenu><A.SidebarMenuItem><A.SidebarMenuButton href="#/me" icon={<A.Avatar name="Maya Chen" size={20} />}>Maya Chen</A.SidebarMenuButton></A.SidebarMenuItem></A.SidebarMenu></A.SidebarFooter>
         </A.Sidebar>}

@@ -62,7 +62,7 @@ function App() {
     <main className="au-page">
       <A.Card className="au-card">
         {step === 'sign-in' && <>
-          <h2 ref={heading} tabIndex={-1} className="au-h">Sign in to Acme</h2>
+          <h2 ref={heading} tabIndex={-1} className="au-h">Sign in to Fieldnote</h2>
           <A.Button className="au-wide" onClick={() => go('sso')}>Continue with single sign-on (SSO)</A.Button>
           <A.Separator label="or" />
           <form className="au-form" noValidate onSubmit={signIn} aria-labelledby="au-pw-h">
@@ -73,10 +73,10 @@ function App() {
             <A.Button type="submit" variant="primary" className="au-wide" loading={busy === 'password'}>{busy === 'password' ? 'Signing in' : 'Sign in'}</A.Button>
           </form>
           <div className="au-links"><A.Button variant="ghost" size="sm" loading={busy === 'link'} onClick={() => sendLink('link-sent')}>Email me a sign-in link</A.Button><A.Button variant="ghost" size="sm" onClick={() => go('reset')}>Forgot your password?</A.Button></div>
-          <p className="au-note">New to Acme? <A.Button variant="ghost" size="sm" onClick={() => { setPassword(''); go('sign-up'); }}>Create an account</A.Button></p>
+          <p className="au-note">New to Fieldnote? <A.Button variant="ghost" size="sm" onClick={() => { setPassword(''); go('sign-up'); }}>Create an account</A.Button></p>
         </>}
         {step === 'sign-up' && <>
-          <h2 ref={heading} tabIndex={-1} className="au-h">Create your Acme account</h2>
+          <h2 ref={heading} tabIndex={-1} className="au-h">Create your Fieldnote account</h2>
           <form className="au-form" noValidate onSubmit={signUp} aria-label="Create an account">
             <A.ErrorSummary errors={errors} focusKey={submits} />
             <A.Field label="Name" error={field('au-name')}><A.Input id="au-name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} /></A.Field>
@@ -97,7 +97,7 @@ function App() {
         </>}
         {step === 'link-sent' && <>
           <h2 ref={heading} tabIndex={-1} className="au-h">Check your email</h2>
-          <p>If <strong>{email}</strong> has an Acme account, we’ve sent a sign-in link to it. The link works once, for 15 minutes.</p>
+          <p>If <strong>{email}</strong> has a Fieldnote account, we’ve sent a sign-in link to it. The link works once, for 15 minutes.</p>
           {resend}
           <A.Button variant="ghost" size="sm" onClick={() => go('sign-in')}>Use a different email address</A.Button>
         </>}
@@ -109,7 +109,7 @@ function App() {
         </>}
         {step === 'two-factor' && <>
           <h2 ref={heading} tabIndex={-1} className="au-h">Enter your code</h2>
-          <p>Open your authenticator app and enter the 6-digit code for Acme.</p>
+          <p>Open your authenticator app and enter the 6-digit code for Fieldnote.</p>
           <A.ErrorSummary errors={errors} focusKey={submits} title="We couldn’t verify that code" />
           <A.Field label="Authentication code" error={field('au-code')}>
             <A.InputOTP id="au-code" maxLength={6} value={code} onChange={setCode} verifying={busy === 'code'} autoComplete="one-time-code" />
@@ -133,7 +133,7 @@ function App() {
         </>}
         {step === 'reset-sent' && <>
           <h2 ref={heading} tabIndex={-1} className="au-h">Check your email</h2>
-          <p>If <strong>{email}</strong> has an Acme account, we’ve sent a link to reset its password. The link works once, for 1 hour.</p>
+          <p>If <strong>{email}</strong> has a Fieldnote account, we’ve sent a link to reset its password. The link works once, for 1 hour.</p>
           {resend}
           <A.Button variant="ghost" size="sm" onClick={() => go('sign-in')}>Back to sign in</A.Button>
         </>}

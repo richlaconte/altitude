@@ -49,7 +49,7 @@ export function Security() {
   return <>
     <PageHeader>
       <PageHeaderTitle id="ac-title" tabIndex={-1}>Security</PageHeaderTitle>
-      <PageHeaderDescription>How you sign in to Northwind.</PageHeaderDescription>
+      <PageHeaderDescription>How you sign in to Fenwick Tools.</PageHeaderDescription>
     </PageHeader>
     <div className="ac-body">
       <Resource query={q} noun="security settings">

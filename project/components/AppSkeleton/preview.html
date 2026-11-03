@@ -94,7 +94,7 @@ function Customers() {
 }
 function Settings() {
   const general = A.useEditRecord({
-    initialValue: { name: "Acme", url: "acme" },
+    initialValue: { name: "Hollis Legal", url: "hollis-legal" },
     validationMode: "submit",
     validate: (d) => d.name.trim() ? {} : { name: "Enter a workspace name." },
     save: async (d) => {
@@ -114,7 +114,7 @@ function App() {
   return /* @__PURE__ */ React.createElement("div", { className: "sk-frame" }, /* @__PURE__ */ React.createElement(
     A.AppShell,
     {
-      sidebar: /* @__PURE__ */ React.createElement(A.Sidebar, null, /* @__PURE__ */ React.createElement(A.SidebarHeader, null, /* @__PURE__ */ React.createElement("span", { className: "sk-ws" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Acme", size: 24 }), /* @__PURE__ */ React.createElement("span", { className: "alt-sidebar-text" }, "Acme"))), /* @__PURE__ */ React.createElement(A.SidebarContent, null, /* @__PURE__ */ React.createElement(A.SidebarGroup, { label: "Workspace" }, /* @__PURE__ */ React.createElement(A.SidebarMenu, null, item("customers", "Customers"), item("reports", "Reports"), item("settings", "Settings")))), /* @__PURE__ */ React.createElement(A.SidebarFooter, null, /* @__PURE__ */ React.createElement(A.SidebarMenu, null, /* @__PURE__ */ React.createElement(A.SidebarMenuItem, null, /* @__PURE__ */ React.createElement(A.SidebarMenuButton, { href: "#/me", icon: /* @__PURE__ */ React.createElement(A.Avatar, { name: "Maya Chen", size: 20 }) }, "Maya Chen"))))),
+      sidebar: /* @__PURE__ */ React.createElement(A.Sidebar, null, /* @__PURE__ */ React.createElement(A.SidebarHeader, null, /* @__PURE__ */ React.createElement("span", { className: "sk-ws" }, /* @__PURE__ */ React.createElement(A.Avatar, { name: "Hollis Legal", size: 24 }), /* @__PURE__ */ React.createElement("span", { className: "alt-sidebar-text" }, "Hollis Legal"))), /* @__PURE__ */ React.createElement(A.SidebarContent, null, /* @__PURE__ */ React.createElement(A.SidebarGroup, { label: "Workspace" }, /* @__PURE__ */ React.createElement(A.SidebarMenu, null, item("customers", "Customers"), item("reports", "Reports"), item("settings", "Settings")))), /* @__PURE__ */ React.createElement(A.SidebarFooter, null, /* @__PURE__ */ React.createElement(A.SidebarMenu, null, /* @__PURE__ */ React.createElement(A.SidebarMenuItem, null, /* @__PURE__ */ React.createElement(A.SidebarMenuButton, { href: "#/me", icon: /* @__PURE__ */ React.createElement(A.Avatar, { name: "Maya Chen", size: 20 }) }, "Maya Chen"))))),
       topBar: /* @__PURE__ */ React.createElement(A.Button, { variant: "secondary", size: "sm", className: "sk-search" }, "Search\u2026 ", /* @__PURE__ */ React.createElement(A.Kbd, null, "\u2318K"))
     },
     at === "customers" ? /* @__PURE__ */ React.createElement(Customers, null) : at === "settings" ? /* @__PURE__ */ React.createElement(Settings, null) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.PageHeader, null, /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, "Reports")), /* @__PURE__ */ React.createElement("div", { className: "sk-body" }, /* @__PURE__ */ React.createElement(A.EmptyState, { title: "No reports yet", description: "Reports you save appear here.", action: /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Create a report") })))

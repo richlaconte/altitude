@@ -414,7 +414,7 @@ try {
     check(await task.locator('.alt-field-label').count() === 0, 'IP-04 no visible label is added above the value');
     await page.keyboard.press('Escape'); await settled();
 
-    const pencil = page.getByRole('button', { name: 'Project name: Northwind launch. Edit Project name', exact: true });
+    const pencil = page.getByRole('button', { name: 'Project name: Spring catalogue launch. Edit Project name', exact: true });
     const pencilAt = await pencil.boundingBox();
     check(await pencil.locator('.alt-inline-edit-pencil').evaluate(el => getComputedStyle(el).opacity === '0'), 'IP-05 the pencil is hidden at rest');
     await pencil.hover(); await settled();

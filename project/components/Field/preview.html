@@ -32,9 +32,9 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 <script>
 var A = window.Altitude;
 function App() {
-  const [v, setV] = React.useState("acme");
+  const [v, setV] = React.useState("kestrel-dental");
   const err = v.length < 5 ? "Use at least 5 characters." : null;
-  return /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Workspace name", hint: "Shown to everyone you invite." }, /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "Northwind Studio" })), /* @__PURE__ */ React.createElement(A.Field, { label: "URL slug", required: true, error: err }, /* @__PURE__ */ React.createElement(A.Input, { value: v, onChange: (e) => setV(e.target.value) })));
+  return /* @__PURE__ */ React.createElement("div", { className: "grid" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Workspace name", hint: "Shown to everyone you invite." }, /* @__PURE__ */ React.createElement(A.Input, { defaultValue: "Kestrel Dental" })), /* @__PURE__ */ React.createElement(A.Field, { label: "URL slug", required: true, error: err }, /* @__PURE__ */ React.createElement(A.Input, { value: v, onChange: (e) => setV(e.target.value) })));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

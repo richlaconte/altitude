@@ -38,7 +38,7 @@ function App() {
     setState("verifying");
     setTimeout(() => setState(c === "123456" ? "ok" : "wrong"), 900);
   };
-  const hint = state === "verifying" ? "Checking code\u2026" : state === "ok" ? "Verified." : "We sent it to j\u2022\u2022\u2022@acme.com. Try 123456, or any other code to see a rejection.";
+  const hint = state === "verifying" ? "Checking code\u2026" : state === "ok" ? "Verified." : "We sent it to j\u2022\u2022\u2022@hollislegal.example. Try 123456, or any other code to see a rejection.";
   return /* @__PURE__ */ React.createElement("div", { className: "col" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Verification code", hint, error: state === "wrong" ? "That code didn't work. Check the latest email and try again." : void 0 }, /* @__PURE__ */ React.createElement(
     A.InputOTP,
     {

@@ -49,7 +49,9 @@ The 2026-10-30 audit found 4 tells exposed; the two schemes and the landing page
 
 **Judged blind (E161).** Models shown each screen without its source called plain Claude's builds "made with AI" 100% of the time, shadcn's 95% and Altitude's 57%, with less confidence for Altitude's. That's what models perceive, not people: the study with people (Research, item 7) is still unrun. The reasons became tells. Being boxed by default, every section in its own card (LA9), was the most-cited new cue for the baselines and was cited for 1 Altitude build. Altitude's elevation look splits judges: it's in 13 of the 23 "AI" answers for Altitude builds, but 9 of the 17 "designer" answers cite it too.
 
-**Exposed: LA10, CP7, CP8, CP9.** Judges cited these in at least 20% of their "AI" answers for Altitude builds: sparse pages with dead space (LA10), the same fact shown twice (CP7), stock sample names such as Northwind and Acme (CP8), and a subtitle that restates the title (CP9). CP8 starts in the previews, which use Northwind throughout, and agents copy previews.
+**Exposed: LA10, CP7, CP9.** Judges cited these in at least 20% of their "AI" answers for Altitude builds: sparse pages with dead space (LA10), the same fact shown twice (CP7), and a subtitle that restates the title (CP9).
+
+**Fixed: CP8, stock sample names.** E161's judges also cited Northwind and Acme. They came from the previews, the pattern fixtures and guides, the site and the admin console example, and agents copy previews. Each now uses a name specific to its domain, on the reserved `.example` domain ([#410](https://github.com/richlaconte/altitude/issues/410)), and the tells lint flags the stock names from CP8's list in `tells.json`.
 
 **Fixed in the previews: CM9, placeholders as labels.** `Field` gives every input a visible label, but several previews rendered a bare `Input` with only a placeholder, and agents copy previews. They now use `Field`, or an `aria-label` in the compact galleries ([#394](https://github.com/richlaconte/altitude/issues/394)).
 

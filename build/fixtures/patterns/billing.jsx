@@ -44,7 +44,7 @@ function PlanChange({ current, period, onPeriod, onChanged, onAgain }) {
         <div className="bl-actions"><A.Button disabled={flow.phase === 'submitting'} onClick={flow.correct}>Choose another plan</A.Button>
           <A.Button variant={down ? 'danger' : 'primary'} loading={flow.phase === 'submitting'} onClick={() => void flow.submit()}>{flow.phase === 'submitting' ? 'Changing plan' : down ? `Downgrade to ${next.name}` : `Upgrade to ${next.name}`}</A.Button></div>
       </>}
-      {flow.phase === 'complete' && <p className="bl-note">{down ? `${next.name} starts on 30 November. Until then everything on your current plan keeps working.` : `${next.name} features are on now. A receipt is on its way to finance@acme.dev.`}</p>}
+      {flow.phase === 'complete' && <p className="bl-note">{down ? `${next.name} starts on 30 November. Until then everything on your current plan keeps working.` : `${next.name} features are on now. A receipt is on its way to finance@cobaltstreet.example.`}</p>}
       {flow.phase === 'complete' && <div><A.Button variant="ghost" onClick={onAgain}>Change plan again</A.Button></div>}
       <A.WorkflowStatus>{flow.status}</A.WorkflowStatus>
     </section>

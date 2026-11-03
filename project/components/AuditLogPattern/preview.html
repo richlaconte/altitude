@@ -41,7 +41,7 @@ const SEED = Array.from(
     const actor = ACTORS[i % 3].value, kind = ACTIONS[i % 3].value, day = String(28 - Math.floor(i / 3)).padStart(2, "0");
     const at = `2026-10-${day}T${String(17 - i % 3 * 3).padStart(2, "0")}:${String(i * 7 % 60).padStart(2, "0")}:00Z`;
     if (kind === "role") return { id: "e" + i, actor, action: kind, resource: "Ines Duarte", sentence: `${actor} changed Ines Duarte\u2019s role from Member to Admin`, at, ip: "81.2.69." + (10 + i), before: { role: "Member" }, after: { role: "Admin" } };
-    if (kind === "invite") return { id: "e" + i, actor, action: kind, resource: `guest${i}@acme.dev`, sentence: `${actor} invited guest${i}@acme.dev as a Viewer`, at, ip: "81.2.69." + (10 + i), before: { invited: "No" }, after: { invited: "Yes, as Viewer" } };
+    if (kind === "invite") return { id: "e" + i, actor, action: kind, resource: `guest${i}@saltmarsh.example`, sentence: `${actor} invited guest${i}@saltmarsh.example as a Viewer`, at, ip: "81.2.69." + (10 + i), before: { invited: "No" }, after: { invited: "Yes, as Viewer" } };
     return { id: "e" + i, actor, action: kind, resource: "Production key", sentence: `${actor} rotated the Production API key`, at, ip: "81.2.69." + (10 + i), before: { key: "ak_live_EXAMPLE\u20264f2a" }, after: { key: "ak_live_EXAMPLE\u20269c1d" } };
   }
 );
@@ -87,7 +87,7 @@ function App() {
     A.toast({ title: "Your export is ready", description: `${matching.length} events, audit-log.csv`, tone: "positive", duration: 0, action: { label: "Download", onClick: () => {
     } } });
   };
-  return /* @__PURE__ */ React.createElement("main", { className: "al-page" }, /* @__PURE__ */ React.createElement("h2", { className: "al-h" }, "Audit log"), /* @__PURE__ */ React.createElement("p", { className: "al-note" }, "Every change in the Acme workspace, kept for 90 days on the Pro plan. Older events are deleted."), /* @__PURE__ */ React.createElement("div", { className: "al-tools" }, /* @__PURE__ */ React.createElement(A.FilterBar, { "aria-label": "Filter events", fields: FIELDS, value: filters, onValueChange: (f) => {
+  return /* @__PURE__ */ React.createElement("main", { className: "al-page" }, /* @__PURE__ */ React.createElement("h2", { className: "al-h" }, "Audit log"), /* @__PURE__ */ React.createElement("p", { className: "al-note" }, "Every change in the Saltmarsh workspace, kept for 90 days on the Pro plan. Older events are deleted."), /* @__PURE__ */ React.createElement("div", { className: "al-tools" }, /* @__PURE__ */ React.createElement(A.FilterBar, { "aria-label": "Filter events", fields: FIELDS, value: filters, onValueChange: (f) => {
     setFilters(f);
     setPage(1);
   }, resultCount: matching.length }), /* @__PURE__ */ React.createElement(A.Button, { onClick: runExport, disabled: exporting !== null }, "Export CSV")), exporting !== null && /* @__PURE__ */ React.createElement("div", { className: "al-export" }, /* @__PURE__ */ React.createElement(A.Progress, { value: exporting, "aria-label": "Preparing export" }), /* @__PURE__ */ React.createElement("span", { role: "status" }, "Preparing export, ", exporting, "%")), /* @__PURE__ */ React.createElement(

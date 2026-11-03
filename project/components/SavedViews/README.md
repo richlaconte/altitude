@@ -47,11 +47,11 @@ import * as React from 'react';
 import { DataTable, FilterBar, FormattedNumber, SavedViews, useSavedViews } from 'altitude-design';
 
 const deals = [
-  { id: 'd1', name: 'Northwind renewal', stage: 'Negotiation', owner: 'Maya', value: 48000 },
-  { id: 'd2', name: 'Globex expansion', stage: 'Proposal', owner: 'Theo', value: 120000 },
-  { id: 'd3', name: 'Initech pilot', stage: 'Discovery', owner: 'Maya', value: 9000 },
-  { id: 'd4', name: 'Umbrella security', stage: 'Negotiation', owner: 'Ada', value: 76000 },
-  { id: 'd5', name: 'Hooli seats', stage: 'Closed won', owner: 'Theo', value: 31000 },
+  { id: 'd1', name: 'Tidewater Clinic renewal', stage: 'Negotiation', owner: 'Maya', value: 48000 },
+  { id: 'd2', name: 'Fenwick Tools expansion', stage: 'Proposal', owner: 'Theo', value: 120000 },
+  { id: 'd3', name: 'Juniper Physio pilot', stage: 'Discovery', owner: 'Maya', value: 9000 },
+  { id: 'd4', name: 'Hollis Legal security', stage: 'Negotiation', owner: 'Ada', value: 76000 },
+  { id: 'd5', name: 'Verity Print seats', stage: 'Closed won', owner: 'Theo', value: 31000 },
 ];
 const fields = [
   { key: 'stage', label: 'Stage', type: 'enum', options: ['Discovery', 'Proposal', 'Negotiation', 'Closed won'].map((x) => ({ value: x, label: x })) },

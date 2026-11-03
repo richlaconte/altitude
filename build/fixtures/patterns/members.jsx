@@ -53,10 +53,10 @@ function MemberRow({ person, me, owners, fail, onRole, onRemove, onResend, onRev
 function App() {
   const me = 'u1';
   const [people, setPeople] = React.useState([
-    { id: 'u1', name: 'Maya Chen', email: 'maya@acme.dev', role: 'owner', projects: 14 },
-    { id: 'u2', name: 'Theo Marsh', email: 'theo@acme.dev', role: 'admin', projects: 9 },
-    { id: 'u3', name: 'Ines Duarte', email: 'ines@acme.dev', role: 'member', projects: 4 },
-    { id: 'i1', name: 'sam@acme.dev', email: 'Invitation', role: 'member', invited: true, sent: 'yesterday', projects: 0 },
+    { id: 'u1', name: 'Maya Chen', email: 'maya@larkspur.example', role: 'owner', projects: 14 },
+    { id: 'u2', name: 'Theo Marsh', email: 'theo@larkspur.example', role: 'admin', projects: 9 },
+    { id: 'u3', name: 'Ines Duarte', email: 'ines@larkspur.example', role: 'member', projects: 4 },
+    { id: 'i1', name: 'sam@larkspur.example', email: 'Invitation', role: 'member', invited: true, sent: 'yesterday', projects: 0 },
   ]);
   const [emails, setEmails] = React.useState(/** @type {string[]} */ ([]));
   const [role, setRole] = React.useState('member');
@@ -82,7 +82,7 @@ function App() {
         <A.Card className="mb-invite" aria-labelledby="mb-invite-h">
           <h3 id="mb-invite-h" className="mb-sub">Invite people</h3>
           <A.Field label="Email addresses" hint="Separate addresses with commas, or paste a list.">
-            <A.TagInput value={emails} onValueChange={setEmails} noun={['address', 'addresses']} placeholder="name@acme.dev" disabled={sending}
+            <A.TagInput value={emails} onValueChange={setEmails} noun={['address', 'addresses']} placeholder="name@larkspur.example" disabled={sending}
               normalize={(t) => t.trim().toLowerCase()} validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `${t} isn’t an email address.`)} />
           </A.Field>
           <div className="mb-roles"><span id="mb-role-label" className="mb-legend">Role</span>

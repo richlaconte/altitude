@@ -20,7 +20,7 @@ Two measures per record, to see whether they move together and to spot the ones 
 
 **Props:** `data`, `x`, `y`; `group`; `id` and `name` (a key or a function); `label`; `trend`; `size`; `tooltip`.
 
-**Selecting, drilling and filtering.** `selected` (the record or its id) and `onSelect`, `drill`, and `relevance` (with `rescale`) work as on every chart: the chosen dot keeps its colour, the rest recede to 35%, and the frame says "Filtered to Vandelay". See [ChartContainer](../ChartContainer/README.md).
+**Selecting, drilling and filtering.** `selected` (the record or its id) and `onSelect`, `drill`, and `relevance` (with `rescale`) work as on every chart: the chosen dot keeps its colour, the rest recede to 35%, and the frame says "Filtered to Dr. Ines Varga". See [ChartContainer](../ChartContainer/README.md).
 
 **Focus.** `focus={['Search']}` keeps those groups' colours (and every shape) and draws the rest in `data-context`; `focus={(d) => d.p95 > 250}` picks out dots instead. See [ChartContainer](../ChartContainer/README.md), "Focus".
 
@@ -70,7 +70,7 @@ const kb = (v) => `${Math.round(v)} KB`, ms = (v) => `${Math.round(v)} ms`;
 const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
 const month = (m) => Array.from({ length: 16 }, (_, i) => {
   const seats = 20 + ((i * 29) % 140) + m * (i % 4) * 6;
-  return { id: 'c' + i, name: ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli', 'Vandelay', 'Stark', 'Wayne', 'Wonka', 'Tyrell', 'Cyberdyne', 'Soylent', 'Aperture', 'Massive', 'Oscorp', 'Gringotts'][i], seats, spend: Math.round(seats * (38 + ((i * 17) % 23)) + m * 300) };
+  return { id: 'c' + i, name: ['Harrow Freight', 'Okafor & Lund', 'Kestrel Dental', 'Tidewater Clinic', 'Bramble Bakery', 'Dr. Ines Varga', 'Fenwick Tools', 'Saltmarsh Books', 'Quarry Lane Vets', 'Marlow & Chen', 'Pinecrest Roofing', 'Ostrander Labs', 'Cobalt Street Coffee', 'Hollis Legal', 'Verity Print', 'Juniper Physio'][i], seats, spend: Math.round(seats * (38 + ((i * 17) % 23)) + m * 300) };
 });
 export default function App() {
   const [m, setM] = React.useState(0);

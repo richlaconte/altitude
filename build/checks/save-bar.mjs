@@ -17,7 +17,7 @@ const bar = () => page.evaluate(() => { const b = document.querySelector('.alt-s
 const said = () => page.evaluate(() => [...document.querySelectorAll('[role="status"]')].map((s) => s.textContent).join('|'));
 
 expect(await bar() === null, 'hidden while the form is clean');
-await page.fill('input >> nth=0', 'Acme Corp');
+await page.fill('input >> nth=0', 'Marlow & Co');
 await page.waitForTimeout(200);
 expect(await bar() === null, 'not on the first key');
 await page.waitForTimeout(700);
@@ -33,16 +33,16 @@ await page.waitForTimeout(1000);
 expect(await bar() === null && (await said()).includes('Saved.'), 'saved, it lowers away and says so');
 
 await (await openFixtures(page)).locator('.alt-switch').click();
-await page.fill('input >> nth=1', 'acme.io');
+await page.fill('input >> nth=1', 'marlowchen.io');
 await page.waitForTimeout(800);
 await page.click('.alt-savebar button:has-text("Save changes")');
 await page.waitForTimeout(1300);
 b = await bar();
-expect(b?.status === 'failed' && b.text.includes('Your changes are kept') && await page.inputValue('input >> nth=1') === 'acme.io', `a failed save drops to a trench and keeps the draft (${b?.text})`);
+expect(b?.status === 'failed' && b.text.includes('Your changes are kept') && await page.inputValue('input >> nth=1') === 'marlowchen.io', `a failed save drops to a trench and keeps the draft (${b?.text})`);
 expect(await page.locator('.alt-savebar button:has-text("Retry")').count() === 1, 'and offers Retry');
 await page.click('.alt-savebar button:has-text("Discard")');
 await page.waitForTimeout(400);
-expect(await page.inputValue('input >> nth=1') === 'acme.dev' && await bar() === null, 'Discard resets the draft and the bar goes');
+expect(await page.inputValue('input >> nth=1') === 'marlowchen.example' && await bar() === null, 'Discard resets the draft and the bar goes');
 
 console.log(`SaveBar: ${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;

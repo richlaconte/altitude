@@ -70,7 +70,7 @@ export function ReviewSubmitExample({ send }: { send: (draft: RecordValue) => Pr
     </>}<WorkflowStatus>{form.status}</WorkflowStatus></section>;
 }
 export function PatternWorkflows() {
-  const data = React.useRef({ record: { name: 'Northwind' }, proposal: true, submissions: [] as RecordValue[] });
+  const data = React.useRef({ record: { name: 'Kestrel Dental' }, proposal: true, submissions: [] as RecordValue[] });
   const fail = React.useRef(false);
   const delay = () => new Promise<void>((resolve, reject) => setTimeout(() => { if (fail.current) { fail.current = false; reject(Error('Controlled failure')); } else resolve(); }, 350));
   return <main><h1>Workflow examples</h1><p>This demo stores records in memory; reloading resets its data.</p>

@@ -25,6 +25,7 @@ Read **Elevation** for the model and every signal height carries, **Motion** bef
 - Alt text says what an image shows, in its context. A decorative image takes `alt=""`. Never "image", "photo" or a file name.
 - Headings describe the section under them. One `h1` per view (`PageHeader` draws it), levels never skip, and the page has a `main` landmark, with `header` and `nav` where it has them.
 - Show real data or say there's none. Never fill a screen with invented figures, ratings, names or testimonials presented as real.
+- Sample data in examples and previews is specific to its domain and never stock: a dental practice, a freight firm or a two-founder studio, not Northwind, Acme, Contoso, Globex or Initech (`tells.json`, CP8, lists them, and the tells lint flags them). Mix the shapes of a list of names, and put addresses on the reserved `.example` domain.
 
 ## Honesty
 

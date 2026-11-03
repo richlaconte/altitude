@@ -32,7 +32,7 @@ for (const [width, narrow] of [[375, true], [960, false]]) {
   await page.evaluate(() => new Promise((done) => {
     document.body.innerHTML = ''; const d = document.createElement('div'); d.style.width = '340px'; document.body.append(d);
     const A = window.Altitude, h = React.createElement;
-    const rows = [{ id: 1, name: 'Northwind', env: 'Production', owner: 'Mara Quinn', region: 'eu-west-1' }];
+    const rows = [{ id: 1, name: 'Checkout API', env: 'Production', owner: 'Mara Quinn', region: 'eu-west-1' }];
     ReactDOM.createRoot(d).render(h(A.AltitudeProvider, null, h(A.DataTable, { 'aria-label': 'Projects', getRowId: (r) => r.id, rows,
       columns: [{ key: 'name', header: 'Name', sticky: true, minWidth: 140 }, { key: 'env', header: 'Environment' }, { key: 'owner', header: 'Owner' }, { key: 'region', header: 'Region' }] })));
     setTimeout(done, 400);

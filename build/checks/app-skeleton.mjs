@@ -47,7 +47,7 @@ await page.keyboard.press('Enter');
 await page.waitForTimeout(400);
 expect(await page.getByRole('heading', { name: 'Settings', exact: true }).count() === 1 && await page.getByRole('link', { name: 'Settings' }).getAttribute('aria-current') === 'page', 'the sidebar navigates by keyboard');
 expect((await primaries()).length <= 1, `the settings view has at most one primary (${await primaries()})`);
-await page.getByLabel('Workspace name').fill('Acme Labs');
+await page.getByLabel('Workspace name').fill('Hollis Legal Group');
 await page.waitForTimeout(900);
 expect(await page.evaluate(() => { const b = document.querySelector('.alt-savebar'); return !!b && b.dataset.state !== 'closed'; }), 'a settings change raises the SaveBar');
 expect(errors.length === 0, `no page errors (${errors.join('; ')})`);

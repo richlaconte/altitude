@@ -20,7 +20,7 @@ const read = () => page.evaluate(() => {
 });
 let r = await read();
 expect(r.variant === 'folder' && r.tabs.join('|') === 'All deals|My open deals|In negotiation', `folder tabs, one per view (${r.tabs})`);
-expect(r.first === 'Globex expansion' && r.actions.length === 0, 'the first view applies its sort, and isn\'t modified');
+expect(r.first === 'Fenwick Tools expansion' && r.actions.length === 0, 'the first view applies its sort, and isn\'t modified');
 await page.click('[role="tab"]:has-text("In negotiation")');
 await page.waitForTimeout(300);
 r = await read();

@@ -307,7 +307,7 @@ function InviteSample() {
   const [email, setEmail] = React.useState('');
   const [error, setError] = React.useState<string | undefined>();
   const send = () => {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Enter an email address, like ana@northwind.studio.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Enter an email address, like ana@larkspur.studio.'); return; }
     setError(undefined);
     toast({ title: 'This is a sample, so no invite was sent', description: `It would have gone to ${email.trim()}.` });
   };
@@ -317,7 +317,7 @@ function InviteSample() {
       <CardContent>
         <form className="sample-body" noValidate onSubmit={(e) => { e.preventDefault(); send(); }}>
           <Field label="Email address" hint="We'll send them a link that works for 7 days." error={error}>
-            <Input type="email" placeholder="ana@northwind.studio" value={email} onChange={(e) => { setEmail(e.target.value); if (error) setError(undefined); }} />
+            <Input type="email" placeholder="ana@larkspur.studio" value={email} onChange={(e) => { setEmail(e.target.value); if (error) setError(undefined); }} />
           </Field>
           <Field label="Role">
             <Select aria-label="Role" defaultValue="editor" items={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }, { value: 'admin', label: 'Admin' }]} />

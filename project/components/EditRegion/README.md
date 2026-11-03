@@ -139,9 +139,9 @@ import { Button, EditRegion, EditRegionForm, EditRegionTrigger, EditRegionValue,
 
 const ER_ROLES = [{ value: 'owner', label: 'Owner' }, { value: 'editor', label: 'Editor' }, { value: 'viewer', label: 'Viewer' }];
 const ER_PEOPLE = Object.freeze([
-  Object.freeze({ id: 'p-mara', name: 'Mara Quist', email: 'mara@northwind.example', role: 'owner', notify: true, revision: 1 }),
-  Object.freeze({ id: 'p-ines', name: 'Inés Ortega', email: 'ines@northwind.example', role: 'editor', notify: false, revision: 1 }),
-  Object.freeze({ id: 'p-tobi', name: 'Tobi Adeyemi', email: 'tobi@northwind.example', role: 'viewer', notify: true, revision: 1 }),
+  Object.freeze({ id: 'p-mara', name: 'Mara Quist', email: 'mara@juniperphysio.example', role: 'owner', notify: true, revision: 1 }),
+  Object.freeze({ id: 'p-ines', name: 'Inés Ortega', email: 'ines@juniperphysio.example', role: 'editor', notify: false, revision: 1 }),
+  Object.freeze({ id: 'p-tobi', name: 'Tobi Adeyemi', email: 'tobi@juniperphysio.example', role: 'viewer', notify: true, revision: 1 }),
 ]);
 const ER_FIXTURES = ['success', 'slow', 'fail-once', 'conflict-during-save'];
 const erWait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -157,7 +157,7 @@ function EditRegionExample({ fixture }) {
   const reconcile = id => setPeople(people => people.map(p => p.id === id ? { ...server.current.get(id) } : p));
   const externalUpdate = () => {
     const current = server.current.get('p-mara');
-    server.current.set('p-mara', { ...current, email: 'm.quist@northwind.example', revision: current.revision + 1 });
+    server.current.set('p-mara', { ...current, email: 'm.quist@juniperphysio.example', revision: current.revision + 1 });
     trace({ event: 'external-update', id: 'p-mara', revision: current.revision + 1 }); reconcile('p-mara');
   };
   const save = person => async (draft, { changed }) => {
@@ -218,7 +218,7 @@ function EditRegionExample({ fixture }) {
 // Labelled rows whose values already have their controls' height (EditRegionValue reserve): Edit all moves nothing.
 const ER_SEATS = [{ value: 'aisle', label: 'Aisle' }, { value: 'window', label: 'Window' }, { value: 'any', label: 'No preference' }];
 function TripSheet() {
-  const [trip, setTrip] = React.useState({ traveller: 'Mara Quist', email: 'mara@northwind.example', phone: '', seat: 'aisle' });
+  const [trip, setTrip] = React.useState({ traveller: 'Mara Quist', email: 'mara@juniperphysio.example', phone: '', seat: 'aisle' });
   const validate = draft => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()) ? undefined : { email: 'Enter an email address, like name@example.com.' };
   const rows = [['traveller', 'Traveller'], ['email', 'Email'], ['phone', 'Phone'], ['seat', 'Seat']];
   return <section className="er-sheet" aria-labelledby="er-sheet-title">

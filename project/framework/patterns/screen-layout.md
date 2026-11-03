@@ -27,7 +27,7 @@ Name the task, choose the frame from the table, build it, then check the build a
 
 ## Content, keyboard, focus and announcements
 
-The title says the task's object ("Week 44 release note", "Refund €420 to Northwind?"). Reading order follows importance: title, lead, primary action, then the rest. Each frame keeps a keyboard path through the lead and returns focus where an action started: cancelling a decline returns to Decline, and an outcome takes focus when it replaces the control that had it. Saving and outcomes are announced as status. Every frame fits at 320px, where the side column stacks under the lead.
+The title says the task's object ("Week 44 release note", "Refund €420 to Quarry Lane Vets?"). Reading order follows importance: title, lead, primary action, then the rest. Each frame keeps a keyboard path through the lead and returns focus where an action started: cancelling a decline returns to Decline, and an outcome takes focus when it replaces the control that had it. Saving and outcomes are announced as status. Every frame fits at 320px, where the side column stacks under the lead.
 
 ## Recovery and working implementation
 

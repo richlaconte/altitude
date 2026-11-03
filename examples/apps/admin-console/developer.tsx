@@ -69,7 +69,7 @@ export function Developer() {
   return <>
     <PageHeader primary={<Button variant="primary" onClick={() => setCreating(true)}>Create key</Button>}>
       <PageHeaderTitle id="ac-title" tabIndex={-1}>Developers</PageHeaderTitle>
-      <PageHeaderDescription>API keys and webhooks for Northwind.</PageHeaderDescription>
+      <PageHeaderDescription>API keys and webhooks for Fenwick Tools.</PageHeaderDescription>
     </PageHeader>
     <div className="ac-body">
       <Resource query={q} noun="keys and webhooks">

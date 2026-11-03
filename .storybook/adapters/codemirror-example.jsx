@@ -10,7 +10,7 @@ import { altitudeTheme } from '../../project/components/src/adapter-codemirror';
 
 const DOC = `{
   "event": "invoice.paid",
-  "url": "https://api.acme.dev/hooks/altitude",
+  "url": "https://api.pinecrest.example/hooks/altitude",
   "retries": 5,
   "active": true,
   "headers": { "X-Team": "billing" },

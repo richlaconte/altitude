@@ -18,7 +18,7 @@ Pairs one control with its label, an optional hint and an error message that eme
 import { Field, Input } from 'altitude-design';
 
 <Field label="Workspace name" hint="Shown to everyone you invite.">
-  <Input defaultValue="Northwind Studio" />
+  <Input defaultValue="Kestrel Dental" />
 </Field>
 ```
 
@@ -29,12 +29,12 @@ import * as React from 'react';
 import { Field, Input } from 'altitude-design';
 
 export default function App() {
-  const [v, setV] = React.useState('acme');
+  const [v, setV] = React.useState('kestrel-dental');
   const err = v.length < 5 ? 'Use at least 5 characters.' : null;
   return (
     <div className="grid">
       <Field label="Workspace name" hint="Shown to everyone you invite.">
-        <Input defaultValue="Northwind Studio" />
+        <Input defaultValue="Kestrel Dental" />
       </Field>
       <Field label="URL slug" required error={err}>
         <Input value={v} onChange={(e) => setV(e.target.value)} />

@@ -91,7 +91,7 @@ for (const scheme of ['daylight', 'nightfall']) {
   await page.waitForTimeout(2200);
   const all = await lists(page);
   const cust = all[2];
-  expect(cust && cust.rows.length === 4 && cust.rows[0].text === '1. Acme Corp, $48,200', `the imprint lands (${cust?.rows.map((r) => r.text)})`);
+  expect(cust && cust.rows.length === 4 && cust.rows[0].text === '1. Okafor & Lund, $48,200', `the imprint lands (${cust?.rows.map((r) => r.text)})`);
   await page.close();
 }
 {

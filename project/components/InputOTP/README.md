@@ -55,7 +55,7 @@ export default function App() {
   const [code, setCode] = React.useState('');
   const [state, setState] = React.useState('idle');
   const verify = (c) => { setState('verifying'); setTimeout(() => setState(c === '123456' ? 'ok' : 'wrong'), 900); };
-  const hint = state === 'verifying' ? 'Checking code…' : state === 'ok' ? 'Verified.' : 'We sent it to j•••@acme.com. Try 123456, or any other code to see a rejection.';
+  const hint = state === 'verifying' ? 'Checking code…' : state === 'ok' ? 'Verified.' : 'We sent it to j•••@hollislegal.example. Try 123456, or any other code to see a rejection.';
   return (
     <div className="col">
       <Field label="Verification code" hint={hint} error={state === 'wrong' ? 'That code didn\'t work. Check the latest email and try again.' : undefined}>

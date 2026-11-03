@@ -49,7 +49,7 @@ function App() {
               onApprove={() => resolve(setPurge, true)} onReject={() => setPurge('rejected')} />}
           </A.TraceStep>
         </A.Trace>
-        {email === 'done' && <section className="ag-record" aria-labelledby="ag-rec-h"><h3 id="ag-rec-h" className="ag-sub">Northwind Traders</h3>
+        {email === 'done' && <section className="ag-record" aria-labelledby="ag-rec-h"><h3 id="ag-rec-h" className="ag-sub">Verity Print</h3>
           <p className="ag-line">Status: Archived <A.AILabel subject="Change" model="Opus 5.5" reviewedBy="Maya Chen" generatedAt="2026-10-30T09:00:00Z" /></p>
           <p className="ag-muted">Archived by the assistant, approved by Maya Chen.</p>
         </section>}

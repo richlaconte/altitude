@@ -89,7 +89,7 @@ const TAG_DOTS = { bug: 'var(--critical)', design: 'var(--accent)', accessibilit
 const tagWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 export default function App() {
   const [labels, setLabels] = React.useState(['design', 'accessibility']);
-  const [recipients, setRecipients] = React.useState(['mara@northwind.example']);
+  const [recipients, setRecipients] = React.useState(['mara@harrowfreight.example']);
   const [skills, setSkills] = React.useState(['Figma', 'Research', 'Writing']);
   return <div className="tags-demo">
     <Field label="Labels">
@@ -98,9 +98,9 @@ export default function App() {
         renderTag={tag => <>{TAG_DOTS[tag] && <span className="tags-dot" style={{ '--dot': TAG_DOTS[tag] }} aria-hidden="true" />}{tag}</>} />
     </Field>
     <Field label="Share with">
-      <TagInput value={recipients} onValueChange={setRecipients} noun={['person', 'people']} placeholder="name@northwind.example"
+      <TagInput value={recipients} onValueChange={setRecipients} noun={['person', 'people']} placeholder="name@harrowfreight.example"
         validate={tag => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag) ? undefined : `${tag} isn’t an email address.`}
-        onAdd={async tag => { await tagWait(500); return tag.endsWith('@northwind.example') ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at northwind.example can be invited. ${tag} wasn’t added.` }; }}
+        onAdd={async tag => { await tagWait(500); return tag.endsWith('@harrowfreight.example') ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at harrowfreight.example can be invited. ${tag} wasn’t added.` }; }}
         onRemove={async () => { await tagWait(300); return { ok: true }; }} />
     </Field>
     <Field label="Skills">

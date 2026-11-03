@@ -33,8 +33,8 @@ import * as React from 'react';
 import { Button, Toaster, toast } from 'altitude-design';
 
 const msgs = [
-  { title: 'Deployment queued', description: 'northwind-web · main@8dc01b2' },
-  { title: 'Domain verified', description: 'acme.dev now points here.', tone: 'positive' },
+  { title: 'Deployment queued', description: 'orchard-web · main@8dc01b2' },
+  { title: 'Domain verified', description: 'orchard.example now points here.', tone: 'positive' },
   { title: 'Build failed', description: 'Missing DATABASE_URL.', tone: 'critical', action: { label: 'Retry', onClick: () => {} } },
 ];
 export default function App() {

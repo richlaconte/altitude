@@ -343,7 +343,7 @@ function InlineDialogBaseline({ open, onOpenChange, value, validate, onSave, onV
 
 // The value as its own button: a pencil on hover, or the field itself on hover. The seam says so at rest.
 function InlineWaysToOpen() {
-  const [values, setValues] = React.useState({ project: 'Northwind launch', meeting: 'Quarterly planning review', owner: '' });
+  const [values, setValues] = React.useState({ project: 'Spring catalogue launch', meeting: 'Quarterly planning review', owner: '' });
   const set = key => next => setValues(all => ({ ...all, [key]: next }));
   const save = draft => ({ ok: true, value: draft.trim() });
   return <section aria-labelledby="inline-ways-title">

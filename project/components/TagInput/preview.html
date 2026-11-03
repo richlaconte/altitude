@@ -39,7 +39,7 @@ const TAG_DOTS = { bug: "var(--critical)", design: "var(--accent)", accessibilit
 const tagWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function App() {
   const [labels, setLabels] = React.useState(["design", "accessibility"]);
-  const [recipients, setRecipients] = React.useState(["mara@northwind.example"]);
+  const [recipients, setRecipients] = React.useState(["mara@harrowfreight.example"]);
   const [skills, setSkills] = React.useState(["Figma", "Research", "Writing"]);
   return /* @__PURE__ */ React.createElement("div", { className: "tags-demo" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Labels" }, /* @__PURE__ */ React.createElement(
     A.TagInput,
@@ -60,11 +60,11 @@ function App() {
       value: recipients,
       onValueChange: setRecipients,
       noun: ["person", "people"],
-      placeholder: "name@northwind.example",
+      placeholder: "name@harrowfreight.example",
       validate: (tag) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag) ? void 0 : `${tag} isn\u2019t an email address.`,
       onAdd: async (tag) => {
         await tagWait(500);
-        return tag.endsWith("@northwind.example") ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at northwind.example can be invited. ${tag} wasn\u2019t added.` };
+        return tag.endsWith("@harrowfreight.example") ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at harrowfreight.example can be invited. ${tag} wasn\u2019t added.` };
       },
       onRemove: async () => {
         await tagWait(300);

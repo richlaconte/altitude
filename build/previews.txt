@@ -211,7 +211,7 @@ function App() {
     <div className="col">
       <div className="grid">
         <A.Field label="Email address"><A.Input type="email" placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} /></A.Field>
-        <A.Field label="Billing email"><A.Input type="email" defaultValue="mara@northwind.dev" /></A.Field>
+        <A.Field label="Billing email"><A.Input type="email" defaultValue="mara@quarrylane.example" /></A.Field>
         <A.Field label="Search projects"><A.Input type="search" placeholder="Project name" leading={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>} trailing={<A.Kbd>/</A.Kbd>} /></A.Field>
         <A.Field label="Invite by email" error="Enter an email address, like name@company.com."><A.Input type="email" defaultValue="not-an-email" /></A.Field>
         <div style={{ gridColumn: '1 / -1' }}><A.Field label="Note"><A.Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={80} placeholder="Leave a note for your team…" /></A.Field></div>
@@ -226,12 +226,12 @@ function App() {
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; max-width: 640px; }
 --- jsx
 function App() {
-  const [v, setV] = React.useState('acme');
+  const [v, setV] = React.useState('kestrel-dental');
   const err = v.length < 5 ? 'Use at least 5 characters.' : null;
   return (
     <div className="grid">
       <A.Field label="Workspace name" hint="Shown to everyone you invite.">
-        <A.Input defaultValue="Northwind Studio" />
+        <A.Input defaultValue="Kestrel Dental" />
       </A.Field>
       <A.Field label="URL slug" required error={err}>
         <A.Input value={v} onChange={(e) => setV(e.target.value)} />
@@ -403,7 +403,7 @@ function App() {
         <div className="who"><A.Avatar name="Lena Park" size={44} status="idle" /><span className="cap">idle</span></div>
         <div className="who"><A.Avatar name="Sam Okafor" size={44} status="offline" /><span className="cap">offline</span></div>
         <div className="who"><A.Avatar name="Noa Levi" size={44} status="active" onClick={() => {}} /><span className="cap">pressable</span></div>
-        <div className="who"><A.Avatar name="Northwind Studio" size={44} shape="square" /><span className="cap">team</span></div>
+        <div className="who"><A.Avatar name="Larkspur Design" size={44} shape="square" /><span className="cap">team</span></div>
         <div className="who"><A.Avatar name="Deploy bot" size={44} shape="square" status="active" /><span className="cap">bot</span></div>
       </div>
       <div className="people" style={{ alignItems: 'center' }}>
@@ -592,7 +592,7 @@ function App() {
       </div>
     <div className="col wrap">
       <A.Alert title="Scheduled maintenance">The API will be read-only on Sunday from 02:00 to 02:30 UTC.</A.Alert>
-      <A.Alert tone="positive" title="Domain verified">acme.dev now points at this project.</A.Alert>
+      <A.Alert tone="positive" title="Domain verified">saltmarshbooks.example now points at this project.</A.Alert>
       <A.Alert tone="caution" variant="raised" title="You're at 90% of your plan" action={<A.Button size="sm" variant="primary">Upgrade</A.Button>} />
       <A.AlertStack>
         {items.map((a) => <A.Alert key={a.id} tone={a.tone} title={a.title} onDismiss={() => setItems((xs) => xs.filter((x) => x.id !== a.id))}>{a.body}</A.Alert>)}
@@ -1061,8 +1061,8 @@ function App() {
 === Toaster | <!-- @dsCard group="Overlays" height=300 subtitle="A depth stack: older toasts sink behind" -->
 --- jsx
 const msgs = [
-  { title: 'Deployment queued', description: 'northwind-web · main@8dc01b2' },
-  { title: 'Domain verified', description: 'acme.dev now points here.', tone: 'positive' },
+  { title: 'Deployment queued', description: 'orchard-web · main@8dc01b2' },
+  { title: 'Domain verified', description: 'orchard.example now points here.', tone: 'positive' },
   { title: 'Build failed', description: 'Missing DATABASE_URL.', tone: 'critical', action: { label: 'Retry', onClick: () => {} } },
 ];
 function App() {
@@ -1125,12 +1125,12 @@ function App() {
       <div className="cell">
         <h4>Recency · afterglow</h4>
         <p className="cap">Changed content arrives lifted and tinted, then settles to the ground over 8s. No badge needed to say what just changed.</p>
-        <A.Surface level={1} className="card" settle={rev}><div><b>Northwind · production</b><br /><span className="sub">build #{rev}</span></div><A.Button size="sm" onClick={() => setRev(rev + 1)}>Deploy</A.Button></A.Surface>
+        <A.Surface level={1} className="card" settle={rev}><div><b>Ledger API · production</b><br /><span className="sub">build #{rev}</span></div><A.Button size="sm" onClick={() => setRev(rev + 1)}>Deploy</A.Button></A.Surface>
       </div>
       <div className="cell">
         <h4>Commitment · pending, landed, failed</h4>
         <p className="cap">An optimistic write hovers above the ground until the server confirms, then lands. A failure drops into a trench.</p>
-        <A.Surface level={1} className="card" status={status}><div><b>Rename to “Northwind 2”</b><br /><span className="sub">{status}</span></div>
+        <A.Surface level={1} className="card" status={status}><div><b>Rename to “Ledger API v2”</b><br /><span className="sub">{status}</span></div>
           <span style={{ display: 'flex', gap: 6 }}><A.Button size="sm" onClick={() => save(false)}>Save</A.Button><A.Button size="sm" variant="ghost" onClick={() => save(true)}>Save (fail)</A.Button></span></A.Surface>
       </div>
       <div className="cell">
@@ -1724,7 +1724,7 @@ function App() {
   const [spike, setSpike] = React.useState(false);
   const [q, setQ] = React.useState('');
   const [later, setLater] = React.useState(undefined);
-  React.useEffect(() => { const t = setTimeout(() => setLater([{ name: 'Acme Corp', value: 48200 }, { name: 'Globex', value: 31900 }, { name: 'Initech', value: 22750 }, { name: 'Umbrella', value: 9400 }]), 2400); return () => clearTimeout(t); }, []);
+  React.useEffect(() => { const t = setTimeout(() => setLater([{ name: 'Okafor & Lund', value: 48200 }, { name: 'Harrow Freight', value: 31900 }, { name: 'Dr. Ines Varga', value: 22750 }, { name: 'Bramble Bakery', value: 9400 }]), 2400); return () => clearTimeout(t); }, []);
   const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   return (
     <div className="bl">
@@ -1870,7 +1870,7 @@ const kb = (v) => `${Math.round(v)} KB`, ms = (v) => `${Math.round(v)} ms`;
 const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
 const month = (m) => Array.from({ length: 16 }, (_, i) => {
   const seats = 20 + ((i * 29) % 140) + m * (i % 4) * 6;
-  return { id: 'c' + i, name: ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli', 'Vandelay', 'Stark', 'Wayne', 'Wonka', 'Tyrell', 'Cyberdyne', 'Soylent', 'Aperture', 'Massive', 'Oscorp', 'Gringotts'][i], seats, spend: Math.round(seats * (38 + ((i * 17) % 23)) + m * 300) };
+  return { id: 'c' + i, name: ['Harrow Freight', 'Okafor & Lund', 'Kestrel Dental', 'Tidewater Clinic', 'Bramble Bakery', 'Dr. Ines Varga', 'Fenwick Tools', 'Saltmarsh Books', 'Quarry Lane Vets', 'Marlow & Chen', 'Pinecrest Roofing', 'Ostrander Labs', 'Cobalt Street Coffee', 'Hollis Legal', 'Verity Print', 'Juniper Physio'][i], seats, spend: Math.round(seats * (38 + ((i * 17) % 23)) + m * 300) };
 });
 function App() {
   const [m, setM] = React.useState(0);
@@ -2667,8 +2667,8 @@ function App() {
         sidebar={
           <A.Sidebar>
             <A.SidebarHeader>
-              <A.DropdownMenu items={[{ label: 'Acme Inc.' }, { label: 'Northwind' }, { type: 'separator' }, { label: 'Create workspace' }]}
-                trigger={<button className="as-ws"><A.Avatar name="Acme Inc." size={24} /><span className="alt-sidebar-text">Acme Inc.</span></button>} />
+              <A.DropdownMenu items={[{ label: 'Fenwick Tools' }, { label: 'Saltmarsh Books' }, { type: 'separator' }, { label: 'Create workspace' }]}
+                trigger={<button className="as-ws"><A.Avatar name="Fenwick Tools" size={24} /><span className="alt-sidebar-text">Fenwick Tools</span></button>} />
             </A.SidebarHeader>
             <A.SidebarContent>
               <A.SidebarGroup label="Workspace"><A.SidebarMenu>{item('inbox', 'Inbox', 4)}{item('projects', 'Projects')}{item('reports', 'Reports')}</A.SidebarMenu></A.SidebarGroup>
@@ -2958,8 +2958,8 @@ function App() {
 .wrap { max-width: 460px; }
 --- jsx
 const tree = { id: 'ws', title: 'Workspace', children: [
-  { id: 'nw', title: 'Northwind', description: 'Marketing site', children: [
-    { id: 'prod', title: 'Production', description: 'acme.dev', children: [
+  { id: 'nw', title: 'Orchard', description: 'Marketing site', children: [
+    { id: 'prod', title: 'Production', description: 'orchard.example', children: [
       { id: 'b42', title: 'Build #42', description: 'main@8dc01b2 · 2h ago', content: 'Deployed by Mara. 14 routes, 2.1 MB, healthy.' },
       { id: 'b41', title: 'Build #41', description: 'main@51ac9e0 · yesterday', content: 'Rolled back after a cold-start regression.' } ] },
     { id: 'prev', title: 'Preview', description: '3 branches', content: 'Preview deployments for open pull requests.' } ] },
@@ -3116,7 +3116,7 @@ const I = {
 const groups = [
   { label: "Recent", predicted: true, items: [
     { label: "Deploy to production", icon: I.up, shortcut: ["\u2318", "D"], keywords: ["ship", "release"] },
-    { label: "Open Northwind", icon: I.folder, description: "Marketing site" }
+    { label: "Open Orchard", icon: I.folder, description: "Marketing site" }
   ] },
   { label: "Actions", items: [
     { label: "New project", icon: I.plus, shortcut: ["\u2318", "N"] },
@@ -3125,7 +3125,7 @@ const groups = [
     { label: "Delete project\u2026", icon: I.trash, tone: "critical" }
   ] },
   { label: "Projects", items: [
-    { label: "Northwind", icon: I.folder, description: "acme.dev" },
+    { label: "Orchard", icon: I.folder, description: "orchard.example" },
     { label: "Beacon", icon: I.folder, description: "Internal dashboard" },
     { label: "Cinder", icon: I.folder, description: "API gateway" }
   ] },
@@ -3157,7 +3157,7 @@ function App() {
   };
   return <div className="app">
   <div className="bar">
-    <b>Northwind</b>
+    <b>Orchard</b>
     <A.Badge tone="positive">Operational</A.Badge>
     <A.Input
       className="find"
@@ -3205,13 +3205,13 @@ function App() {
     <A.Button variant="primary" onClick={() => setEdit(true)}>Edit project</A.Button>
     <A.Sheet side="bottom" size="sm" trigger={<A.Button>Share</A.Button>}>
       <A.SheetHeader>
-        <A.SheetTitle>Share Northwind</A.SheetTitle>
+        <A.SheetTitle>Share Tidepool</A.SheetTitle>
         <A.SheetDescription>
           Anyone with the link can view the latest deployment.
         </A.SheetDescription>
       </A.SheetHeader>
       <A.Input
-        defaultValue="https://acme.dev/n/8dc01b2"
+        defaultValue="https://tidepool.example/n/8dc01b2"
         readOnly={true}
         aria-label="Share link"
       />
@@ -3246,7 +3246,7 @@ function App() {
       <A.SheetDescription>Changes apply to every environment.</A.SheetDescription>
     </A.SheetHeader>
     <div className="form">
-      <A.Field label="Project name"><A.Input defaultValue="Northwind" /></A.Field>
+      <A.Field label="Project name"><A.Input defaultValue="Tidepool" /></A.Field>
       <A.Field label="Description" hint="Shown on the project's card.">
         <A.Textarea placeholder="What is this project for?" />
       </A.Field>
@@ -3289,7 +3289,7 @@ function App() {
   const [code, setCode] = React.useState('');
   const [state, setState] = React.useState('idle');
   const verify = (c) => { setState('verifying'); setTimeout(() => setState(c === '123456' ? 'ok' : 'wrong'), 900); };
-  const hint = state === 'verifying' ? 'Checking code…' : state === 'ok' ? 'Verified.' : 'We sent it to j•••@acme.com. Try 123456, or any other code to see a rejection.';
+  const hint = state === 'verifying' ? 'Checking code…' : state === 'ok' ? 'Verified.' : 'We sent it to j•••@hollislegal.example. Try 123456, or any other code to see a rejection.';
   return (
     <div className="col">
       <A.Field label="Verification code" hint={hint} error={state === 'wrong' ? 'That code didn\'t work. Check the latest email and try again.' : undefined}>
@@ -3397,7 +3397,7 @@ function App() {
   const [failNext, setFailNext] = React.useState(false);
   const fail = React.useRef(false); fail.current = failNext;
   const record = A.useEditRecord({
-    initialValue: { name: 'Acme Inc.', domain: 'acme.dev', seats: '25', region: 'Frankfurt' }, validationMode: 'submit',
+    initialValue: { name: 'Marlow & Chen', domain: 'marlowchen.example', seats: '25', region: 'Frankfurt' }, validationMode: 'submit',
     validate: (d) => (d.name.trim() ? {} : { name: 'Enter a workspace name' }),
     save: (draft) => new Promise((r) => setTimeout(() => r(fail.current ? { ok: false, error: "We couldn't reach the server." } : { ok: true, value: draft }), 900)),
   });
@@ -4528,7 +4528,7 @@ const TAG_DOTS = { bug: 'var(--critical)', design: 'var(--accent)', accessibilit
 const tagWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 function App() {
   const [labels, setLabels] = React.useState(['design', 'accessibility']);
-  const [recipients, setRecipients] = React.useState(['mara@northwind.example']);
+  const [recipients, setRecipients] = React.useState(['mara@harrowfreight.example']);
   const [skills, setSkills] = React.useState(['Figma', 'Research', 'Writing']);
   return <div className="tags-demo">
     <A.Field label="Labels">
@@ -4537,9 +4537,9 @@ function App() {
         renderTag={tag => <>{TAG_DOTS[tag] && <span className="tags-dot" style={{ '--dot': TAG_DOTS[tag] }} aria-hidden="true" />}{tag}</>} />
     </A.Field>
     <A.Field label="Share with">
-      <A.TagInput value={recipients} onValueChange={setRecipients} noun={['person', 'people']} placeholder="name@northwind.example"
+      <A.TagInput value={recipients} onValueChange={setRecipients} noun={['person', 'people']} placeholder="name@harrowfreight.example"
         validate={tag => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tag) ? undefined : `${tag} isn’t an email address.`}
-        onAdd={async tag => { await tagWait(500); return tag.endsWith('@northwind.example') ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at northwind.example can be invited. ${tag} wasn’t added.` }; }}
+        onAdd={async tag => { await tagWait(500); return tag.endsWith('@harrowfreight.example') ? { ok: true, value: tag.toLowerCase() } : { ok: false, error: `Only people at harrowfreight.example can be invited. ${tag} wasn’t added.` }; }}
         onRemove={async () => { await tagWait(300); return { ok: true }; }} />
     </A.Field>
     <A.Field label="Skills">
@@ -4656,7 +4656,7 @@ function App() {
 --- jsx
 const steps = [{ title: "Account" }, { title: "Workspace" }, { title: "Invite team" }, { title: "Billing" }, { title: "Launch" }];
 const setup = [
-  { title: "Connect repository", description: "github.com/acme/northwind" },
+  { title: "Connect repository", description: "github.com/pinecrest/roofing-site" },
   { title: "Configure build", description: "Framework, output directory, env" },
   { title: "Deploy", description: "First production deployment" }
 ];
@@ -4695,7 +4695,7 @@ function App() {
 .filter { width: 210px; }
 --- jsx
 const data = [
-  { id: "nw", name: "Northwind", env: "Production", owner: "Mara Quist", updated: 2, req: 1240 },
+  { id: "nw", name: "Checkout API", env: "Production", owner: "Mara Quist", updated: 2, req: 1240 },
   { id: "bc", name: "Beacon", env: "Preview", owner: "Jon Reyes", updated: 5, req: 312 },
   { id: "ci", name: "Cinder", env: "Production", owner: "Lena Park", updated: 26, req: 5906 },
   { id: "dl", name: "Delta", env: "Staging", owner: "Sam Okafor", updated: 49, req: 88 },
@@ -4804,9 +4804,9 @@ const GF = [
   { key: 'seats', label: 'Seats', type: 'number' },
 ];
 const GROWS = [
-  { id: 'a', name: 'Acme', plan: 'Pro', country: 'DE', seats: 12 }, { id: 'b', name: 'Globex', plan: 'Pro', country: 'US', seats: 80 },
-  { id: 'c', name: 'Initech', plan: 'Pro', country: 'US', seats: 9 }, { id: 'd', name: 'Umbrella', plan: 'Free', country: 'DE', seats: 3 },
-  { id: 'e', name: 'Hooli', plan: 'Enterprise', country: 'FR', seats: 400 },
+  { id: 'a', name: 'Fenwick Tools', plan: 'Pro', country: 'DE', seats: 12 }, { id: 'b', name: 'Okafor & Lund', plan: 'Pro', country: 'US', seats: 80 },
+  { id: 'c', name: 'Pinecrest Roofing', plan: 'Pro', country: 'US', seats: 9 }, { id: 'd', name: 'Saltmarsh Books', plan: 'Free', country: 'DE', seats: 3 },
+  { id: 'e', name: 'Maison Ribault', plan: 'Enterprise', country: 'FR', seats: 400 },
 ];
 const test = (r, f) => f.value === undefined || (f.operator === 'is' ? r[f.field] === f.value : f.operator === 'is not' ? r[f.field] !== f.value : f.operator === '>' ? r[f.field] > f.value : f.operator === '<' ? r[f.field] < f.value : r[f.field] === f.value);
 const holds = (r, node) => { const ts = node.items.map((x) => (x.items ? holds(r, x) : test(r, x))); return node.match === 'all' ? ts.every(Boolean) : ts.some(Boolean); };
@@ -4896,7 +4896,7 @@ function App() {
 @media (max-width: 860px) { .tp { grid-template-columns: minmax(0, 1fr); } }
 --- jsx
 // A stand-in server: 214 invoices and 46 events, answering after 500ms.
-const invoices = Array.from({ length: 214 }, (_, i) => ({ id: 'INV-' + String(1000 + i), customer: ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli'][i % 5], amount: 1900 + ((i * 7919) % 48000) }));
+const invoices = Array.from({ length: 214 }, (_, i) => ({ id: 'INV-' + String(1000 + i), customer: ['Harrow Freight', 'Dr. Ines Varga', 'Bramble Bakery', 'Quarry Lane Vets', 'Hollis Legal'][i % 5], amount: 1900 + ((i * 7919) % 48000) }));
 const events = Array.from({ length: 46 }, (_, i) => ({ id: 'e' + i, what: ['Signed in', 'Exported invoices', 'Changed a role', 'Rotated an API key'][i % 4], who: ['Maya', 'Theo', 'Ada'][i % 3] }));
 const fetchPage = (list, page, size) => new Promise((r) => setTimeout(() => r(list.slice((page - 1) * size, page * size)), 500));
 function Pages() {
@@ -4947,11 +4947,11 @@ function App() {
 === SavedViews | <!-- @dsCard group="Display" height=600 subtitle="A filter, sort and columns kept under a name, as folder tabs above the table" -->
 --- jsx
 const deals = [
-  { id: 'd1', name: 'Northwind renewal', stage: 'Negotiation', owner: 'Maya', value: 48000 },
-  { id: 'd2', name: 'Globex expansion', stage: 'Proposal', owner: 'Theo', value: 120000 },
-  { id: 'd3', name: 'Initech pilot', stage: 'Discovery', owner: 'Maya', value: 9000 },
-  { id: 'd4', name: 'Umbrella security', stage: 'Negotiation', owner: 'Ada', value: 76000 },
-  { id: 'd5', name: 'Hooli seats', stage: 'Closed won', owner: 'Theo', value: 31000 },
+  { id: 'd1', name: 'Tidewater Clinic renewal', stage: 'Negotiation', owner: 'Maya', value: 48000 },
+  { id: 'd2', name: 'Fenwick Tools expansion', stage: 'Proposal', owner: 'Theo', value: 120000 },
+  { id: 'd3', name: 'Juniper Physio pilot', stage: 'Discovery', owner: 'Maya', value: 9000 },
+  { id: 'd4', name: 'Hollis Legal security', stage: 'Negotiation', owner: 'Ada', value: 76000 },
+  { id: 'd5', name: 'Verity Print seats', stage: 'Closed won', owner: 'Theo', value: 31000 },
 ];
 const fields = [
   { key: 'stage', label: 'Stage', type: 'enum', options: ['Discovery', 'Proposal', 'Negotiation', 'Closed won'].map((x) => ({ value: x, label: x })) },
@@ -4989,10 +4989,10 @@ function App() {
 --- jsx
 const TE_PLANS = [{ value: 'starter', label: 'Starter' }, { value: 'team', label: 'Team' }, { value: 'enterprise', label: 'Enterprise' }];
 const TE_SEED = [
-  { id: 'acme', name: 'Acme Corp', plan: 'team', seats: 24, contact: 'ana@acme.example', revision: 1 },
-  { id: 'globex', name: 'Globex', plan: 'enterprise', seats: 140, contact: 'it@globex.example', revision: 1 },
-  { id: 'initech', name: 'Initech', plan: 'starter', seats: 5, contact: 'peter@initech.example', revision: 1 },
-  { id: 'umbrella', name: 'Umbrella', plan: 'team', seats: 31, contact: 'ops@umbrella.example', revision: 1 },
+  { id: 'kestrel', name: 'Kestrel Dental', plan: 'team', seats: 24, contact: 'ana@kestreldental.example', revision: 1 },
+  { id: 'harrow', name: 'Harrow Freight', plan: 'enterprise', seats: 140, contact: 'it@harrowfreight.example', revision: 1 },
+  { id: 'okafor', name: 'Okafor & Lund', plan: 'starter', seats: 5, contact: 'peter@okaforlund.example', revision: 1 },
+  { id: 'tidewater', name: 'Tidewater Clinic', plan: 'team', seats: 31, contact: 'ops@tidewaterclinic.example', revision: 1 },
 ];
 const teWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 function App() {
@@ -5022,7 +5022,7 @@ function App() {
       onRowChange={row => setRows(list => list.map(r => r.id === row.id ? row : r))} />
     <p>Sorted by seats: an edit that changes the seat count holds its place until it's saved, then the row is carried to its new position.</p>
     <details><summary>Fixture controls</summary>
-      <A.Button size="sm" onClick={() => setRows(list => list.map(r => r.id === 'globex' ? { ...r, seats: r.seats + 10, revision: r.revision + 1 } : r))}>Apply external update to Globex</A.Button>
+      <A.Button size="sm" onClick={() => setRows(list => list.map(r => r.id === 'harrow' ? { ...r, seats: r.seats + 10, revision: r.revision + 1 } : r))}>Apply external update to Harrow Freight</A.Button>
     </details>
   </div>;
 }
@@ -5783,7 +5783,7 @@ function InlineDialogBaseline({ open, onOpenChange, value, validate, onSave, onV
 
 // The value as its own button: a pencil on hover, or the field itself on hover. The seam says so at rest.
 function InlineWaysToOpen() {
-  const [values, setValues] = React.useState({ project: 'Northwind launch', meeting: 'Quarterly planning review', owner: '' });
+  const [values, setValues] = React.useState({ project: 'Spring catalogue launch', meeting: 'Quarterly planning review', owner: '' });
   const set = key => next => setValues(all => ({ ...all, [key]: next }));
   const save = draft => ({ ok: true, value: draft.trim() });
   return <section aria-labelledby="inline-ways-title">
@@ -5821,7 +5821,7 @@ function App() {
 .framework-demo{max-width:640px;margin-inline:auto;display:grid;gap:18px;overflow-wrap:anywhere}.framework-demo h2{font:600 var(--text-heading)/1.3 var(--font-sans);margin:0}.framework-demo p{margin:0}.framework-demo form{display:grid;gap:16px}.framework-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.framework-record{padding:16px;border:1px solid var(--line-control);border-radius:var(--radius-lg)}.framework-demo [role="status"]{min-height:1.5em}.framework-demo pre{white-space:pre-wrap;overflow-wrap:anywhere}
 --- jsx
 function App(){
- const [record,setRecord]=React.useState({name:'Northwind studio',email:'team@example.com'});
+ const [record,setRecord]=React.useState({name:'Larkspur studio',email:'team@example.com'});
  const [mode,setMode]=React.useState('success');const [overview,setOverview]=React.useState(false);
  const [discard,setDiscard]=React.useState(null);const heading=React.useRef(null);
  const form=A.useEditRecord({initialValue:record,validationMode:'submit',validate:v=>({...(v.name.trim()?{}:{name:'Enter a workspace name.'}),...(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)?{}:{email:'Enter a valid email address.'})}),save:async draft=>{
@@ -5920,7 +5920,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 function App() {
   const [failNext, setFailNext] = React.useState(false);
   const fail = React.useRef(false); fail.current = failNext;
-  const [saved, setSaved] = React.useState({ name: 'Acme', url: 'acme' });
+  const [saved, setSaved] = React.useState({ name: 'Bramble', url: 'bramble' });
   const general = A.useEditRecord({
     initialValue: saved, validationMode: 'submit',
     validate: (d) => ({ ...(d.name.trim() ? {} : { name: 'Enter a workspace name.' }), ...(/^[a-z0-9-]+$/.test(d.url) ? {} : { url: 'Use lowercase letters, numbers and hyphens.' }) }),
@@ -5938,14 +5938,14 @@ function App() {
   const [typed, setTyped] = React.useState('');
   const heading = React.useRef(null);
   const remove = A.useConsequentialAction({
-    target: 'Acme workspace', consequence: 'Delete Acme, its 12 projects and 1,204 files for all 8 members. This can’t be undone.',
+    target: 'Bramble workspace', consequence: 'Delete Bramble, its 12 projects and 1,204 files for all 8 members. This can’t be undone.',
     requiresConfirmation: true, focusFallback: () => heading.current,
-    execute: async () => { await wait(900); if (fail.current) return { ok: false, error: 'We couldn’t delete the workspace. Nothing was removed. Try again.' }; setDeleted(true); return { ok: true, value: 'acme' }; },
-    messages: { pending: 'Deleting Acme workspace', succeeded: 'Acme workspace deleted' },
+    execute: async () => { await wait(900); if (fail.current) return { ok: false, error: 'We couldn’t delete the workspace. Nothing was removed. Try again.' }; setDeleted(true); return { ok: true, value: 'bramble' }; },
+    messages: { pending: 'Deleting Bramble workspace', succeeded: 'Bramble workspace deleted' },
   });
   const confirming = ['confirming', 'pending', 'failed'].includes(remove.phase);
   const field = (key, label, hint) => <A.Field label={label} hint={hint} error={general.errors[key]}><A.Input id={'ws-' + key} value={general.draft[key]} onChange={(e) => general.setField(key, e.target.value)} /></A.Field>;
-  if (deleted) return <main className="st-page"><h2 ref={heading} tabIndex={-1} className="st-h">Workspace deleted</h2><p>Acme and everything in it were deleted.</p><A.WorkflowStatus>{remove.status}</A.WorkflowStatus></main>;
+  if (deleted) return <main className="st-page"><h2 ref={heading} tabIndex={-1} className="st-h">Workspace deleted</h2><p>Bramble and everything in it were deleted.</p><A.WorkflowStatus>{remove.status}</A.WorkflowStatus></main>;
   return (
     <>
       <main className="st-page">
@@ -5963,7 +5963,7 @@ function App() {
           <A.SettingsRow label="Mentions" description="Email me when someone mentions me." status={writes.mentions}><A.Switch checked={prefs.mentions} onCheckedChange={(v) => apply('mentions', v)} /></A.SettingsRow>
         </A.SettingsSection>
         <A.SettingsSection id="st-billing" title="Billing" readOnlyReason="Only workspace owners can change billing details. Ask Maya Chen.">
-          <A.SettingsRow label="Billing email" description="Invoices and receipts go here."><A.Input defaultValue="finance@acme.dev" /></A.SettingsRow>
+          <A.SettingsRow label="Billing email" description="Invoices and receipts go here."><A.Input defaultValue="finance@bramble.example" /></A.SettingsRow>
         </A.SettingsSection>
         <A.SettingsSection id="st-danger" title="Danger zone" tone="critical">
           <A.SettingsRow label="Delete workspace" description={remove.consequence}><A.Button variant="danger" onClick={remove.request}>Delete workspace</A.Button></A.SettingsRow>
@@ -5971,9 +5971,9 @@ function App() {
         <A.WorkflowStatus>{general.status || remove.status}</A.WorkflowStatus>
         <A.SaveBar record={general} />
         <A.Dialog open={confirming} background="stationary" dismissible={remove.phase !== 'pending'} onOpenChange={(o) => { if (!o) { remove.cancel(); setTyped(''); } }} returnFocus={() => heading.current}
-          title="Delete Acme workspace?" description={remove.consequence}
-          footer={<><A.Button disabled={remove.phase === 'pending'} onClick={() => { remove.cancel(); setTyped(''); }}>Keep workspace</A.Button><A.Button variant="danger" disabled={typed !== 'Acme' || remove.phase === 'pending'} onClick={remove.phase === 'failed' ? remove.retry : remove.confirm}>{remove.phase === 'pending' ? 'Deleting workspace' : remove.phase === 'failed' ? 'Try deleting again' : 'Delete workspace'}</A.Button></>}>
-          <A.Field label="Type Acme to confirm"><A.Input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" /></A.Field>
+          title="Delete Bramble workspace?" description={remove.consequence}
+          footer={<><A.Button disabled={remove.phase === 'pending'} onClick={() => { remove.cancel(); setTyped(''); }}>Keep workspace</A.Button><A.Button variant="danger" disabled={typed !== 'Bramble' || remove.phase === 'pending'} onClick={remove.phase === 'failed' ? remove.retry : remove.confirm}>{remove.phase === 'pending' ? 'Deleting workspace' : remove.phase === 'failed' ? 'Try deleting again' : 'Delete workspace'}</A.Button></>}>
+          <A.Field label="Type Bramble to confirm"><A.Input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" /></A.Field>
           {remove.error && <p role="alert">{remove.error}</p>}
         </A.Dialog>
       </main>
@@ -6034,10 +6034,10 @@ function MemberRow({ person, me, owners, fail, onRole, onRemove, onResend, onRev
 function App() {
   const me = 'u1';
   const [people, setPeople] = React.useState([
-    { id: 'u1', name: 'Maya Chen', email: 'maya@acme.dev', role: 'owner', projects: 14 },
-    { id: 'u2', name: 'Theo Marsh', email: 'theo@acme.dev', role: 'admin', projects: 9 },
-    { id: 'u3', name: 'Ines Duarte', email: 'ines@acme.dev', role: 'member', projects: 4 },
-    { id: 'i1', name: 'sam@acme.dev', email: 'Invitation', role: 'member', invited: true, sent: 'yesterday', projects: 0 },
+    { id: 'u1', name: 'Maya Chen', email: 'maya@larkspur.example', role: 'owner', projects: 14 },
+    { id: 'u2', name: 'Theo Marsh', email: 'theo@larkspur.example', role: 'admin', projects: 9 },
+    { id: 'u3', name: 'Ines Duarte', email: 'ines@larkspur.example', role: 'member', projects: 4 },
+    { id: 'i1', name: 'sam@larkspur.example', email: 'Invitation', role: 'member', invited: true, sent: 'yesterday', projects: 0 },
   ]);
   const [emails, setEmails] = React.useState(/** @type {string[]} */ ([]));
   const [role, setRole] = React.useState('member');
@@ -6063,7 +6063,7 @@ function App() {
         <A.Card className="mb-invite" aria-labelledby="mb-invite-h">
           <h3 id="mb-invite-h" className="mb-sub">Invite people</h3>
           <A.Field label="Email addresses" hint="Separate addresses with commas, or paste a list.">
-            <A.TagInput value={emails} onValueChange={setEmails} noun={['address', 'addresses']} placeholder="name@acme.dev" disabled={sending}
+            <A.TagInput value={emails} onValueChange={setEmails} noun={['address', 'addresses']} placeholder="name@larkspur.example" disabled={sending}
               normalize={(t) => t.trim().toLowerCase()} validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `${t} isn’t an email address.`)} />
           </A.Field>
           <div className="mb-roles"><span id="mb-role-label" className="mb-legend">Role</span>
@@ -6129,7 +6129,7 @@ function PlanChange({ current, period, onPeriod, onChanged, onAgain }) {
         <div className="bl-actions"><A.Button disabled={flow.phase === 'submitting'} onClick={flow.correct}>Choose another plan</A.Button>
           <A.Button variant={down ? 'danger' : 'primary'} loading={flow.phase === 'submitting'} onClick={() => void flow.submit()}>{flow.phase === 'submitting' ? 'Changing plan' : down ? `Downgrade to ${next.name}` : `Upgrade to ${next.name}`}</A.Button></div>
       </>}
-      {flow.phase === 'complete' && <p className="bl-note">{down ? `${next.name} starts on 30 November. Until then everything on your current plan keeps working.` : `${next.name} features are on now. A receipt is on its way to finance@acme.dev.`}</p>}
+      {flow.phase === 'complete' && <p className="bl-note">{down ? `${next.name} starts on 30 November. Until then everything on your current plan keeps working.` : `${next.name} features are on now. A receipt is on its way to finance@cobaltstreet.example.`}</p>}
       {flow.phase === 'complete' && <div><A.Button variant="ghost" onClick={onAgain}>Change plan again</A.Button></div>}
       <A.WorkflowStatus>{flow.status}</A.WorkflowStatus>
     </section>
@@ -6237,7 +6237,7 @@ function App() {
     <main className="au-page">
       <A.Card className="au-card">
         {step === 'sign-in' && <>
-          <h2 ref={heading} tabIndex={-1} className="au-h">Sign in to Acme</h2>
+          <h2 ref={heading} tabIndex={-1} className="au-h">Sign in to Fieldnote</h2>
           <A.Button className="au-wide" onClick={() => go('sso')}>Continue with single sign-on (SSO)</A.Button>
           <A.Separator label="or" />
           <form className="au-form" noValidate onSubmit={signIn} aria-labelledby="au-pw-h">
@@ -6248,10 +6248,10 @@ function App() {
             <A.Button type="submit" variant="primary" className="au-wide" loading={busy === 'password'}>{busy === 'password' ? 'Signing in' : 'Sign in'}</A.Button>
           </form>
           <div className="au-links"><A.Button variant="ghost" size="sm" loading={busy === 'link'} onClick={() => sendLink('link-sent')}>Email me a sign-in link</A.Button><A.Button variant="ghost" size="sm" onClick={() => go('reset')}>Forgot your password?</A.Button></div>
-          <p className="au-note">New to Acme? <A.Button variant="ghost" size="sm" onClick={() => { setPassword(''); go('sign-up'); }}>Create an account</A.Button></p>
+          <p className="au-note">New to Fieldnote? <A.Button variant="ghost" size="sm" onClick={() => { setPassword(''); go('sign-up'); }}>Create an account</A.Button></p>
         </>}
         {step === 'sign-up' && <>
-          <h2 ref={heading} tabIndex={-1} className="au-h">Create your Acme account</h2>
+          <h2 ref={heading} tabIndex={-1} className="au-h">Create your Fieldnote account</h2>
           <form className="au-form" noValidate onSubmit={signUp} aria-label="Create an account">
             <A.ErrorSummary errors={errors} focusKey={submits} />
             <A.Field label="Name" error={field('au-name')}><A.Input id="au-name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} /></A.Field>
@@ -6272,7 +6272,7 @@ function App() {
         </>}
         {step === 'link-sent' && <>
           <h2 ref={heading} tabIndex={-1} className="au-h">Check your email</h2>
-          <p>If <strong>{email}</strong> has an Acme account, we’ve sent a sign-in link to it. The link works once, for 15 minutes.</p>
+          <p>If <strong>{email}</strong> has a Fieldnote account, we’ve sent a sign-in link to it. The link works once, for 15 minutes.</p>
           {resend}
           <A.Button variant="ghost" size="sm" onClick={() => go('sign-in')}>Use a different email address</A.Button>
         </>}
@@ -6284,7 +6284,7 @@ function App() {
         </>}
         {step === 'two-factor' && <>
           <h2 ref={heading} tabIndex={-1} className="au-h">Enter your code</h2>
-          <p>Open your authenticator app and enter the 6-digit code for Acme.</p>
+          <p>Open your authenticator app and enter the 6-digit code for Fieldnote.</p>
           <A.ErrorSummary errors={errors} focusKey={submits} title="We couldn’t verify that code" />
           <A.Field label="Authentication code" error={field('au-code')}>
             <A.InputOTP id="au-code" maxLength={6} value={code} onChange={setCode} verifying={busy === 'code'} autoComplete="one-time-code" />
@@ -6308,7 +6308,7 @@ function App() {
         </>}
         {step === 'reset-sent' && <>
           <h2 ref={heading} tabIndex={-1} className="au-h">Check your email</h2>
-          <p>If <strong>{email}</strong> has an Acme account, we’ve sent a link to reset its password. The link works once, for 1 hour.</p>
+          <p>If <strong>{email}</strong> has a Fieldnote account, we’ve sent a link to reset its password. The link works once, for 1 hour.</p>
           {resend}
           <A.Button variant="ghost" size="sm" onClick={() => go('sign-in')}>Back to sign in</A.Button>
         </>}
@@ -6334,7 +6334,7 @@ const SEED = Array.from({ length: 22 }, /** @returns {AuditEvent} */ (_, i) => {
   const actor = ACTORS[i % 3].value, kind = ACTIONS[i % 3].value, day = String(28 - Math.floor(i / 3)).padStart(2, '0');
   const at = `2026-10-${day}T${String(17 - (i % 3) * 3).padStart(2, '0')}:${String((i * 7) % 60).padStart(2, '0')}:00Z`;
   if (kind === 'role') return { id: 'e' + i, actor, action: kind, resource: 'Ines Duarte', sentence: `${actor} changed Ines Duarte’s role from Member to Admin`, at, ip: '81.2.69.' + (10 + i), before: { role: 'Member' }, after: { role: 'Admin' } };
-  if (kind === 'invite') return { id: 'e' + i, actor, action: kind, resource: `guest${i}@acme.dev`, sentence: `${actor} invited guest${i}@acme.dev as a Viewer`, at, ip: '81.2.69.' + (10 + i), before: { invited: 'No' }, after: { invited: 'Yes, as Viewer' } };
+  if (kind === 'invite') return { id: 'e' + i, actor, action: kind, resource: `guest${i}@saltmarsh.example`, sentence: `${actor} invited guest${i}@saltmarsh.example as a Viewer`, at, ip: '81.2.69.' + (10 + i), before: { invited: 'No' }, after: { invited: 'Yes, as Viewer' } };
   return { id: 'e' + i, actor, action: kind, resource: 'Production key', sentence: `${actor} rotated the Production API key`, at, ip: '81.2.69.' + (10 + i), before: { key: 'ak_live_EXAMPLE…4f2a' }, after: { key: 'ak_live_EXAMPLE…9c1d' } };
 });
 /** @type {A.FilterField[]} */
@@ -6368,7 +6368,7 @@ function App() {
   return (
     <main className="al-page">
       <h2 className="al-h">Audit log</h2>
-      <p className="al-note">Every change in the Acme workspace, kept for 90 days on the Pro plan. Older events are deleted.</p>
+      <p className="al-note">Every change in the Saltmarsh workspace, kept for 90 days on the Pro plan. Older events are deleted.</p>
       <div className="al-tools">
         <A.FilterBar aria-label="Filter events" fields={FIELDS} value={filters} onValueChange={(f) => { setFilters(f); setPage(1); }} resultCount={matching.length} />
         <A.Button onClick={runExport} disabled={exporting !== null}>Export CSV</A.Button>
@@ -6619,7 +6619,7 @@ function App() {
       <section className="dv-section" aria-labelledby="dv-hooks-h">
         <h3 id="dv-hooks-h" className="dv-sub">Webhooks</h3>
         <A.Card className="dv-hook">
-          <div className="dv-row"><code>https://api.acme.dev/hooks/altitude</code><A.Badge tone="positive">Active</A.Badge></div>
+          <div className="dv-row"><code>https://api.pinecrest.example/hooks/altitude</code><A.Badge tone="positive">Active</A.Badge></div>
           <div className="dv-events">{['invoice.paid', 'customer.updated', 'member.removed'].map((e) => <A.Checkbox key={e} label={e} defaultChecked={e !== 'member.removed'} />)}</div>
           <A.Timeline aria-label="Recent deliveries" groupBy="none" locale="en-IE">
             {deliveries.map((d) => <A.TimelineItem key={d.id} time={d.at} status={d.status} onRetry={d.result === 'Failed' ? () => retry(d.id) : undefined}>
@@ -6648,7 +6648,7 @@ function App() {
       <A.Dialog open={!!confirm} background="stationary" size="sm" dismissible={!confirm?.busy} onOpenChange={(o) => { if (!o) setConfirm(null); }}
         title={confirm?.kind === 'roll' ? `Roll the ${key?.name} key?` : confirm?.kind === 'revoke' ? `Revoke the ${key?.name} key?` : `Disconnect ${app?.name}?`}
         description={confirm?.kind === 'roll' ? 'You’ll get a new key now. The old key keeps working for 24 hours, so you can update your services first.'
-          : confirm?.kind === 'revoke' ? `Requests that use it fail immediately. ${key?.used}.` : `${app?.name} stops receiving updates, and anyone using it loses access to Acme data through it.`}
+          : confirm?.kind === 'revoke' ? `Requests that use it fail immediately. ${key?.used}.` : `${app?.name} stops receiving updates, and anyone using it loses access to Pinecrest data through it.`}
         footer={<><A.Button disabled={confirm?.busy} onClick={() => setConfirm(null)}>Cancel</A.Button><A.Button variant={confirm?.kind === 'roll' ? 'primary' : 'danger'} loading={confirm?.busy} onClick={act}>{confirm?.kind === 'roll' ? 'Roll key' : confirm?.kind === 'revoke' ? 'Revoke key' : 'Disconnect'}</A.Button></>} />
     </main>
   );
@@ -6699,7 +6699,7 @@ function App() {
               onApprove={() => resolve(setPurge, true)} onReject={() => setPurge('rejected')} />}
           </A.TraceStep>
         </A.Trace>
-        {email === 'done' && <section className="ag-record" aria-labelledby="ag-rec-h"><h3 id="ag-rec-h" className="ag-sub">Northwind Traders</h3>
+        {email === 'done' && <section className="ag-record" aria-labelledby="ag-rec-h"><h3 id="ag-rec-h" className="ag-sub">Verity Print</h3>
           <p className="ag-line">Status: Archived <A.AILabel subject="Change" model="Opus 5.5" reviewedBy="Maya Chen" generatedAt="2026-10-30T09:00:00Z" /></p>
           <p className="ag-muted">Archived by the assistant, approved by Maya Chen.</p>
         </section>}
@@ -7047,7 +7047,7 @@ function App() {
   const happen = (id) => setDone((d) => ({ ...d, [id]: true }));
   return (
     <main className="ob-page">
-      <header className="ob-head"><h2 className="ob-h">Acme workspace</h2>
+      <header className="ob-head"><h2 className="ob-h">Juniper workspace</h2>
         <div className="ob-tools">
           <A.Popover aria-label="What’s new" align="end" onOpenChange={(o) => { if (o) setSeen(true); }}
             trigger={<A.Button size="sm" variant="ghost" id="ob-new">What’s new{!seen && <A.Badge variant="count" aria-label="2 unseen">2</A.Badge>}</A.Button>}>
@@ -7139,7 +7139,7 @@ function Customers() {
   </>;
 }
 function Settings() {
-  const general = A.useEditRecord({ initialValue: { name: 'Acme', url: 'acme' }, validationMode: 'submit',
+  const general = A.useEditRecord({ initialValue: { name: 'Hollis Legal', url: 'hollis-legal' }, validationMode: 'submit',
     validate: (d) => (d.name.trim() ? {} : { name: 'Enter a workspace name.' }), save: async (d) => { await new Promise((r) => setTimeout(r, 600)); return { ok: true, value: d }; } });
   const [digest, setDigest] = React.useState(true);
   return <>
@@ -7165,7 +7165,7 @@ function App() {
     <div className="sk-frame">
       <A.AppShell
         sidebar={<A.Sidebar>
-          <A.SidebarHeader><span className="sk-ws"><A.Avatar name="Acme" size={24} /><span className="alt-sidebar-text">Acme</span></span></A.SidebarHeader>
+          <A.SidebarHeader><span className="sk-ws"><A.Avatar name="Hollis Legal" size={24} /><span className="alt-sidebar-text">Hollis Legal</span></span></A.SidebarHeader>
           <A.SidebarContent><A.SidebarGroup label="Workspace"><A.SidebarMenu>{item('customers', 'Customers')}{item('reports', 'Reports')}{item('settings', 'Settings')}</A.SidebarMenu></A.SidebarGroup></A.SidebarContent>
           <A.SidebarFooter><A.SidebarMenu><A.SidebarMenuItem><A.SidebarMenuButton href="#/me" icon={<A.Avatar name="Maya Chen" size={20} />}>Maya Chen</A.SidebarMenuButton></A.SidebarMenuItem></A.SidebarMenu></A.SidebarFooter>
         </A.Sidebar>}
@@ -7239,7 +7239,7 @@ function App() {
   const outcome = React.useRef(/** @type {HTMLDivElement | null} */ (null));
   const [sending, setSending] = React.useState(/** @type {'approved' | 'declined' | null} */ (null));
   const decide = (result) => {
-    if (result === 'declined' && !reason.trim()) { setReasonError('Say why, so Support can tell Northwind.'); document.getElementById('ld-reason')?.focus(); return; }
+    if (result === 'declined' && !reason.trim()) { setReasonError('Say why, so Support can tell Quarry Lane Vets.'); document.getElementById('ld-reason')?.focus(); return; }
     setSending(result); setPhase('sending');
     window.setTimeout(() => { setPhase(result); requestAnimationFrame(() => outcome.current?.focus()); }, 600);
   };
@@ -7248,20 +7248,20 @@ function App() {
   return (
     <main className="ld-page">
       <A.PageHeader breadcrumb={<A.Breadcrumb items={[{ label: 'Refund requests', href: '#/refunds' }, { label: 'R-1042' }]} />}>
-        <A.PageHeaderTitle>Refund €420 to Northwind?</A.PageHeaderTitle>
+        <A.PageHeaderTitle>Refund €420 to Quarry Lane Vets?</A.PageHeaderTitle>
         <A.PageHeaderDescription>Asked by Jon Park in Support, today at 09:12.</A.PageHeaderDescription>
       </A.PageHeader>
       {done ? (
         <div className="ld-choice" role="status" tabIndex={-1} ref={outcome}>
-          <p className="ld-consequence">{phase === 'approved' ? 'Refund approved. €420 goes back to the card ending 4242 in 5–10 days, and the October invoice is marked refunded.' : 'Refund declined. Jon has your reason to send to Northwind.'}</p>
+          <p className="ld-consequence">{phase === 'approved' ? 'Refund approved. €420 goes back to the card ending 4242 in 5–10 days, and the October invoice is marked refunded.' : 'Refund declined. Jon has your reason to send to Quarry Lane Vets.'}</p>
           <div><A.Link href="#/refunds/R-1043">Next request: Halcyon, €96 (2 more waiting)</A.Link></div>
         </div>
       ) : (
         <section className="ld-choice" aria-labelledby="ld-choice-h">
           <h2 id="ld-choice-h" className="ld-sr">Your decision</h2>
-          <p className="ld-consequence">Approving sends €420 back to Northwind’s card ending 4242 in 5–10 days and marks their October invoice refunded. A refund can’t be taken back once it’s sent.</p>
+          <p className="ld-consequence">Approving sends €420 back to Quarry Lane Vets’s card ending 4242 in 5–10 days and marks their October invoice refunded. A refund can’t be taken back once it’s sent.</p>
           {phase === 'declining' || (phase === 'sending' && sending === 'declined') ? <>
-            <A.Field label="Why decline?" hint="Jon sends this to Northwind." error={reasonError || undefined}>
+            <A.Field label="Why decline?" hint="Jon sends this to Quarry Lane Vets." error={reasonError || undefined}>
               <A.Textarea id="ld-reason" rows={3} value={reason} onChange={(e) => { setReason(e.target.value); setReasonError(''); }}
                 onKeyDown={(e) => { if (e.key === 'Escape') cancel(); }} />
             </A.Field>
@@ -7356,9 +7356,9 @@ function App() {
 --- jsx
 const ER_ROLES = [{ value: 'owner', label: 'Owner' }, { value: 'editor', label: 'Editor' }, { value: 'viewer', label: 'Viewer' }];
 const ER_PEOPLE = Object.freeze([
-  Object.freeze({ id: 'p-mara', name: 'Mara Quist', email: 'mara@northwind.example', role: 'owner', notify: true, revision: 1 }),
-  Object.freeze({ id: 'p-ines', name: 'Inés Ortega', email: 'ines@northwind.example', role: 'editor', notify: false, revision: 1 }),
-  Object.freeze({ id: 'p-tobi', name: 'Tobi Adeyemi', email: 'tobi@northwind.example', role: 'viewer', notify: true, revision: 1 }),
+  Object.freeze({ id: 'p-mara', name: 'Mara Quist', email: 'mara@juniperphysio.example', role: 'owner', notify: true, revision: 1 }),
+  Object.freeze({ id: 'p-ines', name: 'Inés Ortega', email: 'ines@juniperphysio.example', role: 'editor', notify: false, revision: 1 }),
+  Object.freeze({ id: 'p-tobi', name: 'Tobi Adeyemi', email: 'tobi@juniperphysio.example', role: 'viewer', notify: true, revision: 1 }),
 ]);
 const ER_FIXTURES = ['success', 'slow', 'fail-once', 'conflict-during-save'];
 const erWait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -7374,7 +7374,7 @@ function EditRegionExample({ fixture }) {
   const reconcile = id => setPeople(people => people.map(p => p.id === id ? { ...server.current.get(id) } : p));
   const externalUpdate = () => {
     const current = server.current.get('p-mara');
-    server.current.set('p-mara', { ...current, email: 'm.quist@northwind.example', revision: current.revision + 1 });
+    server.current.set('p-mara', { ...current, email: 'm.quist@juniperphysio.example', revision: current.revision + 1 });
     trace({ event: 'external-update', id: 'p-mara', revision: current.revision + 1 }); reconcile('p-mara');
   };
   const save = person => async (draft, { changed }) => {
@@ -7435,7 +7435,7 @@ function EditRegionExample({ fixture }) {
 // Labelled rows whose values already have their controls' height (EditRegionValue reserve): Edit all moves nothing.
 const ER_SEATS = [{ value: 'aisle', label: 'Aisle' }, { value: 'window', label: 'Window' }, { value: 'any', label: 'No preference' }];
 function TripSheet() {
-  const [trip, setTrip] = React.useState({ traveller: 'Mara Quist', email: 'mara@northwind.example', phone: '', seat: 'aisle' });
+  const [trip, setTrip] = React.useState({ traveller: 'Mara Quist', email: 'mara@juniperphysio.example', phone: '', seat: 'aisle' });
   const validate = draft => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()) ? undefined : { email: 'Enter an email address, like name@example.com.' };
   const rows = [['traveller', 'Traveller'], ['email', 'Email'], ['phone', 'Phone'], ['seat', 'Seat']];
   return <section className="er-sheet" aria-labelledby="er-sheet-title">
@@ -7544,9 +7544,9 @@ function App() {
 .ig-url { font-family: var(--font-mono); font-size: 12px; }
 --- jsx
 const IG_HOOKS = [
-  { id: 'h1', name: 'Production', url: 'https://api.northwind.example/hooks/prod', revision: 1 },
-  { id: 'h2', name: 'Staging', url: 'https://staging.northwind.example/hooks', revision: 1 },
-  { id: 'h3', name: 'Billing events', url: 'https://billing.northwind.example/in', revision: 1 },
+  { id: 'h1', name: 'Production', url: 'https://api.verityprint.example/hooks/prod', revision: 1 },
+  { id: 'h2', name: 'Staging', url: 'https://staging.verityprint.example/hooks', revision: 1 },
+  { id: 'h3', name: 'Billing events', url: 'https://billing.verityprint.example/in', revision: 1 },
 ];
 const igWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const HookIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M6 4.5a2.5 2.5 0 1 1 3 2.4L7 11" /><path d="M4 12a2.5 2.5 0 1 1 2-4" /><path d="M12 12.5H8" /><circle cx="12" cy="12.5" r="1.5" /></svg>;
@@ -7616,7 +7616,7 @@ const plWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const plLabel = (list, v) => list.find(o => o.value === v)?.label;
 function App() {
   const [issue, setIssue] = React.useState({ status: 'review', assignee: 'mara', priority: '', estimate: 3, created: '21 Oct 2026' });
-  const [trip, setTrip] = React.useState({ name: 'Mara Quist', email: 'mara@northwind.example', start: '2026-11-02', end: '2026-11-06', phone: '' });
+  const [trip, setTrip] = React.useState({ name: 'Mara Quist', email: 'mara@tidewaterclinic.example', start: '2026-11-02', end: '2026-11-06', phone: '' });
   const set = key => v => setIssue(i => ({ ...i, [key]: v }));
   const save = key => async draft => { await plWait(250); if (key === 'status' && draft === 'done' && !issue.assignee) return { ok: false, error: 'Assign someone before marking it done.' }; return { ok: true, value: draft }; };
   const tripSet = key => v => setTrip(t => ({ ...t, [key]: v }));

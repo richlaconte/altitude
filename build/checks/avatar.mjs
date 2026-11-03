@@ -58,7 +58,7 @@ const last = '.mount:last-of-type';
   expect(f[0] === '' && f[1] === 'KI', 'a broken image shows the initials: ' + f); }
 
 // Square faces for teams and bots: corners from the radius scale, growing with size.
-{ await mount(`(A, h) => h('div', null, [24, 36, 44, 64].map((s) => h(A.Avatar, { key: s, name: 'Northwind Studio', size: s, shape: 'square' })), h(A.Avatar, { name: 'Ada Obi', size: 44 }))`);
+{ await mount(`(A, h) => h('div', null, [24, 36, 44, 64].map((s) => h(A.Avatar, { key: s, name: 'Larkspur Design', size: s, shape: 'square' })), h(A.Avatar, { name: 'Ada Obi', size: 44 }))`);
   const r = await page.$$eval(`${last} .alt-avatar-face`, (fs) => fs.map((f) => getComputedStyle(f).borderTopLeftRadius));
   expect(JSON.stringify(r.slice(0, 4)) === JSON.stringify(['4px', '7px', '10px', '14px']), 'square corners are radius-xs, sm, md, lg by size: ' + r);
   expect(r[4] === '9999px', 'people stay round: ' + r[4]); }

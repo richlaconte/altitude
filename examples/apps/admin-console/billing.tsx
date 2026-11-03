@@ -80,7 +80,7 @@ function PlanChange({ billing, onChanged, onAgain }: { billing: BillingData; onC
         </div>
       </>}
       {flow.phase === 'complete' && <>
-        <p className="ac-prose">{down ? `Until ${DOWNGRADE_DATE} everything on ${PLAN_NAMES[current]} keeps working. You can keep ${PLAN_NAMES[current]} any time before then.` : keep ? `Nothing changes on ${DOWNGRADE_DATE}.` : `${PLAN_NAMES[next]} features are on now. A receipt is on its way to finance@northwind.dev.`}</p>
+        <p className="ac-prose">{down ? `Until ${DOWNGRADE_DATE} everything on ${PLAN_NAMES[current]} keeps working. You can keep ${PLAN_NAMES[current]} any time before then.` : keep ? `Nothing changes on ${DOWNGRADE_DATE}.` : `${PLAN_NAMES[next]} features are on now. A receipt is on its way to finance@fenwicktools.example.`}</p>
         <div><Button variant="ghost" onClick={onAgain}>Change plan again</Button></div>
       </>}
       <WorkflowStatus>{flow.status}</WorkflowStatus>

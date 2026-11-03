@@ -133,11 +133,11 @@ function Invite({ open, onClose, onSent }: { open: boolean; onClose: () => void;
   };
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && !sending) onClose(); }} dismissible={!sending} title="Invite people"
-      description="They’ll get an email with a link to join Northwind."
+      description="They’ll get an email with a link to join Fenwick Tools."
       footer={<><Button disabled={sending} onClick={onClose}>Cancel</Button><Button variant="primary" loading={sending} onClick={() => void send()}>{sending ? 'Sending invites' : emails.length > 1 ? `Send ${emails.length} invites` : 'Send invite'}</Button></>}>
       <div className="ac-stack">
         <Field label="Email addresses" hint="Separate addresses with commas, or paste a list." error={error || undefined}>
-          <TagInput value={emails} onValueChange={(v) => { setEmails(v); setError(''); }} noun={['address', 'addresses']} placeholder="name@northwind.dev" disabled={sending}
+          <TagInput value={emails} onValueChange={(v) => { setEmails(v); setError(''); }} noun={['address', 'addresses']} placeholder="name@fenwicktools.example" disabled={sending}
             normalize={(t) => t.trim().toLowerCase()} validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `${t} isn’t an email address.`)} />
         </Field>
         <div className="ac-stack-tight">
@@ -180,7 +180,7 @@ export function Members({ go }: { go: (to: 'billing') => void }) {
   return <>
     <PageHeader primary={<Button variant="primary" onClick={() => setInviting(true)}>Invite people</Button>}>
       <PageHeaderTitle id="ac-title" tabIndex={-1}>Members</PageHeaderTitle>
-      <PageHeaderDescription>Who’s in Northwind, and what they can do.</PageHeaderDescription>
+      <PageHeaderDescription>Who’s in Fenwick Tools, and what they can do.</PageHeaderDescription>
     </PageHeader>
     <div className="ac-body">
       <Resource query={q} noun="members">

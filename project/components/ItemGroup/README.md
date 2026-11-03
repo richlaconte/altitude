@@ -132,9 +132,9 @@ import * as React from 'react';
 import { Button, EmptyState, Field, Input, Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle, Toaster } from 'altitude-design';
 
 const IG_HOOKS = [
-  { id: 'h1', name: 'Production', url: 'https://api.northwind.example/hooks/prod', revision: 1 },
-  { id: 'h2', name: 'Staging', url: 'https://staging.northwind.example/hooks', revision: 1 },
-  { id: 'h3', name: 'Billing events', url: 'https://billing.northwind.example/in', revision: 1 },
+  { id: 'h1', name: 'Production', url: 'https://api.verityprint.example/hooks/prod', revision: 1 },
+  { id: 'h2', name: 'Staging', url: 'https://staging.verityprint.example/hooks', revision: 1 },
+  { id: 'h3', name: 'Billing events', url: 'https://billing.verityprint.example/in', revision: 1 },
 ];
 const igWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const HookIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M6 4.5a2.5 2.5 0 1 1 3 2.4L7 11" /><path d="M4 12a2.5 2.5 0 1 1 2-4" /><path d="M12 12.5H8" /><circle cx="12" cy="12.5" r="1.5" /></svg>;

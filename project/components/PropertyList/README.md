@@ -91,7 +91,7 @@ const plWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const plLabel = (list, v) => list.find(o => o.value === v)?.label;
 export default function App() {
   const [issue, setIssue] = React.useState({ status: 'review', assignee: 'mara', priority: '', estimate: 3, created: '21 Oct 2026' });
-  const [trip, setTrip] = React.useState({ name: 'Mara Quist', email: 'mara@northwind.example', start: '2026-11-02', end: '2026-11-06', phone: '' });
+  const [trip, setTrip] = React.useState({ name: 'Mara Quist', email: 'mara@tidewaterclinic.example', start: '2026-11-02', end: '2026-11-06', phone: '' });
   const set = key => v => setIssue(i => ({ ...i, [key]: v }));
   const save = key => async draft => { await plWait(250); if (key === 'status' && draft === 'done' && !issue.assignee) return { ok: false, error: 'Assign someone before marking it done.' }; return { ok: true, value: draft }; };
   const tripSet = key => v => setTrip(t => ({ ...t, [key]: v }));

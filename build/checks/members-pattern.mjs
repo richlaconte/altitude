@@ -18,7 +18,7 @@ const row = (name) => page.evaluate((name) => { const r = [...document.querySele
   return r && { status: r.dataset.status || '', settle: r.dataset.settle || '', text: r.textContent, select: !!r.querySelector('[aria-label^="Role for"]'), remove: [...r.querySelectorAll('button')].some((b) => b.textContent === 'Remove'), badge: r.querySelector('.alt-badge')?.textContent }; }, name);
 
 const input = page.getByLabel('Email addresses');
-for (const t of ['ana@acme.dev', 'nope', 'theo@acme.dev']) {
+for (const t of ['ana@larkspur.example', 'nope', 'theo@larkspur.example']) {
   await input.fill(t); await input.press('Enter'); await page.waitForTimeout(150);
   if (t === 'nope') expect(await page.evaluate(() => document.querySelector('.mb-invite .alt-field-error')?.textContent === 'nope isn’t an email address.'), 'an invalid address is refused with the reason');
 }
@@ -28,9 +28,9 @@ await send.click();
 await page.waitForTimeout(300);
 expect(/Sending invites/.test(await status()), 'sending is said while it happens');
 await page.waitForTimeout(900);
-let r = await row('ana@acme.dev');
+let r = await row('ana@larkspur.example');
 expect(r && r.badge === 'Invited' && r.status === '' && r.settle !== '', `a new invitation lands as a settled row with an Invited plate (${JSON.stringify(r)})`);
-expect(await page.evaluate(() => { const r = [...document.querySelectorAll('tbody tr')].find((r) => r.textContent.includes('ana@acme.dev')); return getComputedStyle(r).animationName !== 'alt-hover'; }), 'an invitation awaiting acceptance never hovers');
+expect(await page.evaluate(() => { const r = [...document.querySelectorAll('tbody tr')].find((r) => r.textContent.includes('ana@larkspur.example')); return getComputedStyle(r).animationName !== 'alt-hover'; }), 'an invitation awaiting acceptance never hovers');
 expect(/1 invite sent, 1 address is already in the workspace\./.test(await status()), `the result is said per address (${await status()})`);
 
 r = await row('Maya Chen');
@@ -63,9 +63,9 @@ await dialog.getByRole('button', { name: 'Remove Theo' }).click();
 await page.waitForTimeout(1100);
 expect(!(await row('Theo Marsh')) && /Theo Marsh was removed\./.test(await status()), 'and is said once they are removed');
 
-await page.locator('tbody tr', { hasText: 'sam@acme.dev' }).getByRole('button', { name: 'Revoke' }).click();
+await page.locator('tbody tr', { hasText: 'sam@larkspur.example' }).getByRole('button', { name: 'Revoke' }).click();
 await page.waitForTimeout(300);
-expect(!(await row('sam@acme.dev')) && /Invitation to sam@acme.dev revoked\./.test(await status()), 'revoking an invitation is said');
+expect(!(await row('sam@larkspur.example')) && /Invitation to sam@larkspur.example revoked\./.test(await status()), 'revoking an invitation is said');
 expect(await page.evaluate(() => document.activeElement.id) === 'mb-heading', 'and focus goes to the heading, not the page');
 
 console.log(`Members pattern: ${pass} passed, ${fail} failed`);
