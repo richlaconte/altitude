@@ -10,6 +10,7 @@
 //   response); a failed incident update keeps its words; the service detail opens from a row and from a deploy.
 import { chromium } from 'playwright-core';
 import { build } from 'esbuild';
+import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildExamples } from '../../scripts/build-examples.mjs';
@@ -80,6 +81,12 @@ const primaries = (page) => page.evaluate(() => [...document.querySelectorAll('.
 const sideways = (page) => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 const status = (page, name) => page.locator('.sh-table tbody tr', { has: page.locator('.sh-link', { hasText: new RegExp(`^${name}$`) }) }).locator('.alt-badge').textContent();
 const focused = (page) => page.evaluate(() => document.activeElement?.id || document.activeElement?.textContent?.trim().slice(0, 40) || '');
+const require = createRequire(import.meta.url);
+const axe = async (page, within = '.ex-app') => {
+  if (!(await page.evaluate(() => !!window.axe))) await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') });
+  const r = await page.evaluate((w) => window.axe.run(document.querySelector(w)), within);
+  return r.violations.map((v) => `${v.id}: ${v.nodes.length} (${v.nodes[0]?.target})`);
+};
 const log = (page, op) => page.evaluate((op) => [...document.querySelectorAll('.ex-log-row')].filter((r) => r.textContent.includes(op)).map((r) => r.dataset.status), op);
 
 // Both schemes, desktop and phone: the frame holds.
@@ -94,6 +101,8 @@ for (const scheme of ['light', 'dark']) {
     expect(lead.h1 === 1 && /alt-chart-takeaway/.test(lead.first), `${scheme} ${width}: one h1, and the takeaway is the first heading after it (${JSON.stringify(lead)})`);
     expect(await primaries(page) === 1, `${scheme} ${width}: one primary, Declare incident for Checkout (${await primaries(page)})`);
     expect(!(await sideways(page)), `${scheme} ${width}: no sideways scroll`);
+    const found = await axe(page);
+    expect(!found.length, `${scheme} ${width}: axe is clean on the app (${found.join(', ')})`);
     expect(!errors.length, `${scheme} ${width}: no page or console errors (${errors.slice(0, 2).join('; ')})`);
     await ctx.close();
   }
@@ -133,6 +142,12 @@ for (const [name, opts] of [['forced colours', { forced: true }], ['reduced moti
   expect(/Checkout/.test(sheet) && /Where the slowest request spent its time/.test(sheet) && /Ana Ruiz deployed 4f2c: Retry payment authorisation on timeout/.test(sheet) && /duplicate idempotency key/.test(sheet),
     'the deploy annotation opens Checkout: its spans, its deploy and its log');
   expect(/isn't a timeline of the request/.test(sheet), 'the spans say they aren’t a waterfall');
+  let found = await axe(page, '[role="dialog"]');
+  expect(!found.length, `axe is clean on the service detail (${found.join(', ')})`);
+  await page.keyboard.press('Escape'); await wait(page, 500);
+  // A row lifts on hover because clicking anywhere on it opens the service.
+  await page.locator('.sh-table tbody tr', { hasText: 'Catalog' }).locator('td').nth(3).click(); await wait(page, 900);
+  expect(/Catalog/.test(await page.locator('[role="dialog"] h2').first().textContent()), 'clicking a row opens its service');
   await page.keyboard.press('Escape'); await wait(page, 500);
   await page.locator('.sh-link', { hasText: /^Payments$/ }).click(); await wait(page, 900);
   expect(/Payments/.test(await page.locator('[role="dialog"] h2').first().textContent()), 'a service row opens its detail');
@@ -144,6 +159,8 @@ for (const [name, opts] of [['forced colours', { forced: true }], ['reduced moti
   await page.locator('.sh-lead button', { hasText: 'Declare incident for Checkout' }).click(); await wait(page, 600);
   const dlg = page.locator('[role="dialog"]');
   const button = () => dlg.locator('.alt-btn[data-variant="primary"]').textContent();
+  found = await axe(page, '[role="dialog"]');
+  expect(!found.length, `axe is clean on the declare dialog (${found.join(', ')})`);
   expect(await button() === 'Declare SEV-2 and page 3 people', `a partial outage starts at SEV-2, and the button says who it pages (${await button()})`);
   expect(/This pages 3 people on the Payments and checkout rota/.test(await dlg.textContent()), 'the consequence is in the description');
   expect(/Checkout errors rose/.test(await dlg.locator('textarea').inputValue()), 'what’s happening starts from the takeaway');

@@ -188,7 +188,7 @@ export function App() {
         </div>
       </section>
 
-      <Panel id="sh-latency" updated={false} title={latencyQ.data?.service ? `${serviceName(latencyQ.data.service)} latency` : 'Latency, all traffic'} query={latencyQ} shown={latencyData} pageAsOf={asOf} noun="latency">
+      <Panel id="sh-latency" updated={false} title={latencyData?.service ? `${serviceName(latencyData.service)} latency` : 'Latency, all traffic'} query={latencyQ} shown={latencyData} pageAsOf={asOf} noun="latency">
         {() => <LatencyChart data={latencyData} paused={paused} onPausedChange={setPaused} />}
       </Panel>
 
@@ -311,7 +311,8 @@ function ServicesTable({ data, onOpen }: { data: ServicesAnswer | undefined; onO
       </TableHeader>
       <TableBody>
         {data.rows.map((r) => (
-          <TableRow key={r.id} rowId={r.id} interactive settle={r.reading.health}>
+          // The row lifts on hover because clicking it opens the service; its name is the button for the keyboard.
+          <TableRow key={r.id} rowId={r.id} interactive settle={r.reading.health} onClick={(e) => { if (!(e.target as HTMLElement).closest('button')) onOpen(r.id); }}>
             <TableCell><button type="button" className="sh-link" onClick={() => onOpen(r.id)}>{r.name}</button></TableCell>
             <TableCell><StatusBadge reading={r.reading} /></TableCell>
             <TableCell>{r.spark.some((v) => v !== null) ? <Sparkline data={r.spark} width="7em" format={formatRate} tone={r.reading.health === 'outage' ? 'critical' : 'neutral'} summary={`${r.name}: errors over the last hour${r.spark.some((v) => v === null) ? ', with a gap where it stopped reporting' : ''}.`} /> : <span className="sh-caption">No data</span>}</TableCell>
