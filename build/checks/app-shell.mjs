@@ -16,7 +16,14 @@ const open = async (width) => {
   await page.waitForTimeout(400);
   return page;
 };
+// Waits for every finite animation and transition to finish, then a frame: a fixed wait alone can read a 220ms glide
+// mid-way on a slow runner (the pill was once 63px short of Reports after 500ms).
+const settled = (p) => p.evaluate(async () => {
+  await Promise.all(document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {})));
+  await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+});
 const page = await open(960);
+await settled(page);
 const read = () => page.evaluate(() => {
   const nav = document.querySelector('nav.alt-sidebar'), cur = nav.querySelector('[aria-current="page"]'), pill = nav.querySelector('.alt-sidebar-pill');
   const a = cur?.getBoundingClientRect(), b = pill.getBoundingClientRect();
@@ -34,6 +41,7 @@ expect(r.current === 'Inbox, 4 unread' && r.pillOff < 1 && r.pillShadow !== 'non
 expect(r.inbox === 'Inbox, 4 unread' && r.badge !== 'none', `a count is part of the name, and floats (${r.inbox})`);
 await page.click('.alt-sidebar-button:has-text("Reports")');
 await page.waitForTimeout(500);
+await settled(page);
 r = await read();
 expect(r.current === 'Reports' && r.pillOff < 1, `the pill follows navigation (${r.current}, ${r.pillOff})`);
 
@@ -43,6 +51,7 @@ await page.click('button.alt-sidebar-label');
 
 await page.keyboard.press('Control+b');
 await page.waitForTimeout(500);
+await settled(page);
 r = await read();
 expect(r.rail && r.width < 70, `⌘/Ctrl+B collapses to a rail (${r.width}px)`);
 expect(r.inbox === 'Inbox, 4 unread', `in the rail a destination keeps its name (${r.inbox})`);
