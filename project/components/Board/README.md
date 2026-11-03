@@ -8,6 +8,7 @@ Columns of cards you move between, a kanban: columns are receptacles that open w
 - **Someone else's hand.** A card a collaborator is holding (`heldBy`) is lifted to level 3, outlined in their presence colour and wears their name; you can't pick it up meanwhile.
 - **Afterglow.** `settle` makes a card arrive tinted and lifted, then settle: for cards moved by someone else.
 - **A move the server can refuse.** `status` on a `BoardCard` gives it Card's commitment readings. While a move is `pending` the card hovers (level 2 to 3) and is `aria-busy`. When it's `committed` it lands. When it's `failed` it drops into a trench (`critical-soft`, `trench`, a 1px `critical` outline), and stays there until you clear it, usually on its next move. The hover starts after `dur-grace`, so a card dropped as pending first settles from the carry and rises only if the write is still in flight; a fast write never flickers. That's intended, so don't work around it. Where a refused card goes is yours to decide (back where it came from is usual), and so are the words saying why: put them on the card and announce them. A pending card can still be picked up, so a second move while the first is waiting is yours to merge, queue or cancel. Forced colours: dotted while pending, dashed when failed.
+- **A change someone proposed.** `proposals` on a `BoardCard` (an assistant's "move this to Backlog", "estimate it at 3 points") puts each proposal on a slip beside the card's face: the change as current struck through, then proposed ("Column ~~In progress~~ ↓ Backlog"), "Proposed by Assistant" (`proposedBy`), then Reject and Accept on their own row. The proposal is the raised thing, not the card: the slip is raised one level (`surface-raised`, `elev-1`, sheen, as PropertyList's proposal), and the card stays at rest in its column, because nothing has been sent. Raising the card would make it look hovered or pending. Accept and Reject are siblings of the face, so pressing them never picks the card up and they're reachable on their own, after the card's tools. While the card is carried the slip is inert. Each proposal's `status` is yours, because an accepted move remounts the card: `applying` lays the slip flush ("Applying…") and makes the card pending; `failed` lays it flush on the card's trench with your `note` after "Not applied:", and offers Retry; `stale` lays it flush and muted with "Out of date:" and your `note`, and offers Dismiss only. A `status` you pass on the card wins over these. Remove a proposal once it's applied, rejected or dismissed: rejected and dismissed ones are announced politely ("Rejected: assign to Lena for Support macros."); saying that an applied change landed is yours, as the words for `status` are. `summary` is the change in words for the buttons' names ("Accept: move to Backlog for Billing emails"). A proposed move doesn't place a ghost in its target column: the slip says where in words. Forced colours: the raised slip has a 1px border.
 
 **Editing in place.** On a board the column you add to is the context, so cards are added and edited where they are, not in a Dialog.
 
@@ -21,15 +22,16 @@ Columns of cards you move between, a kanban: columns are receptacles that open w
 |---|---|
 | `Board` | `onMove({ cardId, from, to })`, where `from` and `to` are `{ column, index }`; you update your data and the board carries the cards |
 | `BoardColumn` | `id`, `title`, `collapsible`, `collapsed`/`defaultCollapsed`/`onCollapsedChange`, `onCreate`, `addLabel` |
-| `BoardCard` | `id`, `label` (its name, and for announcements; without one, its first line), `heldBy`, `settle`, `status` (`pending`, `committed`, `failed`), `onRename`, `value`/`renderEditor`/`onSave`/`onValueChange`; anything inside it |
+| `BoardCard` | `id`, `label` (its name, and for announcements; without one, its first line), `heldBy`, `settle`, `status` (`pending`, `committed`, `failed`), `onRename`, `value`/`renderEditor`/`onSave`/`onValueChange`, `proposals` (each `{ id, label, from?, to, summary?, status?, note?, onAccept, onReject }`), `proposedBy` (default "Assistant"); anything inside it |
 
 **On touch.** A swipe scrolls the board; a press-and-hold picks a card up, then a drag moves it. The card tools are always shown where there's no hover.
 
-**You provide:** the data and an `onMove` that moves the card in it (splice it out of `from.column` at `from.index`, into `to.column` at `to.index`); card content (a title, then a `small` line of detail); short column titles.
+**You provide:** the data and an `onMove` that moves the card in it (splice it out of `from.column` at `from.index`, into `to.column` at `to.index`); card content (a title, then a `small` line of detail); short column titles. For proposals: applying the change in `onAccept` (nothing is applied for you), each proposal's `status` while it's applied, and removing it afterwards.
 
 - Do keep buttons and links inside cards: pressing them doesn't pick the card up, and they sit beside the card's face, not in it, so each is reachable and named on its own.
 - Do collapse finished columns rather than hiding them; the pile keeps their weight visible.
 - Don't use a board for a single list you reorder; that's SortableList.
+- Don't move a card to the column a proposal names before it's accepted, and don't raise the card for a proposal: the slip carries it.
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
 ## Example
@@ -41,7 +43,7 @@ import { Board, BoardCard, BoardColumn, Field, Input } from 'altitude-design';
 
 <Board onMove={move} aria-label="Launch board">
   {Object.keys(titles).map(k => <BoardColumn key={k} id={k} title={titles[k]} collapsible={k === "done"} defaultCollapsed={k === "done"} onCreate={k === "done" ? undefined : create(k)}>
-    {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} status={writes[c.id]?.status} onRename={rename(k, c.id)}
+    {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} status={writes[c.id]?.status} onRename={rename(k, c.id)} proposals={proposalsFor(c.id)}
       {...(k === "review" ? { value: { title: c.t, meta: c.m }, onValueChange: update(k, c.id),
         renderEditor: field => <><Field label="Title"><Input {...field("title")} size="sm" /></Field><Field label="Details"><Input {...field("meta")} size="sm" /></Field></>,
         onSave: async draft => { await wait(200); return refuse(draft.title) || { ok: true, value: draft }; } } : {})}>
@@ -96,6 +98,27 @@ export default function App() {
     setWrites(w => ({ ...w, [cardId]: { status: "committed" } }));
     setLast(`Moved: ${card.t} → ${titles[to.column]}.`);
   };
+  // The assistant's proposals (#444): raised slips on their cards. Nothing moves until a person accepts; accepting is a
+  // write like any other, so it can be refused, and then the slip says so and offers Retry.
+  const [proposals, setProposals] = React.useState([
+    { id: "p1", card: "c3", label: "Column", from: "To do", to: "In progress", summary: "move to In progress" },
+    { id: "p2", card: "c5", label: "Assignee", from: "Ivy", to: "Lena", summary: "assign to Lena" },
+    { id: "p3", card: "c6", label: "Estimate", from: "No estimate", to: "3 points", summary: "estimate 3 points", status: "stale", note: "Ada changed this card after it was proposed. Nothing was applied." }
+  ]);
+  const [failProposal, setFailProposal] = React.useState(false);
+  const failP = React.useRef(false); failP.current = failProposal;
+  const patch = (id, v) => setProposals(ps => ps.map(x => x.id === id ? { ...x, ...v } : x));
+  const accept = p => async () => {
+    patch(p.id, { status: "applying", note: undefined });
+    await wait(700);
+    if (failP.current) { setFailProposal(false); patch(p.id, { status: "failed", note: "the server refused. Nothing was applied." }); return; }
+    if (p.label === "Column") setCols(c => { const from = Object.keys(c).find(k => c[k].some(x => x.id === p.card)); return place(c, { column: from, index: c[from].findIndex(x => x.id === p.card) }, { column: "doing", index: c.doing.length }); });
+    else setCols(c => ({ ...c, doing: c.doing.map(x => x.id === p.card ? { ...x, m: "Support \xB7 Lena" } : x) }));
+    setProposals(ps => ps.filter(x => x.id !== p.id));
+    setLast(`Applied: ${p.summary}.`);
+  };
+  const reject = p => () => { setProposals(ps => ps.filter(x => x.id !== p.id)); setLast(`Rejected: ${p.summary}.`); };
+  const proposalsFor = id => proposals.filter(p => p.card === id).map(p => ({ ...p, onAccept: accept(p), onReject: reject(p) }));
   // The demo service refuses titles with “TBD” in them.
   const refuse = t => /tbd/i.test(t) ? { ok: false, error: "Write the task, not \u201cTBD\u201d." } : null;
   const create = k => async t => { await wait(250); const no = refuse(t); if (no) return no; const card = { id: "n" + ++seq.current, t, m: "New" }; setCols(c => ({ ...c, [k]: [...c[k], card] })); return { ok: true, value: { id: card.id } }; };
@@ -104,7 +127,7 @@ export default function App() {
   return <div className="col" style={{ gap: 4 }}>
     <Board onMove={move} aria-label="Launch board">
       {Object.keys(titles).map(k => <BoardColumn key={k} id={k} title={titles[k]} collapsible={k === "done"} defaultCollapsed={k === "done"} onCreate={k === "done" ? undefined : create(k)}>
-        {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} status={writes[c.id]?.status} onRename={rename(k, c.id)}
+        {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} status={writes[c.id]?.status} onRename={rename(k, c.id)} proposals={proposalsFor(c.id)}
           {...(k === "review" ? { value: { title: c.t, meta: c.m }, onValueChange: update(k, c.id),
             renderEditor: field => <><Field label="Title"><Input {...field("title")} size="sm" /></Field><Field label="Details"><Input {...field("meta")} size="sm" /></Field></>,
             onSave: async draft => { await wait(200); return refuse(draft.title) || { ok: true, value: draft }; } } : {})}>
@@ -115,6 +138,7 @@ export default function App() {
     <p className="cap" role="status">{last ?? "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."}</p>
     <details className="preview-fixtures"><summary>Example fixtures</summary>
       <Switch label="Make the next move fail" checked={failNext} onCheckedChange={setFailNext} />
+      <Switch label="Make the next accepted proposal fail" checked={failProposal} onCheckedChange={setFailProposal} />
     </details>
   </div>;
 }

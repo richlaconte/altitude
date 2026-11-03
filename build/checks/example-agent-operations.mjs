@@ -27,7 +27,10 @@ const drawer = async (page) => { const t = page.locator('.ex-drawer .alt-acc-tri
 const mode = async (page, label) => { await drawer(page); await page.locator('.ex-drawer label.alt-radio').filter({ has: page.locator('.alt-check-label', { hasText: new RegExp(`^${label}$`) }) }).click(); await wait(page, 60); };
 const event = async (page, label) => { await drawer(page); await page.locator('.ex-drawer button', { hasText: label }).click(); await wait(page, 900); };
 const column = (page, col) => page.evaluate((c) => [...document.querySelectorAll(`[data-board-col="${c}"] [data-board-card]`)].map((e) => e.getAttribute('data-board-card')), col);
-const onCard = (page, id) => page.evaluate((i) => [...document.querySelectorAll(`[data-board-card="${i}"] .pb-card-proposal`)].map((e) => e.textContent.trim()), id);
+// Each of a card's proposal slips (BoardCard proposals, #444) as its words plus its buttons' names, which carry the change
+// in words ("Accept: move to Backlog for …"), since the slip itself shows it as current → proposed.
+const onCard = (page, id) => page.evaluate((i) => [...document.querySelectorAll(`[data-board-card="${i}"] .alt-board-proposal`)]
+  .map((e) => `${e.textContent.trim()} ${[...e.querySelectorAll('button')].map((b) => b.getAttribute('aria-label')).join(' ')}`), id);
 const panel = (page) => page.locator('.pb-assistant');
 const status = (page) => page.locator('.ex-app [role="status"]').allTextContents().then((t) => t.join(' '));
 // Primaries that can act now: a Question's Answer before a choice and an empty composer's Send are disabled.
@@ -44,7 +47,7 @@ for (const scheme of ['daylight', 'nightfall']) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, colorScheme: scheme === 'nightfall' ? 'dark' : 'light' });
   const errors = []; page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   await open(page);
-  expect(await panel(page).count() === 0 && await page.locator('.pb-card-proposal').count() === 0, `${scheme}: the assistant is off by default`);
+  expect(await panel(page).count() === 0 && await page.locator('.alt-board-proposal').count() === 0, `${scheme}: the assistant is off by default`);
   await page.locator('button', { hasText: /^Assistant$/ }).click(); await wait(page, 300);
   expect(await page.locator('button', { hasText: /^Assistant$/ }).getAttribute('aria-pressed') === 'true' && await panel(page).count() === 1, `${scheme}: the Assistant toggle opens the panel beside the board`);
   await panel(page).locator('button', { hasText: 'Rebalance Sprint 24' }).click(); await wait(page, 900);
@@ -52,7 +55,7 @@ for (const scheme of ['daylight', 'nightfall']) {
   expect(streaming.msg, `${scheme}: the answer streams (${JSON.stringify(streaming)})`);
   await page.locator('.pb-assistant .alt-question').waitFor({ timeout: 10000 }); await wait(page, 600);
   expect(/read_board/.test(await panel(page).textContent()), `${scheme}: the trace shows the tool call`);
-  expect((await onCard(page, 'c10')).some((t) => /Proposed: move to Backlog/.test(t)) && (await onCard(page, 'c8')).some((t) => /Proposed: estimate 3 points/.test(t)), `${scheme}: proposals show on the cards in words`);
+  expect((await onCard(page, 'c10')).some((t) => /Proposed by Assistant.*Accept: move to Backlog/.test(t)) && (await onCard(page, 'c8')).some((t) => /Proposed: 3 points.*Accept: estimate 3 points/.test(t)), `${scheme}: proposals show on the cards in words`);
   expect((await column(page, 'sprint')).includes('c10') && await log(page, 'cards.move') === 0, `${scheme}: a proposed move hasn't moved the card or sent anything`);
   expect((await primaries(page)).join() === 'Apply changes', `${scheme}: while proposals wait, Apply changes is the one primary (${(await primaries(page)).join()})`);
   expect(await page.locator('.pb-assistant .alt-ailabel, .pb-assistant [class*="ailabel"]').count() >= 1, `${scheme}: the plan carries an AILabel`);
@@ -74,7 +77,7 @@ for (const scheme of ['daylight', 'nightfall']) {
   // Answer the question: another proposal.
   await panel(page).locator('.alt-question label', { hasText: 'Move it to the backlog' }).click();
   await panel(page).locator('.alt-question button', { hasText: 'Answer' }).click(); await wait(page, 2600);
-  expect((await onCard(page, 'c9')).some((t) => /Proposed: move to Backlog/.test(t)), 'the answer adds a proposal');
+  expect((await onCard(page, 'c9')).some((t) => /Accept: move to Backlog/.test(t)), 'the answer adds a proposal');
 
   // Edit a proposal before applying.
   await panel(page).locator('.alt-confirm button', { hasText: /^Edit/ }).first().click(); await wait(page, 300);
