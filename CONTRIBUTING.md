@@ -83,6 +83,20 @@ Follow "Working on it" in the [README](README.md): change the sources, then run 
 - **One issue per pull request**, linked with `Fixes #12` so merging closes it.
 - **Open it as a draft when you start.** That's how others see the issue is taken. Mark it ready for review when the "Done when" list is checked and CI passes.
 - **Stay inside the issue.** If you find something else, file an issue for it rather than fixing it in this pull request.
+- **Bump the version if the package changes.** See "Versions" below. CI fails the pull request if you don't.
+
+### Versions
+
+Merging to `main` publishes to npm whenever `package.json` has a version npm doesn't have yet (see "What happens on push" in the [README](README.md)). So a pull request that changes what `altitude-design` ships also raises the version. That covers anything under `project/`, the package and guidance build scripts, `docs/framework/AGENT-SETUP.md`, or the fields of `package.json` that reach consumers, such as `exports`, `dependencies` and `peerDependencies`. A change to docs, research, examples, the site, Storybook or the checks doesn't need a bump.
+
+```sh
+npm version patch --no-git-tag-version   # a fix, or a change nobody should notice
+npm version minor --no-git-tag-version   # a new component, prop, variant or behaviour
+```
+
+Commit `package.json` and `package-lock.json` together. Before 1.0, a change that breaks existing use is also a minor bump; say in the pull request what breaks. A major bump needs agreement in the issue first.
+
+If `main` moves to a higher version while your pull request is open, bump again from there. A conflict in `package.json` usually means exactly that. If two pull requests bump to the same version, both pass. The second then reaches `main` with nothing to publish, and the publish job fails, so the next pull request should bump again.
 
 ## Framework knowledge and workflow contributions
 

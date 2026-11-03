@@ -87,7 +87,7 @@ Every push and pull request runs the checks: the bundle and previews are rebuilt
 A push to `main` then also:
 
 - deploys the landing page to GitHub Pages, with Storybook under `/storybook/`;
-- publishes to npm **if the version in `package.json` isn't published yet**, and tags the commit `v<version>`. To release, bump the version (`npm version patch`, `minor` or `major`) and push.
+- publishes to npm **if the version in `package.json` isn't published yet**, and tags the commit `v<version>`. Every pull request that changes what the package ships bumps the version itself (`npm version patch --no-git-tag-version`, or `minor`), so each merge to `main` is a release. CI fails a pull request that changes the package without a bump. See "Versions" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Found a bug, or need something it doesn't do?
 
@@ -117,6 +117,7 @@ npx altitude init --client codex          # preview exact changes
 npx altitude init --client codex --apply   # apply after reviewing the preview
 # Claude Code: --client claude. Both: --client all.
 npx altitude doctor --json
+npx altitude check                         # Altitude's rules that are certain from your source
 ```
 
 Setup preserves existing instructions and adds a small versioned pointer to the installed guidance. It never runs on package installation. Preview removal with `npx altitude init --client codex --remove`, then add `--apply` to remove only its managed content. Edited blocks are preserved and require reconciliation. Codex uses a nonempty root `AGENTS.override.md` when present; otherwise `AGENTS.md`. Claude Code uses `CLAUDE.md`. Restart the client after setup. See [setup details](docs/framework/AGENT-SETUP.md).

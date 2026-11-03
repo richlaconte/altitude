@@ -1,0 +1,4 @@
+{
+  "title": "Sprint 24 planning · Altitude example",
+  "description": "An Altitude example app: a planning board, table, schedule and epics over one record, on a simulated server that refuses moves, conflicts, loses responses and goes offline."
+}

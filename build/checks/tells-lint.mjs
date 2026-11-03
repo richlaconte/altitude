@@ -1,6 +1,6 @@
 // The tells of generated interfaces that are certain from source text (Distinctiveness, #320). Every `lint` tell in
 // project/tells.json has a rule here, and every rule names a tell there, so the two can't drift apart.
-// Scans the components' sources and styles, the previews, the tokens and the landing page. No browser, no network.
+// Scans the components' sources and styles, the previews, the tokens, the landing page and the example apps. No browser, no network.
 //   node checks/tells-lint.mjs              exits non-zero on a finding
 //   node checks/tells-lint.mjs --json       the findings as JSON
 //   node checks/tells-lint.mjs --self-test  only the rules' own test (it also runs first on every scan): each catches its
@@ -110,7 +110,7 @@ const EXCEPTIONS = [
 const walk = (dir, re) => readdirSync(join(root, dir), { withFileTypes: true }).flatMap((e) => e.isDirectory() ? walk(join(dir, e.name), re) : re.test(e.name) ? [join(dir, e.name)] : []);
 const files = [
   'project/components/bundle.css', 'build/previews.txt', 'project/tokens.json',
-  ...walk('project/components/src', /\.(ts|tsx)$/), ...walk('site', /\.(ts|tsx|css)$/),
+  ...walk('project/components/src', /\.(ts|tsx)$/), ...walk('site', /\.(ts|tsx|css)$/), ...walk('examples/apps', /\.(ts|tsx|css)$/),
 ];
 
 for (const f of files) for (const name of loaders(readFileSync(join(root, f), 'utf8'))) LOADED.add(name);
