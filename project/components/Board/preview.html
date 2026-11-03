@@ -43,14 +43,33 @@ function App() {
   const [cols, setCols] = React.useState(start);
   const [last, setLast] = React.useState(null);
   const seq = React.useRef(0);
-  const move = ({ cardId, from, to }) => setCols((c) => {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const [writes, setWrites] = React.useState({});
+  const [failNext, setFailNext] = React.useState(false);
+  const fail = React.useRef(false);
+  fail.current = failNext;
+  const place = (c, from, to) => {
     const next = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.slice()]));
     const [card] = next[from.column].splice(from.index, 1);
     next[to.column].splice(to.index, 0, card);
-    setLast(`${card.t} \u2192 ${titles[to.column]}`);
     return next;
-  });
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  };
+  const move = async ({ cardId, from, to }) => {
+    const card = Object.values(cols).flat().find((x) => x.id === cardId);
+    setCols((c) => place(c, from, to));
+    setWrites((w) => ({ ...w, [cardId]: { status: "pending" } }));
+    await wait(700);
+    if (fail.current) {
+      setFailNext(false);
+      setCols((c) => place(c, to, from));
+      const note = `Couldn\u2019t move it: the server refused. It\u2019s back in ${titles[from.column]}.`;
+      setWrites((w) => ({ ...w, [cardId]: { status: "failed", note } }));
+      setLast(`${card.t}: ${note}`);
+      return;
+    }
+    setWrites((w) => ({ ...w, [cardId]: { status: "committed" } }));
+    setLast(`Moved: ${card.t} \u2192 ${titles[to.column]}.`);
+  };
   const refuse = (t) => /tbd/i.test(t) ? { ok: false, error: "Write the task, not \u201CTBD\u201D." } : null;
   const create = (k) => async (t) => {
     await wait(250);
@@ -75,6 +94,7 @@ function App() {
       id: c.id,
       label: c.t,
       heldBy: c.held,
+      status: writes[c.id]?.status,
       onRename: rename(k, c.id),
       ...k === "review" ? {
         value: { title: c.t, meta: c.m },
@@ -87,8 +107,8 @@ function App() {
       } : {}
     },
     c.t,
-    /* @__PURE__ */ React.createElement("small", null, c.m)
-  ))))), /* @__PURE__ */ React.createElement("p", { className: "cap" }, last ? `Moved: ${last}.` : "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."));
+    /* @__PURE__ */ React.createElement("small", null, writes[c.id]?.note ?? c.m)
+  ))))), /* @__PURE__ */ React.createElement("p", { className: "cap", role: "status" }, last ?? "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next move fail", checked: failNext, onCheckedChange: setFailNext })));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

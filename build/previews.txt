@@ -5042,14 +5042,34 @@ function App() {
   const [cols, setCols] = React.useState(start);
   const [last, setLast] = React.useState(null);
   const seq = React.useRef(0);
-  const move = ({ cardId, from, to }) => setCols((c) => {
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  // Each move is a write the demo server can refuse: the card hovers while it's pending, lands when it's committed,
+  // and goes back where it came from, in a trench with the reason, when it's refused.
+  const [writes, setWrites] = React.useState({});
+  const [failNext, setFailNext] = React.useState(false);
+  const fail = React.useRef(false); fail.current = failNext;
+  const place = (c, from, to) => {
     const next = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.slice()]));
     const [card] = next[from.column].splice(from.index, 1);
     next[to.column].splice(to.index, 0, card);
-    setLast(`${card.t} \u2192 ${titles[to.column]}`);
     return next;
-  });
-  const wait = ms => new Promise(r => setTimeout(r, ms));
+  };
+  const move = async ({ cardId, from, to }) => {
+    const card = Object.values(cols).flat().find(x => x.id === cardId);
+    setCols(c => place(c, from, to));
+    setWrites(w => ({ ...w, [cardId]: { status: "pending" } }));
+    await wait(700);
+    if (fail.current) {
+      setFailNext(false);
+      setCols(c => place(c, to, from));
+      const note = `Couldn’t move it: the server refused. It’s back in ${titles[from.column]}.`;
+      setWrites(w => ({ ...w, [cardId]: { status: "failed", note } }));
+      setLast(`${card.t}: ${note}`);
+      return;
+    }
+    setWrites(w => ({ ...w, [cardId]: { status: "committed" } }));
+    setLast(`Moved: ${card.t} → ${titles[to.column]}.`);
+  };
   // The demo service refuses titles with “TBD” in them.
   const refuse = t => /tbd/i.test(t) ? { ok: false, error: "Write the task, not \u201cTBD\u201d." } : null;
   const create = k => async t => { await wait(250); const no = refuse(t); if (no) return no; const card = { id: "n" + ++seq.current, t, m: "New" }; setCols(c => ({ ...c, [k]: [...c[k], card] })); return { ok: true, value: { id: card.id } }; };
@@ -5058,15 +5078,18 @@ function App() {
   return <div className="col" style={{ gap: 4 }}>
     <A.Board onMove={move} aria-label="Launch board">
       {Object.keys(titles).map(k => <A.BoardColumn key={k} id={k} title={titles[k]} collapsible={k === "done"} defaultCollapsed={k === "done"} onCreate={k === "done" ? undefined : create(k)}>
-        {cols[k].map(c => <A.BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} onRename={rename(k, c.id)}
+        {cols[k].map(c => <A.BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} status={writes[c.id]?.status} onRename={rename(k, c.id)}
           {...(k === "review" ? { value: { title: c.t, meta: c.m }, onValueChange: update(k, c.id),
             renderEditor: field => <><A.Field label="Title"><A.Input {...field("title")} size="sm" /></A.Field><A.Field label="Details"><A.Input {...field("meta")} size="sm" /></A.Field></>,
             onSave: async draft => { await wait(200); return refuse(draft.title) || { ok: true, value: draft }; } } : {})}>
-          {c.t}<small>{c.m}</small>
+          {c.t}<small>{writes[c.id]?.note ?? c.m}</small>
         </A.BoardCard>)}
       </A.BoardColumn>)}
     </A.Board>
-    <p className="cap">{last ? `Moved: ${last}.` : "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."}</p>
+    <p className="cap" role="status">{last ?? "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."}</p>
+    <details className="preview-fixtures"><summary>Example fixtures</summary>
+      <A.Switch label="Make the next move fail" checked={failNext} onCheckedChange={setFailNext} />
+    </details>
   </div>;
 }
 

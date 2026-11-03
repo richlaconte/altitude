@@ -951,6 +951,11 @@ export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   heldBy?: { name: string; presence?: 1 | 2 | 3 };
   /** Afterglow: when this value changes the card arrives tinted and lifted, then settles. */
   settle?: unknown;
+  /**
+   * The commitment of a write about this card, usually a move: pending hovers above the ground (after dur-grace, so a fast
+   * write never flickers), committed lands, failed drops into a trench. As Card's `status`: the words saying why are yours.
+   */
+  status?: 'pending' | 'committed' | 'failed';
   /** Rename in place (F2, or the visible Rename button): InlineEdit's contract. Use with `label`. */
   onRename?: (draft: string) => BoardRenameResult | Promise<BoardRenameResult>;
   /** The card's record, for a fuller editor in its place (EditRegion). */
@@ -994,13 +999,13 @@ function CardRename({ label, onRename, onDone }: { label: string; onRename: (dra
   </div>;
 }
 
-export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(function BoardCard({ id, label, heldBy, settle, onRename, value, renderEditor, onSave, onValueChange,
+export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(function BoardCard({ id, label, heldBy, settle, status, onRename, value, renderEditor, onSave, onValueChange,
   className, style, onClickCapture, onKeyDown, children, ...rest }, ref) {
   const ctx = React.useContext(BoardCtx);
   const [mode, setMode] = React.useState<'rename' | 'edit' | null>(null);
   const self = React.useRef<HTMLDivElement | null>(null);
   const name = label ?? id;
-  const depth = useDepth({ heldBy, settle });
+  const depth = useDepth({ heldBy, settle, status });
   // Back from editing: focus returns to the card.
   const refocus = React.useRef(false);
   const done = () => { refocus.current = true; setMode(null); };

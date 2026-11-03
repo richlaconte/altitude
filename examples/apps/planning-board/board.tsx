@@ -135,8 +135,7 @@ export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardDat
                 const holder = data.held[id];
                 return (
                   <BoardCard key={id} id={id} label={k.title} heldBy={holder ? { name: holder, presence: 1 } : undefined} settle={arrived[id]}
-                    data-status={w?.status ?? (assistant?.proposals.some((p) => p.card === id && p.status === 'pending') ? 'pending' : undefined)}
-                    aria-busy={w?.status === 'pending' || assistant?.proposals.some((p) => p.card === id && p.status === 'pending') || undefined}>
+                    status={w?.status ?? (assistant?.proposals.some((p) => p.card === id && p.status === 'pending') ? 'pending' : undefined)}>
                     <span className="pb-title">{k.title}</span>
                     <small className="pb-meta">{meta(k)}</small>
                     {w?.note && <small className="pb-note" data-tone={w.status}>{w.note}</small>}
