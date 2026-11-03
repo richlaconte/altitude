@@ -80,3 +80,78 @@ The rows, the writes and their concurrency guards, and undo. Virtualisation, a f
 The `DataGrid` section of `build/previews.txt` is an inventory grid: the fictional service locks the Desk lamp's price, prices must be 0 or more, and Status uses a Select. `node checks/data-grid.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys, type-to-replace, Enter, Tab, F2, Escape, validation, IME Enter, click-to-commit, a refused save and its retry draft, read-only cells, ranges, copy, clearing a range, undo, a paste with one invalid cell, the Select column, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **On a phone.** Under 480px of the frame's width, columns keep at least 6rem (or their `minWidth`) and the table scrolls inside its frame, fading the edge with more columns, instead of squeezing cells. `sticky: true` keeps a column in view over a flush 1px edge. Wide, nothing changes.
 
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`DataGrid` as first used in its preview:
+
+```tsx
+import { Badge, DataGrid, Select } from 'altitude-design';
+
+<DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name}
+  columns={[
+    { key: 'name', header: 'Name', editable: true, validate: v => String(v).trim() ? undefined : 'Enter a name.' },
+    { key: 'sku', header: 'SKU' },
+    { key: 'price', header: 'Price', align: 'end', editable: true, parse: t => t.trim() === '' ? '' : Number(t), format: dgMoney,
+      validate: v => v === '' || !Number.isFinite(v) || v < 0 ? 'Use a price of 0 or more.' : undefined, cell: r => `$${r.price}` },
+    { key: 'stock', header: 'Stock', align: 'end', editable: true, parse: t => t.trim() === '' ? 0 : Number(t), format: dgMoney,
+      validate: v => Number.isInteger(v) && v >= 0 ? undefined : 'Use a whole number, 0 or more.' },
+    { key: 'status', header: 'Status', editable: true, format: v => DG_STATUS.find(s => s.value === v)?.label ?? '',
+      cell: r => <Badge tone={r.status === 'active' ? 'positive' : r.status === 'paused' ? 'caution' : 'neutral'}>{DG_STATUS.find(s => s.value === r.status).label}</Badge>,
+      editor: control => <Select {...control} items={DG_STATUS} size="sm" defaultOpen /> },
+  ]}
+  onCellSave={async change => {
+    await dgWait(250);
+    // The demo service locks the lamp's price during a sale.
+    if (change.rowId === 'p1' && change.key === 'price') return { ok: false, error: 'The Desk lamp price is locked during the sale.' };
+    apply([change]); return { ok: true };
+  }}
+  onCellsSave={async changes => { await dgWait(300); apply(changes); return { ok: true }; }}
+  onUndo={last => apply(last.map(c => ({ ...c, draft: c.previousValue })))} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`dg-demo` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Badge, DataGrid, Select } from 'altitude-design';
+
+const DG_STATUS = [{ value: 'active', label: 'Active' }, { value: 'paused', label: 'Paused' }, { value: 'retired', label: 'Retired' }];
+const DG_SEED = [
+  { id: 'p1', name: 'Desk lamp', sku: 'LMP-204', price: 49, stock: 120, status: 'active' },
+  { id: 'p2', name: 'Monitor arm', sku: 'ARM-310', price: 89, stock: 34, status: 'active' },
+  { id: 'p3', name: 'Cable tray', sku: 'TRY-118', price: 24, stock: 0, status: 'paused' },
+  { id: 'p4', name: 'Footrest', sku: 'FTR-052', price: 39, stock: 58, status: 'active' },
+  { id: 'p5', name: 'Laptop stand', sku: 'STD-077', price: 59, stock: 12, status: 'retired' },
+];
+const dgWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const dgMoney = v => v === '' || v === null || v === undefined ? '' : String(v);
+export default function App() {
+  const [rows, setRows] = React.useState(DG_SEED);
+  const apply = changes => setRows(list => list.map(row => changes.reduce((r, c) => c.rowId === r.id ? { ...r, [c.key]: c.draft } : r, row)));
+  return <div className="dg-demo">
+    <DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name}
+      columns={[
+        { key: 'name', header: 'Name', editable: true, validate: v => String(v).trim() ? undefined : 'Enter a name.' },
+        { key: 'sku', header: 'SKU' },
+        { key: 'price', header: 'Price', align: 'end', editable: true, parse: t => t.trim() === '' ? '' : Number(t), format: dgMoney,
+          validate: v => v === '' || !Number.isFinite(v) || v < 0 ? 'Use a price of 0 or more.' : undefined, cell: r => `$${r.price}` },
+        { key: 'stock', header: 'Stock', align: 'end', editable: true, parse: t => t.trim() === '' ? 0 : Number(t), format: dgMoney,
+          validate: v => Number.isInteger(v) && v >= 0 ? undefined : 'Use a whole number, 0 or more.' },
+        { key: 'status', header: 'Status', editable: true, format: v => DG_STATUS.find(s => s.value === v)?.label ?? '',
+          cell: r => <Badge tone={r.status === 'active' ? 'positive' : r.status === 'paused' ? 'caution' : 'neutral'}>{DG_STATUS.find(s => s.value === r.status).label}</Badge>,
+          editor: control => <Select {...control} items={DG_STATUS} size="sm" defaultOpen /> },
+      ]}
+      onCellSave={async change => {
+        await dgWait(250);
+        // The demo service locks the lamp's price during a sale.
+        if (change.rowId === 'p1' && change.key === 'price') return { ok: false, error: 'The Desk lamp price is locked during the sale.' };
+        apply([change]); return { ok: true };
+      }}
+      onCellsSave={async changes => { await dgWait(300); apply(changes); return { ok: true }; }}
+      onUndo={last => apply(last.map(c => ({ ...c, draft: c.previousValue })))} />
+    <p>Arrows move, type to replace, Enter or F2 to edit, Tab and Enter save and move. Shift+arrows select; copy and paste a block from a spreadsheet. Ctrl+Z undoes.</p>
+  </div>;
+}
+```
+<!-- /example -->

@@ -23,3 +23,38 @@ Says when content was generated or changed by AI, and explains how when asked: f
 - Do say confidence in words.
 - Don't decorate AI content with gradients, glows or shimmer.
 - Don't use the label as the only place AI involvement is disclosed when your rules require more.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`AILabel` as first used in its preview:
+
+```tsx
+import { AILabel } from 'altitude-design';
+
+<AILabel subject="Summary" model="Opus 5.5" generatedAt={new Date(Date.now() - 4 * 60000)} confidence="Medium: two sources disagreed about the renewal date"
+sources={[{ title: 'Call with Jamie Lee, 28 Oct', url: '#/calls/28' }, { title: 'Contract v3.pdf', url: '#/files/contract' }]} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `al`, `ttl` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import { AILabel } from 'altitude-design';
+
+export default function App() {
+  return (
+    <div className="col al">
+      <div>
+        <h3 className="ttl">Summary <AILabel subject="Summary" model="Opus 5.5" generatedAt={new Date(Date.now() - 4 * 60000)} confidence="Medium: two sources disagreed about the renewal date"
+          sources={[{ title: 'Call with Jamie Lee, 28 Oct', url: '#/calls/28' }, { title: 'Contract v3.pdf', url: '#/files/contract' }]} /></h3>
+        <p>Jamie wants to move to annual billing in November and asked whether the 30-day refund applies to the remaining monthly period.</p>
+      </div>
+      <div>
+        <h3 className="ttl">Reply <AILabel subject="Reply" model="Opus 5.5" generatedAt={new Date(Date.now() - 3 * 3600000)} reviewedBy="Maya Chen" editedBy="Maya Chen" /></h3>
+        <p>Hi Jamie, thanks for getting in touch. Your full refund of €240 is on its way.</p>
+      </div>
+    </div>
+  );
+}
+```
+<!-- /example -->

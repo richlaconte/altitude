@@ -15,3 +15,52 @@ What a list, board, search or page shows when it has nothing to show: a statemen
 - Do give it one primary action at most; a second one is `secondary`, quieter.
 - Don't use it for an error that stopped content loading: that's a problem to fix, an `Alert`.
 - Don't raise it into a card, or make it the only thing on a page that's still loading: show a `Skeleton` until you know it's empty.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`EmptyState` as first used in its preview:
+
+```tsx
+import { Button, EmptyState } from 'altitude-design';
+
+<EmptyState icon={<Gift />} title="No gift ideas yet" headingLevel={2}
+  description="Ideas you save stay private to you until you share them."
+  action={<Button variant="primary">Add idea</Button>}
+  secondary={<Button variant="ghost">Import a list</Button>} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`two`, `lab`, `side`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, EmptyState } from 'altitude-design';
+
+const Gift = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5" /></svg>;
+const Search = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>;
+const Bell = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>;
+export default function App() {
+  const [q, setQ] = React.useState('lamp');
+  return (
+    <div className="two">
+      <div><div className="lab">md · a page with nothing yet</div>
+        <EmptyState icon={<Gift />} title="No gift ideas yet" headingLevel={2}
+          description="Ideas you save stay private to you until you share them."
+          action={<Button variant="primary">Add idea</Button>}
+          secondary={<Button variant="ghost">Import a list</Button>} />
+      </div>
+      <div className="side">
+        <div><div className="lab">sm · a widget</div>
+          <EmptyState size="sm" icon={<Bell />} title="You're all caught up" description="New mentions and replies appear here." />
+        </div>
+        <div><div className="lab">sm · after a search</div>
+          {q ? <EmptyState size="sm" icon={<Search />} title={`No ideas match \u201C${q}\u201D`} announce="No matching ideas"
+            description="Try another word, or clear the search." action={<Button size="sm" onClick={() => setQ('')}>Clear search</Button>} />
+            : <p className="cap">Search cleared.</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+<!-- /example -->

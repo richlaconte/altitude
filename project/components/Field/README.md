@@ -8,3 +8,39 @@ Pairs one control with its label, an optional hint and an error message that eme
 
 - Do write the error as the fix: "Use at least 5 characters", not "Invalid input".
 - Don't show an error before the person has finished with the field; validate on blur or submit.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Field` as first used in its preview:
+
+```tsx
+import { Field, Input } from 'altitude-design';
+
+<Field label="Workspace name" hint="Shown to everyone you invite.">
+  <Input defaultValue="Northwind Studio" />
+</Field>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`grid` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Field, Input } from 'altitude-design';
+
+export default function App() {
+  const [v, setV] = React.useState('acme');
+  const err = v.length < 5 ? 'Use at least 5 characters.' : null;
+  return (
+    <div className="grid">
+      <Field label="Workspace name" hint="Shown to everyone you invite.">
+        <Input defaultValue="Northwind Studio" />
+      </Field>
+      <Field label="URL slug" required error={err}>
+        <Input value={v} onChange={(e) => setV(e.target.value)} />
+      </Field>
+    </div>
+  );
+}
+```
+<!-- /example -->

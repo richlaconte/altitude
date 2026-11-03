@@ -28,3 +28,54 @@ Actions on a thing (a file, a row, a board card, a tree node, a canvas object), 
 - Do offer the same actions in a visible menu.
 - Don't nest menus; open a `Dialog` for a long choice.
 - Don't raise the thing while its menu is open; it's outlined.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`ContextMenu` as first used in its preview:
+
+```tsx
+import { Button, ContextMenu, DropdownMenu, Icons } from 'altitude-design';
+
+<ContextMenu key={f} items={() => actions(f)}>
+  <div className="file" role="listitem" tabIndex={0}>
+    <span className="name">{f}</span><span className="meta">Edited 2 days ago</span>
+    <DropdownMenu align="end" items={actions(f)} trigger={<Button variant="ghost" size="sm" square aria-label={`Actions for ${f}`}><Icons.More /></Button>} />
+  </div>
+</ContextMenu>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `cm2`, `file`, `name`, `meta`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, ContextMenu, DropdownMenu, Icons } from 'altitude-design';
+
+export default function App() {
+  const [files, setFiles] = React.useState(['Q3 board deck.pdf', 'Invoices 2026.xlsx', 'Brand guidelines.fig']);
+  const [said, setSaid] = React.useState('');
+  const actions = (f) => [
+    { label: 'Open', onSelect: () => setSaid(`Opened ${f}.`) },
+    { label: 'Rename', onSelect: () => setSaid(`Renaming ${f}…`) },
+    { label: 'Duplicate', onSelect: () => setSaid(`Duplicated ${f}.`) },
+    { type: 'separator' },
+    { label: 'Delete file', tone: 'critical', onSelect: () => { setFiles((xs) => xs.filter((x) => x !== f)); setSaid(`Deleted ${f}.`); } },
+  ];
+  return (
+    <div className="col">
+      <div className="cm2" role="list" aria-label="Files">
+        {files.map((f) => (
+          <ContextMenu key={f} items={() => actions(f)}>
+            <div className="file" role="listitem" tabIndex={0}>
+              <span className="name">{f}</span><span className="meta">Edited 2 days ago</span>
+              <DropdownMenu align="end" items={actions(f)} trigger={<Button variant="ghost" size="sm" square aria-label={`Actions for ${f}`}><Icons.More /></Button>} />
+            </div>
+          </ContextMenu>
+        ))}
+      </div>
+      <p className="cap" role="status">{said || 'Right-click a file (or long-press, or focus it and press Shift+F10). The same actions are behind each row\'s ⋯ button, because a context menu is never the only way.'}</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

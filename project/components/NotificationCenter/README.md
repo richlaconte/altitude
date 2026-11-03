@@ -26,3 +26,42 @@ An inbox of what happened: mentions, assignments, approvals waiting, failed jobs
 - Do keep an action on the item when it's waiting for someone ("Approve").
 - Don't raise or tint unread items.
 - Don't put momentary confirmations here; that's a toast.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`NotificationCenter` as first used in its preview:
+
+```tsx
+import { NotificationCenter } from 'altitude-design';
+
+<NotificationCenter items={items} onMarkRead={markRead} onMarkAllRead={() => setItems((xs) => xs.map((x) => ({ ...x, read: true })))} preferencesHref="#/settings/notifications" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `nc`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, NotificationCenter } from 'altitude-design';
+
+const ago = (m) => new Date(Date.now() - m * 60000);
+export default function App() {
+  const [items, setItems] = React.useState([
+    { id: 'n1', title: 'Maya mentioned you in Q4 planning', body: '“@you can you take the pricing section?”', createdAt: ago(5), read: false, href: '#/docs/q4' },
+    { id: 'n2', title: 'Theo asked to approve an expense', body: '€1,240 · Conference travel', createdAt: ago(48), read: false, actions: <Button size="sm" variant="secondary">Approve</Button> },
+    { id: 'n3', title: 'Export of 812 invoices is ready', createdAt: ago(60 * 3), read: true, href: '#/exports/7' },
+    { id: 'n4', title: 'Nightly sync failed for Salesforce', body: 'The token expired. Reconnect to resume.', createdAt: ago(60 * 27), read: true, href: '#/integrations' },
+  ]);
+  const markRead = (ids) => setItems((xs) => xs.map((x) => (ids.includes(x.id) ? { ...x, read: true } : x)));
+  return (
+    <div className="col">
+      <div className="nc">
+        <Button size="sm" variant="secondary" onClick={() => setItems((xs) => [{ id: 'n' + Date.now(), title: 'Ada assigned you “Billing page”', createdAt: new Date(), read: false, href: '#/issues/212' }, ...xs])}>Simulate a new notification</Button>
+        <NotificationCenter items={items} onMarkRead={markRead} onMarkAllRead={() => setItems((xs) => xs.map((x) => ({ ...x, read: true })))} preferencesHref="#/settings/notifications" />
+      </div>
+      <p className="cap">Unread is a dot and a bolder title, never a height. A new notification arrives lifted and settles, and is announced even while the panel is closed.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

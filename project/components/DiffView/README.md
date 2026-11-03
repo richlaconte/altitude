@@ -28,3 +28,80 @@ What changed between two versions: version history, audit-log detail ("Plan: Pro
 - Do keep a little context around changes, so they can be read.
 - Don't show a diff in red and green alone.
 - Don't restore from inside the diff without a confirmation.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`DiffView` as first used in its preview:
+
+```tsx
+import { DiffView, diffChanges, diffLines } from 'altitude-design';
+
+<DiffView caption="src/pricing.ts · proposed by the assistant" before={pricingBefore} after={pricingAfter} review decisions={decisions}
+onDecide={(id, d) => setDecisions({ ...decisions, [id]: d })}
+onDecideAll={(d) => setDecisions(Object.fromEntries(diffChanges(diffLines(pricingBefore, pricingAfter)).map((c) => [c.id, decisions[c.id] ?? d])))} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`dv` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { DiffView, diffChanges, diffLines } from 'altitude-design';
+
+const v4 = `# Deploy settings
+region: eu-central-1
+replicas: 2
+memory: 512Mi
+timeout: 30s
+retries: 3
+logging: info
+metrics: enabled
+tracing: disabled
+cache: 5m
+health: /healthz
+owner: platform-team`;
+const v5 = `# Deploy settings
+region: eu-central-1
+replicas: 4
+memory: 1Gi
+timeout: 30s
+retries: 3
+logging: info
+metrics: enabled
+tracing: disabled
+cache: 5m
+health: /healthz
+owner: platform-team
+alerts: on-call`;
+const pricingBefore = `export const plans = {
+  starter: { monthly: 9, seats: 1 },
+  pro: { monthly: 29, seats: 5 },
+  business: { monthly: 99, seats: 25 },
+};
+export const trialDays = 14;
+export const currency = 'USD';`;
+const pricingAfter = `export const plans = {
+  starter: { monthly: 9, seats: 1 },
+  pro: { monthly: 32, seats: 5 },
+  business: { monthly: 99, seats: 25, sso: true },
+};
+export const trialDays = 30;
+export const currency = 'USD';`;
+function Review() {
+  const [decisions, setDecisions] = React.useState({ 'change-2': 'accept' });
+  return <DiffView caption="src/pricing.ts · proposed by the assistant" before={pricingBefore} after={pricingAfter} review decisions={decisions}
+    onDecide={(id, d) => setDecisions({ ...decisions, [id]: d })}
+    onDecideAll={(d) => setDecisions(Object.fromEntries(diffChanges(diffLines(pricingBefore, pricingAfter)).map((c) => [c.id, decisions[c.id] ?? d])))} />;
+}
+export default function App() {
+  return (
+    <div className="dv">
+      <DiffView caption="deploy.yaml · version 4 → 5" before={v4} after={v5} context={1} />
+      <DiffView mode="properties" caption="Subscription changed by Maya" before={{ plan: 'Pro', seats: 12, billing: 'Monthly' }} after={{ plan: 'Business', seats: 25, billing: 'Monthly' }}
+        fields={[{ key: 'plan', label: 'Plan' }, { key: 'seats', label: 'Seats' }, { key: 'billing', label: 'Billing' }]} />
+      <Review />
+    </div>
+  );
+}
+```
+<!-- /example -->

@@ -43,3 +43,74 @@ A value per cell across two dimensions: load by hour and weekday, error rate by 
 - Do use `scale="diverging"` only when the midpoint means something (no change, a target).
 - Don't use a heatmap to compare a handful of values; that's `BarChart`.
 - Don't encode a second measure in cell size or a glow; it's one value per cell.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Heatmap` as first used in its preview:
+
+```tsx
+import { Heatmap } from 'altitude-design';
+
+<Heatmap variant="calendar" data={commits} date="day" value="count" bins={[0, 1, 4, 10]} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`hm`, `wide` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, ChartContainer, Heatmap } from 'altitude-design';
+
+const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+// Requests per hour: a working-day hump, quieter weekends, and a Tuesday-afternoon peak.
+const load = days.flatMap((weekday, w) => Array.from({ length: 24 }, (_, hour) => {
+  const day = Math.max(0, Math.sin(((hour - 6) / 15) * Math.PI));
+  const base = (w < 5 ? 300 : 110) * day + 20 + ((hour * 7 + w * 13) % 17);
+  return { weekday, hour, requests: Math.round(base + (w === 1 && hour >= 13 && hour <= 15 ? 160 : 0)) };
+}));
+// Commits per day for a year, with quiet weekends, a holiday gap and a few busy weeks.
+const start = Date.UTC(2025, 9, 27);
+const commits = Array.from({ length: 365 }, (_, i) => {
+  const t = start + i * 864e5, wd = new Date(t).getUTCDay(), r = (i * 37 + 11) % 23;
+  const busy = (i > 120 && i < 140) || (i > 300 && i < 312);
+  const n = wd === 0 || wd === 6 ? (r < 18 ? 0 : r - 17) : i > 56 && i < 68 ? 0 : busy ? 6 + (r % 9) : r < 5 ? 0 : Math.round(r / 3);
+  return { day: new Date(t).toISOString().slice(0, 10), count: n };
+});
+const services = ['Checkout', 'Search', 'Accounts', 'Media', 'Payments'];
+const regions = ['US', 'EU', 'APAC', 'LATAM'];
+// Error rate against last week, in points: below zero is better.
+const change = services.flatMap((service, s) => regions.map((region, r) => ({ service, region, delta: s === 3 && r === 3 ? null : Math.round((Math.sin(s * 2.1 + r * 1.3) * 1.6 + (s === 4 && r === 1 ? 1.8 : 0)) * 10) / 10 })));
+const pts = (v) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + ' pts';
+export default function App() {
+  const [cell, setCell] = React.useState(null);
+  return (
+    <div className="hm">
+      <Card className="wide">
+        <CardHeader><CardTitle id="h1">Commits</CardTitle><CardDescription>A year, a cell per day: zero is the lightest step, and each step says its range</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="h1" config={{ count: { label: 'Commits' } }}>
+            <Heatmap variant="calendar" data={commits} date="day" value="count" bins={[0, 1, 4, 10]} />
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle id="h2">Requests by hour</CardTitle><CardDescription>Load by weekday and hour, with the table view</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="h2" views config={{ requests: { label: 'Requests' } }} xLabel="Weekday">
+            <Heatmap data={load} x="hour" y="weekday" value="requests" xFormat={(h) => String(h).padStart(2, '0')} />
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle id="h3">Error rate against last week</CardTitle><CardDescription>{cell ? `${cell.service} in ${cell.region}: select it again to clear` : 'scale="diverging": better below zero. Select a cell'}</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="h3" config={{ delta: { label: 'Change', format: pts } }}>
+            <Heatmap data={change} x="region" y="service" value="delta" scale="diverging" selected={cell} onSelect={setCell} />
+          </ChartContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

@@ -14,3 +14,35 @@ This is a design friction: a small, deliberate obstacle in front of an action th
 
 - Use it for destructive or irreversible actions where the person already knows what will happen.
 - Don't use it when the consequence needs explaining; that's a `Dialog`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`HoldButton` as first used in its preview:
+
+```tsx
+import { HoldButton } from 'altitude-design';
+
+<HoldButton onConfirm={() => {}} holdingLabel="Keep holding…" doneLabel="Project deleted">Hold to delete</HoldButton>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `row`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { HoldButton } from 'altitude-design';
+
+export default function App() {
+  const [n, setN] = React.useState(0);
+  return (
+    <div className="col">
+      <div className="row">
+        <HoldButton onConfirm={() => {}} holdingLabel="Keep holding…" doneLabel="Project deleted">Hold to delete</HoldButton>
+        <HoldButton variant="primary" duration={700} repeatable onConfirm={() => setN(n + 1)} doneLabel="Published">Hold to publish</HoldButton>
+      </div>
+      <p className="cap">Press and hold (or hold Space). The button sinks below the ground as the fuse burns; let go early and it springs back. Once done it lies flat and can't be pressed again, unless it's <code>repeatable</code> (published {n}×).</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

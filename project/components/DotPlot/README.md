@@ -36,3 +36,47 @@ Values compared across categories where zero isn't part of the story: ten servic
 - Do sort the rows unless their order means something.
 - Don't use it for change over time; that's a `LineChart`, which implies continuity.
 - Don't set `zero` just to have it: if zero matters, a `BarChart` is usually the better form.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`DotPlot` as first used in its preview:
+
+```tsx
+import { DotPlot } from 'altitude-design';
+
+<DotPlot data={services} x="service" range={['p10', 'p90']} rangeLabel="10th–90th percentile" sort="desc" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`dp` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, ChartContainer, DotPlot } from 'altitude-design';
+
+const services = [['Checkout', 212, 180, 240], ['Search', 188, 170, 205], ['Billing', 236, 190, 320], ['Accounts', 199, 182, 214], ['Media', 228, 196, 268], ['Auth', 184, 176, 193], ['Exports', 221, 187, 262], ['Email', 193, 179, 209]]
+  .map(([service, p95, p10, p90]) => ({ service, p95, p10, p90 }));
+const teams = [['Atlas', 71, 78], ['Birch', 64, 62], ['Cedar', 80, 86], ['Delta', 58, 69], ['Ember', 75, 77]].map(([team, q2, q3]) => ({ team, q2, q3 }));
+export default function App() {
+  return (
+    <div className="dp">
+      <Card>
+        <CardHeader><CardTitle id="d1">p95 latency by service</CardTitle><CardDescription>All between 180 and 240 ms; the band is the 10th–90th percentile</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="d1" aspect={1.5} config={{ p95: { label: 'p95', format: (v) => `${v} ms` } }}>
+            <DotPlot data={services} x="service" range={['p10', 'p90']} rangeLabel="10th–90th percentile" sort="desc" />
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle id="d2">Accessibility score, Q2 to Q3</CardTitle><CardDescription>A dumbbell: the hollow dot is Q2, the filled one Q3</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="d2" aspect={1.5} config={{ q2: { label: 'Q2' }, q3: { label: 'Q3' } }}>
+            <DotPlot data={teams} x="team" from="q2" to="q3" sort="desc" />
+          </ChartContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

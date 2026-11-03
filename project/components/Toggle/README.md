@@ -31,3 +31,55 @@ Either way the group is **one tab stop**, and returning to it lands on the item 
 - Do use `type="single"` for mutually exclusive views; use `Tabs` when each option has its own panel.
 - Don't change a toggle's label when it turns on.
 - Don't use a Toggle for an action that happens once; that's a `Button`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Toggle` as first used in its preview:
+
+```tsx
+import { Toggle } from 'altitude-design';
+
+<Toggle variant="secondary" pressed={archived} onPressedChange={setArchived}>Show archived</Toggle>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`tg`, `bar`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Toggle, ToggleGroup, ToggleGroupItem } from 'altitude-design';
+
+const Thumb = ({ down }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={down ? { transform: 'scaleY(-1)' } : undefined}><path d="M7 10v11H4V10zM7 10l4-7a2 2 0 0 1 3 2l-1 5h6a2 2 0 0 1 2 2.3l-1.5 7A2 2 0 0 1 17.5 21H7" /></svg>;
+export default function App() {
+  const [view, setView] = React.useState('board');
+  const [marks, setMarks] = React.useState(['bold']);
+  const [archived, setArchived] = React.useState(false);
+  const [vote, setVote] = React.useState('');
+  return (
+    <div className="tg">
+      <div className="bar">
+        <ToggleGroup type="multiple" value={marks} onValueChange={setMarks} aria-label="Text style">
+          <ToggleGroupItem value="bold" aria-label="Bold" square><b>B</b></ToggleGroupItem>
+          <ToggleGroupItem value="italic" aria-label="Italic" square><i>I</i></ToggleGroupItem>
+          <ToggleGroupItem value="underline" aria-label="Underline" square><u>U</u></ToggleGroupItem>
+        </ToggleGroup>
+        <ToggleGroup type="single" value={view} onValueChange={setView} aria-label="View">
+          <ToggleGroupItem value="list">List</ToggleGroupItem>
+          <ToggleGroupItem value="board">Board</ToggleGroupItem>
+          <ToggleGroupItem value="calendar">Calendar</ToggleGroupItem>
+        </ToggleGroup>
+        <Toggle variant="secondary" pressed={archived} onPressedChange={setArchived}>Show archived</Toggle>
+      </div>
+      <div className="bar">
+        <span className="cap">Was this answer helpful?</span>
+        <ToggleGroup type="single" value={vote} onValueChange={setVote} aria-label="Rate this answer">
+          <ToggleGroupItem value="up" aria-label="Helpful"><Thumb /></ToggleGroupItem>
+          <ToggleGroupItem value="down" aria-label="Not helpful"><Thumb down /></ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      <p className="cap">On is a choice, built like the Switch: the face sinks into a well with the accent poured in. Pointing at an on toggle previews off. One choice (View) is segmented Tabs without panels. Each group is one tab stop; arrows move inside it.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

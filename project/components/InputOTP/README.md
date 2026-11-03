@@ -28,3 +28,49 @@ A one-time code: two-factor sign-in, email verification, device approval. Four t
 - Do say where the code went and how to get a new one.
 - Don't split the code into several inputs; autofill and paste break.
 - Don't clear the code on a rejection without saying why; leave it so it can be corrected.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`InputOTP` as first used in its preview:
+
+```tsx
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from 'altitude-design';
+
+<InputOTP maxLength={6} value={code} verifying={state === 'verifying'}
+  onChange={(c) => { setCode(c); if (state === 'wrong') setState('idle'); }} onComplete={verify}>
+  <InputOTPGroup>{[0, 1, 2].map((i) => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+  <InputOTPSeparator />
+  <InputOTPGroup>{[3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+</InputOTP>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Field, InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from 'altitude-design';
+
+export default function App() {
+  const [code, setCode] = React.useState('');
+  const [state, setState] = React.useState('idle');
+  const verify = (c) => { setState('verifying'); setTimeout(() => setState(c === '123456' ? 'ok' : 'wrong'), 900); };
+  const hint = state === 'verifying' ? 'Checking code…' : state === 'ok' ? 'Verified.' : 'We sent it to j•••@acme.com. Try 123456, or any other code to see a rejection.';
+  return (
+    <div className="col">
+      <Field label="Verification code" hint={hint} error={state === 'wrong' ? 'That code didn\'t work. Check the latest email and try again.' : undefined}>
+        <InputOTP maxLength={6} value={code} verifying={state === 'verifying'}
+          onChange={(c) => { setCode(c); if (state === 'wrong') setState('idle'); }} onComplete={verify}>
+          <InputOTPGroup>{[0, 1, 2].map((i) => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+          <InputOTPSeparator />
+          <InputOTPGroup>{[3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+        </InputOTP>
+      </Field>
+      <Field label="Backup code" hint="8 letters or digits.">
+        <InputOTP maxLength={8} pattern="alphanumeric" defaultValue="K7Q2" />
+      </Field>
+    </div>
+  );
+}
+```
+<!-- /example -->

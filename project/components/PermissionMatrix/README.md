@@ -26,3 +26,43 @@ Roles against permissions: "Admins can manage billing, Members can invite, Viewe
 - Do return a promise from `onChange` so a cell shows it's saving.
 - Don't draw inherited grants as disabled checkboxes.
 - Don't lift the active cell; it's a ring.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`PermissionMatrix` as first used in its preview:
+
+```tsx
+import { PermissionMatrix } from 'altitude-design';
+
+<PermissionMatrix aria-label="Role permissions" roles={roles} permissions={perms} value={grants} inherited={inherited}
+  onChange={(role, perm, on) => new Promise((r) => setTimeout(() => { setGrants((g) => ({ ...g, [role]: { ...g[role], [perm]: on } })); r(); }, 600))} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { PermissionMatrix } from 'altitude-design';
+
+const roles = [{ id: 'owner', name: 'Owner', locked: true }, { id: 'admin', name: 'Admin' }, { id: 'member', name: 'Member' }, { id: 'viewer', name: 'Viewer' }];
+const perms = [
+  { id: 'billing.view', name: 'View invoices', group: 'Billing' }, { id: 'billing.manage', name: 'Manage billing', group: 'Billing' },
+  { id: 'members.invite', name: 'Invite members', group: 'Members' }, { id: 'members.remove', name: 'Remove members', group: 'Members' },
+  { id: 'projects.create', name: 'Create projects', group: 'Projects' }, { id: 'projects.view', name: 'View projects', group: 'Projects' },
+];
+export default function App() {
+  const [grants, setGrants] = React.useState({ admin: { 'billing.view': true, 'billing.manage': true, 'members.invite': true, 'members.remove': true, 'projects.create': true },
+    member: { 'members.invite': true, 'projects.create': true }, viewer: {} });
+  // Everyone can view projects; admins inherit invoices from Billing admins in this example.
+  const inherited = (role, perm) => (perm === 'projects.view' ? { granted: true, from: 'Everyone' } : role === 'viewer' && perm.startsWith('billing') ? { granted: false, from: 'Guest policy' } : undefined);
+  return (
+    <div className="col">
+      <PermissionMatrix aria-label="Role permissions" roles={roles} permissions={perms} value={grants} inherited={inherited}
+        onChange={(role, perm, on) => new Promise((r) => setTimeout(() => { setGrants((g) => ({ ...g, [role]: { ...g[role], [perm]: on } })); r(); }, 600))} />
+      <p className="cap">Editable grants are checkboxes. Owner's and inherited grants are stamped into the record: they're decided, not unavailable. Arrow keys move; Space toggles.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

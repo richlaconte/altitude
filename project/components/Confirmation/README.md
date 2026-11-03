@@ -32,3 +32,63 @@ Approve or reject an action an agent proposes, before anything happens: "Send 21
 - Do name the outcome on Approve.
 - Don't draw a proposal as pending.
 - Don't remove a rejected proposal; keep it in the record.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Confirmation` as first used in its preview:
+
+```tsx
+import { Confirmation } from 'altitude-design';
+
+<Confirmation state={state} title={title} consequence={consequence} escalate={escalate} approveLabel={approveLabel} rejectLabel={rejectLabel}
+runningLabel={runningLabel} doneLabel={doneLabel} failedLabel={failedLabel} resolvedBy="you" resolvedAt={at} scopes={scopes} resolvedScope={scope}
+onApprove={approve} onReject={() => { setState('rejected'); setAt(new Date()); }} onRetry={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1000); }} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Confirmation, Field, Input, Select } from 'altitude-design';
+
+function Proposal({ escalate, title, consequence, approveLabel, rejectLabel, runningLabel, doneLabel, failedLabel, fails, scopes }) {
+  const [state, setState] = React.useState('requested');
+  const [scope, setScope] = React.useState();
+  const [at, setAt] = React.useState();
+  const approve = (s) => { setScope(s); setState('running'); setTimeout(() => { setState(fails ? 'failed' : 'done'); setAt(new Date()); }, 1400); };
+  return <Confirmation state={state} title={title} consequence={consequence} escalate={escalate} approveLabel={approveLabel} rejectLabel={rejectLabel}
+    runningLabel={runningLabel} doneLabel={doneLabel} failedLabel={failedLabel} resolvedBy="you" resolvedAt={at} scopes={scopes} resolvedScope={scope}
+    onApprove={approve} onReject={() => { setState('rejected'); setAt(new Date()); }} onRetry={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1000); }} />;
+}
+// Edit what's proposed before approving: the consequence and the button follow the edited values.
+function EditableProposal() {
+  const original = { subject: 'October product update', segment: 'Pro customers', n: 214 };
+  const [v, setV] = React.useState(original);
+  const [state, setState] = React.useState('requested');
+  const [at, setAt] = React.useState();
+  const counts = { 'Pro customers': 214, 'All customers': 1180, 'Trial users': 96 };
+  const edited = v.subject !== original.subject || v.segment !== original.segment;
+  return <Confirmation state={state} title="Send campaign email" consequence={`${v.n} ${v.segment} will receive “${v.subject}”.`}
+    approveLabel={`Send ${v.n} emails`} rejectLabel="Don't send" runningLabel="Sending…" doneLabel="Sent" resolvedBy="you" resolvedAt={at} edited={edited}
+    edit={<>
+      <Field label="Subject"><Input value={v.subject} onChange={(e) => setV({ ...v, subject: e.target.value })} /></Field>
+      <Field label="Segment"><Select value={v.segment} onValueChange={(segment) => setV({ ...v, segment, n: counts[segment] })} items={Object.keys(counts).map((k) => ({ value: k, label: k }))} /></Field>
+    </>}
+    onEditCancel={() => setV(original)}
+    onApprove={() => { setState('running'); setTimeout(() => { setState('done'); setAt(new Date()); }, 1200); }} onReject={() => { setState('rejected'); setAt(new Date()); }} />;
+}
+export default function App() {
+  return (
+    <div className="col">
+      <Proposal title="Send campaign email" consequence="214 Pro customers will receive “October product update”." approveLabel="Send 214 emails" rejectLabel="Don't send" runningLabel="Sending…" doneLabel="Sent" failedLabel="Couldn't send" />
+      <Proposal title="Delete 3 stale branches" consequence="release/2.3, spike/maps and fix/old-auth will be deleted from the repository." approveLabel="Delete 3 branches" rejectLabel="Keep them" runningLabel="Deleting…" doneLabel="Deleted" escalate="hold" />
+      <Proposal title="Archive the Atlas workspace" consequence="12 people lose access; it can't be restored after 30 days." approveLabel="Archive workspace" rejectLabel="Don't archive" runningLabel="Archiving…" failedLabel="Couldn't archive" escalate="dialog" fails />
+      <Proposal title="Run npm test" consequence="Runs the test suite in this workspace." approveLabel="Run once" rejectLabel="Don't run" runningLabel="Running…" doneLabel="Ran"
+        scopes={[{ value: 'session', label: 'Allow npm test for this session' }, { value: 'always', label: 'Always allow npm test', description: 'Saved to this project’s settings' }]} />
+      <EditableProposal />
+    </div>
+  );
+}
+```
+<!-- /example -->

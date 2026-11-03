@@ -27,3 +27,40 @@ A number field: seats on a plan, rate limits, retention days, prices, quantities
 - Do put the unit in `format`, not in the label, so it's spoken with the value.
 - Don't use it for identifiers that happen to be digits (a ZIP code, a card number); that's an `Input`.
 - Don't use it to choose roughly within a range; that's a `Slider`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`NumberInput` as first used in its preview:
+
+```tsx
+import { NumberInput } from 'altitude-design';
+
+<NumberInput value={seats} onValueChange={setSeats} min={1} max={500} incrementLabel="Increase seats" decrementLabel="Decrease seats" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `ni`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Field, NumberInput } from 'altitude-design';
+
+export default function App() {
+  const [seats, setSeats] = React.useState(12);
+  const [days, setDays] = React.useState(30);
+  const [price, setPrice] = React.useState(1250.5);
+  const [rate, setRate] = React.useState(null);
+  return (
+    <div className="col">
+      <div className="ni">
+        <Field label="Seats" hint="1 to 500"><NumberInput value={seats} onValueChange={setSeats} min={1} max={500} incrementLabel="Increase seats" decrementLabel="Decrease seats" /></Field>
+        <Field label="Keep logs for"><NumberInput value={days} onValueChange={setDays} min={1} max={365} format={{ style: 'unit', unit: 'day', unitDisplay: 'long' }} /></Field>
+        <Field label="Preis pro Monat" hint="German: type 1.250,50"><NumberInput value={price} onValueChange={setPrice} min={0} step={0.5} locale="de-DE" format={{ style: 'currency', currency: 'EUR' }} /></Field>
+        <Field label="Sampling rate"><NumberInput value={rate} onValueChange={setRate} min={0} max={1} step={0.05} format={{ style: 'percent' }} placeholder="10" /></Field>
+      </div>
+      <p className="cap">Arrow keys step (Shift for ten); Home and End go to the limits; a stepper at its limit lies flat. Values clamp to their range when you leave the field.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

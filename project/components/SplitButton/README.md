@@ -24,3 +24,42 @@ One action with its alternatives: "Save changes ▾" (Save as draft, Save and cl
 - Do mark a destructive alternative with `tone: 'critical'`.
 - Don't hide the default inside the menu, or offer only one alternative (use two buttons).
 - Don't nest a SplitButton in a `Toolbar`; its tools are ghosts.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`SplitButton` as first used in its preview:
+
+```tsx
+import { SplitButton } from 'altitude-design';
+
+<SplitButton label="Save changes" menuLabel="More save options" onClick={() => setSaid('Saved.')}
+  items={[{ label: 'Save as draft', onSelect: () => setSaid('Saved as a draft.') }, { label: 'Save and close', onSelect: () => setSaid('Saved and closed.') }]} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `row`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { SplitButton } from 'altitude-design';
+
+export default function App() {
+  const [said, setSaid] = React.useState('');
+  const [deploying, setDeploying] = React.useState(false);
+  const deploy = (where) => { setSaid(`Deploying to ${where}…`); setDeploying(true); setTimeout(() => { setDeploying(false); setSaid(`Deployed to ${where}.`); }, 1600); };
+  return (
+    <div className="col">
+      <div className="row">
+        <SplitButton label="Save changes" menuLabel="More save options" onClick={() => setSaid('Saved.')}
+          items={[{ label: 'Save as draft', onSelect: () => setSaid('Saved as a draft.') }, { label: 'Save and close', onSelect: () => setSaid('Saved and closed.') }]} />
+        <SplitButton variant="secondary" label="Merge" menuLabel="More merge options" onClick={() => setSaid('Merged.')}
+          items={[{ label: 'Squash and merge', onSelect: () => setSaid('Squashed and merged.') }, { label: 'Rebase and merge', onSelect: () => setSaid('Rebased and merged.') }]} />
+        <SplitButton variant="secondary" label="Deploy" menuLabel="More deploy options" loading={deploying} onClick={() => deploy('staging')}
+          items={[{ label: 'Deploy to staging', onSelect: () => deploy('staging') }, { label: 'Deploy to production', onSelect: () => deploy('production'), tone: 'critical' }]} />
+      </div>
+      <p className="cap" role="status">{said || 'Each face lifts on its own. Alt+Down on an action opens its menu. While Deploy is loading, its chevron still works.'}</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

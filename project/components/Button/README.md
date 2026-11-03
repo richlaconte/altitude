@@ -15,3 +15,44 @@ The wall is the face colour darkened, so it reads in every scheme and with any c
 
 - Don't put two primary buttons in one view. Promote one, demote the other to secondary.
 - Leave room below a row of buttons: the wall extends up to 5px under the face.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Button` as first used in its preview:
+
+```tsx
+import { Button } from 'altitude-design';
+
+<Button variant="primary">Publish changes</Button>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `row`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Icons } from 'altitude-design';
+
+export default function App() {
+  const [busy, setBusy] = React.useState(false);
+  return (
+    <div className="col">
+      <div className="row">
+        <Button variant="primary">Publish changes</Button>
+        <Button>Preview</Button>
+        <Button variant="ghost">Cancel</Button>
+        <Button variant="danger">Delete project</Button>
+      </div>
+      <div className="row">
+        <Button variant="primary" size="sm">Small</Button>
+        <Button variant="primary" size="lg">Large</Button>
+        <Button square aria-label="Close"><Icons.X /></Button>
+        <Button variant="primary" loading={busy} onClick={() => { setBusy(true); setTimeout(() => setBusy(false), 1600); }}>Save</Button>
+        <Button disabled>Disabled</Button>
+      </div>
+      <p className="cap">Primary rests at level 2, secondary at 1, ghost at 0. Hover climbs one level; pressing returns to the ground. Click Save: a loading button stays pressed.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

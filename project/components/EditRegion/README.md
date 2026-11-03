@@ -102,3 +102,162 @@ The record, the write (with a server-side revision or equivalent concurrency gua
 ## Demo and verification
 
 The `EditRegion` section of `build/previews.txt` lists three people with access; each row is an in-place EditRegion over a fictional people service with revisions. Below it, trip details are label–value rows with reserved values. A collapsed harness picks a save fixture (`success`, `slow`, `fail-once`, `conflict-during-save`) and applies an outside update. `node checks/edit-region.mjs` (from `build/`, after rendering previews; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers editing in place (fields hold their place on every frame while the editor grows, the record below is pushed through the glide, lifting never moves the record, each field opens at its value's x, reserved values open exactly where they were, the padded afterglow, the announcement that clears itself), opening and focus, unchanged saves, one write per save, `changed`, validation and error focus, Escape with an open Select, IME Enter, failure and retry, pending lock, both conflict paths, focus return, and a 320/960px layout in both schemes under reduced motion, forced colours and `contrast="more"`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`EditRegion` as first used in its preview:
+
+```tsx
+import { EditRegion, EditRegionForm, EditRegionValue, EditRegionView, Field, Input, Select, Switch } from 'altitude-design';
+
+<EditRegion layout="in-place" label={person.name} editLabel={`Edit ${person.name}`} value={erFields(person)} validate={validate}
+  onValueChange={canonical => setPeople(people => people.map(p => p.id === person.id ? { ...server.current.get(person.id), ...canonical } : p))}
+  onSave={save(person)}>
+  <EditRegionView>
+    <span className="er-name"><EditRegionValue field="name">{person.name}</EditRegionValue></span>
+    <span className="er-meta"><EditRegionValue field="email">{person.email}</EditRegionValue> · <EditRegionValue field="role">{ER_ROLES.find(r => r.value === person.role).label}</EditRegionValue>{person.notify ? <> · <EditRegionValue field="notify">Gets updates</EditRegionValue></> : ''}</span>
+  </EditRegionView>
+  <EditRegionForm>
+    {field => <>
+      <div className="er-name-edit"><Field label="Name" required error={field.error('name')}><Input {...field('name')} autoComplete="off" /></Field></div>
+      <div className="er-meta-edit">
+        <Field label="Email" required error={field.error('email')}><Input {...field('email')} type="email" autoComplete="off" /></Field>
+        <Field label="Role"><Select {...field.value('role')} items={ER_ROLES} /></Field>
+        <Switch {...field.checked('notify')} label="Gets updates" />
+      </div>
+    </>}
+  </EditRegionForm>
+</EditRegion>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`er-list`, `er-name`, `er-meta`, `er-name-edit`, `er-meta-edit`, `er-harness`, `er-harness-controls`, `er-log`, `er-sheet`, `er-sheet-head`, `er-sheet-grid`, `er-demo` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, EditRegion, EditRegionForm, EditRegionTrigger, EditRegionValue, EditRegionView, Field, Input, Select, Switch } from 'altitude-design';
+
+const ER_ROLES = [{ value: 'owner', label: 'Owner' }, { value: 'editor', label: 'Editor' }, { value: 'viewer', label: 'Viewer' }];
+const ER_PEOPLE = Object.freeze([
+  Object.freeze({ id: 'p-mara', name: 'Mara Quist', email: 'mara@northwind.example', role: 'owner', notify: true, revision: 1 }),
+  Object.freeze({ id: 'p-ines', name: 'Inés Ortega', email: 'ines@northwind.example', role: 'editor', notify: false, revision: 1 }),
+  Object.freeze({ id: 'p-tobi', name: 'Tobi Adeyemi', email: 'tobi@northwind.example', role: 'viewer', notify: true, revision: 1 }),
+]);
+const ER_FIXTURES = ['success', 'slow', 'fail-once', 'conflict-during-save'];
+const erWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const erFields = ({ revision, id, ...fields }) => fields;
+
+// A fictional people service with revisions: a stale write is rejected, an accepted one returns the canonical record.
+function EditRegionExample({ fixture }) {
+  const server = React.useRef(new Map(ER_PEOPLE.map(p => [p.id, { ...p }])));
+  const [people, setPeople] = React.useState(() => ER_PEOPLE.map(p => ({ ...p })));
+  const [log, setLog] = React.useState([]);
+  const failed = React.useRef(false);
+  const trace = event => setLog(log => [...log, event]);
+  const reconcile = id => setPeople(people => people.map(p => p.id === id ? { ...server.current.get(id) } : p));
+  const externalUpdate = () => {
+    const current = server.current.get('p-mara');
+    server.current.set('p-mara', { ...current, email: 'm.quist@northwind.example', revision: current.revision + 1 });
+    trace({ event: 'external-update', id: 'p-mara', revision: current.revision + 1 }); reconcile('p-mara');
+  };
+  const save = person => async (draft, { changed }) => {
+    trace({ event: 'requested', id: person.id, expectedRevision: person.revision, changed });
+    await erWait(fixture === 'slow' ? 1400 : 250);
+    if (fixture === 'fail-once' && !failed.current) { failed.current = true; trace({ event: 'rejected', id: person.id }); return { ok: false, error: 'We couldn’t reach the people service. Your changes are still here. Try again.' }; }
+    if (fixture === 'conflict-during-save') { externalUpdate(); await erWait(300); }
+    const current = server.current.get(person.id);
+    if (current.revision !== person.revision) { trace({ event: 'rejected-stale', id: person.id }); return { ok: false, error: 'Someone else changed this person. Review the current details.' }; }
+    if ([...server.current.values()].some(p => p.id !== person.id && p.email === draft.email.trim())) return { ok: false, error: 'Check the highlighted field.', fieldErrors: { email: 'Someone else already uses this email.' } };
+    const next = { ...current, ...draft, name: draft.name.trim(), email: draft.email.trim(), revision: current.revision + 1 };
+    server.current.set(person.id, next);
+    trace({ event: 'committed', id: person.id, revision: next.revision, changed });
+    return { ok: true, value: erFields(next) };
+  };
+  const validate = draft => {
+    const errors = {};
+    if (!draft.name.trim()) errors.name = 'Enter a name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())) errors.email = 'Enter an email address, like name@example.com.';
+    return Object.keys(errors).length ? errors : undefined;
+  };
+  return <>
+    <section aria-labelledby="er-title">
+      <h2 id="er-title">People with access</h2>
+      <ul className="er-list">
+        {people.map(person => <li key={person.id}>
+          <EditRegion layout="in-place" label={person.name} editLabel={`Edit ${person.name}`} value={erFields(person)} validate={validate}
+            onValueChange={canonical => setPeople(people => people.map(p => p.id === person.id ? { ...server.current.get(person.id), ...canonical } : p))}
+            onSave={save(person)}>
+            <EditRegionView>
+              <span className="er-name"><EditRegionValue field="name">{person.name}</EditRegionValue></span>
+              <span className="er-meta"><EditRegionValue field="email">{person.email}</EditRegionValue> · <EditRegionValue field="role">{ER_ROLES.find(r => r.value === person.role).label}</EditRegionValue>{person.notify ? <> · <EditRegionValue field="notify">Gets updates</EditRegionValue></> : ''}</span>
+            </EditRegionView>
+            <EditRegionForm>
+              {field => <>
+                <div className="er-name-edit"><Field label="Name" required error={field.error('name')}><Input {...field('name')} autoComplete="off" /></Field></div>
+                <div className="er-meta-edit">
+                  <Field label="Email" required error={field.error('email')}><Input {...field('email')} type="email" autoComplete="off" /></Field>
+                  <Field label="Role"><Select {...field.value('role')} items={ER_ROLES} /></Field>
+                  <Switch {...field.checked('notify')} label="Gets updates" />
+                </div>
+              </>}
+            </EditRegionForm>
+          </EditRegion>
+        </li>)}
+      </ul>
+    </section>
+    <TripSheet />
+    <details className="er-harness">
+      <summary>Fixture controls</summary>
+      <p>Documentation harness only: change Mara's record on the “server” while it's being edited.</p>
+      <div className="er-harness-controls"><Button onClick={externalUpdate}>Apply external update to Mara</Button></div>
+      <output className="er-log" data-er-log="" aria-label="Fixture operation log">{JSON.stringify(log, null, 2)}</output>
+    </details>
+  </>;
+}
+
+// Labelled rows whose values already have their controls' height (EditRegionValue reserve): Edit all moves nothing.
+const ER_SEATS = [{ value: 'aisle', label: 'Aisle' }, { value: 'window', label: 'Window' }, { value: 'any', label: 'No preference' }];
+function TripSheet() {
+  const [trip, setTrip] = React.useState({ traveller: 'Mara Quist', email: 'mara@northwind.example', phone: '', seat: 'aisle' });
+  const validate = draft => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim()) ? undefined : { email: 'Enter an email address, like name@example.com.' };
+  const rows = [['traveller', 'Traveller'], ['email', 'Email'], ['phone', 'Phone'], ['seat', 'Seat']];
+  return <section className="er-sheet" aria-labelledby="er-sheet-title">
+    <EditRegion layout="in-place" label="Trip details" editLabel="Edit all trip details" value={trip} validate={validate} onValueChange={setTrip}
+      onSave={async draft => { await erWait(250); return { ok: true, value: { ...draft, traveller: draft.traveller.trim(), email: draft.email.trim(), phone: draft.phone.trim() } }; }}>
+      <EditRegionView trigger={false}>
+        <div className="er-sheet-head"><h2 id="er-sheet-title">Trip details</h2><EditRegionTrigger>Edit all</EditRegionTrigger></div>
+        <dl className="er-sheet-grid">{rows.map(([key, label]) => <React.Fragment key={key}><dt>{label}</dt><dd>
+          <EditRegionValue field={key} reserve>{key === 'seat' ? ER_SEATS.find(s => s.value === trip.seat).label : trip[key] || <span className="er-meta">Not set</span>}</EditRegionValue>
+        </dd></React.Fragment>)}</dl>
+      </EditRegionView>
+      <EditRegionForm>
+        {field => <>
+          <div className="er-sheet-head"><h2>Trip details</h2></div>
+          <dl className="er-sheet-grid">
+            <dt>Traveller</dt><dd><Field label="Traveller" required error={field.error('traveller')}><Input {...field('traveller')} autoComplete="off" /></Field></dd>
+            <dt>Email</dt><dd><Field label="Email" required error={field.error('email')}><Input {...field('email')} type="email" autoComplete="off" /></Field></dd>
+            <dt>Phone</dt><dd><Field label="Phone"><Input {...field('phone')} type="tel" placeholder="Add a phone number" autoComplete="off" /></Field></dd>
+            <dt>Seat</dt><dd><Field label="Seat"><Select {...field.value('seat')} items={ER_SEATS} /></Field></dd>
+          </dl>
+        </>}
+      </EditRegionForm>
+    </EditRegion>
+  </section>;
+}
+
+export default function App() {
+  const [fixture, setFixture] = React.useState('success');
+  const [mounted, setMounted] = React.useState({ fixture: 'success', epoch: 0 });
+  return <div className="er-demo">
+    <EditRegionExample key={mounted.epoch} fixture={mounted.fixture} />
+    <details className="er-harness">
+      <summary>Choose the next fixture</summary>
+      <div className="er-harness-controls">
+        <label>Save fixture<select value={fixture} onChange={event => setFixture(event.target.value)}>{ER_FIXTURES.map(name => <option key={name}>{name}</option>)}</select></label>
+        <Button onClick={() => setMounted({ fixture, epoch: mounted.epoch + 1 })}>Reset example</Button>
+      </div>
+    </details>
+  </div>;
+}
+```
+<!-- /example -->

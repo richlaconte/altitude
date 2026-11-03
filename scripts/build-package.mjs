@@ -14,6 +14,7 @@ import { execSync } from 'child_process';
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { tokensCss } from './tokens-css.mjs';
 import { buildGuidance } from './build-guidance.mjs';
+import { examples } from '../build/examples.mjs';
 
 const cssOnly = process.argv.includes('--css-only');
 const src = 'project/components/src/index.tsx';
@@ -64,6 +65,28 @@ for (const file of readdirSync('dist/types').filter(file => file.endsWith('.d.ts
     (_, prefix, specifier, suffix) => prefix + specifier.replace(/\.(?:js|cjs)$/, '') + extension + suffix);
   writeFileSync(path, rewrite('.js'));
   writeFileSync('dist/types-cjs/' + file.replace(/\.d\.ts$/, '.d.cts'), rewrite('.cjs'));
+}
+// Each component's declaration carries its usage as @example, from the same preview its README's example comes from
+// (build/examples.mjs), so an editor's hover and an agent reading the .d.ts see code CI renders.
+const usage = Object.entries(examples()).filter(([, ex]) => ex.minimal);
+for (const dir of ['dist/types', 'dist/types-cjs']) {
+  let added = 0;
+  for (const file of readdirSync(dir).filter((f) => /\.d\.c?ts$/.test(f))) {
+    const path = `${dir}/${file}`;
+    let text = readFileSync(path, 'utf8');
+    for (const [name, ex] of usage) {
+      const head = new RegExp(`\\n(export declare (?:function|const) ${name}\\b)`);
+      if (!head.test(text)) continue;
+      const lines = [`import { ${ex.minimalNames.join(', ')} } from 'altitude-design';`, '', ...ex.minimal.split('\n')].map((l) => ` * ${l.replaceAll('*/', '*\\/')}`.trimEnd());
+      const block = ` * @example\n * \`\`\`tsx\n${lines.join('\n')}\n * \`\`\``;
+      // Into the doc comment right above the declaration, or a new one.
+      const doc = new RegExp(`(/\\*\\*(?:(?!\\*/)[\\s\\S])*?)\\n?([ \\t]*)\\*/\\n(export declare (?:function|const) ${name}\\b)`);
+      text = doc.test(text) ? text.replace(doc, (_, body, indent, decl) => `${body}\n${block}\n${indent}*/\n${decl}`) : text.replace(head, `\n/**\n${block}\n */\n$1`);
+      added++;
+    }
+    writeFileSync(path, text);
+  }
+  if (dir === 'dist/types') console.log(`@example on ${added} of ${usage.length} component declarations`);
 }
 // The declarations are what editors and agents read first, so they say where to report problems.
 const types = 'dist/types/index.d.ts';

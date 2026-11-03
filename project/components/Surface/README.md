@@ -18,3 +18,31 @@ The primitive every component is built from: a box placed on one rung of the ele
 - Do use Surface for one-off panels, sidebars and app chrome so they share the ladder with the components.
 - Don't set `interactive` on something that doesn't act when clicked: a lift is a promise.
 - Don't stack more than three levels in one region; if you need a fourth, the layout probably wants a dialog or a page.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Surface` as first used in its preview:
+
+```tsx
+import { Surface } from 'altitude-design';
+
+<Surface level={-1} className="s"><b>level={'{-1}'}</b><span>A well. Holds things; never lifts.</span></Surface>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`grid`, `s` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import { Surface } from 'altitude-design';
+
+export default function App() {
+  return (
+    <div className="grid" data-tells-ignore="LA4 the three surfaces side by side, to compare">
+      <Surface level={-1} className="s"><b>level={'{-1}'}</b><span>A well. Holds things; never lifts.</span></Surface>
+      <Surface level={1} className="s"><b>level={'{1}'}</b><span>Static grouping. Doesn't react to the pointer.</span></Surface>
+      <Surface level={1} interactive className="s" onClick={() => {}}><b>level={'{1}'} interactive</b><span>Hover: climbs to 2. Press: drops to ground.</span></Surface>
+    </div>
+  );
+}
+```
+<!-- /example -->

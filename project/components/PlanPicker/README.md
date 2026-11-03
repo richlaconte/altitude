@@ -23,3 +23,40 @@ Choose a plan (Free, Pro, Business) in sign-up, upgrade and downgrade flows, wit
 - Do say why a plan can't be chosen.
 - Don't lift or glow a recommended plan.
 - Don't animate prices counting up when the period changes.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`PlanPicker` as first used in its preview:
+
+```tsx
+import { PlanPicker } from 'altitude-design';
+
+<PlanPicker plans={plans} value={plan} onValueChange={setPlan} current="free" recommended="pro" period={period} onPeriodChange={setPeriod} locale="en-IE" aria-label="Choose a plan" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `row` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, PlanPicker } from 'altitude-design';
+
+const plans = [
+  { id: 'free', name: 'Free', price: 0, currency: 'EUR', unit: 'per seat', features: ['3 projects', 'Community support'] },
+  { id: 'pro', name: 'Pro', price: { month: 2400, year: 2000 }, currency: 'EUR', unit: 'per seat', features: ['Unlimited projects', 'SAML SSO', 'Audit log'] },
+  { id: 'business', name: 'Business', price: { month: 4800, year: 4000 }, currency: 'EUR', unit: 'per seat', features: ['Everything in Pro', 'Custom roles', '99.9% uptime SLA'] },
+  { id: 'enterprise', name: 'Enterprise', price: null, unavailable: 'Contact sales for more than 500 seats.' },
+];
+export default function App() {
+  const [plan, setPlan] = React.useState('free');
+  const [period, setPeriod] = React.useState('year');
+  const name = plans.find((p) => p.id === plan).name;
+  return (
+    <div className="col">
+      <PlanPicker plans={plans} value={plan} onValueChange={setPlan} current="free" recommended="pro" period={period} onPeriodChange={setPeriod} locale="en-IE" aria-label="Choose a plan" />
+      <div className="row"><Button variant="primary" disabled={plan === 'free'}>{plan === 'free' ? 'You\'re on Free' : `Continue to ${name}`}</Button></div>
+    </div>
+  );
+}
+```
+<!-- /example -->

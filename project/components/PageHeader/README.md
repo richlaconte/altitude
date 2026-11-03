@@ -27,3 +27,48 @@ The block every page opens with: breadcrumb, title, a line of description, the p
 - Do keep the description to one line about what the page is for.
 - Don't put a PageHeader inside a `Card`; that's `CardHeader`.
 - Don't make the whole header a raised card. It lies on the ground, and only rises while content passes under it.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`PageHeader` as first used in its preview:
+
+```tsx
+import { Breadcrumb, Button, PageHeader, PageHeaderDescription, PageHeaderTitle, Tabs, TabsList, TabsTrigger } from 'altitude-design';
+
+<PageHeader sticky
+  breadcrumb={<Breadcrumb items={[{ label: 'Settings', href: '#/settings' }, { label: 'Members' }]} />}
+  primary={<Button variant="primary">Invite members</Button>}
+  actions={<Button variant="secondary">Export list</Button>}
+  overflow={[{ label: 'Download audit log' }, { label: 'Members settings' }]}
+  tabs={<Tabs variant="segmented" value={tab} onValueChange={setTab}><TabsList aria-label="Members sections"><TabsTrigger value="members">Members</TabsTrigger><TabsTrigger value="invites">Invitations</TabsTrigger><TabsTrigger value="roles">Roles</TabsTrigger></TabsList></Tabs>}>
+  <PageHeaderTitle>Members</PageHeaderTitle>
+  <PageHeaderDescription>People who can see and edit this workspace.</PageHeaderDescription>
+</PageHeader>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`ph`, `rows` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Breadcrumb, Button, PageHeader, PageHeaderDescription, PageHeaderTitle, Tabs, TabsList, TabsTrigger } from 'altitude-design';
+
+export default function App() {
+  const [tab, setTab] = React.useState('members');
+  return (
+    <div className="ph">
+      <PageHeader sticky
+        breadcrumb={<Breadcrumb items={[{ label: 'Settings', href: '#/settings' }, { label: 'Members' }]} />}
+        primary={<Button variant="primary">Invite members</Button>}
+        actions={<Button variant="secondary">Export list</Button>}
+        overflow={[{ label: 'Download audit log' }, { label: 'Members settings' }]}
+        tabs={<Tabs variant="segmented" value={tab} onValueChange={setTab}><TabsList aria-label="Members sections"><TabsTrigger value="members">Members</TabsTrigger><TabsTrigger value="invites">Invitations</TabsTrigger><TabsTrigger value="roles">Roles</TabsTrigger></TabsList></Tabs>}>
+        <PageHeaderTitle>Members</PageHeaderTitle>
+        <PageHeaderDescription>People who can see and edit this workspace.</PageHeaderDescription>
+      </PageHeader>
+      <div className="rows">{Array.from({ length: 10 }, (_, i) => <div key={i} />)}</div>
+    </div>
+  );
+}
+```
+<!-- /example -->

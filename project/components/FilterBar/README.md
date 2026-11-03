@@ -67,3 +67,66 @@ Automation rules, segments and advanced search need nested logic: "Plan is Pro *
 
 A group is drawn as **a flush bracket on the ground**: a 1px `line-control` rule around its own conditions, with its own all/any switch (shown even with one condition) and its own Add filter. Groups are part of the record of the query, not live surfaces. Depth is capped at one level of groups so it never becomes a code editor, and groups follow the top level's conditions. "+ Add group" starts an "any of" group, and removing a group's last condition removes the group. `filterSentence(fields, tree)` reads the whole expression in words, and it's announced as it changes. `value: Filter[]` keeps working as before.
 
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`FilterBar` as first used in its preview:
+
+```tsx
+import { FilterBar } from 'altitude-design';
+
+<FilterBar aria-label="Filter issues" fields={FB_FIELDS} value={filters} onValueChange={setFilters} match={match} onMatchChange={setMatch} resultCount={count} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`fb-demo` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { DataTable, FilterBar } from 'altitude-design';
+
+const FB_STATUSES = [{ value: 'todo', label: 'To do' }, { value: 'progress', label: 'In progress' }, { value: 'review', label: 'In review' }, { value: 'done', label: 'Done' }];
+const FB_PEOPLE = [{ value: 'mara', label: 'Mara Quist' }, { value: 'ines', label: 'Inés Ortega' }, { value: 'tobi', label: 'Tobi Adeyemi' }, { value: 'wen', label: 'Li Wen' }];
+const FB_FIELDS = [
+  { key: 'status', label: 'Status', type: 'enum', options: FB_STATUSES },
+  { key: 'assignee', label: 'Assignee', type: 'enum', options: FB_PEOPLE, searchable: true },
+  { key: 'updated', label: 'Updated', type: 'date' },
+  { key: 'title', label: 'Title', type: 'text' },
+  { key: 'points', label: 'Points', type: 'number' },
+];
+const FB_ROWS = [
+  { id: 'a', title: 'Search results page', status: 'review', assignee: 'mara', updated: '2026-10-21', points: 5 },
+  { id: 'b', title: 'Billing address form', status: 'progress', assignee: 'ines', updated: '2026-10-12', points: 3 },
+  { id: 'c', title: 'Search filters', status: 'todo', assignee: 'tobi', updated: '2026-09-30', points: 8 },
+  { id: 'd', title: 'Invoice emails', status: 'done', assignee: 'wen', updated: '2026-10-02', points: 2 },
+  { id: 'e', title: 'Onboarding checklist', status: 'review', assignee: 'ines', updated: '2026-10-19', points: 3 },
+];
+const fbTest = (row, f) => {
+  if (f.value === undefined || f.value === '') return true;
+  const v = row[f.field];
+  switch (f.operator) {
+    case 'is': return v === f.value; case 'is not': return v !== f.value;
+    case 'contains': return v.toLowerCase().includes(String(f.value).toLowerCase()); case 'does not contain': return !v.toLowerCase().includes(String(f.value).toLowerCase());
+    case '=': return v === f.value; case '>': return v > f.value; case '<': return v < f.value;
+    case 'before': return v < f.value; case 'after': return v > f.value; case 'between': return v >= f.value.start && v <= f.value.end;
+  }
+  return true;
+};
+export default function App() {
+  const [filters, setFilters] = React.useState([{ id: 'f1', field: 'status', operator: 'is', value: 'review' }]);
+  const [match, setMatch] = React.useState('all');
+  const matches = row => match === 'all' ? filters.every(f => fbTest(row, f)) : filters.some(f => fbTest(row, f));
+  const count = FB_ROWS.filter(matches).length;
+  return <div className="fb-demo">
+    <FilterBar aria-label="Filter issues" fields={FB_FIELDS} value={filters} onValueChange={setFilters} match={match} onMatchChange={setMatch} resultCount={count} />
+    <DataTable aria-label="Issues" rows={FB_ROWS} getRowId={r => r.id} relevance={r => filters.length ? (matches(r) ? 'match' : 'miss') : undefined}
+      columns={[
+        { key: 'title', header: 'Title' },
+        { key: 'status', header: 'Status', cell: r => FB_STATUSES.find(s => s.value === r.status).label },
+        { key: 'assignee', header: 'Assignee', cell: r => FB_PEOPLE.find(p => p.value === r.assignee).label },
+        { key: 'updated', header: 'Updated' },
+        { key: 'points', header: 'Points', align: 'end' },
+      ]} />
+  </div>;
+}
+```
+<!-- /example -->

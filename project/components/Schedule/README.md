@@ -74,3 +74,69 @@ The events and their writes (with concurrency guards), time zones, and the detai
 The `Schedule` section of `build/previews.txt` is a room-booking work week (26–30 Oct 2026): the service refuses Wednesday mornings, rooms close at 17:00 on Friday, and Ana holds the Retro. `node checks/schedule.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys and names, creating, carrying, resizing and cancelling without a pointer, a refused move with Retry, unavailable time, a collaborator's hold, rename, remove, the next week, pointer carry, drawing and the resize handle, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **Narrow and on touch.** Under 480px of its own width the schedule shows one day at a time (`narrowView="day"`, the default; `false` keeps the week), paged by the header's previous and next. Under a coarse pointer an hour is 96px unless you set `hourHeight`, so a 15-minute slot is 24px tall, and a tap opens an event.
 
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Schedule` as first used in its preview:
+
+```tsx
+import { Schedule } from 'altitude-design';
+
+<Schedule aria-label="Room bookings" view="workweek" date={date} onDateChange={setDate} now="2026-10-27T10:20"
+  events={events} getKey={e => e.id} getStart={e => e.start} getEnd={e => e.end} getLabel={e => e.title}
+  dayStart="08:00" dayEnd="18:00"
+  renderEvent={e => <><strong>{e.title}</strong><small className="sch-room">{e.start.slice(11)}–{e.end.slice(11)} · {e.room}</small></>}
+  heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
+  // Rooms close at 17:00 on Fridays.
+  isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
+  onChange={async ({ id, start, end }) => {
+    await schWait(300);
+    // The demo service refuses Wednesday mornings: the rooms are being cleaned.
+    if (start.slice(0, 10) === '2026-10-28' && start.slice(11) < '12:00') return { ok: false, error: 'Both rooms are being cleaned on Wednesday morning.' };
+    setEvents(list => list.map(e => e.id === id ? { ...e, start, end } : e)); return { ok: true };
+  }}
+  onCreate={async ({ start, end, title }) => { await schWait(300); const event = { id: 'n' + ++seq.current, title, start, end, room: 'Room A' }; setEvents(list => [...list, event]); return { ok: true, value: event }; }}
+  onRename={async (e, title) => { await schWait(200); setEvents(list => list.map(x => x.id === e.id ? { ...x, title } : x)); return { ok: true }; }}
+  onRemove={e => setEvents(list => list.filter(x => x.id !== e.id))} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`sch-demo`, `sch-room` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Schedule } from 'altitude-design';
+
+const SCH_SEED = [
+  { id: 'e1', title: 'Standup', start: '2026-10-26T09:00', end: '2026-10-26T09:30', room: 'Room A' },
+  { id: 'e2', title: 'Design review', start: '2026-10-27T10:00', end: '2026-10-27T11:00', room: 'Room B' },
+  { id: 'e3', title: 'Customer call', start: '2026-10-27T10:30', end: '2026-10-27T11:15', room: 'Room A' },
+  { id: 'e4', title: 'Planning', start: '2026-10-28T13:00', end: '2026-10-28T14:30', room: 'Room B' },
+  { id: 'e5', title: 'Interview', start: '2026-10-29T15:00', end: '2026-10-29T16:00', room: 'Room A' },
+  { id: 'e6', title: 'Retro', start: '2026-10-30T11:00', end: '2026-10-30T12:00', room: 'Room B' },
+];
+const schWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+export default function App() {
+  const [date, setDate] = React.useState('2026-10-26');
+  const [events, setEvents] = React.useState(SCH_SEED);
+  const seq = React.useRef(0);
+  return <div className="sch-demo">
+    <Schedule aria-label="Room bookings" view="workweek" date={date} onDateChange={setDate} now="2026-10-27T10:20"
+      events={events} getKey={e => e.id} getStart={e => e.start} getEnd={e => e.end} getLabel={e => e.title}
+      dayStart="08:00" dayEnd="18:00"
+      renderEvent={e => <><strong>{e.title}</strong><small className="sch-room">{e.start.slice(11)}–{e.end.slice(11)} · {e.room}</small></>}
+      heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
+      // Rooms close at 17:00 on Fridays.
+      isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
+      onChange={async ({ id, start, end }) => {
+        await schWait(300);
+        // The demo service refuses Wednesday mornings: the rooms are being cleaned.
+        if (start.slice(0, 10) === '2026-10-28' && start.slice(11) < '12:00') return { ok: false, error: 'Both rooms are being cleaned on Wednesday morning.' };
+        setEvents(list => list.map(e => e.id === id ? { ...e, start, end } : e)); return { ok: true };
+      }}
+      onCreate={async ({ start, end, title }) => { await schWait(300); const event = { id: 'n' + ++seq.current, title, start, end, room: 'Room A' }; setEvents(list => [...list, event]); return { ok: true, value: event }; }}
+      onRename={async (e, title) => { await schWait(200); setEvents(list => list.map(x => x.id === e.id ? { ...x, title } : x)); return { ok: true }; }}
+      onRemove={e => setEvents(list => list.filter(x => x.id !== e.id))} />
+  </div>;
+}
+```
+<!-- /example -->

@@ -41,3 +41,61 @@ A total over time and the parts that make it up (requests by region, storage by 
 - Do keep to six bands or fewer; fold the rest into one "Other" series.
 - Don't overlay several unstacked areas; compare trends with a `LineChart`.
 - Don't add a gradient, a glow or a shadow to make it look richer.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`AreaChart` as first used in its preview:
+
+```tsx
+import { AreaChart, ChartLegend, ChartLegendContent } from 'altitude-design';
+
+<AreaChart data={week ? reqB : reqA} x="day" stack curve="monotone">
+  <ChartLegend content={<ChartLegendContent toggle />} />
+</AreaChart>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`ac`, `wide` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { AreaChart, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, ChartContainer, ChartLegend, ChartLegendContent } from 'altitude-design';
+
+const acDays = Array.from({ length: 14 }, (_, i) => `2026-10-${String(i + 1).padStart(2, '0')}`);
+const reqA = acDays.map((day, i) => ({ day, us: 1600 + i * 40 + (i % 3) * 90, eu: 1100 + Math.round(180 * Math.sin(i / 2)), apac: 520 + i * 35 }));
+const reqB = acDays.map((day, i) => ({ day, us: 1500 + i * 55 + (i % 4) * 70, eu: 1250 + Math.round(140 * Math.cos(i / 2)), apac: 700 + i * 20 }));
+const plans = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01', '2026-07-01', '2026-08-01']
+  .map((month, i) => ({ month, free: 620 - i * 30, team: 210 + i * 22, business: 90 + i * 15, enterprise: 20 + i * 6 }));
+const storage = acDays.map((day, i) => ({ day, used: [41, 42, 42.5, 44, 45, 45.2, 47, 49, 50, 50.4, 53, 55, 56, 58][i] }));
+const k = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+function Chart({ id, title, sub, children, className, ...props }) {
+  return (
+    <Card className={className}>
+      <CardHeader><CardTitle id={id}>{title}</CardTitle><CardDescription>{sub}</CardDescription></CardHeader>
+      <CardContent><ChartContainer aria-labelledby={id} {...props}>{children}</ChartContainer></CardContent>
+    </Card>
+  );
+}
+export default function App() {
+  const [week, setWeek] = React.useState(0);
+  return (
+    <div className="ac">
+      <Chart className="wide" id="a1" title="Requests by region" sub={<>Stacked: the total and where it came from · <Button size="sm" variant="ghost" onClick={() => setWeek((w) => 1 - w)}>{week ? 'First week' : 'Second week'}</Button></>}
+        config={{ us: { label: 'US', format: k.format }, eu: { label: 'EU', format: k.format }, apac: { label: 'APAC', format: k.format } }} aspect={3.2} views>
+        <AreaChart data={week ? reqB : reqA} x="day" stack curve="monotone">
+          <ChartLegend content={<ChartLegendContent toggle />} />
+        </AreaChart>
+      </Chart>
+      <Chart id="a2" title="Accounts by plan" sub='stack="expand", focus on Team'
+        config={{ free: { label: 'Free' }, team: { label: 'Team' }, business: { label: 'Business' }, enterprise: { label: 'Enterprise' } }} aspect={1.7}>
+        <AreaChart data={plans} x="month" stack="expand" focus={['team']} />
+      </Chart>
+      <Chart id="a3" title="Storage used" sub="One area: a flat fill under its line" config={{ used: { label: 'Used', format: (v) => `${v} GB` } }} aspect={1.7}
+        summary="Storage use rose from 41 GB to 58 GB over two weeks, fastest in the second.">
+        <AreaChart data={storage} x="day" />
+      </Chart>
+    </div>
+  );
+}
+```
+<!-- /example -->

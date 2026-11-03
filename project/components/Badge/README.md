@@ -20,3 +20,47 @@ Labels status or metadata. A badge is an **indicator plate**: part of the record
 - Do pair status colour with the word: "Outage", never a lamp alone.
 - Don't make badges clickable; if it filters or navigates, it's a ghost Button.
 - Don't use `count` for totals that aren't asking for attention; use a plate or plain text.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Badge` as first used in its preview:
+
+```tsx
+import { Badge } from 'altitude-design';
+
+<Badge lamp>Draft</Badge>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `row`, `anchor`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Badge, Button } from 'altitude-design';
+
+export default function App() {
+  const [deploying, setDeploying] = React.useState(true);
+  const [n, setN] = React.useState(3);
+  React.useEffect(() => { const t = setInterval(() => { setDeploying((d) => !d); setN((x) => (x % 5) + 1); }, 2400); return () => clearInterval(t); }, []);
+  return (
+    <div className="col">
+      <div className="row">
+        <Badge lamp>Draft</Badge>
+        <Badge tone="accent">Beta</Badge>
+        <Badge tone="positive">Operational</Badge>
+        <Badge tone="caution">Degraded</Badge>
+        <Badge tone="critical">Outage</Badge>
+        <Badge tone={deploying ? 'accent' : 'positive'} lamp={deploying ? 'pulse' : true}>{deploying ? 'Deploying' : 'Live'}</Badge>
+      </div>
+      <div className="row">
+        <Badge tone="positive" variant="tinted">Operational</Badge>
+        <Badge tone="critical" variant="tinted">Outage</Badge>
+        <Badge variant="outline">v2.4.0</Badge>
+        <span className="anchor"><Button>Inbox</Button><Badge variant="count" tone="critical">{n}</Badge></span>
+      </div>
+      <p className="cap">Labels are stamped into the record; status wears a lamp that relights when it changes. A count is the one badge that floats, because it wants you.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

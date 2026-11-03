@@ -27,3 +27,64 @@ Connectors between steps are `accent` behind you and `line-control` ahead.
 
 - Do keep it to three to six steps; more than that is a list, not a staircase.
 - Don't use it for places people move between freely; that's Tabs, or Drilldown for a hierarchy.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Stepper` as first used in its preview:
+
+```tsx
+import { Stepper } from 'altitude-design';
+
+<Stepper
+  steps={steps}
+  current={at}
+  onStepChange={setAt}
+  orientation="auto"
+  aria-label="Workspace setup"
+/>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`wrap`, `row`, `cap`, `pair` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Stepper } from 'altitude-design';
+
+const steps = [{ title: "Account" }, { title: "Workspace" }, { title: "Invite team" }, { title: "Billing" }, { title: "Launch" }];
+const setup = [
+  { title: "Connect repository", description: "github.com/acme/northwind" },
+  { title: "Configure build", description: "Framework, output directory, env" },
+  { title: "Deploy", description: "First production deployment" }
+];
+export default function App() {
+  const [at, setAt] = React.useState(2);
+  return <div className="wrap">
+  <Stepper
+    steps={steps}
+    current={at}
+    onStepChange={setAt}
+    orientation="auto"
+    aria-label="Workspace setup"
+  />
+  <div className="row">
+    <Button variant="ghost" disabled={at === 0} onClick={() => setAt(at - 1)}>
+      Back
+    </Button>
+    <Button variant="primary" disabled={at === steps.length} onClick={() => setAt(at + 1)}>
+      {at >= steps.length - 1 ? "Finish" : "Continue"}
+    </Button>
+    <span className="cap">
+      Continue presses the current step into the record and raises the next one; click a completed step to go back.
+    </span>
+  </div>
+  <div className="pair">
+    <Stepper steps={setup} current={1} orientation="vertical" aria-label="Deployment setup" />
+    <p className="cap">
+      Vertical: the same plates, stacked. Completed steps are flush and checked, the current one stands on its wall, and steps to come are imprints.
+    </p>
+  </div>
+</div>;
+}
+```
+<!-- /example -->

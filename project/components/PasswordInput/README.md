@@ -32,3 +32,39 @@ A password field: signing in, signing up, a reset, "change password" in settings
 - Do say your rules before someone breaks them, as requirements.
 - Don't draw strength as a progress bar.
 - Don't show a strength meter when signing in; it's for creating a password.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`PasswordInput` as first used in its preview:
+
+```tsx
+import { PasswordInput } from 'altitude-design';
+
+<PasswordInput defaultValue="correct horse" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`pw` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { Field, PasswordInput } from 'altitude-design';
+
+// A stand-in score: in an app this would be zxcvbn or your own rules.
+const score = (v) => Math.min(4, [v.length >= 8, v.length >= 12, /[A-Z]/.test(v) && /[a-z]/.test(v), /\d/.test(v), /[^\w\s]/.test(v)].filter(Boolean).length - (v.length < 8 ? 1 : 0));
+const common = ['password', 'password1', '12345678', 'qwerty123'];
+export default function App() {
+  return (
+    <div className="pw">
+      <Field label="Password"><PasswordInput defaultValue="correct horse" /></Field>
+      <Field label="New password">
+        <PasswordInput defaultValue="Glacier7" strength={score}
+          requirements={[
+            { label: 'At least 12 characters', test: (v) => v.length >= 12 },
+            { label: 'Not a common password', test: (v) => v.length > 0 && !common.includes(v.toLowerCase()) },
+          ]} />
+      </Field>
+    </div>
+  );
+}
+```
+<!-- /example -->

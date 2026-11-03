@@ -27,3 +27,61 @@ Prompts to start from or follow up with. An empty conversation offers starting p
 - Do keep them short, and few (three is plenty).
 - Do use `fill` when the person will likely want to adjust the prompt.
 - Don't make a suggestion the primary button, or animate follow-ups in with a rise.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Suggestions` as first used in its preview:
+
+```tsx
+import { Suggestion, Suggestions } from 'altitude-design';
+
+<Suggestions aria-label="Start with" onChoose={setDraft}>
+  <Suggestion>Summarise last week's incidents</Suggestion>
+  <Suggestion>Draft a release note</Suggestion>
+  <Suggestion value="Which of my open pull requests are blocked, and by whom?">What's blocked?</Suggestion>
+</Suggestions>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`sg`, `col`, `lbl` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { EmptyState, Message, MessageContent, PromptInput, PromptInputSubmit, PromptInputTextarea, PromptInputToolbar, Suggestion, Suggestions } from 'altitude-design';
+
+export default function App() {
+  const [draft, setDraft] = React.useState('');
+  const [sent, setSent] = React.useState([]);
+  return (
+    <div className="sg">
+      <div className="col">
+        <p className="lbl">Starters in an empty conversation (fill the composer)</p>
+        <EmptyState title="Ask about this workspace" description="Pick a starting point, or write your own." size="sm">
+          <Suggestions aria-label="Start with" onChoose={setDraft}>
+            <Suggestion>Summarise last week's incidents</Suggestion>
+            <Suggestion>Draft a release note</Suggestion>
+            <Suggestion value="Which of my open pull requests are blocked, and by whom?">What's blocked?</Suggestion>
+          </Suggestions>
+        </EmptyState>
+        <PromptInput onSubmit={({ text }) => { setSent((s) => [...s, text]); setDraft(''); }} value={draft} onValueChange={setDraft}>
+          <PromptInputTextarea placeholder="Ask anything" />
+          <PromptInputToolbar><PromptInputSubmit /></PromptInputToolbar>
+        </PromptInput>
+      </div>
+      <div className="col">
+        <p className="lbl">Follow-ups under an answer (send at once)</p>
+        <Message from="assistant">
+          <MessageContent>Revenue grew 12% in Q3, led by the annual plan. Churn held at 2.1%.</MessageContent>
+          <Suggestions aria-label="Suggested follow-ups" mode="send" onChoose={(t) => setSent((s) => [...s, t])}>
+            <Suggestion>Compare with Q2</Suggestion>
+            <Suggestion>Make it shorter</Suggestion>
+            <Suggestion value="List the three biggest risks, with owners">Biggest risks</Suggestion>
+          </Suggestions>
+        </Message>
+        {sent.length > 0 && <p className="lbl">Sent: {sent[sent.length - 1]}</p>}
+      </div>
+    </div>
+  );
+}
+```
+<!-- /example -->

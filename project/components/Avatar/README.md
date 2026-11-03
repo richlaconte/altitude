@@ -32,3 +32,44 @@ In an `AvatarGroup`, every face stands on one ground line, each cut out of the o
 **You provide:** `name` (always: it's the accessible label, with the status appended), optional `src`, `size` in pixels (default 36), `shape`, `status`, `live`, `presence`, `lamp`, `onClick`. On `AvatarGroup`: `max`, `size`.
 
 - Leave about a fifth of the avatar's size free above a live or pressable avatar for it to rise into, and a quarter above a group.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Avatar` as first used in its preview:
+
+```tsx
+import { Avatar } from 'altitude-design';
+
+<Avatar name="Mara Quist" size={44} status="active" live presence={1} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `people`, `who`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import { Avatar, AvatarGroup } from 'altitude-design';
+
+export default function App() {
+  return (
+    <div className="col" style={{ gap: 22 }}>
+      <div className="people">
+        <div className="who"><Avatar name="Mara Quist" size={44} status="active" live presence={1} /><span className="cap">live</span></div>
+        <div className="who"><Avatar name="Jon Reyes" size={44} status="active" /><span className="cap">active</span></div>
+        <div className="who"><Avatar name="Lena Park" size={44} status="idle" /><span className="cap">idle</span></div>
+        <div className="who"><Avatar name="Sam Okafor" size={44} status="offline" /><span className="cap">offline</span></div>
+        <div className="who"><Avatar name="Noa Levi" size={44} status="active" onClick={() => {}} /><span className="cap">pressable</span></div>
+        <div className="who"><Avatar name="Northwind Studio" size={44} shape="square" /><span className="cap">team</span></div>
+        <div className="who"><Avatar name="Deploy bot" size={44} shape="square" status="active" /><span className="cap">bot</span></div>
+      </div>
+      <div className="people" style={{ alignItems: 'center' }}>
+        <AvatarGroup max={5} size={32}>
+          {[['Ada Obi', 'active', true], ['Ivy Chen', 'idle'], ['Theo Marsh', 'active'], ['Rui Costa', 'idle'], ['Noa Levi', 'offline'], ['Eli Ward', 'offline'], ['Kai Ito', 'offline']].map(([n, st, live]) => <Avatar key={n} name={n} status={st} live={live} />)}
+        </AvatarGroup>
+        {[24, 36, 64].map((s) => <Avatar key={s} name="Ines Park" size={s} status="active" />)}
+      </div>
+      <p className="cap">People who are here rest on the page: a filled lamp when they're active, an empty one when they're away. Offline people lie flush and grey. Mara is speaking, so she lifts off her shadow, ringed in her presence colour. Teams and bots are square. Hover Noa: an avatar you can press rises like everything else that acts.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

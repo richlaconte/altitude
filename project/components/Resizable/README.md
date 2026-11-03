@@ -34,3 +34,32 @@ Collapsing a pane changes its size on `ease-glide`, not its level.
 - Do set a `minSize` that keeps a pane usable.
 - Don't use it for a task that sits on top of the page; that's a `Sheet`.
 - Don't raise a pane into a card.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+The full preview, as rendered in Storybook and checked in CI (`rz`, `detail`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from 'altitude-design';
+
+const threads = ['Invoice INV-0042 failed', 'Welcome to the beta', 'Your export is ready', 'Q4 planning notes', 'Security alert: new sign-in'];
+export default function App() {
+  const [open, setOpen] = React.useState(0);
+  return (
+    <div className="rz">
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel defaultSize={35} minSize={20} maxSize={60} collapsible aria-label="Conversations">
+          <ul>{threads.map((t, i) => <li key={t}><button aria-current={i === open || undefined} onClick={() => setOpen(i)}>{t}</button></li>)}</ul>
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel aria-label="Conversation">
+          <div className="detail"><h2>{threads[open]}</h2><p className="cap">Drag the grip, or focus it and use the arrow keys; Enter collapses the list. The panes stay on the ground; only the grip lifts, and floats while held.</p></div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
+  );
+}
+```
+<!-- /example -->

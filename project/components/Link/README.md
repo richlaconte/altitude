@@ -26,3 +26,44 @@ Navigation: a link in prose, "Learn more" after a hint, "View all invoices →" 
 - Do use `external` for anything that leaves your app.
 - Don't use a link for an action (Save, Delete); that's a `Button`.
 - Don't colour a link yourself, or take its underline away inside prose.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Link` as first used in its preview:
+
+```tsx
+import { Link } from 'altitude-design';
+
+<Link href="#webhooks">Read about webhooks</Link>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`lk`, `col`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Link } from 'altitude-design';
+
+// A router's link, to show asChild: Link styles it and it keeps its own behaviour.
+const RouterLink = React.forwardRef(({ to, ...rest }, ref) => <a ref={ref} href={'#' + to} {...rest} />);
+export default function App() {
+  return (
+    <div className="lk">
+      <div className="col">
+        <p>Webhooks send a signed POST for each event. <Link href="#webhooks">Read about webhooks</Link> before you add an endpoint, or check the <Link href="https://status.example.com" external>status page</Link> if deliveries stop.</p>
+        <p className="cap">In prose, the underline thickens on hover. Nothing lifts, so the line of text stays put.</p>
+      </div>
+      <Card>
+        <CardHeader><CardTitle>Invoices</CardTitle><CardDescription>Your last three invoices</CardDescription></CardHeader>
+        <CardContent>
+          <div className="col">
+            <span>INV-0042 · €49.00 · Paid</span>
+            <Link asChild><RouterLink to="/billing/invoices">View all invoices →</RouterLink></Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

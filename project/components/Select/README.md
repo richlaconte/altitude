@@ -25,3 +25,73 @@ Chooses one value from a list: an opening you fill by choosing, with the list ri
 - Do use a RadioGroup instead when there are five options or fewer: people can see and compare them without opening anything.
 - Do give a non-string `label` a `textValue`, so typeahead can find it.
 - Don't use it for actions; that's a DropdownMenu.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Select` as first used in its preview:
+
+```tsx
+import { Select } from 'altitude-design';
+
+<Select items={regions} placeholder="Choose a region" name="region" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `grid`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Field, Select, SelectItem } from 'altitude-design';
+
+const regions = [
+  { value: "iad", label: "Virginia", description: "us-east-1" },
+  { value: "fra", label: "Frankfurt", description: "eu-central-2" },
+  { value: "sin", label: "Singapore", description: "ap-southeast-1" },
+  { value: "gru", label: "S\xE3o Paulo", description: "sa-east-1" },
+  { value: "syd", label: "Sydney", description: "Opens in March", disabled: true }
+];
+export default function App() {
+  const [plan, setPlan] = React.useState("team");
+  const [tz, setTz] = React.useState("");
+  return <div className="col">
+  <div className="grid">
+    <Field label="Region" hint="Where your deployments run.">
+      <Select items={regions} placeholder="Choose a region" name="region" />
+    </Field>
+    <Field label="Plan">
+      <Select value={plan} onValueChange={setPlan}>
+        <SelectItem value="solo">Solo</SelectItem>
+        <SelectItem value="team">Team</SelectItem>
+        <SelectItem value="org">Organization</SelectItem>
+      </Select>
+    </Field>
+    <Field label="Timezone" required={true} error={tz ? null : "Choose a timezone."}>
+      <Select
+        value={tz}
+        onValueChange={setTz}
+        placeholder="Choose a timezone"
+        items={[{ value: "utc", label: "UTC" }, { value: "lis", label: "Europe/Lisbon" }, { value: "nyc", label: "America/New_York" }]}
+      />
+    </Field>
+    <Field label="Runtime">
+      <Select
+        defaultValue="node"
+        defaultOpen={true}
+        items={[{ value: "node", label: "Node.js 22" }, { value: "bun", label: "Bun 1.2" }, { value: "deno", label: "Deno 2" }, { value: "edge", label: "Edge (V8 isolates)" }]}
+      />
+    </Field>
+    <Field label="Owner">
+      <Select
+        disabled={true}
+        defaultValue="mara"
+        items={[{ value: "mara", label: "Mara Quist" }]}
+      />
+    </Field>
+  </div>
+  <p className="cap" style={{ marginTop: 150 }}>
+    Empty fields are holes with their back wall showing; choosing raises the floor flush. Type a letter on a focused field to jump to it.
+  </p>
+</div>;
+}
+```
+<!-- /example -->

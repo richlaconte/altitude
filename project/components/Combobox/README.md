@@ -14,3 +14,38 @@ An editable Select: type to narrow a long list, then choose. What you type is a 
 
 - Do use it when the list is long enough that scrolling is slower than typing (people, countries, repositories).
 - Don't use it for free text that may not be in the list; it only accepts listed values.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Combobox` as first used in its preview:
+
+```tsx
+import { Combobox } from 'altitude-design';
+
+<Combobox items={people} value={who} onValueChange={setWho} placeholder="Search people" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `grid` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Combobox, Field } from 'altitude-design';
+
+const people = ["Ada Obi", "Eli Ward", "Ivy Chen", "Jon Reyes", "Kai Ito", "Lena Park", "Mara Quist", "Noa Levi", "Rui Costa", "Sam Okafor", "Theo Marsh"].map((n) => ({ value: n.toLowerCase().replace(" ", "-"), label: n }));
+const countries = ["Brazil", "Canada", "Germany", "Japan", "Peru", "Portugal", "Singapore", "Spain"].map((c) => ({ value: c.toLowerCase(), label: c }));
+export default function App() {
+  const [who, setWho] = React.useState("");
+  return <div className="col">
+  <div className="grid">
+    <Field label="Assignee" hint={who ? "Assigned." : "Start typing a name."}>
+      <Combobox items={people} value={who} onValueChange={setWho} placeholder="Search people" />
+    </Field>
+    <Field label="Country">
+      <Combobox items={countries} defaultValue="portugal" defaultOpen={true} />
+    </Field>
+  </div>
+</div>;
+}
+```
+<!-- /example -->
