@@ -16,7 +16,8 @@ const open = async ({ scheme = 'daylight', width = 960 } = {}) => {
   return page;
 };
 const cards = (page, col) => page.locator(`[data-board-col="${col}"] .alt-board-list > [data-board-card]`).evaluateAll(els => els.map(e => e.dataset.label));
-const focused = async page => { await page.waitForTimeout(50); return page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.dataset.boardCard); };
+// A card's focus is on its face (#457): report the card it belongs to.
+const focused = async page => { await page.waitForTimeout(50); return page.evaluate(() => { const a = document.activeElement; return a?.matches('.alt-board-card-face') ? a.closest('[data-board-card]').dataset.boardCard : a?.getAttribute('aria-label') ?? a?.dataset.boardCard; }); };
 const said = (page, t) => page.waitForFunction(t => [...document.querySelectorAll('.alt-board .alt-sr')].some(e => e.textContent.includes(t)), t);
 
 try {
@@ -40,7 +41,7 @@ try {
     const rename = page.getByRole('textbox', { name: 'Rename Write release notes' });
     check(await rename.evaluate(el => el === document.activeElement && el.selectionStart === 0 && el.selectionEnd === el.value.length), 'BE-07 F2 turns the title into a field, selected');
     await page.keyboard.press('End'); await page.keyboard.type(' now');
-    check(await page.locator('[data-board-card="c1"]').getAttribute('aria-pressed') === null && (await rename.inputValue()).endsWith(' now'), 'BE-08 Space in the field types a space and doesn’t pick the card up');
+    check(await page.evaluate(() => document.querySelector('[data-board-card="c1"] > .alt-board-card-face')?.getAttribute('aria-pressed') ?? null) === null && (await rename.inputValue()).endsWith(' now'), 'BE-08 Space in the field types a space and doesn’t pick the card up');
     await page.keyboard.type(' TBD'); await page.keyboard.press('Enter');
     await page.locator('.alt-board-rename[data-status="failed"]').waitFor();
     check((await rename.inputValue()).endsWith('TBD') && await page.getByRole('alert').filter({ hasText: 'Write the task' }).isVisible(), 'BE-09 a refused rename keeps the draft with the error');
@@ -51,7 +52,7 @@ try {
     check(await focused(page) === 'c1' && (await cards(page, 'todo'))[0] === 'Write the release notes', 'BE-11 Escape cancels a rename');
     // Carrying is unchanged.
     await page.keyboard.press('Space');
-    check(await page.locator('[data-board-card="c1"]').getAttribute('aria-pressed') === 'true', 'BE-12 Space on a card still picks it up');
+    check(await page.locator('[data-board-card="c1"] > .alt-board-card-face').getAttribute('aria-pressed') === 'true', 'BE-12 Space on a card still picks it up');
     await page.keyboard.press('Escape');
     // A fuller editor in the card's place.
     await page.getByRole('button', { name: 'Edit Brand voice', exact: true }).click();

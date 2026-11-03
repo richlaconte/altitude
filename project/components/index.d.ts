@@ -1482,7 +1482,7 @@ export interface ScheduleProps<T> {
 export declare function Schedule<T>(props: ScheduleProps<T>): React.ReactElement;
 export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   id: string;
-  /** How announcements name the card. Default: its first line of text. */
+  /** The card's name: its group and its draggable face are named by it, and so are announcements. Default: its first line of text. */
   label?: string;
   /** A collaborator is holding it: lifted, in their presence colour, wearing their name. It can't be picked up meanwhile. */
   heldBy?: { name: string; presence?: 1 | 2 | 3 };

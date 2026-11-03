@@ -10,6 +10,7 @@
 //   the epics drill down to a card. Reset starts over, and on a phone the page never scrolls sideways.
 import { chromium } from 'playwright-core';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { buildExamples } from '../../scripts/build-examples.mjs';
 
 let pass = 0, fail = 0;
@@ -49,6 +50,10 @@ for (const scheme of ['daylight', 'nightfall']) {
   }
   expect((await column(page, 'done')).length === 0 && /6/.test(await page.locator('[data-board-col="done"]').textContent()), `${scheme}: Done starts as a pile with its count`);
   expect(!errors.length, `${scheme}: no page or console errors (${errors.slice(0, 2).join('; ')})`);
+  // Nothing interactive inside a card's draggable button (#457): Details sits beside the card's face, not in it.
+  await page.addScriptTag({ path: createRequire(import.meta.url).resolve('axe-core/axe.min.js') });
+  const nested = await page.evaluate(() => window.axe.run(document.querySelector('.ex-app'), { runOnly: { type: 'rule', values: ['nested-interactive'] } }).then((r) => r.violations.flatMap((v) => v.nodes.map((n) => String(n.target)))));
+  expect(nested.length === 0, `${scheme}: no button on a card is nested in its draggable face (${nested.slice(0, 3).join(', ')})`);
   if (scheme === 'nightfall') { await page.close(); continue; }
 
   // ---- Keyboard: one request per carry, none for a cancelled one ------------------------------------------------
@@ -92,12 +97,12 @@ for (const scheme of ['daylight', 'nightfall']) {
   // ---- Teammates -----------------------------------------------------------------------------------------------
   await event(page, 'Mara picks up a card');
   await page.locator('[data-board-card="c4"]').focus(); await page.keyboard.press('Space'); await wait(page, 150);
-  expect(await page.locator('[data-board-card="c4"]').getAttribute('aria-pressed') !== 'true' && /Mara/.test(await page.locator('[data-board-card="c4"]').textContent()), 'a card a teammate holds wears their name and can’t be picked up');
+  expect(await page.locator('[data-board-card="c4"] > .alt-board-card-face').getAttribute('aria-pressed') !== 'true' && /Mara/.test(await page.locator('[data-board-card="c4"]').textContent()), 'a card a teammate holds wears their name and can’t be picked up');
   await event(page, 'Mara puts it down');
   await page.locator('[data-board-card="c3"]').focus();
   await event(page, 'Theo adds a card to the sprint');
   await page.locator('[data-board-card="c3"]').focus();
-  const arrival = await page.evaluate(() => ({ text: document.querySelector('[data-board-col="sprint"]')?.textContent, focus: document.activeElement?.getAttribute('data-board-card') }));
+  const arrival = await page.evaluate(() => ({ text: document.querySelector('[data-board-col="sprint"]')?.textContent, focus: document.activeElement?.closest('[data-board-card]')?.getAttribute('data-board-card') }));
   expect(/Fix the plan picker on Safari/.test(arrival.text ?? '') && arrival.focus === 'c3', `a teammate’s card arrives in the sprint and focus stays put (${arrival.focus})`);
 
   // ---- The card's sheet ----------------------------------------------------------------------------------------
