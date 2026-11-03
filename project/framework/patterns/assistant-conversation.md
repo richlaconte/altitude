@@ -33,7 +33,7 @@ Supply a stream that yields text as it arrives and resolves only when the provid
 
 Say them in an `Alert` resting on the page above the composer, with the action that helps (Retry, Start a new conversation), not as one generic "Something went wrong".
 
-**The context window.** When you know how much is used, show a `Meter` in the composer toolbar with notches at 80% (caution) and 95% (critical), and say it ("80% of context used"). When the app compacts, mark the place with a checkpoint ("Summarised earlier messages").
+**The context window.** When you know how much is used, show a `Meter` in the composer toolbar with notches at 80% (caution) and 95% (critical), label it "Context" and format the reading as a percentage, so it reads "80% of 100%" (`format` formats each number, not the sentence: the meter adds "of" itself). When the app compacts, mark the place with a checkpoint ("Summarised earlier messages").
 
 ## Content, keyboard, focus and announcements
 

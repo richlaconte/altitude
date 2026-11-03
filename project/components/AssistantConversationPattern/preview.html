@@ -82,7 +82,7 @@ function Thread({ restored }) {
       }
     },
     /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask about the release" }),
-    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.Meter, { className: "ac-context", label: "Context", value: used, max: 100, high: 80, critical: 95, format: (v) => `${v}% of context used` }), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
+    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.Meter, { className: "ac-context", label: "Context", value: used, max: 100, high: 80, critical: 95, format: (v) => `${v}%` }), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
   ), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "single", size: "sm", "aria-label": "Make the next send fail", value: failure, onValueChange: (v) => setFailure(
     /** @type {any} */
     v || "none"
