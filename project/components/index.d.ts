@@ -1508,6 +1508,38 @@ export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   onSave?: (draft: Record<string, unknown>, context: { previousValue: Record<string, unknown>; changed: string[] }) => EditRegionSaveResult<Record<string, unknown>> | Promise<EditRegionSaveResult<Record<string, unknown>>>;
   /** Publishes the saved record (a synchronous setter). */
   onValueChange?: (canonical: Record<string, unknown>) => void;
+  /**
+   * Changes someone proposed and nobody has accepted yet. Each is a raised slip on the card, beside its draggable face,
+   * with Accept and Reject; the card itself doesn't rise or move (a proposed move leaves it in its column). Nothing is
+   * applied until you apply it in onAccept. Applying makes the card pending, and failed puts it in its trench, unless
+   * you pass `status` yourself.
+   */
+  proposals?: BoardCardProposal[];
+  /** Who proposed them. Default "Assistant", as PropertyList's. */
+  proposedBy?: string;
+}
+export interface BoardCardProposal {
+  id: string;
+  /** What changes, as a noun: "Column", "Estimate", "Assignee". */
+  label: string;
+  /** The current value, struck through. Omit for something new (an assignee on an unassigned card). */
+  from?: React.ReactNode;
+  /** The proposed value. */
+  to: React.ReactNode;
+  /** The change in words, for button names and announcements: "move to Backlog". Default: "<label> <to>" when `to` is text. */
+  summary?: string;
+  /**
+   * Controlled, because an accepted move remounts the card in its new column. proposed (default): raised, with Accept and
+   * Reject. applying: flush, and the card is pending. failed: flush on the card's trench, with Retry and Reject. stale:
+   * flush and muted, with Dismiss only. Remove the proposal once it's applied, rejected or dismissed.
+   */
+  status?: 'proposed' | 'applying' | 'failed' | 'stale';
+  /** Why it failed or went stale, in words, after "Not applied:" or "Out of date:". */
+  note?: React.ReactNode;
+  /** Accept, or Retry once failed. */
+  onAccept?: () => void;
+  /** Reject, or Dismiss once stale. */
+  onReject?: () => void;
 }
 export declare const BoardCard: React.ForwardRefExoticComponent<BoardCardProps & React.RefAttributes<HTMLDivElement>>;
 
