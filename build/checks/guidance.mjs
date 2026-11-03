@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { resolve, relative } from 'node:path';
-import { buildGuidance, inputs, listFiles, root } from '../../scripts/build-guidance.mjs';
+import { dirname, resolve, relative } from 'node:path';
+import { buildGuidance, inputs, listFiles, relativeLinks, root } from '../../scripts/build-guidance.mjs';
 const {base,patterns,refs,version}=inputs();
 const read=p=>JSON.parse(readFileSync(p,'utf8'));
 const schema=read(resolve(base,'pattern.schema.json'));
@@ -61,6 +61,12 @@ try {
   const expected=listFiles(temp).map(p=>relative(temp,p)).sort(),actual=listFiles(dist).map(p=>relative(dist,p)).sort();
   assert.deepEqual(actual,expected,'distributed file inventory is fresh');
   for(const p of expected)assert.deepEqual(readFileSync(resolve(dist,p)),readFileSync(resolve(temp,p)),`stale generated guidance: ${p}`);
+  // An agent reads these from node_modules: every relative link has to land on a file the package ships.
+  let links=0;
+  for(const p of expected.filter(p=>p.endsWith('.md')))for(const {target} of relativeLinks(readFileSync(resolve(temp,p),'utf8'))){
+    links++;assert.ok(existsSync(resolve(temp,dirname(p),target.split('#')[0])),`${p}: link to ${target} doesn't resolve in the package`);
+  }
+  assert.ok(links>0,'the link check found links to check');
   assert.equal(read(resolve(dist,'index.json')).version,version);
   const pkg=read(resolve(root,'package.json'));
   assert.ok(existsSync(resolve(root,pkg.bin.altitude)),'shipped binary exists');

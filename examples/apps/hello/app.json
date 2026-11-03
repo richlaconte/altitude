@@ -1,0 +1,4 @@
+{
+  "title": "Team notes · Altitude example",
+  "description": "The smallest Altitude example app: add a note on a simulated service that can be slow, fail, lose its response or go offline."
+}

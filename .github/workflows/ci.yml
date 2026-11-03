@@ -5,6 +5,7 @@
 #   checks:     every preview rendered in every scheme and every interaction check (React 18, React 19, StrictMode),
 #               split into shards of about equal time by scripts/ci-checks.mjs from build/checks/ci.json. Each shard
 #               runs its share one after another, exactly as the single job used to, on a runner of its own.
+#   version:    on a pull request, a change to what the package ships comes with a higher version in package.json.
 #   Pushes to main then also: deploy the landing page and Storybook (under /storybook/) to GitHub Pages, and publish to npm if package.json has a new version.
 name: CI
 
@@ -152,6 +153,22 @@ jobs:
             build/test/framework-sizes.json
           if-no-files-found: warn
 
+  version:
+    name: Version goes up with the package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # On main the publish job runs the same check against the commit before the push.
+      - name: A change to what the package ships bumps package.json's version
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-version-bump.mjs "origin/${{ github.base_ref }}"
+
   checks:
     name: Checks ${{ matrix.shard }}/${{ strategy.job-total }}
     runs-on: ubuntu-latest
@@ -218,7 +235,7 @@ jobs:
   # The one status to wait for. It also puts the jobs' evidence back together as the single artifact it always was.
   ci:
     if: ${{ !cancelled() }}
-    needs: [build, framework, checks]
+    needs: [build, framework, checks, version]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -308,6 +325,8 @@ jobs:
       id-token: write   # npm trusted publishing: no npm token is stored in this repository
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -327,6 +346,19 @@ jobs:
           else
             echo "new=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # Two pull requests can each bump to the same version and both pass; the second then reaches main with
+      # package changes and nothing to publish. Fail here so main goes red instead of silently falling behind npm.
+      - name: Nothing unpublished reached main
+        if: steps.version.outputs.new == 'false'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "The commit before this push ($BEFORE) isn't in the history; skipping."
+            exit 0
+          fi
+          node scripts/check-version-bump.mjs "$BEFORE"
 
       - name: Build
         if: steps.version.outputs.new == 'true'

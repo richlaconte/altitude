@@ -21,6 +21,13 @@ try {
     writeFileSync(p,original);
     const preview=run(['init','--client',client]);assert.equal(preview.mode,'preview');assert.equal(readFileSync(p,'utf8'),original);
     assert.ok(preview.changes[0].after.includes(`Altitude framework (${version})`));
+    // The block is read on every turn: a compact index plus the rules, under 8 KB, naming only paths that exist.
+    {const body=preview.changes[0].after.match(/<!-- altitude:start[^>]*-->\n([\s\S]*?)<!-- altitude:end -->/)[1];
+     assert.ok(Buffer.byteLength(body)<=8192,`instruction block is ${Buffer.byteLength(body)} bytes, over the 8 KB budget`);
+     const index=JSON.parse(readFileSync(resolve(dir,'node_modules/altitude-design/dist/guidance/index.json'),'utf8'));
+     for(const c of index.components)assert.ok(new RegExp(`[|,]${c.name}(,|\\n)`).test(body),`block indexes ${c.name}`);
+     for(const p of body.match(/node_modules\/altitude-design\/[^\s,;]+[^\s,;.]/g))if(!p.includes('<Name>'))assert.ok(existsSync(resolve(dir,p)),`block names ${p}, which isn't installed`);
+     assert.ok(existsSync(resolve(dir,'node_modules/altitude-design/dist/guidance/components',index.components[0].name,'README.md')),'component guide path pattern resolves');}
     run(['init','--client',client,'--apply']);const installed=readFileSync(p,'utf8');assert.ok(installed.startsWith(original));
     const again=run(['init','--client',client,'--apply']);assert.equal(again.changes[0].action,'unchanged');assert.equal(readFileSync(p,'utf8'),installed);
     assert.ok(run(['doctor','--json']).ok);
