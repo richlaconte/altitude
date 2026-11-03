@@ -1487,6 +1487,11 @@ export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   heldBy?: { name: string; presence?: 1 | 2 | 3 };
   /** Afterglow: when this value changes the card arrives tinted and lifted, then settles. */
   settle?: unknown;
+  /**
+   * The commitment of a write about this card, usually a move: pending hovers above the ground (after dur-grace, so a fast
+   * write never flickers), committed lands, failed drops into a trench. As Card's `status`: the words saying why are yours.
+   */
+  status?: 'pending' | 'committed' | 'failed';
   /** Rename in place (F2, or the visible Rename button), with InlineEdit's contract. Pair with `label`. */
   onRename?: (draft: string) => BoardRenameResult | Promise<BoardRenameResult>;
   /** The card's record, for a fuller editor (EditRegion) in its place, opened by its Edit button. */

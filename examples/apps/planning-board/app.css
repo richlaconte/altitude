@@ -16,9 +16,6 @@
 .pb-props dt { color: var(--ink-muted); }
 .pb-props dd { margin: 0; }
 .alt-tabs-content > .alt-schedule, .alt-tabs-content > .alt-savedviews, .alt-tabs-content > .alt-drill { margin-top: var(--space-4); }
-/* A refused move drops into a trench. BoardCard has no status yet, and its own surface overrides the shared
-   [data-status="failed"] rule, so this repeats that rule's tokens for board cards. Remove when #438 lands. */
-.pb-board .alt-board-card[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench); outline: 1px solid var(--critical); outline-offset: -1px; }
 /* The assistant (#408). Beside the board when there's room (the board keeps the lead and scrolls by column); a sheet on
    narrower screens. The panel lies on the ground with a hairline: it's a place to read and decide, not an action. */
 .pb-layout { display: grid; gap: var(--space-5); min-width: 0; }

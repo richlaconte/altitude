@@ -7,6 +7,7 @@ Columns of cards you move between, a kanban: columns are receptacles that open w
 - **A collapsed column is a Pile.** Its thickness (one, two or three sheets) and its count badge say how many cards it holds. It still takes drops: carried over it, it deepens and fans its sheets toward the card, and the card is added to the end.
 - **Someone else's hand.** A card a collaborator is holding (`heldBy`) is lifted to level 3, outlined in their presence colour and wears their name; you can't pick it up meanwhile.
 - **Afterglow.** `settle` makes a card arrive tinted and lifted, then settle: for cards moved by someone else.
+- **A move the server can refuse.** `status` on a `BoardCard` gives it Card's commitment readings. While a move is `pending` the card hovers (level 2 to 3) and is `aria-busy`. When it's `committed` it lands. When it's `failed` it drops into a trench (`critical-soft`, `trench`, a 1px `critical` outline), and stays there until you clear it, usually on its next move. The hover starts after `dur-grace`, so a card dropped as pending first settles from the carry and rises only if the write is still in flight; a fast write never flickers. That's intended, so don't work around it. Where a refused card goes is yours to decide (back where it came from is usual), and so are the words saying why: put them on the card and announce them. A pending card can still be picked up, so a second move while the first is waiting is yours to merge, queue or cancel. Forced colours: dotted while pending, dashed when failed.
 
 **Editing in place.** On a board the column you add to is the context, so cards are added and edited where they are, not in a Dialog.
 
@@ -20,7 +21,7 @@ Columns of cards you move between, a kanban: columns are receptacles that open w
 |---|---|
 | `Board` | `onMove({ cardId, from, to })`, where `from` and `to` are `{ column, index }`; you update your data and the board carries the cards |
 | `BoardColumn` | `id`, `title`, `collapsible`, `collapsed`/`defaultCollapsed`/`onCollapsedChange`, `onCreate`, `addLabel` |
-| `BoardCard` | `id`, `label` (for announcements), `heldBy`, `settle`, `onRename`, `value`/`renderEditor`/`onSave`/`onValueChange`; anything inside it |
+| `BoardCard` | `id`, `label` (for announcements), `heldBy`, `settle`, `status` (`pending`, `committed`, `failed`), `onRename`, `value`/`renderEditor`/`onSave`/`onValueChange`; anything inside it |
 
 **On touch.** A swipe scrolls the board; a press-and-hold picks a card up, then a drag moves it. The card tools are always shown where there's no hover.
 
@@ -40,11 +41,11 @@ import { Board, BoardCard, BoardColumn, Field, Input } from 'altitude-design';
 
 <Board onMove={move} aria-label="Launch board">
   {Object.keys(titles).map(k => <BoardColumn key={k} id={k} title={titles[k]} collapsible={k === "done"} defaultCollapsed={k === "done"} onCreate={k === "done" ? undefined : create(k)}>
-    {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} onRename={rename(k, c.id)}
+    {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} status={writes[c.id]?.status} onRename={rename(k, c.id)}
       {...(k === "review" ? { value: { title: c.t, meta: c.m }, onValueChange: update(k, c.id),
         renderEditor: field => <><Field label="Title"><Input {...field("title")} size="sm" /></Field><Field label="Details"><Input {...field("meta")} size="sm" /></Field></>,
         onSave: async draft => { await wait(200); return refuse(draft.title) || { ok: true, value: draft }; } } : {})}>
-      {c.t}<small>{c.m}</small>
+      {c.t}<small>{writes[c.id]?.note ?? c.m}</small>
     </BoardCard>)}
   </BoardColumn>)}
 </Board>
@@ -54,7 +55,7 @@ The full preview, as rendered in Storybook and checked in CI (`col`, `cap` are t
 
 ```tsx
 import * as React from 'react';
-import { Board, BoardCard, BoardColumn, Field, Input } from 'altitude-design';
+import { Board, BoardCard, BoardColumn, Field, Input, Switch } from 'altitude-design';
 
 const start = {
   todo: [{ id: "c1", t: "Write release notes", m: "Docs \xB7 Jon" }, { id: "c2", t: "Fix cold-start regression", m: "Runtime \xB7 Lena" }, { id: "c3", t: "Plan Q1 roadmap", m: "Planning \xB7 Ada" }],
@@ -67,14 +68,34 @@ export default function App() {
   const [cols, setCols] = React.useState(start);
   const [last, setLast] = React.useState(null);
   const seq = React.useRef(0);
-  const move = ({ cardId, from, to }) => setCols((c) => {
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  // Each move is a write the demo server can refuse: the card hovers while it's pending, lands when it's committed,
+  // and goes back where it came from, in a trench with the reason, when it's refused.
+  const [writes, setWrites] = React.useState({});
+  const [failNext, setFailNext] = React.useState(false);
+  const fail = React.useRef(false); fail.current = failNext;
+  const place = (c, from, to) => {
     const next = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v.slice()]));
     const [card] = next[from.column].splice(from.index, 1);
     next[to.column].splice(to.index, 0, card);
-    setLast(`${card.t} \u2192 ${titles[to.column]}`);
     return next;
-  });
-  const wait = ms => new Promise(r => setTimeout(r, ms));
+  };
+  const move = async ({ cardId, from, to }) => {
+    const card = Object.values(cols).flat().find(x => x.id === cardId);
+    setCols(c => place(c, from, to));
+    setWrites(w => ({ ...w, [cardId]: { status: "pending" } }));
+    await wait(700);
+    if (fail.current) {
+      setFailNext(false);
+      setCols(c => place(c, to, from));
+      const note = `Couldn’t move it: the server refused. It’s back in ${titles[from.column]}.`;
+      setWrites(w => ({ ...w, [cardId]: { status: "failed", note } }));
+      setLast(`${card.t}: ${note}`);
+      return;
+    }
+    setWrites(w => ({ ...w, [cardId]: { status: "committed" } }));
+    setLast(`Moved: ${card.t} → ${titles[to.column]}.`);
+  };
   // The demo service refuses titles with “TBD” in them.
   const refuse = t => /tbd/i.test(t) ? { ok: false, error: "Write the task, not \u201cTBD\u201d." } : null;
   const create = k => async t => { await wait(250); const no = refuse(t); if (no) return no; const card = { id: "n" + ++seq.current, t, m: "New" }; setCols(c => ({ ...c, [k]: [...c[k], card] })); return { ok: true, value: { id: card.id } }; };
@@ -83,15 +104,18 @@ export default function App() {
   return <div className="col" style={{ gap: 4 }}>
     <Board onMove={move} aria-label="Launch board">
       {Object.keys(titles).map(k => <BoardColumn key={k} id={k} title={titles[k]} collapsible={k === "done"} defaultCollapsed={k === "done"} onCreate={k === "done" ? undefined : create(k)}>
-        {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} onRename={rename(k, c.id)}
+        {cols[k].map(c => <BoardCard key={c.id} id={c.id} label={c.t} heldBy={c.held} status={writes[c.id]?.status} onRename={rename(k, c.id)}
           {...(k === "review" ? { value: { title: c.t, meta: c.m }, onValueChange: update(k, c.id),
             renderEditor: field => <><Field label="Title"><Input {...field("title")} size="sm" /></Field><Field label="Details"><Input {...field("meta")} size="sm" /></Field></>,
             onSave: async draft => { await wait(200); return refuse(draft.title) || { ok: true, value: draft }; } } : {})}>
-          {c.t}<small>{c.m}</small>
+          {c.t}<small>{writes[c.id]?.note ?? c.m}</small>
         </BoardCard>)}
       </BoardColumn>)}
     </Board>
-    <p className="cap">{last ? `Moved: ${last}.` : "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."}</p>
+    <p className="cap" role="status">{last ?? "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."}</p>
+    <details className="preview-fixtures"><summary>Example fixtures</summary>
+      <Switch label="Make the next move fail" checked={failNext} onCheckedChange={setFailNext} />
+    </details>
   </div>;
 }
 ```

@@ -2953,13 +2953,20 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   transition: box-shadow var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1), transform var(--dur-travel-2) var(--ease-settle),
     rotate var(--dur-travel-2) var(--ease-settle), scale var(--dur-travel-2) var(--ease-settle);
 }
-@media (hover: hover) { .alt-board-card:hover:not([data-carried]):not([data-held]) { box-shadow: var(--elev-2); } }
+@media (hover: hover) { .alt-board-card:hover:not([data-carried]):not([data-held]):not([data-status="failed"]) { box-shadow: var(--elev-2); } }
 .alt-board-card:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
 .alt-board-card[data-carried] { z-index: 10; cursor: grabbing; background: var(--surface-floating); box-shadow: var(--elev-3); rotate: calc(-1.2deg * var(--alt-travel)); scale: calc(1 + 0.015 * var(--alt-travel)); }
 .alt-board-card[data-carried]:not([data-following]) { transform: translateY(calc(-3px * var(--alt-travel))); }
 .alt-board-card[data-following] { transition: box-shadow var(--dur-travel-1), background-color var(--dur-travel-1), rotate var(--dur-travel-2) var(--ease-settle), scale var(--dur-travel-2) var(--ease-settle); }
 .alt-board-card[data-landing] { transition-duration: var(--dur-travel-2); transition-timing-function: var(--ease-settle); }
 .alt-board-card[data-held] { cursor: not-allowed; box-shadow: var(--elev-3); transform: translateY(calc(-2px * var(--alt-travel))) rotate(calc(-0.5deg * var(--alt-travel))); }
+/* A write about the card (#438): the shared commitment readings, restated here because the card's own surface and shadow
+   share their specificity and come later. Pending's hover is an animation, which wins anyway; failed needs the trench. */
+.alt-board-card[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench); outline: 1px solid var(--critical); outline-offset: -1px; }
+.alt-board-card[data-status="failed"]:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; } /* focus stays visible on a refused card */
+/* Reduced motion: pending is a shadow without the hover's travel, as everywhere, restated over the card's own elev-1. */
+@media (prefers-reduced-motion: reduce) { .alt-board-card[data-status="pending"] { box-shadow: var(--elev-2); transition: box-shadow var(--dur-travel-1) var(--ease-rise) var(--dur-grace); } }
+[data-motion="reduced"] .alt-board-card[data-status="pending"] { box-shadow: var(--elev-2); transition: box-shadow var(--dur-travel-1) var(--ease-rise) var(--dur-grace); }
 .alt-board-card[data-held-by] { outline: 2px solid var(--alt-presence); outline-offset: 2px; }
 .alt-board-card small { display: block; margin-top: 4px; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 .alt-board-slot { position: absolute; left: 0; right: 0; border-radius: var(--radius-md); background: var(--surface-trench); box-shadow: var(--trench); outline: 1.5px dashed var(--line-control); outline-offset: -3px; pointer-events: none; transition: top var(--dur-travel-2) var(--ease-settle); }
@@ -3602,7 +3609,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
   .alt-input[data-filled]:not([data-invalid]) { border-style: solid !important; }
   .alt-select-option[data-active] { outline: 2px solid Highlight; outline-offset: -2px; } .alt-select-tick { color: CanvasText; }
   .alt-tr:is([data-selected], [data-row-relevance="match"], [data-interactive]:hover) > .alt-td { border-block: 1px solid CanvasText; } .alt-tr[data-row-relevance="miss"] > .alt-td { border-bottom: 1px dashed CanvasText; }
-  .alt-board-card { border: 1px solid CanvasText; } .alt-board-card[data-carried] { border-width: 2px; } .alt-board[data-carrying] .alt-board-col { border: 1px dashed CanvasText; } .alt-board[data-carrying] .alt-board-col[data-over] { border: 2px dashed Highlight; } .alt-board-slot { outline-color: CanvasText; }
+  .alt-board-card { border: 1px solid CanvasText; } .alt-board-card[data-status="pending"] { border: 2px dotted CanvasText; } .alt-board-card[data-status="failed"] { border: 2px dashed CanvasText; } .alt-board-card[data-carried] { border-width: 2px; } .alt-board[data-carrying] .alt-board-col { border: 1px dashed CanvasText; } .alt-board[data-carrying] .alt-board-col[data-over] { border: 2px dashed Highlight; } .alt-board-slot { outline-color: CanvasText; }
   .alt-tr[data-row-held] > .alt-td { border-block: 2px solid CanvasText; } .alt-table-slot { outline-color: CanvasText; } .alt-table-wrap[data-top] .alt-th { border-bottom: 1px solid CanvasText; }
   .alt-step[data-state="current"] { border: 1px solid CanvasText; } .alt-step[data-state="upcoming"] { border: 1px dashed CanvasText; } .alt-step-mark { border: 1px solid CanvasText; } .alt-step-line[data-done] { background: Highlight; }
   .alt-avatar:is([data-status="offline"], [data-more]) .alt-avatar-face { border-color: GrayText; } .alt-avatar[data-live] .alt-avatar-face { border-width: 2px; }

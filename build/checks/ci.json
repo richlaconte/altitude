@@ -27,11 +27,11 @@
   },
   "react19": {
     "fixtures": "react19",
-    "checks": ["modal-lifecycle", "inline-edit", "actions-in-place", "item-group", "board-edit", "table-editing", "property-list", "edit-region", "tag-input", "date-picker", "tree", "checklist", "filter-bar", "schedule", "data-grid"]
+    "checks": ["modal-lifecycle", "inline-edit", "actions-in-place", "item-group", "board-edit", "board-status", "table-editing", "property-list", "edit-region", "tag-input", "date-picker", "tree", "checklist", "filter-bar", "schedule", "data-grid"]
   },
   "strict": {
     "fixtures": "react19-strict",
-    "checks": ["modal-lifecycle", "inline-edit", "item-group", "board-edit", "table-editing", "property-list", "edit-region", "tag-input", "date-picker", "tree", "checklist", "filter-bar", "schedule", "data-grid"]
+    "checks": ["modal-lifecycle", "inline-edit", "item-group", "board-edit", "board-status", "table-editing", "property-list", "edit-region", "tag-input", "date-picker", "tree", "checklist", "filter-bar", "schedule", "data-grid"]
   },
   "short": {"modal-lifecycle": "modal", "inline-edit": "inline", "actions-in-place": "actions"},
   "elsewhere": {
