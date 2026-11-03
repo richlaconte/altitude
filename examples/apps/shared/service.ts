@@ -20,7 +20,7 @@ export const DEMO_MODES: { value: DemoMode; label: string; description: string }
   { value: 'rate-limited', label: 'Rate limited', description: 'Requests are refused for a while.' },
 ];
 
-export type DemoErrorKind = 'failed' | 'offline' | 'conflict' | 'rate-limited' | 'lost-response' | 'invalid' | 'not-found';
+export type DemoErrorKind = 'failed' | 'offline' | 'conflict' | 'rate-limited' | 'lost-response' | 'invalid' | 'not-found' | 'unauthorized';
 
 /** Why a request was rejected. `committed` says whether the change was saved anyway (only for lost-response). */
 export class DemoError extends Error {
@@ -46,8 +46,8 @@ export class DemoError extends Error {
 /** Whether a request failed for this reason. */
 export const isDemoError = (e: unknown, kind: DemoErrorKind): e is DemoError => e instanceof DemoError && e.kind === kind;
 
-/** Throw from a handler to reject a request the way a server would (a duplicate, a missing record). */
-export const reject = (kind: 'invalid' | 'not-found' | 'conflict', message: string, extra?: { field?: string; current?: unknown }): never => {
+/** Throw from a handler to reject a request the way a server would (a duplicate, a missing record, a session that ended). */
+export const reject = (kind: 'invalid' | 'not-found' | 'conflict' | 'unauthorized', message: string, extra?: { field?: string; current?: unknown }): never => {
   throw new DemoError(kind, message, extra);
 };
 
@@ -100,6 +100,10 @@ export interface DemoSnapshot<S> {
   mode: DemoMode;
   /** True when the mode applies to the next request only, then returns to `success`. */
   once: boolean;
+  /** The operations the mode applies to; every other request succeeds. Null: all of them. */
+  ops: string[] | null;
+  /** False after endSession(), until signIn(): writes are refused as unauthorized. */
+  signedIn: boolean;
   log: DemoLogEntry[];
   /** Counts external changes, so an app can refetch when it moves. */
   externalRevision: number;
@@ -112,7 +116,21 @@ export interface RequestOptions { signal?: AbortSignal }
 export interface DemoService<S> {
   readonly name: string;
   request<T = unknown>(op: string, input?: unknown, options?: RequestOptions): Promise<T>;
-  setMode(mode: DemoMode, options?: { once?: boolean }): void;
+  /** `ops` limits the mode to those operations (handler names); the rest succeed. `once` then means the next of those. */
+  setMode(mode: DemoMode, options?: { once?: boolean; ops?: string[] | null }): void;
+  /** The handler names, for choosing `ops`. */
+  readonly ops: string[];
+  /** The session ends: writes are refused as unauthorized until signIn(). Reads still answer. */
+  endSession(): void;
+  signIn(): void;
+  /**
+   * Stands in for window's 'online' and 'offline' events: false when every request starts failing as offline, true when
+   * they stop (a once-only offline ends after its request). An offline mode limited to some operations isn't a lost
+   * connection, so it doesn't fire.
+   */
+  onConnectivity(listener: (online: boolean) => void): () => void;
+  /** As navigator.onLine. */
+  isOnline(): boolean;
   /** Change the store as if another person or process did, and log it. */
   external(label: string, change: (state: S) => S): void;
   /** Fresh seed, empty log, mode back to success, storage cleared. */
@@ -166,11 +184,16 @@ export function createDemoService<S>(options: DemoServiceOptions<S>): DemoServic
 
   let random = rng(1);
   let nextId = 1;
-  let snapshot: DemoSnapshot<S> = { state: load(), mode: 'success', once: false, log: [], externalRevision: 0, resetRevision: 0 };
+  let snapshot: DemoSnapshot<S> = { state: load(), mode: 'success', once: false, ops: null, signedIn: true, log: [], externalRevision: 0, resetRevision: 0 };
   const listeners = new Set<() => void>();
+  const connectivity = new Set<(online: boolean) => void>();
+  const online = (s: DemoSnapshot<S>) => !(s.mode === 'offline' && !s.ops);
   const emit = (patch: Partial<DemoSnapshot<S>>) => {
+    const was = online(snapshot);
     snapshot = { ...snapshot, ...patch };
     for (const l of [...listeners]) l();
+    const is = online(snapshot);
+    if (is !== was) for (const l of [...connectivity]) l(is);
   };
   const log = (entry: DemoLogEntry) => emit({ log: [entry, ...snapshot.log].slice(0, LOG_LIMIT) });
   const settle = (id: number, status: DemoLogStatus, outcome: string) =>
@@ -180,8 +203,10 @@ export function createDemoService<S>(options: DemoServiceOptions<S>): DemoServic
 
   const request = <T,>(op: string, input?: unknown, { signal }: RequestOptions = {}): Promise<T> => {
     const handler = handlers[op];
-    const mode = snapshot.mode;
-    if (snapshot.once) emit({ mode: 'success', once: false });
+    // A mode limited to some operations leaves the others alone, and a once-only one waits for one of its own.
+    const applies = !snapshot.ops || snapshot.ops.includes(op);
+    const mode: DemoMode = applies ? snapshot.mode : 'success';
+    if (applies && snapshot.once) emit({ mode: 'success', once: false, ops: null });
     const id = nextId++;
     const resetAt = snapshot.resetRevision;
     log({ id, op, input, mode, status: 'pending', outcome: 'Waiting for the server', startedAt: clock.now() });
@@ -230,6 +255,11 @@ export function createDemoService<S>(options: DemoServiceOptions<S>): DemoServic
         finish('ok', isWrite ? 'Saved' : 'Answered', () => resolve(out.result as T));
       };
 
+      // A session that ended refuses writes until the app signs in again; reads still answer.
+      if (isWrite && !snapshot.signedIn && mode !== 'offline') {
+        at(delay(), () => fail(new DemoError('unauthorized', 'Your session has ended. Sign in again to save; nothing was changed.')));
+        return;
+      }
       switch (mode) {
         case 'offline':
           at(0, () => fail(new DemoError('offline', "We can't reach the server. Check your connection and try again.")));
@@ -267,7 +297,23 @@ export function createDemoService<S>(options: DemoServiceOptions<S>): DemoServic
   return {
     name,
     request,
-    setMode(mode, { once = false } = {}) { emit({ mode, once: once && mode !== 'success' }); },
+    setMode(mode, { once = false, ops = null } = {}) {
+      const only = mode === 'success' || !ops || ops.length === 0 ? null : ops.filter((o) => o in handlers);
+      emit({ mode, once: once && mode !== 'success', ops: only && only.length ? only : null });
+    },
+    ops: Object.keys(handlers),
+    endSession() {
+      if (!snapshot.signedIn) return;
+      emit({ signedIn: false });
+      log({ id: nextId++, op: 'session', input: undefined, mode: snapshot.mode, status: 'external', outcome: 'The session ended', startedAt: clock.now(), settledAt: clock.now() });
+    },
+    signIn() {
+      if (snapshot.signedIn) return;
+      emit({ signedIn: true });
+      log({ id: nextId++, op: 'session', input: undefined, mode: snapshot.mode, status: 'external', outcome: 'Signed in again', startedAt: clock.now(), settledAt: clock.now() });
+    },
+    onConnectivity(listener) { connectivity.add(listener); return () => { connectivity.delete(listener); }; },
+    isOnline: () => online(snapshot),
     external(label, change) {
       const state = change(snapshot.state);
       commit(state);
@@ -278,7 +324,7 @@ export function createDemoService<S>(options: DemoServiceOptions<S>): DemoServic
     reset() {
       if (storage) try { storage.removeItem(key); } catch { /* blocked: nothing to clear */ }
       random = rng(1);
-      emit({ state: seed(), mode: 'success', once: false, log: [], resetRevision: snapshot.resetRevision + 1 });
+      emit({ state: seed(), mode: 'success', once: false, ops: null, signedIn: true, log: [], resetRevision: snapshot.resetRevision + 1 });
     },
     getSnapshot: () => snapshot,
     subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },

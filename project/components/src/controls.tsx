@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, DepthProps, Icons, inert, LoadingStyleContext, riseDelay, Spinner, touchHold, useApproach, useBreath, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
+import { cx, DepthProps, FIELD_GROUP, Icons, inert, LoadingStyleContext, riseDelay, Spinner, touchHold, useApproach, useBreath, useControllable, useDepth, useIsoLayoutEffect, useKeyFocus, usePrimaryRegistration } from './core';
 import { Arrive, Await, hasPromise, hint, isPromise, LoadingScope, Promised, RevealGroup, readChildren, readPromised, SkeletonOption, TextImprint, useArrival, useHasWaited, useReportWaiting, useScopeWaiting } from './suspense';
 
 /* ───────────────────────── Button ───────────────────────── */
@@ -256,15 +256,21 @@ export interface FieldProps {
   className?: string;
   children: React.ReactElement<any>;
 }
+const ids = (...parts: unknown[]) => [...new Set(parts.filter(Boolean).join(' ').split(/\s+/).filter(Boolean))].join(' ') || undefined;
 export function Field({ label, hint, error, required, className, children }: FieldProps) {
   const id = React.useId();
   const controlId = children.props.id || id + '-control';
-  const describedBy = [...new Set([children.props['aria-describedby'], hint && id + '-hint', error && id + '-error']
-    .filter(Boolean).join(' ').split(/\s+/).filter(Boolean))].join(' ') || undefined;
+  const describedBy = ids(children.props['aria-describedby'], hint && id + '-hint', error && id + '-error');
+  // A group (RadioGroup) can't be named by <label for>, so its label is a span the group points at.
+  const group = !!(children.type as any)?.[FIELD_GROUP];
+  const mark = required && <span className="alt-field-req" aria-hidden="true"> *</span>;
   return (
     <div className={cx('alt-field', className)}>
-      <label className="alt-field-label" htmlFor={controlId}>{label}{required && <span className="alt-field-req" aria-hidden="true"> *</span>}</label>
-      {React.cloneElement(children, { id: controlId, 'aria-describedby': describedBy, invalid: !!error || children.props.invalid, required: required ?? children.props.required })}
+      {group
+        ? <span className="alt-field-label" id={id + '-label'}>{label}{mark}</span>
+        : <label className="alt-field-label" htmlFor={controlId}>{label}{mark}</label>}
+      {React.cloneElement(children, { id: controlId, 'aria-describedby': describedBy, invalid: !!error || children.props.invalid, required: required ?? children.props.required,
+        ...(group ? { 'aria-labelledby': ids(children.props['aria-labelledby'], id + '-label') } : {}) })}
       {hint && <p className="alt-field-hint" id={id + '-hint'}>{hint}</p>}
       {error && <p className="alt-field-error" id={id + '-error'} role="alert"><Icons.AlertCircle size={14} />{error}</p>}
     </div>
@@ -314,15 +320,23 @@ const RadioCtx = React.createContext<RadioCtxT | null>(null);
 export interface RadioGroupProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'> {
   value?: string; defaultValue?: string; onValueChange?: (v: string) => void; name?: string; disabled?: boolean;
   orientation?: 'vertical' | 'horizontal';
+  /** Invalid: aria-invalid on the group and a critical rim on its tracks. Field sets it from `error`. */
+  invalid?: boolean;
+  /** Sets aria-required on the group. Never native `required` on the radios, whose browser bubble would compete with Field's error. */
+  required?: boolean;
 }
 /** A switch with several positions: one raised thumb slides to the chosen option and the accent pours in behind it. */
-export function RadioGroup({ value, defaultValue = '', onValueChange, name, disabled, orientation = 'vertical', className, children, ...rest }: RadioGroupProps) {
+export function RadioGroup({ value, defaultValue = '', onValueChange, name, disabled, orientation = 'vertical', invalid, required, className, children, onFocus, onPointerDown, onPointerUp, ...rest }: RadioGroupProps) {
   const auto = React.useId();
   const [v, set] = useControllable(value, defaultValue, onValueChange);
   const root = React.useRef<HTMLDivElement>(null);
   const slots = React.useRef(new Map<string, HTMLElement>());
   const [bead, setBead] = React.useState<{ x: number; y: number; ready: boolean } | null>(null);
   const register = React.useCallback((val: string, el: HTMLElement | null) => { if (el) slots.current.set(val, el); else slots.current.delete(val); }, []);
+  // A press on a label or between options focuses the group (it has tabindex -1) before the label's click chooses. That
+  // focus isn't passed on: the click focuses the radio it chooses, and a hop to the old one could scroll the list under
+  // the pointer between press and release.
+  const pressed = React.useRef(false);
   const measure = React.useCallback(() => {
     const el = slots.current.get(v), r = root.current;
     if (!el || !r) { setBead(null); return; }
@@ -339,7 +353,19 @@ export function RadioGroup({ value, defaultValue = '', onValueChange, name, disa
   }, [measure]);
   return (
     <RadioCtx.Provider value={{ name: name || auto, value: v, set, disabled, register }}>
-      <div ref={root} role="radiogroup" className={cx('alt-radio-group', className)} data-orientation={orientation} data-disabled={disabled ? '' : undefined} {...rest}>
+      <div ref={root} role="radiogroup" className={cx('alt-radio-group', className)} data-orientation={orientation} data-disabled={disabled ? '' : undefined}
+        data-invalid={invalid ? '' : undefined} aria-invalid={invalid || undefined} aria-required={required || undefined} tabIndex={-1} {...rest}
+        onPointerDown={(e) => { onPointerDown?.(e); pressed.current = true; }}
+        onPointerUp={(e) => { onPointerUp?.(e); pressed.current = false; }}
+        onFocus={(e) => {
+          onFocus?.(e);
+          const byPointer = pressed.current; pressed.current = false;
+          // Focus sent to the group itself (an ErrorSummary link, getElementById(id).focus()) goes on to a radio, so the
+          // arrow keys work at once: the checked one, which a server's error is about, or else the first enabled one.
+          if (byPointer || e.defaultPrevented || e.target !== e.currentTarget) return;
+          const radios = [...e.currentTarget.querySelectorAll<HTMLInputElement>('input[type="radio"]:not(:disabled)')];
+          (radios.find((r) => r.checked) ?? radios[0])?.focus();
+        }}>
         {children}
         {bead && (
           <span className="alt-radio-thumb" aria-hidden="true" data-ready={bead.ready ? '' : undefined}
@@ -349,6 +375,7 @@ export function RadioGroup({ value, defaultValue = '', onValueChange, name, disa
     </RadioCtx.Provider>
   );
 }
+(RadioGroup as any)[FIELD_GROUP] = true;
 export interface RadioProps { value: string; label?: React.ReactNode; description?: React.ReactNode; disabled?: boolean; className?: string }
 export function Radio({ value, label, description, disabled, className }: RadioProps) {
   const g = React.useContext(RadioCtx);

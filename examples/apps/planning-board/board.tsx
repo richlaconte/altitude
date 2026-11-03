@@ -62,7 +62,7 @@ export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardDat
   const send = async (cardId: string) => {
     const origin = origins.current[cardId];
     // Still in the hand (picked up by keyboard): wait until it's dropped.
-    if (document.querySelector(`[data-board-card="${CSS.escape(cardId)}"]`)?.getAttribute('aria-pressed') === 'true') {
+    if (document.querySelector(`[data-board-card="${CSS.escape(cardId)}"] > .alt-board-card-face`)?.getAttribute('aria-pressed') === 'true') {
       origin.timer = window.setTimeout(() => void send(cardId), 400);
       return;
     }
