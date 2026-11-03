@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cssMs, cx, Icons, riseDelay, touchHold, useControllable, useDepth, useIsoLayoutEffect } from './core';
+import { cssMs, cx, Icons, inert, riseDelay, touchHold, useControllable, useDepth, useIsoLayoutEffect } from './core';
 import { Badge, Button, Checkbox, Input, SortableList } from './controls';
 import { Popover } from './overlays';
 import { ToggleGroup, ToggleGroupItem } from './toggle';
@@ -669,6 +669,8 @@ type BoardCtxT = {
   carry: Carry | null; kb: { id: string; origin: BoardPlace; at: BoardPlace } | null; landing: string | null; hintId: string;
   onPointerDown: (e: React.PointerEvent, id: string) => void; onPointerMove: (e: React.PointerEvent) => void; onPointerUp: () => void;
   onKeyDown: (e: React.KeyboardEvent, id: string) => void; onBlur: (id: string) => void; swallowClick: () => boolean;
+  /** Polite: a card's resolved proposal (#444), in one region on the board rather than one that has just mounted with a card. */
+  announce: (text: string) => void;
 };
 const BoardCtx = React.createContext<BoardCtxT | null>(null);
 
@@ -726,6 +728,7 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
   const [kb, setKb] = React.useState<BoardCtxT['kb']>(null);
   const [landing, setLanding] = React.useState<string | null>(null);
   const [said, setSaid] = React.useState('');
+  const [politely, setPolitely] = React.useState('');
   const start = React.useRef<{ x: number; y: number; id: string; cols?: SnapCol[]; from?: BoardPlace; card?: SnapCard; armed: boolean; release?: () => void } | null>(null);
   const dragged = React.useRef(false);
   useCarry(root, '[data-board-card]', 'data-board-card');
@@ -844,13 +847,14 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
     setTimeout(() => { if (!(document.activeElement as HTMLElement | null)?.matches?.(`[data-board-card="${CSS.escape(id)}"] > .alt-board-card-face`)) setKb((x) => (x?.id === id ? null : x)); }, 80);
   };
   const swallowClick = () => { const d = dragged.current; dragged.current = false; return d; };
-  const ctx: BoardCtxT = { carry, kb, landing, hintId, onPointerDown, onPointerMove, onPointerUp, onKeyDown, onBlur, swallowClick };
+  const ctx: BoardCtxT = { carry, kb, landing, hintId, onPointerDown, onPointerMove, onPointerUp, onKeyDown, onBlur, swallowClick, announce: setPolitely };
   return (
     <BoardCtx.Provider value={ctx}>
       <div ref={root} role="group" aria-label={rest['aria-label'] ?? 'Board'} className={cx('alt-board', className)} data-carrying={carry || kb ? '' : undefined} {...rest}>
         {children}
         <span id={hintId} className="alt-sr">Press Space to pick up. While holding a card, use the arrow keys to move it, Space to drop it, Escape to cancel.</span>
         <span className="alt-sr" aria-live="assertive">{said}</span>
+        <span className="alt-sr" aria-live="polite">{politely}</span>
       </div>
     </BoardCtx.Provider>
   );
@@ -973,6 +977,37 @@ export interface BoardCardProps extends React.HTMLAttributes<HTMLDivElement> {
   renderEditor?: (field: EditRegionBinder<Record<string, unknown>>) => React.ReactNode;
   onSave?: (draft: Record<string, unknown>, context: { previousValue: Record<string, unknown>; changed: string[] }) => EditRegionSaveResult<Record<string, unknown>> | Promise<EditRegionSaveResult<Record<string, unknown>>>;
   onValueChange?: (canonical: Record<string, unknown>) => void;
+  /**
+   * Changes someone proposed and nobody has accepted yet (#444). Each is a raised slip on the card, beside its face, with
+   * Accept and Reject; the card itself doesn't rise or move. Nothing is applied until you apply it in onAccept.
+   */
+  proposals?: BoardCardProposal[];
+  /** Who proposed them. Default "Assistant", as PropertyList's. */
+  proposedBy?: string;
+}
+
+export interface BoardCardProposal {
+  id: string;
+  /** What changes, as a noun: "Column", "Estimate", "Assignee". */
+  label: string;
+  /** The current value, struck through. Omit for something new (an assignee on an unassigned card). */
+  from?: React.ReactNode;
+  /** The proposed value. */
+  to: React.ReactNode;
+  /** The change in words, for button names and announcements: "move to Backlog". Default: "<label> <to>" when `to` is text. */
+  summary?: string;
+  /**
+   * Controlled, because an accepted move remounts the card in its new column. proposed (default): raised, Accept and
+   * Reject. applying: flush, and the card is pending. failed: flush on the card's trench, Retry and Reject. stale: flush,
+   * Dismiss only. Remove the proposal once it's applied or rejected.
+   */
+  status?: 'proposed' | 'applying' | 'failed' | 'stale';
+  /** Why it failed or went stale, in words ("Someone moved this card first. Nothing was applied."). */
+  note?: React.ReactNode;
+  /** Accept, or Retry once failed. */
+  onAccept?: () => void;
+  /** Reject, or Dismiss once stale. */
+  onReject?: () => void;
 }
 
 /** Renaming a card's title in place, with InlineEdit's session rules (retained input on failure, no save on blur). */
@@ -1009,7 +1044,73 @@ function CardRename({ label, onRename, onDone }: { label: string; onRename: (dra
   </div>;
 }
 
+const proposalSummary = (p: BoardCardProposal) => p.summary ?? `${p.label.toLowerCase()} ${typeof p.to === 'string' || typeof p.to === 'number' ? p.to : ''}`.trim();
+
+// The proposals on one card (#444): each a slip beside the face, never inside it (#457). A proposed one is raised, as
+// PropertyList's proposal is: the proposal is the raised thing, not the record it's about, so the card doesn't rise.
+// Applying, failed and stale lie flush, so that two things never hover at once (the card is the one that's pending).
+type Pressed = Map<string, 'accept' | 'reject' | 'dismiss'>;
+// Rejected and dismissed proposals are said politely once the app removes them, since only the press knows which it was.
+// Applied ones aren't: the app knows whether the write landed (as with the card's own status, the words are yours), and an
+// accepted move remounts the card in another column anyway. It lives on the card, which outlasts its last slip.
+function useProposalOutcomes(name: string, proposals: BoardCardProposal[] | undefined, announce: (t: string) => void) {
+  const pressed = React.useRef<Pressed>(new Map());
+  const seen = React.useRef(new Map<string, BoardCardProposal>());
+  React.useEffect(() => {
+    const now = new Set((proposals ?? []).map((p) => p.id));
+    seen.current.forEach((p, key) => {
+      if (now.has(key)) return;
+      const did = pressed.current.get(key);
+      if (did && did !== 'accept') announce(`${did === 'reject' ? 'Rejected' : 'Dismissed'}: ${proposalSummary(p)} for ${name}.`);
+      seen.current.delete(key); pressed.current.delete(key);
+    });
+    (proposals ?? []).forEach((p) => seen.current.set(p.id, p));
+  });
+  return pressed.current;
+}
+
+function CardProposalSlips({ name, by, proposals, carried, countId, pressed }: { name: string; by: string; proposals: BoardCardProposal[]; carried: boolean; countId: string; pressed: Pressed }) {
+  // Each slip's rise joins the attention budget's stagger (four at once), which matters when a turn proposes for six cards.
+  const delays = React.useRef(new Map<string, number>());
+  const n = proposals.length;
+  const words = `${n} proposed ${n === 1 ? 'change' : 'changes'}`;
+  return <>
+    <span id={countId} className="alt-sr">{words}.</span>
+    <div className="alt-board-proposals" role="group" aria-label={`${words} by ${by}`} {...(carried ? inert : null)}>
+      {proposals.map((p) => {
+        const st = p.status ?? 'proposed', what = proposalSummary(p);
+        const act = (kind: 'accept' | 'reject' | 'dismiss', fn?: () => void) => () => { pressed.set(p.id, kind); fn?.(); };
+        if (!delays.current.has(p.id)) delays.current.set(p.id, riseDelay());
+        const delay = delays.current.get(p.id)!;
+        return <div key={p.id} className="alt-board-proposal" data-status={st} aria-busy={st === 'applying' || undefined}
+          style={delay ? ({ '--alt-rise-delay': `${delay}ms` } as React.CSSProperties) : undefined}>
+          <span className="alt-board-proposal-change">
+            <span className="alt-board-proposal-label">{p.label}</span>
+            {p.from !== undefined && p.from !== null && <del className="alt-diff-old"><span className="alt-sr">Current: </span>{p.from}</del>}
+            <Icons.ChevronDown className="alt-diff-arrow" size={14} aria-hidden="true" />
+            <ins className="alt-diff-new"><span className="alt-sr">Proposed: </span>{p.to}</ins>
+          </span>
+          <span className="alt-board-proposal-by">
+            {st === 'proposed' ? `Proposed by ${by}`
+              : st === 'applying' ? 'Applying…'
+              : <><Icons.AlertCircle size={13} aria-hidden="true" />{st === 'failed' ? 'Not applied' : 'Out of date'}{p.note ? <>: {p.note}</> : null}</>}
+          </span>
+          {st !== 'applying' && <span className="alt-board-proposal-actions">
+            {st === 'stale'
+              ? <Button size="sm" variant="ghost" aria-label={`Dismiss: ${what} for ${name}`} onClick={act('dismiss', p.onReject)}>Dismiss</Button>
+              : <>
+                <Button size="sm" variant="ghost" aria-label={`Reject: ${what} for ${name}`} onClick={act('reject', p.onReject)}>Reject</Button>
+                <Button size="sm" variant="secondary" aria-label={`${st === 'failed' ? 'Retry' : 'Accept'}: ${what} for ${name}`} onClick={act('accept', p.onAccept)}>{st === 'failed' ? 'Retry' : 'Accept'}</Button>
+              </>}
+          </span>}
+        </div>;
+      })}
+    </div>
+  </>;
+}
+
 export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(function BoardCard({ id, label, heldBy, settle, status, onRename, value, renderEditor, onSave, onValueChange,
+  proposals, proposedBy = 'Assistant',
   className, style, onClickCapture, onKeyDown, onFocus, children, ...rest }, ref) {
   const ctx = React.useContext(BoardCtx);
   const [mode, setMode] = React.useState<'rename' | 'edit' | null>(null);
@@ -1018,12 +1119,18 @@ export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(functi
   const [firstLine, setFirstLine] = React.useState<string | undefined>(undefined);
   useIsoLayoutEffect(() => {
     if (label || !self.current) return;
-    const first = Array.from(self.current.children).find((c) => !c.matches('.alt-board-card-face, .alt-board-card-tools'));
+    const first = Array.from(self.current.children).find((c) => !c.matches('.alt-board-card-face, .alt-board-card-tools, .alt-board-proposals, .alt-sr'));
     const t = first?.textContent?.trim() || undefined;
     setFirstLine((p) => (p === t ? p : t));
   });
   const name = label ?? firstLine ?? id;
-  const depth = useDepth({ heldBy, settle, status });
+  const open = proposals?.length ? proposals : undefined;
+  // A proposal's commitment belongs to the card once it's approved: applying is the card pending, not applied is its trench.
+  const derived = status ?? (open?.some((p) => p.status === 'applying') ? 'pending' : open?.some((p) => p.status === 'failed') ? 'failed' : undefined);
+  const depth = useDepth({ heldBy, settle, status: derived });
+  const countId = React.useId();
+  const [localSaid, setLocalSaid] = React.useState('');
+  const pressed = useProposalOutcomes(name, proposals, ctx?.announce ?? setLocalSaid);
   // Back from editing: focus returns to the card.
   const refocus = React.useRef(false);
   const done = () => { refocus.current = true; setMode(null); };
@@ -1065,12 +1172,14 @@ export const BoardCard = React.forwardRef<HTMLDivElement, BoardCardProps>(functi
       }} onBlur={() => ctx?.onBlur(id)}
       onClickCapture={(e) => { if (ctx?.swallowClick()) { e.preventDefault(); e.stopPropagation(); } else onClickCapture?.(e); }} {...rest}>
       {!mode && <div className="alt-board-card-face" role="button" tabIndex={0} aria-roledescription="draggable card" aria-label={name}
-        aria-describedby={ctx?.hintId} aria-pressed={ctx?.kb?.id === id ? true : undefined} />}
+        aria-describedby={[ctx?.hintId, open ? countId : undefined].filter(Boolean).join(' ') || undefined} aria-pressed={ctx?.kb?.id === id ? true : undefined} />}
       {content}
       {editable && !mode && <span className="alt-board-card-tools">
         {onRename && <Button size="sm" variant="ghost" aria-label={`Rename ${name}`} onClick={() => setMode('rename')}>Rename</Button>}
         {value && renderEditor && <Button size="sm" variant="ghost" aria-label={`Edit ${name}`} onClick={() => setMode('edit')}>Edit</Button>}
       </span>}
+      {open && !mode && <CardProposalSlips name={name} by={proposedBy} proposals={open} carried={carried} countId={countId} pressed={pressed} />}
+      {!ctx && <span className="alt-sr" aria-live="polite">{localSaid}</span>}
     </div>
   );
 });

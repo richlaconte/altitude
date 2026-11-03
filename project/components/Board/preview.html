@@ -1,4 +1,4 @@
-<!-- @dsCard group="Layout" height=560 subtitle="Columns open to receive; a carried card floats at level 3; add and rename in place" -->
+<!-- @dsCard group="Layout" height=640 subtitle="Columns open to receive; a carried card floats at level 3; add and rename in place; a proposed change is a raised slip on its card" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -70,6 +70,36 @@ function App() {
     setWrites((w) => ({ ...w, [cardId]: { status: "committed" } }));
     setLast(`Moved: ${card.t} \u2192 ${titles[to.column]}.`);
   };
+  const [proposals, setProposals] = React.useState([
+    { id: "p1", card: "c3", label: "Column", from: "To do", to: "In progress", summary: "move to In progress" },
+    { id: "p2", card: "c5", label: "Assignee", from: "Ivy", to: "Lena", summary: "assign to Lena" },
+    { id: "p3", card: "c6", label: "Estimate", from: "No estimate", to: "3 points", summary: "estimate 3 points", status: "stale", note: "Ada changed this card after it was proposed. Nothing was applied." }
+  ]);
+  const [failProposal, setFailProposal] = React.useState(false);
+  const failP = React.useRef(false);
+  failP.current = failProposal;
+  const patch = (id, v) => setProposals((ps) => ps.map((x) => x.id === id ? { ...x, ...v } : x));
+  const accept = (p) => async () => {
+    patch(p.id, { status: "applying", note: void 0 });
+    await wait(700);
+    if (failP.current) {
+      setFailProposal(false);
+      patch(p.id, { status: "failed", note: "the server refused. Nothing was applied." });
+      return;
+    }
+    if (p.label === "Column") setCols((c) => {
+      const from = Object.keys(c).find((k) => c[k].some((x) => x.id === p.card));
+      return place(c, { column: from, index: c[from].findIndex((x) => x.id === p.card) }, { column: "doing", index: c.doing.length });
+    });
+    else setCols((c) => ({ ...c, doing: c.doing.map((x) => x.id === p.card ? { ...x, m: "Support \xB7 Lena" } : x) }));
+    setProposals((ps) => ps.filter((x) => x.id !== p.id));
+    setLast(`Applied: ${p.summary}.`);
+  };
+  const reject = (p) => () => {
+    setProposals((ps) => ps.filter((x) => x.id !== p.id));
+    setLast(`Rejected: ${p.summary}.`);
+  };
+  const proposalsFor = (id) => proposals.filter((p) => p.card === id).map((p) => ({ ...p, onAccept: accept(p), onReject: reject(p) }));
   const refuse = (t) => /tbd/i.test(t) ? { ok: false, error: "Write the task, not \u201CTBD\u201D." } : null;
   const create = (k) => async (t) => {
     await wait(250);
@@ -96,6 +126,7 @@ function App() {
       heldBy: c.held,
       status: writes[c.id]?.status,
       onRename: rename(k, c.id),
+      proposals: proposalsFor(c.id),
       ...k === "review" ? {
         value: { title: c.t, meta: c.m },
         onValueChange: update(k, c.id),
@@ -108,7 +139,7 @@ function App() {
     },
     c.t,
     /* @__PURE__ */ React.createElement("small", null, writes[c.id]?.note ?? c.m)
-  ))))), /* @__PURE__ */ React.createElement("p", { className: "cap", role: "status" }, last ?? "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next move fail", checked: failNext, onCheckedChange: setFailNext })));
+  ))))), /* @__PURE__ */ React.createElement("p", { className: "cap", role: "status" }, last ?? "Drag a card, or focus one and press Space, then the arrow keys. F2 renames a card; each column adds cards at its foot. Done is collapsed into a pile and still takes cards."), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next move fail", checked: failNext, onCheckedChange: setFailNext }), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next accepted proposal fail", checked: failProposal, onCheckedChange: setFailProposal })));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

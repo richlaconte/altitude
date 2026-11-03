@@ -10,7 +10,7 @@ import { errorMessage, isDemoError } from '../shared/react';
 import { COLUMNS, COLUMN_TITLE, WIP_LIMIT, service } from './data';
 import type { BoardData, Card, ColumnId } from './data';
 import { short } from './assistant-script';
-import type { Proposals } from './assistant';
+import type { Proposal, Proposals } from './assistant';
 
 type Write = { status: 'pending' | 'committed' | 'failed'; note: string };
 
@@ -135,15 +135,13 @@ export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardDat
                 const holder = data.held[id];
                 return (
                   <BoardCard key={id} id={id} label={k.title} heldBy={holder ? { name: holder, presence: 1 } : undefined} settle={arrived[id]}
-                    status={w?.status ?? (assistant?.proposals.some((p) => p.card === id && p.status === 'pending') ? 'pending' : undefined)}>
+                    status={w?.status} proposals={assistant ? cardProposals(k, assistant) : undefined}>
                     <span className="pb-title">{k.title}</span>
                     <small className="pb-meta">{meta(k)}</small>
                     {w?.note && <small className="pb-note" data-tone={w.status}>{w.note}</small>}
-                    {assistant && <CardProposals id={id} title={k.title} assistant={assistant} />}
+                    {assistant && <AppliedLabel id={id} title={k.title} assistant={assistant} />}
                     <span className="pb-open">
-                      <Button size="sm" variant="ghost" aria-label={`Open ${k.title}`}
-                        onPointerDown={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}
-                        onClick={(e) => { e.stopPropagation(); onOpen(id); }}>Details</Button>
+                      <Button size="sm" variant="ghost" aria-label={`Open ${k.title}`} onClick={() => onOpen(id)}>Details</Button>
                     </span>
                   </BoardCard>
                 );
@@ -157,29 +155,29 @@ export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardDat
   );
 }
 
-// The assistant's proposals for one card, in words on the card: proposed (nothing sent), applying, out of date or not
-// applied, each with what to do. BoardCard has no proposed reading of its own yet (#444), so the card doesn't rise for a
-// proposal; the word "Proposed" and the Accept and Reject buttons carry it. Applied changes keep an AILabel.
-const stop = { onPointerDown: (e: React.PointerEvent) => e.stopPropagation(), onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation() };
-function CardProposals({ id, title, assistant }: { id: string; title: string; assistant: Proposals }) {
-  const mine = assistant.proposals.filter((p) => p.card === id && p.status !== 'rejected');
-  if (!mine.length) return null;
-  const applied = mine.filter((p) => p.status === 'applied');
-  return (
-    <span className="pb-card-proposals">
-      {mine.filter((p) => p.status !== 'applied').map((p) => (
-        <span key={p.id} className="pb-card-proposal" data-status={p.status}>
-          <small><strong>{p.status === 'proposed' ? 'Proposed' : p.status === 'pending' ? 'Applying' : p.status === 'stale' ? 'Out of date' : 'Not applied'}:</strong> {short(p)}{p.edited ? ' (edited)' : ''}</small>
-          {(p.status === 'proposed' || p.status === 'failed') && (
-            <span className="pb-proposal-actions">
-              <Button size="sm" {...stop} onClick={(e) => { e.stopPropagation(); void assistant.apply(p.id); }} aria-label={`Accept: ${short(p)} for ${title}`}>{p.status === 'failed' ? 'Retry' : 'Accept'}</Button>
-              <Button size="sm" variant="ghost" {...stop} onClick={(e) => { e.stopPropagation(); assistant.reject(p.id); }} aria-label={`Reject: ${short(p)} for ${title}`}>Reject</Button>
-            </span>
-          )}
-          {p.note && p.status !== 'pending' && <small className="pb-note" data-tone={p.status === 'proposed' ? undefined : 'failed'}>{p.note}</small>}
-        </span>
-      ))}
-      {applied.length > 0 && <span className="pb-card-ai"><AILabel subject={`${title}: ${applied.map(short).join(', ')}`} model="Scripted assistant (no model)" reviewedBy="you" /></span>}
-    </span>
-  );
+// The assistant's proposals for one card, as BoardCard's raised slips (#444): proposed (nothing sent), applying, out of
+// date or not applied. The card stays in its column until a proposal is accepted, and applying makes it pending, so its
+// own status carries the commitment. The card's buttons don't pick it up, so nothing here stops their events.
+const PROPOSAL_STATUS = { proposed: 'proposed', pending: 'applying', failed: 'failed', stale: 'stale' } as const;
+// The app's notes are whole sentences for the panel ("Out of date: …"); the slip says that part itself.
+const bare = (note?: string) => note?.replace(/^(Out of date|Not applied):\s*/, '');
+function cardProposals(k: Card, assistant: Proposals) {
+  return assistant.proposals.filter((p): p is Proposal & { status: keyof typeof PROPOSAL_STATUS } => p.card === k.id && p.status in PROPOSAL_STATUS).map((p) => ({
+    id: p.id,
+    ...(p.kind === 'move' ? { label: 'Column', from: p.from ? COLUMN_TITLE[p.from] : undefined, to: COLUMN_TITLE[p.to] }
+      : p.kind === 'points' ? { label: 'Estimate', from: k.points === null ? 'No estimate' : `${k.points} points`, to: `${p.value} points` }
+        : { label: 'Assignee', from: k.assignee ?? undefined, to: p.value }),
+    summary: `${short(p)}${p.edited ? ' (edited)' : ''}`,
+    status: PROPOSAL_STATUS[p.status],
+    note: p.status === 'pending' ? undefined : bare(p.note),
+    onAccept: () => void assistant.apply(p.id),
+    onReject: () => assistant.reject(p.id),
+  }));
+}
+
+// Applied changes keep an AILabel on the card, so where they came from stays visible after the slip is gone.
+function AppliedLabel({ id, title, assistant }: { id: string; title: string; assistant: Proposals }) {
+  const applied = assistant.proposals.filter((p) => p.card === id && p.status === 'applied');
+  if (!applied.length) return null;
+  return <span className="pb-card-ai"><AILabel subject={`${title}: ${applied.map(short).join(', ')}`} model="Scripted assistant (no model)" reviewedBy="you" /></span>;
 }

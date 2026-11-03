@@ -32,10 +32,6 @@
 .pb-proposals li { display: grid; gap: var(--space-1); padding-top: var(--space-2); border-top: 1px solid var(--line); font: 400 14px/20px var(--font-sans); }
 .pb-proposals li:first-child { border-top: 0; padding-top: 0; }
 .pb-proposals li[data-status="stale"] strong, .pb-proposals li[data-status="failed"] strong { color: var(--critical); }
-.pb-proposal-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.pb-card-proposals { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
-.pb-card-proposal { display: grid; gap: var(--space-1); padding-top: var(--space-2); border-top: 1px dashed var(--line-control); font: 500 12.5px/17px var(--font-sans); }
-.pb-card-proposal[data-status="stale"] strong, .pb-card-proposal[data-status="failed"] strong { color: var(--critical); }
 .pb-card-ai { display: flex; }
 .pb-activity { display: grid; gap: var(--space-2); }
 .pb-activity ul { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-1); font: 400 14px/20px var(--font-sans); }
