@@ -27,31 +27,17 @@ const Alarm = () => (
   </svg>
 );
 
-/** RadioGroup has no error state of its own and can't sit in a Field, so its label and error are laid out by hand. Replace with Field when #442 lands. */
-function Choices({ id, label, error, value, onValueChange, orientation, children }: {
-  id: string; label: string; error?: string; value: string; onValueChange: (v: string) => void; orientation?: 'horizontal'; children: React.ReactNode;
-}) {
-  return (
-    <div className="bk-choices" data-invalid={error ? '' : undefined}>
-      <span className="alt-field-label" id={`${id}-label`}>{label}</span>
-      <RadioGroup id={id} tabIndex={-1} aria-labelledby={`${id}-label`} aria-describedby={error ? `${id}-error` : undefined} aria-invalid={error ? true : undefined}
-        value={value} onValueChange={onValueChange} orientation={orientation}>
-        {children}
-      </RadioGroup>
-      {error && <p className="alt-field-error" id={`${id}-error`} role="alert"><Alarm />{error}</p>}
-    </div>
-  );
-}
-
 export function ServiceStep({ draft, errors, set }: StepProps) {
   return (
     <div className="bk-fields">
-      <Choices id={FIELD_ID.service} label="Treatment" error={errors.service} value={draft.service} onValueChange={(v) => set('service', v)}>
-        {TREATMENTS.map((t) => (
-          <Radio key={t.id} value={t.id} label={<span className="bk-choice"><span>{t.name}</span><span className="bk-price">{money(t.price)}</span></span>}
-            description={`${t.minutes} minutes. ${t.about}`} />
-        ))}
-      </Choices>
+      <Field className="bk-choices" label="Treatment" error={errors.service}>
+        <RadioGroup id={FIELD_ID.service} value={draft.service} onValueChange={(v) => set('service', v)}>
+          {TREATMENTS.map((t) => (
+            <Radio key={t.id} value={t.id} label={<span className="bk-choice"><span>{t.name}</span><span className="bk-price">{money(t.price)}</span></span>}
+              description={`${t.minutes} minutes. ${t.about}`} />
+          ))}
+        </RadioGroup>
+      </Field>
       <Checkbox id={FIELD_ID.addon} checked={draft.addon} onCheckedChange={(v) => set('addon', v)}
         label={`Add a ${ADDON.name.toLowerCase()} (${money(ADDON.price)})`} description="Posted to you after the appointment. Your physio emails the same plan for free." />
     </div>
@@ -76,9 +62,11 @@ function Slots({ date, value, error, onValueChange }: { date: string; value: str
   return (
     <DemoResource query={q} noun={`the times on ${dayName(date)}`}>
       {(slots) => slots.some((s) => s.free) ? (
-        <Choices id={FIELD_ID.time} label={`Times on ${dayName(date)}`} error={error} value={value} onValueChange={onValueChange} orientation="horizontal">
-          {slots.map((s) => <Radio key={s.time} value={s.time} label={s.time} description={s.free ? undefined : 'Booked'} disabled={!s.free && s.time !== value} />)}
-        </Choices>
+        <Field className="bk-choices" label={`Times on ${dayName(date)}`} error={error}>
+          <RadioGroup id={FIELD_ID.time} value={value} onValueChange={onValueChange} orientation="horizontal">
+            {slots.map((s) => <Radio key={s.time} value={s.time} label={s.time} description={s.free ? undefined : 'Booked'} disabled={!s.free && s.time !== value} />)}
+          </RadioGroup>
+        </Field>
       ) : <p className="bk-quiet" id={FIELD_ID.time} tabIndex={-1}>Every time on {dayName(date)} is booked. Choose another day.</p>}
     </DemoResource>
   );

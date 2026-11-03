@@ -255,7 +255,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-check-track {
   position: relative; flex: none; box-sizing: border-box; width: 22px; height: 22px;
   border: 1px solid var(--line-control); border-radius: 6px; background: var(--surface-trench); box-shadow: var(--trench);
-  transition: border-color var(--dur-travel-2) var(--ease-rise);
+  transition: border-color var(--dur-travel-2) var(--ease-rise), background-color var(--dur-travel-2) var(--ease-rise);
 }
 .alt-check-track[data-round] { border-radius: var(--radius-full); }
 .alt-check-fill {
@@ -311,6 +311,16 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 @media (hover: hover) { .alt-radio:hover:not([data-disabled]) input:not(:checked) + .alt-check-track::after { opacity: 0.5; scale: 0.85; transition-timing-function: var(--ease-rise), var(--ease-settle); } }
 .alt-radio-group[data-disabled] .alt-radio-thumb { background: var(--surface-well); background-image: none; box-shadow: var(--elev-0); }
+/* Invalid (Field's error, or aria-invalid from the app): the tracks are trenches already, so the reading is the tint and
+   the rim, not more depth (Elevation, "Validity"). The rim stays critical on hover. A checked track is poured full of
+   accent over its rim, so its critical edge is a 1px ring just outside: the server refused that choice. The group's own
+   focus (tabindex -1) is only ever passed on to a radio, so it draws nothing. */
+.alt-radio-group:focus { outline: none; }
+.alt-radio-group[data-invalid] .alt-check input:not(:checked) + .alt-check-track { background: var(--critical-soft); border-color: var(--critical); }
+@media (hover: hover) { .alt-radio-group[data-invalid] .alt-check:hover:not([data-disabled]) input:not(:checked):not(:indeterminate) + .alt-check-track { border-color: var(--critical); } }
+.alt-radio-group[data-invalid] .alt-check input:checked + .alt-check-track { box-shadow: var(--trench), 0 0 0 1px var(--critical); }
+/* An option that can't be chosen (a booked time) isn't part of the problem: it keeps its disabled reading. */
+.alt-radio-group[data-invalid] .alt-check[data-disabled] input:not(:checked) + .alt-check-track { background: var(--surface-ground); border-color: var(--line); }
 
 /* ── Switch: a trench with a raised thumb; the accent pours in behind the thumb. ── */
 .alt-switch {
@@ -3602,6 +3612,8 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
   [data-status="pending"] { border: 2px dotted CanvasText; }
   .alt-progress-fill, .alt-slider-fill, .alt-switch-fill, .alt-check-fill { background: Highlight; }
   .alt-check-track { border: 2px dashed CanvasText; } .alt-radio-thumb { border: 1px solid CanvasText; } .alt-check-mark { color: Canvas; filter: none; }
+  /* The tracks are already dashed, as an invalid Input is, so the whole question is outlined instead. */
+  .alt-radio-group[data-invalid] { outline: 2px dashed CanvasText; outline-offset: 4px; }
   .alt-pile-item { border: 1px solid CanvasText; }
   .alt-alert, .alt-alert-sheet, .alt-badge { border: 1px solid CanvasText; } .alt-alert[data-variant="raised"], .alt-badge[data-variant="count"] { border: 2px solid CanvasText; }
   .alt-badge-lamp, .alt-avatar-lamp { border: 1px solid CanvasText; }

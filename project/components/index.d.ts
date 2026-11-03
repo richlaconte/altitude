@@ -213,7 +213,8 @@ export interface FieldProps {
   error?: React.ReactNode;
   required?: boolean;
   className?: string;
-  /** Exactly one control: Input, Textarea or any element that accepts id, aria-describedby and invalid. */
+  /** Exactly one control: Input, Textarea, RadioGroup or any element that accepts id, aria-describedby and invalid. A RadioGroup
+   *  is named by aria-labelledby, since a <label for> can't name a group. */
   children: React.ReactElement;
 }
 export declare function Field(props: FieldProps): React.ReactElement;
@@ -430,6 +431,12 @@ export interface RadioGroupProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   disabled?: boolean;
   /** Default 'vertical'. */
   orientation?: 'vertical' | 'horizontal';
+  /** Invalid: aria-invalid on the group and a critical rim on its tracks. Field sets it from `error`. */
+  invalid?: boolean;
+  /** Sets aria-required on the group (never native `required`, whose browser bubble competes with Field's error). Field sets it from `required`. */
+  required?: boolean;
+  /** On the radiogroup. Focusing it (an ErrorSummary link, `getElementById(id).focus()`) moves focus to the checked radio, or else the first enabled one. */
+  id?: string;
 }
 export declare function RadioGroup(props: RadioGroupProps): React.ReactElement;
 export interface RadioProps { value: string; label?: React.ReactNode; description?: React.ReactNode; disabled?: boolean; className?: string }
