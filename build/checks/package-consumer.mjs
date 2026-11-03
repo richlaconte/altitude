@@ -59,5 +59,13 @@ const env={...process.env,ALT_PACKAGE_ROOT:installed};
 execFileSync(process.execPath,[join(root,'build/checks/pattern-workflows.mjs')],{cwd:root,env,stdio:'inherit'});
 execFileSync(process.execPath,[join(root,'scripts/build-check-fixtures.mjs'),'EditRecord,AsyncCollection,ConsequentialAction,ReviewSubmit'],{cwd:root,env,stdio:'inherit'});
 execFileSync(process.execPath,[join(root,'build/checks/framework-accessibility.mjs')],{cwd:root,env:{...env,ALT_FIXTURE_ROOT:join(root,'build/test/react19-installed')},stdio:'inherit'});
-console.log('Packed npm consumer: ESM/CommonJS/NodeNext/Bundler types, chart-themes subpath, assets, guidance, CLI, installed workflow transitions passed.');
+// The installed CLI's source check (bundled into dist/cli) on a fixture app: an error fails it, a fixed app passes.
+{mkdirSync(join(consumer,'src'),{recursive:true});
+ const page=label=>`import 'altitude-design/altitude.css';\nimport { AltitudeProvider, Button } from 'altitude-design';\nexport const App=()=><AltitudeProvider><Button variant="primary">${label}</Button></AltitudeProvider>;\n`;
+ writeFileSync(join(consumer,'src/App.tsx'),page('Submit'));
+ let failed=null;try{execFileSync(join(consumer,'node_modules/.bin/altitude'),['check','--json'],{cwd:consumer,encoding:'utf8'});}catch(e){failed=JSON.parse(e.stdout);}
+ assert.ok(failed&&!failed.ok&&failed.findings.some(f=>f.ruleId==='ALT-COPY-001'),'installed altitude check reports ALT-COPY-001');
+ writeFileSync(join(consumer,'src/App.tsx'),page('Save changes'));
+ assert.equal(JSON.parse(execFileSync(join(consumer,'node_modules/.bin/altitude'),['check','--json'],{cwd:consumer,encoding:'utf8'})).ok,true,'installed altitude check passes a fixed app');}
+console.log('Packed npm consumer: ESM/CommonJS/NodeNext/Bundler types, chart-themes subpath, assets, guidance, CLI (including check), installed workflow transitions passed.');
 writeFileSync(join(artifact,'result.json'),JSON.stringify({package:packed.filename,version:pkg.version,consumer,installed,checks:symbols,date:new Date().toISOString()},null,2)+'\n');

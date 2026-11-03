@@ -117,6 +117,7 @@ npx altitude init --client codex          # preview exact changes
 npx altitude init --client codex --apply   # apply after reviewing the preview
 # Claude Code: --client claude. Both: --client all.
 npx altitude doctor --json
+npx altitude check                         # Altitude's rules that are certain from your source
 ```
 
 Setup preserves existing instructions and adds a small versioned pointer to the installed guidance. It never runs on package installation. Preview removal with `npx altitude init --client codex --remove`, then add `--apply` to remove only its managed content. Edited blocks are preserved and require reconciliation. Codex uses a nonempty root `AGENTS.override.md` when present; otherwise `AGENTS.md`. Claude Code uses `CLAUDE.md`. Restart the client after setup. See [setup details](docs/framework/AGENT-SETUP.md).

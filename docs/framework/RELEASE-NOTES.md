@@ -11,6 +11,7 @@ No package version bump, npm publish or deployment is part of this change. The e
 - Reproducible three-condition agent evaluation harness and separate manual validation protocol.
 - The installed guidance carries the visual layer: every design guide under `dist/guidance/visual/` (the design guide, Elevation, Charts, Motion, Mobile, Theming, Distinctiveness, Fundamentals, Actions in place, Research) and every component's guide under `dist/guidance/components/<Name>/README.md`. `index.json` lists the components with their group, summary and guide, and the guidance README routes to them. Links between guides resolve inside the package; a link to a file the package doesn't ship goes to GitHub at the release tag.
 - The `altitude init` block now carries a compact component index (every component by group, and where its guide is), the rules that hold on every screen, and a reminder to prefer the installed docs and declarations to memory. It stays under 8 KB. Rerun `npm exec -- altitude init --client <client> --apply` after upgrading to refresh it.
+- `altitude check [dir] [--json]` scans an application's source for Altitude's rules that are certain from text, with rule IDs `altitude explain` resolves: five that fail the run (`ALT-TOKEN-001`, `ALT-SETUP-002`, `ALT-SETUP-003`, `ALT-CHART-001`, `ALT-COPY-001`) and two listed for review (`ALT-PRIMARY-001`, `ALT-VISUAL-004`). The init block and the guidance tell agents to run it after UI changes.
 
 ## Changed
 
