@@ -1,6 +1,7 @@
 // Example apps' simulated service and fixtures drawer (#400).
 // First, the service on its own with a hand-driven clock: every mode resolves or rejects when and how it says, a lost
-// response saves before it fails, a conflict hands back the current version, "only the next request" reverts, a cancelled
+// response saves before it fails, a conflict hands back the current version, "only the next request" reverts, a mode can be
+// limited to some operations, a session ends and signs in again, connectivity is reported (#459), a cancelled
 // write doesn't save, external changes and reset notify, persistence round-trips, and jitter repeats run to run.
 // Then the smallest app, Team notes (examples/apps/hello), built by scripts/build-examples.mjs and driven in a browser:
 // it renders in both schemes with no page or console errors; a note is pending, then lands; a failed one keeps its text
@@ -133,6 +134,54 @@ const watch = (p) => { const out = { settled: false }; p.then((v) => Object.assi
   expect(times[0] === times[1] && /\d/.test(times[0]), `jitter repeats run to run (${times.join(' / ')})`);
 }
 
+{ // a mode limited to some operations (#459)
+  const { clock, svc } = make(); svc.setMode('fail', { ops: ['items.add'] });
+  expect(svc.ops.join() === 'items.list,items.add', 'the service lists its operations');
+  const read = watch(svc.request('items.list')), write = watch(svc.request('items.add', 'b')); clock.advance(300); await flush();
+  expect(read.value?.join() === 'a' && write.error?.kind === 'failed', 'ops: only the named operation fails; the rest succeed');
+  expect(svc.getSnapshot().log.find((e) => e.op === 'items.list').mode === 'success' && svc.getSnapshot().log.find((e) => e.op === 'items.add').mode === 'fail', 'ops: the log records the mode each request got');
+  svc.setMode('fail', { ops: ['items.add'], once: true });
+  const r1 = watch(svc.request('items.list')); clock.advance(300); await flush();
+  expect(r1.value && svc.getSnapshot().mode === 'fail', 'ops and once: another operation doesn\'t use up the once');
+  const r2 = watch(svc.request('items.add', 'c')), r3 = watch(svc.request('items.add', 'd')); clock.advance(300); await flush();
+  expect(r2.error?.kind === 'failed' && r3.value === 'd' && svc.getSnapshot().mode === 'success' && svc.getSnapshot().ops === null, 'ops and once: the next of its own fails, then everything succeeds');
+  svc.setMode('fail', { ops: ['nope'] });
+  expect(svc.getSnapshot().ops === null, 'ops: unknown operations are ignored, leaving the mode on every request');
+  svc.setMode('success', { ops: ['items.add'] });
+  expect(svc.getSnapshot().ops === null, 'ops: success applies to everything');
+}
+{ // a session that ends (#459)
+  const { clock, svc } = make();
+  svc.endSession();
+  const read = watch(svc.request('items.list')), write = watch(svc.request('items.add', 'b')); clock.advance(300); await flush();
+  expect(read.value?.join() === 'a' && write.error?.kind === 'unauthorized' && svc.getSnapshot().state.items.length === 1, 'session: reads answer, writes are refused as unauthorized and save nothing');
+  expect(svc.getSnapshot().log.some((e) => e.op === 'session' && /ended/.test(e.outcome)), 'session: its end is logged');
+  svc.signIn();
+  const again = watch(svc.request('items.add', 'b')); clock.advance(300); await flush();
+  expect(again.value === 'b' && svc.getSnapshot().signedIn, 'session: after signIn writes save again');
+  let threw;
+  try { (await import('../../examples/apps/shared/service.ts')).reject('unauthorized', 'Signed out.'); } catch (e) { threw = e; }
+  expect(threw?.kind === 'unauthorized', 'reject() takes unauthorized');
+  svc.endSession(); svc.reset();
+  expect(svc.getSnapshot().signedIn, 'session: reset signs back in');
+}
+{ // connectivity (#459)
+  const { clock, svc } = make(); const heard = [];
+  const off = svc.onConnectivity((online) => heard.push(online));
+  expect(svc.isOnline(), 'connectivity: online to start');
+  svc.setMode('slow'); svc.setMode('offline');
+  expect(heard.join() === 'false' && !svc.isOnline(), 'connectivity: offline for every request fires false');
+  svc.setMode('success');
+  expect(heard.join() === 'false,true' && svc.isOnline(), 'connectivity: back to succeeding fires true');
+  svc.setMode('offline', { ops: ['items.add'] });
+  expect(heard.length === 2 && svc.isOnline(), 'connectivity: offline for one operation isn\'t a lost connection');
+  svc.setMode('offline', { once: true });
+  const r = watch(svc.request('items.list')); clock.advance(1); await flush();
+  expect(r.error?.kind === 'offline' && heard.join() === 'false,true,false,true', `connectivity: a once-only offline comes back after its request (${heard})`);
+  off(); svc.setMode('offline');
+  expect(heard.length === 4, 'connectivity: unsubscribing stops it');
+}
+
 // ---- Team notes in a browser ----------------------------------------------------------------------------------
 const out = fileURLToPath(new URL('../test/examples/', import.meta.url));
 await buildExamples(out, { only: ['hello'] });
@@ -197,6 +246,19 @@ for (const scheme of ['daylight', 'nightfall']) {
     await mode(page, 'Succeed');
     await page.locator('.hello .alt-alert button', { hasText: 'Try again' }).click(); await page.waitForTimeout(700);
     expect(await page.locator('.hello .alt-alert').count() === 0, 'Try again refreshes it');
+
+    // A fault on one operation (#459): Fail applied to notes.add only, chosen in the drawer. Adding fails; the list loads.
+    await mode(page, 'Fail');
+    await page.locator('.ex-drawer [aria-labelledby="ex-ops"]').click(); await page.waitForTimeout(150);
+    await page.locator('[role="listbox"] [role="option"]', { hasText: /^notes\.add$/ }).click(); await page.waitForTimeout(100);
+    const said = await page.locator('.ex-drawer .ex-sr').textContent();
+    expect(/notes\.add requests: fail\. Every other request succeeds/.test(said), `choosing an operation limits the mode and says so (${said})`);
+    await add(page, 'Only adding fails.'); await page.waitForTimeout(700);
+    expect((await notes(page))[0]?.status === 'failed', 'with Fail on notes.add, adding a note fails');
+    await page.locator('.ex-drawer button', { hasText: 'A teammate adds a note' }).click(); await page.waitForTimeout(700);
+    expect(await page.locator('.hello .alt-alert', { hasText: 'couldn’t refresh' }).count() === 0, 'while the list still refreshes');
+    await mode(page, 'Succeed');
+    expect(await page.locator('.ex-drawer [aria-labelledby="ex-ops"]').isDisabled(), 'Succeed applies to every request, so the operation picker rests');
 
     // The log, then Reset.
     expect(await page.locator('.ex-log-row').count() > 5, 'the request log lists the requests');

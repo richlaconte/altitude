@@ -97,11 +97,13 @@ const STATUS: Record<DemoLogEntry['status'], { tone: Tone; word: string; lamp?: 
   external: { tone: 'neutral', word: 'Elsewhere', lamp: false },
 };
 
-const modeAnnouncement = (mode: DemoMode, once: boolean) => {
+const modeAnnouncement = (mode: DemoMode, once: boolean, op: string | null) => {
   const m = DEMO_MODES.find((x) => x.value === mode)!;
   if (mode === 'success') return 'Requests will succeed.';
+  if (op) return once ? `The next ${op} request: ${m.label.toLowerCase()}. Then it succeeds again.` : `${op} requests: ${m.label.toLowerCase()}. Every other request succeeds.`;
   return once ? `The next request: ${m.label.toLowerCase()}. Then requests succeed again.` : `${m.description} This lasts until you change it.`;
 };
+const EVERY = '*';
 
 export interface FixturesDrawerProps<S> {
   service: DemoService<S>;
@@ -114,16 +116,25 @@ export interface FixturesDrawerProps<S> {
    */
   page?: PageModes;
   onPageChange?: (page: PageModes) => void;
+  /** The example's own fixtures that are state, not events (whose view, live data on or off): a "This example" section. */
+  controls?: React.ReactNode;
+  /** Offer "End the session" (the next writes are refused as unauthorized until the app calls service.signIn()). */
+  session?: boolean;
 }
 
 export interface PageModes { scheme: BuiltInScheme; accent: string; reduced: boolean; more: boolean }
 
 /** The example's controls: the server's behaviour, things that happen elsewhere, the page's modes, and the request log. */
-export function FixturesDrawer<S>({ service, modes, events = [], page, onPageChange }: FixturesDrawerProps<S>) {
+export function FixturesDrawer<S>({ service, modes, events = [], page, onPageChange, controls, session }: FixturesDrawerProps<S>) {
   const snap = useDemoService(service);
   const [said, setSaid] = React.useState('');
   const offered = DEMO_MODES.filter((m) => !modes || modes.includes(m.value));
-  const setMode = (mode: DemoMode, once: boolean) => { service.setMode(mode, { once }); setSaid(modeAnnouncement(mode, once && mode !== 'success')); };
+  const only = snap.ops?.[0] ?? null;
+  const setMode = (mode: DemoMode, once: boolean, op: string | null = only) => {
+    service.setMode(mode, { once, ops: op ? [op] : null });
+    setSaid(modeAnnouncement(mode, once && mode !== 'success', mode === 'success' ? null : op));
+  };
+  const opItems = [{ value: EVERY, label: 'Every request' }, ...service.ops.map((o) => ({ value: o, label: o }))];
   const set = (patch: Partial<PageModes>) => { if (page && onPageChange) onPageChange({ ...page, ...patch }); };
 
   const content = (
@@ -133,8 +144,21 @@ export function FixturesDrawer<S>({ service, modes, events = [], page, onPageCha
         <RadioGroup value={snap.mode} onValueChange={(v) => setMode(v as DemoMode, snap.once)} aria-labelledby="ex-server">
           {offered.map((m) => <Radio key={m.value} value={m.value} label={m.label} description={m.description} />)}
         </RadioGroup>
+        <div className="ex-field">
+          <span id="ex-ops" className="ex-label">Applies to</span>
+          <Select aria-labelledby="ex-ops" value={only ?? EVERY} onValueChange={(v) => setMode(snap.mode, snap.once, v === EVERY ? null : v)} items={opItems} disabled={snap.mode === 'success'} />
+        </div>
         <Switch checked={snap.once} onCheckedChange={(once) => setMode(snap.mode, once)} label="Only the next request" disabled={snap.mode === 'success'} />
+        {session && (snap.signedIn
+          ? <Button size="sm" onClick={() => { service.endSession(); setSaid('The session ended. The next save is refused until the app signs in again.'); }}>End the session</Button>
+          : <p className="ex-caption">The session has ended. The app signs in again.</p>)}
       </section>
+      {controls && (
+        <section className="ex-group" aria-labelledby="ex-this">
+          <h3 id="ex-this" className="ex-group-title">This example</h3>
+          {controls}
+        </section>
+      )}
       {events.length > 0 && (
         <section className="ex-group" aria-labelledby="ex-elsewhere">
           <h3 id="ex-elsewhere" className="ex-group-title">Elsewhere</h3>
@@ -194,6 +218,8 @@ export interface ExampleFrameProps<S> {
   service: DemoService<S>;
   modes?: DemoMode[];
   events?: ExternalEvent[];
+  controls?: React.ReactNode;
+  session?: boolean;
   /** The app. It renders its own main. */
   children: React.ReactNode;
 }
@@ -208,11 +234,11 @@ export interface ExampleContentProps<S> extends ExampleFrameProps<S> {
  * The app and its fixtures drawer, without a provider: for a host that already has one, like Storybook, whose decorator
  * wraps every story in a single AltitudeProvider. ExampleFrame is this plus the provider and the page modes.
  */
-export function ExampleContent<S>({ service, modes, events, page, onPageChange, children }: ExampleContentProps<S>) {
+export function ExampleContent<S>({ service, modes, events, controls, session, page, onPageChange, children }: ExampleContentProps<S>) {
   return (
     <>
       <div className="ex-app">{children}</div>
-      <FixturesDrawer service={service} modes={modes} events={events} page={page} onPageChange={onPageChange} />
+      <FixturesDrawer service={service} modes={modes} events={events} controls={controls} session={session} page={page} onPageChange={onPageChange} />
     </>
   );
 }
@@ -222,7 +248,7 @@ export function ExampleContent<S>({ service, modes, events, page, onPageChange, 
  * scheme on the body, so the page behind the app matches; that stays here, not in ExampleContent, because a host with
  * its own provider owns the body too.
  */
-export function ExampleFrame<S>({ service, modes, events, children }: ExampleFrameProps<S>) {
+export function ExampleFrame<S>({ service, modes, events, controls, session, children }: ExampleFrameProps<S>) {
   const [page, setPage] = React.useState<PageModes>(() => ({ scheme: systemScheme(), accent: 'scheme', reduced: false, more: false }));
   React.useLayoutEffect(() => { document.body.setAttribute('data-theme', page.scheme); }, [page.scheme]);
   return (
@@ -233,7 +259,7 @@ export function ExampleFrame<S>({ service, modes, events, children }: ExampleFra
       contrast={page.more ? 'more' : 'system'}
       className="ex-frame"
     >
-      <ExampleContent service={service} modes={modes} events={events} page={page} onPageChange={setPage}>{children}</ExampleContent>
+      <ExampleContent service={service} modes={modes} events={events} controls={controls} session={session} page={page} onPageChange={setPage}>{children}</ExampleContent>
     </AltitudeProvider>
   );
 }
