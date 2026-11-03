@@ -2,6 +2,8 @@
 
 Start from the person's task. Read only the relevant pattern below, its linked rules, and the public declarations. The installed copy matches the package version; `altitude doctor --json` checks that connection. Guidance supports judgment; it does not certify an application.
 
+Every screen also follows the visual rules. Read the [design guide](../README.md) before composing one, [Elevation](../Elevation.md) for what height means, [Charts](../Charts.md) before drawing any chart, stat or meter, and [Motion](../Motion.md) before animating. Each component has its own guide (what it's for, how it uses height, what you provide); read it before using the component: for example [Button](../components/Button/README.md) or [Select](../components/Select/README.md). The `components` list in `index.json` has every component with its group, a one-line summary and its guide.
+
 Composing a new screen? Choose its frame from the task with [screen layout](patterns/screen-layout.md) first: name the task, the one thing that leads and the one primary action. The [app skeleton](app-skeleton.md) is one of its frames, for working through many similar records: shell, page header, a filtered and paged table, a record in a sheet, and settings, composed correctly.
 
 | Intent | Focused contract |
@@ -28,5 +30,7 @@ Before implementation, capture a short design record in the application's normal
 Use `altitude patterns "edit settings" --json` to discover contracts and `altitude explain ALT-EDIT-001` for a rule's scope and evidence. Read [principles](principles.md) for ownership and [evidence.json](evidence.json) for source authority. The generated `index.json` and `llms.txt` route to these same sources; they are not separately authored manuals.
 
 Compose existing primitives and small workflow hooks from the main `altitude-design` export inside one `AltitudeProvider`. Import a package stylesheet. The application supplies routes, business validation and services. Verify delayed operations, rejection, retry, cancellation and stale responses where applicable; include keyboard and manual assistive-technology review. Automated checks cannot establish complete accessibility or task suitability.
+
+After changing UI, run `npm exec -- altitude check` (or `altitude check src --json`). It reports Altitude's rules that are certain from source text as errors (hard-coded colours instead of tokens, a missing stylesheet or `AltitudeProvider`, pie and donut charts, buttons labelled OK or Submit) and likely problems for review (several primary buttons in one file, elevation overrides on controls). Fix the errors; decide on the reviews. Each finding names a rule `altitude explain` describes. It doesn't check anything that needs the page rendered or a person.
 
 For explicit agent setup, preview `npm exec -- altitude init --client codex` (or `claude`), then use `--apply`. Full setup and removal instructions are shipped as `agent-setup.md`, generated from the repository’s `docs/framework/AGENT-SETUP.md`. No installation hook writes project instructions.

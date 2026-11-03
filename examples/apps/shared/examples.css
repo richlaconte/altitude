@@ -1,0 +1,21 @@
+/* The example apps' shared frame and fixtures drawer (#400). Tokens only; nothing here rises. The drawer lies flush on
+   the page below the app, separated by a divider, so it never reads as part of the product. */
+.ex-frame { min-height: 100vh; background: var(--surface-ground); color: var(--ink); font-family: var(--font-sans); }
+.ex-app { min-height: 0; }
+.ex-drawer { max-width: 1120px; margin: 0 auto; padding: var(--space-8) var(--space-4) var(--space-12); border-top: 1px solid var(--line); display: grid; gap: var(--space-3); }
+.ex-drawer-title { margin: 0; font: 600 19px/26px var(--font-sans); letter-spacing: -0.01em; /* text-heading */ }
+.ex-drawer-body { display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); padding-top: var(--space-2); }
+.ex-group { display: grid; gap: var(--space-3); align-content: start; }
+.ex-group-title { margin: 0; font: 600 14px/20px var(--font-sans); }
+.ex-caption { margin: 0; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); letter-spacing: 0.005em; /* text-caption */ max-width: 70ch; }
+.ex-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ex-field { display: grid; gap: var(--space-1); }
+.ex-label { font: 500 14px/20px var(--font-sans); /* text-label */ }
+.ex-log { grid-column: 1 / -1; }
+.ex-log-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.ex-log-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.ex-log-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--line); }
+.ex-log-op { font-family: var(--font-mono); font-size: 13px; }
+.ex-log-outcome { flex: 1 1 16ch; }
+.ex-loading { padding: var(--space-4) 0; }
+.ex-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

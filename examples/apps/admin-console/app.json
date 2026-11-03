@@ -1,0 +1,4 @@
+{
+  "title": "Northwind admin console · Altitude example",
+  "description": "An Altitude example app: a workspace's settings, members, billing, API keys, security and audit log on one simulated server that can be slow, fail, lose responses or conflict."
+}

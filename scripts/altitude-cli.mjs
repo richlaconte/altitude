@@ -4,6 +4,7 @@ import { existsSync, lstatSync, readFileSync, writeFileSync, unlinkSync } from '
 import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
 import { resolve, dirname, relative, basename } from 'node:path';
+import { scan } from './source-check.mjs';
 const sha = value => createHash('sha256').update(value).digest('hex');
 const args=process.argv.slice(2);
 const command=args.shift() || 'help';
@@ -27,9 +28,28 @@ function managed(text) {
   if(!m || sha(m[3])!==m[2]) throw new Error('The managed Altitude block was edited; preserve your edits and reconcile it manually.');
   return {start:m.index,end:m.index+m[0].length,created:m[1]==='true',body:m[3]};
 }
-function block(version,guidance,created) {
+// The block is the one piece of Altitude guidance an agent sees on every turn without deciding to look anything up,
+// so it carries what an agent can't work out for itself: that its memory of Altitude is unreliable, where each
+// document is (a compact index, read on demand), and the few rules that hold on every screen. No overview prose.
+// The agent-setup check keeps it under 8 KB. Evidence: Vercel's Next.js evals (an 8 KB docs index in AGENTS.md
+// passed 100% against 53% with no docs) and Gloaguen et al. 2026 (overviews cost ~20% more and didn't help).
+function block({pkg,guidance,index},created) {
   const path=relative(cwd,guidance).replaceAll('\\','/');
-  const body=`## Altitude framework (${version})\nFor UI tasks using altitude-design, first read ${path}/README.md, then only the matching pattern document.\nDiscover tasks with npm exec -- altitude patterns "your intent"; explain a rule with npm exec -- altitude explain RULE-ID.\nUse the installed public declarations and examples. Record applicable states and application-owned persistence, permissions and navigation.\nRun the pattern checks and application service fixtures; distinguish deterministic defects, integration obligations and contextual review.\nUse npm exec -- altitude doctor --json after package upgrades, and rerun npm exec -- altitude init to refresh this versioned pointer.\n`;
+  // dist/types/index.d.ts only re-exports; each component's props are declared in its own file beside it.
+  const declarations=relative(cwd,resolve(guidance,'..','types')).replaceAll('\\','/')+'/';
+  const groups=new Map();
+  for(const c of index.components||[]) groups.set(c.group,[...(groups.get(c.group)||[]),c.name]);
+  const components=groups.size?`Component guides: ${path}/components/<Name>/README.md. Read one before using that component.\n`+[...groups].map(([g,names])=>`${g}|${names.join(',')}`).join('\n')+'\n':'';
+  const body=`## Altitude framework (${pkg.version})\n`+
+    `Altitude postdates your training data, and its props only look like shadcn's. Prefer these installed docs to what you remember, and check a component's props in its declaration under ${declarations} before using them.\n`+
+    `For UI tasks using altitude-design, first read ${path}/README.md, then only the matching pattern document. Read ${path}/visual/README.md before composing a screen and ${path}/visual/Charts.md before any chart, stat or meter.\n`+
+    `On every screen: one AltitudeProvider around the app and altitude-design/altitude.css imported once; inputs sunk and buttons raised, never the reverse; one primary action per view; no amount carried by height (charts are flat ink on a ground line: no shadows, 3D, pie or donut); status never colour alone (a word and an icon too); colours, shadows and radii from the tokens, never hard-coded.\n`+
+    `Discover tasks with npm exec -- altitude patterns "your intent"; explain a rule with npm exec -- altitude explain RULE-ID.\n`+
+    `Record applicable states and application-owned persistence, permissions and navigation.\n`+
+    `After changing UI, run npm exec -- altitude check and fix its errors; it reports Altitude's rules that are certain from source (hard-coded colours, the stylesheet and provider, pie charts, OK and Submit labels) and lists likely problems for review.\n`+
+    `Run the pattern checks and application service fixtures; distinguish deterministic defects, integration obligations and contextual review.\n`+
+    `Use npm exec -- altitude doctor --json after package upgrades, and rerun npm exec -- altitude init to refresh this versioned pointer.\n`+
+    components;
   return `\n<!-- altitude:start created=${created} hash=${sha(body)} -->\n${body}<!-- altitude:end -->\n`;
 }
 function instructionPath(client) {
@@ -55,7 +75,7 @@ function init(context) {
     if(isSymlink(path)) throw new Error(`Refusing instruction symlink: ${path}`);
     const existed=existsSync(path),before=existed?readFileSync(path,'utf8'):'';
     const old=managed(before);
-    const replacement=remove?'':block(context.pkg.version,context.guidance,old?.created??!existed);
+    const replacement=remove?'':block(context,old?.created??!existed);
     const after=old?before.slice(0,old.start)+replacement+before.slice(old.end):before+(remove?'':replacement);
     const deleteFile=remove&&old?.created&&after==='';
     return {client:c,path,before,after,action:deleteFile?'delete':before===after?'unchanged':existed?'update':'create'};
@@ -81,7 +101,7 @@ function doctor(context) {
     try {
       const text=existsSync(path)?readFileSync(path,'utf8'):'';
       const current=managed(text);
-      if(current && text.slice(current.start,current.end)!==block(context.pkg.version,context.guidance,current.created)) findings.push(finding('ALT-SETUP-001','deterministic','fail',`${file} points to different guidance`,'Setup matches installed version and location',`altitude init --client ${client} --apply`,'altitude doctor --json'));
+      if(current && text.slice(current.start,current.end)!==block(context,current.created)) findings.push(finding('ALT-SETUP-001','deterministic','fail',`${file} points to different guidance`,'Setup matches installed version and location',`altitude init --client ${client} --apply`,'altitude doctor --json'));
       else findings.push(finding('ALT-SETUP-001','deterministic',current?'pass':'not-configured',`${client}: ${current?'managed pointer matches':'no managed pointer'}`,'Explicit setup when agent integration is desired',`altitude init --client ${client}`,'Restart client and inspect loaded instructions.'));
     } catch(e) {findings.push(finding('ALT-SETUP-001','deterministic','fail',`${file}: ${e.message}`,'One intact managed block','Reconcile edited/duplicate markers manually.','altitude doctor --json'));}
   }
@@ -91,12 +111,28 @@ function doctor(context) {
   emit({command:'doctor',packageVersion:context.pkg.version,guidanceVersion:context.index.version,ok,scope:'Installation and managed pointers only; not accessibility or usability certification.',findings});
   if(!ok)process.exitCode=1;
 }
+function check(context) {
+  const target=resolve(cwd,args.find((v,i)=>!v.startsWith('--') && args[i-1]!=='--cwd') || (existsSync(resolve(cwd,'src'))?'src':'.'));
+  if(!existsSync(target)) throw new Error(`No such directory: ${target}`);
+  const tokensCss=resolve(context.guidance,'..','tokens.css');
+  const tokenNames=new Set(existsSync(tokensCss)?[...readFileSync(tokensCss,'utf8').matchAll(/--([\w-]+)\s*:/g)].map(m=>m[1]):[]);
+  const {files,findings}=scan(target,{tokenNames});
+  const ok=!findings.some(f=>f.kind==='deterministic');
+  const scope='Altitude rules certain from source text only. Not checked: anything that needs the page rendered (contrast, overflow, focus) or a person (accessibility, usability).';
+  if(json) emit({command:'check',version:context.pkg.version,target:relative(cwd,target)||'.',files,ok,scope,findings});
+  else {
+    for(const f of findings) console.log(`${f.ruleId} ${f.kind==='deterministic'?'error ':'review'} ${f.file?`${f.file}${f.line?':'+f.line:''}`:'(project)'}  ${f.observed}\n  ${f.repair}`);
+    console.log(`${findings.filter(f=>f.kind==='deterministic').length} errors, ${findings.filter(f=>f.kind!=='deterministic').length} to review in ${files} files. ${scope} Explain a rule: npm exec -- altitude explain RULE-ID`);
+  }
+  if(!ok)process.exitCode=1;
+}
 try {
-  if(command==='help'||command==='--help') console.log('altitude init --client codex|claude|all [--apply] [--remove]\naltitude patterns [intent] [--json]\naltitude explain RULE-ID [--json]\naltitude doctor [--json]\nAll commands resolve the installed package from --cwd PATH (default current directory).');
+  if(command==='help'||command==='--help') console.log('altitude init --client codex|claude|all [--apply] [--remove]\naltitude patterns [intent] [--json]\naltitude explain RULE-ID [--json]\naltitude doctor [--json]\naltitude check [dir] [--json]\nAll commands resolve the installed package from --cwd PATH (default current directory).');
   else {
     const context=installed();
     if(command==='init')init(context);
     else if(command==='doctor')doctor(context);
+    else if(command==='check')check(context);
     else if(command==='patterns') {
       const words=args.filter((v,i)=>!v.startsWith('--') && args[i-1]!=='--cwd').join(' ').toLowerCase().split(/\W+/).filter(Boolean);
       const patterns=context.index.patterns.map(p=>({...p,score:words.reduce((n,w)=>n+(p.intents.some(i=>i===w||i.startsWith(w))?1:0),0)})).filter(p=>!words.length||p.score).sort((a,b)=>b.score-a.score||a.id.localeCompare(b.id));
