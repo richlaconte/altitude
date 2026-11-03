@@ -24,6 +24,12 @@ import { App as HelloApp, events as helloEvents, service as helloService } from 
 import helloMeta from '../../examples/apps/hello/app.json';
 import '../../examples/apps/hello/app.css';
 
+import { App as ServiceHealthApp } from '../../examples/apps/service-health/app';
+import { events as healthEvents, live as healthLive, service as healthService } from '../../examples/apps/service-health/data';
+import { Controls as HealthControls } from '../../examples/apps/service-health/controls';
+import healthMeta from '../../examples/apps/service-health/app.json';
+import '../../examples/apps/service-health/app.css';
+
 import { App as PlanningBoardApp } from '../../examples/apps/planning-board/app';
 import { events as boardEvents, service as boardService } from '../../examples/apps/planning-board/data';
 import boardMeta from '../../examples/apps/planning-board/app.json';
@@ -44,4 +50,5 @@ const story = (name: string, meta: { title: string; description: string }, rende
 export const AdminConsole = story('Admin console', adminMeta, () => <ExampleContent service={adminService} events={adminEvents}><AdminConsoleApp /></ExampleContent>);
 export const Booking = story('Booking', bookingMeta, () => <ExampleContent service={bookingService} events={bookingEvents}><BookingApp /></ExampleContent>);
 export const PlanningBoard = story('Planning board', boardMeta, () => <ExampleContent service={boardService} events={boardEvents}><PlanningBoardApp /></ExampleContent>);
+export const ServiceHealth = story('Service health', healthMeta, () => { healthLive.start(); return <ExampleContent service={healthService} events={healthEvents} controls={<HealthControls />}><ServiceHealthApp /></ExampleContent>; });
 export const Hello = story('Hello (starter)', helloMeta, () => <ExampleContent service={helloService} events={helloEvents}><HelloApp /></ExampleContent>);
