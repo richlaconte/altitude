@@ -2,7 +2,7 @@
 // it was. Its status and error budget, saturation (the fourth golden signal), its deploys, where the slowest request
 // spent its time, and a log excerpt.
 // The slowest request's spans are ranked as a BarList, which is a ranked top-N of amounts. They aren't a waterfall:
-// a waterfall shows when each span ran and which waited on which, and Altitude doesn't draw one (filed separately).
+// a waterfall shows when each span ran and which waited on which, and Altitude doesn’t draw one yet (#466).
 // The log is a CodeBlock, a fixed excerpt of the record; a live tail would be a Terminal with Stop.
 import * as React from 'react';
 import {
