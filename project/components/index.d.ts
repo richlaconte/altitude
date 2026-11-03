@@ -3630,6 +3630,53 @@ export declare function ThreadListGroup(props: ThreadListGroupProps): React.Reac
 export declare function ThreadListItem(props: ThreadListItemProps): React.ReactElement | null;
 export declare function ThreadListNew(props: React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }): React.ReactElement;
 
+export interface InboxListHandle {
+  /** Focus an item's row, as when the detail closes and focus returns to the list. */
+  focusItem: (key: string) => void;
+}
+export interface InboxListProps<T> extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children' | 'onSelect' | 'defaultValue'> {
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  /** The items, in your order. Keys that weren't here at the last render arrive with the afterglow (up to four at once; more arrive settled, with one message giving the count). */
+  items: T[];
+  getKey: (item: T) => string;
+  /** An InboxItem for each item. Nothing in a row can take focus: a listbox option can't contain a control. */
+  renderItem: (item: T) => React.ReactNode;
+  /** The open item's key: tinted and raised one level, aria-selected. Controlled with onSelectedChange, or uncontrolled with defaultSelected. */
+  selected?: string | null;
+  defaultSelected?: string | null;
+  /** Called on Enter, Space or a click, never on the arrow keys, so moving through the list doesn't open every item. */
+  onSelectedChange?: (key: string) => void;
+  /** Say new items politely as they arrive ("New: Refund for order 4471, from Priya Natarajan"). Default true. */
+  announceArrivals?: boolean;
+}
+export interface InboxItemProps {
+  /** What it's about: a ticket's subject, a message's subject. */
+  title: React.ReactNode;
+  /** Who it's from. */
+  from?: React.ReactNode;
+  /** One line of what it says, clipped with an ellipsis; complete in the row's description. */
+  preview?: React.ReactNode;
+  /** When: usually a RelativeTime with tooltip={false}, since nothing in a row can take focus. */
+  time?: React.ReactNode;
+  /** Its status in words, usually a Badge plate. */
+  status?: React.ReactNode;
+  /** Not read yet: a dot, weight 600, and "Unread" first in the row's name. Never a height. */
+  unread?: boolean;
+  /** Other people looking at it now: small presence avatars, and "Maya is viewing" (or "replying") in the row's name. */
+  viewers?: { name: string; presence?: 1 | 2 | 3; replying?: boolean }[];
+  className?: string;
+}
+/**
+ * The list in a list-and-detail frame (#468): a queue you work through one item at a time. Rows lie flush; pointing at
+ * one lifts it; the open one is selected (accent-soft, raised one level). A listbox: ↑/↓, Home and End move focus,
+ * Enter or Space opens, typing jumps by title. A new row arrives with the afterglow, and never moves the row under the
+ * pointer or the focused one. Use DataTable to act on many rows at once, ThreadList for conversations with an assistant.
+ */
+export declare function InboxList<T>(props: InboxListProps<T> & { ref?: React.Ref<InboxListHandle> }): React.ReactElement;
+/** One row of an InboxList: fixed slots, so every row is named in the same order. */
+export declare function InboxItem(props: InboxItemProps): React.ReactElement;
+
 export type AgentState = 'queued' | 'working' | 'needs-input' | 'blocked' | 'stalled' | 'failed' | 'done' | 'stopped';
 export type AgentNeeds = 'approval' | 'question' | 'review';
 export interface AgentFleetProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -3903,7 +3950,7 @@ declare global {
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
       Artifact: typeof Artifact; ArtifactHeader: typeof ArtifactHeader; ArtifactVersions: typeof ArtifactVersions; ArtifactContent: typeof ArtifactContent; ArtifactReference: typeof ArtifactReference;
-      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate;
+      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem;
       AgentFleet: typeof AgentFleet; AgentFleetGroup: typeof AgentFleetGroup; AgentFleetItem: typeof AgentFleetItem; AgentRequests: typeof AgentRequests; AgentRequest: typeof AgentRequest; AgentLanes: typeof AgentLanes; summarizeFleet: typeof summarizeFleet; groupAgents: typeof groupAgents; needsYou: typeof needsYou; formatSpan: typeof formatSpan;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;

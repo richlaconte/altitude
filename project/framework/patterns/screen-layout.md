@@ -13,7 +13,7 @@ Name the task, choose the frame from the table, build it, then check the build a
 | Frame | Fits when the person came to | What leads | Built from |
 | --- | --- | --- | --- |
 | Records | find, compare and act on many similar records | the table, filtered | `AppShell`, `FilterBar`, `DataTable`, `Sheet`: the [app skeleton](../app-skeleton.md) |
-| List and detail | triage: work through items one at a time | the open item | `ResizablePanelGroup` (it stacks when narrow), a list, a `PropertyList` |
+| List and detail | triage: work through items one at a time | the open item | `ResizablePanelGroup` (it stacks when narrow), an `InboxList`, a `PropertyList` |
 | Focused editor | make or change one thing | the thing being made | `Breadcrumb` back, `PageHeader` with one primary action, the editor, `SyncIndicator` or `SaveBar` |
 | Guided flow | set something up in order | the current step | `Stepper` and the [review and submit](review-submit.md) contract |
 | Decision | approve, choose or confirm | the choice and its consequence | the [consequential action](consequential-action.md) contract, `PlanPicker`, `Confirmation` |
