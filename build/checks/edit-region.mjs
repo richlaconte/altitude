@@ -175,7 +175,8 @@ try {
     check(rows.every(k => sheetOpen[k].x === sheetRead[k].x && Math.abs(sheetOpen[k].y - sheetRead[k].y) <= 1), `ER-34 reserved values open exactly where they were (${JSON.stringify(sheetRead)} → ${JSON.stringify(sheetOpen)})`);
     const grown = (await page.locator('.er-harness').first().boundingBox()).y - below.y;
     const actions = await sheet.locator('.alt-edit-region-chrome').boundingBox();
-    check(grown > 0 && grown <= actions.height + 16, `ER-35 only the actions row is added below a reserved sheet (${grown}px for a ${actions.height}px row)`);
+    // The row, the form's gap above it, and the 8px the card's space-4 bottom inset adds over its resting space-2.
+    check(grown > 0 && grown <= actions.height + 16 + 8, `ER-35 only the actions row is added below a reserved sheet (${grown}px for a ${actions.height}px row)`);
     await page.keyboard.press('Escape');
     await page.close(); }
 
