@@ -43,6 +43,9 @@ export class DemoError extends Error {
   }
 }
 
+/** Whether a request failed for this reason. */
+export const isDemoError = (e: unknown, kind: DemoErrorKind): e is DemoError => e instanceof DemoError && e.kind === kind;
+
 /** Throw from a handler to reject a request the way a server would (a duplicate, a missing record). */
 export const reject = (kind: 'invalid' | 'not-found' | 'conflict', message: string, extra?: { field?: string; current?: unknown }): never => {
   throw new DemoError(kind, message, extra);
@@ -242,7 +245,8 @@ export function createDemoService<S>(options: DemoServiceOptions<S>): DemoServic
           at(delay(), () => fail(new DemoError('conflict', 'Someone else changed this first.', { current: (handler as WriteHandler<S>).current?.(snapshot.state, input) })));
           break;
         case 'lost-response':
-          if (!isWrite) { at(delay(), () => fail(new DemoError('failed', "We couldn't load that."))); break; }
+          // Only writes lose their response; reads answer, so the app can find out what happened.
+          if (!isWrite) { at(delay(), succeed); break; }
           // Saved at the normal latency; the app only hears a failure later, and must reconcile before retrying.
           at(delay(), () => {
             const out = run();

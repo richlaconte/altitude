@@ -59,6 +59,18 @@ try {
     await form.getByRole('textbox', { name: 'Details' }).fill('Design · Mara'); await form.getByRole('textbox', { name: 'Details' }).press('Enter');
     await page.waitForFunction(() => document.querySelector('[data-board-card="c6"] small')?.textContent === 'Design · Mara');
     check(await focused(page) === 'c6', 'BE-13 the card grows into an EditRegion, saves, and focus returns to the card');
+    // A pointer drag into another column swallows only its own click, not the next one on a card's button (#435).
+    { const from = await page.locator('[data-board-card="c1"]').boundingBox();
+      const toCol = (await page.locator('[data-board-col]:not([data-collapsed])').evaluateAll(els => els.map(e => e.dataset.boardCol))).find(c => c !== 'todo');
+      const to = await page.locator(`[data-board-col="${toCol}"]`).boundingBox();
+      const x0 = from.x + 40, y0 = from.y + 20, x1 = to.x + to.width / 2, y1 = to.y + 60;
+      await page.mouse.move(x0, y0); await page.mouse.down();
+      for (let i = 1; i <= 12; i++) await page.mouse.move(x0 + (x1 - x0) * i / 12, y0 + (y1 - y0) * i / 12);
+      await page.mouse.up();
+      await page.waitForFunction(c => !!document.querySelector(`[data-board-col="${c}"] [data-board-card="c1"]`), toCol);
+      await page.getByRole('button', { name: 'Edit Brand voice', exact: true }).click();
+      check(await page.getByRole('form', { name: 'Edit brand voice' }).isVisible(), 'BE-14 after a drop in another column, the first click on a card’s button acts');
+      await page.keyboard.press('Escape'); }
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {

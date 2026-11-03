@@ -58,7 +58,7 @@ const watch = (p) => { const out = { settled: false }; p.then((v) => Object.assi
   expect(r.error?.kind === 'lost-response' && r.error.committed === true, 'lost response: then rejected, marked committed');
   expect(svc.getSnapshot().log[0].status === 'lost', 'lost response: logged as lost');
   const read = watch(svc.request('items.list')); clock.advance(300); await flush();
-  expect(read.error?.kind === 'failed', 'lost response: a read just fails');
+  expect(read.value?.join() === 'a,b', 'lost response: a read answers, so the app can reconcile');
 }
 { // conflict
   const { clock, svc } = make(); svc.setMode('conflict');
@@ -172,7 +172,7 @@ for (const scheme of ['daylight', 'nightfall']) {
     await mode(page, 'Lose the response'); await add(page, 'Fire drill at 11.'); await page.waitForTimeout(2600);
     n = await notes(page);
     expect(n.filter((x) => x.text === 'Fire drill at 11.').length === 1, 'a lost response leaves exactly one copy');
-    expect(n.find((x) => x.text === 'Fire drill at 11.')?.status === 'committed' || n.find((x) => x.text === 'Fire drill at 11.')?.status === 'failed', 'and the app reached a settled state');
+    expect(n.find((x) => x.text === 'Fire drill at 11.')?.status === 'committed', 'and reading back shows it was saved, so it lands');
 
     // Announcement of a mode change.
     await mode(page, 'Offline');

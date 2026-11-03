@@ -3,7 +3,7 @@
 // Built only from the public altitude-design API.
 import * as React from 'react';
 import {
-  Accordion, AltitudeProvider, Badge, Button, Radio, RadioGroup, Select, Switch, Tabs, TabsList, TabsTrigger,
+  Accordion, Alert, AltitudeProvider, Badge, Button, Radio, RadioGroup, Select, Skeleton, Switch, Tabs, TabsList, TabsTrigger,
 } from 'altitude-design';
 import type { BuiltInScheme, Tone } from 'altitude-design';
 import { DEMO_MODES } from './service';
@@ -14,6 +14,62 @@ export * from './service';
 /** The service's store, mode and log, re-rendering when any of them changes. */
 export function useDemoService<S>(service: DemoService<S>): DemoSnapshot<S> {
   return React.useSyncExternalStore(service.subscribe, service.getSnapshot, service.getSnapshot);
+}
+
+export interface DemoQuery<T> {
+  /** The last answer. Kept while a refresh is in flight or after a refresh fails. */
+  data: T | undefined;
+  /** Why the last read failed. Cleared by the next answer. */
+  error: Error | undefined;
+  loading: boolean;
+  reload: () => Promise<void>;
+  /** Change the held answer in place, for an optimistic write. */
+  setData: (update: (data: T | undefined) => T | undefined) => void;
+}
+
+/**
+ * A read through the service: it runs on mount, again when something changes elsewhere (externalRevision) or the
+ * example is reset (resetRevision), and on reload. An answer that arrives after a newer request was sent is ignored.
+ */
+export function useDemoQuery<S, T>(service: DemoService<S>, op: string, input?: unknown): DemoQuery<T> {
+  const { externalRevision, resetRevision } = useDemoService(service);
+  const [state, setState] = React.useState<{ data: T | undefined; error: Error | undefined; loading: boolean }>({ data: undefined, error: undefined, loading: true });
+  const seq = React.useRef(0);
+  const key = JSON.stringify(input ?? null);
+  const reload = React.useCallback(async () => {
+    const id = ++seq.current;
+    setState((s) => ({ ...s, loading: true }));
+    try {
+      const data = await service.request<T>(op, input);
+      if (id === seq.current) setState({ data, error: undefined, loading: false });
+    } catch (e) {
+      if (id === seq.current) setState((s) => ({ ...s, error: e instanceof Error ? e : new Error(String(e)), loading: false }));
+    }
+  }, [service, op, key]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { if (resetRevision) setState({ data: undefined, error: undefined, loading: true }); }, [resetRevision]);
+  React.useEffect(() => { void reload(); }, [reload, externalRevision, resetRevision]);
+  const setData = React.useCallback((update: (data: T | undefined) => T | undefined) => setState((s) => ({ ...s, data: update(s.data) })), []);
+  return { ...state, reload, setData };
+}
+
+/** The words of a failed request. */
+export const errorMessage = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/**
+ * A read's states, around what it renders. While the first answer is on its way: an imprint. If it fails: what happened
+ * and Try again. If a refresh fails after an answer: the answer stays, with a note that it may be out of date.
+ */
+export function DemoResource<T>({ query, noun, children }: { query: DemoQuery<T>; noun: string; children: (data: T) => React.ReactNode }) {
+  if (query.data === undefined) {
+    if (query.error) {
+      return <Alert tone="critical" title={`We couldn’t load ${noun}`} action={<Button size="sm" onClick={() => void query.reload()}>Try again</Button>}>{errorMessage(query.error)}</Alert>;
+    }
+    return <div className="ex-loading" role="status" aria-label={`Loading ${noun}`}><Skeleton shape="text" lines={4} /></div>;
+  }
+  return <>
+    {query.error && <Alert tone="caution" title={`We couldn’t refresh ${noun}`} action={<Button size="sm" onClick={() => void query.reload()}>Try again</Button>}>What you see may be out of date. {errorMessage(query.error)}</Alert>}
+    {children(query.data)}
+  </>;
 }
 
 /** Something that happens outside the app, offered as a button in the drawer. */
