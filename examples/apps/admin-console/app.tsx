@@ -1,5 +1,5 @@
-// Example: Northwind admin console (#401). The SaaS admin patterns working as one workspace on one simulated server.
-//   Task: a workspace admin keeps Northwind running: people, plan, keys and settings.
+// Example: Fenwick Tools admin console (#401). The SaaS admin patterns working as one workspace on one simulated server.
+//   Task: a workspace admin keeps Fenwick Tools running: people, plan, keys and settings.
 //   Lead: whichever section is open. Primary action: per section (Invite people, Create key; General saves with its
 //   SaveBar). Next: the change, recorded in the audit log.
 // Cross-links: a rename shows in the sidebar; upgrading to Business unlocks custom roles in Members; a scheduled
@@ -48,7 +48,7 @@ export function App() {
   // A new section takes focus at its heading, so a keyboard or screen reader user lands where the page changed.
   React.useEffect(() => { if (moved.current) requestAnimationFrame(() => document.getElementById('ac-title')?.focus()); }, [at]);
 
-  const name = workspace.data?.name ?? 'Northwind';
+  const name = workspace.data?.name ?? 'Fenwick Tools';
   const deleted = workspace.data?.deleted;
   return (
     <AppShell

@@ -62,8 +62,8 @@ import { AppShell, Avatar, Button, DropdownMenu, Kbd, PageHeader, PageHeaderDesc
   sidebar={
     <Sidebar>
       <SidebarHeader>
-        <DropdownMenu items={[{ label: 'Acme Inc.' }, { label: 'Northwind' }, { type: 'separator' }, { label: 'Create workspace' }]}
-          trigger={<button className="as-ws"><Avatar name="Acme Inc." size={24} /><span className="alt-sidebar-text">Acme Inc.</span></button>} />
+        <DropdownMenu items={[{ label: 'Fenwick Tools' }, { label: 'Saltmarsh Books' }, { type: 'separator' }, { label: 'Create workspace' }]}
+          trigger={<button className="as-ws"><Avatar name="Fenwick Tools" size={24} /><span className="alt-sidebar-text">Fenwick Tools</span></button>} />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup label="Workspace"><SidebarMenu>{item('inbox', 'Inbox', 4)}{item('projects', 'Projects')}{item('reports', 'Reports')}</SidebarMenu></SidebarGroup>
@@ -100,8 +100,8 @@ export default function App() {
         sidebar={
           <Sidebar>
             <SidebarHeader>
-              <DropdownMenu items={[{ label: 'Acme Inc.' }, { label: 'Northwind' }, { type: 'separator' }, { label: 'Create workspace' }]}
-                trigger={<button className="as-ws"><Avatar name="Acme Inc." size={24} /><span className="alt-sidebar-text">Acme Inc.</span></button>} />
+              <DropdownMenu items={[{ label: 'Fenwick Tools' }, { label: 'Saltmarsh Books' }, { type: 'separator' }, { label: 'Create workspace' }]}
+                trigger={<button className="as-ws"><Avatar name="Fenwick Tools" size={24} /><span className="alt-sidebar-text">Fenwick Tools</span></button>} />
             </SidebarHeader>
             <SidebarContent>
               <SidebarGroup label="Workspace"><SidebarMenu>{item('inbox', 'Inbox', 4)}{item('projects', 'Projects')}{item('reports', 'Reports')}</SidebarMenu></SidebarGroup>

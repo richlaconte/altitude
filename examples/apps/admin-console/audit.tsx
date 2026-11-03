@@ -22,7 +22,7 @@ export function Audit({ go }: { go: (to: 'billing') => void }) {
   return <>
     <PageHeader>
       <PageHeaderTitle id="ac-title" tabIndex={-1}>Audit log</PageHeaderTitle>
-      <PageHeaderDescription>Every change in Northwind, newest first. Kept for 90 days on Pro and Business.</PageHeaderDescription>
+      <PageHeaderDescription>Every change in Fenwick Tools, newest first. Kept for 90 days on Pro and Business.</PageHeaderDescription>
     </PageHeader>
     <div className="ac-body">
       <Resource query={q} noun="the audit log">

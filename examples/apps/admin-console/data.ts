@@ -1,4 +1,4 @@
-// The Northwind workspace's simulated server (#401). Every write goes through here and leaves an entry in the audit log,
+// The Fenwick Tools workspace's simulated server (#401). Every write goes through here and leaves an entry in the audit log,
 // so what you do in one section shows up in another. Versions (`rev`) make conflicts real: an external change bumps the
 // version, and a save made against the old one is rejected with the current record.
 import { createDemoService, reject } from '../shared/service';
@@ -46,20 +46,20 @@ const T0 = Date.UTC(2026, 10, 2, 9, 0);
 const H = 3_600_000;
 
 export const seed = (): Store => ({
-  workspace: { name: 'Northwind', url: 'northwind', digest: true, mentions: true, rev: 1 },
+  workspace: { name: 'Fenwick Tools', url: 'fenwick-tools', digest: true, mentions: true, rev: 1 },
   members: [
-    { id: 'u1', name: 'Maya Chen', email: 'maya@northwind.dev', role: 'owner', projects: 14, rev: 1 },
-    { id: 'u2', name: 'Theo Marsh', email: 'theo@northwind.dev', role: 'admin', projects: 9, rev: 1 },
-    { id: 'u3', name: 'Ines Duarte', email: 'ines@northwind.dev', role: 'member', projects: 4, rev: 1 },
-    { id: 'u4', name: 'Kofi Mensah', email: 'kofi@northwind.dev', role: 'viewer', projects: 2, rev: 1 },
-    { id: 'i1', name: 'sam@northwind.dev', email: 'sam@northwind.dev', role: 'member', projects: 0, invited: true, sentAt: T0 - 20 * H, rev: 1 },
+    { id: 'u1', name: 'Maya Chen', email: 'maya@fenwicktools.example', role: 'owner', projects: 14, rev: 1 },
+    { id: 'u2', name: 'Theo Marsh', email: 'theo@fenwicktools.example', role: 'admin', projects: 9, rev: 1 },
+    { id: 'u3', name: 'Ines Duarte', email: 'ines@fenwicktools.example', role: 'member', projects: 4, rev: 1 },
+    { id: 'u4', name: 'Kofi Mensah', email: 'kofi@fenwicktools.example', role: 'viewer', projects: 2, rev: 1 },
+    { id: 'i1', name: 'sam@fenwicktools.example', email: 'sam@fenwicktools.example', role: 'member', projects: 0, invited: true, sentAt: T0 - 20 * H, rev: 1 },
   ],
   billing: { plan: 'pro', period: 'month', seats: 4, storageGb: 62, apiCallsM: 0.84 },
   keys: [
-    { id: 'k1', name: 'Production', tail: '4f2a', lastUsed: 'Used 3 minutes ago', usedBy: ['the billing service', 'the webhook to api.northwind.dev'] },
+    { id: 'k1', name: 'Production', tail: '4f2a', lastUsed: 'Used 3 minutes ago', usedBy: ['the billing service', 'the webhook to api.fenwicktools.example'] },
     { id: 'k2', name: 'CI pipeline', tail: '8d0e', lastUsed: 'Used yesterday', usedBy: [] },
   ],
-  webhooks: [{ id: 'w1', url: 'https://api.northwind.dev/hooks/altitude', keyId: 'k1', events: ['invoice.paid', 'member.removed'] }],
+  webhooks: [{ id: 'w1', url: 'https://api.fenwicktools.example/hooks/altitude', keyId: 'k1', events: ['invoice.paid', 'member.removed'] }],
   grants: {
     admin: { 'projects.create': true, 'projects.delete': true, 'members.invite': true, 'billing.view': true },
     member: { 'projects.create': true, 'projects.delete': false, 'members.invite': false, 'billing.view': false },
@@ -68,7 +68,7 @@ export const seed = (): Store => ({
   twoFactor: false,
   audit: [
     { id: 'a3', actor: 'Maya Chen', action: 'role', sentence: 'Maya Chen changed Kofi Mensah’s role from Member to Viewer', at: T0 - 4 * H, before: { role: 'Member' }, after: { role: 'Viewer' } },
-    { id: 'a2', actor: 'Maya Chen', action: 'invite', sentence: 'Maya Chen invited sam@northwind.dev as a Member', at: T0 - 20 * H, before: {}, after: { invited: 'sam@northwind.dev', role: 'Member' } },
+    { id: 'a2', actor: 'Maya Chen', action: 'invite', sentence: 'Maya Chen invited sam@fenwicktools.example as a Member', at: T0 - 20 * H, before: {}, after: { invited: 'sam@fenwicktools.example', role: 'Member' } },
     { id: 'a1', actor: 'Theo Marsh', action: 'key', sentence: 'Theo Marsh created the CI pipeline API key', at: T0 - 26 * H, before: {}, after: { key: 'CI pipeline' } },
   ],
   seq: 10,
@@ -204,7 +204,7 @@ export const service = createDemoService<Store>({
       write: (s, d: { id: string; keyId: string }) => {
         const k = keyOf(s, d.keyId);
         const webhooks = s.webhooks.map((w) => (w.id === d.id ? { ...w, keyId: k.id } : w));
-        const keys = s.keys.map((x) => (x.id === k.id && !x.usedBy.includes('the webhook to api.northwind.dev') ? { ...x, usedBy: [...x.usedBy, 'the webhook to api.northwind.dev'] } : x));
+        const keys = s.keys.map((x) => (x.id === k.id && !x.usedBy.includes('the webhook to api.fenwicktools.example') ? { ...x, usedBy: [...x.usedBy, 'the webhook to api.fenwicktools.example'] } : x));
         return { state: { ...s, webhooks, keys, ...audit(s, ME, 'webhook', `${ME} signed the webhook with the ${k.name} key`, {}, { key: k.name }) }, result: webhooks };
       },
     },
@@ -230,7 +230,7 @@ export const events = [
   {
     label: 'Theo renames the workspace',
     run: () => service.external('Theo Marsh renames the workspace', (s) => {
-      const name = s.workspace.name === 'Northwind Labs' ? 'Northwind Studio' : 'Northwind Labs';
+      const name = s.workspace.name === 'Fenwick Tools Ltd' ? 'Fenwick Toolworks' : 'Fenwick Tools Ltd';
       return { ...s, workspace: { ...s.workspace, name, rev: s.workspace.rev + 1 }, ...audit(s, 'Theo Marsh', 'workspace', `Theo Marsh renamed the workspace from ${s.workspace.name} to ${name}`, { name: s.workspace.name }, { name }) };
     }),
   },
@@ -245,7 +245,7 @@ export const events = [
   },
   {
     label: 'Sam accepts the invitation',
-    run: () => service.external('sam@northwind.dev accepts the invitation', (s) => {
+    run: () => service.external('sam@fenwicktools.example accepts the invitation', (s) => {
       if (!s.members.some((x) => x.id === 'i1' && x.invited)) return s;
       return { ...s, members: s.members.map((x) => (x.id === 'i1' ? { ...x, name: 'Sam Okafor', invited: false, sentAt: undefined, rev: x.rev + 1 } : x)), ...audit(s, 'Sam Okafor', 'member', 'Sam Okafor joined the workspace from an invitation') };
     }),

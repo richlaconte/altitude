@@ -47,7 +47,7 @@ export default function App() {
   const [failNext, setFailNext] = React.useState(false);
   const fail = React.useRef(false); fail.current = failNext;
   const record = useEditRecord({
-    initialValue: { name: 'Acme Inc.', domain: 'acme.dev', seats: '25', region: 'Frankfurt' }, validationMode: 'submit',
+    initialValue: { name: 'Marlow & Chen', domain: 'marlowchen.example', seats: '25', region: 'Frankfurt' }, validationMode: 'submit',
     validate: (d) => (d.name.trim() ? {} : { name: 'Enter a workspace name' }),
     save: (draft) => new Promise((r) => setTimeout(() => r(fail.current ? { ok: false, error: "We couldn't reach the server." } : { ok: true, value: draft }), 900)),
   });

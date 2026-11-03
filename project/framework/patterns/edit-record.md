@@ -26,7 +26,7 @@ The package exports `useEditRecord`, `ErrorSummary` and `WorkflowStatus`. This m
 
 ```tsx
 const form = useEditRecord({
-  initialValue: { name: 'Northwind' }, validationMode: 'submit',
+  initialValue: { name: 'Kestrel Dental' }, validationMode: 'submit',
   validate: value => value.name.trim() ? {} : { name: 'Enter a workspace name.' },
   save: async value => ({ ok: true, value: await api.saveSettings(value) }),
 });

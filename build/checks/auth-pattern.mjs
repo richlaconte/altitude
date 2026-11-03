@@ -24,11 +24,11 @@ expect(await page.getAttribute('#au-email', 'autocomplete') === 'username' && aw
 await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 await page.waitForTimeout(300);
 expect(await page.evaluate(() => !!document.activeElement.closest('.alt-error-summary')), 'an empty submit focuses the error summary');
-await signIn('maya@acme.dev', 'wrong');
+await signIn('maya@fieldnote.example', 'wrong');
 let t = await text();
 expect(/That email and password don’t match/.test(t) && !/no account|not found|doesn’t exist/i.test(t), 'a wrong password never says whether the account exists');
-expect(await page.inputValue('#au-email') === 'maya@acme.dev' && await page.inputValue('#au-password') === '', 'it keeps the email and clears only the password');
-await signIn('maya@acme.dev', 'altitude');
+expect(await page.inputValue('#au-email') === 'maya@fieldnote.example' && await page.inputValue('#au-password') === '', 'it keeps the email and clears only the password');
+await signIn('maya@fieldnote.example', 'altitude');
 expect(await focused() === 'Enter your code', 'the right password moves to two-factor, focusing its heading');
 expect(await page.getAttribute('#au-code', 'autocomplete') === 'one-time-code', 'the code field asks for a one-time code');
 const verify = page.getByRole('button', { name: 'Verify', exact: true });
@@ -45,18 +45,18 @@ expect(await page.getByRole('heading', { name: 'You’re signed in' }).count() =
 await page.getByRole('button', { name: 'Sign out' }).click();
 await page.waitForTimeout(200);
 
-for (let i = 0; i < 3; i++) await signIn('maya@acme.dev', 'nope');
-await signIn('maya@acme.dev', 'nope');
+for (let i = 0; i < 3; i++) await signIn('maya@fieldnote.example', 'nope');
+await signIn('maya@fieldnote.example', 'nope');
 expect(/Too many attempts\. Wait 5 minutes/.test(await text()), 'repeated failures are rate limited, with the wait in words');
 
 await page.getByRole('button', { name: 'Email me a sign-in link' }).click();
 await page.waitForTimeout(1000);
 t = await text();
-expect(await focused() === 'Check your email' && /If maya@acme\.dev has an Acme account, we’ve sent a sign-in link/.test(t), 'the link screen never says whether the account exists');
+expect(await focused() === 'Check your email' && /If maya@fieldnote\.example has a Fieldnote account, we’ve sent a sign-in link/.test(t), 'the link screen never says whether the account exists');
 expect(/You can resend the email in (30|29) seconds\./.test(t), 'a resend waits, with the time in words');
 await page.getByRole('button', { name: 'Use a different email address' }).click();
 await page.waitForTimeout(200);
-expect(await page.inputValue('#au-email') === 'maya@acme.dev', 'going back keeps the email');
+expect(await page.inputValue('#au-email') === 'maya@fieldnote.example', 'going back keeps the email');
 
 await page.getByRole('button', { name: 'Create an account' }).click();
 await page.waitForTimeout(200);

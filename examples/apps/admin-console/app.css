@@ -1,4 +1,4 @@
-/* Northwind admin console (#401). Tokens only. The shell is on the ground; sections are SettingsSections and tables. */
+/* Fenwick Tools admin console (#401). Tokens only. The shell is on the ground; sections are SettingsSections and tables. */
 .ac-shell { min-height: 100vh; }
 .ac-body { display: grid; gap: var(--space-6); padding: var(--space-6) 0 96px; max-width: 960px; min-width: 0; }
 .ac-ws { display: inline-flex; align-items: center; gap: var(--space-2); font: 600 14px/20px var(--font-sans); }

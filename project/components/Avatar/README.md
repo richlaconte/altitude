@@ -58,7 +58,7 @@ export default function App() {
         <div className="who"><Avatar name="Lena Park" size={44} status="idle" /><span className="cap">idle</span></div>
         <div className="who"><Avatar name="Sam Okafor" size={44} status="offline" /><span className="cap">offline</span></div>
         <div className="who"><Avatar name="Noa Levi" size={44} status="active" onClick={() => {}} /><span className="cap">pressable</span></div>
-        <div className="who"><Avatar name="Northwind Studio" size={44} shape="square" /><span className="cap">team</span></div>
+        <div className="who"><Avatar name="Larkspur Design" size={44} shape="square" /><span className="cap">team</span></div>
         <div className="who"><Avatar name="Deploy bot" size={44} shape="square" status="active" /><span className="cap">bot</span></div>
       </div>
       <div className="people" style={{ alignItems: 'center' }}>

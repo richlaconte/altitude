@@ -50,7 +50,7 @@ export default function App() {
     <div className="col">
       <div className="grid">
         <Field label="Email address"><Input type="email" placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-        <Field label="Billing email"><Input type="email" defaultValue="mara@northwind.dev" /></Field>
+        <Field label="Billing email"><Input type="email" defaultValue="mara@quarrylane.example" /></Field>
         <Field label="Search projects"><Input type="search" placeholder="Project name" leading={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>} trailing={<Kbd>/</Kbd>} /></Field>
         <Field label="Invite by email" error="Enter an email address, like name@company.com."><Input type="email" defaultValue="not-an-email" /></Field>
         <div style={{ gridColumn: '1 / -1' }}><Field label="Note"><Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={80} placeholder="Leave a note for your team…" /></Field></div>

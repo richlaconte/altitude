@@ -12,7 +12,7 @@ Runtime phases are `idle`, `confirming`, `pending`, `failed`, `succeeded`, `undo
 
 ## Content, keyboard, focus and announcements
 
-Name actions by outcome (“Delete Northwind workspace”), not “OK”. Make the target and consequence visible before commitment. Use native buttons, and an accessible Dialog for bounded confirmation; its name, inert background, contained Tab/Shift+Tab, dismissal and initial focus must remain correct. Initial focus may favor the safe option for irreversible consequences. On cancel return to the trigger; after a removed record, focus a surviving logical neighbor or heading via the application callback. Persistent failure belongs near the task; concise status uses `WorkflowStatus` without stealing focus.
+Name actions by outcome (“Delete the Harrow Freight workspace”), not “OK”. Make the target and consequence visible before commitment. Use native buttons, and an accessible Dialog for bounded confirmation; its name, inert background, contained Tab/Shift+Tab, dismissal and initial focus must remain correct. Initial focus may favor the safe option for irreversible consequences. On cancel return to the trigger; after a removed record, focus a surviving logical neighbor or heading via the application callback. Persistent failure belongs near the task; concise status uses `WorkflowStatus` without stealing focus.
 
 Long target names and consequences must wrap on narrow screens; keep cancellation and commitment visible and keyboard reachable. Verify RTL, zoom, forced colors, reduced motion and touch. Meaning must survive without animation, shadow or color.
 

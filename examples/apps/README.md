@@ -9,7 +9,7 @@ They aren't part of the package. Each app imports `altitude-design` by name, as 
 | App | Folder | What it shows |
 |---|---|---|
 | Team notes | `hello/` | the smallest app on the service: pending, landed, failed, reconciled, arrived |
-| Northwind admin console | `admin-console/` | settings, members, billing, API keys, security and the audit log on one workspace: every change is logged, conflicts come from other admins (#401) |
+| Fenwick Tools admin console | `admin-console/` | settings, members, billing, API keys, security and the audit log on one workspace: every change is logged, conflicts come from other admins (#401) |
 | Sprint 24 planning | `planning-board/` | a board, table, schedule and epics over one record: moves that hover until they land and go back with a reason when the server refuses (#402). Its Assistant toggle adds a scripted assistant whose proposed changes show on the cards until a person accepts them (#408) |
 | Book an appointment | `booking/` | a phone-first booking flow from treatment to paid booking: a real held time that says when it ends, a text code, review with every charge, and cancelling as easily as booking (#403) |
 

@@ -20,7 +20,7 @@ Finds and runs anything in the product from one field: the summit, at level 5, o
 
 **You provide:** `items`, a list of groups (`label`, `items`, optional `predicted`), each item with a `label` and usually an `icon`, `onSelect`, `shortcut` (display only: bind the key yourself), `keywords` and `description`; `open`/`onOpenChange` when you also open it from a button or a field; `query`/`onQueryChange` or `defaultQuery` when it should open on a query. Optionally `filter` (return 0 to hide, higher to rank nearer the top; `commandScore` is the default), `empty`, `placeholder`, and `shortcut` (another letter, or `false`).
 
-- Do start actions with a verb ("Invite people") and name places plainly ("Northwind").
+- Do start actions with a verb ("Invite people") and name places plainly ("Orchard").
 - Do mark items `predicted` only when you'd be right most of the time; a wrong prediction costs a moment.
 - Don't render two palettes, and don't open a Sheet from one: one summit, and a level-4 sheet can't sit on it.
 
@@ -126,7 +126,7 @@ const I = {
 const groups = [
   { label: "Recent", predicted: true, items: [
     { label: "Deploy to production", icon: I.up, shortcut: ["\u2318", "D"], keywords: ["ship", "release"] },
-    { label: "Open Northwind", icon: I.folder, description: "Marketing site" }
+    { label: "Open Orchard", icon: I.folder, description: "Marketing site" }
   ] },
   { label: "Actions", items: [
     { label: "New project", icon: I.plus, shortcut: ["\u2318", "N"] },
@@ -135,7 +135,7 @@ const groups = [
     { label: "Delete project\u2026", icon: I.trash, tone: "critical" }
   ] },
   { label: "Projects", items: [
-    { label: "Northwind", icon: I.folder, description: "acme.dev" },
+    { label: "Orchard", icon: I.folder, description: "orchard.example" },
     { label: "Beacon", icon: I.folder, description: "Internal dashboard" },
     { label: "Cinder", icon: I.folder, description: "API gateway" }
   ] },
@@ -167,7 +167,7 @@ export default function App() {
   };
   return <div className="app">
   <div className="bar">
-    <b>Northwind</b>
+    <b>Orchard</b>
     <Badge tone="positive">Operational</Badge>
     <Input
       className="find"

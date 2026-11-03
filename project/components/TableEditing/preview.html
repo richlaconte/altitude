@@ -37,10 +37,10 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 var A = window.Altitude;
 const TE_PLANS = [{ value: "starter", label: "Starter" }, { value: "team", label: "Team" }, { value: "enterprise", label: "Enterprise" }];
 const TE_SEED = [
-  { id: "acme", name: "Acme Corp", plan: "team", seats: 24, contact: "ana@acme.example", revision: 1 },
-  { id: "globex", name: "Globex", plan: "enterprise", seats: 140, contact: "it@globex.example", revision: 1 },
-  { id: "initech", name: "Initech", plan: "starter", seats: 5, contact: "peter@initech.example", revision: 1 },
-  { id: "umbrella", name: "Umbrella", plan: "team", seats: 31, contact: "ops@umbrella.example", revision: 1 }
+  { id: "kestrel", name: "Kestrel Dental", plan: "team", seats: 24, contact: "ana@kestreldental.example", revision: 1 },
+  { id: "harrow", name: "Harrow Freight", plan: "enterprise", seats: 140, contact: "it@harrowfreight.example", revision: 1 },
+  { id: "okafor", name: "Okafor & Lund", plan: "starter", seats: 5, contact: "peter@okaforlund.example", revision: 1 },
+  { id: "tidewater", name: "Tidewater Clinic", plan: "team", seats: 31, contact: "ops@tidewaterclinic.example", revision: 1 }
 ];
 const teWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function App() {
@@ -72,7 +72,7 @@ function App() {
       },
       onRowChange: (row) => setRows((list) => list.map((r) => r.id === row.id ? row : r))
     }
-  ), /* @__PURE__ */ React.createElement("p", null, "Sorted by seats: an edit that changes the seat count holds its place until it's saved, then the row is carried to its new position."), /* @__PURE__ */ React.createElement("details", null, /* @__PURE__ */ React.createElement("summary", null, "Fixture controls"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setRows((list) => list.map((r) => r.id === "globex" ? { ...r, seats: r.seats + 10, revision: r.revision + 1 } : r)) }, "Apply external update to Globex")));
+  ), /* @__PURE__ */ React.createElement("p", null, "Sorted by seats: an edit that changes the seat count holds its place until it's saved, then the row is carried to its new position."), /* @__PURE__ */ React.createElement("details", null, /* @__PURE__ */ React.createElement("summary", null, "Fixture controls"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setRows((list) => list.map((r) => r.id === "harrow" ? { ...r, seats: r.seats + 10, revision: r.revision + 1 } : r)) }, "Apply external update to Harrow Freight")));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

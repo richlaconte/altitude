@@ -124,7 +124,7 @@ const I = {
 const groups = [
   { label: "Recent", predicted: true, items: [
     { label: "Deploy to production", icon: I.up, shortcut: ["\u2318", "D"], keywords: ["ship", "release"] },
-    { label: "Open Northwind", icon: I.folder, description: "Marketing site" }
+    { label: "Open Orchard", icon: I.folder, description: "Marketing site" }
   ] },
   { label: "Actions", items: [
     { label: "New project", icon: I.plus, shortcut: ["\u2318", "N"] },
@@ -133,7 +133,7 @@ const groups = [
     { label: "Delete project\u2026", icon: I.trash, tone: "critical" }
   ] },
   { label: "Projects", items: [
-    { label: "Northwind", icon: I.folder, description: "acme.dev" },
+    { label: "Orchard", icon: I.folder, description: "orchard.example" },
     { label: "Beacon", icon: I.folder, description: "Internal dashboard" },
     { label: "Cinder", icon: I.folder, description: "API gateway" }
   ] },
@@ -165,7 +165,7 @@ function App() {
     setOpen(v);
     if (!v) setText("");
   };
-  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("b", null, "Northwind"), /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Operational"), /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { className: "app" }, /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("b", null, "Orchard"), /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Operational"), /* @__PURE__ */ React.createElement(
     A.Input,
     {
       className: "find",

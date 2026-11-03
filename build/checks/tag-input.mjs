@@ -68,19 +68,19 @@ try {
     await page.close(); }
 
   { const page = await open(); const input = page.getByRole('combobox', { name: 'Share with' });
-    await input.fill('ines@northwind.example'); await input.press('Enter');
+    await input.fill('ines@harrowfreight.example'); await input.press('Enter');
     await page.waitForTimeout(400);
     check(await page.locator('.alt-tag[data-status="pending"]').count() === 1 && await page.locator('.alt-tag[aria-busy="true"]').count() === 1, 'TAG-21 a tag waits, pending and busy, for onAdd');
-    await status(page, 'Share with').filter({ hasText: 'Added ines@northwind.example' }).waitFor();
-    check((await tagsOf(page, 'Share with')).includes('ines@northwind.example') && await page.locator('.alt-tag[data-status]').count() === 0, 'TAG-22 an accepted add lands');
+    await status(page, 'Share with').filter({ hasText: 'Added ines@harrowfreight.example' }).waitFor();
+    check((await tagsOf(page, 'Share with')).includes('ines@harrowfreight.example') && await page.locator('.alt-tag[data-status]').count() === 0, 'TAG-22 an accepted add lands');
     await input.fill('x@other.example'); await input.press('Enter');
-    await page.locator('.alt-tag-error', { hasText: 'Only people at northwind.example can be invited.' }).waitFor();
+    await page.locator('.alt-tag-error', { hasText: 'Only people at harrowfreight.example can be invited.' }).waitFor();
     check(await input.inputValue() === 'x@other.example' && await input.getAttribute('aria-invalid') === 'true' && !(await tagsOf(page, 'Share with')).includes('x@other.example'), 'TAG-23 a rejected add returns its text to the input with the error');
     await input.fill('not-an-email,');
     check(await page.locator('.alt-tag-error', { hasText: 'not-an-email isn’t an email address.' }).isVisible(), 'TAG-24 validate refuses a tag before any write');
-    await input.fill(''); await page.getByRole('button', { name: 'Remove mara@northwind.example' }).click();
-    await status(page, 'Share with').filter({ hasText: 'Removed mara@northwind.example' }).waitFor();
-    check(!(await tagsOf(page, 'Share with')).includes('mara@northwind.example'), 'TAG-25 the remove button removes after onRemove succeeds');
+    await input.fill(''); await page.getByRole('button', { name: 'Remove mara@harrowfreight.example' }).click();
+    await status(page, 'Share with').filter({ hasText: 'Removed mara@harrowfreight.example' }).waitFor();
+    check(!(await tagsOf(page, 'Share with')).includes('mara@harrowfreight.example'), 'TAG-25 the remove button removes after onRemove succeeds');
     check(await page.getByRole('combobox', { name: 'Skills' }).isDisabled() && await page.locator('.alt-field', { has: page.getByRole('combobox', { name: 'Skills' }) }).locator('.alt-tag-remove').count() === 0, 'TAG-26 a disabled TagInput has no remove buttons');
     await page.close(); }
 

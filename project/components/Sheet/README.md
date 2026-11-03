@@ -41,13 +41,13 @@ import { Button, Input, Sheet, SheetDescription, SheetFooter, SheetHeader, Sheet
 
 <Sheet side="bottom" size="sm" trigger={<Button>Share</Button>}>
   <SheetHeader>
-    <SheetTitle>Share Northwind</SheetTitle>
+    <SheetTitle>Share Tidepool</SheetTitle>
     <SheetDescription>
       Anyone with the link can view the latest deployment.
     </SheetDescription>
   </SheetHeader>
   <Input
-    defaultValue="https://acme.dev/n/8dc01b2"
+    defaultValue="https://tidepool.example/n/8dc01b2"
     readOnly={true}
     aria-label="Share link"
   />
@@ -68,13 +68,13 @@ export default function App() {
     <Button variant="primary" onClick={() => setEdit(true)}>Edit project</Button>
     <Sheet side="bottom" size="sm" trigger={<Button>Share</Button>}>
       <SheetHeader>
-        <SheetTitle>Share Northwind</SheetTitle>
+        <SheetTitle>Share Tidepool</SheetTitle>
         <SheetDescription>
           Anyone with the link can view the latest deployment.
         </SheetDescription>
       </SheetHeader>
       <Input
-        defaultValue="https://acme.dev/n/8dc01b2"
+        defaultValue="https://tidepool.example/n/8dc01b2"
         readOnly={true}
         aria-label="Share link"
       />
@@ -109,7 +109,7 @@ export default function App() {
       <SheetDescription>Changes apply to every environment.</SheetDescription>
     </SheetHeader>
     <div className="form">
-      <Field label="Project name"><Input defaultValue="Northwind" /></Field>
+      <Field label="Project name"><Input defaultValue="Tidepool" /></Field>
       <Field label="Description" hint="Shown on the project's card.">
         <Textarea placeholder="What is this project for?" />
       </Field>

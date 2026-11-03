@@ -1,4 +1,4 @@
-// Northwind admin console (examples/apps/admin-console, #401), built by scripts/build-examples.mjs and driven in a
+// Fenwick Tools admin console (examples/apps/admin-console, #401), built by scripts/build-examples.mjs and driven in a
 // browser on its simulated server. Every section renders in both schemes with no page or console errors, has one h1,
 // at most one primary action, and takes focus at its heading when you arrive. Then the fixtures #401 names:
 //   General: a rename saves through the SaveBar and shows in the sidebar; a slow save still lands; a save against a
@@ -64,17 +64,17 @@ for (const scheme of ['daylight', 'nightfall']) {
 
   // ---- General ------------------------------------------------------------------------------------------------
   await nav(page, 'General');
-  await page.fill('#ac-ws-name', 'Northwind Group'); await wait(page, 750);
+  await page.fill('#ac-ws-name', 'Fenwick Tools Group'); await wait(page, 750);
   expect(await page.locator('.alt-savebar').count() === 1, 'an edit raises the SaveBar');
   await page.locator('.alt-savebar [data-variant="primary"]').click(); await wait(page, 900);
-  expect(/Northwind Group/.test(await text(page, '.alt-sidebar')), 'a saved rename shows in the sidebar');
+  expect(/Fenwick Tools Group/.test(await text(page, '.alt-sidebar')), 'a saved rename shows in the sidebar');
 
   await mode(page, 'Slow');
-  await page.fill('#ac-ws-url', 'northwind-group'); await wait(page, 750);
+  await page.fill('#ac-ws-url', 'fenwick-tools-group'); await wait(page, 750);
   await page.locator('.alt-savebar [data-variant="primary"]').click(); await wait(page, 600);
   expect(await page.evaluate(() => document.querySelector('.alt-savebar')?.getAttribute('data-state')) !== null, 'a slow save is still in flight after 600 ms');
   await wait(page, 2800);
-  expect(await page.inputValue('#ac-ws-url') === 'northwind-group' && !/Unsaved/.test(await text(page, '.alt-savebar')), 'then it lands');
+  expect(await page.inputValue('#ac-ws-url') === 'fenwick-tools-group' && !/Unsaved/.test(await text(page, '.alt-savebar')), 'then it lands');
   await mode(page, 'Succeed');
 
   await page.fill('#ac-ws-name', 'Mine'); await wait(page, 750);
@@ -89,13 +89,13 @@ for (const scheme of ['daylight', 'nightfall']) {
   await nav(page, 'Members');
   await page.locator('.ex-app button', { hasText: 'Invite people' }).click(); await wait(page, 300);
   const tag = page.locator('[role="dialog"] .alt-tag-input input').first();
-  await tag.fill('theo@northwind.dev,'); await tag.fill('lee@northwind.dev,'); await wait(page, 100);
+  await tag.fill('theo@fenwicktools.example,'); await tag.fill('lee@fenwicktools.example,'); await wait(page, 100);
   await page.locator('[role="dialog"] button', { hasText: /Send/ }).click(); await wait(page, 900);
   const turned = await page.evaluate(() => ({ dialog: !!document.querySelector('[role="dialog"]'), says: /already in the workspace/.test(document.querySelector('[role="dialog"]')?.textContent ?? ''), kept: document.querySelectorAll('[role="dialog"] .alt-tag-list li').length }));
   expect(turned.dialog && turned.says && turned.kept === 2, `inviting someone already here is turned away and the list is kept (${JSON.stringify(turned)})`);
-  await page.locator('[role="dialog"] [aria-label="Remove theo@northwind.dev"]').click(); await wait(page, 400);
+  await page.locator('[role="dialog"] [aria-label="Remove theo@fenwicktools.example"]').click(); await wait(page, 400);
   await page.locator('[role="dialog"] button', { hasText: /Send/ }).click(); await wait(page, 900);
-  expect(!(await page.locator('[role="dialog"]').count()) && /lee@northwind\.dev/.test(await text(page, '.ex-app table')), `the rest are invited (${await text(page, '[role="dialog"]')})`);
+  expect(!(await page.locator('[role="dialog"]').count()) && /lee@fenwicktools\.example/.test(await text(page, '.ex-app table')), `the rest are invited (${await text(page, '[role="dialog"]')})`);
 
   await choose(page, '[aria-label="Role for Kofi Mensah"]', 'Member'); await wait(page, 900);
   expect(/Role changed/.test(await page.locator('tr', { hasText: 'Kofi Mensah' }).textContent()), 'a role change lands');
@@ -142,7 +142,7 @@ for (const scheme of ['daylight', 'nightfall']) {
   // ---- Developers ---------------------------------------------------------------------------------------------
   await nav(page, 'Developers');
   await page.locator('[aria-label="Revoke the Production key"]').click(); await wait(page, 300);
-  expect(/the webhook to api\.northwind\.dev/.test(await text(page, '[role="dialog"]')), 'revoking a key names what uses it');
+  expect(/the webhook to api\.fenwicktools\.example/.test(await text(page, '[role="dialog"]')), 'revoking a key names what uses it');
   await page.locator('[role="dialog"] button', { hasText: 'Revoke key' }).click(); await wait(page, 1000);
   expect(/Failing/.test(await text(page, '.ac-hook')) && /signing key was revoked/.test(await text(page, '.ac-hook')), 'the webhook signed with it says it’s failing');
   await choose(page, '.ac-hook .alt-select-trigger', 'CI pipeline'); await wait(page, 1000);
@@ -168,8 +168,8 @@ for (const scheme of ['daylight', 'nightfall']) {
   const log = await auditSentences(page);
   const one = (re) => log.filter((r) => re.test(r)).length === 1;
   for (const [re, what] of [
-    [/renamed the workspace from Northwind to Northwind Group/, 'the rename'], [/changed the workspace URL to altitude\.app\/northwind-group/, 'the slow URL change'],
-    [/Theo Marsh renamed the workspace/, 'Theo’s rename'], [/invited lee@northwind\.dev/, 'the invitation'],
+    [/renamed the workspace from Fenwick Tools to Fenwick Tools Group/, 'the rename'], [/changed the workspace URL to altitude\.app\/fenwick-tools-group/, 'the slow URL change'],
+    [/Theo Marsh renamed the workspace/, 'Theo’s rename'], [/invited lee@fenwicktools\.example/, 'the invitation'],
     [/Kofi Mensah’s role from Member to Admin/, 'the role change whose response was lost'], [/upgraded from Pro to Business/, 'the upgrade'],
     [/scheduled a downgrade from Business to Free/, 'the downgrade'], [/revoked the Production API key/, 'the revoked key'],
     [/created the Billing service API key/, 'the new key'], [/turned on two-factor/, 'two-factor'], [/allowed (Admin|Member|Viewer)s to /, 'the permission'],
@@ -181,7 +181,7 @@ for (const scheme of ['daylight', 'nightfall']) {
 
   // ---- Reset --------------------------------------------------------------------------------------------------
   await drawer(page); await page.locator('.ex-drawer button', { hasText: 'Reset example data' }).click(); await wait(page, 1000);
-  expect(await text(page, '.ac-ws') === 'NNorthwind' || (await text(page, '.ac-ws')).endsWith('Northwind'), `Reset starts over (${await text(page, '.ac-ws')})`);
+  expect(await text(page, '.ac-ws') === 'FTFenwick Tools' || (await text(page, '.ac-ws')).endsWith('Fenwick Tools'), `Reset starts over (${await text(page, '.ac-ws')})`);
   expect(!errors.length, `daylight flow: no page or console errors (${errors.slice(0, 2).join('; ')})`);
   await page.close();
 }

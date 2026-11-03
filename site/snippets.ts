@@ -108,7 +108,7 @@ import 'altitude-design/altitude.css';
 export function App() {
   return (
     <AltitudeProvider scheme="daylight">
-      <Field label="Workspace name"><Input placeholder="Northwind Studio" /></Field>
+      <Field label="Workspace name"><Input placeholder="Larkspur Studio" /></Field>
       <Button variant="primary">Save changes</Button>
     </AltitudeProvider>
   );

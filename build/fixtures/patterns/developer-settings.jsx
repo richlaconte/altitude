@@ -57,7 +57,7 @@ function App() {
       <section className="dv-section" aria-labelledby="dv-hooks-h">
         <h3 id="dv-hooks-h" className="dv-sub">Webhooks</h3>
         <A.Card className="dv-hook">
-          <div className="dv-row"><code>https://api.acme.dev/hooks/altitude</code><A.Badge tone="positive">Active</A.Badge></div>
+          <div className="dv-row"><code>https://api.pinecrest.example/hooks/altitude</code><A.Badge tone="positive">Active</A.Badge></div>
           <div className="dv-events">{['invoice.paid', 'customer.updated', 'member.removed'].map((e) => <A.Checkbox key={e} label={e} defaultChecked={e !== 'member.removed'} />)}</div>
           <A.Timeline aria-label="Recent deliveries" groupBy="none" locale="en-IE">
             {deliveries.map((d) => <A.TimelineItem key={d.id} time={d.at} status={d.status} onRetry={d.result === 'Failed' ? () => retry(d.id) : undefined}>
@@ -86,7 +86,7 @@ function App() {
       <A.Dialog open={!!confirm} background="stationary" size="sm" dismissible={!confirm?.busy} onOpenChange={(o) => { if (!o) setConfirm(null); }}
         title={confirm?.kind === 'roll' ? `Roll the ${key?.name} key?` : confirm?.kind === 'revoke' ? `Revoke the ${key?.name} key?` : `Disconnect ${app?.name}?`}
         description={confirm?.kind === 'roll' ? 'You’ll get a new key now. The old key keeps working for 24 hours, so you can update your services first.'
-          : confirm?.kind === 'revoke' ? `Requests that use it fail immediately. ${key?.used}.` : `${app?.name} stops receiving updates, and anyone using it loses access to Acme data through it.`}
+          : confirm?.kind === 'revoke' ? `Requests that use it fail immediately. ${key?.used}.` : `${app?.name} stops receiving updates, and anyone using it loses access to Pinecrest data through it.`}
         footer={<><A.Button disabled={confirm?.busy} onClick={() => setConfirm(null)}>Cancel</A.Button><A.Button variant={confirm?.kind === 'roll' ? 'primary' : 'danger'} loading={confirm?.busy} onClick={act}>{confirm?.kind === 'roll' ? 'Roll key' : confirm?.kind === 'revoke' ? 'Revoke key' : 'Disconnect'}</A.Button></>} />
     </main>
   );

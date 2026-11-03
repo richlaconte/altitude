@@ -53,7 +53,7 @@ import { Button, Stepper } from 'altitude-design';
 
 const steps = [{ title: "Account" }, { title: "Workspace" }, { title: "Invite team" }, { title: "Billing" }, { title: "Launch" }];
 const setup = [
-  { title: "Connect repository", description: "github.com/acme/northwind" },
+  { title: "Connect repository", description: "github.com/pinecrest/roofing-site" },
   { title: "Configure build", description: "Framework, output directory, env" },
   { title: "Deploy", description: "First production deployment" }
 ];

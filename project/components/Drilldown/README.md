@@ -31,8 +31,8 @@ The full preview, as rendered in Storybook and checked in CI (`wrap` is the prev
 import { Drilldown } from 'altitude-design';
 
 const tree = { id: 'ws', title: 'Workspace', children: [
-  { id: 'nw', title: 'Northwind', description: 'Marketing site', children: [
-    { id: 'prod', title: 'Production', description: 'acme.dev', children: [
+  { id: 'nw', title: 'Orchard', description: 'Marketing site', children: [
+    { id: 'prod', title: 'Production', description: 'orchard.example', children: [
       { id: 'b42', title: 'Build #42', description: 'main@8dc01b2 · 2h ago', content: 'Deployed by Mara. 14 routes, 2.1 MB, healthy.' },
       { id: 'b41', title: 'Build #41', description: 'main@51ac9e0 · yesterday', content: 'Rolled back after a cold-start regression.' } ] },
     { id: 'prev', title: 'Preview', description: '3 branches', content: 'Preview deployments for open pull requests.' } ] },

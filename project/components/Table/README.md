@@ -84,7 +84,7 @@ import * as React from 'react';
 import { Badge, Button, DataTable, Input } from 'altitude-design';
 
 const data = [
-  { id: "nw", name: "Northwind", env: "Production", owner: "Mara Quist", updated: 2, req: 1240 },
+  { id: "nw", name: "Checkout API", env: "Production", owner: "Mara Quist", updated: 2, req: 1240 },
   { id: "bc", name: "Beacon", env: "Preview", owner: "Jon Reyes", updated: 5, req: 312 },
   { id: "ci", name: "Cinder", env: "Production", owner: "Lena Park", updated: 26, req: 5906 },
   { id: "dl", name: "Delta", env: "Staging", owner: "Sam Okafor", updated: 49, req: 88 },

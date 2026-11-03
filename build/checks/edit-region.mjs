@@ -61,7 +61,7 @@ try {
     await page.keyboard.press('Escape'); await page.getByRole('listbox').waitFor({ state: 'detached' });
     check(await form(page).isVisible(), 'ER-11 Escape in an open Select closes the list, not the editor');
     await page.keyboard.press('Escape'); await page.getByRole('button', { name: 'Edit Mara Quist', exact: true }).waitFor();
-    check(await page.getByText('mara@northwind.example · Owner · Gets updates').isVisible(), 'ER-12 a second Escape cancels and discards the draft');
+    check(await page.getByText('mara@juniperphysio.example · Owner · Gets updates').isVisible(), 'ER-12 a second Escape cancels and discards the draft');
     // IME: Enter during composition does nothing.
     await edit(page); await name(page).fill('Mara Q');
     await name(page).evaluate(el => el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing: true })));
@@ -80,7 +80,7 @@ try {
     await page.close(); }
 
   { const page = await open('slow');
-    await edit(page); await email(page).fill('mara.q@northwind.example'); await email(page).press('Enter');
+    await edit(page); await email(page).fill('mara.q@juniperphysio.example'); await email(page).press('Enter');
     await page.waitForTimeout(100);
     check(await form(page).getAttribute('aria-busy') === 'true' && await name(page).getAttribute('readonly') !== null, 'ER-17 saving marks the form busy and its fields read-only');
     await page.keyboard.press('Escape');
@@ -96,7 +96,7 @@ try {
     await form(page).getByText('This record changed', { exact: true }).waitFor();
     check(await form(page).getByRole('button', { name: 'Save changes' }).isDisabled() && await name(page).inputValue() === 'Mara Draft', 'ER-20 an outside change during editing keeps the draft and blocks Save');
     await form(page).getByRole('button', { name: 'Use current values' }).click();
-    check(await email(page).inputValue() === 'm.quist@northwind.example' && await focused(name(page)), 'ER-21 Use current values replaces the draft and refocuses the form');
+    check(await email(page).inputValue() === 'm.quist@juniperphysio.example' && await focused(name(page)), 'ER-21 Use current values replaces the draft and refocuses the form');
     await name(page).fill('Mara Current'); await name(page).press('Enter');
     await page.getByRole('button', { name: 'Edit Mara Current', exact: true }).or(page.getByRole('button', { name: 'Edit Mara Quist', exact: true })).waitFor();
     check(await page.getByText('Mara Current', { exact: true }).isVisible(), 'ER-22 a save on the current values succeeds');

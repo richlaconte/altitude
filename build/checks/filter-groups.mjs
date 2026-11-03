@@ -21,7 +21,7 @@ let r = await read();
 expect(r.root === 'Segment rules' && r.groups.length === 1, 'a tree renders its conditions and one group');
 expect(r.groups[0].label === 'Any of' && r.groups[0].border === '1px' && r.groups[0].shadow === 'none', 'a group is a flush bracket named "Any of"');
 expect(r.sentence === 'Plan is Pro and any of: Country is Germany, Seats > 50', `the expression in words (${r.sentence})`);
-expect(r.matched.join(',') === 'Acme,Globex', `the table filters by the tree (${r.matched})`);
+expect(r.matched.join(',') === 'Fenwick Tools,Okafor & Lund', `the table filters by the tree (${r.matched})`);
 
 await page.click('.alt-filter-group button:has-text("Match any of")');
 await page.waitForTimeout(200);

@@ -113,7 +113,7 @@ const overlap = (a, b) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1
   await page.mouse.click(pick.x + pick.width / 2, pick.y + pick.height / 2);
   await page.waitForTimeout(300);
   const sel = await page.evaluate(() => { const fig = document.querySelectorAll('.alt-chart')[1]; return { frame: fig.querySelector('.alt-chart-selection')?.textContent, ops: [...fig.querySelectorAll('.alt-chart-rel')].map((g) => +getComputedStyle(g).opacity), cursor: getComputedStyle(fig.querySelector('.alt-chart-plot')).cursor }; });
-  expect(sel.frame === 'Filtered to VandelayClear' && sel.ops.filter((o) => o === 1).length === 1 && sel.ops.filter((o) => Math.abs(o - 0.35) < 0.01).length === 15 && sel.cursor === 'pointer', `a selected dot keeps its colour and the rest recede (${sel.frame}, ${sel.cursor})`);
+  expect(sel.frame === 'Filtered to Dr. Ines VargaClear' && sel.ops.filter((o) => o === 1).length === 1 && sel.ops.filter((o) => Math.abs(o - 0.35) < 0.01).length === 15 && sel.cursor === 'pointer', `a selected dot keeps its colour and the rest recede (${sel.frame}, ${sel.cursor})`);
   await page.keyboard.press('Escape');
   await page.locator('.alt-chart').nth(1).getByRole('button', { name: 'Clear', exact: true }).click().catch(() => {});
 

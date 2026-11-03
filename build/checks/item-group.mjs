@@ -51,7 +51,7 @@ try {
     await fresh.getByRole('textbox', { name: 'Name' }).fill('Audit log'); await fresh.getByRole('button', { name: 'Add webhook' }).click();
     await fresh.getByText('Enter a name.').or(fresh.getByText('Use an https:// address.')).first().waitFor();
     check(await fresh.getByRole('textbox', { name: 'Endpoint URL' }).getAttribute('aria-invalid') === 'true', 'IG-07 a refused new item keeps the editor with field errors');
-    await fresh.getByRole('textbox', { name: 'Endpoint URL' }).fill('https://audit.northwind.example/in'); await fresh.getByRole('button', { name: 'Add webhook' }).click();
+    await fresh.getByRole('textbox', { name: 'Endpoint URL' }).fill('https://audit.verityprint.example/in'); await fresh.getByRole('button', { name: 'Add webhook' }).click();
     await said(page, 'Added Audit log');
     check((await titles(page)).at(-1) === 'Audit log' && (await focusedName(page)).endsWith('Add webhook'), 'IG-08 the new slat lands and focus goes to a fresh add slat, ready for the next');
     // Remove with Undo: the receipt is left in the slat's place, and nothing moves while it holds.

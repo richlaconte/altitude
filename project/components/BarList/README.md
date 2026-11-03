@@ -56,7 +56,7 @@ export default function App() {
   const [spike, setSpike] = React.useState(false);
   const [q, setQ] = React.useState('');
   const [later, setLater] = React.useState(undefined);
-  React.useEffect(() => { const t = setTimeout(() => setLater([{ name: 'Acme Corp', value: 48200 }, { name: 'Globex', value: 31900 }, { name: 'Initech', value: 22750 }, { name: 'Umbrella', value: 9400 }]), 2400); return () => clearTimeout(t); }, []);
+  React.useEffect(() => { const t = setTimeout(() => setLater([{ name: 'Okafor & Lund', value: 48200 }, { name: 'Harrow Freight', value: 31900 }, { name: 'Dr. Ines Varga', value: 22750 }, { name: 'Bramble Bakery', value: 9400 }]), 2400); return () => clearTimeout(t); }, []);
   const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
   return (
     <div className="bl">

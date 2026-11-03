@@ -45,26 +45,26 @@ const danger = await page.evaluate(() => { const d = document.getElementById('st
   return { tone: d.dataset.tone, inset: /inset/.test(cs.boxShadow), same: cs.transform === getComputedStyle(g).transform && cs.zIndex === getComputedStyle(g).zIndex }; });
 expect(danger.tone === 'critical' && danger.inset && danger.same, `the danger zone has a critical rim at the same height (${JSON.stringify(danger)})`);
 
-await page.fill('#ws-name', 'Acme Labs');
+await page.fill('#ws-name', 'Bramble Labs');
 await page.waitForTimeout(900);
 expect(await page.locator('.alt-savebar[data-state="open"], .alt-savebar:not([data-state="closed"])').count() === 1, 'a changed field opens the SaveBar');
-await page.fill('#ws-url', 'Acme Labs');
+await page.fill('#ws-url', 'Bramble Labs');
 await page.getByRole('button', { name: 'Save changes' }).click();
 await page.waitForTimeout(300);
 expect(await page.evaluate(() => document.activeElement.closest('.alt-error-summary') !== null), 'an invalid save focuses the error summary');
 await page.fill('#ws-url', 'acme-labs');
 await page.getByRole('button', { name: 'Save changes' }).click();
 await page.waitForTimeout(1400);
-expect(await page.inputValue('#ws-name') === 'Acme Labs' && await page.evaluate(() => !document.querySelector('.alt-savebar') || document.querySelector('.alt-savebar').dataset.state === 'closed'), 'saving lowers the bar and keeps the values');
+expect(await page.inputValue('#ws-name') === 'Bramble Labs' && await page.evaluate(() => !document.querySelector('.alt-savebar') || document.querySelector('.alt-savebar').dataset.state === 'closed'), 'saving lowers the bar and keeps the values');
 
 await page.getByRole('button', { name: 'Delete workspace' }).click();
 await page.waitForTimeout(500);
-const dialog = page.getByRole('dialog', { name: 'Delete Acme workspace?' });
+const dialog = page.getByRole('dialog', { name: 'Delete Bramble workspace?' });
 expect(await dialog.count() === 1, 'deleting asks in a dialog');
 expect(await page.evaluate(() => !document.querySelector('[data-receded]')), 'the dialog is stationary: nothing behind it recedes');
 const confirm = dialog.getByRole('button', { name: 'Delete workspace' });
 expect(await confirm.isDisabled(), 'confirming waits for the name');
-await dialog.getByLabel('Type Acme to confirm').fill('Acme');
+await dialog.getByLabel('Type Bramble to confirm').fill('Bramble');
 expect(!(await confirm.isDisabled()), 'typing the name enables it');
 await confirm.click();
 await page.waitForTimeout(1300);

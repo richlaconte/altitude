@@ -58,7 +58,7 @@ export default function App() {
       </div>
     <div className="col wrap">
       <Alert title="Scheduled maintenance">The API will be read-only on Sunday from 02:00 to 02:30 UTC.</Alert>
-      <Alert tone="positive" title="Domain verified">acme.dev now points at this project.</Alert>
+      <Alert tone="positive" title="Domain verified">saltmarshbooks.example now points at this project.</Alert>
       <Alert tone="caution" variant="raised" title="You're at 90% of your plan" action={<Button size="sm" variant="primary">Upgrade</Button>} />
       <AlertStack>
         {items.map((a) => <Alert key={a.id} tone={a.tone} title={a.title} onDismiss={() => setItems((xs) => xs.filter((x) => x.id !== a.id))}>{a.body}</Alert>)}

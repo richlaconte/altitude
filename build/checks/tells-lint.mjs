@@ -36,6 +36,11 @@ const KIT_HEX = ['#3b82f6', '#2563eb', '#1d4ed8', '#6366f1', '#4f46e5', '#8b5cf6
   '#0d9488', '#06b6d4', '#0ea5e9', '#0f172a', '#1e293b', '#64748b', '#111827', '#18181b'];
 const KIT_CLASS = /\b(?:bg|text|border|from|via|to|ring|fill|stroke)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/;
 
+// CP8: stock sample names. The list is CP8's own `names` in project/tells.json, so the catalogue and the rule share it.
+const STOCK = JSON.parse(readFileSync(join(root, 'project/tells.json'), 'utf8')).tells.find((t) => t.id === 'CP8')?.names ?? [];
+const STOCK_NAME = new RegExp(`\\b(?:${STOCK.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`);
+const stock = (l) => STOCK_NAME.test(l) || /\b(?:northwind|acme)\.[a-z]/.test(l);
+
 /* ── font helpers ── */
 const familyDecl = /(?:font-family:|--font-[\w-]+:|"(?:sans|mono|display)":)\s*([^;}\n]+)/;
 const firstFamily = (line) => { const m = line.match(familyDecl); return m ? m[1].split(',')[0].replace(/[\\"']/g, '').trim().toLowerCase() : null; };
@@ -97,6 +102,7 @@ const rules = [
   { id: 'CP2', files: MARKUP, test: (l) => /Welcome back!|Something went wrong|\bOops\b|>\s*(?:OK|Submit)\s*</.test(l), bad: '<Button>Submit</Button>', good: '<Button>Send invite</Button>' },
   { id: 'CP3', files: MARKUP, test: (l) => /<(Button|Link|a)\b[^>]*>[^<]*(?:→|->)\s*<\/\1>/.test(l), bad: '<Button>Get started →</Button>', good: '<Button>Create workspace</Button>' },
   { id: 'CP5', files: MARKUP, test: (l) => /<(Button|Link|a)\b[^>]*>\s*(?:Learn more|Read more|Click here|See more|More|Here)\s*<\/\1>/i.test(l), bad: '<Link href="/pricing">Learn more</Link>', good: '<Link href="/pricing">Compare plans</Link>' },
+  { id: 'CP8', files: ALL, test: stock, bad: "{ name: 'Northwind Traders', contact: 'ana@acme.dev' }", good: "{ name: 'Harrow Freight', contact: 'ana@harrowfreight.example' }" },
   { id: 'CP4', files: MARKUP, test: (l) => /\bAI-powered\b/i.test(l), bad: 'The AI-powered inbox for modern teams', good: 'Sort your inbox by who is waiting' },
   { id: 'CN1', files: /\.css$/, test: (l) => /(?:^|[{;\s])font-family:(?!\s*(?:var\(|inherit|initial|unset))/.test(l) && !/^\s*--/.test(l), bad: '.title { font-family: "Fraunces", serif; }', good: '.title { font-family: var(--font-sans); }' },
 ];

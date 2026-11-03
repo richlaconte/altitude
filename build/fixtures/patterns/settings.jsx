@@ -10,7 +10,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 function App() {
   const [failNext, setFailNext] = React.useState(false);
   const fail = React.useRef(false); fail.current = failNext;
-  const [saved, setSaved] = React.useState({ name: 'Acme', url: 'acme' });
+  const [saved, setSaved] = React.useState({ name: 'Bramble', url: 'bramble' });
   const general = A.useEditRecord({
     initialValue: saved, validationMode: 'submit',
     validate: (d) => ({ ...(d.name.trim() ? {} : { name: 'Enter a workspace name.' }), ...(/^[a-z0-9-]+$/.test(d.url) ? {} : { url: 'Use lowercase letters, numbers and hyphens.' }) }),
@@ -28,14 +28,14 @@ function App() {
   const [typed, setTyped] = React.useState('');
   const heading = React.useRef(null);
   const remove = A.useConsequentialAction({
-    target: 'Acme workspace', consequence: 'Delete Acme, its 12 projects and 1,204 files for all 8 members. This can’t be undone.',
+    target: 'Bramble workspace', consequence: 'Delete Bramble, its 12 projects and 1,204 files for all 8 members. This can’t be undone.',
     requiresConfirmation: true, focusFallback: () => heading.current,
-    execute: async () => { await wait(900); if (fail.current) return { ok: false, error: 'We couldn’t delete the workspace. Nothing was removed. Try again.' }; setDeleted(true); return { ok: true, value: 'acme' }; },
-    messages: { pending: 'Deleting Acme workspace', succeeded: 'Acme workspace deleted' },
+    execute: async () => { await wait(900); if (fail.current) return { ok: false, error: 'We couldn’t delete the workspace. Nothing was removed. Try again.' }; setDeleted(true); return { ok: true, value: 'bramble' }; },
+    messages: { pending: 'Deleting Bramble workspace', succeeded: 'Bramble workspace deleted' },
   });
   const confirming = ['confirming', 'pending', 'failed'].includes(remove.phase);
   const field = (key, label, hint) => <A.Field label={label} hint={hint} error={general.errors[key]}><A.Input id={'ws-' + key} value={general.draft[key]} onChange={(e) => general.setField(key, e.target.value)} /></A.Field>;
-  if (deleted) return <main className="st-page"><h2 ref={heading} tabIndex={-1} className="st-h">Workspace deleted</h2><p>Acme and everything in it were deleted.</p><A.WorkflowStatus>{remove.status}</A.WorkflowStatus></main>;
+  if (deleted) return <main className="st-page"><h2 ref={heading} tabIndex={-1} className="st-h">Workspace deleted</h2><p>Bramble and everything in it were deleted.</p><A.WorkflowStatus>{remove.status}</A.WorkflowStatus></main>;
   return (
     <>
       <main className="st-page">
@@ -53,7 +53,7 @@ function App() {
           <A.SettingsRow label="Mentions" description="Email me when someone mentions me." status={writes.mentions}><A.Switch checked={prefs.mentions} onCheckedChange={(v) => apply('mentions', v)} /></A.SettingsRow>
         </A.SettingsSection>
         <A.SettingsSection id="st-billing" title="Billing" readOnlyReason="Only workspace owners can change billing details. Ask Maya Chen.">
-          <A.SettingsRow label="Billing email" description="Invoices and receipts go here."><A.Input defaultValue="finance@acme.dev" /></A.SettingsRow>
+          <A.SettingsRow label="Billing email" description="Invoices and receipts go here."><A.Input defaultValue="finance@bramble.example" /></A.SettingsRow>
         </A.SettingsSection>
         <A.SettingsSection id="st-danger" title="Danger zone" tone="critical">
           <A.SettingsRow label="Delete workspace" description={remove.consequence}><A.Button variant="danger" onClick={remove.request}>Delete workspace</A.Button></A.SettingsRow>
@@ -61,9 +61,9 @@ function App() {
         <A.WorkflowStatus>{general.status || remove.status}</A.WorkflowStatus>
         <A.SaveBar record={general} />
         <A.Dialog open={confirming} background="stationary" dismissible={remove.phase !== 'pending'} onOpenChange={(o) => { if (!o) { remove.cancel(); setTyped(''); } }} returnFocus={() => heading.current}
-          title="Delete Acme workspace?" description={remove.consequence}
-          footer={<><A.Button disabled={remove.phase === 'pending'} onClick={() => { remove.cancel(); setTyped(''); }}>Keep workspace</A.Button><A.Button variant="danger" disabled={typed !== 'Acme' || remove.phase === 'pending'} onClick={remove.phase === 'failed' ? remove.retry : remove.confirm}>{remove.phase === 'pending' ? 'Deleting workspace' : remove.phase === 'failed' ? 'Try deleting again' : 'Delete workspace'}</A.Button></>}>
-          <A.Field label="Type Acme to confirm"><A.Input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" /></A.Field>
+          title="Delete Bramble workspace?" description={remove.consequence}
+          footer={<><A.Button disabled={remove.phase === 'pending'} onClick={() => { remove.cancel(); setTyped(''); }}>Keep workspace</A.Button><A.Button variant="danger" disabled={typed !== 'Bramble' || remove.phase === 'pending'} onClick={remove.phase === 'failed' ? remove.retry : remove.confirm}>{remove.phase === 'pending' ? 'Deleting workspace' : remove.phase === 'failed' ? 'Try deleting again' : 'Delete workspace'}</A.Button></>}>
+          <A.Field label="Type Bramble to confirm"><A.Input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" /></A.Field>
           {remove.error && <p role="alert">{remove.error}</p>}
         </A.Dialog>
       </main>

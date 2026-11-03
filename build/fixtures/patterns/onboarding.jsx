@@ -23,7 +23,7 @@ function App() {
   const happen = (id) => setDone((d) => ({ ...d, [id]: true }));
   return (
     <main className="ob-page">
-      <header className="ob-head"><h2 className="ob-h">Acme workspace</h2>
+      <header className="ob-head"><h2 className="ob-h">Juniper workspace</h2>
         <div className="ob-tools">
           <A.Popover aria-label="What’s new" align="end" onOpenChange={(o) => { if (o) setSeen(true); }}
             trigger={<A.Button size="sm" variant="ghost" id="ob-new">What’s new{!seen && <A.Badge variant="count" aria-label="2 unseen">2</A.Badge>}</A.Button>}>
