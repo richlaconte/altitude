@@ -1166,6 +1166,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const fmtY = yFormat ?? info.yFormat ?? series[0]?.format ?? ((v: number) => new Intl.NumberFormat(locale).format(v));
   const W = size?.w ?? 0, H = size?.h ?? 0;
   const horizontal = info.layout === 'horizontal' && kind === 'band';
+  // A live window slides only along a time or linear x (see useChartMotion), so only then are the marks clipped to the plot.
+  const glides = live && kind !== 'band' && !grid;
   // Two pins say their difference in a strip under the x axis.
   const bottom = (axes && !grid ? 26 : 1) + (info.bottom ?? 0) + (pins.length === 2 ? 24 : 0);
   const right = (info.right ?? 0) + (horizontal ? (axes ? 20 : 2) : kind === 'band' || !axes || grid ? 2 : 18);
@@ -2088,8 +2090,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                         </g>
                       );
                     })()}
-                    {live && <defs><clipPath id={`${pid}-plot-${i}`}><rect x={-3} y={-TOP} width={pw + 9 + right} height={ph + TOP + 6} /></clipPath></defs>}
-                    <g className="alt-chart-marks" clipPath={live ? `url(#${pid}-plot-${i})` : undefined}><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
+                    {/* Clipped only where a live window can glide (a time or linear x): a band or grid chart never slides, and
+                        draws its own labels outside the plot, such as a heatmap's row names (#463). */}
+                    {glides && <defs><clipPath id={`${pid}-plot-${i}`}><rect x={-3} y={-TOP} width={pw + 9 + right} height={ph + TOP + 6} /></clipPath></defs>}
+                    <g className="alt-chart-marks" clipPath={glides ? `url(#${pid}-plot-${i})` : undefined}><ChartContext.Provider value={ctx}>{svgKids}</ChartContext.Provider></g>
                     {boundaryAt !== null && info.boundary !== false && (() => {
                       const at = Math.round(boundaryAt) + 0.5, word = info.boundary ?? 'Today';
                       if (horizontal) return <text className="alt-chart-boundary-label" x={pw} y={at - 5} textAnchor="end">{word}</text>;
