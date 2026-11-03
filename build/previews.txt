@@ -3692,6 +3692,61 @@ function App() {
   );
 }
 
+=== InboxList | <!-- @dsCard group="Layout" height=620 subtitle="A queue worked through one item at a time: the open row raised, unread a mark, new rows settling without moving the one you're on" -->
+--- css
+.ibx { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); max-width: 820px; height: 460px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.ibx-list { overflow-y: auto; border-right: 1px solid var(--line); padding: 6px; }
+.ibx-detail { padding: 20px 24px; min-width: 0; }
+.ibx-detail h2 { margin: 0 0 4px; font: 600 17px/24px var(--font-sans); color: var(--ink); }
+.ibx-detail p { margin: 12px 0 0; font: 400 14px/21px var(--font-sans); color: var(--ink); }
+.ibx-detail .cap { margin: 0; color: var(--ink-muted); font: 400 13px/18px var(--font-sans); }
+@media (max-width: 640px) { .ibx { grid-template-columns: minmax(0, 1fr); height: auto; } .ibx-list { border-right: 0; border-bottom: 1px solid var(--line); max-height: 320px; } }
+--- jsx
+const IBX_NOW = Date.now();
+const ibxAgo = m => IBX_NOW - m * 60000;
+const IBX_SEED = [
+  { id: "t1", subject: "Refund for order 4471", from: "Priya Natarajan", status: "Open", at: ibxAgo(4), unread: true, preview: "The blender arrived with a cracked jug, so I'd like a refund rather than a replacement.", viewers: [{ name: "Maya Chen", presence: 2 }] },
+  { id: "t2", subject: "Can't sign in after the update", from: "Tomás Ruiz", status: "Open", at: ibxAgo(18), unread: true, preview: "Since this morning the app says my password is wrong, but it works on the website." },
+  { id: "t3", subject: "Change the delivery address", from: "Hana Kobayashi", status: "Pending", at: ibxAgo(52), preview: "Thanks, I've sent the new address. It's the flat above the bakery." },
+  { id: "t4", subject: "Invoice for March", from: "Oluwaseun Bello", status: "On hold", at: ibxAgo(130), preview: "Our finance team needs the VAT number on the invoice before they can pay it." },
+  { id: "t5", subject: "Wrong size sent", from: "Lea Hoffmann", status: "Solved", at: ibxAgo(300), preview: "Got the right ones today, thank you for sorting it out so quickly." },
+  { id: "t6", subject: "Gift message missing", from: "Sam Okafor", status: "Solved", at: ibxAgo(1440), preview: "The card wasn't in the parcel. Not a big deal, just letting you know." }
+];
+const IBX_TONE = { Open: "caution", Pending: "neutral", "On hold": "neutral", Solved: "positive" };
+const IBX_NEW = [
+  { subject: "Discount code not working", from: "Aiyana Redcloud", preview: "SPRING20 says it has expired, but the email says it runs until Sunday." },
+  { subject: "Order arrived damaged", from: "Kofi Mensah", preview: "The box was crushed and two of the glasses are broken." },
+  { subject: "Where is my parcel?", from: "Ines Duarte", preview: "Tracking hasn't moved since Tuesday." }
+];
+function App() {
+  const [tickets, setTickets] = React.useState(IBX_SEED);
+  const [open, setOpen] = React.useState("t3");
+  const n = React.useRef(0);
+  const deliver = () => {
+    const t = IBX_NEW[n.current % IBX_NEW.length], id = "n" + ++n.current;
+    setTickets(ts => [{ id, ...t, status: "Open", at: Date.now(), unread: true }, ...ts]);
+  };
+  const choose = id => { setOpen(id); setTickets(ts => ts.map(t => t.id === id ? { ...t, unread: false } : t)); };
+  const t = tickets.find(x => x.id === open);
+  return <div className="col" style={{ gap: 8 }}>
+    <div className="ibx">
+      <div className="ibx-list">
+        <A.InboxList aria-label="Tickets: Mine" items={tickets} getKey={x => x.id} selected={open} onSelectedChange={choose}
+          renderItem={x => <A.InboxItem title={x.subject} from={x.from} preview={x.preview} unread={x.unread} viewers={x.viewers}
+            time={<A.RelativeTime date={x.at} tooltip={false} />}
+            status={<A.Badge tone={IBX_TONE[x.status]}>{x.status}</A.Badge>} />} />
+      </div>
+      <section className="ibx-detail" aria-label="Open ticket">
+        {t ? <><h2>{t.subject}</h2><p className="cap">{t.from} · {t.status}</p><p>{t.preview}</p></> : <p className="cap">Choose a ticket.</p>}
+      </section>
+    </div>
+    <p className="cap">↑ and ↓ move, Enter opens, a letter jumps to the next ticket starting with it. A new ticket arrives at the top without moving the one you're on.</p>
+    <details className="preview-fixtures"><summary>Example fixtures</summary>
+      <A.Button size="sm" variant="secondary" onClick={deliver}>Deliver a new ticket</A.Button>
+    </details>
+  </div>;
+}
+
 === ThreadList | <!-- @dsCard group="Layout" height=640 subtitle="Conversations with an assistant beside the thread, the ones still working said in words" -->
 --- css
 .tl { height: 600px; max-width: 760px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }

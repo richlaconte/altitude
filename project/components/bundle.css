@@ -1534,6 +1534,41 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
 .alt-thread:has(.alt-thread-more) .alt-thread-main { padding-right: 28px; }
 .alt-thread-rename { display: block; width: 100%; padding: 4px; }
 .alt-threads-new { width: 100%; justify-content: center; }
+
+/* ── InboxList (#468): the list in a list-and-detail frame. Rows are the record, flush on the pane with a 1px line
+   between them. Pointing at a row lifts it one level (surface-raised, elev-1), because it opens; the open row is
+   selected, tinted accent-soft and raised one level, like Table's selected row, and says so with aria-selected. Only
+   one row is raised for being open. Unread is a dot, weight 600 and "Unread" in its name, never a height. A new row
+   arrives tinted and lifted and settles (the shared afterglow), and the list keeps the row under your pointer or focus
+   where it was. The status is a Badge plate set flush; presence is Avatar's ring. */
+/* The list keeps the row you're on in place itself (Safari has no scroll anchoring), so the browser's own anchoring is off
+   here, or Chromium would move it twice. */
+.alt-inbox { display: flex; flex-direction: column; min-width: 0; padding: 2px; outline: none; overflow-anchor: none; }
+.alt-inbox-row { position: relative; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); cursor: pointer; outline: none;
+  background: transparent; box-shadow: var(--elev-0); transition: background-color var(--dur-travel-1) var(--ease-glide), box-shadow var(--dur-travel-1) var(--ease-rise); }
+.alt-inbox-row + .alt-inbox-row { margin-top: 1px; }
+.alt-inbox-row + .alt-inbox-row::after { content: ""; position: absolute; left: var(--space-3); right: var(--space-3); top: -1px; height: 1px; background: var(--line); pointer-events: none; }
+.alt-inbox-row:is(:hover, [data-selected]) + .alt-inbox-row::after, .alt-inbox-row:is(:hover, [data-selected])::after { opacity: 0; }
+@media (hover: hover) { .alt-inbox-row:hover { background: var(--surface-raised); box-shadow: var(--elev-1); } }
+.alt-inbox-row[data-selected] { background: var(--accent-soft); box-shadow: var(--elev-1); }
+.alt-inbox-row:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
+.alt-inbox-item { display: grid; gap: 2px; min-width: 0; font: 400 13px/18px var(--font-sans); color: var(--ink); }
+.alt-inbox-line { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.alt-inbox-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.alt-inbox-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.alt-inbox-item[data-unread] .alt-inbox-title { font-weight: 600; }
+.alt-inbox-time { flex: none; margin-left: auto; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.alt-inbox-meta { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-inbox-from { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-inbox-status { flex: none; }
+.alt-inbox-viewers { display: inline-flex; flex: none; margin-left: auto; }
+.alt-inbox-viewers > * + * { margin-left: -4px; }
+.alt-inbox-preview { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+@media (prefers-reduced-motion: reduce) { .alt-inbox-row { transition-duration: 0ms; } }
+[data-motion="reduced"] .alt-inbox-row { transition-duration: 0ms; }
+[data-contrast="more"] .alt-inbox-row + .alt-inbox-row::after { background: var(--ink); }
+[data-contrast="more"] .alt-inbox-row[data-selected] { box-shadow: 0 0 0 1px var(--ink), var(--elev-1); }
+@media (forced-colors: active) { .alt-inbox-row[data-selected] { border: 1px solid CanvasText; background: Highlight; color: HighlightText; } .alt-inbox-row[data-selected] .alt-inbox-meta, .alt-inbox-row[data-selected] .alt-inbox-time, .alt-inbox-row[data-selected] .alt-inbox-preview { color: HighlightText; } .alt-inbox-dot { background: CanvasText; } .alt-inbox-row + .alt-inbox-row::after { background: CanvasText; } }
 /* AgentFleet: every agent in a run of work, grouped by what they need from you. Rows are the record, flush, with their
    state in words on a plate (the lamp only repeats it); working never hovers. The open agent is selected: tinted and
    raised one level, as a table's selected row. Finished agents are stamped: a check and muted ink. Agents an agent

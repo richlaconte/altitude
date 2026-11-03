@@ -1603,6 +1603,10 @@ Some cues were cited only for Altitude, so they say more about Altitude's look t
 
 Limits: models aren't people, and the builds and judges are all Claude. Each session saw all 36 screens, so later answers can lean on earlier ones. Judges ran in an agent harness that may load this repository's agent instructions. A first launch was discarded before analysis because the anchor's brand replacement had broken the AdminLTE logo into visible alt text. `anchor.mjs` now edits visible text only, and all five sessions were rerun on the corrected set.
 
+### E162 · The list in a list-and-detail frame keeps your place
+
+#468 (from #404) found that the list-and-detail frame named "a list" with no component behind it. The candidates were wrong in specific ways: `ThreadList`'s states are an agent's, `DataTable`'s checkboxes mean "many chosen", and `NotificationCenter` floats and dismisses. `InboxList` follows WAI-ARIA's listbox pattern, single select, where selection doesn't follow focus (APG, "Listbox": a list where arrowing would load each item should require activation). Single-letter shortcuts such as `j`/`k` are left to the app, because WCAG 2.2 SC 2.1.4 (Character Key Shortcuts) requires that they can be turned off or remapped. The one new behaviour is keeping the row you're on in place when rows arrive above it. CSS scroll anchoring (`overflow-anchor`, CSS Scroll Anchoring Module Level 1) does this in Chromium and Firefox but not in Safari, so the list does it itself and turns the browser's anchoring off on the list: with both on, Chromium moved the row twice (found by `checks/inbox-list.mjs`, 8px off at the bottom of the scroll range). Prototype review: the preview and its check drive the keyboard path, the row names, arrivals while a row is focused and while one is under the pointer, and forced colours, in both schemes. Not yet tested with people or with a screen reader beyond Chromium's computed names.
+
 ## What was rejected
 
 - **Blur for de-emphasis.** Small blur isn't detected pre-attentively, large blur is unpleasant to read, and it destroys text contrast. Relevance uses shading polarity (raised vs sunk) instead.

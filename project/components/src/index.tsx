@@ -49,6 +49,8 @@ export { InlineCitation, Sources } from './inline-citation';
 export { Artifact, ArtifactHeader, ArtifactVersions, ArtifactContent, ArtifactReference } from './artifact';
 export type { ArtifactProps, ArtifactHeaderProps, ArtifactVersionsProps, ArtifactContentProps, ArtifactReferenceProps, ArtifactStatus } from './artifact';
 export { ThreadList, ThreadListGroup, ThreadListItem, ThreadListNew, groupByDate } from './thread-list';
+export { InboxList, InboxItem } from './inbox-list';
+export type { InboxListProps, InboxItemProps, InboxListHandle } from './inbox-list';
 export type { ThreadListProps, ThreadListItemProps, ThreadListGroupProps, ThreadStatus } from './thread-list';
 export { AgentFleet, AgentFleetGroup, AgentFleetItem, AgentRequests, AgentRequest, AgentLanes, summarizeFleet, groupAgents, needsYou, formatSpan } from './agent-fleet';
 export type { AgentFleetProps, AgentFleetGroupProps, AgentFleetItemProps, AgentRequestsProps, AgentRequestProps, AgentLanesProps, AgentLane, AgentLaneState, AgentState, AgentNeeds } from './agent-fleet';
