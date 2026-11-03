@@ -9,6 +9,9 @@ export const useIsoLayoutEffect = typeof window === 'undefined' ? React.useEffec
 /* ───────────────────────── utilities ───────────────────────── */
 
 export const cx = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
+/** Marks a component Field labels as a group (RadioGroup): a <label for> can't name a radiogroup, so Field renders its
+ *  label as a span and points aria-labelledby at it. A static marker rather than a type check, so memo and wrappers keep it. */
+export const FIELD_GROUP = Symbol.for('altitude.field-group');
 
 /** A duration token in milliseconds. Minifiers rewrite `220ms` as `.22s`, so the unit is read, not assumed. */
 export const cssMs = (cs: CSSStyleDeclaration | null | undefined, name: string, fallback: number) => {

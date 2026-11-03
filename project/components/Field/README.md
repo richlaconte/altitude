@@ -6,6 +6,8 @@ Pairs one control with its label, an optional hint and an error message that eme
 
 **You provide:** `label`, optionally `hint`, `error` (a string or node; falsy when valid) and `required`, and exactly one control as the child. A child’s `required` prop is preserved unless Field explicitly supplies one.
 
+A `RadioGroup` child is a group, which a `<label for>` can't name: Field renders its label as a span and sets `aria-labelledby` on the group, merged with any the group already has. The group turns `required` into `aria-required`, and passes focus to a radio, so an `ErrorSummary` link to its `id` lands where the arrow keys work (see RadioGroup, "In a form").
+
 - Do write the error as the fix: "Use at least 5 characters", not "Invalid input".
 - Don't show an error before the person has finished with the field; validate on blur or submit.
 
