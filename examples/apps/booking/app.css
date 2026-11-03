@@ -1,0 +1,60 @@
+/* Book an appointment (#403). Tokens only. Phone first: one column, the step is the lead. From 720px of its own width
+   the summary sits beside the step, on the ground with a hairline, because it's the record so far, not an action. */
+.bk-page { max-width: 960px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-12); display: grid; gap: var(--space-5); container-type: inline-size; min-width: 0; }
+@media (min-width: 640px) { .bk-page { padding: var(--space-8) var(--space-6) var(--space-12); } }
+.bk-head { display: grid; gap: var(--space-1); }
+.bk-head h1 { margin: 0; font: 600 26px/32px var(--font-sans); letter-spacing: -0.015em; }
+.bk-clinic { margin: 0; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); }
+.bk-layout { display: grid; gap: var(--space-6); min-width: 0; }
+@container (min-width: 720px) { .bk-layout { grid-template-columns: minmax(0, 1fr) 280px; align-items: start; } }
+.bk-flow { display: grid; gap: var(--space-5); min-width: 0; }
+.bk-step { display: grid; gap: var(--space-4); min-width: 0; }
+.bk-step > form, .bk-review, .bk-fields, .bk-code { display: grid; gap: var(--space-5); min-width: 0; }
+.bk-code { gap: var(--space-3); }
+.bk-count { margin: 0; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); letter-spacing: 0.005em; }
+.bk-step h2, .bk-outcome h2 { margin: 0; font: 600 21px/28px var(--font-sans); letter-spacing: -0.01em; }
+.bk-step h2:focus-visible, .bk-outcome h2:focus-visible, .bk-review > div[tabindex]:focus-visible, .bk-fields [tabindex="-1"]:focus-visible {
+  outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-sm);
+}
+.bk-choices { display: grid; gap: var(--space-2); }
+.bk-choices .alt-radio-group:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 4px; border-radius: var(--radius-sm); }
+.bk-choice { display: flex; justify-content: space-between; gap: var(--space-3); width: 100%; }
+.bk-choices .alt-check-text { flex: 1; }
+.bk-price { font-variant-numeric: tabular-nums; }
+/* Times wrap as a grid of equal cells, so a thumb finds each one. */
+.bk-choices .alt-radio-group[data-orientation="horizontal"] { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--space-3) var(--space-4); }
+.bk-quiet { margin: 0; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); }
+.bk-hold { margin: 0; padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); font: 400 15px/23px var(--font-sans); }
+.bk-hold[data-tone="caution"] { border-color: var(--caution); background: var(--caution-soft); }
+.bk-verified { margin: 0; display: flex; gap: var(--space-2); align-items: center; font: 500 15px/23px var(--font-sans); color: var(--ink); }
+.bk-verified span { color: var(--positive); font-weight: 700; }
+/* The simulated text message: set apart by a hairline and a label, so it isn't mistaken for part of the form. */
+.bk-message { margin: 0; padding: var(--space-3) var(--space-4); border: 1px dashed var(--line-control); border-radius: var(--radius-md); font: 400 15px/23px var(--font-sans); }
+.bk-message-from { display: block; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+.bk-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: flex-end; }
+.bk-actions-even { justify-content: flex-start; }
+@container (max-width: 479px) {
+  .bk-actions { flex-direction: column-reverse; }
+  .bk-actions-even { flex-direction: column; }
+  .bk-actions .alt-btn { width: 100%; min-height: 44px; }
+}
+.bk-answers { margin: 0; display: grid; }
+.bk-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
+.bk-row:last-child { border-bottom: 1px solid var(--line); }
+.bk-row dt { grid-column: 1; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); }
+.bk-row dd { grid-column: 1; margin: 0; font: 400 15px/23px var(--font-sans); overflow-wrap: anywhere; }
+.bk-row dd.bk-change { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.bk-charges { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2) var(--space-4); font: 400 15px/23px var(--font-sans); }
+.bk-charges dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
+.bk-charges .bk-total { padding-top: var(--space-2); border-top: 1px solid var(--line); font-weight: 600; }
+.bk-terms { margin: 0; font: 400 15px/23px var(--font-sans); max-width: 70ch; }
+.bk-summary { display: none; }
+@container (min-width: 720px) {
+  .bk-summary { display: grid; gap: var(--space-2); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-lg); position: sticky; top: var(--space-4); }
+  .bk-summary p { margin: 0; font: 400 15px/23px var(--font-sans); }
+  .bk-summary .bk-charges { margin-top: var(--space-2); font-size: 14px; line-height: 20px; }
+}
+.bk-summary-title { margin: 0; font: 600 16px/22px var(--font-sans); }
+.bk-outcome { display: grid; gap: var(--space-4); max-width: 640px; }
+.bk-outcome p { margin: 0; font: 400 15px/23px var(--font-sans); }
+.bk-outcome .bk-quiet { font-size: 14px; }

@@ -11,6 +11,7 @@ They aren't part of the package. Each app imports `altitude-design` by name, as 
 | Team notes | `hello/` | the smallest app on the service: pending, landed, failed, reconciled, arrived |
 | Northwind admin console | `admin-console/` | settings, members, billing, API keys, security and the audit log on one workspace: every change is logged, conflicts come from other admins (#401) |
 | Sprint 24 planning | `planning-board/` | a board, table, schedule and epics over one record: moves that hover until they land and go back with a reason when the server refuses (#402) |
+| Book an appointment | `booking/` | a phone-first booking flow from treatment to paid booking: a real held time that says when it ends, a text code, review with every charge, and cancelling as easily as booking (#403) |
 
 ## Running them
 
@@ -20,6 +21,7 @@ npm run build-site                              # the same, as part of the landi
 cd build && node checks/example-service.mjs     # the service's unit checks, and Team notes driven in a browser
 cd build && node checks/example-admin-console.mjs   # the admin console driven through #401's fixtures
 cd build && node checks/example-planning-board.mjs  # the planning board driven through #402's fixtures
+cd build && node checks/example-booking.mjs         # the booking flow driven through #403's fixtures, at phone width
 ```
 
 `npm run typecheck` type-checks the apps along with the components.
