@@ -65,3 +65,52 @@ The value and the rules (limits, unavailable days). Time of day isn't covered (t
 ## Demo and verification
 
 The `DatePicker` section of `build/previews.txt` shows a due date (from today, weekends unavailable, en-GB, open), a trip range and an en-US date. `node checks/date-picker.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG grid keys, RTL arrows, unavailable days, Escape, focus return, segment typing and stepping, impossible dates, Alt+↓, the range flow with its preview, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`DatePicker` as first used in its preview:
+
+```tsx
+import { DatePicker } from 'altitude-design';
+
+<DatePicker value={due} onValueChange={setDue} min={DP_TODAY} isUnavailable={weekend} locale="en-GB" defaultOpen />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`dp-demo`, `dp-wide` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, DatePicker, DateRangePicker, Field, datePresets } from 'altitude-design';
+
+const DP_TODAY = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })();
+const dpShift = (iso, days) => { const [y, m, d] = iso.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1, d + days)); return t.toISOString().slice(0, 10); };
+export default function App() {
+  const [due, setDue] = React.useState(dpShift(DP_TODAY, 3));
+  const [trip, setTrip] = React.useState({ start: dpShift(DP_TODAY, 9), end: dpShift(DP_TODAY, 13) });
+  const [start, setStart] = React.useState(null);
+  const [dpToday, setDpToday] = React.useState('2026-10-27');
+  const [period, setPeriod] = React.useState({ start: '2026-09-28', end: '2026-10-27' });
+  const [preset, setPreset] = React.useState('last-30-days');
+  const weekend = iso => { const [y, m, d] = iso.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w === 0 || w === 6; };
+  return <div className="dp-demo">
+    <Field label="Due date" hint="Weekends aren’t available.">
+      <DatePicker value={due} onValueChange={setDue} min={DP_TODAY} isUnavailable={weekend} locale="en-GB" defaultOpen />
+    </Field>
+    <div>
+      <Field label="Trip"><DateRangePicker value={trip} onValueChange={setTrip} min={DP_TODAY} locale="en-GB" /></Field>
+      <div style={{ height: 24 }} />
+      <Field label="Start date (US format)"><DatePicker value={start} onValueChange={setStart} locale="en-US" /></Field>
+    </div>
+    <div className="dp-wide">
+      <Field label="Reporting period" hint={`Presets resolve against today (${dpToday}); they stay relative when it changes.`}>
+        <DateRangePicker value={period} onValueChange={setPeriod} preset={preset} onPresetChange={setPreset} today={dpToday} locale="en-GB"
+          presets={[datePresets.today(), datePresets.lastDays(7), datePresets.lastDays(30), datePresets.thisMonth(), datePresets.thisQuarter(), datePresets.lastQuarter(),
+            { key: 'launch', label: 'Since launch', range: { start: '2026-03-04', end: dpToday } }]} />
+      </Field>
+      <div style={{ marginTop: 8 }}><Button size="sm" variant="ghost" onClick={() => setDpToday((t) => dpShift(t, 1))}>Next day</Button></div>
+    </div>
+  </div>;
+}
+```
+<!-- /example -->

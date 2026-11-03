@@ -50,7 +50,16 @@ function App() {
       relevance: (r) => q ? r.name.toLowerCase().includes(q.toLowerCase()) || r.owner.toLowerCase().includes(q.toLowerCase()) ? "match" : "miss" : void 0,
       actions: () => /* @__PURE__ */ React.createElement(A.Button, { size: "sm" }, "Archive"),
       columnsMenu: true,
-      toolbar: /* @__PURE__ */ React.createElement("div", { className: "filter" }, /* @__PURE__ */ React.createElement(A.Input, { size: "sm", placeholder: "Filter in place", value: q, onChange: (e) => setQ(e.target.value), "aria-label": "Filter projects" })),
+      toolbar: /* @__PURE__ */ React.createElement("div", { className: "filter" }, /* @__PURE__ */ React.createElement(
+        A.Input,
+        {
+          size: "sm",
+          placeholder: "Filter in place",
+          value: q,
+          onChange: (e) => setQ(e.target.value),
+          "aria-label": "Filter projects"
+        }
+      )),
       columns: [
         { key: "name", header: "Project", sortValue: (r) => r.name },
         { key: "env", header: "Environment", cell: (r) => /* @__PURE__ */ React.createElement(A.Badge, { tone: tone[r.env] }, r.env), sortValue: (r) => r.env },

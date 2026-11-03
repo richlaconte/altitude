@@ -9,3 +9,38 @@ Toggles one independent option. A checkbox is built like the Switch and the Radi
 **You provide:** `label`, optional `description`, and `checked`/`onCheckedChange` (or `defaultChecked`). It's a real `<input type="checkbox">`, so it works in forms with `name` and `value`.
 
 - Use a Switch when the change takes effect immediately; a Checkbox is for choices submitted together.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Checkbox` as first used in its preview:
+
+```tsx
+import { Checkbox } from 'altitude-design';
+
+<Checkbox label="Select all" checked={a && b} indeterminate={a !== b} onCheckedChange={(c) => { setA(c); setB(c); }} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `family`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Checkbox, Switch } from 'altitude-design';
+
+export default function App() {
+  const [a, setA] = React.useState(true);
+  const [b, setB] = React.useState(false);
+  return (
+    <div className="col">
+      <Checkbox label="Select all" checked={a && b} indeterminate={a !== b} onCheckedChange={(c) => { setA(c); setB(c); }} />
+      <div className="col" style={{ paddingLeft: 34 }}>
+        <Checkbox label="Weekly digest" description="A summary every Monday morning." checked={a} onCheckedChange={setA} />
+        <Checkbox label="Product updates" checked={b} onCheckedChange={setB} />
+      </div>
+      <Checkbox label="Disabled" disabled defaultChecked />
+      <div className="family"><span className="cap">Same build as</span><Switch defaultChecked aria-label="Switch" /><Switch aria-label="Switch off" /></div>
+    </div>
+  );
+}
+```
+<!-- /example -->

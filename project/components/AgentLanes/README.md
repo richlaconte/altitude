@@ -19,3 +19,35 @@ Where each agent's time went, one lane per agent on a shared clock: working, wai
 
 - Do keep it below the roster: it explains the past, the roster and requests are for now.
 - Don't draw dependencies as arrows between lanes; say them on the waiting agent ("Waiting on Billing API").
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`AgentLanes` as first used in its preview:
+
+```tsx
+import { AgentLanes } from 'altitude-design';
+
+<AgentLanes lanes={lanes} start={t0} now={m(31)} selected={sel} onSelect={setSel} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`al` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { AgentLanes } from 'altitude-design';
+
+const t0 = Date.UTC(2026, 9, 31, 14, 0), m = (n) => t0 + n * 60000;
+const lanes = [
+  { id: 'pricing', name: 'Pricing page', segments: [{ from: m(3), to: m(20), state: 'working' }, { from: m(20), to: m(25), state: 'waiting' }] },
+  { id: 'api', name: 'Billing API', segments: [{ from: m(3), to: m(7), state: 'working' }, { from: m(7), to: m(10), state: 'waiting' }, { from: m(10), to: m(19), state: 'working' }] },
+  { id: 'emails', name: 'Renewal emails', segments: [{ from: m(3), to: m(8), state: 'working' }, { from: m(8), to: m(13), state: 'waiting' }, { from: m(13), to: m(25), state: 'working' }] },
+  { id: 'qa', name: 'QA', segments: [{ from: m(3), to: m(19), state: 'blocked' }, { from: m(19), to: m(21), state: 'working' }, { from: m(21), to: m(23), state: 'failed' }, { from: m(23), to: m(29), state: 'working' }] },
+  { id: 'changelog', name: 'Changelog', segments: [{ from: m(27), to: m(30), state: 'working' }] },
+];
+export default function App() {
+  const [sel, setSel] = React.useState('qa');
+  return <div className="al"><AgentLanes lanes={lanes} start={t0} now={m(31)} selected={sel} onSelect={setSel} /></div>;
+}
+```
+<!-- /example -->

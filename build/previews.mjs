@@ -1,6 +1,7 @@
 import { syncActionsGuide } from '../scripts/sync-actions-guide.mjs';
 syncActionsGuide();
 import { transformSync } from 'esbuild';
+import { examples, withExample } from './examples.mjs';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 const src = readFileSync('previews.txt', 'utf8');
 const common = `#root { padding: 20px 24px; }
@@ -47,3 +48,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
   names.push(name);
 }
 console.log(names.join(' '));
+
+// Each component's README ends with an example generated from its preview (examples.mjs), so the usage an agent or a
+// person copies is the code CI renders. The section is rewritten in place between its markers.
+let written = 0;
+for (const [name, ex] of Object.entries(examples())) {
+  const path = `../project/components/${name}/README.md`;
+  const before = readFileSync(path, 'utf8'), after = withExample(before, name, ex);
+  if (after !== before) { writeFileSync(path, after); written++; }
+}
+console.log(`examples: ${written} READMEs updated`);

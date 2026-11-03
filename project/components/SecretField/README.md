@@ -26,3 +26,49 @@ A key or token: an API key, a webhook signing secret, a personal access token. I
 - Do leave out `onReveal` for secrets you don't store in a retrievable form.
 - Don't show a stored secret in full by default.
 - Don't put revoke one click away; it's held.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`SecretField` as first used in its preview:
+
+```tsx
+import { SecretField } from 'altitude-design';
+
+<SecretField label="Secret key" value="ak_live_EXAMPLE0000demo4f2a" once onAcknowledge={() => setSaved(true)} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`sf`, `col`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, SecretField } from 'altitude-design';
+
+export default function App() {
+  const [saved, setSaved] = React.useState(false);
+  const [said, setSaid] = React.useState('');
+  return (
+    <div className="sf">
+      <Card>
+        <CardHeader><CardTitle>API key created</CardTitle><CardDescription>Production · created just now</CardDescription></CardHeader>
+        <CardContent>
+          <SecretField label="Secret key" value="ak_live_EXAMPLE0000demo4f2a" once onAcknowledge={() => setSaved(true)} />
+        </CardContent>
+        <CardFooter><Button variant="primary" disabled={!saved}>Done</Button></CardFooter>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Webhook signing secret</CardTitle><CardDescription>Used to verify deliveries to /hooks/billing</CardDescription></CardHeader>
+        <CardContent>
+          <div className="col">
+            <SecretField label="Signing secret" noun="secret" prefix="whk_" maskedTail="9d1c"
+              onReveal={() => new Promise((r) => setTimeout(() => r('whk_EXAMPLE0000demo9d1c'), 400))}
+              onRotate={() => setSaid('A new secret would be created; the old one keeps working for 24 hours.')} onRevoke={() => setSaid('Secret revoked.')} />
+            <p className="cap" role="status">{said}</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

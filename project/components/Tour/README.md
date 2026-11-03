@@ -27,3 +27,47 @@ A few steps pointing at parts of the interface, for onboarding or a feature laun
 - Do remember when it's been finished or skipped.
 - Don't dim the page or block the target.
 - Don't use a tour to explain an interface that should explain itself.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Tour` as first used in its preview:
+
+```tsx
+import { Tour } from 'altitude-design';
+
+<Tour open={open} onOpenChange={setOpen} onFinish={(how) => setSaid(how === 'done' ? 'Tour finished.' : 'Tour skipped.')} steps={[
+  { target: '#tour-projects', title: 'Projects moved here', body: 'All your projects now live in one place.' },
+  { target: '[data-tour="owner"]', title: 'Filter by owner', body: 'Type a name to see only their projects.' },
+  { target: '[data-tour="new"]', title: 'Start something new', body: 'Projects can start from a template.' },
+]} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`tr`, `bar`, `row`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Input, Tour } from 'altitude-design';
+
+export default function App() {
+  const [open, setOpen] = React.useState(false);
+  const [said, setSaid] = React.useState('');
+  return (
+    <div className="tr">
+      <div className="bar">
+        <Button variant="ghost" id="tour-projects">Projects</Button>
+        <Input size="sm" placeholder="Filter by owner" aria-label="Filter by owner" data-tour="owner" style={{ maxWidth: 220 }} />
+        <span style={{ marginLeft: 'auto' }}><Button variant="primary" data-tour="new">New project</Button></span>
+      </div>
+      <div className="row"><Button onClick={() => setOpen(true)}>Take the tour</Button></div>
+      <p className="cap">{said || 'The tour points at one thing at a time with a ring. The page isn\'t dimmed and stays usable: try typing in the filter while it\'s on that step.'}</p>
+      <Tour open={open} onOpenChange={setOpen} onFinish={(how) => setSaid(how === 'done' ? 'Tour finished.' : 'Tour skipped.')} steps={[
+        { target: '#tour-projects', title: 'Projects moved here', body: 'All your projects now live in one place.' },
+        { target: '[data-tour="owner"]', title: 'Filter by owner', body: 'Type a name to see only their projects.' },
+        { target: '[data-tour="new"]', title: 'Start something new', body: 'Projects can start from a template.' },
+      ]} />
+    </div>
+  );
+}
+```
+<!-- /example -->

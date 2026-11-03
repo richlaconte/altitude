@@ -43,3 +43,127 @@ The thread between a person and an assistant: their messages, the assistant's an
 - Do keep earlier versions when regenerating.
 - Don't fade in text word by word or glow a streaming answer.
 - Don't make a streaming answer hover; it isn't a pending write.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Conversation` as first used in its preview:
+
+```tsx
+import { Conversation, ConversationCheckpoint, ConversationContent, ConversationScrollButton, Message, MessageActions, MessageAttachments, MessageContent } from 'altitude-design';
+
+<Conversation aria-label="Assistant">
+  <ConversationContent>
+    {msgs.map((m) => m.kind === 'checkpoint' ? (
+      <ConversationCheckpoint key={m.id} label={m.label} at={m.at} onRestore={() => restore(m.id)} onReturn={giveBack}
+        consequence="The messages after this will be set aside. You can return to them." />
+    ) : (
+      <Message key={m.id} from={m.from} status={m.status} edited={m.v > 0} onRetry={m.status === 'stopped' ? () => { setStatus('streaming'); stream(m.id); } : undefined}>
+        {m.files && <MessageAttachments items={m.files} />}
+        <MessageContent>{m.text}</MessageContent>
+        {m.from === 'assistant' ? <MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />
+          : <MessageActions onEdit={(t) => edit(m.id, t)} versions={m.versions && { index: m.v + 1, total: m.versions.length, onChange: (k) => showVersion(m.id, k - 1) }} />}
+      </Message>
+    ))}
+  </ConversationContent>
+  <ConversationScrollButton />
+</Conversation>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`cv` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Conversation, ConversationCheckpoint, ConversationContent, ConversationQueue, ConversationScrollButton, Message, MessageActions, MessageAttachments, MessageContent, PromptInput, PromptInputSubmit, PromptInputTextarea, PromptInputToolbar } from 'altitude-design';
+
+const answer = 'Last week the team shipped 14 changes. Two risks are open: the billing migration is two days behind, and the EU data residency review needs a decision from legal by Friday.';
+export default function App() {
+  const [msgs, setMsgs] = React.useState([
+    { id: 1, from: 'user', text: 'What changed in the Atlas workspace this month?', files: [
+      { name: 'atlas-usage.png', type: 'image/svg+xml', url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='64'%3E%3Crect width='120' height='64' fill='%23e8edf5'/%3E%3Cpath d='M8 52 L32 36 L56 42 L80 20 L112 12' stroke='%233b6fd8' stroke-width='3' fill='none'/%3E%3C/svg%3E", onOpen: () => {} },
+      { name: 'Atlas changelog.pdf', type: 'application/pdf', size: 482113, href: '#changelog' },
+    ] },
+    { id: 'cp1', kind: 'checkpoint', label: 'Before the Atlas summary', at: '2026-10-30T14:14:00' },
+    { id: 2, from: 'assistant', text: 'Atlas moved to the new permission model on 3 October, and its storage limit was raised to 2 TB. Three people joined: Maya, Theo and Ada.', status: 'complete' },
+  ]);
+  const [status, setStatus] = React.useState('ready');
+  const timer = React.useRef();
+  // Messages written while the assistant works wait in the queue; the first is sent when the turn ends.
+  const [queued, setQueued] = React.useState([]);
+  const queuedRef = React.useRef(queued); queuedRef.current = queued;
+  const sendRef = React.useRef();
+  const stream = (id) => {
+    let n = 0;
+    const tick = () => {
+      n += 6;
+      setMsgs((ms) => ms.map((m) => (m.id === id ? { ...m, text: answer.slice(0, n), status: n >= answer.length ? 'complete' : 'streaming' } : m)));
+      if (n < answer.length) timer.current = setTimeout(tick, 60);
+      else {
+        setStatus('ready');
+        const next = queuedRef.current[0];
+        if (next) { setQueued((q) => q.slice(1)); setTimeout(() => sendRef.current({ text: next.text }), 0); }
+      }
+    };
+    tick();
+  };
+  const enqueue = ({ text }) => setQueued((q) => [...q, { id: String(Date.now()), text }]);
+  const send = ({ text }) => {
+    const id = Date.now();
+    setMsgs((ms) => [...ms, { id: id - 1, from: 'user', text }, { id, from: 'assistant', text: '', status: 'streaming' }]);
+    setStatus('streaming');
+    stream(id);
+  };
+  // Editing a sent message starts a branch from it; the earlier exchange is kept as version 1.
+  const edit = (id, text) => {
+    const i = msgs.findIndex((m) => m.id === id), m = msgs[i];
+    const versions = (m.versions ?? [{ text: m.text, files: m.files }]).map((v, k) => (k === (m.v ?? 0) ? { ...v, rest: msgs.slice(i + 1) } : v));
+    const aid = Date.now();
+    setMsgs([...msgs.slice(0, i), { ...m, text, files: undefined, versions: [...versions, { text }], v: versions.length }, { id: aid, from: 'assistant', text: '', status: 'streaming' }]);
+    setStatus('streaming');
+    stream(aid);
+  };
+  const showVersion = (id, k) => {
+    const i = msgs.findIndex((m) => m.id === id), m = msgs[i];
+    const versions = m.versions.map((v, j) => (j === m.v ? { ...v, rest: msgs.slice(i + 1) } : v));
+    setMsgs([...msgs.slice(0, i), { ...m, text: versions[k].text, files: versions[k].files, versions, v: k }, ...(versions[k].rest ?? [])]);
+  };
+  const sendNow = (id) => {
+    const q = queued.find((x) => x.id === id);
+    setQueued((qs) => qs.filter((x) => x.id !== id));
+    stop();
+    setTimeout(() => sendRef.current({ text: q.text }), 0);
+  };
+  // Restoring a checkpoint sets the turns after it aside; returning brings them back.
+  const aside = React.useRef([]);
+  const restore = (id) => new Promise((done) => setTimeout(() => { setMsgs((ms) => { const i = ms.findIndex((m) => m.id === id); aside.current = ms.slice(i + 1); return ms.slice(0, i + 1); }); done(); }, 900));
+  const giveBack = () => { setMsgs((ms) => [...ms, ...aside.current]); aside.current = []; };
+  const stop = () => { clearTimeout(timer.current); setStatus('ready'); setMsgs((ms) => ms.map((m) => (m.status === 'streaming' ? { ...m, status: 'stopped' } : m))); };
+  sendRef.current = send;
+  return (
+    <div className="cv">
+      <Conversation aria-label="Assistant">
+        <ConversationContent>
+          {msgs.map((m) => m.kind === 'checkpoint' ? (
+            <ConversationCheckpoint key={m.id} label={m.label} at={m.at} onRestore={() => restore(m.id)} onReturn={giveBack}
+              consequence="The messages after this will be set aside. You can return to them." />
+          ) : (
+            <Message key={m.id} from={m.from} status={m.status} edited={m.v > 0} onRetry={m.status === 'stopped' ? () => { setStatus('streaming'); stream(m.id); } : undefined}>
+              {m.files && <MessageAttachments items={m.files} />}
+              <MessageContent>{m.text}</MessageContent>
+              {m.from === 'assistant' ? <MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />
+                : <MessageActions onEdit={(t) => edit(m.id, t)} versions={m.versions && { index: m.v + 1, total: m.versions.length, onChange: (k) => showVersion(m.id, k - 1) }} />}
+            </Message>
+          ))}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
+      <ConversationQueue items={queued} onSendNow={sendNow} onEdit={(id, text) => setQueued((qs) => qs.map((q) => (q.id === id ? { ...q, text } : q)))} onRemove={(id) => setQueued((qs) => qs.filter((q) => q.id !== id))} />
+      <PromptInput onSubmit={send} status={status} onStop={stop} onQueue={enqueue}>
+        <PromptInputTextarea placeholder="Ask about this workspace" />
+        <PromptInputToolbar><PromptInputSubmit /></PromptInputToolbar>
+      </PromptInput>
+    </div>
+  );
+}
+```
+<!-- /example -->

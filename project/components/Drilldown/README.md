@@ -13,3 +13,31 @@ Navigates a hierarchy as a **stack**. Each place you go into is laid on top of t
 - Don't use it for steps in a process; a stack implies you can always lift back out.
 
 **Charts that drill.** A node with both `content` and `children` shows its content, and the content opens the children itself: a chart's `drill={(d) => childId}`, or `useDrilldown().open(id)` from your own component. After a step, focus moves to the new view's own first stop when it names one (`data-drill-focus`, as a chart's summary does), otherwise to the view.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Drilldown` as first used in its preview:
+
+```tsx
+import { Drilldown } from 'altitude-design';
+
+<Drilldown root={tree} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`wrap` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { Drilldown } from 'altitude-design';
+
+const tree = { id: 'ws', title: 'Workspace', children: [
+  { id: 'nw', title: 'Northwind', description: 'Marketing site', children: [
+    { id: 'prod', title: 'Production', description: 'acme.dev', children: [
+      { id: 'b42', title: 'Build #42', description: 'main@8dc01b2 · 2h ago', content: 'Deployed by Mara. 14 routes, 2.1 MB, healthy.' },
+      { id: 'b41', title: 'Build #41', description: 'main@51ac9e0 · yesterday', content: 'Rolled back after a cold-start regression.' } ] },
+    { id: 'prev', title: 'Preview', description: '3 branches', content: 'Preview deployments for open pull requests.' } ] },
+  { id: 'bc', title: 'Beacon', description: 'Internal dashboard', content: 'No deployments yet.' },
+  { id: 'st', title: 'Settings', description: 'Members, billing, domains', content: 'Workspace settings.' } ] };
+export default function App() { return <div className="wrap"><Drilldown root={tree} /></div>; }
+```
+<!-- /example -->

@@ -35,3 +35,47 @@ formatNumber(4213, { format: 'compact' })                              // "4.2K"
 - Do use `formatNumber` for table columns and chart formatters, so a number reads the same everywhere.
 - Don't animate digits or count up to a new value.
 - Don't use it for a headline figure; that's a `Stat`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`FormattedNumber` as first used in its preview:
+
+```tsx
+import { FormattedNumber } from 'altitude-design';
+
+<FormattedNumber value={4900} format="currency" currency="EUR" locale="en-IE" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`fn`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, FormattedNumber } from 'altitude-design';
+
+const usage = [4_212_000_000, 4_512_000_000, 5_030_000_000];
+export default function App() {
+  const [i, setI] = React.useState(0);
+  React.useEffect(() => { const t = setInterval(() => setI((n) => (n + 1) % usage.length), 2600); return () => clearInterval(t); }, []);
+  return (
+    <div className="fn">
+      <dl>
+        <dt>Plan</dt><dd><FormattedNumber value={4900} format="currency" currency="EUR" locale="en-IE" /> a month</dd>
+        <dt>Storage</dt><dd><FormattedNumber value={4_512_000_000} format="bytes" /></dd>
+        <dt>Latency</dt><dd><FormattedNumber value={128} format="duration" /> · <FormattedNumber value={95_000} format="duration" /></dd>
+        <dt>Error rate</dt><dd><FormattedNumber value={0.0123} format="percent" maximumFractionDigits={1} /></dd>
+        <dt>Requests</dt><dd><FormattedNumber value={4213} format="compact" /></dd>
+        <dt>Seats</dt><dd><FormattedNumber value={1250} /></dd>
+      </dl>
+      <Card>
+        <CardHeader><CardTitle>Usage</CardTitle><CardDescription>Refreshes as files are uploaded</CardDescription></CardHeader>
+        <CardContent>
+          <p>You've used <FormattedNumber value={usage[i]} format="bytes" /> of <FormattedNumber value={10_000_000_000} format="bytes" />.</p>
+          <p className="cap">A changed value cross-fades and settles with a tint. It never counts up. Point at "4.2K" or a byte size for its exact value.</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

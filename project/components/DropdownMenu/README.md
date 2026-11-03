@@ -17,3 +17,47 @@ The menu rises like a Popover. Items stagger in at 16ms each. A single `accent-s
 - Do use `ContextMenu` for the same menu opened where something is right-clicked; the two share one implementation.
 - Do use `checked` for an item that turns something on or off: it becomes a `menuitemcheckbox` with a check, and every item keeps a slot for the check so labels line up.
 - Do put destructive actions last, after a separator, in `critical`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`DropdownMenu` as first used in its preview:
+
+```tsx
+import { Button, DropdownMenu, Icons } from 'altitude-design';
+
+<DropdownMenu defaultOpen items={items} trigger={<Button trailing={<Icons.ChevronDown />}>Actions</Button>} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`pair` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import { Button, DropdownMenu, Icons } from 'altitude-design';
+
+const items = [
+  { type: 'label', label: 'Project' },
+  { label: 'Rename', shortcut: 'R' },
+  { label: 'Duplicate', shortcut: '⌘D' },
+  { label: 'Move to…' },
+  { label: 'Archive', disabled: true },
+  { type: 'separator' },
+  { label: 'Delete project', tone: 'critical', shortcut: '⌫' },
+];
+const predicted = [
+  { label: 'Copy link', shortcut: '⌘L', predicted: true },
+  { label: 'Share…', predicted: true },
+  { label: 'Rename', shortcut: 'R' },
+  { label: 'Duplicate', shortcut: '⌘D' },
+  { label: 'Export as PDF' },
+  { label: 'Version history' },
+];
+export default function App() {
+  return (
+    <div className="pair">
+      <DropdownMenu defaultOpen items={items} trigger={<Button trailing={<Icons.ChevronDown />}>Actions</Button>} />
+      <DropdownMenu items={predicted} trigger={<Button trailing={<Icons.ChevronDown />}>Predicted</Button>} />
+    </div>
+  );
+}
+```
+<!-- /example -->

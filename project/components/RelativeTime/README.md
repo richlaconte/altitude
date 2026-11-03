@@ -24,3 +24,50 @@ A moment shown as "3 minutes ago", for activity feeds, audit logs, comments and 
 - Do keep the tooltip on wherever the exact time matters (audit logs, billing).
 - Don't put a RelativeTime in a live region, or announce it ticking.
 - Don't format times by hand with string concatenation.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`RelativeTime` as first used in its preview:
+
+```tsx
+import { RelativeTime } from 'altitude-design';
+
+<RelativeTime date={when} format="auto" />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`rt`, `col`, `row`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, RelativeTime } from 'altitude-design';
+
+const ago = (ms) => new Date(Date.now() - ms);
+const events = [
+  ['Deploy #482 finished', ago(20_000)],
+  ['Maya invited Theo', ago(3 * 60_000)],
+  ['Invoice INV-0042 paid', ago(5 * 3_600_000)],
+  ['API key rotated', ago(26 * 3_600_000)],
+  ['Workspace created', ago(40 * 86_400_000)],
+];
+export default function App() {
+  const [edited, setEdited] = React.useState(() => ago(12 * 60_000));
+  return (
+    <div className="rt">
+      <ul aria-label="Activity">
+        {events.map(([what, when]) => <li key={what}><span>{what}</span><RelativeTime date={when} format="auto" /></li>)}
+      </ul>
+      <Card>
+        <CardHeader><CardTitle>Q3 board deck</CardTitle><CardDescription>Last edited <RelativeTime date={edited} /></CardDescription></CardHeader>
+        <CardContent>
+          <div className="col">
+            <div className="row"><Button size="sm" onClick={() => setEdited(new Date())}>Edit again</Button></div>
+            <p className="cap">Time passing changes the words with nothing else. A new moment (an edit) settles with a tint. Point at or tab to a time for its exact date, time and zone. Past a week, the feed shows a date.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

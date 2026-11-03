@@ -55,3 +55,83 @@ The record and each property's write, and for Edit all the whole-record write an
 The `PropertyList` section of `build/previews.txt` shows an issue sidebar (status, assignee, priority unset, estimate, created) with shortcuts on, and a “Check your answers” summary with an unset phone number and Edit all. `node checks/property-list.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the `dl` structure, value buttons and their names, read-only text, unset openings, on-choose saves and announcements, filling an unset value, validation and Escape, shortcuts, Edit all with a cross-field rule and focus return, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **Narrow.** Under 480px of its own width, an inline list stacks each label over its value, and a proposed change stacks its values, who proposed it and its Reject and Accept.
 
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`PropertyList` as first used in its preview:
+
+```tsx
+import { Badge, Combobox, Input, PropertyList, PropertyListItem, Select } from 'altitude-design';
+
+<PropertyList aria-labelledby="pl-issue" shortcuts>
+  <PropertyListItem label="Status" value={issue.status} shortcut="s" commit="on-choose" onSave={save('status')} onValueChange={set('status')}
+    renderValue={s => <Badge tone={PL_TONE[s]}>{plLabel(PL_STATUS, s)}</Badge>} editor={c => <Select {...c} items={PL_STATUS} size="sm" />} />
+  <PropertyListItem label="Assignee" value={issue.assignee} shortcut="a" commit="on-choose" onSave={save('assignee')} onValueChange={set('assignee')}
+    renderValue={p => plLabel(PL_PEOPLE, p)} editor={c => <Combobox {...c} items={PL_PEOPLE} size="sm" />} />
+  <PropertyListItem label="Priority" value={issue.priority} emptyLabel="Add priority" commit="on-choose" onSave={save('priority')} onValueChange={set('priority')}
+    renderValue={p => plLabel(PL_PRIORITY, p)} editor={c => <Select {...c} items={PL_PRIORITY} size="sm" />} />
+  <PropertyListItem label="Estimate" value={issue.estimate} onSave={save('estimate')} onValueChange={set('estimate')} required
+    validate={n => Number.isInteger(n) && n >= 0 ? undefined : 'Use a whole number, 0 or more.'} renderValue={n => `${n} points`}
+    editor={({ value, onValueChange, ...c }) => <Input {...c} type="number" size="sm" value={value ?? ''} onChange={e => onValueChange(e.target.value === '' ? null : Number(e.target.value))} />} />
+  <PropertyListItem label="Created" value={issue.created} />
+</PropertyList>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`pl-demo`, `pl-side` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Badge, Combobox, Field, Input, PropertyList, PropertyListItem, Select } from 'altitude-design';
+
+const PL_STATUS = [{ value: 'todo', label: 'To do' }, { value: 'progress', label: 'In progress' }, { value: 'review', label: 'In review' }, { value: 'done', label: 'Done' }];
+const PL_TONE = { todo: 'neutral', progress: 'accent', review: 'caution', done: 'positive' };
+const PL_PEOPLE = [{ value: 'mara', label: 'Mara Quist' }, { value: 'ines', label: 'Inés Ortega' }, { value: 'tobi', label: 'Tobi Adeyemi' }];
+const PL_PRIORITY = [{ value: 'low', label: 'Low' }, { value: 'medium', label: 'Medium' }, { value: 'high', label: 'High' }];
+const plWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const plLabel = (list, v) => list.find(o => o.value === v)?.label;
+export default function App() {
+  const [issue, setIssue] = React.useState({ status: 'review', assignee: 'mara', priority: '', estimate: 3, created: '21 Oct 2026' });
+  const [trip, setTrip] = React.useState({ name: 'Mara Quist', email: 'mara@northwind.example', start: '2026-11-02', end: '2026-11-06', phone: '' });
+  const set = key => v => setIssue(i => ({ ...i, [key]: v }));
+  const save = key => async draft => { await plWait(250); if (key === 'status' && draft === 'done' && !issue.assignee) return { ok: false, error: 'Assign someone before marking it done.' }; return { ok: true, value: draft }; };
+  const tripSet = key => v => setTrip(t => ({ ...t, [key]: v }));
+  const tripSave = async draft => { await plWait(200); return { ok: true, value: draft }; };
+  return <div className="pl-demo">
+    <section className="pl-side">
+      <h3 id="pl-issue">Issue details</h3>
+      <PropertyList aria-labelledby="pl-issue" shortcuts>
+        <PropertyListItem label="Status" value={issue.status} shortcut="s" commit="on-choose" onSave={save('status')} onValueChange={set('status')}
+          renderValue={s => <Badge tone={PL_TONE[s]}>{plLabel(PL_STATUS, s)}</Badge>} editor={c => <Select {...c} items={PL_STATUS} size="sm" />} />
+        <PropertyListItem label="Assignee" value={issue.assignee} shortcut="a" commit="on-choose" onSave={save('assignee')} onValueChange={set('assignee')}
+          renderValue={p => plLabel(PL_PEOPLE, p)} editor={c => <Combobox {...c} items={PL_PEOPLE} size="sm" />} />
+        <PropertyListItem label="Priority" value={issue.priority} emptyLabel="Add priority" commit="on-choose" onSave={save('priority')} onValueChange={set('priority')}
+          renderValue={p => plLabel(PL_PRIORITY, p)} editor={c => <Select {...c} items={PL_PRIORITY} size="sm" />} />
+        <PropertyListItem label="Estimate" value={issue.estimate} onSave={save('estimate')} onValueChange={set('estimate')} required
+          validate={n => Number.isInteger(n) && n >= 0 ? undefined : 'Use a whole number, 0 or more.'} renderValue={n => `${n} points`}
+          editor={({ value, onValueChange, ...c }) => <Input {...c} type="number" size="sm" value={value ?? ''} onChange={e => onValueChange(e.target.value === '' ? null : Number(e.target.value))} />} />
+        <PropertyListItem label="Created" value={issue.created} />
+      </PropertyList>
+    </section>
+    <section>
+      <h3 id="pl-trip">Check your answers</h3>
+      <PropertyList aria-labelledby="pl-trip" layout="inline"
+        editAll={{ label: 'trip details', value: trip, onValueChange: setTrip,
+          validate: d => d.end < d.start ? { end: 'The last day must be on or after the first.' } : undefined,
+          onSave: async d => { await plWait(250); return { ok: true, value: d }; },
+          renderEditor: field => <>
+            <Field label="Name" error={field.error('name')}><Input {...field('name')} /></Field>
+            <Field label="Email" error={field.error('email')}><Input {...field('email')} type="email" /></Field>
+            <Field label="First day" error={field.error('start')}><Input {...field('start')} type="date" /></Field>
+            <Field label="Last day" error={field.error('end')}><Input {...field('end')} type="date" /></Field>
+            <Field label="Phone"><Input {...field('phone')} type="tel" /></Field>
+          </> }}>
+        <PropertyListItem label="Name" value={trip.name} onSave={tripSave} onValueChange={tripSet('name')} required />
+        <PropertyListItem label="Email" value={trip.email} onSave={tripSave} onValueChange={tripSet('email')} required />
+        <PropertyListItem label="Dates" value={`${trip.start} to ${trip.end}`} />
+        <PropertyListItem label="Phone" value={trip.phone} emptyLabel="Add phone number" onSave={tripSave} onValueChange={tripSet('phone')} />
+      </PropertyList>
+    </section>
+  </div>;
+}
+```
+<!-- /example -->

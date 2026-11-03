@@ -84,3 +84,88 @@ The data, the writes and their concurrency guards, and the removal policy (recov
 The `Tree` section of `build/previews.txt` is a page tree with a toolbar; the demo service rejects names over 40 characters and moves out of Archive. `node checks/tree.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG keys and RTL, rename (cancel, rejection, save), create (sibling and child), keyboard carry (up, down, indent, outdent, cancel, drop, a rejected move, `canDrop`), Alt+↓, Delete with focus repair, pointer carry into a closed node (spring-loaded) and onto a slot, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **On touch.** With `onMove`, a swipe on a row scrolls; a press-and-hold picks it up, then a drag moves it.
 
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Tree` as first used in its preview:
+
+```tsx
+import { Tree } from 'altitude-design';
+
+<Tree ref={tree} aria-label="Pages" items={pages} getKey={p => p.id} getLabel={p => p.title} getChildren={p => p.children} hasChildren={p => !!p.children}
+  expanded={expanded} onExpandedChange={setExpanded} selected={selected} onSelectedChange={setSelected}
+  renderItem={p => <><span className="tree-demo-icon" aria-hidden="true">{p.children ? <FolderIcon /> : <PageIcon />}</span>{p.title}</>}
+  onRename={async (page, title) => { await treeWait(250); if (title.length > 40) return { ok: false, error: 'Use 40 characters or fewer.' }; setPages(list => treeRename(list, page.id, title.trim())); return { ok: true }; }}
+  canDrop={({ to }) => to.parentId === null || !!treeFind(pages, to.parentId).page.children}
+  onMove={async ({ id, to }) => {
+    await treeWait(250);
+    // The demo service refuses to move anything out of Archive.
+    if (treeFind(pages, id).parent === 'archive' && to.parentId !== 'archive') return { ok: false, error: 'Archived pages can’t be moved out of Archive.' };
+    setPages(list => { const page = treeFind(list, id).page; return treeInsert(treeRemove(list, id), to.parentId, to.index, page); });
+    return { ok: true };
+  }}
+  onCreate={async ({ parentId, index, name }) => { await treeWait(250); const page = { id: 'new-' + ++seq.current, title: name }; setPages(list => treeInsert(list, parentId, index, page)); return { ok: true, value: page }; }}
+  onRemove={page => setPages(list => treeRemove(list, page.id))} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`tree-demo`, `tree-demo-tools`, `tree-demo-icon`, `tree-demo-panel` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Tree } from 'altitude-design';
+
+const TREE_SEED = [
+  { id: 'brand', title: 'Brand', children: [
+    { id: 'logo', title: 'Logo usage' }, { id: 'colour', title: 'Colour' }, { id: 'type', title: 'Typography' } ] },
+  { id: 'product', title: 'Product', children: [
+    { id: 'roadmap', title: 'Roadmap' },
+    { id: 'specs', title: 'Specs', children: [{ id: 'search', title: 'Search' }, { id: 'billing', title: 'Billing' }] } ] },
+  { id: 'archive', title: 'Archive', children: [] },
+  { id: 'handbook', title: 'Team handbook' },
+];
+const treeWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+// Pure helpers over the nested pages: find, remove, insert.
+const treeFind = (list, id, parent = null) => { for (const [i, p] of list.entries()) { if (p.id === id) return { page: p, parent, index: i }; const hit = p.children && treeFind(p.children, id, p.id); if (hit) return hit; } return null; };
+const treeRemove = (list, id) => list.filter(p => p.id !== id).map(p => p.children ? { ...p, children: treeRemove(p.children, id) } : p);
+const treeInsert = (list, parentId, index, page) => parentId === null ? [...list.slice(0, index), page, ...list.slice(index)]
+  : list.map(p => p.id === parentId ? { ...p, children: [...(p.children || []).slice(0, index), page, ...(p.children || []).slice(index)] } : p.children ? { ...p, children: treeInsert(p.children, parentId, index, page) } : p);
+const treeRename = (list, id, title) => list.map(p => p.id === id ? { ...p, title } : p.children ? { ...p, children: treeRename(p.children, id, title) } : p);
+const FolderIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M2 4.5h4l1.5 1.5H14v6.5H2z" /></svg>;
+const PageIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M4 2h5l3 3v9H4z" /><path d="M9 2v3h3" /></svg>;
+
+export default function App() {
+  const [pages, setPages] = React.useState(TREE_SEED);
+  const [expanded, setExpanded] = React.useState(['brand', 'product']);
+  const [selected, setSelected] = React.useState('roadmap');
+  const tree = React.useRef(null);
+  const seq = React.useRef(0);
+  const current = selected && treeFind(pages, selected);
+  return <div className="tree-demo">
+    <div>
+      <div className="tree-demo-tools">
+        <Button size="sm" variant="ghost" onClick={() => tree.current.startCreate(current && current.page.children ? current.page.id : current ? current.parent : null)}>New page</Button>
+        <Button size="sm" variant="ghost" disabled={!current} onClick={() => tree.current.startRename(selected)}>Rename</Button>
+      </div>
+      <Tree ref={tree} aria-label="Pages" items={pages} getKey={p => p.id} getLabel={p => p.title} getChildren={p => p.children} hasChildren={p => !!p.children}
+        expanded={expanded} onExpandedChange={setExpanded} selected={selected} onSelectedChange={setSelected}
+        renderItem={p => <><span className="tree-demo-icon" aria-hidden="true">{p.children ? <FolderIcon /> : <PageIcon />}</span>{p.title}</>}
+        onRename={async (page, title) => { await treeWait(250); if (title.length > 40) return { ok: false, error: 'Use 40 characters or fewer.' }; setPages(list => treeRename(list, page.id, title.trim())); return { ok: true }; }}
+        canDrop={({ to }) => to.parentId === null || !!treeFind(pages, to.parentId).page.children}
+        onMove={async ({ id, to }) => {
+          await treeWait(250);
+          // The demo service refuses to move anything out of Archive.
+          if (treeFind(pages, id).parent === 'archive' && to.parentId !== 'archive') return { ok: false, error: 'Archived pages can’t be moved out of Archive.' };
+          setPages(list => { const page = treeFind(list, id).page; return treeInsert(treeRemove(list, id), to.parentId, to.index, page); });
+          return { ok: true };
+        }}
+        onCreate={async ({ parentId, index, name }) => { await treeWait(250); const page = { id: 'new-' + ++seq.current, title: name }; setPages(list => treeInsert(list, parentId, index, page)); return { ok: true, value: page }; }}
+        onRemove={page => setPages(list => treeRemove(list, page.id))} />
+    </div>
+    <div className="tree-demo-panel" aria-live="polite">
+      <h3>{current ? current.page.title : 'No page selected'}</h3>
+      <p>F2 renames. Ctrl+Enter adds a page after, Ctrl+Shift+Enter one inside. Space picks a page up: arrows move it, → puts it inside the page above, Space drops. Or drag it onto a folder.</p>
+    </div>
+  </div>;
+}
+```
+<!-- /example -->

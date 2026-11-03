@@ -39,3 +39,66 @@ Two measures per record, to see whether they move together and to spot the ones 
 - Do say what a correlation means in the `summary`; don't let a trend line stand in for a cause.
 - Don't use more than three groups; split into small multiples.
 - Don't size dots by a third measure; it's two measures per record, read by position.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`ScatterChart` as first used in its preview:
+
+```tsx
+import { ChartLegend, ChartLegendContent, ScatterChart } from 'altitude-design';
+
+<ScatterChart data={endpoints} x="kb" y="ms" group="service" id="name" name="name" label={(d) => (d.ms > 250 && d.kb < 300 ? d.name : null)} trend>
+  <ChartLegend content={<ChartLegendContent toggle label="Services" />} />
+</ScatterChart>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`sc`, `sc-foot` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, ChartContainer, ChartLegend, ChartLegendContent, ScatterChart } from 'altitude-design';
+
+const svc = ['Checkout', 'Search', 'Media'];
+// p95 latency against payload per endpoint: latency climbs with payload, Media's big payloads most of all.
+const endpoints = Array.from({ length: 30 }, (_, i) => {
+  const service = svc[i % 3], kb = Math.round(8 + ((i * 53) % 97) * (service === 'Media' ? 4.1 : 2.2));
+  const ms = Math.round(70 + kb * (service === 'Media' ? 0.62 : 0.48) + ((i * 37) % 41) - 20 + (i === 13 ? 190 : 0));
+  return { name: `${service} ${['list', 'get', 'create', 'update', 'search', 'export', 'upload', 'sync', 'batch', 'stream'][Math.floor(i / 3)]}`, service, kb, ms };
+});
+const kb = (v) => `${Math.round(v)} KB`, ms = (v) => `${Math.round(v)} ms`;
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact' });
+const month = (m) => Array.from({ length: 16 }, (_, i) => {
+  const seats = 20 + ((i * 29) % 140) + m * (i % 4) * 6;
+  return { id: 'c' + i, name: ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli', 'Vandelay', 'Stark', 'Wayne', 'Wonka', 'Tyrell', 'Cyberdyne', 'Soylent', 'Aperture', 'Massive', 'Oscorp', 'Gringotts'][i], seats, spend: Math.round(seats * (38 + ((i * 17) % 23)) + m * 300) };
+});
+export default function App() {
+  const [m, setM] = React.useState(0);
+  const [picked, setPicked] = React.useState(null);
+  const customers = React.useMemo(() => month(m), [m]);
+  return (
+    <div className="sc">
+      <Card>
+        <CardHeader><CardTitle id="sc1">Latency against payload</CardTitle><CardDescription>p95 per endpoint, by service, with the trend</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="sc1" aspect={1.5} config={{ kb: { label: 'Payload', format: kb }, ms: { label: 'p95', format: ms } }}>
+            <ScatterChart data={endpoints} x="kb" y="ms" group="service" id="name" name="name" label={(d) => (d.ms > 250 && d.kb < 300 ? d.name : null)} trend>
+              <ChartLegend content={<ChartLegendContent toggle label="Services" />} />
+            </ScatterChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle id="sc2">Spend against seats</CardTitle><CardDescription>{picked ? `${picked.name} selected: the rest recede` : 'Per customer. Select one; dots glide by id when the month changes'}</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="sc2" aspect={1.5} views config={{ seats: { label: 'Seats' }, spend: { label: 'Spend', format: usd.format } }}>
+            <ScatterChart data={customers} x="seats" y="spend" id="id" name="name" selected={picked ? picked.id : null} onSelect={setPicked} />
+          </ChartContainer>
+          <div className="sc-foot"><Button size="sm" variant="secondary" onClick={() => setM((n) => (n + 1) % 3)}>Next month</Button><span>Month {m + 1} of 3</span></div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

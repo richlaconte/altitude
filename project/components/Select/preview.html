@@ -38,7 +38,21 @@ function App() {
       placeholder: "Choose a timezone",
       items: [{ value: "utc", label: "UTC" }, { value: "lis", label: "Europe/Lisbon" }, { value: "nyc", label: "America/New_York" }]
     }
-  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Runtime" }, /* @__PURE__ */ React.createElement(A.Select, { defaultValue: "node", defaultOpen: true, items: [{ value: "node", label: "Node.js 22" }, { value: "bun", label: "Bun 1.2" }, { value: "deno", label: "Deno 2" }, { value: "edge", label: "Edge (V8 isolates)" }] })), /* @__PURE__ */ React.createElement(A.Field, { label: "Owner" }, /* @__PURE__ */ React.createElement(A.Select, { disabled: true, defaultValue: "mara", items: [{ value: "mara", label: "Mara Quist" }] }))), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 150 } }, "Empty fields are holes with their back wall showing; choosing raises the floor flush. Type a letter on a focused field to jump to it."));
+  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Runtime" }, /* @__PURE__ */ React.createElement(
+    A.Select,
+    {
+      defaultValue: "node",
+      defaultOpen: true,
+      items: [{ value: "node", label: "Node.js 22" }, { value: "bun", label: "Bun 1.2" }, { value: "deno", label: "Deno 2" }, { value: "edge", label: "Edge (V8 isolates)" }]
+    }
+  )), /* @__PURE__ */ React.createElement(A.Field, { label: "Owner" }, /* @__PURE__ */ React.createElement(
+    A.Select,
+    {
+      disabled: true,
+      defaultValue: "mara",
+      items: [{ value: "mara", label: "Mara Quist" }]
+    }
+  ))), /* @__PURE__ */ React.createElement("p", { className: "cap", style: { marginTop: 150 } }, "Empty fields are holes with their back wall showing; choosing raises the floor flush. Type a letter on a focused field to jump to it."));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

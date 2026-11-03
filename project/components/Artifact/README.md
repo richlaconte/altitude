@@ -28,3 +28,72 @@ What an agent is making (a document, a component, a page, a chart, a config) in 
 - Do sandbox preview iframes; the frame's permissions are yours.
 - Do keep the last whole version visible when a new one fails.
 - Don't lift the pane or tint it for an earlier version; say it in the strip.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Artifact` as first used in its preview:
+
+```tsx
+import { Artifact, ArtifactContent, ArtifactHeader, ArtifactVersions, CodeBlock, DiffView } from 'altitude-design';
+
+<Artifact id="pricing-artifact" title="Pricing page" status={status} version={3}>
+  <ArtifactHeader onCopy={() => versions[v - 1].code} onDownload={() => {}} onClose={() => setOpen(false)} />
+  <ArtifactVersions versions={3} current={v} onChange={setV} onRestore={() => setV(3)} />
+  <ArtifactContent views={{
+    preview: <iframe sandbox="" srcDoc={html(v)} title={`Pricing page preview, version ${v}`} />,
+    source: <CodeBlock language="tsx" code={versions[v - 1].code} streaming={status === 'writing' && v === 3} />,
+    changes: v > 1 ? <DiffView caption={`Version ${v - 1} → ${v}`} before={versions[v - 2].code} after={versions[v - 1].code} /> : undefined,
+  }} />
+</Artifact>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`af`, `chat` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Artifact, ArtifactContent, ArtifactHeader, ArtifactReference, ArtifactVersions, CodeBlock, DiffView, Message, MessageContent, ResizableHandle, ResizablePanel, ResizablePanelGroup } from 'altitude-design';
+
+const versions = [
+  { code: `export function Pricing() {\n  return <h1>Pricing</h1>;\n}` },
+  { code: `export function Pricing() {\n  return (\n    <section>\n      <h1>Pricing</h1>\n      <p>Start free, upgrade when you grow.</p>\n    </section>\n  );\n}` },
+  { code: `export function Pricing() {\n  return (\n    <section>\n      <h1>Pricing</h1>\n      <p>Start free, upgrade when you grow.</p>\n      <Plans tiers={['Starter', 'Pro', 'Business']} />\n    </section>\n  );\n}` },
+];
+const html = (v) => `<body style="font:15px system-ui;margin:24px;color:#1b2230"><h1 style="font-size:22px">Pricing</h1>${v >= 2 ? '<p>Start free, upgrade when you grow.</p>' : ''}${v >= 3 ? '<div style="display:flex;gap:8px">' + ['Starter', 'Pro', 'Business'].map((t) => `<div style="flex:1;padding:12px;border:1px solid #d5dae3;border-radius:8px">${t}</div>`).join('') + '</div>' : ''}</body>`;
+export default function App() {
+  const [open, setOpen] = React.useState(true);
+  const [status, setStatus] = React.useState('writing');
+  const [v, setV] = React.useState(3);
+  React.useEffect(() => { const t = setTimeout(() => setStatus('complete'), 2500); return () => clearTimeout(t); }, []);
+  return (
+    <div className="af">
+      <ResizablePanelGroup direction="horizontal" narrow="stack" narrowPanel={open ? 1 : 0}>
+        <ResizablePanel defaultSize={42} aria-label="Conversation">
+          <div className="chat">
+            <Message from="user"><MessageContent>Make a pricing page with three plans.</MessageContent></Message>
+            <Message from="assistant">
+              <MessageContent>Here's the page, with the three plans in a row.</MessageContent>
+              <ArtifactReference title="Pricing page" version={3} status={status} controls="pricing-artifact" onOpen={() => setOpen(true)} />
+            </Message>
+          </div>
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel defaultSize={58} aria-label="Pricing page">
+          {open && (
+            <Artifact id="pricing-artifact" title="Pricing page" status={status} version={3}>
+              <ArtifactHeader onCopy={() => versions[v - 1].code} onDownload={() => {}} onClose={() => setOpen(false)} />
+              <ArtifactVersions versions={3} current={v} onChange={setV} onRestore={() => setV(3)} />
+              <ArtifactContent views={{
+                preview: <iframe sandbox="" srcDoc={html(v)} title={`Pricing page preview, version ${v}`} />,
+                source: <CodeBlock language="tsx" code={versions[v - 1].code} streaming={status === 'writing' && v === 3} />,
+                changes: v > 1 ? <DiffView caption={`Version ${v - 1} → ${v}`} before={versions[v - 2].code} after={versions[v - 1].code} /> : undefined,
+              }} />
+            </Artifact>
+          )}
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </div>
+  );
+}
+```
+<!-- /example -->

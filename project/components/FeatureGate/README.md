@@ -26,3 +26,42 @@ Pressing it opens a `Popover` (level 3): "Available on Business", what the plan 
 - Do say what the plan adds, not just its name.
 - Don't use `disabled` for a feature that needs another plan.
 - Don't hide the upgrade from people who can't buy it; tell them who can.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`FeatureGate` as first used in its preview:
+
+```tsx
+import { Button, FeatureGate } from 'altitude-design';
+
+<FeatureGate requires="Business" description="Export any view to CSV, and schedule exports by email." onUpgrade={() => setSaid('Opening plans…')} compareHref="#/billing/plans">
+  <Button variant="secondary">Export to CSV</Button>
+</FeatureGate>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `row`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, FeatureGate } from 'altitude-design';
+
+export default function App() {
+  const [said, setSaid] = React.useState('');
+  return (
+    <div className="col">
+      <div className="row">
+        <Button variant="secondary">Export view</Button>
+        <FeatureGate requires="Business" description="Export any view to CSV, and schedule exports by email." onUpgrade={() => setSaid('Opening plans…')} compareHref="#/billing/plans">
+          <Button variant="secondary">Export to CSV</Button>
+        </FeatureGate>
+        <FeatureGate requires="Enterprise" description="Sign in with your identity provider (Okta, Azure AD, Google)." canUpgrade={false}>
+          <Button variant="ghost">SAML SSO</Button>
+        </FeatureGate>
+      </div>
+      <p className="cap" role="status">{said || 'Locked features keep their ink, lift when pointed at and are reachable by keyboard; pressing one explains the plan. Without permission to upgrade, it says to ask an admin.'}</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

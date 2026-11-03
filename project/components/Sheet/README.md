@@ -30,3 +30,97 @@ A large panel laid over the page at level 4, anchored to an edge, for a task tha
 A modal Sheet shares document-scoped isolation, scroll ownership and eligible-focus containment with Dialog. Its locks remain through exit. Opening a Dialog from a Sheet suspends the Sheet, then resumes its focus and existing background policy after the Dialog closes. A Sheet requested beneath a summit cannot take its focus or `aria-modal` ownership. A stationary Dialog also removes the lower Sheet's scrim blur until it closes.
 
 `modal={false}` keeps the page interactive and scrollable: no scrim, recession or focus trap. Closing that Sheet does not restore focus over a newer modal.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Sheet` as first used in its preview:
+
+```tsx
+import { Button, Input, Sheet, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from 'altitude-design';
+
+<Sheet side="bottom" size="sm" trigger={<Button>Share</Button>}>
+  <SheetHeader>
+    <SheetTitle>Share Northwind</SheetTitle>
+    <SheetDescription>
+      Anyone with the link can view the latest deployment.
+    </SheetDescription>
+  </SheetHeader>
+  <Input
+    defaultValue="https://acme.dev/n/8dc01b2"
+    readOnly={true}
+    aria-label="Share link"
+  />
+  <SheetFooter><Button variant="primary">Copy link</Button></SheetFooter>
+</Sheet>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`page`, `row`, `grid`, `form` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Card, Checkbox, Field, Input, Sheet, SheetDescription, SheetFooter, SheetHeader, SheetTitle, Switch, Textarea } from 'altitude-design';
+
+export default function App() {
+  const [edit, setEdit] = React.useState(true);
+  return <div className="page">
+  <div className="row">
+    <Button variant="primary" onClick={() => setEdit(true)}>Edit project</Button>
+    <Sheet side="bottom" size="sm" trigger={<Button>Share</Button>}>
+      <SheetHeader>
+        <SheetTitle>Share Northwind</SheetTitle>
+        <SheetDescription>
+          Anyone with the link can view the latest deployment.
+        </SheetDescription>
+      </SheetHeader>
+      <Input
+        defaultValue="https://acme.dev/n/8dc01b2"
+        readOnly={true}
+        aria-label="Share link"
+      />
+      <SheetFooter><Button variant="primary">Copy link</Button></SheetFooter>
+    </Sheet>
+    <Sheet
+      side="left"
+      size="sm"
+      modal={false}
+      trigger={<Button variant="ghost">Filters</Button>}
+    >
+      <SheetHeader>
+        <SheetTitle>Filters</SheetTitle>
+        <SheetDescription>The page stays usable while this is open.</SheetDescription>
+      </SheetHeader>
+      <Checkbox label="Production" defaultChecked={true} />
+      <Checkbox label="Preview" />
+      <Checkbox label="Failed builds only" />
+    </Sheet>
+  </div>
+  <div className="grid" data-tells-ignore="LA4 placeholder page behind the overlay">
+    <Card />
+    <Card />
+    <Card />
+    <Card />
+    <Card />
+    <Card />
+  </div>
+  <Sheet open={edit} onOpenChange={setEdit}>
+    <SheetHeader>
+      <SheetTitle>Edit project</SheetTitle>
+      <SheetDescription>Changes apply to every environment.</SheetDescription>
+    </SheetHeader>
+    <div className="form">
+      <Field label="Project name"><Input defaultValue="Northwind" /></Field>
+      <Field label="Description" hint="Shown on the project's card.">
+        <Textarea placeholder="What is this project for?" />
+      </Field>
+      <Switch label="Deploy previews for every branch" defaultChecked={true} />
+    </div>
+    <SheetFooter>
+      <Button variant="ghost" onClick={() => setEdit(false)}>Cancel</Button>
+      <Button variant="primary" onClick={() => setEdit(false)}>Save changes</Button>
+    </SheetFooter>
+  </Sheet>
+</div>;
+}
+```
+<!-- /example -->

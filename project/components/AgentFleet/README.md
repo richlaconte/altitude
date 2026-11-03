@@ -32,3 +32,50 @@ const row = (a) => <AgentFleetItem key={a.id} {...a} selected={a.id === open} on
 - Do say every state in words; the lamp and mark only repeat it.
 - Don't show a spinner, a ticking counter or make a working row hover.
 - Don't lay agents out as a grid of equal cards: the one that needs you gets lost among the ones that don't.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`AgentFleet` as first used in its preview:
+
+```tsx
+import { AgentFleet, AgentFleetGroup, summarizeFleet } from 'altitude-design';
+
+<AgentFleet now={now} summary={summarizeFleet(seed.map((a) => a.state))}>
+  <AgentFleetGroup label="Needs you" empty="Nothing needs you.">{g.needsYou.map(row)}</AgentFleetGroup>
+  <AgentFleetGroup label="Working">{g.working.map(row)}</AgentFleetGroup>
+  <AgentFleetGroup label="Done" collapsible>{g.finished.map(row)}</AgentFleetGroup>
+</AgentFleet>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`af` is the preview page's own layout class, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { AgentFleet, AgentFleetGroup, AgentFleetItem, groupAgents, summarizeFleet } from 'altitude-design';
+
+const now = Date.UTC(2026, 9, 31, 14, 20), min = 60000;
+const seed = [
+  { id: 'api', name: 'Billing API', state: 'needs-input', needs: 'approval', activity: 'Wants to run the migration on staging', since: now - 6 * min, startedAt: now - 17 * min, step: { current: 3, total: 4 }, cost: '$0.38' },
+  { id: 'qa', name: 'QA', state: 'failed', activity: '2 of 14 checkout tests failed', since: now - 2 * min, startedAt: now - 5 * min, cost: '$0.11' },
+  { id: 'docs', name: 'Docs', state: 'stalled', stalledReason: 'Retried the same step 3 times', activity: 'Link check timed out on /enterprise; retrying', since: now - 5 * min, startedAt: now - 17 * min, step: { current: 3, total: 3 }, cost: '$0.31' },
+  { id: 'pricing', name: 'Pricing page', state: 'working', activity: 'Writing the annual toggle in Pricing.tsx', startedAt: now - 17 * min, step: { current: 2, total: 4 }, cost: '$0.41', conflict: { file: 'src/content/pricing.ts', with: 'Docs' } },
+  { id: 'changelog', name: 'Changelog', state: 'blocked', blockedBy: 'Pricing page' },
+  { id: 'emails', name: 'Renewal emails', state: 'done', activity: 'Scheduled for Tuesday 9:00 to 1,240 customers', startedAt: now - 17 * min, endedAt: now - 3 * min, cost: '$0.29' },
+];
+export default function App() {
+  const [open, setOpen] = React.useState('pricing');
+  const g = groupAgents(seed, (a) => a);
+  const row = (a) => <AgentFleetItem key={a.id} {...a} selected={a.id === open} onSelect={() => setOpen(a.id)} />;
+  return (
+    <div className="af">
+      <AgentFleet now={now} summary={summarizeFleet(seed.map((a) => a.state))}>
+        <AgentFleetGroup label="Needs you" empty="Nothing needs you.">{g.needsYou.map(row)}</AgentFleetGroup>
+        <AgentFleetGroup label="Working">{g.working.map(row)}</AgentFleetGroup>
+        <AgentFleetGroup label="Done" collapsible>{g.finished.map(row)}</AgentFleetGroup>
+      </AgentFleet>
+    </div>
+  );
+}
+```
+<!-- /example -->

@@ -91,3 +91,103 @@ The `ItemGroup` section of `build/previews.txt` shows webhooks (edit, add, reord
 It also renders and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **Narrow.** When the group is under 480px wide, `ItemActions` moves to its own row under the content, so the title keeps its width; `narrow="inline"` keeps the actions beside it. `ItemDescription truncate` (or a number of lines) clamps a long description.
 
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`ItemGroup` as first used in its preview:
+
+```tsx
+import { Button, Field, Input, Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from 'altitude-design';
+
+<ItemGroup aria-labelledby="ig-hooks" items={hooks} getKey={h => h.id} getLabel={h => h.name}
+  renderItem={(h, { editProps, removeProps }) => <Item>
+    <ItemMedia><HookIcon /></ItemMedia>
+    <ItemContent><ItemTitle>{h.name}</ItemTitle><ItemDescription className="ig-url">{h.url}</ItemDescription></ItemContent>
+    <ItemActions><Button size="sm" variant="ghost" {...editProps}>Edit</Button><Button size="sm" variant="ghost" {...removeProps}>Remove</Button></ItemActions>
+  </Item>}
+  renderEditor={field => <>
+    <Field label="Name" required error={field.error('name')}><Input {...field('name')} /></Field>
+    <Field label="Endpoint URL" required error={field.error('url')}><Input {...field('url')} type="url" /></Field>
+  </>}
+  onSave={async (draft, { previousValue }) => {
+    const errors = validate(draft); if (Object.keys(errors).length) return { ok: false, error: 'Check the highlighted fields.', fieldErrors: errors };
+    await igWait(300); return { ok: true, value: { ...draft, name: draft.name.trim(), revision: previousValue.revision + 1 } };
+  }}
+  onItemChange={h => setHooks(list => list.map(x => x.id === h.id ? h : x))}
+  newItem={() => ({ id: '', name: '', url: 'https://', revision: 0 })}
+  onCreate={async draft => {
+    const errors = validate(draft); if (Object.keys(errors).length) return { ok: false, error: 'Check the highlighted fields.', fieldErrors: errors };
+    await igWait(300); const hook = { ...draft, id: 'n' + ++seq.current, name: draft.name.trim(), revision: 1 }; setHooks(list => [...list, hook]); return { ok: true, value: hook };
+  }}
+  addLabel="Add webhook"
+  onReorder={async next => { await igWait(200); setHooks(next); }}
+  onRemove={async h => { await igWait(200); trash.current.set(h.id, hooks.indexOf(h)); setHooks(list => list.filter(x => x.id !== h.id)); }}
+  removal={{ kind: 'recoverable', undo: h => setHooks(list => { const next = [...list]; next.splice(trash.current.get(h.id) ?? next.length, 0, h); return next; }) }} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`ig-demo`, `ig-url` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, EmptyState, Field, Input, Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle, Toaster } from 'altitude-design';
+
+const IG_HOOKS = [
+  { id: 'h1', name: 'Production', url: 'https://api.northwind.example/hooks/prod', revision: 1 },
+  { id: 'h2', name: 'Staging', url: 'https://staging.northwind.example/hooks', revision: 1 },
+  { id: 'h3', name: 'Billing events', url: 'https://billing.northwind.example/in', revision: 1 },
+];
+const igWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const HookIcon = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M6 4.5a2.5 2.5 0 1 1 3 2.4L7 11" /><path d="M4 12a2.5 2.5 0 1 1 2-4" /><path d="M12 12.5H8" /><circle cx="12" cy="12.5" r="1.5" /></svg>;
+export default function App() {
+  const [hooks, setHooks] = React.useState(IG_HOOKS);
+  const [options, setOptions] = React.useState([]);
+  const trash = React.useRef(new Map());
+  const seq = React.useRef(0);
+  const validate = draft => ({ ...(draft.name.trim() ? {} : { name: 'Enter a name.' }), ...(/^https:\/\/[^\s/]+\.[^\s]+$/.test(draft.url) ? {} : { url: 'Use an https:// address.' }) });
+  return <div className="ig-demo">
+    <section>
+      <h3 id="ig-hooks">Webhooks</h3>
+      <ItemGroup aria-labelledby="ig-hooks" items={hooks} getKey={h => h.id} getLabel={h => h.name}
+        renderItem={(h, { editProps, removeProps }) => <Item>
+          <ItemMedia><HookIcon /></ItemMedia>
+          <ItemContent><ItemTitle>{h.name}</ItemTitle><ItemDescription className="ig-url">{h.url}</ItemDescription></ItemContent>
+          <ItemActions><Button size="sm" variant="ghost" {...editProps}>Edit</Button><Button size="sm" variant="ghost" {...removeProps}>Remove</Button></ItemActions>
+        </Item>}
+        renderEditor={field => <>
+          <Field label="Name" required error={field.error('name')}><Input {...field('name')} /></Field>
+          <Field label="Endpoint URL" required error={field.error('url')}><Input {...field('url')} type="url" /></Field>
+        </>}
+        onSave={async (draft, { previousValue }) => {
+          const errors = validate(draft); if (Object.keys(errors).length) return { ok: false, error: 'Check the highlighted fields.', fieldErrors: errors };
+          await igWait(300); return { ok: true, value: { ...draft, name: draft.name.trim(), revision: previousValue.revision + 1 } };
+        }}
+        onItemChange={h => setHooks(list => list.map(x => x.id === h.id ? h : x))}
+        newItem={() => ({ id: '', name: '', url: 'https://', revision: 0 })}
+        onCreate={async draft => {
+          const errors = validate(draft); if (Object.keys(errors).length) return { ok: false, error: 'Check the highlighted fields.', fieldErrors: errors };
+          await igWait(300); const hook = { ...draft, id: 'n' + ++seq.current, name: draft.name.trim(), revision: 1 }; setHooks(list => [...list, hook]); return { ok: true, value: hook };
+        }}
+        addLabel="Add webhook"
+        onReorder={async next => { await igWait(200); setHooks(next); }}
+        onRemove={async h => { await igWait(200); trash.current.set(h.id, hooks.indexOf(h)); setHooks(list => list.filter(x => x.id !== h.id)); }}
+        removal={{ kind: 'recoverable', undo: h => setHooks(list => { const next = [...list]; next.splice(trash.current.get(h.id) ?? next.length, 0, h); return next; }) }} />
+      <Toaster />
+    </section>
+    <section>
+      <h3 id="ig-options">Answer options</h3>
+      <ItemGroup aria-labelledby="ig-options" items={options} getKey={o => o.id} getLabel={o => o.label}
+        renderItem={(o, { editProps, removeProps }) => <Item><ItemContent><ItemTitle>{o.label}</ItemTitle></ItemContent>
+          <ItemActions><Button size="sm" variant="ghost" {...editProps}>Edit</Button><Button size="sm" variant="ghost" {...removeProps}>Delete</Button></ItemActions></Item>}
+        renderEditor={field => <Field label="Option" required error={field.error('label')}><Input {...field('label')} /></Field>}
+        onItemChange={o => setOptions(list => list.map(x => x.id === o.id ? o : x))}
+        newItem={() => ({ id: '', label: '' })}
+        onCreate={draft => { if (!draft.label.trim()) return { ok: false, error: 'Enter an option.', fieldErrors: { label: 'Enter an option.' } }; const o = { id: 'o' + ++seq.current, label: draft.label.trim() }; setOptions(list => [...list, o]); return { ok: true, value: o }; }}
+        addLabel="Add option" onReorder={setOptions}
+        onRemove={o => setOptions(list => list.filter(x => x.id !== o.id))}
+        removal={{ kind: 'confirm', title: o => `Delete “${o.label}” permanently?`, description: () => 'Responses that chose it keep their answer, but it can’t be chosen again.', confirmLabel: 'Delete option' }}
+        empty={<EmptyState size="sm" title="No options yet" description="Add the answers people can choose from." />} />
+    </section>
+  </div>;
+}
+```
+<!-- /example -->

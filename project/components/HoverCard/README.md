@@ -16,3 +16,56 @@ A richer preview of what a link or a face points to: who someone is, what a proj
 
 - Do keep it to a glance: if people need to act on it, it's a Popover (click to open) or a page.
 - Don't put the only copy of anything in it, and don't put a form in it.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`HoverCard` as first used in its preview:
+
+```tsx
+import { HoverCard } from 'altitude-design';
+
+<HoverCard defaultOpen={true} trigger={<a href="#mara">Mara Quist</a>}>
+  <Card p={people.mara} />
+</HoverCard>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`who`, `bio`, `stats`, `col`, `para`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import { Avatar, HoverCard } from 'altitude-design';
+
+const people = {
+  mara: { name: "Mara Quist", role: "Platform \xB7 Lisbon", bio: "Owns deploys and the edge runtime. Usually reviews within the hour.", s: [42, 6, 3] },
+  jon: { name: "Jon Reyes", role: "Docs \xB7 Lima", bio: "Writes the release notes and keeps the changelog honest.", s: [18, 2, 5] }
+};
+const Card = ({ p }) => <>
+  <div className="who">
+    <Avatar name={p.name} size={40} status="active" />
+    <div><b>{p.name}</b><span>{p.role}</span></div>
+  </div>
+  <p className="bio">{p.bio}</p>
+  <div className="stats">
+    <span><b>{p.s[0]}</b>{" merged"}</span>
+    <span><b>{p.s[1]}</b>{" open"}</span>
+    <span><b>{p.s[2]}</b>{" projects"}</span>
+  </div>
+</>;
+export default function App() {
+  return <div className="col" style={{ gap: 18 }}>
+  <p className="para">
+    {"Merged by "}
+    <HoverCard defaultOpen={true} trigger={<a href="#mara">Mara Quist</a>}>
+      <Card p={people.mara} />
+    </HoverCard>
+    {" two hours ago, after review from "}
+    <HoverCard trigger={<a href="#jon">Jon Reyes</a>}><Card p={people.jon} /></HoverCard>
+    .
+  </p>
+  <p className="cap" style={{ marginTop: 160 }}>
+    Rest the pointer on a name; once one card has shown, the other opens at once. Focus a link with Tab to open it from the keyboard; Escape closes it.
+  </p>
+</div>;
+}
+```
+<!-- /example -->

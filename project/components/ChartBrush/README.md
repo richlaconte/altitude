@@ -39,3 +39,60 @@ const [range, setRange] = React.useState({ start: '2026-03-01', end: '2026-04-30
 - Do give the window a typed twin (a `DateRangePicker`) when exact dates matter; dragging is for finding, typing for stating.
 - Don't use a brush for a few dozen records: the chart can show them all.
 - Don't put a brush on a chart of categories; it windows records in their order, which only means something over time.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`ChartBrush` as first used in its preview:
+
+```tsx
+import { ChartBrush } from 'altitude-design';
+
+<ChartBrush />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`cb`, `col`, `pick` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { AreaChart, BarChart, Card, CardContent, CardDescription, CardHeader, CardTitle, ChartBrush, ChartContainer, DateRangePicker, Field } from 'altitude-design';
+
+// A year of daily active users, with a dip in August and a launch in late September.
+const cbYear = Array.from({ length: 365 }, (_, i) => {
+  const day = new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10);
+  const trend = 4200 + i * 9, week = [0.82, 1, 1.04, 1.05, 1.03, 0.97, 0.78][i % 7];
+  const summer = i > 212 && i < 243 ? 0.8 : 1, launch = i > 265 ? 1.18 : 1;
+  return { day, active: Math.round((trend + 260 * Math.sin(i / 9)) * week * summer * launch) };
+});
+const cbWeeks = Array.from({ length: 52 }, (_, i) => ({ week: new Date(Date.UTC(2026, 0, 5 + i * 7)).toISOString().slice(0, 10), signups: Math.round(310 + i * 6 + 90 * Math.sin(i / 3) + (i > 37 ? 160 : 0)) }));
+const cbK = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+export default function App() {
+  const [range, setRange] = React.useState({ start: '2026-03-01', end: '2026-04-30' });
+  return (
+    <div className="cb">
+      <Card>
+        <CardHeader><CardTitle id="cb1">Daily active users</CardTitle><CardDescription>Drag the lens to pan, a grip to resize, or press the overview to centre it there. The picker is the same state, typed.</CardDescription></CardHeader>
+        <CardContent className="col">
+          <Field label="Window" className="pick"><DateRangePicker value={range} onValueChange={setRange} min="2026-01-01" max="2026-12-31" locale="en-GB" /></Field>
+          <ChartContainer aria-labelledby="cb1" config={{ active: { label: 'Active users', format: cbK.format } }} aspect={3.4} locale="en-GB">
+            <AreaChart data={cbYear} x="day" window={range} onWindowChange={setRange}>
+              <ChartBrush />
+            </AreaChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle id="cb2">Weekly sign-ups</CardTitle><CardDescription>Bars over time with a brush that keeps its own window</CardDescription></CardHeader>
+        <CardContent>
+          <ChartContainer aria-labelledby="cb2" config={{ signups: { label: 'Sign-ups' } }} aspect={4} locale="en-GB">
+            <BarChart data={cbWeeks} x="week">
+              <ChartBrush />
+            </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+<!-- /example -->

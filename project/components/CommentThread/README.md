@@ -28,3 +28,54 @@ Comments on a task, a document, a design or a deal: write with @mentions, post, 
 - Do keep a resolved thread in place, stamped.
 - Don't announce typing.
 - Don't post on Enter alone; people write several lines.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`CommentThread` as first used in its preview:
+
+```tsx
+import { CommentThread } from 'altitude-design';
+
+<CommentThread comments={comments} resolved={resolved ? { by: 'You' } : false} onPost={post}
+  onResolve={() => setResolved(true)} onReopen={() => setResolved(false)}
+  onRetry={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, status: undefined } : x)))}
+  onDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: true } : x)))}
+  onUndoDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: false } : x)))}
+  mentionable={(q) => people.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))} typing={resolved ? [] : ['Ada Obi']} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `ct` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { CommentThread, Switch } from 'altitude-design';
+
+const people = [{ id: 'maya', name: 'Maya Chen' }, { id: 'theo', name: 'Theo Marsh' }, { id: 'ada', name: 'Ada Obi' }];
+const ago = (m) => new Date(Date.now() - m * 60000);
+export default function App() {
+  const [comments, setComments] = React.useState([
+    { id: 'c1', author: { name: 'Theo Marsh' }, body: 'Can we ship this before the release freeze on Friday?', createdAt: ago(90) },
+    { id: 'c2', author: { name: 'Maya Chen' }, body: '@Theo Marsh yes, if QA signs off by Thursday.', mentions: ['Theo Marsh'], createdAt: ago(40) },
+  ]);
+  const [resolved, setResolved] = React.useState(false);
+  const [failNext, setFailNext] = React.useState(false);
+  const post = (body, mentions) => {
+    const id = 'n' + Date.now(), fail = failNext;
+    setComments((xs) => [...xs, { id, author: { name: 'You' }, body, mentions: mentions.map((m) => m.name), createdAt: new Date(), status: 'pending', mine: true }]);
+    setTimeout(() => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, status: fail ? 'failed' : undefined } : x))), 900);
+  };
+  return (
+    <div className="col ct">
+      <CommentThread comments={comments} resolved={resolved ? { by: 'You' } : false} onPost={post}
+        onResolve={() => setResolved(true)} onReopen={() => setResolved(false)}
+        onRetry={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, status: undefined } : x)))}
+        onDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: true } : x)))}
+        onUndoDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: false } : x)))}
+        mentionable={(q) => people.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))} typing={resolved ? [] : ['Ada Obi']} />
+      <Switch label="Make the next post fail" checked={failNext} onCheckedChange={setFailNext} />
+    </div>
+  );
+}
+```
+<!-- /example -->

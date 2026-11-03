@@ -22,3 +22,57 @@ One honest answer to "is my work saved?", for autosaving editors, optimistic UIs
 - Do count what's waiting when offline.
 - Don't put a spinner beside it; the pulsing lamp and the word say it.
 - Don't raise the plate to get attention when a sync fails; the lamp and the words change.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`SyncIndicator` as first used in its preview:
+
+```tsx
+import { Surface, SyncIndicator } from 'altitude-design';
+
+<SyncIndicator state={state} pending={waiting.length} lastSyncedAt={at} conflicts={1} onRetry={() => { setState('saving'); setTimeout(() => { setState('saved'); setAt(new Date()); }, 700); }}
+  onOpenConflicts={() => setState('saved')}
+  queue={waiting.length ? waiting.map((w, i) => <Surface key={i} status="pending" className="change">{w}</Surface>) : undefined} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`si`, `bar`, `change`, `col`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Surface, Switch, SyncIndicator, Textarea } from 'altitude-design';
+
+export default function App() {
+  const [text, setText] = React.useState('Q4 goals: grow self-serve revenue 20% and halve time to first value.');
+  const [state, setState] = React.useState('saved');
+  const [at, setAt] = React.useState(() => new Date(Date.now() - 120000));
+  const [offline, setOffline] = React.useState(false);
+  const [waiting, setWaiting] = React.useState([]);
+  const timer = React.useRef();
+  const edit = (v) => {
+    setText(v);
+    if (offline) { setWaiting((w) => [...w.slice(-2), 'Edited the goals paragraph']); setState('offline'); return; }
+    setState('saving'); clearTimeout(timer.current);
+    timer.current = setTimeout(() => { setState('saved'); setAt(new Date()); }, 700);
+  };
+  return (
+    <div className="si">
+      <div>
+        <div className="bar"><span>Q4 planning</span>
+          <SyncIndicator state={state} pending={waiting.length} lastSyncedAt={at} conflicts={1} onRetry={() => { setState('saving'); setTimeout(() => { setState('saved'); setAt(new Date()); }, 700); }}
+            onOpenConflicts={() => setState('saved')}
+            queue={waiting.length ? waiting.map((w, i) => <Surface key={i} status="pending" className="change">{w}</Surface>) : undefined} />
+        </div>
+        <Textarea value={text} onChange={(e) => edit(e.target.value)} aria-label="Q4 goals" />
+      </div>
+      <div className="col">
+        <Switch label="Offline" checked={offline} onCheckedChange={(on) => { setOffline(on); if (!on) { setWaiting([]); setState('saving'); setTimeout(() => { setState('saved'); setAt(new Date()); }, 700); } }} />
+        <Button size="sm" onClick={() => setState('failed')}>Make a save fail</Button>
+        <Button size="sm" onClick={() => setState('conflict')}>Cause a conflict</Button>
+        <p className="cap">Type to save. Go offline and the plate counts what's waiting; press it to see those changes, each hovering until it lands.</p>
+      </div>
+    </div>
+  );
+}
+```
+<!-- /example -->

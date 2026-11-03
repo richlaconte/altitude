@@ -25,3 +25,180 @@ Finds and runs anything in the product from one field: the summit, at level 5, o
 - Don't render two palettes, and don't open a Sheet from one: one summit, and a level-4 sheet can't sit on it.
 
 The palette and Dialog share one summit per document, including across providers. Its shortcut cannot take an occupied summit. A simultaneous controlled request is rejected with a development warning; set it to `false` before trying again. Rejected requests do not queue. A selected command can close the palette and open a Dialog synchronously: callback ordering is unchanged, the exiting palette retires, and scroll/isolation ownership transfers without unlocking the page. Only the active modal has `aria-modal`; composition Enter and Escape remain with the input method.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`CommandPalette` as first used in its preview:
+
+```tsx
+import { CommandPalette } from 'altitude-design';
+
+<CommandPalette
+  open={open}
+  onOpenChange={onOpenChange}
+  query={text}
+  onQueryChange={setText}
+  items={groups}
+  onSelect={(item) => setLast(item.label)}
+/>
+```
+
+The full preview, as rendered in Storybook and checked in CI (`app`, `bar`, `find`, `grid`, `cap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Badge, Card, CommandPalette, Input, Kbd } from 'altitude-design';
+
+const I = {
+  up: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  <path d="M7 17L17 7M9 7h8v8" />
+</svg>,
+  folder: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinejoin="round"
+>
+  <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+</svg>,
+  plus: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+>
+  <path d="M12 5v14M5 12h14" />
+</svg>,
+  user: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+>
+  <circle cx="12" cy="8" r="4" />
+  <path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+</svg>,
+  key: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  <circle cx="8" cy="15" r="4" />
+  <path d="M11 12l9-9M17 6l3 3" />
+</svg>,
+  trash: <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+</svg>
+};
+const groups = [
+  { label: "Recent", predicted: true, items: [
+    { label: "Deploy to production", icon: I.up, shortcut: ["\u2318", "D"], keywords: ["ship", "release"] },
+    { label: "Open Northwind", icon: I.folder, description: "Marketing site" }
+  ] },
+  { label: "Actions", items: [
+    { label: "New project", icon: I.plus, shortcut: ["\u2318", "N"] },
+    { label: "Invite people", icon: I.user, keywords: ["team", "member"] },
+    { label: "Deploy preview", icon: I.up, description: "main@8dc01b2" },
+    { label: "Delete project\u2026", icon: I.trash, tone: "critical" }
+  ] },
+  { label: "Projects", items: [
+    { label: "Northwind", icon: I.folder, description: "acme.dev" },
+    { label: "Beacon", icon: I.folder, description: "Internal dashboard" },
+    { label: "Cinder", icon: I.folder, description: "API gateway" }
+  ] },
+  { label: "Settings", items: [
+    { label: "Environment variables", icon: I.key, keywords: ["env", "secrets", "dependencies"] },
+    { label: "Billing", icon: I.key, disabled: true }
+  ] }
+];
+const searchIcon = <svg
+  width="16"
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="1.75"
+  strokeLinecap="round"
+  aria-hidden="true"
+>
+  <circle cx="11" cy="11" r="7" />
+  <path d="M20 20l-3.5-3.5" />
+</svg>;
+export default function App() {
+  const [open, setOpen] = React.useState(true);
+  const [text, setText] = React.useState("");
+  const [last, setLast] = React.useState(null);
+  const onOpenChange = (v) => {
+    setOpen(v);
+    if (!v) setText("");
+  };
+  return <div className="app">
+  <div className="bar">
+    <b>Northwind</b>
+    <Badge tone="positive">Operational</Badge>
+    <Input
+      className="find"
+      aria-label="Search or run a command"
+      placeholder="Search or run a command"
+      value={text}
+      leading={searchIcon}
+      trailing={<span aria-hidden="true"><Kbd>⌘</Kbd><Kbd>K</Kbd></span>}
+      onChange={(e) => {
+    setText(e.target.value);
+    if (e.target.value) setOpen(true);
+  }}
+    />
+  </div>
+  <div className="grid" data-tells-ignore="LA4 placeholder page behind the overlay">
+    <Card />
+    <Card />
+    <Card />
+  </div>
+  <p className="cap">
+    {last ? `Chose \u201C${last}\u201D.` : "Type \u201Cdep\u201D: the best match moves to the top and the rows that stay travel there. Close it and type in the search field: the palette opens with what you typed."}
+  </p>
+  <CommandPalette
+    open={open}
+    onOpenChange={onOpenChange}
+    query={text}
+    onQueryChange={setText}
+    items={groups}
+    onSelect={(item) => setLast(item.label)}
+  />
+</div>;
+}
+```
+<!-- /example -->

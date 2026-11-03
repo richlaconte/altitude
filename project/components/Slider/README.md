@@ -23,3 +23,38 @@ Pass `value` (or `defaultValue`) as `[low, high]` and the Slider has two thumbs,
 - **Names.** Give each thumb its own name (`['Minimum price', 'Maximum price']`), or one name for the pair: the thumbs are then "Price, minimum" and "Price, maximum", in a `role="group"` named "Price".
 
 - Do show the current value in text near the slider when it matters precisely; the bubble only shows while dragging or focused.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Slider` as first used in its preview:
+
+```tsx
+import { Slider } from 'altitude-design';
+
+<Slider value={v} onValueChange={setV} aria-label="Volume" format={(n) => n + '%'} />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`col`, `wrap`, `cap`, `gap` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Slider } from 'altitude-design';
+
+export default function App() {
+  const [v, setV] = React.useState(64);
+  const [price, setPrice] = React.useState([20, 80]);
+  return (
+    <div className="col wrap">
+      <Slider value={v} onValueChange={setV} aria-label="Volume" format={(n) => n + '%'} />
+      <Slider defaultValue={30} disabled aria-label="Disabled" />
+      <p className="cap">Volume {v}% — drag, or focus and use the arrow keys.</p>
+      <div className="gap" />
+      <Slider value={price} onValueChange={setPrice} min={0} max={200} step={5} minStepsBetween={2}
+        aria-label={['Minimum price', 'Maximum price']} format={(n) => '$' + n} />
+      <p className="cap">Price ${price[0]}–${price[1]} — drag either thumb, or the fill to move both.</p>
+    </div>
+  );
+}
+```
+<!-- /example -->

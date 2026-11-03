@@ -29,3 +29,64 @@ The tile at the top of a dashboard: a label, a big number, how it changed and ag
 - Do lead a dashboard with stats, then the charts that explain them, then the table that is the record.
 - Don't use `size="hero"` more than once in a view.
 - Don't animate the number counting up, or colour the value itself: colour belongs to the change, and only with `good`.
+
+<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
+## Example
+
+`Stat` as first used in its preview:
+
+```tsx
+import { Stat } from 'altitude-design';
+
+<Stat label="Monthly recurring revenue" size="hero" value={mrr} format={usd.format} good="up"
+  change={{ value: 0.042, vs: 'September', previous: 176800 }} help="Paid plans only, before refunds." />
+```
+
+The full preview, as rendered in Storybook and checked in CI (`st`, `st-bar` are the preview page's own layout classes, not Altitude's):
+
+```tsx
+import * as React from 'react';
+import { Button, Card, CardContent, Sparkline, Stat, StatGroup } from 'altitude-design';
+
+const stDays = (vals) => vals.map((v, i) => ({ day: `2026-10-${String(i + 1).padStart(2, '0')}`, v }));
+const active = stDays([11.2, 11.4, 11.3, 11.6, 11.5, 11.8, 11.9, 12.0, 11.9, 12.1, 12.2, 12.4, 12.3, 12.48].map((k) => k * 1000));
+const errors = stDays([0.8, 0.9, 0.8, 1.0, 1.1, 1.0, 1.2, 1.3, 1.2, 1.4, 1.5, 1.4, 1.6, 1.7]);
+const usd = new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+export default function App() {
+  const [n, setN] = React.useState(0);
+  const [mrr, setMrr] = React.useState(undefined);
+  React.useEffect(() => { const t = setTimeout(() => setMrr(184200), 2400); return () => clearTimeout(t); }, []);
+  const users = 12480 + n * 312;
+  return (
+    <div className="st">
+      <Card>
+        <CardContent>
+          <Stat label="Monthly recurring revenue" size="hero" value={mrr} format={usd.format} good="up"
+            change={{ value: 0.042, vs: 'September', previous: 176800 }} help="Paid plans only, before refunds." />
+        </CardContent>
+      </Card>
+      <div className="st-bar">
+        <h3>Last 30 days</h3>
+        <Button variant="secondary" size="sm" onClick={() => setN((k) => k + 1)}>Refresh</Button>
+      </div>
+      <StatGroup aria-label="Last 30 days">
+        <Card><CardContent>
+          <Stat label="Active users" value={users} live good="up" change={{ value: users / 11556 - 1, vs: 'last month', previous: 11556 }}
+            trend={<Sparkline data={active} x="day" y="v" decorative width={72} />} />
+        </CardContent></Card>
+        <Card><CardContent>
+          <Stat label="Error rate" value={1.7 + n * 0.1} format={(v) => `${v.toFixed(1)}%`} good="down" change={{ value: 0.21 + n * 0.07, vs: 'last month' }}
+            trend={<Sparkline data={errors} x="day" y="v" tone="critical" decorative width={72} />} />
+        </CardContent></Card>
+        <Card><CardContent>
+          <Stat label="Median response" value={182 - n * 4} format={(v) => `${v} ms`} change={{ value: -12 - n * 4, vs: 'last week', format: (m) => `${m} ms` }} />
+        </CardContent></Card>
+        <Card><CardContent>
+          <Stat label="Refunds" value={null} help="No refunds this period." />
+        </CardContent></Card>
+      </StatGroup>
+    </div>
+  );
+}
+```
+<!-- /example -->
