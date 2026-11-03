@@ -21,7 +21,7 @@ if (Number(version.split('.')[0]) !== 19) throw new Error('React 19 runtime requ
 mkdirSync(out, { recursive: true });
 const tokens = process.env.ALT_PACKAGE_ROOT ? '' : tokensCss(join(root, 'project/tokens.json'));
 const componentCss = readFileSync(process.env.ALT_PACKAGE_ROOT ? resolve(process.env.ALT_PACKAGE_ROOT, 'dist/altitude.no-fonts.css') : join(root, 'project/components/bundle.css'), 'utf8').replace(/^@import[^\n]*\n/, '');
-const common = '#root { padding: 20px 24px; } .row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; } .col { display:flex; flex-direction:column; gap:14px; } .cap { margin:0; font:500 12.5px/17px var(--font-sans); color:var(--ink-muted); } .body { margin:0; font:400 15px/23px var(--font-sans); color:var(--ink); }';
+const common = readFileSync(join(root, 'build/preview-common.css'), 'utf8'); // the same page as the previews and Storybook (#409)
 const aliases = Object.fromEntries(['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime'].map(name => [name, requireRoot.resolve(name)]));
 for (const name of names) {
   const section = sections.get(name);

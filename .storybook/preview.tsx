@@ -3,6 +3,7 @@ import type { Preview } from '@storybook/react-vite';
 import { AltitudeProvider } from '../project/components/src/index';
 import './generated/tokens.css';
 import '../project/components/bundle.css';
+import '../build/preview-common.css';
 import './preview.css';
 
 type Scheme = 'daylight' | 'nightfall';

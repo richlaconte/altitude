@@ -37,6 +37,7 @@
   "elsewhere": {
     "adapter-page": "build/checks/adapter-tiptap.mjs",
     "fixture-path": "build/checks/modal-lifecycle.mjs",
+    "preview-fixtures": "build/checks/settings-pattern.mjs",
     "agent-setup": "scripts/check-framework.mjs",
     "framework-accessibility": "build/checks/package-consumer.mjs",
     "guidance": "scripts/check-framework.mjs",

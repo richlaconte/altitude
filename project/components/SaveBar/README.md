@@ -55,9 +55,11 @@ export default function App() {
   return (
     <div className="col">
       <div className="sb">{f('name', 'Workspace name')}{f('domain', 'Domain')}{f('seats', 'Seats')}{f('region', 'Region')}</div>
-      <Switch label="Make the next save fail" checked={failNext} onCheckedChange={setFailNext} />
       <p className="cap">Change a field: once the change settles, the bar rises from the bottom edge. ⌘S or Save hovers while saving and lowers away when saved; a failed save drops into a trench and keeps your changes.</p>
       <SaveBar record={record} />
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <Switch label="Make the next save fail" checked={failNext} onCheckedChange={setFailNext} />
+      </details>
     </div>
   );
 }

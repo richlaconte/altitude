@@ -73,7 +73,9 @@ export default function App() {
         onDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: true } : x)))}
         onUndoDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: false } : x)))}
         mentionable={(q) => people.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))} typing={resolved ? [] : ['Ada Obi']} />
-      <Switch label="Make the next post fail" checked={failNext} onCheckedChange={setFailNext} />
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <Switch label="Make the next post fail" checked={failNext} onCheckedChange={setFailNext} />
+      </details>
     </div>
   );
 }

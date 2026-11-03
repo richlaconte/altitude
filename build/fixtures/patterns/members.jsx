@@ -76,30 +76,34 @@ function App() {
     setStatus([fresh.length && `${fresh.length} ${fresh.length === 1 ? 'invite' : 'invites'} sent`, already && `${already} ${already === 1 ? 'address is' : 'addresses are'} already in the workspace`].filter(Boolean).join(', ') + '.');
   };
   return (
-    <main className="mb-page">
-      <h2 id="mb-heading" tabIndex={-1} className="mb-h">Members</h2>
-      <A.Card className="mb-invite" aria-labelledby="mb-invite-h">
-        <h3 id="mb-invite-h" className="mb-sub">Invite people</h3>
-        <A.Field label="Email addresses" hint="Separate addresses with commas, or paste a list.">
-          <A.TagInput value={emails} onValueChange={setEmails} noun={['address', 'addresses']} placeholder="name@acme.dev" disabled={sending}
-            normalize={(t) => t.trim().toLowerCase()} validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `${t} isn’t an email address.`)} />
-        </A.Field>
-        <div className="mb-roles"><span id="mb-role-label" className="mb-legend">Role</span>
-          <A.RadioGroup value={role} onValueChange={setRole} aria-labelledby="mb-role-label">{ROLES.map((r) => <A.Radio key={r.value} value={r.value} label={r.label} description={r.description} />)}</A.RadioGroup>
-        </div>
-        <div><A.Button variant="primary" loading={sending} disabled={!emails.length} onClick={send}>{sending ? 'Sending invites' : emails.length > 1 ? `Send ${emails.length} invites` : 'Send invite'}</A.Button></div>
-      </A.Card>
-      <A.Switch label="Make the next role change fail" checked={failNext} onCheckedChange={setFailNext} />
-      <A.Table aria-label="Members and invitations">
-        <A.TableHeader><A.TableRow><A.TableHead>Person</A.TableHead><A.TableHead>Role</A.TableHead><A.TableHead align="end"><span className="mb-vh">Actions</span></A.TableHead></A.TableRow></A.TableHeader>
-        <A.TableBody>{people.map((p) => <MemberRow key={p.id} person={p} me={me} owners={owners} fail={fail}
-          onRole={(id, r) => setPeople((l) => l.map((x) => (x.id === id ? { ...x, role: r } : x)))}
-          onRemove={(x) => { setPeople((l) => l.filter((y) => y.id !== x.id)); setStatus(`${x.name} was removed.`); }}
-          onResend={(x) => setStatus(`Invite resent to ${x.name}.`)}
-          onRevoke={(x) => { setPeople((l) => l.filter((y) => y.id !== x.id)); setStatus(`Invitation to ${x.name} revoked.`); document.getElementById('mb-heading')?.focus(); }} />)}</A.TableBody>
-      </A.Table>
-      <A.WorkflowStatus>{status}</A.WorkflowStatus>
-    </main>
+    <>
+      <main className="mb-page">
+        <h2 id="mb-heading" tabIndex={-1} className="mb-h">Members</h2>
+        <A.Card className="mb-invite" aria-labelledby="mb-invite-h">
+          <h3 id="mb-invite-h" className="mb-sub">Invite people</h3>
+          <A.Field label="Email addresses" hint="Separate addresses with commas, or paste a list.">
+            <A.TagInput value={emails} onValueChange={setEmails} noun={['address', 'addresses']} placeholder="name@acme.dev" disabled={sending}
+              normalize={(t) => t.trim().toLowerCase()} validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `${t} isn’t an email address.`)} />
+          </A.Field>
+          <div className="mb-roles"><span id="mb-role-label" className="mb-legend">Role</span>
+            <A.RadioGroup value={role} onValueChange={setRole} aria-labelledby="mb-role-label">{ROLES.map((r) => <A.Radio key={r.value} value={r.value} label={r.label} description={r.description} />)}</A.RadioGroup>
+          </div>
+          <div><A.Button variant="primary" loading={sending} disabled={!emails.length} onClick={send}>{sending ? 'Sending invites' : emails.length > 1 ? `Send ${emails.length} invites` : 'Send invite'}</A.Button></div>
+        </A.Card>
+        <A.Table aria-label="Members and invitations">
+          <A.TableHeader><A.TableRow><A.TableHead>Person</A.TableHead><A.TableHead>Role</A.TableHead><A.TableHead align="end"><span className="mb-vh">Actions</span></A.TableHead></A.TableRow></A.TableHeader>
+          <A.TableBody>{people.map((p) => <MemberRow key={p.id} person={p} me={me} owners={owners} fail={fail}
+            onRole={(id, r) => setPeople((l) => l.map((x) => (x.id === id ? { ...x, role: r } : x)))}
+            onRemove={(x) => { setPeople((l) => l.filter((y) => y.id !== x.id)); setStatus(`${x.name} was removed.`); }}
+            onResend={(x) => setStatus(`Invite resent to ${x.name}.`)}
+            onRevoke={(x) => { setPeople((l) => l.filter((y) => y.id !== x.id)); setStatus(`Invitation to ${x.name} revoked.`); document.getElementById('mb-heading')?.focus(); }} />)}</A.TableBody>
+        </A.Table>
+        <A.WorkflowStatus>{status}</A.WorkflowStatus>
+      </main>
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <A.Switch label="Make the next role change fail" checked={failNext} onCheckedChange={setFailNext} />
+      </details>
+    </>
   );
 }
 // preview:end

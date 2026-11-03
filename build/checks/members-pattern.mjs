@@ -5,6 +5,7 @@
 // what they lose and is said once done; revoking an invitation is said and focus goes to the heading. Run after a render
 // of every preview (it opens test/p-MembersPattern-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
+import { openFixtures } from './preview-fixtures.mjs';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const T = new URL('../test/', import.meta.url).pathname;
 let pass = 0, fail = 0;
@@ -43,6 +44,7 @@ expect(r.status === 'pending' && /Changing role…/.test(r.text), `a role change
 await page.waitForTimeout(700);
 r = await row('Theo Marsh');
 expect(r.status === 'committed' && /Role changed/.test(r.text), 'and lands as changed');
+await openFixtures(page);
 await page.getByRole('switch', { name: 'Make the next role change fail' }).click();
 await page.getByRole('button', { name: 'Role for Ines Duarte' }).click();
 await page.getByRole('option', { name: 'Viewer' }).click();

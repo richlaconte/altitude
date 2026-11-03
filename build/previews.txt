@@ -731,7 +731,9 @@ function App() {
         onDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: true } : x)))}
         onUndoDelete={(id) => setComments((xs) => xs.map((x) => (x.id === id ? { ...x, deleted: false } : x)))}
         mentionable={(q) => people.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))} typing={resolved ? [] : ['Ada Obi']} />
-      <A.Switch label="Make the next post fail" checked={failNext} onCheckedChange={setFailNext} />
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <A.Switch label="Make the next post fail" checked={failNext} onCheckedChange={setFailNext} />
+      </details>
     </div>
   );
 }
@@ -3403,9 +3405,11 @@ function App() {
   return (
     <div className="col">
       <div className="sb">{f('name', 'Workspace name')}{f('domain', 'Domain')}{f('seats', 'Seats')}{f('region', 'Region')}</div>
-      <A.Switch label="Make the next save fail" checked={failNext} onCheckedChange={setFailNext} />
       <p className="cap">Change a field: once the change settles, the bar rises from the bottom edge. ⌘S or Save hovers while saving and lowers away when saved; a failed save drops into a trench and keeps your changes.</p>
       <A.SaveBar record={record} />
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <A.Switch label="Make the next save fail" checked={failNext} onCheckedChange={setFailNext} />
+      </details>
     </div>
   );
 }
@@ -5178,12 +5182,9 @@ function App() {
 .aip-target span { color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); }
 .aip-documentation { margin-top: var(--space-6); border-top: 1px solid var(--line); padding-top: var(--space-4); font: 400 12.5px/17px var(--font-sans); }
 .aip a { color: var(--accent-ink); }
-.aip-harness { margin-top: var(--space-4); color: var(--ink-muted); }
-.aip-harness summary { cursor: pointer; }
-.aip-harness label { display: grid; gap: var(--space-2); }
-.aip-harness select { max-width: 100%; font: inherit; padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-sm); }
-.aip-harness-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
-.aip-harness pre { overflow: auto; max-height: 220px; font: 12px/1.5 var(--font-mono); }
+.preview-fixtures label { display: grid; gap: var(--space-2); }
+.preview-fixtures select { max-width: 100%; font: inherit; padding: var(--space-2); background: var(--surface-well); color: var(--ink); border: 1px solid var(--line-control); border-radius: var(--radius-sm); }
+.preview-fixtures pre { overflow: auto; max-height: 220px; font: 12px/1.5 var(--font-mono); }
 @media (max-width: 600px) { #root { padding: 16px; } .aip-list > li { align-items: stretch; flex-direction: column; gap: var(--space-2); } .aip-row-actions { align-self: flex-start; } .aip-toolbar > .alt-input { max-width: none; } .aip-header > .aip-meta { display: none; } .aip-recovery .alt-alert-inner, .aip-file .alt-alert-inner { flex-wrap: wrap; } .aip-recovery .alt-alert-body, .aip-file .alt-alert-body { flex-basis: calc(100% - 60px); } .aip-recovery .alt-alert-action, .aip-file .alt-alert-action { width: 100%; } }
 --- jsx
 // Application-owned fictional service. Kept here so preview and Storybook share it.
@@ -5520,12 +5521,12 @@ function App() {
     <FilesExample key={run.key} service={service} full={full} />
     <A.Toaster />
     <div className="aip-documentation"><a href={full ? '#' : '#files'}>{full ? 'Show focused recovery example' : 'Open complete Files example'}</a>
-      <details className="aip-harness"><summary>Example fixtures and source</summary>
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
         <p>Fictional local records. Select a fixture, then reset to mount the same example with that service behavior.</p>
         <label>Service fixture <select aria-label="Service fixture" value={fixture} onChange={event => setFixture(event.target.value)}>
           <option value="success-100">Success · 100 ms</option><option value="success-1200">Slow success · 1,200 ms</option><option value="fail-once">Fail once, then retry</option><option value="conflict">Record changes before save</option><option value="interrupted-after-save">Connection interrupted after save</option>
         </select></label>
-        <div className="aip-harness-actions"><A.Button size="sm" onClick={reset}>Reset example</A.Button>
+        <div className="preview-fixtures-actions"><A.Button size="sm" onClick={reset}>Reset example</A.Button>
           <A.Button size="sm" onClick={() => { service.change('file-brand', { name: 'Brand guidelines updated.pdf' }); window.__filesDemo?.sync('file-brand'); }}>Change Brand on server</A.Button>
           <A.Button size="sm" onClick={() => { service.change('file-brand', { deleted: true }); window.__filesDemo?.sync('file-brand'); }}>Remove Brand on server</A.Button>
           <A.Button size="sm" onClick={() => setTrace(JSON.stringify({ requests: service.requests, accepted: service.accepted }, null, 2))}>Inspect requests</A.Button></div>
@@ -5923,36 +5924,40 @@ function App() {
   const field = (key, label, hint) => <A.Field label={label} hint={hint} error={general.errors[key]}><A.Input id={'ws-' + key} value={general.draft[key]} onChange={(e) => general.setField(key, e.target.value)} /></A.Field>;
   if (deleted) return <main className="st-page"><h2 ref={heading} tabIndex={-1} className="st-h">Workspace deleted</h2><p>Acme and everything in it were deleted.</p><A.WorkflowStatus>{remove.status}</A.WorkflowStatus></main>;
   return (
-    <main className="st-page">
-      <h2 ref={heading} tabIndex={-1} className="st-h">Workspace settings</h2>
-      <nav aria-label="Settings sections" className="st-nav"><a href="#st-general">General</a><a href="#st-notify">Notifications</a><a href="#st-billing">Billing</a><a href="#st-danger">Danger zone</a></nav>
-      <A.Switch label="Make the next change fail" checked={failNext} onCheckedChange={setFailNext} />
-      <A.SettingsSection id="st-general" title="General" description="Saved together: change what you need, then save once.">
-        <form className="st-form" noValidate onSubmit={(e) => { e.preventDefault(); void general.submit(); }}>
-          <A.ErrorSummary errors={Object.entries(general.errors).map(([k, message]) => ({ id: 'ws-' + k, label: k === 'name' ? 'Workspace name' : 'Workspace URL', message }))} focusKey={general.submitCount} />
-          {field('name', 'Workspace name', 'Shown to everyone in the workspace.')}
-          {field('url', 'Workspace URL', 'altitude.app/' + general.draft.url)}
-        </form>
-      </A.SettingsSection>
-      <A.SettingsSection id="st-notify" title="Notifications" description="Each change applies as soon as you make it.">
-        <A.SettingsRow label="Weekly digest" description="A summary of activity every Monday." status={writes.digest}><A.Switch checked={prefs.digest} onCheckedChange={(v) => apply('digest', v)} /></A.SettingsRow>
-        <A.SettingsRow label="Mentions" description="Email me when someone mentions me." status={writes.mentions}><A.Switch checked={prefs.mentions} onCheckedChange={(v) => apply('mentions', v)} /></A.SettingsRow>
-      </A.SettingsSection>
-      <A.SettingsSection id="st-billing" title="Billing" readOnlyReason="Only workspace owners can change billing details. Ask Maya Chen.">
-        <A.SettingsRow label="Billing email" description="Invoices and receipts go here."><A.Input defaultValue="finance@acme.dev" /></A.SettingsRow>
-      </A.SettingsSection>
-      <A.SettingsSection id="st-danger" title="Danger zone" tone="critical">
-        <A.SettingsRow label="Delete workspace" description={remove.consequence}><A.Button variant="danger" onClick={remove.request}>Delete workspace</A.Button></A.SettingsRow>
-      </A.SettingsSection>
-      <A.WorkflowStatus>{general.status || remove.status}</A.WorkflowStatus>
-      <A.SaveBar record={general} />
-      <A.Dialog open={confirming} background="stationary" dismissible={remove.phase !== 'pending'} onOpenChange={(o) => { if (!o) { remove.cancel(); setTyped(''); } }} returnFocus={() => heading.current}
-        title="Delete Acme workspace?" description={remove.consequence}
-        footer={<><A.Button disabled={remove.phase === 'pending'} onClick={() => { remove.cancel(); setTyped(''); }}>Keep workspace</A.Button><A.Button variant="danger" disabled={typed !== 'Acme' || remove.phase === 'pending'} onClick={remove.phase === 'failed' ? remove.retry : remove.confirm}>{remove.phase === 'pending' ? 'Deleting workspace' : remove.phase === 'failed' ? 'Try deleting again' : 'Delete workspace'}</A.Button></>}>
-        <A.Field label="Type Acme to confirm"><A.Input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" /></A.Field>
-        {remove.error && <p role="alert">{remove.error}</p>}
-      </A.Dialog>
-    </main>
+    <>
+      <main className="st-page">
+        <h2 ref={heading} tabIndex={-1} className="st-h">Workspace settings</h2>
+        <nav aria-label="Settings sections" className="st-nav"><a href="#st-general">General</a><a href="#st-notify">Notifications</a><a href="#st-billing">Billing</a><a href="#st-danger">Danger zone</a></nav>
+        <A.SettingsSection id="st-general" title="General" description="Saved together: change what you need, then save once.">
+          <form className="st-form" noValidate onSubmit={(e) => { e.preventDefault(); void general.submit(); }}>
+            <A.ErrorSummary errors={Object.entries(general.errors).map(([k, message]) => ({ id: 'ws-' + k, label: k === 'name' ? 'Workspace name' : 'Workspace URL', message }))} focusKey={general.submitCount} />
+            {field('name', 'Workspace name', 'Shown to everyone in the workspace.')}
+            {field('url', 'Workspace URL', 'altitude.app/' + general.draft.url)}
+          </form>
+        </A.SettingsSection>
+        <A.SettingsSection id="st-notify" title="Notifications" description="Each change applies as soon as you make it.">
+          <A.SettingsRow label="Weekly digest" description="A summary of activity every Monday." status={writes.digest}><A.Switch checked={prefs.digest} onCheckedChange={(v) => apply('digest', v)} /></A.SettingsRow>
+          <A.SettingsRow label="Mentions" description="Email me when someone mentions me." status={writes.mentions}><A.Switch checked={prefs.mentions} onCheckedChange={(v) => apply('mentions', v)} /></A.SettingsRow>
+        </A.SettingsSection>
+        <A.SettingsSection id="st-billing" title="Billing" readOnlyReason="Only workspace owners can change billing details. Ask Maya Chen.">
+          <A.SettingsRow label="Billing email" description="Invoices and receipts go here."><A.Input defaultValue="finance@acme.dev" /></A.SettingsRow>
+        </A.SettingsSection>
+        <A.SettingsSection id="st-danger" title="Danger zone" tone="critical">
+          <A.SettingsRow label="Delete workspace" description={remove.consequence}><A.Button variant="danger" onClick={remove.request}>Delete workspace</A.Button></A.SettingsRow>
+        </A.SettingsSection>
+        <A.WorkflowStatus>{general.status || remove.status}</A.WorkflowStatus>
+        <A.SaveBar record={general} />
+        <A.Dialog open={confirming} background="stationary" dismissible={remove.phase !== 'pending'} onOpenChange={(o) => { if (!o) { remove.cancel(); setTyped(''); } }} returnFocus={() => heading.current}
+          title="Delete Acme workspace?" description={remove.consequence}
+          footer={<><A.Button disabled={remove.phase === 'pending'} onClick={() => { remove.cancel(); setTyped(''); }}>Keep workspace</A.Button><A.Button variant="danger" disabled={typed !== 'Acme' || remove.phase === 'pending'} onClick={remove.phase === 'failed' ? remove.retry : remove.confirm}>{remove.phase === 'pending' ? 'Deleting workspace' : remove.phase === 'failed' ? 'Try deleting again' : 'Delete workspace'}</A.Button></>}>
+          <A.Field label="Type Acme to confirm"><A.Input value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" /></A.Field>
+          {remove.error && <p role="alert">{remove.error}</p>}
+        </A.Dialog>
+      </main>
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <A.Switch label="Make the next change fail" checked={failNext} onCheckedChange={setFailNext} />
+      </details>
+    </>
   );
 }
 
@@ -6029,30 +6034,34 @@ function App() {
     setStatus([fresh.length && `${fresh.length} ${fresh.length === 1 ? 'invite' : 'invites'} sent`, already && `${already} ${already === 1 ? 'address is' : 'addresses are'} already in the workspace`].filter(Boolean).join(', ') + '.');
   };
   return (
-    <main className="mb-page">
-      <h2 id="mb-heading" tabIndex={-1} className="mb-h">Members</h2>
-      <A.Card className="mb-invite" aria-labelledby="mb-invite-h">
-        <h3 id="mb-invite-h" className="mb-sub">Invite people</h3>
-        <A.Field label="Email addresses" hint="Separate addresses with commas, or paste a list.">
-          <A.TagInput value={emails} onValueChange={setEmails} noun={['address', 'addresses']} placeholder="name@acme.dev" disabled={sending}
-            normalize={(t) => t.trim().toLowerCase()} validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `${t} isn’t an email address.`)} />
-        </A.Field>
-        <div className="mb-roles"><span id="mb-role-label" className="mb-legend">Role</span>
-          <A.RadioGroup value={role} onValueChange={setRole} aria-labelledby="mb-role-label">{ROLES.map((r) => <A.Radio key={r.value} value={r.value} label={r.label} description={r.description} />)}</A.RadioGroup>
-        </div>
-        <div><A.Button variant="primary" loading={sending} disabled={!emails.length} onClick={send}>{sending ? 'Sending invites' : emails.length > 1 ? `Send ${emails.length} invites` : 'Send invite'}</A.Button></div>
-      </A.Card>
-      <A.Switch label="Make the next role change fail" checked={failNext} onCheckedChange={setFailNext} />
-      <A.Table aria-label="Members and invitations">
-        <A.TableHeader><A.TableRow><A.TableHead>Person</A.TableHead><A.TableHead>Role</A.TableHead><A.TableHead align="end"><span className="mb-vh">Actions</span></A.TableHead></A.TableRow></A.TableHeader>
-        <A.TableBody>{people.map((p) => <MemberRow key={p.id} person={p} me={me} owners={owners} fail={fail}
-          onRole={(id, r) => setPeople((l) => l.map((x) => (x.id === id ? { ...x, role: r } : x)))}
-          onRemove={(x) => { setPeople((l) => l.filter((y) => y.id !== x.id)); setStatus(`${x.name} was removed.`); }}
-          onResend={(x) => setStatus(`Invite resent to ${x.name}.`)}
-          onRevoke={(x) => { setPeople((l) => l.filter((y) => y.id !== x.id)); setStatus(`Invitation to ${x.name} revoked.`); document.getElementById('mb-heading')?.focus(); }} />)}</A.TableBody>
-      </A.Table>
-      <A.WorkflowStatus>{status}</A.WorkflowStatus>
-    </main>
+    <>
+      <main className="mb-page">
+        <h2 id="mb-heading" tabIndex={-1} className="mb-h">Members</h2>
+        <A.Card className="mb-invite" aria-labelledby="mb-invite-h">
+          <h3 id="mb-invite-h" className="mb-sub">Invite people</h3>
+          <A.Field label="Email addresses" hint="Separate addresses with commas, or paste a list.">
+            <A.TagInput value={emails} onValueChange={setEmails} noun={['address', 'addresses']} placeholder="name@acme.dev" disabled={sending}
+              normalize={(t) => t.trim().toLowerCase()} validate={(t) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? undefined : `${t} isn’t an email address.`)} />
+          </A.Field>
+          <div className="mb-roles"><span id="mb-role-label" className="mb-legend">Role</span>
+            <A.RadioGroup value={role} onValueChange={setRole} aria-labelledby="mb-role-label">{ROLES.map((r) => <A.Radio key={r.value} value={r.value} label={r.label} description={r.description} />)}</A.RadioGroup>
+          </div>
+          <div><A.Button variant="primary" loading={sending} disabled={!emails.length} onClick={send}>{sending ? 'Sending invites' : emails.length > 1 ? `Send ${emails.length} invites` : 'Send invite'}</A.Button></div>
+        </A.Card>
+        <A.Table aria-label="Members and invitations">
+          <A.TableHeader><A.TableRow><A.TableHead>Person</A.TableHead><A.TableHead>Role</A.TableHead><A.TableHead align="end"><span className="mb-vh">Actions</span></A.TableHead></A.TableRow></A.TableHeader>
+          <A.TableBody>{people.map((p) => <MemberRow key={p.id} person={p} me={me} owners={owners} fail={fail}
+            onRole={(id, r) => setPeople((l) => l.map((x) => (x.id === id ? { ...x, role: r } : x)))}
+            onRemove={(x) => { setPeople((l) => l.filter((y) => y.id !== x.id)); setStatus(`${x.name} was removed.`); }}
+            onResend={(x) => setStatus(`Invite resent to ${x.name}.`)}
+            onRevoke={(x) => { setPeople((l) => l.filter((y) => y.id !== x.id)); setStatus(`Invitation to ${x.name} revoked.`); document.getElementById('mb-heading')?.focus(); }} />)}</A.TableBody>
+        </A.Table>
+        <A.WorkflowStatus>{status}</A.WorkflowStatus>
+      </main>
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <A.Switch label="Make the next role change fail" checked={failNext} onCheckedChange={setFailNext} />
+      </details>
+    </>
   );
 }
 
@@ -6642,36 +6651,40 @@ function App() {
   const stepFor = (c) => (c === 'requested' ? 'awaiting-approval' : c === 'running' || c === 'approved' ? 'running' : c === 'failed' ? 'failed' : 'done');
   const ready = archive === 'done';
   return (
-    <main className="ag-page">
-      <div className="ag-ask"><span className="ag-who">You asked</span><p>Clean up leads nobody has touched since July, and tell their owners.</p></div>
-      <div className="ag-demo"><A.Switch label="Make the next step fail" checked={failNext} onCheckedChange={setFailNext} /><A.Button size="sm" onClick={restart}>Run again</A.Button></div>
-      <A.Trace aria-label="Assistant run: clean up stale leads">
-        <A.TraceStep title="Find leads untouched since July" status={search} duration={search === 'done' ? 900 : undefined}
-          error={search === 'failed' ? 'The CRM didn’t answer in time. Nothing was changed.' : undefined} onRetry={search === 'failed' ? runSearch : undefined}>
-          <A.TraceToolCall name="search_leads" input={{ untouchedSince: '2026-07-01', limit: 50 }} output={search === 'done' ? { found: 4 } : undefined} />
-        </A.TraceStep>
-        <A.TraceStep title="Archive 4 stale leads" status={archive}>
-          {archive === 'done' && <div className="ag-receipt"><span role="status">{undone ? 'Archive undone. The 4 leads are back.' : '4 leads archived. You can undo this for 30 days.'}</span>
-            {!undone && <A.Button size="sm" variant="ghost" onClick={() => setUndone(true)}>Undo archive</A.Button>}</div>}
-        </A.TraceStep>
-        <A.TraceStep title={email === 'rejected' ? 'Didn’t email the lead owners' : 'Email 3 lead owners'} status={ready ? stepFor(email) : 'planned'}>
-          {ready && <A.Confirmation state={email} title="Email 3 lead owners" requestedBy="The assistant" resolvedBy="Maya Chen"
-            consequence="Theo Marsh, Ines Duarte and Sam Okafor will get an email listing the leads that were archived."
-            approveLabel="Send 3 emails" rejectLabel="Don’t send" runningLabel="Sending…" doneLabel="3 emails sent" failedLabel="The emails weren’t sent."
-            onApprove={() => resolve(setEmail, !fail.current)} onReject={() => setEmail('rejected')} onRetry={() => resolve(setEmail, true)} />}
-        </A.TraceStep>
-        <A.TraceStep title="Delete the “Summer import” list for good" status={ready && email !== 'requested' ? stepFor(purge) : 'planned'}>
-          {ready && email !== 'requested' && <A.Confirmation state={purge} escalate="dialog" title="Delete the “Summer import” list" resolvedBy="Maya Chen"
-            consequence="The list and its 212 rows are deleted permanently. Leads in it stay; only the list goes."
-            approveLabel="Delete list" rejectLabel="Keep the list" runningLabel="Deleting…" doneLabel="List deleted"
-            onApprove={() => resolve(setPurge, true)} onReject={() => setPurge('rejected')} />}
-        </A.TraceStep>
-      </A.Trace>
-      {email === 'done' && <section className="ag-record" aria-labelledby="ag-rec-h"><h3 id="ag-rec-h" className="ag-sub">Northwind Traders</h3>
-        <p className="ag-line">Status: Archived <A.AILabel subject="Change" model="Opus 5.5" reviewedBy="Maya Chen" generatedAt="2026-10-30T09:00:00Z" /></p>
-        <p className="ag-muted">Archived by the assistant, approved by Maya Chen.</p>
-      </section>}
-    </main>
+    <>
+      <main className="ag-page">
+        <div className="ag-ask"><span className="ag-who">You asked</span><p>Clean up leads nobody has touched since July, and tell their owners.</p></div>
+        <A.Trace aria-label="Assistant run: clean up stale leads">
+          <A.TraceStep title="Find leads untouched since July" status={search} duration={search === 'done' ? 900 : undefined}
+            error={search === 'failed' ? 'The CRM didn’t answer in time. Nothing was changed.' : undefined} onRetry={search === 'failed' ? runSearch : undefined}>
+            <A.TraceToolCall name="search_leads" input={{ untouchedSince: '2026-07-01', limit: 50 }} output={search === 'done' ? { found: 4 } : undefined} />
+          </A.TraceStep>
+          <A.TraceStep title="Archive 4 stale leads" status={archive}>
+            {archive === 'done' && <div className="ag-receipt"><span role="status">{undone ? 'Archive undone. The 4 leads are back.' : '4 leads archived. You can undo this for 30 days.'}</span>
+              {!undone && <A.Button size="sm" variant="ghost" onClick={() => setUndone(true)}>Undo archive</A.Button>}</div>}
+          </A.TraceStep>
+          <A.TraceStep title={email === 'rejected' ? 'Didn’t email the lead owners' : 'Email 3 lead owners'} status={ready ? stepFor(email) : 'planned'}>
+            {ready && <A.Confirmation state={email} title="Email 3 lead owners" requestedBy="The assistant" resolvedBy="Maya Chen"
+              consequence="Theo Marsh, Ines Duarte and Sam Okafor will get an email listing the leads that were archived."
+              approveLabel="Send 3 emails" rejectLabel="Don’t send" runningLabel="Sending…" doneLabel="3 emails sent" failedLabel="The emails weren’t sent."
+              onApprove={() => resolve(setEmail, !fail.current)} onReject={() => setEmail('rejected')} onRetry={() => resolve(setEmail, true)} />}
+          </A.TraceStep>
+          <A.TraceStep title="Delete the “Summer import” list for good" status={ready && email !== 'requested' ? stepFor(purge) : 'planned'}>
+            {ready && email !== 'requested' && <A.Confirmation state={purge} escalate="dialog" title="Delete the “Summer import” list" resolvedBy="Maya Chen"
+              consequence="The list and its 212 rows are deleted permanently. Leads in it stay; only the list goes."
+              approveLabel="Delete list" rejectLabel="Keep the list" runningLabel="Deleting…" doneLabel="List deleted"
+              onApprove={() => resolve(setPurge, true)} onReject={() => setPurge('rejected')} />}
+          </A.TraceStep>
+        </A.Trace>
+        {email === 'done' && <section className="ag-record" aria-labelledby="ag-rec-h"><h3 id="ag-rec-h" className="ag-sub">Northwind Traders</h3>
+          <p className="ag-line">Status: Archived <A.AILabel subject="Change" model="Opus 5.5" reviewedBy="Maya Chen" generatedAt="2026-10-30T09:00:00Z" /></p>
+          <p className="ag-muted">Archived by the assistant, approved by Maya Chen.</p>
+        </section>}
+      </main>
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <div className="ag-demo"><A.Switch label="Make the next step fail" checked={failNext} onCheckedChange={setFailNext} /><A.Button size="sm" onClick={restart}>Run again</A.Button></div>
+      </details>
+    </>
   );
 }
 
@@ -6703,12 +6716,6 @@ function Thread({ restored }) {
   React.useEffect(() => { if (turn.state === 'complete') setUsed((u) => Math.min(99, u + 9)); }, [turn.state]);
   return (
     <div className="col ac">
-      <A.ToggleGroup type="single" size="sm" aria-label="Make the next send fail" value={failure} onValueChange={(v) => setFailure(/** @type {any} */ (v) || 'none')}>
-        <A.ToggleGroupItem value="none">Works</A.ToggleGroupItem>
-        <A.ToggleGroupItem value="offline">Offline</A.ToggleGroupItem>
-        <A.ToggleGroupItem value="rate-limited">Rate limited</A.ToggleGroupItem>
-        <A.ToggleGroupItem value="context-full">Context full</A.ToggleGroupItem>
-      </A.ToggleGroup>
       <A.Conversation aria-label="Assistant">
         <A.ConversationContent>
           {turn.input !== undefined && <A.Message from="user"><A.MessageContent>{turn.input}</A.MessageContent></A.Message>}
@@ -6732,6 +6739,14 @@ function Thread({ restored }) {
           <A.PromptInputSubmit />
         </A.PromptInputToolbar>
       </A.PromptInput>
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <A.ToggleGroup type="single" size="sm" aria-label="Make the next send fail" value={failure} onValueChange={(v) => setFailure(/** @type {any} */ (v) || 'none')}>
+          <A.ToggleGroupItem value="none">Works</A.ToggleGroupItem>
+          <A.ToggleGroupItem value="offline">Offline</A.ToggleGroupItem>
+          <A.ToggleGroupItem value="rate-limited">Rate limited</A.ToggleGroupItem>
+          <A.ToggleGroupItem value="context-full">Context full</A.ToggleGroupItem>
+        </A.ToggleGroup>
+      </details>
     </div>
   );
 }

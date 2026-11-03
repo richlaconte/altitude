@@ -5,6 +5,7 @@
 // words. Run after a render of every preview (it opens test/p-AssistantConversationPattern-daylight.html); exits
 // non-zero on a failure.
 import { chromium } from 'playwright-core';
+import { openFixtures } from './preview-fixtures.mjs';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const T = new URL('../test/', import.meta.url).pathname;
 let pass = 0, fail = 0;
@@ -26,6 +27,7 @@ await page.click('.alt-msg[data-from="assistant"] button:has-text("Retry")'); aw
 a = await answer();
 expect(a.stream === 'complete' && a.text.includes('decision from legal by Friday'), `Retry completes the answer (${a.stream})`);
 // Offline: the message stays in the composer, said in words.
+await openFixtures(page);
 await page.click('[role="radio"]:has-text("Offline"), button:has-text("Offline")'); await page.waitForTimeout(100);
 await box.fill('Summarise it'); await box.press('Enter'); await page.waitForTimeout(700);
 let r = await read();

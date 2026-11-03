@@ -3,6 +3,7 @@
 // announced; a failed save drops it to a trench that keeps the draft and offers Retry; Discard resets. Run after a
 // render of every preview (it opens test/p-SaveBar-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
+import { openFixtures } from './preview-fixtures.mjs';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const T = new URL('../test/', import.meta.url).pathname;
 let pass = 0, fail = 0;
@@ -31,7 +32,7 @@ expect(b?.status === 'pending' && b.busy === 'true' && b.text === 'Saving…', '
 await page.waitForTimeout(1000);
 expect(await bar() === null && (await said()).includes('Saved.'), 'saved, it lowers away and says so');
 
-await page.click('.alt-switch');
+await (await openFixtures(page)).locator('.alt-switch').click();
 await page.fill('input >> nth=1', 'acme.io');
 await page.waitForTimeout(800);
 await page.click('.alt-savebar button:has-text("Save changes")');
