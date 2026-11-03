@@ -1,0 +1,14 @@
+{
+  "note": "Spacing findings known when checks/spacing.mjs was added (2026-11-03), each to be fixed and removed. The check fails on anything not listed here, and says when a listed one is gone.",
+  "known": [
+    "AgentHarness  SP1  button.ah-moment is 1.0px from the top edge of ol.ah-moments (radius 10px); stand it in at least space-2",
+    "AgentHarness  SP1  button.ah-moment is 2.0px from the bottom edge of ol.ah-moments (radius 10px); stand it in at least space-2",
+    "AgentHarness  SP1  button.ah-moment is 2.0px from the top edge of ol.ah-moments (radius 10px); stand it in at least space-2",
+    "Board  SP1  button.alt-btn is 4.0px from the top edge of div.alt-board-card (radius 10px); stand it in at least space-2",
+    "DeveloperSettingsPattern  SP1  button.alt-btn is 6.0px from the bottom edge of li.alt-timeline-item (radius 10px); stand it in at least space-2",
+    "DiffView  SP1  button.alt-btn is 2.0px from the bottom edge of div.alt-diff-hunk (radius 10px); stand it in at least space-2",
+    "PropertyProposals  SP1  button.alt-btn is 4.0px from the bottom edge of div.alt-property-proposals (radius 10px); stand it in at least space-2",
+    "PropertyProposals  SP1  button.alt-btn is 6.0px from the top edge of div.alt-property-proposals (radius 10px); stand it in at least space-2",
+    "Tour  SP1  button.alt-btn is 4.0px from the bottom edge of div.bar (radius 14px); stand it in at least space-2"
+  ]
+}
