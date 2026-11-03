@@ -1,6 +1,7 @@
 // Chart motion, sampled frame by frame (as E5 did for levels): a rescale comes before the values and the two never move
 // at once, re-sorted bands are carried, an interruption starts from where the marks are, reduced motion only
-// cross-fades, resizing never animates, and durations written in seconds by a minifier are read as seconds. Run after a render of every preview (it opens
+// cross-fades, resizing never animates, durations written in seconds by a minifier are read as seconds, and a chart
+// type that cross-fades its own marks (Heatmap) takes new data without an error (#464). Run after a render of every preview (it opens
 // test/p-ChartMotion-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
@@ -141,6 +142,29 @@ const tickYs = (f) => f.layers[0].ticks.filter((t) => t.a == null).map((t) => `$
   const moving = frames.filter((f) => f.stage === 'rescale' || f.stage === 'values');
   const ms = moving.length ? moving[moving.length - 1].t - moving[0].t : 0;
   expect(ms > 300 && ms < 900, `durations in seconds are read as seconds: rescale then values take ${Math.round(ms)}ms`);
+}
+
+// A chart type that cross-fades its own marks (motion 'none', a Heatmap) takes new values in place: no animation frame
+// runs, so none can throw (#464).
+{
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.evaluate(() => new Promise((done) => {
+    const d = document.createElement('div'); d.id = 'heat-probe'; d.style.width = '600px'; document.body.prepend(d);
+    const A = window.Altitude, h = React.createElement;
+    function Heat() {
+      const [n, setN] = React.useState(1);
+      window.__heat = setN;
+      const data = ['a', 'b'].flatMap((y) => ['1', '2', '3'].map((x) => ({ x, y, v: (n * (x.charCodeAt(0) + y.charCodeAt(0))) % 9 })));
+      return h(A.ChartContainer, { data, config: { v: { label: 'Value' } } }, h(A.Heatmap, { data, x: 'x', y: 'y', value: 'v' }));
+    }
+    ReactDOM.createRoot(d).render(h(Heat));
+    setTimeout(done, 600);
+  }));
+  for (const n of [2, 3, 4]) { await page.evaluate((n) => window.__heat(n), n); await page.waitForTimeout(250); }
+  const bins = await page.evaluate(() => [...document.querySelectorAll('#heat-probe .alt-heat-cell')].map((g) => g.dataset.bin).join(''));
+  expect(!errors.length, `a heatmap's data changes three times without an error (${errors.join('; ')})`);
+  expect(bins.length === 6, `and its cells are drawn (${bins})`);
 }
 
 console.log(`${pass} passed, ${fail} failed`);

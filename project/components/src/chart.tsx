@@ -904,8 +904,12 @@ function useChartMotion(target: Frame, changeKey: unknown, plotRef: React.RefObj
     }
     setTick((n) => n + 1);
     cancelAnimationFrame(raf.current);
+    // Nothing to animate (a chart type that cross-fades its own marks took the values at once): no frames (#464).
+    if (!motion.current) return;
     const step = () => {
-      if (at(performance.now()).done) { settled.current = motion.current!.to; motion.current = null; }
+      const m = motion.current;
+      if (!m) return;
+      if (at(performance.now()).done) { settled.current = m.to; motion.current = null; }
       else raf.current = requestAnimationFrame(step);
       setTick((n) => n + 1);
     };
