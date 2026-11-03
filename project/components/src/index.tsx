@@ -157,3 +157,58 @@ export type { AssistantTurn, AssistantTurnOptions, AssistantTurnState, Assistant
 export type { ConsequentialActionOptions, ConsequentialPhase, ActionResult, UndoResult } from './pattern-consequential-action';
 export { useReviewSubmit } from './pattern-review-submit';
 export type { ReviewSubmitOptions, ReviewSubmitResult } from './pattern-review-submit';
+
+// The props and data types each public component is built from, so an app can type its own wrappers and data
+// (`Omit<ButtonProps, 'variant'>`, `const regions: SelectOption[]`). A type is public when something public takes it
+// or returns it (#432); build/checks/declarations.mjs keeps these and project/components/index.d.ts in step.
+export type { AILabelProps } from './ai-label';
+export type { AppShellProps, SidebarGroupProps, SidebarMenuBadgeProps, SidebarMenuButtonProps, SidebarProps, SidebarProviderProps } from './app-shell';
+export type { BreadcrumbItemProps, BreadcrumbProps } from './breadcrumb';
+export type { ChartCompare } from './chart';
+export type { CodeBlockProps } from './code-block';
+export type { BoardCardProps, BoardColumnProps, BoardMove, BoardPlace, BoardProps, DataTableProps, TableCellProps, TableHeadProps, TableProps, TableRowProps, TableSort } from './collections';
+export type { ColorPickerProps, ColorSwatchPickerProps } from './color-picker';
+export type { CommandGroup, CommandItem, CommandPaletteProps } from './command';
+export type { CommentThreadProps } from './comment-thread';
+export type { ConfirmationProps } from './confirmation';
+export type { ContextMenuProps } from './context-menu';
+export type { PromisedTextProps, Tone, AccordionItem, AccordionProps, AlertProps, AlertStackProps, BadgeProps, ButtonProps, CardContentProps, CardProps, CheckboxProps, DropZoneProps, FieldProps, HoldButtonProps, InputProps, ProgressProps, RadioGroupProps, RadioProps, ScrollAreaProps, SkeletonProps, SliderProps, SliderRangeProps, SortableListProps, SwitchProps, TabsProps, TextareaProps } from './controls';
+export type { ConversationCheckpointProps, ConversationProps, ConversationQueueProps, MessageActionsProps, MessageAttachment, MessageProps, QueuedMessage } from './conversation';
+export type { CopyButtonProps } from './copy-button';
+export type { IconComponent, AltitudeProviderProps, DepthProps, KbdProps, Level, SurfaceProps } from './core';
+export type { DiffDecision, DiffViewProps } from './diff-view';
+export type { EmptyStateProps } from './empty';
+export type { FeatureGateProps } from './feature-gate';
+export type { FormattedNumberProps } from './formatted-number';
+export type { InlineCitationProps, SourcesProps } from './inline-citation';
+export type { InputOTPProps } from './input-otp';
+export type { LinkProps } from './link';
+export type { DrillNode, DrilldownProps } from './nav';
+export type { NotificationCenterProps, NotificationListProps } from './notifications';
+export type { NumberInputProps } from './number-input';
+export type { DialogProps, DropdownMenuProps, HoverCardProps, MenuEntry, MenuItem, PopoverProps, ToastOptions, TooltipProps } from './overlays';
+export type { PageHeaderProps } from './page-header';
+export type { PaginationProps } from './pagination';
+export type { PasswordInputProps } from './password-input';
+export type { PermissionMatrixProps } from './permission-matrix';
+export type { PileProps } from './pile';
+export type { PlanPickerProps } from './plan-picker';
+export type { PromptCommand, PromptInputDictateProps, PromptInputProps, PromptInputTextareaProps, PromptMention } from './prompt-input';
+export type { RelativeTimeProps } from './relative-time';
+export type { ResizableHandleProps, ResizablePanelGroupProps, ResizablePanelProps } from './resizable';
+export type { SaveBarProps } from './save-bar';
+export type { SavedViewsProps } from './saved-views';
+export type { SecretFieldProps } from './secret-field';
+export type { ComboboxProps, SelectItemProps, SelectOption, SelectProps } from './select';
+export type { SeparatorProps } from './separator';
+export type { SettingsRowProps, SettingsSectionProps } from './settings';
+export type { SheetProps } from './sheet';
+export type { SplitButtonProps } from './split-button';
+export type { StepperProps, StepperStep } from './stepper';
+export type { SyncIndicatorProps } from './sync-indicator';
+export type { TimeInputProps } from './time-input';
+export type { TimelineItemProps, TimelineProps } from './timeline';
+export type { ToggleGroupItemProps, ToggleGroupMultipleProps, ToggleGroupProps, ToggleGroupSingleProps, ToggleProps } from './toggle';
+export type { ToolbarButtonProps, ToolbarProps, ToolbarToggleProps } from './toolbar';
+export type { TourProps } from './tour';
+export type { TraceParallelProps, TraceProps, TraceReasoningProps, TraceStepProps, TraceToolCallProps } from './trace';

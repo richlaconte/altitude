@@ -24,6 +24,7 @@ export interface CustomScheme {
   /** Colour and shadow tokens by name, without `--`. Shadows keep the four-layer structure; under high contrast they give way to slabs as the built-in ones do. */
   tokens: Partial<Record<SchemeColorToken | SchemeShadowToken, string>>;
 }
+/** The status vocabulary Badge and Alert share. Each tone pairs its colour with an icon or word, so it never relies on colour alone. */
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical';
 
 export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -3061,6 +3062,8 @@ export interface NotificationListProps {
   groupBy?: 'day' | 'none';
   locale?: string;
   onOpen?: (item: NotificationEntry) => void;
+  /** Ids that arrived while the list wasn't showing (NotificationCenter passes them), to arrive with the afterglow. */
+  fresh?: Set<string>;
 }
 /** The list of notifications on the ground; unread is a mark, not a height. */
 export declare function NotificationList(props: NotificationListProps): React.ReactElement;
