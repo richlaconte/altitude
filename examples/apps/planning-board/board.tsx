@@ -3,12 +3,14 @@
 // teammate is holding it, it's offline), the card goes back where it came from and says why, on the card and aloud.
 // A conflict adopts the server's board. A lost response is reconciled by reading the board back.
 import * as React from 'react';
-import { Board, BoardCard, BoardColumn, Button } from 'altitude-design';
+import { AILabel, Board, BoardCard, BoardColumn, Button } from 'altitude-design';
 import type { BoardMove } from 'altitude-design';
 import type { DemoQuery } from '../shared/react';
 import { errorMessage, isDemoError } from '../shared/react';
 import { COLUMNS, COLUMN_TITLE, WIP_LIMIT, service } from './data';
 import type { BoardData, Card, ColumnId } from './data';
+import { short } from './assistant-script';
+import type { Proposals } from './assistant';
 
 type Write = { status: 'pending' | 'committed' | 'failed'; note: string };
 
@@ -20,7 +22,7 @@ const place = (cols: Record<ColumnId, string[]>, id: string, column: ColumnId, i
 };
 const meta = (k: Card) => [k.epic, k.assignee ?? 'Unassigned', k.points ? `${k.points} pts` : 'No estimate'].join(' · ');
 
-export function BoardView({ q, onOpen, say }: { q: DemoQuery<BoardData>; onOpen: (id: string) => void; say: (s: string) => void }) {
+export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardData>; onOpen: (id: string) => void; say: (s: string) => void; assistant?: Proposals }) {
   const data = q.data!;
   const [writes, setWrites] = React.useState<Record<string, Write | undefined>>({});
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({ done: true });
@@ -133,10 +135,12 @@ export function BoardView({ q, onOpen, say }: { q: DemoQuery<BoardData>; onOpen:
                 const holder = data.held[id];
                 return (
                   <BoardCard key={id} id={id} label={k.title} heldBy={holder ? { name: holder, presence: 1 } : undefined} settle={arrived[id]}
-                    data-status={w?.status} aria-busy={w?.status === 'pending' || undefined}>
+                    data-status={w?.status ?? (assistant?.proposals.some((p) => p.card === id && p.status === 'pending') ? 'pending' : undefined)}
+                    aria-busy={w?.status === 'pending' || assistant?.proposals.some((p) => p.card === id && p.status === 'pending') || undefined}>
                     <span className="pb-title">{k.title}</span>
                     <small className="pb-meta">{meta(k)}</small>
                     {w?.note && <small className="pb-note" data-tone={w.status}>{w.note}</small>}
+                    {assistant && <CardProposals id={id} title={k.title} assistant={assistant} />}
                     <span className="pb-open">
                       <Button size="sm" variant="ghost" aria-label={`Open ${k.title}`}
                         onPointerDown={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}
@@ -151,5 +155,32 @@ export function BoardView({ q, onOpen, say }: { q: DemoQuery<BoardData>; onOpen:
       </Board>
       <p className="pb-hint">Drag a card, or focus one and press Space, then the arrow keys. In progress holds {WIP_LIMIT} cards.</p>
     </div>
+  );
+}
+
+// The assistant's proposals for one card, in words on the card: proposed (nothing sent), applying, out of date or not
+// applied, each with what to do. BoardCard has no proposed reading of its own yet (#444), so the card doesn't rise for a
+// proposal; the word "Proposed" and the Accept and Reject buttons carry it. Applied changes keep an AILabel.
+const stop = { onPointerDown: (e: React.PointerEvent) => e.stopPropagation(), onKeyDown: (e: React.KeyboardEvent) => e.stopPropagation() };
+function CardProposals({ id, title, assistant }: { id: string; title: string; assistant: Proposals }) {
+  const mine = assistant.proposals.filter((p) => p.card === id && p.status !== 'rejected');
+  if (!mine.length) return null;
+  const applied = mine.filter((p) => p.status === 'applied');
+  return (
+    <span className="pb-card-proposals">
+      {mine.filter((p) => p.status !== 'applied').map((p) => (
+        <span key={p.id} className="pb-card-proposal" data-status={p.status}>
+          <small><strong>{p.status === 'proposed' ? 'Proposed' : p.status === 'pending' ? 'Applying' : p.status === 'stale' ? 'Out of date' : 'Not applied'}:</strong> {short(p)}{p.edited ? ' (edited)' : ''}</small>
+          {(p.status === 'proposed' || p.status === 'failed') && (
+            <span className="pb-proposal-actions">
+              <Button size="sm" {...stop} onClick={(e) => { e.stopPropagation(); void assistant.apply(p.id); }} aria-label={`Accept: ${short(p)} for ${title}`}>{p.status === 'failed' ? 'Retry' : 'Accept'}</Button>
+              <Button size="sm" variant="ghost" {...stop} onClick={(e) => { e.stopPropagation(); assistant.reject(p.id); }} aria-label={`Reject: ${short(p)} for ${title}`}>Reject</Button>
+            </span>
+          )}
+          {p.note && p.status !== 'pending' && <small className="pb-note" data-tone={p.status === 'proposed' ? undefined : 'failed'}>{p.note}</small>}
+        </span>
+      ))}
+      {applied.length > 0 && <span className="pb-card-ai"><AILabel subject={`${title}: ${applied.map(short).join(', ')}`} model="Scripted assistant (no model)" reviewedBy="you" /></span>}
+    </span>
   );
 }

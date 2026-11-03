@@ -6,10 +6,15 @@ import type { DemoQuery } from '../shared/react';
 import { errorMessage, isDemoError } from '../shared/react';
 import { COLUMNS, COLUMN_TITLE, PEOPLE, POINTS, service } from './data';
 import type { BoardData, Card, ColumnId } from './data';
+import type { Proposals } from './assistant';
 
 type Saved<V> = { ok: true; value: V } | { ok: false; error: string };
 
-export function CardSheet({ q, id, onClose }: { q: DemoQuery<BoardData>; id: string | null; onClose: () => void }) {
+export function CardSheet({ q, id, onClose, assistant }: { q: DemoQuery<BoardData>; id: string | null; onClose: () => void; assistant?: Proposals }) {
+  // The assistant's open proposals for this card's fields show in place: current struck beside proposed, Accept and Reject.
+  const proposal = (kind: 'points' | 'assignee') => assistant?.proposals.find((p) => p.card === id && p.kind === kind && p.status === 'proposed');
+  const pts = proposal('points'), who = proposal('assignee');
+  const resolved = (p: { id: string } | undefined) => (ok: boolean) => { if (!p) return; if (ok) assistant!.accepted(p.id); else assistant!.reject(p.id); };
   const data = q.data;
   const k = id && data ? data.cards[id] : undefined;
   const column = k && data ? (Object.keys(data.columns) as ColumnId[]).find((c) => data.columns[c].includes(k.id)) : undefined;
@@ -69,14 +74,16 @@ export function CardSheet({ q, id, onClose }: { q: DemoQuery<BoardData>; id: str
           <SheetTitle>{k.title}</SheetTitle>
           <SheetDescription>{k.epic} · in {COLUMN_TITLE[column]}</SheetDescription>
         </SheetHeader>
-        <PropertyList aria-label={`${k.title}: details`}>
+        <PropertyList aria-label={`${k.title}: details`} proposedBy="The assistant">
           <PropertyListItem label="Title" value={k.title} onSave={update('title')} onValueChange={publish} validate={(v) => (v.trim() ? undefined : 'Give the card a title.')} />
           <PropertyListItem label="Status" value={column as string} renderValue={(v) => COLUMN_TITLE[v as ColumnId]} commit="on-choose" onSave={moveTo} onValueChange={publish}
             editor={(c) => <Select {...c} items={COLUMNS.map((x) => ({ value: x.id, label: x.title }))} />} />
           <PropertyListItem label="Assignee" value={k.assignee ?? ''} emptyLabel="Unassigned" commit="on-choose" onValueChange={publish}
+            proposed={who && who.kind === 'assignee' ? who.value : undefined} onProposalResolved={resolved(who)}
             onSave={async (v) => { const r = await update('assignee')(v || null); return r.ok ? { ok: true, value: r.value ?? '' } : r; }}
             editor={(c) => <Select {...c} items={PEOPLE.map((p) => ({ value: p, label: p }))} />} />
           <PropertyListItem label="Estimate" value={k.points == null ? '' : String(k.points)} emptyLabel="No estimate" commit="on-choose" onValueChange={publish}
+            proposed={pts && pts.kind === 'points' ? String(pts.value) : undefined} onProposalResolved={resolved(pts)}
             renderValue={(v) => `${v} points`}
             onSave={async (v) => { const r = await update('points')(v ? Number(v) : null); return r.ok ? { ok: true, value: r.value == null ? '' : String(r.value) } : r; }}
             editor={(c) => <Select {...c} items={POINTS.map((p) => ({ value: String(p), label: `${p} points` }))} />} />

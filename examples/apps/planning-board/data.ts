@@ -2,6 +2,8 @@
 // (In progress holds three cards; a card someone else is holding can't be moved), and every card carries a version, so
 // a move made against an old one is a conflict. Meetings live on a two-week schedule and can't overlap in the team room.
 import { createDemoService, reject } from '../shared/service';
+import { script } from './assistant-script';
+import type { TurnInput } from './assistant-script';
 
 export type ColumnId = 'backlog' | 'sprint' | 'doing' | 'done';
 export const COLUMNS: { id: ColumnId; title: string }[] = [
@@ -18,7 +20,8 @@ export const SPRINT_END = '2026-11-20';
 export interface Card { id: string; title: string; epic: string; assignee: string | null; points: number | null; tags: string[]; due: string | null; rev: number }
 export interface Meeting { id: string; title: string; start: string; end: string; rev: number }
 export interface BoardData { cards: Record<string, Card>; columns: Record<ColumnId, string[]>; held: Record<string, string>; started: boolean }
-export interface Store extends BoardData { meetings: Meeting[]; seq: number }
+/** The assistant's model, as the fixtures can bend it: refuse the next request, or have the conversation fill its context. */
+export interface Store extends BoardData { meetings: Meeting[]; seq: number; assistant: { refuse: boolean; full: boolean } }
 
 const c = (id: string, title: string, epic: string, assignee: string | null, points: number | null, tags: string[] = [], due: string | null = null): Card => ({ id, title, epic, assignee, points, tags, due, rev: 1 });
 
@@ -47,6 +50,7 @@ export const seed = (): Store => ({
     { id: 'm4', title: 'Retro', start: '2026-11-20T16:00', end: '2026-11-20T16:45', rev: 1 },
   ],
   seq: 20,
+  assistant: { refuse: false, full: false },
 });
 
 const board = (s: Store): BoardData => ({ cards: s.cards, columns: s.columns, held: s.held, started: s.started });
@@ -135,6 +139,15 @@ export const service = createDemoService<Store>({
         return { state: { ...s, meetings }, result: meetings.find((x) => x.id === d.id) };
       },
     },
+    // A write, because it can use up a one-off refusal; its result is the turn's events.
+    'assistant.turn': {
+      write: (s, d: TurnInput & { fresh?: boolean }) => {
+        const a = s.assistant ?? { refuse: false, full: false };
+        if (a.full && !d.fresh) reject('invalid', 'This conversation is too long for the assistant’s context. Start a new conversation; the board isn’t affected.', { field: 'context' });
+        if (a.refuse) return { state: { ...s, assistant: { ...a, refuse: false } }, result: [{ at: 1, type: 'refusal', text: 'I can’t help with that request.' }, { at: 1, type: 'finish' }] };
+        return { state: d.fresh ? { ...s, assistant: { ...a, full: false } } : s, result: script(board(s), d) };
+      },
+    },
   },
 });
 
@@ -155,4 +168,15 @@ export const events = [
     label: 'Mara puts it down',
     run: () => service.external('Mara Silva puts down “Welcome checklist”', (s) => { const held = { ...s.held }; delete held.c4; return { ...s, held }; }),
   },
+  {
+    label: 'Lena moves a card the assistant proposed to move',
+    run: () => service.external('Lena Park moves “Billing emails in Spanish” to In progress', (s) => {
+      const from = where(s, 'c10');
+      if (!from || from === 'doing') return s;
+      const columns = { ...s.columns, [from]: s.columns[from].filter((x) => x !== 'c10'), doing: [...s.columns.doing, 'c10'] } as Record<ColumnId, string[]>;
+      return { ...s, columns, cards: { ...s.cards, c10: { ...s.cards.c10, rev: s.cards.c10.rev + 1 } } };
+    }),
+  },
+  { label: 'The assistant’s model refuses the next request', run: () => service.external('The model will refuse the next request', (s) => ({ ...s, assistant: { ...(s.assistant ?? { full: false }), refuse: true } })) },
+  { label: 'The conversation fills the model’s context', run: () => service.external('The conversation filled the model’s context', (s) => ({ ...s, assistant: { ...(s.assistant ?? { refuse: false }), full: true } })) },
 ];

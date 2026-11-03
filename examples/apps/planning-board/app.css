@@ -19,3 +19,28 @@
 /* A refused move drops into a trench. BoardCard has no status yet, and its own surface overrides the shared
    [data-status="failed"] rule, so this repeats that rule's tokens for board cards. Remove when #438 lands. */
 .pb-board .alt-board-card[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench); outline: 1px solid var(--critical); outline-offset: -1px; }
+/* The assistant (#408). Beside the board when there's room (the board keeps the lead and scrolls by column); a sheet on
+   narrower screens. The panel lies on the ground with a hairline: it's a place to read and decide, not an action. */
+.pb-layout { display: grid; gap: var(--space-5); min-width: 0; }
+.pb-layout[data-assistant] { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
+.pb-layout > * { min-width: 0; }
+.pb-aside { position: sticky; top: var(--space-4); max-height: calc(100vh - 2 * var(--space-4)); overflow: auto; padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.pb-assistant { display: grid; gap: var(--space-4); min-width: 0; }
+.pb-assistant-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.pb-h2 { margin: 0; font: 600 19px/26px var(--font-sans); letter-spacing: -0.01em; }
+.pb-label { margin: 0; font: 500 14px/20px var(--font-sans); }
+.pb-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pb-convo { max-height: 520px; min-height: 120px; }
+.pb-proposals { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.pb-proposals li { display: grid; gap: var(--space-1); padding-top: var(--space-2); border-top: 1px solid var(--line); font: 400 14px/20px var(--font-sans); }
+.pb-proposals li:first-child { border-top: 0; padding-top: 0; }
+.pb-proposals li[data-status="stale"] strong, .pb-proposals li[data-status="failed"] strong { color: var(--critical); }
+.pb-proposal-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.pb-card-proposals { display: grid; gap: var(--space-2); margin-top: var(--space-2); }
+.pb-card-proposal { display: grid; gap: var(--space-1); padding-top: var(--space-2); border-top: 1px dashed var(--line-control); font: 500 12.5px/17px var(--font-sans); }
+.pb-card-proposal[data-status="stale"] strong, .pb-card-proposal[data-status="failed"] strong { color: var(--critical); }
+.pb-card-ai { display: flex; }
+.pb-activity { display: grid; gap: var(--space-2); }
+.pb-activity ul { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-1); font: 400 14px/20px var(--font-sans); }
+.pb-edit { display: grid; gap: var(--space-1); }
+.pb-sheet .pb-assistant { padding: 0 var(--alt-inset-box, var(--space-4)) var(--space-4); }
