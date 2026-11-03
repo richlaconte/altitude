@@ -166,7 +166,7 @@ export type { AppShellProps, SidebarGroupProps, SidebarMenuBadgeProps, SidebarMe
 export type { BreadcrumbItemProps, BreadcrumbProps } from './breadcrumb';
 export type { ChartCompare } from './chart';
 export type { CodeBlockProps } from './code-block';
-export type { BoardCardProps, BoardColumnProps, BoardMove, BoardPlace, BoardProps, DataTableProps, TableCellProps, TableHeadProps, TableProps, TableRowProps, TableSort } from './collections';
+export type { BoardCardProps, BoardCardProposal, BoardColumnProps, BoardMove, BoardPlace, BoardProps, DataTableProps, TableCellProps, TableHeadProps, TableProps, TableRowProps, TableSort } from './collections';
 export type { ColorPickerProps, ColorSwatchPickerProps } from './color-picker';
 export type { CommandGroup, CommandItem, CommandPaletteProps } from './command';
 export type { CommentThreadProps } from './comment-thread';
