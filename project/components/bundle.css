@@ -1548,8 +1548,8 @@ button.alt-sidebar-label:focus-visible { outline: 2px solid var(--accent-ink); o
   background: transparent; box-shadow: var(--elev-0); transition: background-color var(--dur-travel-1) var(--ease-glide), box-shadow var(--dur-travel-1) var(--ease-rise); }
 .alt-inbox-row + .alt-inbox-row { margin-top: 1px; }
 .alt-inbox-row + .alt-inbox-row::after { content: ""; position: absolute; left: var(--space-3); right: var(--space-3); top: -1px; height: 1px; background: var(--line); pointer-events: none; }
-.alt-inbox-row:is(:hover, [data-selected]) + .alt-inbox-row::after, .alt-inbox-row:is(:hover, [data-selected])::after { opacity: 0; }
-@media (hover: hover) { .alt-inbox-row:hover { background: var(--surface-raised); box-shadow: var(--elev-1); } }
+.alt-inbox-row[data-selected] + .alt-inbox-row::after, .alt-inbox-row[data-selected]::after { opacity: 0; }
+@media (hover: hover) { .alt-inbox-row:hover { background: var(--surface-raised); box-shadow: var(--elev-1); } .alt-inbox-row:hover + .alt-inbox-row::after, .alt-inbox-row:hover::after { opacity: 0; } }
 .alt-inbox-row[data-selected] { background: var(--accent-soft); box-shadow: var(--elev-1); }
 .alt-inbox-row:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-inbox-item { display: grid; gap: 2px; min-width: 0; font: 400 13px/18px var(--font-sans); color: var(--ink); }
