@@ -27,6 +27,8 @@ Writes follow the `InlineEdit` contract: resolve `{ ok: true }` after `rows` car
 
 Data that arrived from elsewhere (an import, a sync) may already break a column's `validate`. `showInvalid` checks every cell at rest: an invalid value lies in a trench on critical-soft with an alert mark, and its problem is the cell's description, so the work left is visible at a glance and each cell says what's wrong. Fixing the value through `onCellSave` lifts it out.
 
+**Linking to a cell.** An `ErrorSummary` above or below the grid can send people to the cell each problem is about. Pass `cellId(rowId, columnKey)` and each cell gets that id. It's built from the row's id and the column's key, not positions, so it survives reordering. Build the summary's links with the same function: `{ id: cellId(row.id, 'receipt'), label: row.merchant, message: 'Add a receipt' }`. Following a link focuses the cell and makes it the active one: it holds the grid's one tab stop, the next arrow key moves from it, and Tab out and back returns to it. Focusing a cell from your own code does the same, and so does any focus that lands on a cell. Being sent to a cell doesn't start an edit (Enter does), and a sticky column never covers the focused cell.
+
 ## Elevation
 
 - **Cells** are the record, flush in Table's rows. The **active cell** is a 2px `accent-ink` ring, not a height; a **range** is an `accent-soft` tint with `aria-selected`, because choosing a target isn't live content.
@@ -63,6 +65,8 @@ Clicking another cell saves the open one and moves there, as in a spreadsheet; m
 | `rows`, `getRowId`, `getRowLabel` | the data; the row label names each cell's editor (“Price, Desk lamp”) |
 | `columns` | `{ key, header, label?, align?, editable?, parse?, format?, validate?, cell?, editor?, width? }` |
 | `onCellSave`, `onCellsSave`, `onUndo` | the writes and their reversal |
+| `showInvalid` | check every cell against its column's `validate` at rest (imported data) |
+| `cellId` | `(rowId, columnKey) => string`: an id on each cell, for `ErrorSummary` links |
 | `maxHeight`, `aria-label`, `aria-labelledby` | |
 
 ## You provide
@@ -88,7 +92,7 @@ The `DataGrid` section of `build/previews.txt` is an inventory grid: the fiction
 ```tsx
 import { Badge, DataGrid, Select } from 'altitude-design';
 
-<DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name}
+<DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name} cellId={dgCell}
   columns={[
     { key: 'name', header: 'Name', editable: true, validate: v => String(v).trim() ? undefined : 'Enter a name.' },
     { key: 'sku', header: 'SKU' },
@@ -114,7 +118,7 @@ The full preview, as rendered in Storybook and checked in CI (`dg-demo` is the p
 
 ```tsx
 import * as React from 'react';
-import { Badge, DataGrid, Select } from 'altitude-design';
+import { Badge, DataGrid, ErrorSummary, Select } from 'altitude-design';
 
 const DG_STATUS = [{ value: 'active', label: 'Active' }, { value: 'paused', label: 'Paused' }, { value: 'retired', label: 'Retired' }];
 const DG_SEED = [
@@ -126,11 +130,13 @@ const DG_SEED = [
 ];
 const dgWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const dgMoney = v => v === '' || v === null || v === undefined ? '' : String(v);
+// Each cell's id, from its row's id and its column's key: an ErrorSummary links to a cell with the same function.
+const dgCell = (rowId, key) => `inventory-${rowId}-${key}`;
 export default function App() {
   const [rows, setRows] = React.useState(DG_SEED);
   const apply = changes => setRows(list => list.map(row => changes.reduce((r, c) => c.rowId === r.id ? { ...r, [c.key]: c.draft } : r, row)));
   return <div className="dg-demo">
-    <DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name}
+    <DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name} cellId={dgCell}
       columns={[
         { key: 'name', header: 'Name', editable: true, validate: v => String(v).trim() ? undefined : 'Enter a name.' },
         { key: 'sku', header: 'SKU' },
@@ -151,6 +157,9 @@ export default function App() {
       onCellsSave={async changes => { await dgWait(300); apply(changes); return { ok: true }; }}
       onUndo={last => apply(last.map(c => ({ ...c, draft: c.previousValue })))} />
     <p>Arrows move, type to replace, Enter or F2 to edit, Tab and Enter save and move. Shift+arrows select; copy and paste a block from a spreadsheet. Ctrl+Z undoes.</p>
+    {/* Before the catalogue is published, every product that isn't retired needs stock: the summary links to each cell. */}
+    <ErrorSummary title="Before you publish"
+      errors={rows.filter(r => r.status !== 'retired' && !(r.stock > 0)).map(r => ({ id: dgCell(r.id, 'stock'), label: `${r.name} stock`, message: 'add stock, or retire it' }))} />
   </div>;
 }
 ```
