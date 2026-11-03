@@ -64,7 +64,7 @@ Rules that follow:
 | **Editing in a list** | one slat at a time is lifted into its editor while its neighbours stay flush and readable; the add slat is an opening at the end of the list | `ItemGroup` |
 | **Pressables in an opening** | a number field is a well that fills, and its steppers are small raised slabs in its end cap because you press them; at a limit a stepper lies flush and faint | `NumberInput` |
 | **Something to take away** | a secret shown once is an opening (a sunk well, though it holds text) with copy beside it, until you confirm you've saved it; then it fills flush and masks to its tail, settled in the record; revoking it is held | `SecretField` |
-| **Validity** | an invalid field sinks to trench depth on `critical-soft` | `Input`, `Select`, `Combobox`, `Field` |
+| **Validity** | an invalid field sinks to trench depth on `critical-soft`; a radio group's tracks are trenches already, so they take the tint and a `critical` rim | `Input`, `Select`, `Combobox`, `RadioGroup`, `Field` |
 | **The record, in rows** | a table's rows lie flush; selected rows are tinted and raised one level, interactive rows lift on hover, matches rise and misses sink when filtering in place, and a row in hand floats at level 3 over the slot it will land in | `Table`, `Tree` |
 | **The record, in cells** | in a grid, a cell being edited opens into a well in its flush row; when the value lands the floor rises flush and settles; the active cell is a ring and a range a tint, never a height | `DataGrid` |
 | **Who can do what** | a grid on the ground; editable grants are Checkboxes; inherited and fixed grants are flush stamped checks, decided rather than disabled; the active cell is a ring | `PermissionMatrix` |

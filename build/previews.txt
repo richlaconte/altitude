@@ -260,11 +260,12 @@ function App() {
   );
 }
 
-=== RadioGroup | <!-- @dsCard group="Inputs" height=190 subtitle="One switch, several positions" -->
+=== RadioGroup | <!-- @dsCard group="Inputs" height=210 subtitle="One switch, several positions" -->
 --- css
-.pair { display: flex; gap: 64px; align-items: flex-start; }
+.pair { display: flex; flex-wrap: wrap; gap: 32px 64px; align-items: flex-start; }
 --- jsx
 function App() {
+  const [invoice, setInvoice] = React.useState('');
   return (
     <div className="pair">
       <A.RadioGroup defaultValue="team" aria-label="Plan">
@@ -272,9 +273,16 @@ function App() {
         <A.Radio value="team" label="Team" description="Up to 20 seats and shared libraries." />
         <A.Radio value="org" label="Organization" disabled description="Talk to us." />
       </A.RadioGroup>
-      <A.RadioGroup defaultValue="m" orientation="horizontal" aria-label="Size">
-        <A.Radio value="s" label="Small" /><A.Radio value="m" label="Medium" /><A.Radio value="l" label="Large" />
-      </A.RadioGroup>
+      <div className="col">
+        <A.RadioGroup defaultValue="m" orientation="horizontal" aria-label="Size">
+          <A.Radio value="s" label="Small" /><A.Radio value="m" label="Medium" /><A.Radio value="l" label="Large" />
+        </A.RadioGroup>
+        <A.Field label="Send invoices by" required error={invoice ? null : 'Choose how invoices reach you.'}>
+          <A.RadioGroup value={invoice} onValueChange={setInvoice} orientation="horizontal">
+            <A.Radio value="email" label="Email" /><A.Radio value="post" label="Post" /><A.Radio value="fax" label="Fax" disabled />
+          </A.RadioGroup>
+        </A.Field>
+      </div>
     </div>
   );
 }

@@ -81,9 +81,11 @@ expect(!(await page.locator('.bk-actions button[type="submit"]').isDisabled()), 
 await cont(page);
 expect(await page.locator('.alt-error-summary').count() === 1 && /Treatment: Choose a treatment/.test(await text(page, '.alt-error-summary')), 'Continue with nothing chosen shows the error summary');
 expect(await page.evaluate(() => document.activeElement?.classList.contains('alt-error-summary')), 'the error summary takes focus');
-expect(await page.locator('#bk-service').getAttribute('aria-invalid') === 'true' && /Choose a treatment/.test(await text(page, '#bk-service-error')), 'the treatment choices carry the error in words');
+const described = await page.evaluate(() => (document.getElementById('bk-service')?.getAttribute('aria-describedby') || '').split(/\s+/).map((id) => document.getElementById(id)?.textContent).join(' '));
+expect(await page.locator('#bk-service').getAttribute('aria-invalid') === 'true' && /Choose a treatment/.test(described), `the treatment choices carry the error in words (${described})`);
 await page.locator('.alt-error-summary a').first().click(); await wait(page, 100);
-expect(await focused(page) === 'bk-service', `the summary's link moves focus to the choices (${await focused(page)})`);
+const landed = await page.evaluate(() => { const a = document.activeElement; return a?.matches('#bk-service input[type="radio"]') ? a.value : a?.id || a?.tagName; });
+expect(landed === 'assessment', `the summary's link moves focus to the first treatment, where the arrows work (${landed})`);
 
 // By keyboard: arrows choose, Enter continues, focus lands on each step's heading.
 await page.locator('#bk-service input[value="assessment"]').focus();
