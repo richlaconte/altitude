@@ -3641,10 +3641,8 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-inline-edit-surface { min-width: 0; border-radius: var(--radius-md); }
 .alt-inline-edit-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
 /* Nothing reaches past the column (README, "Spacing and radius"): a parent that clips, or has no padding, would cut the
-   open field off. With the default Edit button the value sits on the column's edge, and opening moves its text in by the
-   field's inset as the well appears around it. A value you point at (pencil, field, value) keeps that inset at rest, so
-   the shape drawn on hover and the field opened in its place leave the text where it is. */
-.alt-inline-edit[data-trigger="button"][data-state="read"] .alt-inline-edit-slot { padding-inline: 0; border-inline-width: 0; }
+   open field off. So the value keeps the field's inset at rest, 13px in from the column's edge, whatever opens it, and
+   the field opened in its place leaves the text where it is (E52, IP-01). */
 .alt-inline-edit-slot, .alt-inline-edit-slot-box { flex: 0 1 auto; min-width: 0; }
 .alt-inline-edit[data-state]:not([data-state="read"]) .alt-inline-edit-slot-box { flex: 1 1 14rem; }
 .alt-inline-edit-slot {
