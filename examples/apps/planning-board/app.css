@@ -1,0 +1,21 @@
+/* Sprint 24 planning (#402). Tokens only. The board is the lead: it gets the full width and scrolls by column. */
+.pb-page { max-width: 1240px; margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-12); display: grid; gap: var(--space-5); min-width: 0; }
+@media (max-width: 640px) { .pb-page { padding: var(--space-6) var(--space-4) var(--space-12); } }
+.pb-page > * { min-width: 0; }
+.pb-board { display: grid; gap: var(--space-2); padding-top: var(--space-4); min-width: 0; }
+.pb-board .alt-board { overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
+.pb-board .alt-board-col { scroll-snap-align: start; }
+.pb-title { display: block; font: 500 14px/20px var(--font-sans); }
+.pb-meta { display: block; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); }
+.pb-note { display: block; margin-top: var(--space-1); font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.pb-note[data-tone="failed"] { color: var(--critical); }
+.pb-open { display: flex; justify-content: flex-end; margin-top: var(--space-1); }
+.pb-hint, .pb-prose { margin: 0; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); max-width: 70ch; }
+.pb-outcome:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-lg); }
+.pb-props { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin: 0; font: 400 14px/20px var(--font-sans); }
+.pb-props dt { color: var(--ink-muted); }
+.pb-props dd { margin: 0; }
+.alt-tabs-content > .alt-schedule, .alt-tabs-content > .alt-savedviews, .alt-tabs-content > .alt-drill { margin-top: var(--space-4); }
+/* A refused move drops into a trench. BoardCard has no status yet, and its own surface overrides the shared
+   [data-status="failed"] rule, so this repeats that rule's tokens for board cards. Remove when #438 lands. */
+.pb-board .alt-board-card[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench); outline: 1px solid var(--critical); outline-offset: -1px; }

@@ -1,0 +1,4 @@
+{
+  "title": "Book an appointment · Altitude example",
+  "description": "An Altitude example app: a phone-first booking flow for a physiotherapy appointment, with a real held time, a text code, review and payment, on a simulated server that loses your time, declines the card and expires the code."
+}

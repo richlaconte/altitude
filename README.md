@@ -87,7 +87,7 @@ Every push and pull request runs the checks: the bundle and previews are rebuilt
 A push to `main` then also:
 
 - deploys the landing page to GitHub Pages, with Storybook under `/storybook/`;
-- publishes to npm **if the version in `package.json` isn't published yet**, and tags the commit `v<version>`. To release, bump the version (`npm version patch`, `minor` or `major`) and push.
+- publishes to npm **if the version in `package.json` isn't published yet**, and tags the commit `v<version>`. Every pull request that changes what the package ships bumps the version itself (`npm version patch --no-git-tag-version`, or `minor`), so each merge to `main` is a release. CI fails a pull request that changes the package without a bump. See "Versions" in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Found a bug, or need something it doesn't do?
 

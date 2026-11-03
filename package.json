@@ -1,6 +1,6 @@
 {
   "name": "altitude-design",
-  "version": "0.2.1",
+  "version": "0.3.2",
   "description": "A design and HCI framework for agent-built React web applications, where height is the interface.",
   "keywords": [
     "react",
@@ -109,7 +109,7 @@
   },
   "scripts": {
     "build": "node scripts/build-package.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit --declaration false --emitDeclarationOnly false",
+    "typecheck": "tsc -p tsconfig.json --noEmit --declaration false --emitDeclarationOnly false && tsc -p examples/apps/tsconfig.json",
     "storybook": "node scripts/stories.mjs && storybook dev -p 6006",
     "build-storybook": "node scripts/stories.mjs && storybook build -o storybook-static --quiet",
     "build-site": "node scripts/build-site.mjs",

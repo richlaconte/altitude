@@ -13,7 +13,7 @@ Milestones are goals, `P1`–`P3` are priority, and `ready` / `needs-design` say
 3. **Read all of it.** Read the body (the agreed spec), the comments, the issues it links, and the research its milestone links. If the body and the comments disagree, ask rather than guess.
 4. **Claim it before you build.** Branch from `main` (`feat/`, `fix/`, `docs/` or `chore/` plus a short slug), push, and open a draft pull request with `Fixes #<number>` in the body. If another pull request appears for the same issue first, stop and tell the person you're working for.
 5. **Keep to one pull request.** If the issue turns out to need several, stop and propose sub-issues in a comment. Don't widen the pull request. If you find something else broken, file it separately (see below) rather than fixing it here.
-6. **Finish it.** Tick the "Done when" list, run the checks it names, and mark the pull request ready for review.
+6. **Finish it.** Tick the "Done when" list and run the checks it names. If the pull request changes what the package ships (anything under `project/`, for a start), bump the version as [CONTRIBUTING.md](CONTRIBUTING.md) describes under "Versions": `npm version patch --no-git-tag-version`, or `minor` for a new capability. Then mark the pull request ready for review.
 
 ## You can file issues
 

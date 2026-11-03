@@ -733,12 +733,12 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
   const refocus = (id: string) => requestAnimationFrame(() => cardEl(id)?.focus({ preventScroll: true }));
 
   const onPointerDown = (e: React.PointerEvent, id: string) => {
+    dragged.current = false; // a new press: any earlier drag is over, whatever this press is on (#435)
     if (e.button !== 0 || kb || (e.target as HTMLElement).closest('button, a, input, textarea, select, [contenteditable]')) return;
     if ((e.currentTarget as HTMLElement).hasAttribute('data-held-by')) return; // someone else has it
     start.current?.release?.();
     const s: NonNullable<typeof start.current> = { x: e.clientX, y: e.clientY, id, armed: true };
     start.current = s;
-    dragged.current = false;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     // On touch a card is picked up by press-and-hold, so a swipe still scrolls the board (#254).
     if (e.pointerType === 'touch') {
@@ -773,6 +773,10 @@ export const Board = React.forwardRef<HTMLDivElement, BoardProps>(function Board
     const s = start.current;
     start.current = null;
     s?.release?.();
+    // Only the click that ends this drag is swallowed. When the drop remounts the card in another
+    // column that click never reaches a card, so the flag would otherwise eat the next one, including
+    // a keyboard activation, which has no press to clear it (#435).
+    if (dragged.current) setTimeout(() => { dragged.current = false; }, 0);
     if (!s?.cols || !carry || !root.current) { setCarry(null); return; }
     // Where each card was drawn when it was let go, so the landing travels from there.
     const m = new Map<string, { x: number; y: number }>();

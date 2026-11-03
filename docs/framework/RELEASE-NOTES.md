@@ -1,6 +1,6 @@
-# Unreleased — design and HCI framework
+# 0.3.0 — design and HCI framework
 
-No package version bump, npm publish or deployment is part of this change. The existing package version remains the development build identity; release managers must select a new version before publication. Generated guidance always matches the package version used to build it.
+Everything merged to `main` since 0.2.1. Generated guidance always matches the package version used to build it.
 
 ## Added
 
