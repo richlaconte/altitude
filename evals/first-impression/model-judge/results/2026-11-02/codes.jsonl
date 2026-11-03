@@ -1,0 +1,759 @@
+{"session": 1, "stimulus": "s261", "cue": "floating-point bug in copy: Target 28.000000000000004–35%", "codes": ["new:raw-float-in-copy"]}
+{"session": 1, "stimulus": "s261", "cue": "every section in identically rounded bordered white cards", "codes": ["new:every-section-in-card"]}
+{"session": 1, "stimulus": "s261", "cue": "monochrome black pill buttons and badges with no accent colour", "codes": ["new:monochrome-no-accent"]}
+{"session": 1, "stimulus": "s261", "cue": "avatar initials circles in grey on change timeline", "codes": ["IC4"]}
+{"session": 1, "stimulus": "s820", "cue": "grey annotated band on line chart labelled Millbrook closed explaining the dip", "codes": ["new:chart-event-annotation"]}
+{"session": 1, "stimulus": "s820", "cue": "Chart/Table toggle offering a non-visual alternative", "codes": ["new:chart-table-toggle"]}
+{"session": 1, "stimulus": "s820", "cue": "subtitle states peak month and value in words", "codes": ["new:prose-chart-summary"]}
+{"session": 1, "stimulus": "s820", "cue": "selected KPI card marked by heavy black border tied to the Loans tab", "codes": ["new:selected-state-heavy-border"]}
+{"session": 1, "stimulus": "s780", "cue": "classic admin-template nav (Interface, Components, Pages, Forms, Gallery, Documentation) with outline icons", "codes": ["CM6", "IC3"]}
+{"session": 1, "stimulus": "s780", "cue": "Source Sans type and muted Bootstrap-era blue Print Invoice button", "codes": ["new:source-sans-type", "CO8"]}
+{"session": 1, "stimulus": "s780", "cue": "European number formatting $1.800,00 in fully ruled table", "codes": ["new:locale-number-format", "new:fully-ruled-table"]}
+{"session": 1, "stimulus": "s780", "cue": "real avatar photo with Administrator role under name", "codes": ["new:real-photo-avatars"]}
+{"session": 1, "stimulus": "s484", "cue": "unexplained large empty gap between result count and table", "codes": ["new:unexplained-empty-gap"]}
+{"session": 1, "stimulus": "s484", "cue": "Open tasks header misaligned vertically with other headers", "codes": ["new:misaligned-element"]}
+{"session": 1, "stimulus": "s484", "cue": "inset grey search field style unlike the rest of the flat UI", "codes": ["new:inset-shadowed-field", "new:inconsistent-component-styles"]}
+{"session": 1, "stimulus": "s484", "cue": "sentence-style status line 12 projects found. with full stop", "codes": ["new:sentence-status-line"]}
+{"session": 1, "stimulus": "s484", "cue": "explanatory subtitle restating the task", "codes": ["new:generic-subtitle"]}
+{"session": 1, "stimulus": "s140", "cue": "AdminLTE-style dark sidebar with Font Awesome icons and New / count badges", "codes": ["CM6", "IC3"]}
+{"session": 1, "stimulus": "s140", "cue": "cartoon illustrated avatar set for team members", "codes": ["IC4"]}
+{"session": 1, "stimulus": "s140", "cue": "Bootstrap 4 primary/info/danger View-Edit-Delete button trio", "codes": ["CM6", "CO8"]}
+{"session": 1, "stimulus": "s140", "cue": "card header with minimise and close controls", "codes": ["CM6"]}
+{"session": 1, "stimulus": "s571", "cue": "established admin-template header and icon nav (Interface, Components, Gallery, Documentation)", "codes": ["CM6", "IC3"]}
+{"session": 1, "stimulus": "s571", "cue": "uppercase light-grey Source Sans column headers", "codes": ["new:source-sans-type", "TY4"]}
+{"session": 1, "stimulus": "s571", "cue": "dated 2018-era crypto sample data with CMGR/MONTH column", "codes": ["new:dated-sample-data"]}
+{"session": 1, "stimulus": "s571", "cue": "tiny coin-logo column left as dots", "codes": ["new:broken-images"]}
+{"session": 1, "stimulus": "s134", "cue": "Practice overview rendered as a raised button-like chip above the title with no clear function", "codes": ["BH4"]}
+{"session": 1, "stimulus": "s134", "cue": "two rounded white cards side by side with unequal heights and lots of dead space", "codes": ["new:sparse-dead-space", "new:unequal-card-heights"]}
+{"session": 1, "stimulus": "s134", "cue": "generic subtitle restating the page purpose", "codes": ["new:generic-subtitle"]}
+{"session": 1, "stimulus": "s134", "cue": "glossy raised blue primary button with heavy bottom shadow", "codes": ["new:glossy-raised-button"]}
+{"session": 1, "stimulus": "s134", "cue": "Practice name repeated in details though already the page title", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s364", "cue": "cream background with serif display headings and terracotta primary button, a stock warm-editorial look", "codes": ["CO4", "new:serif-display-headings"]}
+{"session": 1, "stimulus": "s364", "cue": "six-cell stat strip with uppercase tracked labels across the top", "codes": ["LA7", "TY4"]}
+{"session": 1, "stimulus": "s364", "cue": "every section in a rounded bordered white card", "codes": ["new:every-section-in-card"]}
+{"session": 1, "stimulus": "s364", "cue": "awkward wrap in PORTION cell (~280 / g cooked)", "codes": ["new:awkward-text-wrap"]}
+{"session": 1, "stimulus": "s750", "cue": "unstyled native select for Plan next to styled segmented control", "codes": ["new:inconsistent-component-styles"]}
+{"session": 1, "stimulus": "s750", "cue": "text-labelled Dark mode button in header", "codes": ["new:dark-mode-toggle"]}
+{"session": 1, "stimulus": "s750", "cue": "KPI card labels wrapping awkwardly (New subscriptions (12 / mo), +0.28 / pts)", "codes": ["new:awkward-text-wrap"]}
+{"session": 1, "stimulus": "s750", "cue": "row of KPI cards with sparklines and triangle deltas", "codes": ["LA7"]}
+{"session": 1, "stimulus": "s750", "cue": "system font defaults", "codes": ["TY1"]}
+{"session": 1, "stimulus": "s839", "cue": "understated stat tiles with small bold values instead of oversized hero numbers", "codes": ["new:understated-stats"]}
+{"session": 1, "stimulus": "s839", "cue": "status hierarchy: solid black Checked in pill vs outlined Confirmed/Pending", "codes": ["new:status-hierarchy-by-fill"]}
+{"session": 1, "stimulus": "s839", "cue": "Practice details subtitle Shown to clients when they book explains why it matters", "codes": ["new:purposeful-helper-copy"]}
+{"session": 1, "stimulus": "s839", "cue": "consistent outline icons beside each contact field and quiet text Edit link", "codes": ["new:consistent-outline-icons"]}
+{"session": 1, "stimulus": "s374", "cue": "workspace name duplicated as a raised chip directly above the identical heading", "codes": ["new:duplicated-information", "BH4"]}
+{"session": 1, "stimulus": "s374", "cue": "focus ring drawn around the page title as if it were an input, clipping the text", "codes": ["new:stray-focus-outline", "new:clipped-content"]}
+{"session": 1, "stimulus": "s374", "cue": "single sparse Details card with most of the page empty", "codes": ["new:sparse-dead-space"]}
+{"session": 1, "stimulus": "s374", "cue": "Owner and Last changed repeat the same person", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s652", "cue": "Last contact column clipped off the right edge of the contacts card", "codes": ["new:clipped-content"]}
+{"session": 1, "stimulus": "s652", "cue": "industry and website repeated in header meta and Details panel", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s652", "cue": "initials-avatar circles on every row and HF monogram tile", "codes": ["IC4", "new:letter-logo-tile"]}
+{"session": 1, "stimulus": "s652", "cue": "every section in identical rounded bordered card with grey subtitle line", "codes": ["new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 1, "stimulus": "s497", "cue": "chart title written as the takeaway (Loans rose 2.9%... led by Eastfield)", "codes": ["new:takeaway-chart-title"]}
+{"session": 1, "stimulus": "s497", "cue": "direct end-of-line labels instead of a legend", "codes": ["new:direct-line-labels"]}
+{"session": 1, "stimulus": "s497", "cue": "single event annotation Riverside closed on a hairline marker", "codes": ["new:chart-event-annotation"]}
+{"session": 1, "stimulus": "s497", "cue": "prose summary under the chart naming busiest and quietest months", "codes": ["new:prose-chart-summary"]}
+{"session": 1, "stimulus": "s497", "cue": "no KPI-card row; one chart carries the page", "codes": ["new:single-chart-focus"]}
+{"session": 1, "stimulus": "s634", "cue": "Clear search link floating misaligned to the right of the search field", "codes": ["new:misaligned-element"]}
+{"session": 1, "stimulus": "s634", "cue": "large unexplained gap between count and table", "codes": ["new:unexplained-empty-gap"]}
+{"session": 1, "stimulus": "s634", "cue": "inconsistent status badge styles (In transit blue text without dot vs dotted pills)", "codes": ["new:inconsistent-component-styles"]}
+{"session": 1, "stimulus": "s634", "cue": "Weight header sits higher than the other headers", "codes": ["new:misaligned-element"]}
+{"session": 1, "stimulus": "s634", "cue": "inset grey search field with gradient shadow", "codes": ["new:inset-shadowed-field"]}
+{"session": 1, "stimulus": "s143", "cue": "20 shipments count shown twice (subtitle and right of search)", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s143", "cue": "rainbow of pastel status pills, one hue per status including purple and orange", "codes": ["new:rainbow-colour-coding"]}
+{"session": 1, "stimulus": "s143", "cue": "whole page wrapped in one large rounded card under a slash breadcrumb header", "codes": ["new:page-in-single-card"]}
+{"session": 1, "stimulus": "s143", "cue": "truck icon logo with Brand / Section header pattern", "codes": ["new:literal-icon-logo"]}
+{"session": 1, "stimulus": "s892", "cue": "Tailwind slate-900 sidebar with indigo-violet gradient initials tile", "codes": ["CO8", "CO1", "new:letter-logo-tile"]}
+{"session": 1, "stimulus": "s892", "cue": "default Tailwind gray/indigo palette and system font", "codes": ["CO8", "CO1", "TY1"]}
+{"session": 1, "stimulus": "s892", "cue": "card with grey footer bar holding Cancel and disabled indigo Save changes", "codes": ["new:card-footer-action-bar", "new:washed-out-disabled-button", "CO1"]}
+{"session": 1, "stimulus": "s892", "cue": "helper text under every field and a character counter 26/60", "codes": ["new:helper-text-every-field"]}
+{"session": 1, "stimulus": "s182", "cue": "AdminLTE dark sidebar with Font Awesome icons and New/count badges", "codes": ["CM6", "IC3"]}
+{"session": 1, "stimulus": "s182", "cue": "solid primary/secondary/info coloured card headers with collapse minus icon", "codes": ["CM6", "CO8"]}
+{"session": 1, "stimulus": "s182", "cue": "hipster ipsum sample text and quirky names like Tony Chicken", "codes": ["new:template-sample-copy", "new:quirky-sample-data"]}
+{"session": 1, "stimulus": "s182", "cue": "Bootstrap teal eye and red trash icon button pairs", "codes": ["CM6", "CO8"]}
+{"session": 1, "stimulus": "s907", "cue": "overlapping avatar stack with initials clipped (PI MC LI TI)", "codes": ["new:avatar-stack", "IC4", "new:clipped-content"]}
+{"session": 1, "stimulus": "s907", "cue": "member count shown twice (Members tile and 7 members footer)", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s907", "cue": "three equal stat tiles with icon + label above a table card", "codes": ["LA7", "LA4"]}
+{"session": 1, "stimulus": "s907", "cue": "generic subtitle Everything your team is working on this quarter", "codes": ["new:generic-subtitle"]}
+{"session": 1, "stimulus": "s635", "cue": "legend lists Cancelled in orange but no orange bars are visible in the chart", "codes": ["new:chart-legend-mismatch"]}
+{"session": 1, "stimulus": "s635", "cue": "thin bars with jagged rendered edges", "codes": ["new:rendering-artifacts"]}
+{"session": 1, "stimulus": "s635", "cue": "2x2 grid of KPI cards each with green/red arrow delta and grey footer strip", "codes": ["LA7", "LA4"]}
+{"session": 1, "stimulus": "s635", "cue": "Sample data pill badge in header", "codes": ["new:sample-data-label"]}
+{"session": 1, "stimulus": "s635", "cue": "y-axis label $700.0K inconsistent with $1.4M formatting", "codes": ["new:awkward-number-format"]}
+{"session": 1, "stimulus": "s940", "cue": "12 projects count repeated in subtitle and right of search", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s940", "cue": "initials avatar circle before every owner name", "codes": ["IC4"]}
+{"session": 1, "stimulus": "s940", "cue": "progress bar plus percentage column alongside open tasks, redundant metrics", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s940", "cue": "entire page inside one big rounded card", "codes": ["new:page-in-single-card"]}
+{"session": 1, "stimulus": "s940", "cue": "Last synced timestamp next to a Refresh button", "codes": ["new:sync-status-shown"]}
+{"session": 1, "stimulus": "s443", "cue": "randomly coloured initials avatars (orange, magenta, blue, purple, teal)", "codes": ["IC4", "new:rainbow-colour-coding"]}
+{"session": 1, "stimulus": "s443", "cue": "uppercase tracked eyebrow NORTHWIND · PRODUCT TEAM above title", "codes": ["TY4"]}
+{"session": 1, "stimulus": "s443", "cue": "sort arrows on every column header and / keyboard hint in search", "codes": ["new:sort-arrows-every-column", "new:keyboard-shortcut-hint"]}
+{"session": 1, "stimulus": "s443", "cue": "pastel tinted status pills with dot", "codes": ["new:dotted-pastel-status-pills"]}
+{"session": 1, "stimulus": "s443", "cue": "Tailwind default indigo progress bars", "codes": ["CO8", "CO1"]}
+{"session": 1, "stimulus": "s753", "cue": "breadcrumb rendered as three raised button chips at different heights", "codes": ["new:raised-breadcrumb-chips", "new:misaligned-element"]}
+{"session": 1, "stimulus": "s753", "cue": "inconsistent allergen capitalisation (Celery, sulphites, milk)", "codes": ["new:inconsistent-capitalisation"]}
+{"session": 1, "stimulus": "s753", "cue": "glossy raised blue Edit details button with thick bottom shadow", "codes": ["new:glossy-raised-button"]}
+{"session": 1, "stimulus": "s753", "cue": "braised dish assigned to Grill station, an internal inconsistency", "codes": ["new:domain-inconsistency"]}
+{"session": 1, "stimulus": "s433", "cue": "unstyled native selects beside a styled segmented control", "codes": ["new:inconsistent-component-styles"]}
+{"session": 1, "stimulus": "s433", "cue": "text Dark mode button in the header", "codes": ["new:dark-mode-toggle"]}
+{"session": 1, "stimulus": "s433", "cue": "KPI cards with triangle deltas and sparklines ending in a blue dot", "codes": ["LA7"]}
+{"session": 1, "stimulus": "s433", "cue": "stacked format bar with third segment unlabelled and legend wrapping unevenly", "codes": ["new:chart-legend-mismatch"]}
+{"session": 1, "stimulus": "s433", "cue": "footnote text clipped at the bottom of the branch card", "codes": ["new:clipped-content"]}
+{"session": 1, "stimulus": "s882", "cue": "well-known admin-template dashboard: six small stat tiles with coloured % deltas top-right", "codes": ["CM6", "LA7"]}
+{"session": 1, "stimulus": "s882", "cue": "placeholder Chart title cards with C3-style donut and pie", "codes": ["CP2", "CM6"]}
+{"session": 1, "stimulus": "s882", "cue": "Are you in trouble? Read our documentation template alert", "codes": ["CM6", "new:template-sample-copy"]}
+{"session": 1, "stimulus": "s882", "cue": "Source Sans type, real avatar photos mixed with initials, trash icon per commit row", "codes": ["new:source-sans-type", "new:real-photo-avatars", "IC4"]}
+{"session": 1, "stimulus": "s800", "cue": "developer demo toggle Make the next role change fail left in the product UI", "codes": ["new:debug-control-exposed"]}
+{"session": 1, "stimulus": "s800", "cue": "two stacked, overlapping helper lines under the email field", "codes": ["new:overlapping-text"]}
+{"session": 1, "stimulus": "s800", "cue": "inset grey email field with heavy inner shadow", "codes": ["new:inset-shadowed-field"]}
+{"session": 1, "stimulus": "s800", "cue": "dead-looking disabled grey Send invite button", "codes": ["new:washed-out-disabled-button"]}
+{"session": 1, "stimulus": "s236", "cue": "gradient blue square logo mark next to generic product name Relay", "codes": ["new:gradient-logo-mark", "new:generic-product-name"]}
+{"session": 1, "stimulus": "s236", "cue": "multicoloured initials avatars and rainbow role pills", "codes": ["IC4", "new:rainbow-colour-coding"]}
+{"session": 1, "stimulus": "s236", "cue": "trailing orphan bullet after the website in the meta row", "codes": ["new:stray-separator"]}
+{"session": 1, "stimulus": "s236", "cue": "four-up stat strip with health score progress bar", "codes": ["LA7"]}
+{"session": 1, "stimulus": "s236", "cue": "Primary badge squeezed beside a wrapping name", "codes": ["new:awkward-text-wrap"]}
+{"session": 1, "stimulus": "s464", "cue": "AdminLTE Dashboard v2 layout with coloured icon info-boxes (CPU Traffic, Likes, Sales, New Members)", "codes": ["CM6", "CM4"]}
+{"session": 1, "stimulus": "s464", "cue": "Chart.js smoothed area chart with Goal Completion progress bars in Bootstrap colours", "codes": ["CM6", "CO8"]}
+{"session": 1, "stimulus": "s464", "cue": "card tools: minimise, wrench dropdown, close", "codes": ["CM6"]}
+{"session": 1, "stimulus": "s464", "cue": "US-Visitors Report vector map and sparkline values in a green box", "codes": ["CM6", "new:raw-data-leak"]}
+{"session": 1, "stimulus": "s577", "cue": "breadcrumb as raised button chips at mismatched heights", "codes": ["new:raised-breadcrumb-chips", "new:misaligned-element"]}
+{"session": 1, "stimulus": "s577", "cue": "glossy raised blue Publish button with thick bottom shadow", "codes": ["new:glossy-raised-button"]}
+{"session": 1, "stimulus": "s577", "cue": "large empty textarea and sparse right rail with most of page blank", "codes": ["new:sparse-dead-space"]}
+{"session": 1, "stimulus": "s577", "cue": "small Saved pill beside Publish", "codes": ["new:save-status-indicator"]}
+{"session": 1, "stimulus": "s812", "cue": "breadcrumb as raised button chips at mismatched heights", "codes": ["new:raised-breadcrumb-chips", "new:misaligned-element"]}
+{"session": 1, "stimulus": "s812", "cue": "odd section heading Around it", "codes": ["new:odd-copy"]}
+{"session": 1, "stimulus": "s812", "cue": "pricing change named in headline but not marked on the chart", "codes": ["new:headline-not-shown-in-chart"]}
+{"session": 1, "stimulus": "s812", "cue": "caption sentence restating the headline numbers", "codes": ["new:prose-chart-summary"]}
+{"session": 1, "stimulus": "s474", "cue": "stray blue focus outline around the whole main container", "codes": ["new:stray-focus-outline"]}
+{"session": 1, "stimulus": "s474", "cue": "helper text under every field and a General card subtitle", "codes": ["new:helper-text-every-field", "new:generic-subtitle"]}
+{"session": 1, "stimulus": "s474", "cue": "teal-green brand applied to paw logo, avatar and washed-out disabled Save", "codes": ["new:washed-out-disabled-button"]}
+{"session": 1, "stimulus": "s474", "cue": "generic Update how your practice appears to clients subtitle", "codes": ["new:generic-subtitle"]}
+{"session": 1, "stimulus": "s669", "cue": "breadcrumb rendered as raised button chips", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 1, "stimulus": "s669", "cue": "Yesterday group header repeated as yesterday under the activity item", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s669", "cue": "renewal date repeated in header meta and details table", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s669", "cue": "note Dana Whitfield is the main point of contact duplicates the Primary badge", "codes": ["new:duplicated-information"]}
+{"session": 1, "stimulus": "s762", "cue": "AdminLTE sidebar and Bootstrap 4 card with minimise/close tools", "codes": ["CM6"]}
+{"session": 1, "stimulus": "s762", "cue": "Font Awesome brush logo and file-type icons in Project files list", "codes": ["IC3"]}
+{"session": 1, "stimulus": "s762", "cue": "hipster ipsum and Lorem ipsum represents a long-held tradition template copy", "codes": ["new:template-sample-copy"]}
+{"session": 1, "stimulus": "s762", "cue": "photo avatars in social-feed style activity posts", "codes": ["new:real-photo-avatars", "CM6"]}
+{"session": 1, "stimulus": "s369", "cue": "axis labels with redundant decimals ($500.0K, $250.0K)", "codes": ["new:awkward-number-format"]}
+{"session": 1, "stimulus": "s369", "cue": "y-axis truncated at $250K exaggerating growth", "codes": ["new:truncated-axis"]}
+{"session": 1, "stimulus": "s369", "cue": "long auto-written caption restating min/max values to the dollar", "codes": ["new:prose-chart-summary"]}
+{"session": 1, "stimulus": "s369", "cue": "stat row labels below the fold with no visual grouping", "codes": ["LA7", "LA6"]}
+{"session": 1, "stimulus": "s323", "cue": "slate-900 top nav with blue single-letter logo square", "codes": ["CO8", "new:letter-logo-tile"]}
+{"session": 1, "stimulus": "s323", "cue": "Tailwind pastel bordered status pills with dots in blue/green/amber/red/indigo", "codes": ["CO8", "new:dotted-pastel-status-pills", "new:rainbow-colour-coding"]}
+{"session": 1, "stimulus": "s323", "cue": "uppercase tracked column headers and / keyboard shortcut hint in search", "codes": ["TY4", "new:keyboard-shortcut-hint"]}
+{"session": 1, "stimulus": "s323", "cue": "count 28 shipments floated right of search", "codes": ["new:count-beside-search"]}
+{"session": 1, "stimulus": "s323", "cue": "monospace bold reference IDs with secondary PO lines", "codes": ["new:monospace-ids"]}
+{"session": 1, "stimulus": "s894", "cue": "admin-template profile page with landscape cover photo and overlapping avatar", "codes": ["CM6", "new:cover-photo-profile"]}
+{"session": 1, "stimulus": "s894", "cue": "real portrait photos for every commenter", "codes": ["new:real-photo-avatars"]}
+{"session": 1, "stimulus": "s894", "cue": "quirky human bio copy Big belly rude boy, million dollar hustler. Unemployed.", "codes": ["new:quirky-sample-data"]}
+{"session": 1, "stimulus": "s894", "cue": "outlined Twitter Follow button and circular grey social icons", "codes": ["new:social-media-widgets"]}
+{"session": 1, "stimulus": "s620", "cue": "developer toggle Make the next change fail exposed in the settings page", "codes": ["new:debug-control-exposed"]}
+{"session": 1, "stimulus": "s620", "cue": "plain underlined text links as section tabs", "codes": ["new:text-link-tabs"]}
+{"session": 1, "stimulus": "s620", "cue": "Mentions row drawn as a misaligned inner surface wider than its sibling row", "codes": ["new:misaligned-element", "new:inconsistent-component-styles"]}
+{"session": 1, "stimulus": "s620", "cue": "every section in identical rounded white card with grey description line", "codes": ["new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 2, "stimulus": "s892", "cue": "dark slate sidebar with gradient indigo-violet initials badge", "codes": ["CO8", "CO1", "new:letter-logo-tile"]}
+{"session": 2, "stimulus": "s892", "cue": "Tailwind gray-50 page background with single bordered white card", "codes": ["CO8", "new:page-in-single-card"]}
+{"session": 2, "stimulus": "s892", "cue": "disabled save button in washed-out indigo", "codes": ["new:washed-out-disabled-button", "CO1"]}
+{"session": 2, "stimulus": "s892", "cue": "em-dash in workspace name 'Northwind Health — Product'", "codes": ["new:em-dash-copy"]}
+{"session": 2, "stimulus": "s892", "cue": "helper text under every field in identical gray small type", "codes": ["new:helper-text-every-field"]}
+{"session": 2, "stimulus": "s497", "cue": "headline states the finding as a sentence rather than a generic chart title", "codes": ["new:takeaway-chart-title"]}
+{"session": 2, "stimulus": "s497", "cue": "direct line labels at line ends instead of a legend", "codes": ["new:direct-line-labels"]}
+{"session": 2, "stimulus": "s497", "cue": "annotated 'Riverside closed' event marker on the chart", "codes": ["new:chart-event-annotation"]}
+{"session": 2, "stimulus": "s497", "cue": "chart/table toggle and summary paragraph below with exact figures", "codes": ["new:chart-table-toggle", "new:prose-chart-summary"]}
+{"session": 2, "stimulus": "s497", "cue": "restrained two-colour palette, no cards or shadows", "codes": ["new:restrained-palette", "new:no-cards"]}
+{"session": 2, "stimulus": "s571", "cue": "Source Sans type and outline icon nav typical of a hand-built admin template", "codes": ["new:source-sans-type", "new:consistent-outline-icons", "CM6"]}
+{"session": 2, "stimulus": "s571", "cue": "real-world 2018-era crypto data with uneven decimals", "codes": ["new:dated-sample-data", "new:awkward-number-format"]}
+{"session": 2, "stimulus": "s571", "cue": "tiny broken coin icons and wrapping supply column left as-is", "codes": ["new:broken-images", "new:awkward-text-wrap"]}
+{"session": 2, "stimulus": "s571", "cue": "small outlined blue 'Help' button and real avatar photo", "codes": ["new:real-photo-avatars"]}
+{"session": 2, "stimulus": "s571", "cue": "template nav items like Interface/Components/Gallery/Documentation", "codes": ["CM6"]}
+{"session": 2, "stimulus": "s261", "cue": "floating-point bug 'Target 28.000000000000004–35%' rendered in the UI", "codes": ["new:raw-float-in-copy"]}
+{"session": 2, "stimulus": "s261", "cue": "every section in a rounded bordered white card with equal padding", "codes": ["new:every-section-in-card"]}
+{"session": 2, "stimulus": "s261", "cue": "initials avatar circles in an activity timeline with strikethrough old→new diff chips", "codes": ["IC4", "new:diff-chips"]}
+{"session": 2, "stimulus": "s261", "cue": "black pill status badge plus monospace ID 'MN-014'", "codes": ["new:monochrome-no-accent", "new:monospace-ids"]}
+{"session": 2, "stimulus": "s261", "cue": "label/value 3-column grid of metadata", "codes": ["new:label-value-grid"]}
+{"session": 2, "stimulus": "s364", "cue": "cream background with rust/terracotta primary button and display serif headings", "codes": ["CO4", "new:serif-display-headings"]}
+{"session": 2, "stimulus": "s364", "cue": "six-up stat strip of uppercase tiny-label KPI cells", "codes": ["LA7", "TY4"]}
+{"session": 2, "stimulus": "s364", "cue": "green dot 'Active' pill and dot-separated metadata row", "codes": ["new:dotted-pastel-status-pills", "new:dot-separated-meta"]}
+{"session": 2, "stimulus": "s364", "cue": "soft pink allergen chips", "codes": ["new:pastel-tag-chips"]}
+{"session": 2, "stimulus": "s364", "cue": "two-column card layout with identical rounded bordered panels", "codes": ["new:every-section-in-card"]}
+{"session": 2, "stimulus": "s882", "cue": "recognisable hand-built admin template look: Source Sans, outline icon nav, 'Are you in trouble? Read our documentation' alert", "codes": ["CM6", "new:source-sans-type", "new:consistent-outline-icons", "new:template-sample-copy"]}
+{"session": 2, "stimulus": "s882", "cue": "placeholder 'Chart title' headings left in", "codes": ["CP2"]}
+{"session": 2, "stimulus": "s882", "cue": "donut chart with clipped '3.0%' label and C3-style pie colours", "codes": ["new:clipped-content", "CM6"]}
+{"session": 2, "stimulus": "s882", "cue": "real avatar photos mixed with initials fallback", "codes": ["new:real-photo-avatars", "IC4"]}
+{"session": 2, "stimulus": "s882", "cue": "square-ish small-radius cards with thin borders, no soft shadows", "codes": ["new:small-radius-flat-cards"]}
+{"session": 2, "stimulus": "s474", "cue": "stray blue browser focus outline around the whole main container", "codes": ["new:stray-focus-outline"]}
+{"session": 2, "stimulus": "s474", "cue": "single bordered white card on off-white page with helper text under each field", "codes": ["new:page-in-single-card", "new:helper-text-every-field"]}
+{"session": 2, "stimulus": "s474", "cue": "washed-out disabled green 'Save changes' next to white Cancel", "codes": ["new:washed-out-disabled-button"]}
+{"session": 2, "stimulus": "s474", "cue": "cute paw-print logo 'PawBook' and initials avatar chip", "codes": ["new:literal-icon-logo", "IC4"]}
+{"session": 2, "stimulus": "s474", "cue": "large empty area below, layout not tuned to viewport", "codes": ["new:sparse-dead-space"]}
+{"session": 2, "stimulus": "s812", "cue": "breadcrumb rendered as two raised shadowed button chips, misaligned vertically", "codes": ["new:raised-breadcrumb-chips", "new:misaligned-element"]}
+{"session": 2, "stimulus": "s812", "cue": "odd section heading copy 'Around it'", "codes": ["new:odd-copy"]}
+{"session": 2, "stimulus": "s812", "cue": "stat row below the fold cut off with huge numerals", "codes": ["LA7", "new:clipped-content", "new:oversized-numbers"]}
+{"session": 2, "stimulus": "s812", "cue": "every x-axis day label at 2-day steps crowding the axis", "codes": ["new:crowded-axis-labels"]}
+{"session": 2, "stimulus": "s182", "cue": "classic AdminLTE/Bootstrap 4 look with solid coloured card headers (blue, grey, teal)", "codes": ["CM6", "CO8"]}
+{"session": 2, "stimulus": "s182", "cue": "hipster ipsum 'Raw denim you probably haven't heard of them' in textarea", "codes": ["new:template-sample-copy"]}
+{"session": 2, "stimulus": "s182", "cue": "Font Awesome solid icons and 'New'/count badges in sidebar", "codes": ["IC3", "CM6"]}
+{"session": 2, "stimulus": "s182", "cue": "Bootstrap teal/red square action buttons in files table", "codes": ["CM6", "CO8"]}
+{"session": 2, "stimulus": "s182", "cue": "odd sample data like 'Email-from-flatbal.mln' and '49.8005 kb'", "codes": ["new:quirky-sample-data"]}
+{"session": 2, "stimulus": "s820", "cue": "three KPI cards with lucide outline icons, big number and green ↗ delta lines", "codes": ["LA7", "IC3"]}
+{"session": 2, "stimulus": "s820", "cue": "shadcn-style rounded cards, segmented tabs and select on off-white", "codes": ["CM6"]}
+{"session": 2, "stimulus": "s820", "cue": "smoothed monotone spline line chart with legend below", "codes": ["new:smoothed-chart-lines"]}
+{"session": 2, "stimulus": "s820", "cue": "heavy black border on the selected KPI card", "codes": ["new:selected-state-heavy-border"]}
+{"session": 2, "stimulus": "s820", "cue": "solid grey shaded band 'Millbrook closed' that dominates the chart", "codes": ["new:chart-event-annotation"]}
+{"session": 2, "stimulus": "s894", "cue": "real landscape cover photo and real portrait photos", "codes": ["new:real-photo-avatars", "new:cover-photo-profile"]}
+{"session": 2, "stimulus": "s894", "cue": "quirky human-written bio 'Big belly rude boy, million dollar hustler. Unemployed.'", "codes": ["new:quirky-sample-data"]}
+{"session": 2, "stimulus": "s894", "cue": "Twitter-blue outlined 'Follow' button and round grey social icon buttons", "codes": ["new:social-media-widgets"]}
+{"session": 2, "stimulus": "s894", "cue": "classic Latin lorem ipsum in a template profile page", "codes": ["new:template-sample-copy"]}
+{"session": 2, "stimulus": "s894", "cue": "Source Sans template typography with thin-border square cards", "codes": ["new:source-sans-type", "new:small-radius-flat-cards"]}
+{"session": 2, "stimulus": "s236", "cue": "gradient blue square logo mark and colourful initials avatars", "codes": ["new:gradient-logo-mark", "IC4", "new:rainbow-colour-coding"]}
+{"session": 2, "stimulus": "s236", "cue": "four-up KPI strip with tiny label, big number, green ▲ delta", "codes": ["LA7"]}
+{"session": 2, "stimulus": "s236", "cue": "pastel role pills (Champion, Economic buyer, Technical evaluator)", "codes": ["new:pastel-tag-chips"]}
+{"session": 2, "stimulus": "s236", "cue": "dot-separated metadata row with trailing orphan dot", "codes": ["new:dot-separated-meta", "new:stray-separator"]}
+{"session": 2, "stimulus": "s236", "cue": "every section in rounded bordered white cards with uppercase small section labels", "codes": ["new:every-section-in-card", "TY4"]}
+{"session": 2, "stimulus": "s940", "cue": "shadcn data-table look: checkbox column, search input with magnifier, outlined Refresh button", "codes": ["CM6"]}
+{"session": 2, "stimulus": "s940", "cue": "coloured-dot status pills On track/At risk/Off track/Planning", "codes": ["new:dotted-pastel-status-pills"]}
+{"session": 2, "stimulus": "s940", "cue": "grey initials avatars beside owner names", "codes": ["IC4"]}
+{"session": 2, "stimulus": "s940", "cue": "black progress bars with percentage", "codes": ["new:progress-bar-every-row"]}
+{"session": 2, "stimulus": "s940", "cue": "diverse-name sample roster and 'Northwind' team; '12 projects' count repeated twice", "codes": ["new:diverse-name-roster", "new:stock-sample-names", "new:duplicated-information"]}
+{"session": 2, "stimulus": "s464", "cue": "AdminLTE 'Dashboard v2' with solid-colour icon info boxes (teal, red, green, yellow)", "codes": ["CM6", "CM4"]}
+{"session": 2, "stimulus": "s464", "cue": "Chart.js overlapping area chart with Bootstrap primary colours", "codes": ["CM6", "CO8"]}
+{"session": 2, "stimulus": "s464", "cue": "card tool icons (minimise, wrench, close) in headers", "codes": ["CM6"]}
+{"session": 2, "stimulus": "s464", "cue": "vector US map widget and sparkline label '90,70,90,70,75,80,70'", "codes": ["CM6", "new:raw-data-leak"]}
+{"session": 2, "stimulus": "s464", "cue": "Font Awesome solid icons and Source Sans Pro", "codes": ["IC3", "new:source-sans-type"]}
+{"session": 2, "stimulus": "s634", "cue": "'In transit' badge styled differently (blue text, no dot) from the other status badges", "codes": ["new:inconsistent-component-styles"]}
+{"session": 2, "stimulus": "s634", "cue": "'Clear search' link floats misaligned beside the input", "codes": ["new:misaligned-element"]}
+{"session": 2, "stimulus": "s634", "cue": "'Weight' header sits higher than the other column headers", "codes": ["new:misaligned-element"]}
+{"session": 2, "stimulus": "s634", "cue": "large unexplained gap between count and table", "codes": ["new:unexplained-empty-gap"]}
+{"session": 2, "stimulus": "s634", "cue": "dot + pill status chips and monospace reference IDs", "codes": ["new:dotted-pastel-status-pills", "new:monospace-ids"]}
+{"session": 2, "stimulus": "s140", "cue": "AdminLTE projects page with illustrated cartoon avatar set", "codes": ["CM6", "IC4"]}
+{"session": 2, "stimulus": "s140", "cue": "Bootstrap blue/teal/red View/Edit/Delete buttons wrapping onto two lines", "codes": ["CM6", "CO8", "new:awkward-text-wrap"]}
+{"session": 2, "stimulus": "s140", "cue": "green 'Success' badges on every row and '#' placeholders in the index column", "codes": ["new:identical-placeholder-rows"]}
+{"session": 2, "stimulus": "s140", "cue": "zebra-striped table with Font Awesome icons", "codes": ["new:zebra-striped-table", "IC3"]}
+{"session": 2, "stimulus": "s140", "cue": "template sidebar with 'New' and count badges", "codes": ["CM6"]}
+{"session": 2, "stimulus": "s374", "cue": "programmatic focus outline drawn around the page heading", "codes": ["new:stray-focus-outline"]}
+{"session": 2, "stimulus": "s374", "cue": "breadcrumb rendered as a raised shadowed button chip", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 2, "stimulus": "s374", "cue": "single sparse details card with label/value two-column grid, rest of page empty", "codes": ["new:sparse-dead-space", "new:label-value-grid"]}
+{"session": 2, "stimulus": "s374", "cue": "generic 'Northwind' sample workspace and 'Workspace overview' subtitle", "codes": ["new:stock-sample-names", "new:generic-subtitle"]}
+{"session": 2, "stimulus": "s443", "cue": "uppercase tracked eyebrow 'NORTHWIND · PRODUCT TEAM' above title", "codes": ["TY4"]}
+{"session": 2, "stimulus": "s443", "cue": "pastel dot status pills and saturated colourful initials avatars", "codes": ["new:dotted-pastel-status-pills", "IC4", "new:rainbow-colour-coding"]}
+{"session": 2, "stimulus": "s443", "cue": "search with '/' keyboard hint and sort arrows on every uppercase header", "codes": ["new:keyboard-shortcut-hint", "new:sort-arrows-every-column", "TY4"]}
+{"session": 2, "stimulus": "s443", "cue": "blue progress bars with % and relative 'hours ago' timestamps", "codes": ["new:progress-bar-every-row", "new:relative-timestamps"]}
+{"session": 2, "stimulus": "s443", "cue": "Northwind sample data and diverse name roster", "codes": ["new:stock-sample-names", "new:diverse-name-roster"]}
+{"session": 2, "stimulus": "s577", "cue": "breadcrumb shown as raised, shadowed button chips that look clickable and misaligned", "codes": ["new:raised-breadcrumb-chips", "BH4", "new:misaligned-element"]}
+{"session": 2, "stimulus": "s577", "cue": "chunky 3D 'Publish' button with heavy bottom shadow", "codes": ["new:glossy-raised-button"]}
+{"session": 2, "stimulus": "s577", "cue": "small 'Saved' dot pill next to primary action", "codes": ["new:save-status-indicator"]}
+{"session": 2, "stimulus": "s577", "cue": "sparse layout with large empty lower half", "codes": ["new:sparse-dead-space"]}
+{"session": 2, "stimulus": "s652", "cue": "'Last contacted' column clipped off the right edge of the contacts card", "codes": ["new:clipped-content"]}
+{"session": 2, "stimulus": "s652", "cue": "shadcn-style rounded bordered cards with title + muted subtitle on every section", "codes": ["CM6", "new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 2, "stimulus": "s652", "cue": "grey initials avatars and outlined role pills", "codes": ["IC4", "new:pastel-tag-chips"]}
+{"session": 2, "stimulus": "s652", "cue": "green dot 'Customer' pill and monospace 'ACC-10482' ID", "codes": ["new:dotted-pastel-status-pills", "new:monospace-ids"]}
+{"session": 2, "stimulus": "s652", "cue": "yellow star emoji-style icon marking primary contact", "codes": ["IC1"]}
+{"session": 2, "stimulus": "s753", "cue": "breadcrumb steps rendered as staggered raised button chips at different heights", "codes": ["new:raised-breadcrumb-chips", "new:misaligned-element"]}
+{"session": 2, "stimulus": "s753", "cue": "inconsistent allergen chip capitalisation ('Celery', 'sulphites', 'milk')", "codes": ["new:inconsistent-capitalisation"]}
+{"session": 2, "stimulus": "s753", "cue": "chunky 3D blue 'Edit details' button with thick bottom shadow", "codes": ["new:glossy-raised-button"]}
+{"session": 2, "stimulus": "s753", "cue": "timeline dot misaligned at the start of 'Recent changes'", "codes": ["new:misaligned-element"]}
+{"session": 2, "stimulus": "s669", "cue": "redundant 'yesterday' timestamp under a 'Yesterday' group heading", "codes": ["new:duplicated-information"]}
+{"session": 2, "stimulus": "s669", "cue": "breadcrumb as raised shadowed button chips", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 2, "stimulus": "s669", "cue": "metadata line with cramped '·' separators and no spacing after the pill", "codes": ["new:dot-separated-meta", "new:cramped-spacing"]}
+{"session": 2, "stimulus": "s669", "cue": "every email and phone underlined as a link, making the contacts column busy", "codes": ["new:links-everywhere"]}
+{"session": 2, "stimulus": "s134", "cue": "single breadcrumb chip that is just a raised button with the page's own section name", "codes": ["new:raised-breadcrumb-chips", "new:duplicated-information"]}
+{"session": 2, "stimulus": "s134", "cue": "two side-by-side rounded cards of unequal height leaving a large empty area", "codes": ["new:unequal-card-heights", "new:sparse-dead-space"]}
+{"session": 2, "stimulus": "s134", "cue": "diverse name set (Hannah Lee, Daniel Kim, Sofia Alvarez, Dr. Okafor, Dr. Priya Raman)", "codes": ["new:diverse-name-roster"]}
+{"session": 2, "stimulus": "s134", "cue": "chunky 3D blue primary button", "codes": ["new:glossy-raised-button"]}
+{"session": 2, "stimulus": "s635", "cue": "2x2 grid of identical rounded KPI cards with big number, ↗ delta and grey footer strip", "codes": ["LA7", "LA4"]}
+{"session": 2, "stimulus": "s635", "cue": "'Sample data' pill badge in the header", "codes": ["new:sample-data-label"]}
+{"session": 2, "stimulus": "s635", "cue": "legend lists 'Cancelled' in orange but no orange bars render, only blue", "codes": ["new:chart-legend-mismatch"]}
+{"session": 2, "stimulus": "s635", "cue": "very thin bar columns with jagged rendering", "codes": ["new:rendering-artifacts"]}
+{"session": 2, "stimulus": "s635", "cue": "area chart with pale blue gradient fill under smooth line", "codes": ["new:gradient-area-fill", "new:smoothed-chart-lines"]}
+{"session": 2, "stimulus": "s484", "cue": "'Open tasks' header sits higher than its neighbours", "codes": ["new:misaligned-element"]}
+{"session": 2, "stimulus": "s484", "cue": "large unexplained gap between the result count and the table", "codes": ["new:unexplained-empty-gap"]}
+{"session": 2, "stimulus": "s484", "cue": "'Completed' pill lacks the dot the other statuses have", "codes": ["new:inconsistent-component-styles"]}
+{"session": 2, "stimulus": "s484", "cue": "diverse sample name roster and generic project names", "codes": ["new:diverse-name-roster", "new:stock-sample-names"]}
+{"session": 2, "stimulus": "s800", "cue": "demo-only toggle 'Make the next role change fail' left in the product UI", "codes": ["new:debug-control-exposed"]}
+{"session": 2, "stimulus": "s800", "cue": "two redundant helper lines under the email field", "codes": ["new:duplicated-information"]}
+{"session": 2, "stimulus": "s800", "cue": "acme.dev sample emails and initials avatars", "codes": ["new:stock-sample-names", "IC4"]}
+{"session": 2, "stimulus": "s800", "cue": "invite form in a single rounded card with stacked radio descriptions", "codes": ["new:page-in-single-card", "new:radio-with-descriptions"]}
+{"session": 2, "stimulus": "s839", "cue": "three-up stat cards with small label and number, oddly small bold values", "codes": ["new:understated-stats", "LA7"]}
+{"session": 2, "stimulus": "s839", "cue": "shadcn-like rounded bordered cards with title + muted subtitle", "codes": ["CM6", "new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 2, "stimulus": "s839", "cue": "lucide outline icons beside each contact detail", "codes": ["IC3", "new:consistent-outline-icons"]}
+{"session": 2, "stimulus": "s839", "cue": "black/outline/white status pills (Checked in, Confirmed, Pending)", "codes": ["new:status-hierarchy-by-fill"]}
+{"session": 2, "stimulus": "s839", "cue": "sample names Maya Okafor, Tom Alvarez, Grace Kim, Dr. Patel", "codes": ["new:diverse-name-roster"]}
+{"session": 2, "stimulus": "s433", "cue": "four-up KPI cards with big number, green ▲ delta and sparkline", "codes": ["LA7"]}
+{"session": 2, "stimulus": "s433", "cue": "native browser select elements next to custom segmented control", "codes": ["new:inconsistent-component-styles"]}
+{"session": 2, "stimulus": "s433", "cue": "stacked format bar whose third segment is unlabeled and legend wraps awkwardly", "codes": ["new:chart-legend-mismatch", "new:awkward-text-wrap"]}
+{"session": 2, "stimulus": "s433", "cue": "selected KPI card with blue focus-style border", "codes": ["new:selected-state-heavy-border"]}
+{"session": 2, "stimulus": "s433", "cue": "footer copy cut off at bottom of 'Loans by branch' card", "codes": ["new:clipped-content"]}
+{"session": 2, "stimulus": "s780", "cue": "classic admin-template invoice page with 'Street Address / State, City' placeholders", "codes": ["CM6", "new:template-sample-copy"]}
+{"session": 2, "stimulus": "s780", "cue": "European number format '$1.800,00' from the original template author", "codes": ["new:locale-number-format"]}
+{"session": 2, "stimulus": "s780", "cue": "fully gridded bordered table with uppercase light grey headers", "codes": ["new:fully-ruled-table", "TY4"]}
+{"session": 2, "stimulus": "s780", "cue": "square flat blue 'Print Invoice' button and Source Sans type", "codes": ["new:small-radius-flat-cards", "new:source-sans-type", "CO8"]}
+{"session": 2, "stimulus": "s780", "cue": "real avatar photo in header", "codes": ["new:real-photo-avatars"]}
+{"session": 2, "stimulus": "s143", "cue": "rainbow of pastel status pills (blue, green, orange, purple, sky, grey, red) one per status", "codes": ["new:rainbow-colour-coding"]}
+{"session": 2, "stimulus": "s143", "cue": "shadcn data-table: checkbox column, search with magnifier, outlined Refresh button in a rounded card", "codes": ["CM6", "new:page-in-single-card"]}
+{"session": 2, "stimulus": "s143", "cue": "shipment count repeated in subtitle and at right of search", "codes": ["new:duplicated-information"]}
+{"session": 2, "stimulus": "s143", "cue": "lucide truck icon logo with slash breadcrumb", "codes": ["new:literal-icon-logo", "IC3"]}
+{"session": 2, "stimulus": "s143", "cue": "monospace references with stacked PO/BOL sub-line", "codes": ["new:monospace-ids", "new:two-line-cells"]}
+{"session": 2, "stimulus": "s762", "cue": "AdminLTE project detail template with Font Awesome paintbrush brand icon", "codes": ["CM6", "IC3"]}
+{"session": 2, "stimulus": "s762", "cue": "hipster ipsum and 'Lorem ipsum represents a long-held tradition' filler", "codes": ["new:template-sample-copy"]}
+{"session": 2, "stimulus": "s762", "cue": "real user photos in activity feed", "codes": ["new:real-photo-avatars"]}
+{"session": 2, "stimulus": "s762", "cue": "'Estimated project duration' overflowing its grey info box", "codes": ["new:clipped-content"]}
+{"session": 2, "stimulus": "s762", "cue": "sample files like 'Contract-10_12_2014.docx' from an older template", "codes": ["new:dated-sample-data"]}
+{"session": 2, "stimulus": "s323", "cue": "dark navy top bar with gradient blue single-letter logo square", "codes": ["new:gradient-logo-mark", "new:letter-logo-tile"]}
+{"session": 2, "stimulus": "s323", "cue": "pastel bordered dot status pills", "codes": ["new:dotted-pastel-status-pills"]}
+{"session": 2, "stimulus": "s323", "cue": "search with '/' keyboard hint and uppercase tracked column headers", "codes": ["new:keyboard-shortcut-hint", "TY4"]}
+{"session": 2, "stimulus": "s323", "cue": "table wrapped in a rounded bordered white card with checkbox column", "codes": ["new:page-in-single-card", "CM6"]}
+{"session": 2, "stimulus": "s323", "cue": "monospace bold reference IDs with sub-line", "codes": ["new:monospace-ids", "new:two-line-cells"]}
+{"session": 2, "stimulus": "s369", "cue": "chart headline states the finding ('MRR grew 65.4%...')", "codes": ["new:takeaway-chart-title"]}
+{"session": 2, "stimulus": "s369", "cue": "event annotation 'Price change' with a vertical rule", "codes": ["new:chart-event-annotation"]}
+{"session": 2, "stimulus": "s369", "cue": "direct end-of-line label instead of legend", "codes": ["new:direct-line-labels"]}
+{"session": 2, "stimulus": "s369", "cue": "plain-language summary caption with exact figures beneath the chart", "codes": ["new:prose-chart-summary"]}
+{"session": 2, "stimulus": "s369", "cue": "no card wrappers; flat page with chart/table toggle", "codes": ["new:no-cards", "new:chart-table-toggle"]}
+{"session": 2, "stimulus": "s620", "cue": "demo toggle 'Make the next change fail' exposed in the settings page", "codes": ["new:debug-control-exposed"]}
+{"session": 2, "stimulus": "s620", "cue": "stacked rounded cards, each with title + muted one-line description", "codes": ["new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 2, "stimulus": "s620", "cue": "'Mentions' row has a stray divider/background that bleeds past the card padding", "codes": ["new:misaligned-element"]}
+{"session": 2, "stimulus": "s620", "cue": "plain underlined anchor links as section nav", "codes": ["new:text-link-tabs"]}
+{"session": 2, "stimulus": "s620", "cue": "'Acme' sample workspace", "codes": ["new:stock-sample-names"]}
+{"session": 2, "stimulus": "s907", "cue": "overlapping avatar stack with initials clipped ('PI', 'MC', 'LI', 'TH') and '+3'", "codes": ["new:avatar-stack", "IC4", "new:clipped-content"]}
+{"session": 2, "stimulus": "s907", "cue": "three-up stat cards with lucide icons and tiny values", "codes": ["LA7", "IC3", "new:understated-stats"]}
+{"session": 2, "stimulus": "s907", "cue": "shadcn-style rounded card with title + muted subtitle around table", "codes": ["CM6", "new:page-in-single-card", "new:generic-subtitle"]}
+{"session": 2, "stimulus": "s907", "cue": "Northwind sample name and diverse roster (Priya Raman, Marcus Oyelaran, Tomás Herrera, Aiko Tanaka)", "codes": ["new:stock-sample-names", "new:diverse-name-roster"]}
+{"session": 2, "stimulus": "s907", "cue": "grey/red/outline status pills", "codes": ["new:status-hierarchy-by-fill"]}
+{"session": 2, "stimulus": "s750", "cue": "row of five KPI cards with ▲ deltas and sparklines ending in a blue dot", "codes": ["LA7"]}
+{"session": 2, "stimulus": "s750", "cue": "awkward wrapping in KPI labels ('New subscriptions (12 mo)', '+0.28 pts' breaking)", "codes": ["new:awkward-text-wrap"]}
+{"session": 2, "stimulus": "s750", "cue": "native browser select beside custom segmented control", "codes": ["new:inconsistent-component-styles"]}
+{"session": 2, "stimulus": "s750", "cue": "oversized hero number in the first KPI card", "codes": ["new:oversized-numbers"]}
+{"session": 2, "stimulus": "s750", "cue": "'Dark mode' text button in the header", "codes": ["new:dark-mode-toggle"]}
+{"session": 3, "stimulus": "s261", "cue": "floating-point bug rendered in copy: 'Target 28.000000000000004–35%'", "codes": ["new:raw-float-in-copy"]}
+{"session": 3, "stimulus": "s261", "cue": "every section in its own rounded bordered white card", "codes": ["new:every-section-in-card"]}
+{"session": 3, "stimulus": "s261", "cue": "uniform 3-column label/value grid with identical grey labels", "codes": ["new:label-value-grid"]}
+{"session": 3, "stimulus": "s261", "cue": "monogram avatar circles on a vertical timeline with grey diff boxes", "codes": ["IC4", "new:diff-chips"]}
+{"session": 3, "stimulus": "s812", "cue": "chart title states the finding ('Signups doubled after the pricing change on 14 October')", "codes": ["new:takeaway-chart-title"]}
+{"session": 3, "stimulus": "s812", "cue": "direct label 'Signups' at line end instead of a legend", "codes": ["new:direct-line-labels"]}
+{"session": 3, "stimulus": "s812", "cue": "no card around the chart; sits flat on the grey page", "codes": ["new:no-cards"]}
+{"session": 3, "stimulus": "s812", "cue": "plain-language caption under the chart explaining the cause", "codes": ["new:prose-chart-summary"]}
+{"session": 3, "stimulus": "s635", "cue": "2x2 grid of identical KPI cards, big number + green arrow delta + grey footer strip", "codes": ["LA7", "LA4"]}
+{"session": 3, "stimulus": "s635", "cue": "inconsistent axis formatting ('$1.4M', '$1.1M', '$700.0K')", "codes": ["new:awkward-number-format"]}
+{"session": 3, "stimulus": "s635", "cue": "legend shows 'Cancelled' but no orange bars visible in the chart", "codes": ["new:chart-legend-mismatch"]}
+{"session": 3, "stimulus": "s635", "cue": "'Sample data' pill badge in the header", "codes": ["new:sample-data-label"]}
+{"session": 3, "stimulus": "s635", "cue": "skinny bars with odd rounded/jagged tops", "codes": ["new:rendering-artifacts"]}
+{"session": 3, "stimulus": "s464", "cue": "recognisable AdminLTE 'Dashboard v2' layout: dark sidebar, coloured square icon info-boxes", "codes": ["CM6", "CM4"]}
+{"session": 3, "stimulus": "s464", "cue": "Bootstrap-era Font Awesome solid icons and primary/danger/success/warning colour set", "codes": ["IC3", "CO8"]}
+{"session": 3, "stimulus": "s464", "cue": "box widgets with minimise/wrench/close tool icons", "codes": ["CM6"]}
+{"session": 3, "stimulus": "s464", "cue": "sidebar badges 'New' and counts, 'EXAMPLES' section label", "codes": ["CM6", "TY4"]}
+{"session": 3, "stimulus": "s369", "cue": "'Price change' event annotation line on the chart", "codes": ["new:chart-event-annotation"]}
+{"session": 3, "stimulus": "s369", "cue": "Chart/Table segmented toggle offering an accessible data alternative", "codes": ["new:chart-table-toggle"]}
+{"session": 3, "stimulus": "s369", "cue": "headline states the finding with exact figures", "codes": ["new:takeaway-chart-title"]}
+{"session": 3, "stimulus": "s369", "cue": "direct end-of-line label 'MRR', no legend, no card chrome", "codes": ["new:direct-line-labels", "new:no-cards"]}
+{"session": 3, "stimulus": "s443", "cue": "'Northwind · Product Team' uppercase eyebrow, a stock AI sample company", "codes": ["TY4", "new:stock-sample-names"]}
+{"session": 3, "stimulus": "s443", "cue": "coloured-dot status pills (On track / At risk / Off track / Planning) in tinted pastels", "codes": ["new:dotted-pastel-status-pills"]}
+{"session": 3, "stimulus": "s443", "cue": "random-coloured initials avatars per owner", "codes": ["IC4", "new:rainbow-colour-coding"]}
+{"session": 3, "stimulus": "s443", "cue": "thin blue progress bars with percentages in every row", "codes": ["new:progress-bar-every-row"]}
+{"session": 3, "stimulus": "s443", "cue": "uppercase tracked column headers with tiny sort triangles on every column", "codes": ["TY4", "new:sort-arrows-every-column"]}
+{"session": 3, "stimulus": "s143", "cue": "'20 shipments' count repeated twice (subtitle and right of search)", "codes": ["new:duplicated-information"]}
+{"session": 3, "stimulus": "s143", "cue": "rainbow of tinted status pills: blue, green, orange, purple, grey, red", "codes": ["new:rainbow-colour-coding"]}
+{"session": 3, "stimulus": "s143", "cue": "table nested inside a rounded card inside another bordered container", "codes": ["new:nested-containers"]}
+{"session": 3, "stimulus": "s143", "cue": "generic invented company names (Ridgeway Freight, FreshPath Produce, Ironclad Fabrication)", "codes": ["new:stock-sample-names"]}
+{"session": 3, "stimulus": "s143", "cue": "two-line cells with grey secondary line in nearly every column", "codes": ["new:two-line-cells"]}
+{"session": 3, "stimulus": "s762", "cue": "AdminLTE 'Project Detail' example page: dark sidebar, Font Awesome icons, box with collapse/close", "codes": ["CM6", "IC3"]}
+{"session": 3, "stimulus": "s762", "cue": "hipster ipsum copy ('Raw denim you probably haven't heard of them') and 'Tony Chicken'/'Deveint Inc' from the template", "codes": ["new:template-sample-copy", "new:quirky-sample-data"]}
+{"session": 3, "stimulus": "s762", "cue": "photo avatars and file list with typed file icons", "codes": ["new:real-photo-avatars", "new:file-type-icons"]}
+{"session": 3, "stimulus": "s762", "cue": "Bootstrap blue link names and grey info-box tiles", "codes": ["CO8", "CM6"]}
+{"session": 3, "stimulus": "s882", "cue": "recognisable Tabler dashboard: Source Sans type, top nav with Feather line icons", "codes": ["CM6", "new:source-sans-type", "IC3"]}
+{"session": 3, "stimulus": "s882", "cue": "row of six small stat tiles with coloured % deltas in the corner", "codes": ["CM6", "LA7"]}
+{"session": 3, "stimulus": "s882", "cue": "'Are you in trouble? Read our documentation' info alert from the template", "codes": ["CM6", "new:template-sample-copy"]}
+{"session": 3, "stimulus": "s882", "cue": "unrenamed 'Chart title' placeholders on donut and pie cards", "codes": ["CP2"]}
+{"session": 3, "stimulus": "s940", "cue": "project count repeated twice ('12 projects in Northwind...' and '12 projects' at right)", "codes": ["new:duplicated-information"]}
+{"session": 3, "stimulus": "s940", "cue": "'Northwind Product Team' stock sample org", "codes": ["new:stock-sample-names"]}
+{"session": 3, "stimulus": "s940", "cue": "dot-in-outlined-pill status badges: On track / At risk / Off track", "codes": ["new:dotted-pastel-status-pills"]}
+{"session": 3, "stimulus": "s940", "cue": "grey initials avatars and black progress bars with % on every row", "codes": ["IC4", "new:progress-bar-every-row"]}
+{"session": 3, "stimulus": "s940", "cue": "table inside a bordered box inside a rounded card", "codes": ["new:nested-containers"]}
+{"session": 3, "stimulus": "s892", "cue": "'Northwind Health' sample org with indigo-to-violet gradient initials tile", "codes": ["new:stock-sample-names", "CO1", "new:letter-logo-tile"]}
+{"session": 3, "stimulus": "s892", "cue": "Tailwind slate-900 sidebar with uppercase 'WORKSPACE' label and outline icons", "codes": ["CO8", "TY4", "IC3"]}
+{"session": 3, "stimulus": "s892", "cue": "single white card form with grey footer bar holding Cancel / Save changes", "codes": ["new:page-in-single-card", "new:card-footer-action-bar"]}
+{"session": 3, "stimulus": "s892", "cue": "washed-out indigo disabled Save button", "codes": ["new:washed-out-disabled-button", "CO1"]}
+{"session": 3, "stimulus": "s892", "cue": "helper text under every field, character counter 26/60", "codes": ["new:helper-text-every-field"]}
+{"session": 3, "stimulus": "s134", "cue": "practice name repeated as page title and first field in 'Practice details'", "codes": ["new:duplicated-information"]}
+{"session": 3, "stimulus": "s134", "cue": "two equal rounded cards side by side, left one half-empty", "codes": ["LA4", "new:sparse-dead-space"]}
+{"session": 3, "stimulus": "s134", "cue": "stacked label/value list with hairline dividers under every row", "codes": ["new:label-value-grid", "new:hairline-row-dividers"]}
+{"session": 3, "stimulus": "s134", "cue": "single breadcrumb rendered as a raised chip button", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 3, "stimulus": "s497", "cue": "prior year drawn as a muted grey comparison line with accent for current", "codes": ["new:muted-comparison-series"]}
+{"session": 3, "stimulus": "s497", "cue": "'Riverside closed' event annotation explaining the March dip", "codes": ["new:chart-event-annotation"]}
+{"session": 3, "stimulus": "s497", "cue": "direct line-end labels instead of a legend", "codes": ["new:direct-line-labels"]}
+{"session": 3, "stimulus": "s497", "cue": "metric switcher plus Chart/Table toggle, no card chrome", "codes": ["new:chart-table-toggle", "new:no-cards"]}
+{"session": 3, "stimulus": "s497", "cue": "sparse x-axis ticks (quarterly) rather than every month", "codes": ["new:sparse-axis-ticks"]}
+{"session": 3, "stimulus": "s374", "cue": "'Northwind Product Team' repeated in breadcrumb chip and title", "codes": ["new:duplicated-information", "new:raised-breadcrumb-chips"]}
+{"session": 3, "stimulus": "s374", "cue": "focus ring drawn awkwardly around the page heading, stretching to the button", "codes": ["new:stray-focus-outline"]}
+{"session": 3, "stimulus": "s374", "cue": "single sparse 'Details' card with 2-column label/value grid, rest of page empty", "codes": ["new:sparse-dead-space", "new:label-value-grid"]}
+{"session": 3, "stimulus": "s374", "cue": "generic subtitle 'Workspace overview'", "codes": ["new:generic-subtitle"]}
+{"session": 3, "stimulus": "s571", "cue": "Tabler 'Crypto currencies' demo page with its top nav and Feather icons", "codes": ["CM6", "IC3"]}
+{"session": 3, "stimulus": "s571", "cue": "2018-era crypto data (Bitcoin $10513, NEM, EOS) copied from the template", "codes": ["new:dated-sample-data"]}
+{"session": 3, "stimulus": "s571", "cue": "broken tiny coin icons rendered as dots", "codes": ["new:broken-images"]}
+{"session": 3, "stimulus": "s571", "cue": "uppercase light-grey column headers wrapping onto two lines", "codes": ["TY4", "new:awkward-text-wrap"]}
+{"session": 3, "stimulus": "s750", "cue": "row of KPI cards with sparklines and green/red triangle deltas, labels wrapping awkwardly ('New subscriptions (12 mo)')", "codes": ["LA7", "new:awkward-text-wrap"]}
+{"session": 3, "stimulus": "s750", "cue": "'+0.28 pts' delta wrapping into a broken two-line layout", "codes": ["new:awkward-text-wrap"]}
+{"session": 3, "stimulus": "s750", "cue": "native unstyled <select> for Plan next to custom segmented control", "codes": ["new:inconsistent-component-styles"]}
+{"session": 3, "stimulus": "s750", "cue": "'Dark mode' text button in the page header", "codes": ["new:dark-mode-toggle"]}
+{"session": 3, "stimulus": "s750", "cue": "every block in identical rounded bordered card", "codes": ["new:every-section-in-card"]}
+{"session": 3, "stimulus": "s753", "cue": "ingredients grouped by stage ('Braise') with quantity-first columns, kitchen-style", "codes": ["new:domain-specific-structure"]}
+{"session": 3, "stimulus": "s753", "cue": "no card chrome; content laid flat with a narrow details column", "codes": ["new:no-cards"]}
+{"session": 3, "stimulus": "s753", "cue": "expert service copy ('Glaze under the salamander to order')", "codes": ["new:domain-expert-copy"]}
+{"session": 3, "stimulus": "s753", "cue": "breadcrumb trail as stacked raised chips with the current one lifted", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 3, "stimulus": "s907", "cue": "'Northwind' stock sample company again", "codes": ["new:stock-sample-names"]}
+{"session": 3, "stimulus": "s907", "cue": "three identical stat cards with small outline icon + label + tiny number", "codes": ["LA7", "LA4", "new:understated-stats"]}
+{"session": 3, "stimulus": "s907", "cue": "overlapping avatar stack with clipped, unreadable initials ('PI MC LI TH +3')", "codes": ["new:avatar-stack", "IC4", "new:clipped-content"]}
+{"session": 3, "stimulus": "s907", "cue": "table inside a rounded card with generic subtitle 'Everything your team is working on this quarter.'", "codes": ["new:page-in-single-card", "new:generic-subtitle"]}
+{"session": 3, "stimulus": "s907", "cue": "shadcn-style grey/red status pills", "codes": ["CM6", "new:status-hierarchy-by-fill"]}
+{"session": 3, "stimulus": "s894", "cue": "Tabler profile page: cover photo with overlapping round avatar", "codes": ["CM6", "new:cover-photo-profile"]}
+{"session": 3, "stimulus": "s894", "cue": "irreverent template bio 'Big belly rude boy, million dollar hustler. Unemployed.'", "codes": ["new:quirky-sample-data"]}
+{"session": 3, "stimulus": "s894", "cue": "real stock photos for avatars, Twitter 'Follow' outline button", "codes": ["new:real-photo-avatars", "new:social-media-widgets"]}
+{"session": 3, "stimulus": "s894", "cue": "threaded lorem-ipsum comments with bold name inline", "codes": ["new:template-sample-copy"]}
+{"session": 3, "stimulus": "s894", "cue": "social icon circles (Facebook, Twitter, phone, Skype)", "codes": ["new:social-media-widgets"]}
+{"session": 3, "stimulus": "s800", "cue": "debug toggle 'Make the next role change fail' left in the product UI", "codes": ["new:debug-control-exposed"]}
+{"session": 3, "stimulus": "s800", "cue": "two redundant helper lines under the email field saying the same thing", "codes": ["new:duplicated-information"]}
+{"session": 3, "stimulus": "s800", "cue": "inset/sunken grey email input that looks disabled", "codes": ["new:inset-shadowed-field"]}
+{"session": 3, "stimulus": "s800", "cue": "'acme.dev' sample domain and initials avatars", "codes": ["new:stock-sample-names", "IC4"]}
+{"session": 3, "stimulus": "s433", "cue": "row of KPI cards with big number, green triangle delta and sparkline ending in a blue dot", "codes": ["LA7"]}
+{"session": 3, "stimulus": "s433", "cue": "native unstyled <select> dropdowns beside a custom segmented control", "codes": ["new:inconsistent-component-styles"]}
+{"session": 3, "stimulus": "s433", "cue": "'Dark mode' text button in the header", "codes": ["new:dark-mode-toggle"]}
+{"session": 3, "stimulus": "s433", "cue": "every panel in the same rounded bordered card", "codes": ["new:every-section-in-card"]}
+{"session": 3, "stimulus": "s433", "cue": "third stacked-bar segment unlabelled and legend wrapping unevenly", "codes": ["new:chart-legend-mismatch"]}
+{"session": 3, "stimulus": "s620", "cue": "debug toggle 'Make the next change fail' shipped in the page", "codes": ["new:debug-control-exposed"]}
+{"session": 3, "stimulus": "s620", "cue": "each settings section in its own identical rounded card", "codes": ["new:every-section-in-card"]}
+{"session": 3, "stimulus": "s620", "cue": "underlined text-link anchor nav (General, Notifications, Billing, Danger zone)", "codes": ["new:text-link-tabs"]}
+{"session": 3, "stimulus": "s620", "cue": "'Acme' placeholder workspace", "codes": ["new:stock-sample-names"]}
+{"session": 3, "stimulus": "s620", "cue": "misaligned divider/row background under 'Mentions' extending past card padding", "codes": ["new:misaligned-element"]}
+{"session": 3, "stimulus": "s634", "cue": "'In transit' badge styled differently (blue text, no dot) from the other dot badges", "codes": ["new:inconsistent-component-styles"]}
+{"session": 3, "stimulus": "s634", "cue": "'Clear search' link floating misaligned beside the input", "codes": ["new:misaligned-element"]}
+{"session": 3, "stimulus": "s634", "cue": "'Weight' header sits higher than the other column headers", "codes": ["new:misaligned-element"]}
+{"session": 3, "stimulus": "s634", "cue": "large unexplained gap between '22 shipments' and the table", "codes": ["new:unexplained-empty-gap"]}
+{"session": 3, "stimulus": "s634", "cue": "stock sample names (Brightline Electronics, Northgate Grocers)", "codes": ["new:stock-sample-names"]}
+{"session": 3, "stimulus": "s820", "cue": "three KPI cards each with lucide icon, big number and green arrow deltas, first one heavy black-bordered as 'selected'", "codes": ["LA7", "IC3", "new:selected-state-heavy-border"]}
+{"session": 3, "stimulus": "s820", "cue": "smoothed spline lines that overshoot between monthly points", "codes": ["new:smoothed-chart-lines"]}
+{"session": 3, "stimulus": "s820", "cue": "inconsistent number formats ('513K' vs '220.2K')", "codes": ["new:awkward-number-format"]}
+{"session": 3, "stimulus": "s820", "cue": "heavy solid grey block for the 'Millbrook closed' annotation", "codes": ["new:chart-event-annotation"]}
+{"session": 3, "stimulus": "s820", "cue": "everything in matching rounded cards with a moon-icon theme toggle", "codes": ["new:every-section-in-card", "new:dark-mode-toggle"]}
+{"session": 3, "stimulus": "s484", "cue": "'Open tasks' header sits higher than its neighbouring headers", "codes": ["new:misaligned-element"]}
+{"session": 3, "stimulus": "s484", "cue": "'Completed' badge has no dot while the others do", "codes": ["new:inconsistent-component-styles"]}
+{"session": 3, "stimulus": "s484", "cue": "big empty gap between '12 projects found.' and the table", "codes": ["new:unexplained-empty-gap"]}
+{"session": 3, "stimulus": "s484", "cue": "stock status set On track / At risk / Off track / Completed", "codes": ["new:stock-status-set"]}
+{"session": 3, "stimulus": "s484", "cue": "inset grey search field that reads as disabled", "codes": ["new:inset-shadowed-field"]}
+{"session": 3, "stimulus": "s652", "cue": "'Last contact' column clipped off the card edge ('Oct 29, 20')", "codes": ["new:clipped-content"]}
+{"session": 3, "stimulus": "s652", "cue": "industry, location and website repeated in header and Details card", "codes": ["new:duplicated-information"]}
+{"session": 3, "stimulus": "s652", "cue": "initials avatars, outlined role pills, green dot 'Customer' badge", "codes": ["IC4", "new:pastel-tag-chips", "new:dotted-pastel-status-pills"]}
+{"session": 3, "stimulus": "s652", "cue": "every section in identical rounded bordered card with title + grey subtitle", "codes": ["new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 3, "stimulus": "s652", "cue": "shadcn-style segmented tabs All/Meetings/Calls/Emails/Notes", "codes": ["CM6", "new:segmented-controls"]}
+{"session": 3, "stimulus": "s780", "cue": "Tabler invoice demo page with its top nav, Source Sans and Feather icons", "codes": ["CM6", "new:source-sans-type", "IC3"]}
+{"session": 3, "stimulus": "s780", "cue": "European number format '$1.800,00' carried over from the template", "codes": ["new:locale-number-format"]}
+{"session": 3, "stimulus": "s780", "cue": "placeholder 'Street Address / State, City' blocks for Company and Client", "codes": ["new:template-sample-copy"]}
+{"session": 3, "stimulus": "s780", "cue": "fully bordered table grid with uppercase light headers", "codes": ["new:fully-ruled-table", "TY4"]}
+{"session": 3, "stimulus": "s182", "cue": "AdminLTE 'Project Edit' example: coloured card headers (primary blue, secondary grey, info teal)", "codes": ["CM6", "CO8"]}
+{"session": 3, "stimulus": "s182", "cue": "template sample data: hipster ipsum, 'Deveint Inc', 'Tony Chicken', 'Email-from-flatbal.mln'", "codes": ["new:template-sample-copy", "new:quirky-sample-data"]}
+{"session": 3, "stimulus": "s182", "cue": "Bootstrap teal/red square icon buttons for view/delete", "codes": ["CM6", "CO8"]}
+{"session": 3, "stimulus": "s182", "cue": "dark sidebar with Font Awesome icons and badges", "codes": ["CM6", "IC3"]}
+{"session": 3, "stimulus": "s323", "cue": "Tailwind slate-900 top bar with blue initial-letter logo tile", "codes": ["CO8", "new:letter-logo-tile"]}
+{"session": 3, "stimulus": "s323", "cue": "tinted dot status pills in blue/green/amber/indigo/red", "codes": ["new:dotted-pastel-status-pills", "new:rainbow-colour-coding", "CO1"]}
+{"session": 3, "stimulus": "s323", "cue": "uppercase tracked grey column headers", "codes": ["TY4"]}
+{"session": 3, "stimulus": "s323", "cue": "table wrapped in a rounded bordered card with search and count in a toolbar", "codes": ["new:page-in-single-card", "new:count-beside-search"]}
+{"session": 3, "stimulus": "s323", "cue": "'/' keyboard hint in search, 'Updated 8:52 PM' subtitle, stock invented company names", "codes": ["new:keyboard-shortcut-hint", "new:sync-status-shown", "new:stock-sample-names"]}
+{"session": 3, "stimulus": "s474", "cue": "stray blue focus outline drawn around the whole main region", "codes": ["new:stray-focus-outline"]}
+{"session": 3, "stimulus": "s474", "cue": "cute product name 'PawBook' with paw icon and initials avatar", "codes": ["new:literal-icon-logo", "new:generic-product-name", "IC4"]}
+{"session": 3, "stimulus": "s474", "cue": "single 'General' card with two fields and helper text under each", "codes": ["new:page-in-single-card", "new:helper-text-every-field"]}
+{"session": 3, "stimulus": "s474", "cue": "faded green disabled 'Save changes' beside outlined Cancel", "codes": ["new:washed-out-disabled-button"]}
+{"session": 3, "stimulus": "s474", "cue": "generic subtitle 'Update how your practice appears to clients.'", "codes": ["new:generic-subtitle"]}
+{"session": 3, "stimulus": "s577", "cue": "no card wrappers; form laid directly on the page with a narrow details column", "codes": ["new:no-cards"]}
+{"session": 3, "stimulus": "s577", "cue": "consequence copy beside the audience select ('Publishing adds it to the changelog and to What's new')", "codes": ["new:purposeful-helper-copy"]}
+{"session": 3, "stimulus": "s577", "cue": "useful context line 'Last week: \"Export any table as CSV\"'", "codes": ["new:purposeful-helper-copy"]}
+{"session": 3, "stimulus": "s577", "cue": "quiet 'Saved' status chip next to a single raised primary action", "codes": ["new:save-status-indicator"]}
+{"session": 3, "stimulus": "s839", "cue": "three identical stat cards with small label and small bold number", "codes": ["LA7", "LA4", "new:understated-stats"]}
+{"session": 3, "stimulus": "s839", "cue": "every block in the same rounded bordered card", "codes": ["new:every-section-in-card"]}
+{"session": 3, "stimulus": "s839", "cue": "'PawBook' cute product name, eyebrow 'Practice overview' over title", "codes": ["new:generic-product-name", "new:eyebrow-label"]}
+{"session": 3, "stimulus": "s839", "cue": "icon-led contact list (mail, phone, pin, clock) in a details card", "codes": ["new:consistent-outline-icons"]}
+{"session": 3, "stimulus": "s839", "cue": "black/outlined shadcn-style status badges", "codes": ["CM6", "new:status-hierarchy-by-fill"]}
+{"session": 3, "stimulus": "s140", "cue": "AdminLTE 'Projects' example page with cartoon avatar illustrations", "codes": ["CM6", "IC4"]}
+{"session": 3, "stimulus": "s140", "cue": "Bootstrap blue/teal/red View, Edit, Delete buttons with Font Awesome icons wrapping onto two lines", "codes": ["CM6", "CO8", "IC3", "new:awkward-text-wrap"]}
+{"session": 3, "stimulus": "s140", "cue": "'#' placeholder in the number column and identical 'Created 01.01.2026' rows", "codes": ["new:identical-placeholder-rows"]}
+{"session": 3, "stimulus": "s140", "cue": "green 'Success' label badges and Bootstrap progress bars", "codes": ["new:identical-placeholder-rows", "CM6"]}
+{"session": 3, "stimulus": "s236", "cue": "gradient blue logo square and slate-900 top nav, Tailwind defaults", "codes": ["new:gradient-logo-mark", "CO8"]}
+{"session": 3, "stimulus": "s236", "cue": "four-up KPI strip (ARR, pipeline, renewal, health score with progress bar)", "codes": ["LA7"]}
+{"session": 3, "stimulus": "s236", "cue": "multicoloured initials avatars and colour-coded role pills", "codes": ["IC4", "new:rainbow-colour-coding"]}
+{"session": 3, "stimulus": "s236", "cue": "trailing orphan bullet separator after the website link in the meta row", "codes": ["new:stray-separator"]}
+{"session": 3, "stimulus": "s236", "cue": "name wrapping awkwardly next to 'Primary' badge; uppercase tracked section labels", "codes": ["new:awkward-text-wrap", "TY4"]}
+{"session": 3, "stimulus": "s364", "cue": "warm cream background, serif display headings and terracotta primary button: the stock 'artisanal' themed look", "codes": ["CO4", "new:serif-display-headings"]}
+{"session": 3, "stimulus": "s364", "cue": "six-cell stat strip with uppercase tracked labels", "codes": ["LA7", "TY4"]}
+{"session": 3, "stimulus": "s364", "cue": "'Harrow & Vine' invented name and bullet-separated meta row with stray dots", "codes": ["new:stock-sample-names", "new:dot-separated-meta", "new:stray-separator"]}
+{"session": 3, "stimulus": "s364", "cue": "cards with header dividers for Ingredients and Service details", "codes": ["new:card-header-dividers"]}
+{"session": 3, "stimulus": "s669", "cue": "redundant timestamps: 'Yesterday' group header and 'yesterday' under the item", "codes": ["new:duplicated-information"]}
+{"session": 3, "stimulus": "s669", "cue": "footnote 'Dana Whitfield is the main point of contact' repeats the 'Primary' badge", "codes": ["new:duplicated-information"]}
+{"session": 3, "stimulus": "s669", "cue": "renewal date repeated in subtitle and Details table", "codes": ["new:duplicated-information"]}
+{"session": 3, "stimulus": "s669", "cue": "every email and phone rendered as underlined blue links in a dense stack", "codes": ["new:links-everywhere"]}
+{"session": 4, "stimulus": "s652", "cue": "every section in a rounded bordered white card with title plus grey subtitle", "codes": ["new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 4, "stimulus": "s652", "cue": "shadcn-style pill badges for roles and Customer/Enterprise", "codes": ["CM6", "new:pastel-tag-chips"]}
+{"session": 4, "stimulus": "s652", "cue": "initials avatar circles in table rows", "codes": ["IC4"]}
+{"session": 4, "stimulus": "s652", "cue": "text-clipped table column Last contact, truncated dates", "codes": ["new:clipped-content"]}
+{"session": 4, "stimulus": "s364", "cue": "warm cream background with serif display headings and terracotta primary button", "codes": ["CO4", "new:serif-display-headings"]}
+{"session": 4, "stimulus": "s364", "cue": "stat strip of six small-caps label over bold value cells", "codes": ["LA7", "TY4"]}
+{"session": 4, "stimulus": "s364", "cue": "bordered white cards with serif titles", "codes": ["new:every-section-in-card", "new:serif-display-headings"]}
+{"session": 4, "stimulus": "s364", "cue": "pill allergen chips in pink", "codes": ["new:pastel-tag-chips"]}
+{"session": 4, "stimulus": "s497", "cue": "finding-as-headline over the chart naming leaders and decliners", "codes": ["new:takeaway-chart-title"]}
+{"session": 4, "stimulus": "s497", "cue": "direct line labels instead of a legend", "codes": ["new:direct-line-labels"]}
+{"session": 4, "stimulus": "s497", "cue": "Riverside closed annotation on the line explaining the dip", "codes": ["new:chart-event-annotation"]}
+{"session": 4, "stimulus": "s497", "cue": "plain-language caption stating totals, peak and trough with causes", "codes": ["new:prose-chart-summary"]}
+{"session": 4, "stimulus": "s497", "cue": "chart/table toggle for access", "codes": ["new:chart-table-toggle"]}
+{"session": 4, "stimulus": "s940", "cue": "generic projects table in a single rounded card: checkbox, status pill with coloured dot, avatar initials, progress bar", "codes": ["new:stock-screen-archetype", "new:page-in-single-card", "new:dotted-pastel-status-pills", "IC4", "new:progress-bar-every-row"]}
+{"session": 4, "stimulus": "s940", "cue": "On track / At risk / Off track status triad", "codes": ["new:stock-status-set"]}
+{"session": 4, "stimulus": "s940", "cue": "search input plus Refresh button with Last synced subtitle", "codes": ["new:sync-status-shown"]}
+{"session": 4, "stimulus": "s940", "cue": "Northwind placeholder team and tidy 3-letter codes under names", "codes": ["new:stock-sample-names", "new:two-line-cells"]}
+{"session": 4, "stimulus": "s236", "cue": "dark top nav with Relay logo square and avatar, Inter-style type", "codes": ["new:letter-logo-tile", "TY1"]}
+{"session": 4, "stimulus": "s236", "cue": "four KPI stat cards with green delta arrow and health progress bar", "codes": ["LA7"]}
+{"session": 4, "stimulus": "s236", "cue": "multicolour tinted pill badges and coloured initial avatars", "codes": ["new:pastel-tag-chips", "IC4", "new:rainbow-colour-coding"]}
+{"session": 4, "stimulus": "s236", "cue": "blue primary button plus bordered Log activity secondary", "codes": ["new:primary-secondary-button-pair"]}
+{"session": 4, "stimulus": "s236", "cue": "Freight Systems CRM account page template", "codes": ["new:stock-screen-archetype"]}
+{"session": 4, "stimulus": "s800", "cue": "considered edge-case copy: only owner cannot change role, Transfer ownership first", "codes": ["new:edge-case-handling"]}
+{"session": 4, "stimulus": "s800", "cue": "helper text under input describing comma/Enter and live count of 0 addresses", "codes": ["new:purposeful-helper-copy"]}
+{"session": 4, "stimulus": "s800", "cue": "disabled Send invite state shown with descriptive radio help lines", "codes": ["new:disabled-until-valid", "new:radio-with-descriptions"]}
+{"session": 4, "stimulus": "s800", "cue": "restrained soft grey page, single blue accent, no decoration", "codes": ["new:restrained-palette"]}
+{"session": 4, "stimulus": "s261", "cue": "floating point leak: Target 28.000000000000004-35% shown to user", "codes": ["new:raw-float-in-copy"]}
+{"session": 4, "stimulus": "s261", "cue": "stacked rounded bordered white cards each with title and grey subtitle", "codes": ["new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 4, "stimulus": "s261", "cue": "monochrome black pill and black button, shadcn look", "codes": ["new:monochrome-no-accent", "CM6"]}
+{"session": 4, "stimulus": "s261", "cue": "timeline of recent changes with initials avatars and strikethrough old to new diff chips", "codes": ["IC4", "new:diff-chips"]}
+{"session": 4, "stimulus": "s839", "cue": "PawBook invented product with paw logo and breadcrumb header", "codes": ["new:generic-product-name", "new:literal-icon-logo"]}
+{"session": 4, "stimulus": "s839", "cue": "three equal stat cards plus two-column bordered cards with identical radius", "codes": ["LA7", "LA4", "new:every-section-in-card"]}
+{"session": 4, "stimulus": "s839", "cue": "status pills in black/grey outline", "codes": ["new:status-hierarchy-by-fill"]}
+{"session": 4, "stimulus": "s839", "cue": "icon-labelled contact details list (mail, phone, pin, clock)", "codes": ["new:consistent-outline-icons"]}
+{"session": 4, "stimulus": "s839", "cue": "minimal monochrome with no brand colour, large empty space below", "codes": ["new:monochrome-no-accent", "new:sparse-dead-space"]}
+{"session": 4, "stimulus": "s762", "cue": "AdminLTE/Bootstrap 4 admin template look with dark sidebar and Font Awesome icons", "codes": ["CM6", "IC3"]}
+{"session": 4, "stimulus": "s762", "cue": "real photo avatars", "codes": ["new:real-photo-avatars"]}
+{"session": 4, "stimulus": "s762", "cue": "hipster ipsum and Lorem ipsum filler with Demo File labels", "codes": ["new:template-sample-copy"]}
+{"session": 4, "stimulus": "s762", "cue": "dated flat 2014-era styling, New and numbered sidebar badges", "codes": ["new:dated-template-look", "CM6"]}
+{"session": 4, "stimulus": "s762", "cue": "stat boxes cramped, Estimated project duration text overflowing its box", "codes": ["new:cramped-spacing", "new:clipped-content"]}
+{"session": 4, "stimulus": "s635", "cue": "classic SaaS KPI card grid: big number, green delta arrow vs prior month, footer strip", "codes": ["new:stock-screen-archetype", "LA7"]}
+{"session": 4, "stimulus": "s635", "cue": "rounded bordered cards with muted footers all same style", "codes": ["new:every-section-in-card"]}
+{"session": 4, "stimulus": "s635", "cue": "area chart with soft blue fill and legend above bar chart", "codes": ["new:gradient-area-fill"]}
+{"session": 4, "stimulus": "s635", "cue": "Sample data pill and chart titles with takeaway subtitles", "codes": ["new:sample-data-label", "new:takeaway-chart-title"]}
+{"session": 4, "stimulus": "s635", "cue": "bars rendered too thin and clumped, a generic metrics dashboard", "codes": ["new:rendering-artifacts", "new:stock-screen-archetype"]}
+{"session": 4, "stimulus": "s134", "cue": "Riverside Animal Clinic with Portland 555 placeholder contact details", "codes": ["new:placeholder-contact-details", "new:stock-sample-names"]}
+{"session": 4, "stimulus": "s134", "cue": "two stock white cards on pale grey with label-over-value rows and hairline dividers", "codes": ["new:every-section-in-card", "new:label-value-grid", "new:hairline-row-dividers"]}
+{"session": 4, "stimulus": "s134", "cue": "Practice overview label styled as a raised button-like chip, a tab that is not actionable", "codes": ["BH4"]}
+{"session": 4, "stimulus": "s134", "cue": "Biscuit/Pepper pet names and Dr. Priya Raman typical generated sample content", "codes": ["new:stock-sample-names"]}
+{"session": 4, "stimulus": "s780", "cue": "Tabler/Bootstrap-style template invoice page with placeholder Street Address, State, City", "codes": ["CM6", "new:template-sample-copy"]}
+{"session": 4, "stimulus": "s780", "cue": "European number format $1.800,00 and QNT abbreviation as in a stock template", "codes": ["new:locale-number-format", "new:template-sample-copy"]}
+{"session": 4, "stimulus": "s780", "cue": "photo avatar and outlined Help button", "codes": ["new:real-photo-avatars"]}
+{"session": 4, "stimulus": "s780", "cue": "centred fixed-width container with horizontal nav of outline icons", "codes": ["new:centred-fixed-container", "new:consistent-outline-icons"]}
+{"session": 4, "stimulus": "s369", "cue": "insight headline stating the finding with numbers rather than a generic chart title", "codes": ["new:takeaway-chart-title"]}
+{"session": 4, "stimulus": "s369", "cue": "single direct-labelled line, no legend, with Price change annotation", "codes": ["new:direct-line-labels", "new:chart-event-annotation"]}
+{"session": 4, "stimulus": "s369", "cue": "caption that interprets the series, flagging largest rises and flattest month", "codes": ["new:prose-chart-summary"]}
+{"session": 4, "stimulus": "s369", "cue": "chart/table toggle and Export CSV, comparison table following", "codes": ["new:chart-table-toggle", "new:export-option"]}
+{"session": 4, "stimulus": "s907", "cue": "Northwind Product Studio generic workspace overview with three stat cards with icons", "codes": ["new:stock-sample-names", "new:generic-subtitle", "LA7"]}
+{"session": 4, "stimulus": "s907", "cue": "projects table with On track / At risk / Completed pills", "codes": ["new:stock-status-set"]}
+{"session": 4, "stimulus": "s907", "cue": "overlapping avatar stack with clipped initials and +3", "codes": ["new:avatar-stack", "new:clipped-content"]}
+{"session": 4, "stimulus": "s907", "cue": "everything in rounded bordered cards, monochrome, Priya Raman/Marcus Oyelaran names", "codes": ["new:every-section-in-card", "new:monochrome-no-accent", "new:diverse-name-roster"]}
+{"session": 4, "stimulus": "s907", "cue": "small stat cards with tiny numbers, plenty of dead white space", "codes": ["new:understated-stats", "new:sparse-dead-space"]}
+{"session": 4, "stimulus": "s669", "cue": "freight-logistics CRM account page with Dana Whitfield VP of Operations and 555 phone numbers", "codes": ["new:stock-screen-archetype", "new:placeholder-contact-details"]}
+{"session": 4, "stimulus": "s669", "cue": "Customer pill with dot, Primary badge, initials avatars", "codes": ["new:dotted-pastel-status-pills", "IC4"]}
+{"session": 4, "stimulus": "s669", "cue": "breadcrumb rendered as raised button chips, odd for navigation", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 4, "stimulus": "s669", "cue": "underlined blue email and phone links stacked under each contact", "codes": ["new:links-everywhere"]}
+{"session": 4, "stimulus": "s892", "cue": "dark navy sidebar with gradient purple NH logo tile and Business plan", "codes": ["CO8", "CO1", "new:letter-logo-tile"]}
+{"session": 4, "stimulus": "s892", "cue": "Northwind Health placeholder workspace with Overview/Projects/Members/Settings", "codes": ["new:stock-sample-names"]}
+{"session": 4, "stimulus": "s892", "cue": "single bordered card with General heading, helper text under every field, character counter 26/60", "codes": ["new:page-in-single-card", "new:helper-text-every-field"]}
+{"session": 4, "stimulus": "s892", "cue": "footer bar with Cancel and disabled Save changes", "codes": ["new:card-footer-action-bar", "new:washed-out-disabled-button"]}
+{"session": 4, "stimulus": "s892", "cue": "Tailwind UI settings form archetype, large empty area right and below", "codes": ["new:stock-screen-archetype", "CM6", "new:sparse-dead-space"]}
+{"session": 4, "stimulus": "s577", "cue": "Week 44 release note editor with Saved pill and Publish button, textbook form plus side details", "codes": ["new:stock-screen-archetype", "new:save-status-indicator"]}
+{"session": 4, "stimulus": "s577", "cue": "breadcrumb crumbs drawn as raised button chips", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 4, "stimulus": "s577", "cue": "helper text under select explaining what publishing does", "codes": ["new:purposeful-helper-copy"]}
+{"session": 4, "stimulus": "s577", "cue": "plain two-column layout with large empty textarea and empty area below", "codes": ["new:sparse-dead-space"]}
+{"session": 4, "stimulus": "s433", "cue": "row of KPI cards with big number, green delta, tiny sparkline", "codes": ["LA7"]}
+{"session": 4, "stimulus": "s433", "cue": "rounded bordered cards for every chart, area fill under the line", "codes": ["new:every-section-in-card", "new:gradient-area-fill"]}
+{"session": 4, "stimulus": "s433", "cue": "Dark mode toggle button, filter pills and selects in a toolbar", "codes": ["new:dark-mode-toggle", "new:filter-toolbar"]}
+{"session": 4, "stimulus": "s433", "cue": "stacked 68/27 bar and horizontal bars with green/red triangle deltas", "codes": ["new:delta-indicators"]}
+{"session": 4, "stimulus": "s433", "cue": "everything dense and evenly weighted, standard dashboard template", "codes": ["LA4", "new:stock-screen-archetype"]}
+{"session": 4, "stimulus": "s820", "cue": "three KPI cards with icon, large number and green delta arrows, one selected with heavy outline", "codes": ["LA7", "new:selected-state-heavy-border"]}
+{"session": 4, "stimulus": "s820", "cue": "black rounded square library logo and moon dark-mode icon button", "codes": ["new:letter-logo-tile", "new:dark-mode-toggle"]}
+{"session": 4, "stimulus": "s820", "cue": "all panels in identical rounded bordered cards, smooth-line chart with blue/grey series", "codes": ["new:every-section-in-card", "new:smoothed-chart-lines"]}
+{"session": 4, "stimulus": "s820", "cue": "segmented pill controls for Loans/New members/Visits and Chart/Table", "codes": ["new:segmented-controls"]}
+{"session": 4, "stimulus": "s820", "cue": "stock dashboard recipe with generic library-system placeholder name", "codes": ["new:stock-screen-archetype", "new:stock-sample-names"]}
+{"session": 4, "stimulus": "s140", "cue": "AdminLTE template with dark sidebar, Font Awesome icons and Bootstrap coloured buttons", "codes": ["CM6", "IC3", "CO8"]}
+{"session": 4, "stimulus": "s140", "cue": "cartoon avatar illustrations in team members column", "codes": ["IC4"]}
+{"session": 4, "stimulus": "s140", "cue": "every row identical Fieldline Created 01.01.2026, hash for index, all Success status", "codes": ["new:identical-placeholder-rows"]}
+{"session": 4, "stimulus": "s140", "cue": "View/Edit/Delete button trio in blue teal red wrapping onto two lines", "codes": ["CM6", "CO8", "new:awkward-text-wrap"]}
+{"session": 4, "stimulus": "s140", "cue": "dated 2014-era admin look", "codes": ["new:dated-template-look"]}
+{"session": 4, "stimulus": "s484", "cue": "generic projects table with On track / At risk / Off track / Completed pills with dots", "codes": ["new:stock-status-set", "new:dotted-pastel-status-pills"]}
+{"session": 4, "stimulus": "s484", "cue": "12 projects found count and Refresh button, checkbox column, sortable header", "codes": ["new:count-beside-search", "new:sort-arrows-every-column"]}
+{"session": 4, "stimulus": "s484", "cue": "stock names Priya Natarajan, Tomas Herrera, Elena Sokolova", "codes": ["new:diverse-name-roster", "new:stock-sample-names"]}
+{"session": 4, "stimulus": "s484", "cue": "pale grey page, no sidebar, minimal chrome", "codes": ["new:minimal-chrome"]}
+{"session": 4, "stimulus": "s374", "cue": "Northwind Product Team placeholder with Priya Raman owner", "codes": ["new:stock-sample-names"]}
+{"session": 4, "stimulus": "s374", "cue": "single bordered white card of label/value pairs in two columns", "codes": ["new:page-in-single-card", "new:label-value-grid"]}
+{"session": 4, "stimulus": "s374", "cue": "heading shown in an edit-focus box with cramped padding looks like a defect", "codes": ["new:stray-focus-outline"]}
+{"session": 4, "stimulus": "s374", "cue": "narrow centred column with empty page below, minimal content", "codes": ["new:centred-fixed-container", "new:sparse-dead-space"]}
+{"session": 4, "stimulus": "s182", "cue": "AdminLTE Project Edit demo page with coloured blue, grey and teal card headers", "codes": ["CM6", "CO8"]}
+{"session": 4, "stimulus": "s182", "cue": "hipster ipsum description and Tony Chicken / Deveint Inc filler", "codes": ["new:template-sample-copy", "new:quirky-sample-data"]}
+{"session": 4, "stimulus": "s182", "cue": "file sizes with four decimals like 49.8005 kb", "codes": ["new:awkward-number-format", "new:quirky-sample-data"]}
+{"session": 4, "stimulus": "s182", "cue": "Bootstrap 4 form controls and font-awesome icons, dated look", "codes": ["CM6", "IC3", "new:dated-template-look"]}
+{"session": 4, "stimulus": "s474", "cue": "PawBook veterinary invention with paw logo, green tint theme and Dr. Priya Raman avatar", "codes": ["new:generic-product-name", "new:literal-icon-logo", "new:stock-sample-names"]}
+{"session": 4, "stimulus": "s474", "cue": "single bordered General card with helper text under each field", "codes": ["new:page-in-single-card", "new:helper-text-every-field"]}
+{"session": 4, "stimulus": "s474", "cue": "Cancel plus disabled-looking muted green Save changes at card bottom", "codes": ["new:card-footer-action-bar", "new:washed-out-disabled-button"]}
+{"session": 4, "stimulus": "s474", "cue": "stock settings form archetype, lots of unused space", "codes": ["new:stock-screen-archetype", "new:sparse-dead-space"]}
+{"session": 4, "stimulus": "s474", "cue": "descriptive explanatory microcopy under every field", "codes": ["new:helper-text-every-field"]}
+{"session": 4, "stimulus": "s443", "cue": "Northwind Product Team projects table with tinted pills At risk / On track / Off track / Planning", "codes": ["new:stock-sample-names", "new:dotted-pastel-status-pills", "new:stock-status-set"]}
+{"session": 4, "stimulus": "s443", "cue": "multicolour initial avatars, blue progress bars, mono three-letter project codes", "codes": ["IC4", "new:rainbow-colour-coding", "new:progress-bar-every-row", "new:monospace-ids"]}
+{"session": 4, "stimulus": "s443", "cue": "search with slash-key hint, Refresh, sortable column arrows, relative Updated times", "codes": ["new:keyboard-shortcut-hint", "new:sort-arrows-every-column", "new:relative-timestamps"]}
+{"session": 4, "stimulus": "s443", "cue": "Overdue flagged in red text, textbook SaaS list template", "codes": ["new:red-overdue-flag", "new:stock-screen-archetype"]}
+{"session": 4, "stimulus": "s443", "cue": "Stripe and Parquet-flavoured project names for plausible fake data", "codes": ["new:stock-sample-names"]}
+{"session": 4, "stimulus": "s753", "cue": "open layout without card boxes, ingredient table grouped by Braise with quantity/ingredient/prep columns", "codes": ["new:no-cards", "new:domain-specific-structure"]}
+{"session": 4, "stimulus": "s753", "cue": "domain-accurate specifics like hold at 63 C, Cotes du Rhone, rapeseed oil, UK spellings", "codes": ["new:domain-expert-copy"]}
+{"session": 4, "stimulus": "s753", "cue": "breadcrumb as stacked raised chips and tactile Edit details button", "codes": ["new:raised-breadcrumb-chips", "new:glossy-raised-button"]}
+{"session": 4, "stimulus": "s753", "cue": "allergen tags as small outlined amber chips", "codes": ["new:pastel-tag-chips"]}
+{"session": 4, "stimulus": "s620", "cue": "stacked settings sections General/Notifications/Billing each in its own rounded white card with grey description", "codes": ["new:every-section-in-card", "new:generic-subtitle"]}
+{"session": 4, "stimulus": "s620", "cue": "Acme placeholder workspace and toggle rows with title plus helper line", "codes": ["new:stock-sample-names", "new:helper-text-every-field"]}
+{"session": 4, "stimulus": "s620", "cue": "anchor links as underlined text tabs for Danger zone", "codes": ["new:text-link-tabs"]}
+{"session": 4, "stimulus": "s620", "cue": "Make the next change fail demo toggle, Saved together vs applies immediately explanatory copy", "codes": ["new:debug-control-exposed", "new:purposeful-helper-copy"]}
+{"session": 4, "stimulus": "s464", "cue": "AdminLTE Dashboard v2 demo with CPU Traffic / Likes / Sales / New Members coloured icon boxes", "codes": ["CM6", "CM4"]}
+{"session": 4, "stimulus": "s464", "cue": "smoothed overlapping area chart with unlabeled y values, Goal Completion bars in four colours", "codes": ["new:smoothed-chart-lines", "new:unlabelled-axis", "CO8"]}
+{"session": 4, "stimulus": "s464", "cue": "US-Visitors map with raw 90,70,90,70 sparkline text leaking", "codes": ["CM6", "new:raw-data-leak"]}
+{"session": 4, "stimulus": "s464", "cue": "dark sidebar with New and count badges, saturated Bootstrap palette", "codes": ["CM6", "CO8"]}
+{"session": 4, "stimulus": "s894", "cue": "real photographs: mountain cover image and people portrait avatars", "codes": ["new:real-photo-avatars", "new:cover-photo-profile"]}
+{"session": 4, "stimulus": "s894", "cue": "latin lorem ipsum filler comments", "codes": ["new:template-sample-copy"]}
+{"session": 4, "stimulus": "s894", "cue": "Big belly rude boy, million dollar hustler bio joke copy", "codes": ["new:quirky-sample-data"]}
+{"session": 4, "stimulus": "s894", "cue": "Twitter Follow button and Facebook/Skype social circles from a stock profile template", "codes": ["new:social-media-widgets", "CM6"]}
+{"session": 4, "stimulus": "s894", "cue": "Tabler-style layout with Help outline button and horizontal icon nav", "codes": ["CM6", "new:consistent-outline-icons"]}
+{"session": 4, "stimulus": "s750", "cue": "row of five KPI cards with big number, coloured delta triangles and sparkline", "codes": ["LA7"]}
+{"session": 4, "stimulus": "s750", "cue": "hero MRR card larger than the others, classic SaaS subscription dashboard", "codes": ["new:oversized-numbers", "new:stock-screen-archetype"]}
+{"session": 4, "stimulus": "s750", "cue": "area chart with light blue fill and end label, Dark mode and Table buttons", "codes": ["new:gradient-area-fill", "new:direct-line-labels", "new:dark-mode-toggle", "new:chart-table-toggle"]}
+{"session": 4, "stimulus": "s750", "cue": "date-range segmented control plus Plan select, all in same rounded bordered cards", "codes": ["new:segmented-controls", "new:every-section-in-card"]}
+{"session": 4, "stimulus": "s750", "cue": "labels wrapping awkwardly (12 mo, pts) in narrow cards", "codes": ["new:awkward-text-wrap"]}
+{"session": 4, "stimulus": "s143", "cue": "Ridgeway Freight Shipment Tracker with truck icon and breadcrumb header", "codes": ["new:stock-sample-names", "new:literal-icon-logo"]}
+{"session": 4, "stimulus": "s143", "cue": "tinted pill statuses in blue, green, orange, purple, red across a table in one rounded card", "codes": ["new:rainbow-colour-coding", "new:page-in-single-card"]}
+{"session": 4, "stimulus": "s143", "cue": "search input, Refresh button, shipments count repeated twice (subtitle and right side)", "codes": ["new:sync-status-shown", "new:duplicated-information"]}
+{"session": 4, "stimulus": "s143", "cue": "very tidy generated data: sequential SHP refs, plausible PO/BOL, cities, carriers", "codes": ["new:too-tidy-data"]}
+{"session": 4, "stimulus": "s634", "cue": "instructional subtitle Find shipments by reference and select the ones you are working on", "codes": ["new:generic-subtitle"]}
+{"session": 4, "stimulus": "s634", "cue": "labelled search with helper For example SHP-24-10482 and Clear search link, 22 shipments count", "codes": ["new:purposeful-helper-copy", "new:count-beside-search"]}
+{"session": 4, "stimulus": "s634", "cue": "stock logistics data: Kestrel Medical, Northgate Grocers, Brightline Electronics", "codes": ["new:stock-sample-names"]}
+{"session": 4, "stimulus": "s634", "cue": "status pills with dot for Delivered/Exception/Delayed and checkbox column", "codes": ["new:dotted-pastel-status-pills", "new:checkbox-column"]}
+{"session": 4, "stimulus": "s323", "cue": "dark navy top bar with gradient N logo tile and nav pills", "codes": ["new:gradient-logo-mark", "new:letter-logo-tile", "new:pill-nav"]}
+{"session": 4, "stimulus": "s323", "cue": "tinted status pills with dots (In transit, Delivered, Delayed, Exception)", "codes": ["new:dotted-pastel-status-pills"]}
+{"session": 4, "stimulus": "s323", "cue": "search with slash shortcut hint, Refresh, count top right, one rounded card around table", "codes": ["new:keyboard-shortcut-hint", "new:sync-status-shown", "new:count-beside-search", "new:page-in-single-card"]}
+{"session": 4, "stimulus": "s323", "cue": "uppercase tracking-wide grey column headers, mono bold reference with PO under", "codes": ["TY4", "new:monospace-ids", "new:two-line-cells"]}
+{"session": 4, "stimulus": "s323", "cue": "red late ETAs, textbook Tailwind freight table", "codes": ["new:red-overdue-flag", "CO8", "new:stock-screen-archetype"]}
+{"session": 4, "stimulus": "s812", "cue": "headline states the finding with causal detail: signups doubled after the pricing change, 39 a day to 80", "codes": ["new:takeaway-chart-title"]}
+{"session": 4, "stimulus": "s812", "cue": "single direct-labelled line with no legend or card chrome", "codes": ["new:direct-line-labels", "new:no-cards"]}
+{"session": 4, "stimulus": "s812", "cue": "caption explaining the free plan gaining a third project", "codes": ["new:prose-chart-summary"]}
+{"session": 4, "stimulus": "s812", "cue": "Around it supporting stats section beneath the chart", "codes": ["LA7", "new:odd-copy"]}
+{"session": 4, "stimulus": "s571", "cue": "Tabler template crypto currencies table with 2018 prices", "codes": ["CM6", "new:dated-sample-data"]}
+{"session": 4, "stimulus": "s571", "cue": "tiny broken coin icons in the logo column", "codes": ["new:broken-images"]}
+{"session": 4, "stimulus": "s571", "cue": "inconsistent row heights from wrapped supply text, irregular price decimals", "codes": ["new:awkward-text-wrap", "new:awkward-number-format"]}
+{"session": 4, "stimulus": "s571", "cue": "red/green percentages and quirky CMGR/MONTH and INFLATION columns from real scraped data", "codes": ["new:delta-indicators", "new:dated-sample-data"]}
+{"session": 4, "stimulus": "s882", "cue": "Tabler demo dashboard with six small stat cards, up/down arrow percentages", "codes": ["CM6", "LA7"]}
+{"session": 4, "stimulus": "s882", "cue": "two Chart title placeholder cards with donut and pie charts, clipped labels", "codes": ["CP2", "new:clipped-content"]}
+{"session": 4, "stimulus": "s882", "cue": "Are you in trouble? Read our documentation info banner", "codes": ["CM6", "new:template-sample-copy"]}
+{"session": 4, "stimulus": "s882", "cue": "Development Activity line chart cropped, Initial commit / Main structure filler rows", "codes": ["new:clipped-content", "new:template-sample-copy"]}
+{"session": 4, "stimulus": "s882", "cue": "photo avatars mixed with initials, Help outline button", "codes": ["new:real-photo-avatars", "IC4"]}
+{"session": 5, "stimulus": "s635", "cue": "KPI cards each with big number, green delta and grey footer strip", "codes": ["LA7"]}
+{"session": 5, "stimulus": "s635", "cue": "rounded bordered white cards, uniform", "codes": ["new:every-section-in-card"]}
+{"session": 5, "stimulus": "s635", "cue": "Inter-like type, 'Sample data' pill", "codes": ["TY1", "new:sample-data-label"]}
+{"session": 5, "stimulus": "s323", "cue": "dark navy top nav with gradient logo square", "codes": ["new:gradient-logo-mark"]}
+{"session": 5, "stimulus": "s323", "cue": "status pills with dots in pastel tints", "codes": ["new:dotted-pastel-status-pills"]}
+{"session": 5, "stimulus": "s323", "cue": "search with / keyboard hint, row checkboxes, generic freight table", "codes": ["new:keyboard-shortcut-hint", "new:checkbox-column", "new:stock-screen-archetype"]}
+{"session": 5, "stimulus": "s140", "cue": "AdminLTE-style dark sidebar with coloured badges", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s140", "cue": "bright blue/teal/red View/Edit/Delete buttons", "codes": ["CM6", "CO8"]}
+{"session": 5, "stimulus": "s140", "cue": "cartoon avatars and placeholder data", "codes": ["IC4", "new:template-sample-copy"]}
+{"session": 5, "stimulus": "s820", "cue": "KPI cards with icons and green +% deltas", "codes": ["LA7", "IC3"]}
+{"session": 5, "stimulus": "s820", "cue": "shaded 'Millbrook closed' band on chart", "codes": ["new:chart-event-annotation"]}
+{"session": 5, "stimulus": "s820", "cue": "chart/table toggle, tidy bar list", "codes": ["new:chart-table-toggle", "new:ranked-bar-list"]}
+{"session": 5, "stimulus": "s839", "cue": "PawBook vet clinic with paw logo", "codes": ["new:generic-product-name", "new:literal-icon-logo"]}
+{"session": 5, "stimulus": "s839", "cue": "stat cards plus Up next table plus details card", "codes": ["LA7", "new:every-section-in-card"]}
+{"session": 5, "stimulus": "s839", "cue": "pill statuses, icon+label contact list", "codes": ["new:status-hierarchy-by-fill", "new:consistent-outline-icons"]}
+{"session": 5, "stimulus": "s669", "cue": "raised bevelled tab buttons and gradient primary button", "codes": ["new:raised-breadcrumb-chips", "new:glossy-raised-button"]}
+{"session": 5, "stimulus": "s669", "cue": "underlined links, dense detail table", "codes": ["new:links-everywhere"]}
+{"session": 5, "stimulus": "s669", "cue": "distinct non-default styling", "codes": ["vague"]}
+{"session": 5, "stimulus": "s571", "cue": "Tabler-style template with top nav and crypto table", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s571", "cue": "tiny coin icons, inconsistent column alignment", "codes": ["new:broken-images", "new:misaligned-element"]}
+{"session": 5, "stimulus": "s571", "cue": "template demo content", "codes": ["new:template-sample-copy"]}
+{"session": 5, "stimulus": "s892", "cue": "dark slate sidebar with gradient NH avatar", "codes": ["CO8", "new:letter-logo-tile"]}
+{"session": 5, "stimulus": "s892", "cue": "Tailwind-like settings card with footer actions", "codes": ["CM6", "new:card-footer-action-bar"]}
+{"session": 5, "stimulus": "s892", "cue": "disabled Save button, char counter 26/60", "codes": ["new:washed-out-disabled-button", "new:helper-text-every-field"]}
+{"session": 5, "stimulus": "s780", "cue": "Tabler-style invoice template", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s780", "cue": "placeholder Company/Client address", "codes": ["new:template-sample-copy"]}
+{"session": 5, "stimulus": "s780", "cue": "bordered table with grid lines", "codes": ["new:fully-ruled-table"]}
+{"session": 5, "stimulus": "s620", "cue": "'Make the next change fail' test toggle", "codes": ["new:debug-control-exposed"]}
+{"session": 5, "stimulus": "s620", "cue": "sectioned settings cards with anchor links", "codes": ["new:every-section-in-card", "new:text-link-tabs"]}
+{"session": 5, "stimulus": "s620", "cue": "grey page, blue switches", "codes": ["new:restrained-palette"]}
+{"session": 5, "stimulus": "s369", "cue": "headline states the finding", "codes": ["new:takeaway-chart-title"]}
+{"session": 5, "stimulus": "s369", "cue": "chart/table toggle, annotated 'Price change' line", "codes": ["new:chart-table-toggle", "new:chart-event-annotation"]}
+{"session": 5, "stimulus": "s369", "cue": "minimal single-line chart", "codes": ["new:plain-line-chart"]}
+{"session": 5, "stimulus": "s134", "cue": "bevelled tab and raised blue button", "codes": ["new:raised-breadcrumb-chips", "new:glossy-raised-button"]}
+{"session": 5, "stimulus": "s134", "cue": "sparse layout, ruled detail list", "codes": ["new:sparse-dead-space", "new:hairline-row-dividers"]}
+{"session": 5, "stimulus": "s134", "cue": "grey background, plain cards", "codes": ["new:every-section-in-card"]}
+{"session": 5, "stimulus": "s812", "cue": "finding as chart headline", "codes": ["new:takeaway-chart-title"]}
+{"session": 5, "stimulus": "s812", "cue": "raised breadcrumb tabs", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 5, "stimulus": "s812", "cue": "plain line chart, direct label", "codes": ["new:plain-line-chart", "new:direct-line-labels"]}
+{"session": 5, "stimulus": "s907", "cue": "workspace overview: stats, projects table, avatar stack", "codes": ["LA7", "new:avatar-stack", "new:stock-screen-archetype"]}
+{"session": 5, "stimulus": "s907", "cue": "clipped overlapping avatar initials", "codes": ["new:avatar-stack", "new:clipped-content"]}
+{"session": 5, "stimulus": "s907", "cue": "centered narrow container, pill statuses", "codes": ["new:centred-fixed-container", "new:dotted-pastel-status-pills"]}
+{"session": 5, "stimulus": "s464", "cue": "AdminLTE Dashboard v2 demo", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s464", "cue": "saturated coloured info boxes", "codes": ["CM4"]}
+{"session": 5, "stimulus": "s464", "cue": "dark sidebar, map widget", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s762", "cue": "AdminLTE project detail template", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s762", "cue": "lorem ipsum, file list with doc icons", "codes": ["new:template-sample-copy", "new:file-type-icons"]}
+{"session": 5, "stimulus": "s762", "cue": "coloured sidebar badges", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s753", "cue": "raised breadcrumb tabs, gradient button", "codes": ["new:raised-breadcrumb-chips", "new:glossy-raised-button"]}
+{"session": 5, "stimulus": "s753", "cue": "recipe ingredients table with prep column", "codes": ["new:domain-specific-structure"]}
+{"session": 5, "stimulus": "s753", "cue": "allergen tags outlined", "codes": ["new:pastel-tag-chips"]}
+{"session": 5, "stimulus": "s882", "cue": "Tabler dashboard demo", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s882", "cue": "two 'Chart title' placeholders", "codes": ["CP2"]}
+{"session": 5, "stimulus": "s882", "cue": "donut and pie with default greens/blues", "codes": ["CM6", "CO8"]}
+{"session": 5, "stimulus": "s433", "cue": "library KPI cards with sparklines", "codes": ["LA7"]}
+{"session": 5, "stimulus": "s433", "cue": "segmented format bar, delta arrows", "codes": ["new:chart-legend-mismatch", "new:delta-indicators"]}
+{"session": 5, "stimulus": "s433", "cue": "dark mode button, multiple filters", "codes": ["new:dark-mode-toggle", "new:filter-toolbar"]}
+{"session": 5, "stimulus": "s894", "cue": "Tabler profile/social feed template", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s894", "cue": "lorem ipsum, stock photos", "codes": ["new:template-sample-copy", "new:real-photo-avatars"]}
+{"session": 5, "stimulus": "s894", "cue": "social icons circles", "codes": ["new:social-media-widgets"]}
+{"session": 5, "stimulus": "s474", "cue": "PawBook green-themed settings form", "codes": ["new:generic-product-name", "new:page-in-single-card"]}
+{"session": 5, "stimulus": "s474", "cue": "white card, disabled save button", "codes": ["new:page-in-single-card", "new:washed-out-disabled-button"]}
+{"session": 5, "stimulus": "s474", "cue": "blue focus frame around page", "codes": ["new:stray-focus-outline"]}
+{"session": 5, "stimulus": "s497", "cue": "finding as chart headline", "codes": ["new:takeaway-chart-title"]}
+{"session": 5, "stimulus": "s497", "cue": "annotated vertical line", "codes": ["new:chart-event-annotation"]}
+{"session": 5, "stimulus": "s497", "cue": "plain line chart", "codes": ["new:plain-line-chart"]}
+{"session": 5, "stimulus": "s182", "cue": "AdminLTE project edit", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s182", "cue": "coloured card headers", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s182", "cue": "lorem ipsum", "codes": ["new:template-sample-copy"]}
+{"session": 5, "stimulus": "s652", "cue": "HF square logo, Customer/Enterprise pills", "codes": ["new:letter-logo-tile", "new:pastel-tag-chips"]}
+{"session": 5, "stimulus": "s652", "cue": "contacts table with buying-role pills", "codes": ["new:pastel-tag-chips"]}
+{"session": 5, "stimulus": "s652", "cue": "table clipped at right edge", "codes": ["new:clipped-content"]}
+{"session": 5, "stimulus": "s364", "cue": "Harrow & Vine serif display, warm cream/brown palette", "codes": ["new:stock-sample-names", "new:serif-display-headings", "CO4"]}
+{"session": 5, "stimulus": "s364", "cue": "stat strip, allergens as red pills", "codes": ["LA7", "new:pastel-tag-chips"]}
+{"session": 5, "stimulus": "s364", "cue": "plating notes copy", "codes": ["new:domain-expert-copy"]}
+{"session": 5, "stimulus": "s484", "cue": "inset search field, bevelled checkboxes", "codes": ["new:inset-shadowed-field", "new:raised-tactile-style"]}
+{"session": 5, "stimulus": "s484", "cue": "plain projects table", "codes": ["new:stock-screen-archetype"]}
+{"session": 5, "stimulus": "s484", "cue": "sort arrow in header", "codes": ["new:sortable-columns"]}
+{"session": 5, "stimulus": "s143", "cue": "Ridgeway Freight shipment table with coloured pills", "codes": ["new:stock-sample-names", "new:rainbow-colour-coding"]}
+{"session": 5, "stimulus": "s143", "cue": "search with ellipsis placeholder, pallets sub-lines", "codes": ["new:ellipsis-placeholder", "new:two-line-cells"]}
+{"session": 5, "stimulus": "s143", "cue": "standard checkboxes", "codes": ["new:checkbox-column"]}
+{"session": 5, "stimulus": "s634", "cue": "inset search field, clear search link", "codes": ["new:inset-shadowed-field", "new:misaligned-element"]}
+{"session": 5, "stimulus": "s634", "cue": "monospace refs, sortable ETA", "codes": ["new:monospace-ids", "new:sortable-columns"]}
+{"session": 5, "stimulus": "s634", "cue": "Altitude-like raised style", "codes": ["new:raised-tactile-style"]}
+{"session": 5, "stimulus": "s261", "cue": "Target 28.000000000000004 float bug", "codes": ["new:raw-float-in-copy"]}
+{"session": 5, "stimulus": "s261", "cue": "change log with strikethrough diffs", "codes": ["new:diff-chips"]}
+{"session": 5, "stimulus": "s261", "cue": "avatar initials, black pills", "codes": ["IC4", "new:monochrome-no-accent"]}
+{"session": 5, "stimulus": "s443", "cue": "coloured initials avatars, progress bars, status pills", "codes": ["IC4", "new:rainbow-colour-coding", "new:progress-bar-every-row", "new:dotted-pastel-status-pills"]}
+{"session": 5, "stimulus": "s443", "cue": "search with / hint", "codes": ["new:keyboard-shortcut-hint"]}
+{"session": 5, "stimulus": "s443", "cue": "sort carets in every header", "codes": ["new:sort-arrows-every-column"]}
+{"session": 5, "stimulus": "s577", "cue": "raised breadcrumb tabs, gradient Publish", "codes": ["new:raised-breadcrumb-chips", "new:glossy-raised-button"]}
+{"session": 5, "stimulus": "s577", "cue": "saved badge", "codes": ["new:save-status-indicator"]}
+{"session": 5, "stimulus": "s577", "cue": "two-column editor", "codes": ["new:two-column-form-layout"]}
+{"session": 5, "stimulus": "s750", "cue": "KPI cards with sparklines and delta arrows", "codes": ["LA7"]}
+{"session": 5, "stimulus": "s750", "cue": "oversized MRR number", "codes": ["new:oversized-numbers"]}
+{"session": 5, "stimulus": "s750", "cue": "area chart with Table toggle", "codes": ["new:gradient-area-fill", "new:chart-table-toggle"]}
+{"session": 5, "stimulus": "s236", "cue": "Relay CRM with dark nav, gradient logo", "codes": ["new:generic-product-name", "new:gradient-logo-mark"]}
+{"session": 5, "stimulus": "s236", "cue": "KPI strip with health bar", "codes": ["LA7"]}
+{"session": 5, "stimulus": "s236", "cue": "coloured initials avatars, role pills", "codes": ["IC4", "new:rainbow-colour-coding", "new:pastel-tag-chips"]}
+{"session": 5, "stimulus": "s940", "cue": "projects table with progress bars and pills", "codes": ["new:progress-bar-every-row", "new:dotted-pastel-status-pills"]}
+{"session": 5, "stimulus": "s940", "cue": "coloured status dots", "codes": ["new:dotted-pastel-status-pills"]}
+{"session": 5, "stimulus": "s940", "cue": "tidy Refresh button", "codes": ["new:sync-status-shown"]}
+{"session": 5, "stimulus": "s374", "cue": "focused inline-edit title", "codes": ["new:stray-focus-outline"]}
+{"session": 5, "stimulus": "s374", "cue": "bevelled breadcrumb", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 5, "stimulus": "s374", "cue": "sparse detail card", "codes": ["new:sparse-dead-space"]}
+{"session": 5, "stimulus": "s800", "cue": "'Make the next role change fail' toggle", "codes": ["new:debug-control-exposed"]}
+{"session": 5, "stimulus": "s800", "cue": "inset input, radio group", "codes": ["new:inset-shadowed-field", "new:radio-with-descriptions"]}
+{"session": 5, "stimulus": "s800", "cue": "members table with owner note", "codes": ["new:edge-case-handling"]}
+{"newLabels": {"new:avatar-stack": "An overlapping stack of avatar circles with a +N count.", "new:awkward-number-format": "Numbers are formatted inconsistently or with redundant decimals.", "new:awkward-text-wrap": "Labels or names wrap awkwardly in narrow cells.", "new:broken-images": "Small images or icons fail to load and render as dots or blanks.", "new:card-footer-action-bar": "A card ends in a grey footer bar holding Cancel and Save.", "new:card-header-dividers": "Cards have a rule separating the card title from its body.", "new:centred-fixed-container": "Content sits in a narrow centred fixed-width column.", "new:chart-event-annotation": "An event is annotated on the chart with a band or marker line.", "new:chart-legend-mismatch": "The legend or labels don't match the marks drawn (missing series, unlabelled segment).", "new:chart-table-toggle": "A Chart/Table toggle offers the data as a table.", "new:checkbox-column": "Tables lead with a row-selection checkbox column.", "new:clipped-content": "Text, columns or labels are cut off or overflow their container.", "new:consistent-outline-icons": "One outline icon set is used consistently, e.g. beside each detail or in the nav.", "new:count-beside-search": "A result count is floated to the right of the search field.", "new:cover-photo-profile": "A profile page with a landscape cover photo and overlapping round avatar.", "new:cramped-spacing": "Elements are squeezed with too little space between them.", "new:crowded-axis-labels": "An axis labels every tick so the labels crowd each other.", "new:dark-mode-toggle": "A dark-mode button or moon icon sits in the header.", "new:dated-sample-data": "Sample data is visibly old (e.g. 2018 crypto prices, 2014 filenames).", "new:dated-template-look": "The styling reads as an older (2014-era) flat admin template.", "new:debug-control-exposed": "A developer/demo control (e.g. \"Make the next change fail\") is left in the product UI.", "new:delta-indicators": "Values carry green/red up/down triangles or arrows for change.", "new:diff-chips": "A change log shows old and new values as strikethrough-to-new chips.", "new:direct-line-labels": "Series are labelled at the line ends instead of with a legend.", "new:disabled-until-valid": "The primary action stays disabled until the form is filled in.", "new:diverse-name-roster": "Sample people form a deliberately diverse roster of names.", "new:domain-expert-copy": "Copy uses accurate, specialist domain detail (temperatures, techniques, regional spelling).", "new:domain-inconsistency": "Sample content contradicts itself within the domain (e.g. a braised dish on the grill station).", "new:domain-specific-structure": "Content is structured the way the domain works (e.g. ingredients grouped by stage, quantity-first).", "new:dot-separated-meta": "Metadata items run in a row separated by middle dots.", "new:dotted-pastel-status-pills": "Status shown as tinted pills with a leading coloured dot.", "new:duplicated-information": "The same fact (count, name, date) is shown twice on the screen.", "new:edge-case-handling": "The screen shows copy or states for edge cases (e.g. the sole owner cannot change role).", "new:ellipsis-placeholder": "A search field's placeholder text ends in an ellipsis.", "new:em-dash-copy": "Em dashes appear in names or interface strings.", "new:every-section-in-card": "Every section sits in its own identical rounded bordered card.", "new:export-option": "An Export CSV or similar data-download control sits beside the chart.", "new:eyebrow-label": "A small label sits above the page title.", "new:file-type-icons": "Files are listed with per-type document icons.", "new:filter-toolbar": "A toolbar of filter pills and selects sits above the content.", "new:fully-ruled-table": "A table with borders on every cell.", "new:generic-product-name": "An invented, generic or cute product name (Relay, PawBook).", "new:generic-subtitle": "A generic subtitle restates the page title or task.", "new:glossy-raised-button": "A button is drawn glossy and raised with a heavy bottom shadow or gradient.", "new:gradient-area-fill": "A line chart has a soft gradient or tinted fill beneath the line.", "new:gradient-logo-mark": "The logo is a gradient-filled square mark.", "new:hairline-row-dividers": "Thin hairline rules separate every row of a list.", "new:headline-not-shown-in-chart": "The headline names an event that the chart does not mark.", "new:helper-text-every-field": "Every field has helper text beneath it.", "new:identical-placeholder-rows": "Table rows repeat identical placeholder values (same date, same status, '#' index).", "new:inconsistent-capitalisation": "The same kind of label is capitalised differently from item to item.", "new:inconsistent-component-styles": "One instance of a component is styled unlike its siblings or the rest of the UI.", "new:inset-shadowed-field": "An input is drawn inset with a grey inner shadow, often reading as disabled.", "new:keyboard-shortcut-hint": "A \"/\" keyboard shortcut hint sits in the search field.", "new:label-value-grid": "Metadata laid out as a uniform grid of grey labels over values.", "new:letter-logo-tile": "The logo is a small square tile with a letter or monogram.", "new:links-everywhere": "Every email, phone or value is rendered as an underlined link.", "new:literal-icon-logo": "The logo is a literal stock icon of the domain (truck, paw, brush).", "new:locale-number-format": "Numbers use a non-local format such as $1.800,00.", "new:minimal-chrome": "Plain pale page with no sidebar and little surrounding interface chrome.", "new:misaligned-element": "An element sits out of alignment with its neighbours.", "new:monochrome-no-accent": "The interface is black, white and grey with no accent colour.", "new:monospace-ids": "Reference IDs are set in a monospace face.", "new:muted-comparison-series": "A prior period is drawn as a muted grey line against an accented current series.", "new:nested-containers": "A table sits in a bordered box inside another card or container.", "new:no-cards": "Content sits flat on the page without card containers.", "new:odd-copy": "A heading or label uses unusual or awkward wording.", "new:overlapping-text": "Two lines of text are drawn on top of each other.", "new:oversized-numbers": "A stat or hero number is set very large.", "new:page-in-single-card": "The whole page's content is wrapped in one large card.", "new:pastel-tag-chips": "Roles, tags or allergens shown as tinted or outlined pill chips.", "new:pill-nav": "Top navigation items are rendered as pills.", "new:placeholder-contact-details": "Contact details use placeholder values such as 555 phone numbers.", "new:plain-line-chart": "A simple single-line chart without decoration.", "new:primary-secondary-button-pair": "A filled primary button sits beside a bordered secondary button.", "new:progress-bar-every-row": "Every table row carries a progress bar with a percentage.", "new:prose-chart-summary": "A caption or subtitle restates the chart's figures in words.", "new:purposeful-helper-copy": "Helper copy explains consequences or context specific to the task.", "new:quirky-sample-data": "Sample data includes quirky or joke names and odd values.", "new:radio-with-descriptions": "Radio options each carry a descriptive helper line.", "new:rainbow-colour-coding": "Avatars or pills are given many arbitrary hues, one per item or status.", "new:raised-breadcrumb-chips": "Breadcrumb or tab items are drawn as raised, shadowed button chips.", "new:raised-tactile-style": "Controls are drawn raised or bevelled, like physical keys.", "new:ranked-bar-list": "A tidy list of horizontal bars ranks items.", "new:raw-data-leak": "Raw data values (e.g. a sparkline's number list) render as visible text.", "new:raw-float-in-copy": "An unrounded floating-point number (28.000000000000004) appears in the interface.", "new:real-photo-avatars": "Avatars are real photographs of people.", "new:red-overdue-flag": "Late or overdue values are flagged in red text.", "new:relative-timestamps": "Times are shown relatively (\"2 hours ago\").", "new:rendering-artifacts": "Chart marks render with jagged or broken edges.", "new:restrained-palette": "A muted palette with one or two colours and no decoration.", "new:sample-data-label": "A \"Sample data\" pill badge is shown in the header.", "new:save-status-indicator": "A small \"Saved\" chip sits beside the primary action.", "new:segmented-controls": "Options are switched with segmented pill controls.", "new:selected-state-heavy-border": "The selected card is marked by a heavy or coloured border.", "new:sentence-status-line": "A result count is written as a full sentence with a full stop.", "new:serif-display-headings": "Headings are set in a serif display face.", "new:single-chart-focus": "One chart carries the whole page instead of a row of KPI cards.", "new:small-radius-flat-cards": "Cards have a small radius, thin borders and no soft shadow.", "new:smoothed-chart-lines": "Line charts use smoothed spline curves between points.", "new:social-media-widgets": "Social follow buttons and circular social-network icons.", "new:sort-arrows-every-column": "Every column header carries a sort arrow.", "new:sortable-columns": "A table column header carries a sort control.", "new:source-sans-type": "The interface is set in Source Sans.", "new:sparse-axis-ticks": "The x-axis shows only a few ticks (e.g. quarterly) instead of every period.", "new:sparse-dead-space": "Most of the page is left empty, with sparse content.", "new:status-hierarchy-by-fill": "Status pills differ by solid, outlined or plain fill to show rank.", "new:stock-sample-names": "Stock or invented sample organisation and people names (Northwind, Acme).", "new:stock-screen-archetype": "The screen follows a textbook template archetype (settings form, projects table, KPI dashboard).", "new:stock-status-set": "Statuses use the stock On track / At risk / Off track set.", "new:stray-focus-outline": "A focus ring is drawn around a non-input element such as the page title or main region.", "new:stray-separator": "A separator dot or bullet trails with nothing after it.", "new:sync-status-shown": "A \"Last synced/Updated\" time is shown, often with a Refresh button.", "new:takeaway-chart-title": "The chart title states the finding as a sentence.", "new:template-sample-copy": "Lorem/hipster ipsum or template demo copy is left in.", "new:text-link-tabs": "Section navigation is plain underlined text links.", "new:too-tidy-data": "Sample data is suspiciously regular: sequential IDs and uniformly plausible values.", "new:truncated-axis": "The y-axis starts above zero, exaggerating change.", "new:two-column-form-layout": "A form or editor on the left with a narrow details column on the right.", "new:two-line-cells": "Table cells carry a grey secondary line under the main value.", "new:understated-stats": "Stat tiles use small, restrained values rather than hero numbers.", "new:unequal-card-heights": "Side-by-side cards have mismatched heights.", "new:unexplained-empty-gap": "A large unexplained gap separates related elements.", "new:unlabelled-axis": "A chart axis carries no value labels.", "new:washed-out-disabled-button": "The disabled primary button is a faded, washed-out tint.", "new:zebra-striped-table": "Table rows alternate background shades."}}

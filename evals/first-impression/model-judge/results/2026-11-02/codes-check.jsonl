@@ -1,0 +1,148 @@
+{"session": 1, "stimulus": "s140", "cue": "AdminLTE-style dark sidebar with Font Awesome icons and New / count badges", "codes": ["CM6", "IC3", "new:dark-sidebar", "new:sidebar-count-badges"]}
+{"session": 1, "stimulus": "s140", "cue": "cartoon illustrated avatar set for team members", "codes": ["IC4"]}
+{"session": 1, "stimulus": "s140", "cue": "Bootstrap 4 primary/info/danger View-Edit-Delete button trio", "codes": ["CM6", "CO8"]}
+{"session": 1, "stimulus": "s140", "cue": "card header with minimise and close controls", "codes": ["new:card-window-controls"]}
+{"session": 1, "stimulus": "s571", "cue": "established admin-template header and icon nav (Interface, Components, Gallery, Documentation)", "codes": ["CM6"]}
+{"session": 1, "stimulus": "s571", "cue": "uppercase light-grey Source Sans column headers", "codes": ["new:uppercase-column-headers"]}
+{"session": 1, "stimulus": "s571", "cue": "dated 2018-era crypto sample data with CMGR/MONTH column", "codes": ["new:stock-sample-data"]}
+{"session": 1, "stimulus": "s571", "cue": "tiny coin-logo column left as dots", "codes": ["new:missing-images"]}
+{"session": 1, "stimulus": "s652", "cue": "Last contact column clipped off the right edge of the contacts card", "codes": ["new:content-clipped-overflow"]}
+{"session": 1, "stimulus": "s652", "cue": "industry and website repeated in header meta and Details panel", "codes": ["new:redundant-repeated-info"]}
+{"session": 1, "stimulus": "s652", "cue": "initials-avatar circles on every row and HF monogram tile", "codes": ["IC4"]}
+{"session": 1, "stimulus": "s652", "cue": "every section in identical rounded bordered card with grey subtitle line", "codes": ["new:every-section-carded", "CM1"]}
+{"session": 1, "stimulus": "s634", "cue": "Clear search link floating misaligned to the right of the search field", "codes": ["new:misaligned-elements"]}
+{"session": 1, "stimulus": "s634", "cue": "large unexplained gap between count and table", "codes": ["new:unexplained-gap"]}
+{"session": 1, "stimulus": "s634", "cue": "inconsistent status badge styles (In transit blue text without dot vs dotted pills)", "codes": ["new:inconsistent-component-styles"]}
+{"session": 1, "stimulus": "s634", "cue": "Weight header sits higher than the other headers", "codes": ["new:misaligned-elements"]}
+{"session": 1, "stimulus": "s634", "cue": "inset grey search field with gradient shadow", "codes": ["new:inset-shadow-field"]}
+{"session": 1, "stimulus": "s143", "cue": "20 shipments count shown twice (subtitle and right of search)", "codes": ["new:redundant-repeated-info"]}
+{"session": 1, "stimulus": "s143", "cue": "rainbow of pastel status pills, one hue per status including purple and orange", "codes": ["new:tinted-status-pills"]}
+{"session": 1, "stimulus": "s143", "cue": "whole page wrapped in one large rounded card under a slash breadcrumb header", "codes": ["new:page-in-single-card"]}
+{"session": 1, "stimulus": "s143", "cue": "truck icon logo with Brand / Section header pattern", "codes": ["new:literal-icon-logo"]}
+{"session": 1, "stimulus": "s940", "cue": "12 projects count repeated in subtitle and right of search", "codes": ["new:redundant-repeated-info"]}
+{"session": 1, "stimulus": "s940", "cue": "initials avatar circle before every owner name", "codes": ["IC4"]}
+{"session": 1, "stimulus": "s940", "cue": "progress bar plus percentage column alongside open tasks, redundant metrics", "codes": ["new:redundant-repeated-info", "new:progress-bars-in-table"]}
+{"session": 1, "stimulus": "s940", "cue": "entire page inside one big rounded card", "codes": ["new:page-in-single-card"]}
+{"session": 1, "stimulus": "s940", "cue": "Last synced timestamp next to a Refresh button", "codes": ["new:manual-refresh-control"]}
+{"session": 1, "stimulus": "s433", "cue": "unstyled native selects beside a styled segmented control", "codes": ["new:unstyled-native-control"]}
+{"session": 1, "stimulus": "s433", "cue": "text Dark mode button in the header", "codes": ["new:dark-mode-text-toggle"]}
+{"session": 1, "stimulus": "s433", "cue": "KPI cards with triangle deltas and sparklines ending in a blue dot", "codes": ["LA7", "new:kpi-delta-sparkline"]}
+{"session": 1, "stimulus": "s433", "cue": "stacked format bar with third segment unlabelled and legend wrapping unevenly", "codes": ["new:chart-labelling-defect", "new:awkward-text-wrap"]}
+{"session": 1, "stimulus": "s433", "cue": "footnote text clipped at the bottom of the branch card", "codes": ["new:content-clipped-overflow"]}
+{"session": 1, "stimulus": "s464", "cue": "AdminLTE Dashboard v2 layout with coloured icon info-boxes (CPU Traffic, Likes, Sales, New Members)", "codes": ["CM6", "CM4"]}
+{"session": 1, "stimulus": "s464", "cue": "Chart.js smoothed area chart with Goal Completion progress bars in Bootstrap colours", "codes": ["CM6", "CO8", "new:smoothed-area-chart"]}
+{"session": 1, "stimulus": "s464", "cue": "card tools: minimise, wrench dropdown, close", "codes": ["new:card-window-controls"]}
+{"session": 1, "stimulus": "s464", "cue": "US-Visitors Report vector map and sparkline values in a green box", "codes": ["new:vector-map-widget"]}
+{"session": 1, "stimulus": "s369", "cue": "axis labels with redundant decimals ($500.0K, $250.0K)", "codes": ["new:number-formatting-defect"]}
+{"session": 1, "stimulus": "s369", "cue": "y-axis truncated at $250K exaggerating growth", "codes": ["new:truncated-chart-axis"]}
+{"session": 1, "stimulus": "s369", "cue": "long auto-written caption restating min/max values to the dollar", "codes": ["new:caption-restates-data"]}
+{"session": 1, "stimulus": "s369", "cue": "stat row labels below the fold with no visual grouping", "codes": ["LA6", "LA7"]}
+{"session": 1, "stimulus": "s620", "cue": "developer toggle Make the next change fail exposed in the settings page", "codes": ["new:debug-control-exposed"]}
+{"session": 1, "stimulus": "s620", "cue": "plain underlined text links as section tabs", "codes": ["new:links-as-tabs"]}
+{"session": 1, "stimulus": "s620", "cue": "Mentions row drawn as a misaligned inner surface wider than its sibling row", "codes": ["new:misaligned-elements"]}
+{"session": 1, "stimulus": "s620", "cue": "every section in identical rounded white card with grey description line", "codes": ["new:every-section-carded", "CM1"]}
+{"session": 2, "stimulus": "s882", "cue": "recognisable hand-built admin template look: Source Sans, outline icon nav, 'Are you in trouble? Read our documentation' alert", "codes": ["CM6"]}
+{"session": 2, "stimulus": "s882", "cue": "placeholder 'Chart title' headings left in", "codes": ["CP2"]}
+{"session": 2, "stimulus": "s882", "cue": "donut chart with clipped '3.0%' label and C3-style pie colours", "codes": ["new:content-clipped-overflow", "CO8"]}
+{"session": 2, "stimulus": "s882", "cue": "real avatar photos mixed with initials fallback", "codes": ["new:real-photo-avatars"]}
+{"session": 2, "stimulus": "s882", "cue": "square-ish small-radius cards with thin borders, no soft shadows", "codes": ["new:flat-small-radius-cards"]}
+{"session": 2, "stimulus": "s443", "cue": "uppercase tracked eyebrow 'NORTHWIND · PRODUCT TEAM' above title", "codes": ["TY4"]}
+{"session": 2, "stimulus": "s443", "cue": "pastel dot status pills and saturated colourful initials avatars", "codes": ["new:tinted-status-pills", "IC4"]}
+{"session": 2, "stimulus": "s443", "cue": "search with '/' keyboard hint and sort arrows on every uppercase header", "codes": ["new:keyboard-shortcut-hint", "new:sortable-column-headers", "new:uppercase-column-headers"]}
+{"session": 2, "stimulus": "s443", "cue": "blue progress bars with % and relative 'hours ago' timestamps", "codes": ["new:progress-bars-in-table", "new:relative-timestamps"]}
+{"session": 2, "stimulus": "s443", "cue": "Northwind sample data and diverse name roster", "codes": ["new:stock-sample-data"]}
+{"session": 2, "stimulus": "s669", "cue": "redundant 'yesterday' timestamp under a 'Yesterday' group heading", "codes": ["new:redundant-repeated-info"]}
+{"session": 2, "stimulus": "s669", "cue": "breadcrumb as raised shadowed button chips", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 2, "stimulus": "s669", "cue": "metadata line with cramped '·' separators and no spacing after the pill", "codes": ["new:dot-separated-meta", "new:cramped-spacing"]}
+{"session": 2, "stimulus": "s669", "cue": "every email and phone underlined as a link, making the contacts column busy", "codes": ["new:underlined-contact-links"]}
+{"session": 2, "stimulus": "s750", "cue": "row of five KPI cards with ▲ deltas and sparklines ending in a blue dot", "codes": ["LA7", "new:kpi-delta-sparkline"]}
+{"session": 2, "stimulus": "s750", "cue": "awkward wrapping in KPI labels ('New subscriptions (12 mo)', '+0.28 pts' breaking)", "codes": ["new:awkward-text-wrap"]}
+{"session": 2, "stimulus": "s750", "cue": "native browser select beside custom segmented control", "codes": ["new:unstyled-native-control"]}
+{"session": 2, "stimulus": "s750", "cue": "oversized hero number in the first KPI card", "codes": ["new:oversized-hero-number"]}
+{"session": 2, "stimulus": "s750", "cue": "'Dark mode' text button in the header", "codes": ["new:dark-mode-text-toggle"]}
+{"session": 3, "stimulus": "s261", "cue": "floating-point bug rendered in copy: 'Target 28.000000000000004–35%'", "codes": ["new:number-formatting-defect"]}
+{"session": 3, "stimulus": "s261", "cue": "every section in its own rounded bordered white card", "codes": ["new:every-section-carded", "CM1"]}
+{"session": 3, "stimulus": "s261", "cue": "uniform 3-column label/value grid with identical grey labels", "codes": ["new:label-value-grid"]}
+{"session": 3, "stimulus": "s261", "cue": "monogram avatar circles on a vertical timeline with grey diff boxes", "codes": ["IC4", "new:activity-timeline"]}
+{"session": 3, "stimulus": "s369", "cue": "'Price change' event annotation line on the chart", "codes": ["new:chart-event-annotation"]}
+{"session": 3, "stimulus": "s369", "cue": "Chart/Table segmented toggle offering an accessible data alternative", "codes": ["new:chart-table-toggle"]}
+{"session": 3, "stimulus": "s369", "cue": "headline states the finding with exact figures", "codes": ["new:finding-as-headline"]}
+{"session": 3, "stimulus": "s369", "cue": "direct end-of-line label 'MRR', no legend, no card chrome", "codes": ["new:direct-chart-labels", "new:no-card-chrome"]}
+{"session": 3, "stimulus": "s143", "cue": "'20 shipments' count repeated twice (subtitle and right of search)", "codes": ["new:redundant-repeated-info"]}
+{"session": 3, "stimulus": "s143", "cue": "rainbow of tinted status pills: blue, green, orange, purple, grey, red", "codes": ["new:tinted-status-pills"]}
+{"session": 3, "stimulus": "s143", "cue": "table nested inside a rounded card inside another bordered container", "codes": ["new:nested-containers"]}
+{"session": 3, "stimulus": "s143", "cue": "generic invented company names (Ridgeway Freight, FreshPath Produce, Ironclad Fabrication)", "codes": ["new:stock-sample-data"]}
+{"session": 3, "stimulus": "s143", "cue": "two-line cells with grey secondary line in nearly every column", "codes": ["new:two-line-cells"]}
+{"session": 3, "stimulus": "s753", "cue": "ingredients grouped by stage ('Braise') with quantity-first columns, kitchen-style", "codes": ["new:domain-specific-structure"]}
+{"session": 3, "stimulus": "s753", "cue": "no card chrome; content laid flat with a narrow details column", "codes": ["new:no-card-chrome"]}
+{"session": 3, "stimulus": "s753", "cue": "expert service copy ('Glaze under the salamander to order')", "codes": ["new:domain-expert-copy"]}
+{"session": 3, "stimulus": "s753", "cue": "breadcrumb trail as stacked raised chips with the current one lifted", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 3, "stimulus": "s474", "cue": "stray blue focus outline drawn around the whole main region", "codes": ["new:stray-focus-outline"]}
+{"session": 3, "stimulus": "s474", "cue": "cute product name 'PawBook' with paw icon and initials avatar", "codes": ["new:invented-brand-name", "new:literal-icon-logo", "IC4"]}
+{"session": 3, "stimulus": "s474", "cue": "single 'General' card with two fields and helper text under each", "codes": ["new:helper-text-every-field", "new:sparse-content"]}
+{"session": 3, "stimulus": "s474", "cue": "faded green disabled 'Save changes' beside outlined Cancel", "codes": ["new:disabled-primary-button"]}
+{"session": 3, "stimulus": "s474", "cue": "generic subtitle 'Update how your practice appears to clients.'", "codes": ["CP2"]}
+{"session": 3, "stimulus": "s364", "cue": "warm cream background, serif display headings and terracotta primary button: the stock 'artisanal' themed look", "codes": ["CO4", "new:serif-display-headings"]}
+{"session": 3, "stimulus": "s364", "cue": "six-cell stat strip with uppercase tracked labels", "codes": ["LA7", "TY4"]}
+{"session": 3, "stimulus": "s364", "cue": "'Harrow & Vine' invented name and bullet-separated meta row with stray dots", "codes": ["new:invented-brand-name", "new:dot-separated-meta"]}
+{"session": 3, "stimulus": "s364", "cue": "cards with header dividers for Ingredients and Service details", "codes": ["new:card-header-dividers"]}
+{"session": 3, "stimulus": "s669", "cue": "redundant timestamps: 'Yesterday' group header and 'yesterday' under the item", "codes": ["new:redundant-repeated-info"]}
+{"session": 3, "stimulus": "s669", "cue": "footnote 'Dana Whitfield is the main point of contact' repeats the 'Primary' badge", "codes": ["new:redundant-repeated-info"]}
+{"session": 3, "stimulus": "s669", "cue": "renewal date repeated in subtitle and Details table", "codes": ["new:redundant-repeated-info"]}
+{"session": 3, "stimulus": "s669", "cue": "every email and phone rendered as underlined blue links in a dense stack", "codes": ["new:underlined-contact-links"]}
+{"session": 4, "stimulus": "s940", "cue": "generic projects table in a single rounded card: checkbox, status pill with coloured dot, avatar initials, progress bar", "codes": ["new:stock-screen-archetype", "new:page-in-single-card", "new:row-checkbox-column", "new:tinted-status-pills", "IC4", "new:progress-bars-in-table"]}
+{"session": 4, "stimulus": "s940", "cue": "On track / At risk / Off track status triad", "codes": ["new:stock-status-triad"]}
+{"session": 4, "stimulus": "s940", "cue": "search input plus Refresh button with Last synced subtitle", "codes": ["new:manual-refresh-control"]}
+{"session": 4, "stimulus": "s940", "cue": "Northwind placeholder team and tidy 3-letter codes under names", "codes": ["new:stock-sample-data"]}
+{"session": 4, "stimulus": "s762", "cue": "AdminLTE/Bootstrap 4 admin template look with dark sidebar and Font Awesome icons", "codes": ["CM6", "IC3", "new:dark-sidebar"]}
+{"session": 4, "stimulus": "s762", "cue": "real photo avatars", "codes": ["new:real-photo-avatars"]}
+{"session": 4, "stimulus": "s762", "cue": "hipster ipsum and Lorem ipsum filler with Demo File labels", "codes": ["CP2"]}
+{"session": 4, "stimulus": "s762", "cue": "dated flat 2014-era styling, New and numbered sidebar badges", "codes": ["new:dated-flat-styling", "new:sidebar-count-badges"]}
+{"session": 4, "stimulus": "s762", "cue": "stat boxes cramped, Estimated project duration text overflowing its box", "codes": ["new:cramped-spacing", "new:content-clipped-overflow"]}
+{"session": 4, "stimulus": "s484", "cue": "generic projects table with On track / At risk / Off track / Completed pills with dots", "codes": ["new:stock-screen-archetype", "new:tinted-status-pills", "new:stock-status-triad"]}
+{"session": 4, "stimulus": "s484", "cue": "12 projects found count and Refresh button, checkbox column, sortable header", "codes": ["new:result-count-label", "new:manual-refresh-control", "new:row-checkbox-column", "new:sortable-column-headers"]}
+{"session": 4, "stimulus": "s484", "cue": "stock names Priya Natarajan, Tomas Herrera, Elena Sokolova", "codes": ["new:stock-sample-data"]}
+{"session": 4, "stimulus": "s484", "cue": "pale grey page, no sidebar, minimal chrome", "codes": ["new:pale-grey-ground", "new:minimal-chrome"]}
+{"session": 4, "stimulus": "s374", "cue": "Northwind Product Team placeholder with Priya Raman owner", "codes": ["new:stock-sample-data"]}
+{"session": 4, "stimulus": "s374", "cue": "single bordered white card of label/value pairs in two columns", "codes": ["new:label-value-grid"]}
+{"session": 4, "stimulus": "s374", "cue": "heading shown in an edit-focus box with cramped padding looks like a defect", "codes": ["new:inline-edit-title", "new:cramped-spacing"]}
+{"session": 4, "stimulus": "s374", "cue": "narrow centred column with empty page below, minimal content", "codes": ["new:narrow-centred-column", "new:sparse-content"]}
+{"session": 4, "stimulus": "s474", "cue": "PawBook veterinary invention with paw logo, green tint theme and Dr. Priya Raman avatar", "codes": ["new:invented-brand-name", "new:literal-icon-logo", "new:single-hue-tint-theme", "new:stock-sample-data"]}
+{"session": 4, "stimulus": "s474", "cue": "single bordered General card with helper text under each field", "codes": ["new:helper-text-every-field", "new:sparse-content"]}
+{"session": 4, "stimulus": "s474", "cue": "Cancel plus disabled-looking muted green Save changes at card bottom", "codes": ["new:disabled-primary-button"]}
+{"session": 4, "stimulus": "s474", "cue": "stock settings form archetype, lots of unused space", "codes": ["new:stock-screen-archetype", "new:sparse-content"]}
+{"session": 4, "stimulus": "s474", "cue": "descriptive explanatory microcopy under every field", "codes": ["new:helper-text-every-field"]}
+{"session": 4, "stimulus": "s464", "cue": "AdminLTE Dashboard v2 demo with CPU Traffic / Likes / Sales / New Members coloured icon boxes", "codes": ["CM6", "CM4"]}
+{"session": 4, "stimulus": "s464", "cue": "smoothed overlapping area chart with unlabeled y values, Goal Completion bars in four colours", "codes": ["new:smoothed-area-chart", "new:chart-labelling-defect"]}
+{"session": 4, "stimulus": "s464", "cue": "US-Visitors map with raw 90,70,90,70 sparkline text leaking", "codes": ["new:vector-map-widget", "new:raw-markup-leak"]}
+{"session": 4, "stimulus": "s464", "cue": "dark sidebar with New and count badges, saturated Bootstrap palette", "codes": ["new:dark-sidebar", "new:sidebar-count-badges", "CO8"]}
+{"session": 4, "stimulus": "s143", "cue": "Ridgeway Freight Shipment Tracker with truck icon and breadcrumb header", "codes": ["new:invented-brand-name", "new:literal-icon-logo"]}
+{"session": 4, "stimulus": "s143", "cue": "tinted pill statuses in blue, green, orange, purple, red across a table in one rounded card", "codes": ["new:tinted-status-pills", "new:page-in-single-card"]}
+{"session": 4, "stimulus": "s143", "cue": "search input, Refresh button, shipments count repeated twice (subtitle and right side)", "codes": ["new:manual-refresh-control", "new:redundant-repeated-info"]}
+{"session": 4, "stimulus": "s143", "cue": "very tidy generated data: sequential SHP refs, plausible PO/BOL, cities, carriers", "codes": ["new:stock-sample-data"]}
+{"session": 4, "stimulus": "s812", "cue": "headline states the finding with causal detail: signups doubled after the pricing change, 39 a day to 80", "codes": ["new:finding-as-headline"]}
+{"session": 4, "stimulus": "s812", "cue": "single direct-labelled line with no legend or card chrome", "codes": ["new:direct-chart-labels", "new:no-card-chrome"]}
+{"session": 4, "stimulus": "s812", "cue": "caption explaining the free plan gaining a third project", "codes": ["new:explanatory-chart-caption"]}
+{"session": 4, "stimulus": "s812", "cue": "Around it supporting stats section beneath the chart", "codes": ["new:supporting-stats-section"]}
+{"session": 5, "stimulus": "s780", "cue": "Tabler-style invoice template", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s780", "cue": "placeholder Company/Client address", "codes": ["CP2"]}
+{"session": 5, "stimulus": "s780", "cue": "bordered table with grid lines", "codes": ["new:gridlined-table"]}
+{"session": 5, "stimulus": "s369", "cue": "headline states the finding", "codes": ["new:finding-as-headline"]}
+{"session": 5, "stimulus": "s369", "cue": "chart/table toggle, annotated 'Price change' line", "codes": ["new:chart-table-toggle", "new:chart-event-annotation"]}
+{"session": 5, "stimulus": "s369", "cue": "minimal single-line chart", "codes": ["new:minimal-line-chart"]}
+{"session": 5, "stimulus": "s134", "cue": "bevelled tab and raised blue button", "codes": ["new:bevelled-raised-controls"]}
+{"session": 5, "stimulus": "s134", "cue": "sparse layout, ruled detail list", "codes": ["new:sparse-content", "new:ruled-detail-list"]}
+{"session": 5, "stimulus": "s134", "cue": "grey background, plain cards", "codes": ["new:pale-grey-ground", "new:plain-cards"]}
+{"session": 5, "stimulus": "s907", "cue": "workspace overview: stats, projects table, avatar stack", "codes": ["new:stock-screen-archetype", "LA7", "new:avatar-stack"]}
+{"session": 5, "stimulus": "s907", "cue": "clipped overlapping avatar initials", "codes": ["new:content-clipped-overflow", "IC4"]}
+{"session": 5, "stimulus": "s907", "cue": "centered narrow container, pill statuses", "codes": ["new:narrow-centred-column", "new:tinted-status-pills"]}
+{"session": 5, "stimulus": "s894", "cue": "Tabler profile/social feed template", "codes": ["CM6"]}
+{"session": 5, "stimulus": "s894", "cue": "lorem ipsum, stock photos", "codes": ["CP2", "IC4"]}
+{"session": 5, "stimulus": "s894", "cue": "social icons circles", "codes": ["new:circular-social-icons"]}
+{"session": 5, "stimulus": "s497", "cue": "finding as chart headline", "codes": ["new:finding-as-headline"]}
+{"session": 5, "stimulus": "s497", "cue": "annotated vertical line", "codes": ["new:chart-event-annotation"]}
+{"session": 5, "stimulus": "s497", "cue": "plain line chart", "codes": ["new:minimal-line-chart"]}
+{"session": 5, "stimulus": "s374", "cue": "focused inline-edit title", "codes": ["new:inline-edit-title"]}
+{"session": 5, "stimulus": "s374", "cue": "bevelled breadcrumb", "codes": ["new:raised-breadcrumb-chips"]}
+{"session": 5, "stimulus": "s374", "cue": "sparse detail card", "codes": ["new:sparse-content"]}
+{"newLabels": {"new:activity-timeline": "A vertical activity timeline of events with avatars and change boxes.", "new:avatar-stack": "Overlapping stacked avatars.", "new:awkward-text-wrap": "Labels or legends wrap at awkward points.", "new:bevelled-raised-controls": "Tabs and buttons drawn bevelled or raised.", "new:caption-restates-data": "A long caption restates values already visible in the chart.", "new:card-header-dividers": "Cards with a rule dividing a header row from the body.", "new:card-window-controls": "Card headers carry minimise, settings or close controls like a window.", "new:chart-event-annotation": "A chart carries an annotation line marking an event.", "new:chart-labelling-defect": "Chart segments, axes or legends left unlabelled or laid out badly.", "new:chart-table-toggle": "A toggle to switch between a chart and a data table.", "new:circular-social-icons": "Social network icons in filled circles.", "new:content-clipped-overflow": "Text, columns or labels are clipped by or overflow their container.", "new:cramped-spacing": "Elements packed with too little padding or spacing.", "new:dark-mode-text-toggle": "A plain text 'Dark mode' button in the header.", "new:dark-sidebar": "A dark-filled navigation sidebar beside a light content area.", "new:dated-flat-styling": "Flat styling of an older era (circa 2014).", "new:debug-control-exposed": "A developer or test control is visible in the shipped UI.", "new:direct-chart-labels": "Series labelled directly at the line end instead of a legend.", "new:disabled-primary-button": "The primary action shown faded or disabled-looking.", "new:domain-expert-copy": "Copy using expert, domain-specific language.", "new:domain-specific-structure": "Content structured by the domain's own conventions (e.g. ingredients grouped by stage, quantity first).", "new:dot-separated-meta": "A metadata line of items separated by middle dots or bullets.", "new:every-section-carded": "Every section sits in its own identical bordered card, often with a grey subtitle line.", "new:explanatory-chart-caption": "A caption that explains why the data changed.", "new:finding-as-headline": "The chart's headline states the finding, often with figures.", "new:flat-small-radius-cards": "Cards with small radius, thin borders and no soft shadow.", "new:gridlined-table": "A bordered table with full grid lines.", "new:helper-text-every-field": "Explanatory helper text under every form field.", "new:inconsistent-component-styles": "The same kind of component is drawn in different styles on one screen.", "new:inline-edit-title": "The page title shown inside an inline-edit focus box.", "new:inset-shadow-field": "Input fields drawn inset with a grey fill and gradient or inner shadow.", "new:invented-brand-name": "A made-up product or business name used as the app's brand.", "new:keyboard-shortcut-hint": "A keyboard shortcut hint (such as '/') inside the search field.", "new:kpi-delta-sparkline": "KPI cards with triangle deltas and a sparkline ending in a dot.", "new:label-value-grid": "Details laid out as a uniform grid of grey labels over values.", "new:links-as-tabs": "Plain underlined text links used as section tabs.", "new:literal-icon-logo": "The product logo is a stock icon literally matching the domain (truck, paw).", "new:manual-refresh-control": "A Refresh button, often with a 'Last synced' timestamp.", "new:minimal-chrome": "Little or no application chrome (no sidebar, sparse header).", "new:minimal-line-chart": "A plain chart with a single line and little decoration.", "new:misaligned-elements": "Elements sit off the shared alignment of their siblings.", "new:missing-images": "Image slots (logos, icons) render empty or as dots because the image never loaded.", "new:narrow-centred-column": "Content confined to a narrow centred column.", "new:nested-containers": "Containers nested inside other bordered containers.", "new:no-card-chrome": "Content laid flat on the page without card borders or containers.", "new:number-formatting-defect": "Numbers shown with spurious decimals or raw floating-point output.", "new:oversized-hero-number": "One KPI number drawn much larger than the others.", "new:page-in-single-card": "The whole page content is wrapped in one large rounded card.", "new:pale-grey-ground": "A pale grey page background.", "new:plain-cards": "Unadorned cards with no decoration.", "new:progress-bars-in-table": "Table rows carry inline progress bars, often with a percentage beside them.", "new:raised-breadcrumb-chips": "Breadcrumb items drawn as raised, shadowed or bevelled chips.", "new:raw-markup-leak": "Raw data or markup text leaking into the rendered UI.", "new:real-photo-avatars": "Avatars use real photographs.", "new:redundant-repeated-info": "The same value or fact is shown twice or more on one screen.", "new:relative-timestamps": "Times shown relatively ('3 hours ago', 'yesterday').", "new:result-count-label": "A results count shown above or beside the table.", "new:row-checkbox-column": "A checkbox selection column on the table's left.", "new:ruled-detail-list": "Details shown as a list separated by horizontal rules.", "new:serif-display-headings": "Headings set in a serif display face.", "new:sidebar-count-badges": "Navigation items carry 'New' or numeric count badges.", "new:single-hue-tint-theme": "The whole interface tinted in one brand hue.", "new:smoothed-area-chart": "Smoothed (curved) area charts, often overlapping series.", "new:sortable-column-headers": "Sort affordances on table column headers, often on every column.", "new:sparse-content": "Very little content with lots of unused space.", "new:stock-sample-data": "Tidy invented demo data: placeholder company, team and person names, sequential codes, sample records.", "new:stock-screen-archetype": "The screen follows a stock template archetype (projects table, settings form, workspace overview).", "new:stock-status-triad": "Statuses from the stock set On track / At risk / Off track (/ Completed).", "new:stray-focus-outline": "A focus outline drawn around a large non-interactive region.", "new:supporting-stats-section": "A section of supporting statistics placed beneath the chart.", "new:tinted-status-pills": "Statuses shown as pastel tinted pills, often one hue per status and sometimes with a leading dot.", "new:truncated-chart-axis": "A chart axis starts above zero, exaggerating change.", "new:two-line-cells": "Table cells with a primary line and a grey secondary line in most columns.", "new:underlined-contact-links": "Every email and phone number rendered as an underlined link.", "new:unexplained-gap": "A large empty gap between related elements with no apparent reason.", "new:unstyled-native-control": "Unstyled native browser controls placed beside custom-styled ones.", "new:uppercase-column-headers": "Table column headers set in uppercase, usually light grey.", "new:vector-map-widget": "A vector map widget (e.g. visitors by region) in the dashboard."}}

@@ -11,6 +11,7 @@ const steps=[
  ['evals/framework/harness.test.mjs'],
  ['evals/framework/evaluator/assess.test.mjs'],
  ['evals/distinctiveness/briefs.test.mjs'],
+ ['evals/first-impression/model-judge/model-judge.test.mjs'],
  ['evals/adherence/score.test.mjs'],
  ['scripts/measure-framework.mjs'],
 ];

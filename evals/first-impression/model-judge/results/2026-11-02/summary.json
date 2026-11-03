@@ -1,0 +1,1719 @@
+{
+  "sessions": 5,
+  "judges": {
+    "1": "claude-opus-5-5",
+    "2": "claude-opus-5-5",
+    "3": "claude-opus-5-5",
+    "4": "claude-sonnet-5-5",
+    "5": "claude-sonnet-5-5"
+  },
+  "answers": 180,
+  "problems": [],
+  "origin": {
+    "pooled": {
+      "claude-plain": {
+        "p": 1,
+        "lo": 1,
+        "hi": 1,
+        "n": 40,
+        "confidence": 2.85
+      },
+      "claude-shadcn": {
+        "p": 0.95,
+        "lo": 0.875,
+        "hi": 1,
+        "n": 40,
+        "confidence": 2.825
+      },
+      "claude-altitude": {
+        "p": 0.575,
+        "lo": 0.35,
+        "hi": 0.75,
+        "n": 40,
+        "confidence": 2.15
+      },
+      "human": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 40,
+        "confidence": 3.375
+      },
+      "altitude-preview": {
+        "p": 0.6,
+        "lo": 0.45,
+        "hi": 0.75,
+        "n": 20,
+        "confidence": 2.3
+      }
+    },
+    "claude-opus-5-5": {
+      "claude-plain": {
+        "p": 1,
+        "lo": 1,
+        "hi": 1,
+        "n": 24,
+        "confidence": 2.875
+      },
+      "claude-shadcn": {
+        "p": 0.9166666666666666,
+        "lo": 0.7916666666666666,
+        "hi": 1,
+        "n": 24,
+        "confidence": 2.8333333333333335
+      },
+      "claude-altitude": {
+        "p": 0.75,
+        "lo": 0.4583333333333333,
+        "hi": 0.9583333333333334,
+        "n": 24,
+        "confidence": 2.25
+      },
+      "human": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 24,
+        "confidence": 3.25
+      },
+      "altitude-preview": {
+        "p": 0.8333333333333334,
+        "lo": 0.6666666666666666,
+        "hi": 1,
+        "n": 12,
+        "confidence": 2.4166666666666665
+      }
+    },
+    "claude-sonnet-5-5": {
+      "claude-plain": {
+        "p": 1,
+        "lo": 1,
+        "hi": 1,
+        "n": 16,
+        "confidence": 2.8125
+      },
+      "claude-shadcn": {
+        "p": 1,
+        "lo": 1,
+        "hi": 1,
+        "n": 16,
+        "confidence": 2.8125
+      },
+      "claude-altitude": {
+        "p": 0.3125,
+        "lo": 0.125,
+        "hi": 0.4375,
+        "n": 16,
+        "confidence": 2
+      },
+      "human": {
+        "p": 0,
+        "lo": 0,
+        "hi": 0,
+        "n": 16,
+        "confidence": 3.5625
+      },
+      "altitude-preview": {
+        "p": 0.25,
+        "lo": 0,
+        "hi": 0.5,
+        "n": 8,
+        "confidence": 2.125
+      }
+    }
+  },
+  "discrimination": [
+    {
+      "session": 1,
+      "model": "claude-opus-5-5",
+      "allBuilt": {
+        "d": 2.6735381586749583,
+        "c": 0.2564497374429763
+      },
+      "claude-plain": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-shadcn": {
+        "d": 2.182674615211468,
+        "c": 0.5018815091747214
+      },
+      "claude-altitude": {
+        "d": 2.5606403834351554,
+        "c": 0.31289862506287774
+      }
+    },
+    {
+      "session": 2,
+      "model": "claude-opus-5-5",
+      "allBuilt": {
+        "d": 2.8747703809206118,
+        "c": 0.15583362632014963
+      },
+      "claude-plain": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-shadcn": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-altitude": {
+        "d": 2.182674615211468,
+        "c": 0.5018815091747214
+      }
+    },
+    {
+      "session": 3,
+      "model": "claude-opus-5-5",
+      "allBuilt": {
+        "d": 2.6735381586749583,
+        "c": 0.2564497374429763
+      },
+      "claude-plain": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-shadcn": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-altitude": {
+        "d": 1.8754349635250207,
+        "c": 0.6555013350179452
+      }
+    },
+    {
+      "session": 4,
+      "model": "claude-sonnet-5-5",
+      "allBuilt": {
+        "d": 2.6735381586749583,
+        "c": 0.2564497374429763
+      },
+      "claude-plain": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-shadcn": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-altitude": {
+        "d": 1.8754349635250207,
+        "c": 0.6555013350179452
+      }
+    },
+    {
+      "session": 5,
+      "model": "claude-sonnet-5-5",
+      "allBuilt": {
+        "d": 2.0056819462189317,
+        "c": 0.5903778436709897
+      },
+      "claude-plain": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-shadcn": {
+        "d": 3.186437633560911,
+        "c": 0
+      },
+      "claude-altitude": {
+        "d": 0,
+        "c": 1.5932188167804555
+      }
+    }
+  ],
+  "codes": {
+    "claude-plain": {
+      "aiAnswers": 40,
+      "cited": {
+        "LA7": 20,
+        "TY4": 14,
+        "IC4": 12,
+        "new:rainbow-colour-coding": 12,
+        "new:dotted-pastel-status-pills": 11,
+        "CO8": 10,
+        "new:letter-logo-tile": 10,
+        "new:page-in-single-card": 10,
+        "new:washed-out-disabled-button": 10,
+        "new:helper-text-every-field": 9,
+        "new:keyboard-shortcut-hint": 9,
+        "new:stock-sample-names": 9,
+        "new:every-section-in-card": 8,
+        "new:awkward-text-wrap": 8,
+        "new:dark-mode-toggle": 8,
+        "new:stock-screen-archetype": 8,
+        "new:gradient-logo-mark": 7,
+        "new:inconsistent-component-styles": 6,
+        "CO1": 6,
+        "new:pastel-tag-chips": 6,
+        "CO4": 5,
+        "new:serif-display-headings": 5,
+        "new:card-footer-action-bar": 5,
+        "new:sort-arrows-every-column": 5,
+        "new:generic-product-name": 5,
+        "new:stray-focus-outline": 4,
+        "new:chart-legend-mismatch": 4,
+        "new:stray-separator": 4,
+        "new:monospace-ids": 4,
+        "new:progress-bar-every-row": 4,
+        "CM6": 3,
+        "new:sparse-dead-space": 3,
+        "TY1": 3,
+        "new:literal-icon-logo": 3,
+        "new:count-beside-search": 3,
+        "new:dot-separated-meta": 3,
+        "new:oversized-numbers": 3,
+        "new:gradient-area-fill": 3,
+        "new:chart-table-toggle": 2,
+        "new:generic-subtitle": 2,
+        "new:clipped-content": 2,
+        "new:sync-status-shown": 2,
+        "new:relative-timestamps": 2,
+        "new:two-line-cells": 2,
+        "new:filter-toolbar": 2,
+        "new:delta-indicators": 2,
+        "new:red-overdue-flag": 2,
+        "new:selected-state-heavy-border": 1,
+        "IC3": 1,
+        "new:direct-line-labels": 1,
+        "LA4": 1,
+        "new:em-dash-copy": 1,
+        "new:diverse-name-roster": 1,
+        "new:domain-expert-copy": 1,
+        "new:stock-status-set": 1,
+        "new:segmented-controls": 1,
+        "new:card-header-dividers": 1,
+        "new:primary-secondary-button-pair": 1,
+        "new:checkbox-column": 1,
+        "new:pill-nav": 1
+      }
+    },
+    "claude-shadcn": {
+      "aiAnswers": 38,
+      "cited": {
+        "LA7": 18,
+        "new:every-section-in-card": 17,
+        "IC4": 16,
+        "CM6": 11,
+        "new:generic-subtitle": 10,
+        "new:duplicated-information": 10,
+        "new:clipped-content": 10,
+        "new:stock-sample-names": 10,
+        "new:page-in-single-card": 7,
+        "LA4": 7,
+        "new:dotted-pastel-status-pills": 7,
+        "new:monochrome-no-accent": 6,
+        "IC3": 6,
+        "new:status-hierarchy-by-fill": 6,
+        "new:raw-float-in-copy": 5,
+        "new:understated-stats": 5,
+        "new:rainbow-colour-coding": 5,
+        "new:literal-icon-logo": 5,
+        "new:avatar-stack": 5,
+        "new:sample-data-label": 5,
+        "new:consistent-outline-icons": 4,
+        "new:rendering-artifacts": 4,
+        "new:sync-status-shown": 4,
+        "new:diff-chips": 4,
+        "new:pastel-tag-chips": 4,
+        "new:smoothed-chart-lines": 4,
+        "new:progress-bar-every-row": 4,
+        "new:diverse-name-roster": 4,
+        "new:two-line-cells": 4,
+        "new:stock-screen-archetype": 4,
+        "new:chart-event-annotation": 3,
+        "new:selected-state-heavy-border": 3,
+        "new:letter-logo-tile": 3,
+        "new:chart-legend-mismatch": 3,
+        "new:awkward-number-format": 3,
+        "new:generic-product-name": 3,
+        "new:monospace-ids": 3,
+        "new:sparse-dead-space": 2,
+        "new:dark-mode-toggle": 2,
+        "new:label-value-grid": 2,
+        "new:gradient-area-fill": 2,
+        "new:nested-containers": 2,
+        "new:stock-status-set": 2,
+        "new:segmented-controls": 2,
+        "new:chart-table-toggle": 1,
+        "TY1": 1,
+        "new:takeaway-chart-title": 1,
+        "IC1": 1,
+        "new:eyebrow-label": 1,
+        "new:centred-fixed-container": 1,
+        "new:too-tidy-data": 1,
+        "new:checkbox-column": 1,
+        "new:ranked-bar-list": 1,
+        "new:ellipsis-placeholder": 1
+      }
+    },
+    "claude-altitude": {
+      "aiAnswers": 23,
+      "cited": {
+        "new:raised-breadcrumb-chips": 9,
+        "new:misaligned-element": 8,
+        "new:duplicated-information": 8,
+        "new:sparse-dead-space": 7,
+        "new:stock-sample-names": 7,
+        "new:unexplained-empty-gap": 6,
+        "new:inconsistent-component-styles": 6,
+        "new:generic-subtitle": 5,
+        "new:label-value-grid": 5,
+        "new:glossy-raised-button": 4,
+        "new:stray-focus-outline": 4,
+        "new:dotted-pastel-status-pills": 4,
+        "new:inset-shadowed-field": 3,
+        "BH4": 3,
+        "new:diverse-name-roster": 3,
+        "new:links-everywhere": 3,
+        "new:unequal-card-heights": 2,
+        "new:inconsistent-capitalisation": 2,
+        "new:count-beside-search": 2,
+        "new:hairline-row-dividers": 2,
+        "new:stock-status-set": 2,
+        "new:placeholder-contact-details": 2,
+        "new:every-section-in-card": 1,
+        "IC4": 1,
+        "new:prose-chart-summary": 1,
+        "new:sentence-status-line": 1,
+        "LA7": 1,
+        "new:purposeful-helper-copy": 1,
+        "new:clipped-content": 1,
+        "new:page-in-single-card": 1,
+        "LA4": 1,
+        "new:awkward-number-format": 1,
+        "new:sort-arrows-every-column": 1,
+        "new:domain-inconsistency": 1,
+        "new:truncated-axis": 1,
+        "LA6": 1,
+        "new:monospace-ids": 1,
+        "new:dot-separated-meta": 1,
+        "new:cramped-spacing": 1,
+        "new:stock-screen-archetype": 1,
+        "new:centred-fixed-container": 1,
+        "new:minimal-chrome": 1,
+        "new:checkbox-column": 1
+      }
+    },
+    "human": {
+      "aiAnswers": 0,
+      "cited": {}
+    },
+    "altitude-preview": {
+      "aiAnswers": 12,
+      "cited": {
+        "new:misaligned-element": 7,
+        "new:debug-control-exposed": 7,
+        "new:raised-breadcrumb-chips": 5,
+        "new:stock-sample-names": 5,
+        "new:every-section-in-card": 4,
+        "new:text-link-tabs": 4,
+        "new:generic-subtitle": 3,
+        "new:sparse-dead-space": 3,
+        "new:save-status-indicator": 3,
+        "IC4": 2,
+        "new:inset-shadowed-field": 2,
+        "new:glossy-raised-button": 2,
+        "new:duplicated-information": 2,
+        "new:purposeful-helper-copy": 2,
+        "new:odd-copy": 2,
+        "new:prose-chart-summary": 1,
+        "new:inconsistent-component-styles": 1,
+        "BH4": 1,
+        "LA7": 1,
+        "new:clipped-content": 1,
+        "new:page-in-single-card": 1,
+        "new:washed-out-disabled-button": 1,
+        "new:helper-text-every-field": 1,
+        "new:overlapping-text": 1,
+        "new:headline-not-shown-in-chart": 1,
+        "new:oversized-numbers": 1,
+        "new:crowded-axis-labels": 1,
+        "new:radio-with-descriptions": 1,
+        "new:stock-screen-archetype": 1
+      }
+    }
+  },
+  "newTells": [
+    {
+      "label": "new:every-section-in-card",
+      "definition": "Every section sits in its own identical rounded bordered card.",
+      "share": {
+        "claude-plain": 0.2,
+        "claude-shadcn": 0.4473684210526316,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:raised-breadcrumb-chips",
+      "definition": "Breadcrumb or tab items are drawn as raised, shadowed button chips.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.391304347826087
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:duplicated-information",
+      "definition": "The same fact (count, name, date) is shown twice on the screen.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.2631578947368421,
+        "claude-altitude": 0.34782608695652173
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:misaligned-element",
+      "definition": "An element sits out of alignment with its neighbours.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.34782608695652173
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:sparse-dead-space",
+      "definition": "Most of the page is left empty, with sparse content.",
+      "share": {
+        "claude-plain": 0.075,
+        "claude-shadcn": 0.05263157894736842,
+        "claude-altitude": 0.30434782608695654
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:stock-sample-names",
+      "definition": "Stock or invented sample organisation and people names (Northwind, Acme).",
+      "share": {
+        "claude-plain": 0.225,
+        "claude-shadcn": 0.2631578947368421,
+        "claude-altitude": 0.30434782608695654
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:rainbow-colour-coding",
+      "definition": "Avatars or pills are given many arbitrary hues, one per item or status.",
+      "share": {
+        "claude-plain": 0.3,
+        "claude-shadcn": 0.13157894736842105,
+        "claude-altitude": 0
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:dotted-pastel-status-pills",
+      "definition": "Status shown as tinted pills with a leading coloured dot.",
+      "share": {
+        "claude-plain": 0.275,
+        "claude-shadcn": 0.18421052631578946,
+        "claude-altitude": 0.17391304347826086
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:clipped-content",
+      "definition": "Text, columns or labels are cut off or overflow their container.",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0.2631578947368421,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:generic-subtitle",
+      "definition": "A generic subtitle restates the page title or task.",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0.2631578947368421,
+        "claude-altitude": 0.21739130434782608
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:inconsistent-component-styles",
+      "definition": "One instance of a component is styled unlike its siblings or the rest of the UI.",
+      "share": {
+        "claude-plain": 0.15,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.2608695652173913
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:unexplained-empty-gap",
+      "definition": "A large unexplained gap separates related elements.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.2608695652173913
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:letter-logo-tile",
+      "definition": "The logo is a small square tile with a letter or monogram.",
+      "share": {
+        "claude-plain": 0.25,
+        "claude-shadcn": 0.07894736842105263,
+        "claude-altitude": 0
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:page-in-single-card",
+      "definition": "The whole page's content is wrapped in one large card.",
+      "share": {
+        "claude-plain": 0.25,
+        "claude-shadcn": 0.18421052631578946,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:washed-out-disabled-button",
+      "definition": "The disabled primary button is a faded, washed-out tint.",
+      "share": {
+        "claude-plain": 0.25,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:helper-text-every-field",
+      "definition": "Every field has helper text beneath it.",
+      "share": {
+        "claude-plain": 0.225,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:keyboard-shortcut-hint",
+      "definition": "A \"/\" keyboard shortcut hint sits in the search field.",
+      "share": {
+        "claude-plain": 0.225,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:label-value-grid",
+      "definition": "Metadata laid out as a uniform grid of grey labels over values.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.05263157894736842,
+        "claude-altitude": 0.21739130434782608
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:awkward-text-wrap",
+      "definition": "Labels or names wrap awkwardly in narrow cells.",
+      "share": {
+        "claude-plain": 0.2,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:dark-mode-toggle",
+      "definition": "A dark-mode button or moon icon sits in the header.",
+      "share": {
+        "claude-plain": 0.2,
+        "claude-shadcn": 0.05263157894736842,
+        "claude-altitude": 0
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:stock-screen-archetype",
+      "definition": "The screen follows a textbook template archetype (settings form, projects table, KPI dashboard).",
+      "share": {
+        "claude-plain": 0.2,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": true
+    },
+    {
+      "label": "new:gradient-logo-mark",
+      "definition": "The logo is a gradient-filled square mark.",
+      "share": {
+        "claude-plain": 0.175,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:glossy-raised-button",
+      "definition": "A button is drawn glossy and raised with a heavy bottom shadow or gradient.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.17391304347826086
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:stray-focus-outline",
+      "definition": "A focus ring is drawn around a non-input element such as the page title or main region.",
+      "share": {
+        "claude-plain": 0.1,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.17391304347826086
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:monochrome-no-accent",
+      "definition": "The interface is black, white and grey with no accent colour.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.15789473684210525,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:status-hierarchy-by-fill",
+      "definition": "Status pills differ by solid, outlined or plain fill to show rank.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.15789473684210525,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:pastel-tag-chips",
+      "definition": "Roles, tags or allergens shown as tinted or outlined pill chips.",
+      "share": {
+        "claude-plain": 0.15,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:avatar-stack",
+      "definition": "An overlapping stack of avatar circles with a +N count.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.13157894736842105,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:literal-icon-logo",
+      "definition": "The logo is a literal stock icon of the domain (truck, paw, brush).",
+      "share": {
+        "claude-plain": 0.075,
+        "claude-shadcn": 0.13157894736842105,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:raw-float-in-copy",
+      "definition": "An unrounded floating-point number (28.000000000000004) appears in the interface.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.13157894736842105,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:sample-data-label",
+      "definition": "A \"Sample data\" pill badge is shown in the header.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.13157894736842105,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:understated-stats",
+      "definition": "Stat tiles use small, restrained values rather than hero numbers.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.13157894736842105,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:diverse-name-roster",
+      "definition": "Sample people form a deliberately diverse roster of names.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0.13043478260869565
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:inset-shadowed-field",
+      "definition": "An input is drawn inset with a grey inner shadow, often reading as disabled.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.13043478260869565
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:links-everywhere",
+      "definition": "Every email, phone or value is rendered as an underlined link.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.13043478260869565
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:card-footer-action-bar",
+      "definition": "A card ends in a grey footer bar holding Cancel and Save.",
+      "share": {
+        "claude-plain": 0.125,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:generic-product-name",
+      "definition": "An invented, generic or cute product name (Relay, PawBook).",
+      "share": {
+        "claude-plain": 0.125,
+        "claude-shadcn": 0.07894736842105263,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:serif-display-headings",
+      "definition": "Headings are set in a serif display face.",
+      "share": {
+        "claude-plain": 0.125,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:sort-arrows-every-column",
+      "definition": "Every column header carries a sort arrow.",
+      "share": {
+        "claude-plain": 0.125,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:consistent-outline-icons",
+      "definition": "One outline icon set is used consistently, e.g. beside each detail or in the nav.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:diff-chips",
+      "definition": "A change log shows old and new values as strikethrough-to-new chips.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:progress-bar-every-row",
+      "definition": "Every table row carries a progress bar with a percentage.",
+      "share": {
+        "claude-plain": 0.1,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:rendering-artifacts",
+      "definition": "Chart marks render with jagged or broken edges.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:smoothed-chart-lines",
+      "definition": "Line charts use smoothed spline curves between points.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:sync-status-shown",
+      "definition": "A \"Last synced/Updated\" time is shown, often with a Refresh button.",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:two-line-cells",
+      "definition": "Table cells carry a grey secondary line under the main value.",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0.10526315789473684,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:chart-legend-mismatch",
+      "definition": "The legend or labels don't match the marks drawn (missing series, unlabelled segment).",
+      "share": {
+        "claude-plain": 0.1,
+        "claude-shadcn": 0.07894736842105263,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:monospace-ids",
+      "definition": "Reference IDs are set in a monospace face.",
+      "share": {
+        "claude-plain": 0.1,
+        "claude-shadcn": 0.07894736842105263,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:stray-separator",
+      "definition": "A separator dot or bullet trails with nothing after it.",
+      "share": {
+        "claude-plain": 0.1,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:count-beside-search",
+      "definition": "A result count is floated to the right of the search field.",
+      "share": {
+        "claude-plain": 0.075,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.08695652173913043
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:hairline-row-dividers",
+      "definition": "Thin hairline rules separate every row of a list.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.08695652173913043
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:inconsistent-capitalisation",
+      "definition": "The same kind of label is capitalised differently from item to item.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.08695652173913043
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:placeholder-contact-details",
+      "definition": "Contact details use placeholder values such as 555 phone numbers.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.08695652173913043
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:stock-status-set",
+      "definition": "Statuses use the stock On track / At risk / Off track set.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0.05263157894736842,
+        "claude-altitude": 0.08695652173913043
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:unequal-card-heights",
+      "definition": "Side-by-side cards have mismatched heights.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.08695652173913043
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:awkward-number-format",
+      "definition": "Numbers are formatted inconsistently or with redundant decimals.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.07894736842105263,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:chart-event-annotation",
+      "definition": "An event is annotated on the chart with a band or marker line.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.07894736842105263,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:selected-state-heavy-border",
+      "definition": "The selected card is marked by a heavy or coloured border.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0.07894736842105263,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:dot-separated-meta",
+      "definition": "Metadata items run in a row separated by middle dots.",
+      "share": {
+        "claude-plain": 0.075,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:gradient-area-fill",
+      "definition": "A line chart has a soft gradient or tinted fill beneath the line.",
+      "share": {
+        "claude-plain": 0.075,
+        "claude-shadcn": 0.05263157894736842,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:oversized-numbers",
+      "definition": "A stat or hero number is set very large.",
+      "share": {
+        "claude-plain": 0.075,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:nested-containers",
+      "definition": "A table sits in a bordered box inside another card or container.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.05263157894736842,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:segmented-controls",
+      "definition": "Options are switched with segmented pill controls.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0.05263157894736842,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:chart-table-toggle",
+      "definition": "A Chart/Table toggle offers the data as a table.",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0.02631578947368421,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:delta-indicators",
+      "definition": "Values carry green/red up/down triangles or arrows for change.",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:filter-toolbar",
+      "definition": "A toolbar of filter pills and selects sits above the content.",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:red-overdue-flag",
+      "definition": "Late or overdue values are flagged in red text.",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:relative-timestamps",
+      "definition": "Times are shown relatively (\"2 hours ago\").",
+      "share": {
+        "claude-plain": 0.05,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:centred-fixed-container",
+      "definition": "Content sits in a narrow centred fixed-width column.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.02631578947368421,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:checkbox-column",
+      "definition": "Tables lead with a row-selection checkbox column.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0.02631578947368421,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:cramped-spacing",
+      "definition": "Elements are squeezed with too little space between them.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:domain-inconsistency",
+      "definition": "Sample content contradicts itself within the domain (e.g. a braised dish on the grill station).",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:minimal-chrome",
+      "definition": "Plain pale page with no sidebar and little surrounding interface chrome.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:prose-chart-summary",
+      "definition": "A caption or subtitle restates the chart's figures in words.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:purposeful-helper-copy",
+      "definition": "Helper copy explains consequences or context specific to the task.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:sentence-status-line",
+      "definition": "A result count is written as a full sentence with a full stop.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:truncated-axis",
+      "definition": "The y-axis starts above zero, exaggerating change.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0.043478260869565216
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:ellipsis-placeholder",
+      "definition": "A search field's placeholder text ends in an ellipsis.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.02631578947368421,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:eyebrow-label",
+      "definition": "A small label sits above the page title.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.02631578947368421,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:ranked-bar-list",
+      "definition": "A tidy list of horizontal bars ranks items.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.02631578947368421,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:takeaway-chart-title",
+      "definition": "The chart title states the finding as a sentence.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.02631578947368421,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:too-tidy-data",
+      "definition": "Sample data is suspiciously regular: sequential IDs and uniformly plausible values.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0.02631578947368421,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:card-header-dividers",
+      "definition": "Cards have a rule separating the card title from its body.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:direct-line-labels",
+      "definition": "Series are labelled at the line ends instead of with a legend.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:domain-expert-copy",
+      "definition": "Copy uses accurate, specialist domain detail (temperatures, techniques, regional spelling).",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:em-dash-copy",
+      "definition": "Em dashes appear in names or interface strings.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:pill-nav",
+      "definition": "Top navigation items are rendered as pills.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:primary-secondary-button-pair",
+      "definition": "A filled primary button sits beside a bordered secondary button.",
+      "share": {
+        "claude-plain": 0.025,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:broken-images",
+      "definition": "Small images or icons fail to load and render as dots or blanks.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:cover-photo-profile",
+      "definition": "A profile page with a landscape cover photo and overlapping round avatar.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:crowded-axis-labels",
+      "definition": "An axis labels every tick so the labels crowd each other.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:dated-sample-data",
+      "definition": "Sample data is visibly old (e.g. 2018 crypto prices, 2014 filenames).",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:dated-template-look",
+      "definition": "The styling reads as an older (2014-era) flat admin template.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:debug-control-exposed",
+      "definition": "A developer/demo control (e.g. \"Make the next change fail\") is left in the product UI.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:disabled-until-valid",
+      "definition": "The primary action stays disabled until the form is filled in.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:domain-specific-structure",
+      "definition": "Content is structured the way the domain works (e.g. ingredients grouped by stage, quantity-first).",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:edge-case-handling",
+      "definition": "The screen shows copy or states for edge cases (e.g. the sole owner cannot change role).",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:export-option",
+      "definition": "An Export CSV or similar data-download control sits beside the chart.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:file-type-icons",
+      "definition": "Files are listed with per-type document icons.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:fully-ruled-table",
+      "definition": "A table with borders on every cell.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:headline-not-shown-in-chart",
+      "definition": "The headline names an event that the chart does not mark.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:identical-placeholder-rows",
+      "definition": "Table rows repeat identical placeholder values (same date, same status, '#' index).",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:locale-number-format",
+      "definition": "Numbers use a non-local format such as $1.800,00.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:muted-comparison-series",
+      "definition": "A prior period is drawn as a muted grey line against an accented current series.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:no-cards",
+      "definition": "Content sits flat on the page without card containers.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:odd-copy",
+      "definition": "A heading or label uses unusual or awkward wording.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:overlapping-text",
+      "definition": "Two lines of text are drawn on top of each other.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:plain-line-chart",
+      "definition": "A simple single-line chart without decoration.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:quirky-sample-data",
+      "definition": "Sample data includes quirky or joke names and odd values.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:radio-with-descriptions",
+      "definition": "Radio options each carry a descriptive helper line.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:raised-tactile-style",
+      "definition": "Controls are drawn raised or bevelled, like physical keys.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:raw-data-leak",
+      "definition": "Raw data values (e.g. a sparkline's number list) render as visible text.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:real-photo-avatars",
+      "definition": "Avatars are real photographs of people.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:restrained-palette",
+      "definition": "A muted palette with one or two colours and no decoration.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:save-status-indicator",
+      "definition": "A small \"Saved\" chip sits beside the primary action.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:single-chart-focus",
+      "definition": "One chart carries the whole page instead of a row of KPI cards.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:small-radius-flat-cards",
+      "definition": "Cards have a small radius, thin borders and no soft shadow.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:social-media-widgets",
+      "definition": "Social follow buttons and circular social-network icons.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:sortable-columns",
+      "definition": "A table column header carries a sort control.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:source-sans-type",
+      "definition": "The interface is set in Source Sans.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:sparse-axis-ticks",
+      "definition": "The x-axis shows only a few ticks (e.g. quarterly) instead of every period.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:template-sample-copy",
+      "definition": "Lorem/hipster ipsum or template demo copy is left in.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:text-link-tabs",
+      "definition": "Section navigation is plain underlined text links.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:two-column-form-layout",
+      "definition": "A form or editor on the left with a narrow details column on the right.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:unlabelled-axis",
+      "definition": "A chart axis carries no value labels.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    },
+    {
+      "label": "new:zebra-striped-table",
+      "definition": "Table rows alternate background shades.",
+      "share": {
+        "claude-plain": 0,
+        "claude-shadcn": 0,
+        "claude-altitude": 0
+      },
+      "proposed": false
+    }
+  ],
+  "agreement": {
+    "cues": 147,
+    "exact": 0.8095238095238095,
+    "perCode": {
+      "CM6": {
+        "uses": 17,
+        "kappa": 0.7164508128961143
+      },
+      "new": {
+        "uses": 135,
+        "kappa": 0.5770653514180026
+      },
+      "IC4": {
+        "uses": 10,
+        "kappa": 0.8127388535031843
+      }
+    }
+  }
+}
