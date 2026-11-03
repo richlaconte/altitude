@@ -1,0 +1,4 @@
+{
+  "title": "Travel policy editor · Altitude example",
+  "description": "A docs editor that saves as you type: offline edits that wait, a conflict when someone else saved first, a session that ends mid-save, and a review round with comments and suggested changes."
+}
