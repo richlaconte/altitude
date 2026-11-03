@@ -5,6 +5,7 @@
 // needs the workspace's name typed into a stationary dialog. Run after a render of every preview (it opens
 // test/p-SettingsPattern-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
+import { openFixtures } from './preview-fixtures.mjs';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const T = new URL('../test/', import.meta.url).pathname;
 let pass = 0, fail = 0;
@@ -29,6 +30,7 @@ expect(await page.evaluate(() => getComputedStyle(document.querySelector('.alt-s
 await page.waitForTimeout(800);
 r = await row('Weekly digest');
 expect(r.status === 'committed' && r.words === 'Saved' && r.checked === 'false', `then lands, saved (${JSON.stringify(r)})`);
+await openFixtures(page);
 await page.getByRole('switch', { name: 'Make the next change fail' }).click();
 await page.getByRole('switch', { name: 'Mentions' }).click();
 await page.waitForTimeout(1300);

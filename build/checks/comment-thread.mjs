@@ -4,6 +4,7 @@
 // stamps and collapses the thread, kept in place, with Reopen; the typing line isn't announced. Run after a render of
 // every preview (it opens test/p-CommentThread-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
+import { openFixtures } from './preview-fixtures.mjs';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const T = new URL('../test/', import.meta.url).pathname;
 let pass = 0, fail = 0;
@@ -35,7 +36,7 @@ expect(r.items[2].status === 'pending' && r.items[2].mentions === 1 && await ta.
 await page.waitForTimeout(1000);
 expect((await read()).items[2].status === null, 'then it lands');
 
-await page.click('.alt-switch');
+await (await openFixtures(page)).locator('.alt-switch').click();
 await ta.fill('This one fails');
 await page.click('button:has-text("Comment")');
 await page.waitForTimeout(1100);

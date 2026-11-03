@@ -6,6 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MembersPattern — Altitude</title>
 <style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
 #root { padding: 20px 24px; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .col { display: flex; flex-direction: column; gap: 14px; }
@@ -13,6 +16,14 @@
 .body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
 /* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
 summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .mb-page{max-width:760px;margin-inline:auto;display:grid;gap:20px;overflow-wrap:break-word}.mb-page td:first-child{width:40%}.mb-page .alt-table{min-width:600px}.mb-h{font:600 21px/28px var(--font-sans);margin:0}.mb-sub{font:600 17px/24px var(--font-sans);margin:0}.mb-invite{padding:var(--alt-inset-box);gap:16px}.mb-roles{display:grid;gap:8px}.mb-legend{font:500 14px/20px var(--font-sans)}.mb-who{display:flex;gap:10px;align-items:center;min-width:0}.mb-name{font:500 14px/20px var(--font-sans)}.mb-email,.mb-reason,.mb-write,.mb-invited{font:400 13px/18px var(--font-sans);color:var(--ink-muted)}.mb-invited{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.mb-role{display:grid;gap:4px;max-width:200px}.mb-write:empty{display:none}.mb-actions{display:inline-flex;gap:4px}.mb-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.mb-page [role="status"]:empty{display:none}
 </style>
 </head>
@@ -104,7 +115,7 @@ function App() {
     setSending(false);
     setStatus([fresh.length && `${fresh.length} ${fresh.length === 1 ? "invite" : "invites"} sent`, already && `${already} ${already === 1 ? "address is" : "addresses are"} already in the workspace`].filter(Boolean).join(", ") + ".");
   };
-  return /* @__PURE__ */ React.createElement("main", { className: "mb-page" }, /* @__PURE__ */ React.createElement("h2", { id: "mb-heading", tabIndex: -1, className: "mb-h" }, "Members"), /* @__PURE__ */ React.createElement(A.Card, { className: "mb-invite", "aria-labelledby": "mb-invite-h" }, /* @__PURE__ */ React.createElement("h3", { id: "mb-invite-h", className: "mb-sub" }, "Invite people"), /* @__PURE__ */ React.createElement(A.Field, { label: "Email addresses", hint: "Separate addresses with commas, or paste a list." }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("main", { className: "mb-page" }, /* @__PURE__ */ React.createElement("h2", { id: "mb-heading", tabIndex: -1, className: "mb-h" }, "Members"), /* @__PURE__ */ React.createElement(A.Card, { className: "mb-invite", "aria-labelledby": "mb-invite-h" }, /* @__PURE__ */ React.createElement("h3", { id: "mb-invite-h", className: "mb-sub" }, "Invite people"), /* @__PURE__ */ React.createElement(A.Field, { label: "Email addresses", hint: "Separate addresses with commas, or paste a list." }, /* @__PURE__ */ React.createElement(
     A.TagInput,
     {
       value: emails,
@@ -115,7 +126,7 @@ function App() {
       normalize: (t) => t.trim().toLowerCase(),
       validate: (t) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t) ? void 0 : `${t} isn\u2019t an email address.`
     }
-  )), /* @__PURE__ */ React.createElement("div", { className: "mb-roles" }, /* @__PURE__ */ React.createElement("span", { id: "mb-role-label", className: "mb-legend" }, "Role"), /* @__PURE__ */ React.createElement(A.RadioGroup, { value: role, onValueChange: setRole, "aria-labelledby": "mb-role-label" }, ROLES.map((r) => /* @__PURE__ */ React.createElement(A.Radio, { key: r.value, value: r.value, label: r.label, description: r.description })))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", loading: sending, disabled: !emails.length, onClick: send }, sending ? "Sending invites" : emails.length > 1 ? `Send ${emails.length} invites` : "Send invite"))), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next role change fail", checked: failNext, onCheckedChange: setFailNext }), /* @__PURE__ */ React.createElement(A.Table, { "aria-label": "Members and invitations" }, /* @__PURE__ */ React.createElement(A.TableHeader, null, /* @__PURE__ */ React.createElement(A.TableRow, null, /* @__PURE__ */ React.createElement(A.TableHead, null, "Person"), /* @__PURE__ */ React.createElement(A.TableHead, null, "Role"), /* @__PURE__ */ React.createElement(A.TableHead, { align: "end" }, /* @__PURE__ */ React.createElement("span", { className: "mb-vh" }, "Actions")))), /* @__PURE__ */ React.createElement(A.TableBody, null, people.map((p) => /* @__PURE__ */ React.createElement(
+  )), /* @__PURE__ */ React.createElement("div", { className: "mb-roles" }, /* @__PURE__ */ React.createElement("span", { id: "mb-role-label", className: "mb-legend" }, "Role"), /* @__PURE__ */ React.createElement(A.RadioGroup, { value: role, onValueChange: setRole, "aria-labelledby": "mb-role-label" }, ROLES.map((r) => /* @__PURE__ */ React.createElement(A.Radio, { key: r.value, value: r.value, label: r.label, description: r.description })))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", loading: sending, disabled: !emails.length, onClick: send }, sending ? "Sending invites" : emails.length > 1 ? `Send ${emails.length} invites` : "Send invite"))), /* @__PURE__ */ React.createElement(A.Table, { "aria-label": "Members and invitations" }, /* @__PURE__ */ React.createElement(A.TableHeader, null, /* @__PURE__ */ React.createElement(A.TableRow, null, /* @__PURE__ */ React.createElement(A.TableHead, null, "Person"), /* @__PURE__ */ React.createElement(A.TableHead, null, "Role"), /* @__PURE__ */ React.createElement(A.TableHead, { align: "end" }, /* @__PURE__ */ React.createElement("span", { className: "mb-vh" }, "Actions")))), /* @__PURE__ */ React.createElement(A.TableBody, null, people.map((p) => /* @__PURE__ */ React.createElement(
     MemberRow,
     {
       key: p.id,
@@ -135,7 +146,7 @@ function App() {
         document.getElementById("mb-heading")?.focus();
       }
     }
-  )))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, null, status));
+  )))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, null, status)), /* @__PURE__ */ React.createElement("details", { className: "preview-fixtures" }, /* @__PURE__ */ React.createElement("summary", null, "Example fixtures"), /* @__PURE__ */ React.createElement(A.Switch, { label: "Make the next role change fail", checked: failNext, onCheckedChange: setFailNext })));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

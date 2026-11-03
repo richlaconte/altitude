@@ -4,6 +4,7 @@
 // failed step says nothing changed and retries; the changed record carries an AI label naming the approver. Run after a
 // render of every preview (it opens test/p-AgentActionPattern-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
+import { openFixtures } from './preview-fixtures.mjs';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
 const T = new URL('../test/', import.meta.url).pathname;
 let pass = 0, fail = 0;
@@ -43,6 +44,7 @@ await page.getByRole('button', { name: 'Undo archive' }).click();
 await page.waitForTimeout(200);
 expect(/Archive undone/.test(await page.evaluate(() => document.querySelector('.ag-receipt').textContent)), 'Undo reverses the reversible step');
 
+await openFixtures(page);
 await page.getByRole('switch', { name: 'Make the next step fail' }).click();
 await page.getByRole('button', { name: 'Run again' }).click();
 await page.waitForTimeout(1100);

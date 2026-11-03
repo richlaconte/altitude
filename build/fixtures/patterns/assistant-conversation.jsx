@@ -32,12 +32,6 @@ function Thread({ restored }) {
   React.useEffect(() => { if (turn.state === 'complete') setUsed((u) => Math.min(99, u + 9)); }, [turn.state]);
   return (
     <div className="col ac">
-      <A.ToggleGroup type="single" size="sm" aria-label="Make the next send fail" value={failure} onValueChange={(v) => setFailure(/** @type {any} */ (v) || 'none')}>
-        <A.ToggleGroupItem value="none">Works</A.ToggleGroupItem>
-        <A.ToggleGroupItem value="offline">Offline</A.ToggleGroupItem>
-        <A.ToggleGroupItem value="rate-limited">Rate limited</A.ToggleGroupItem>
-        <A.ToggleGroupItem value="context-full">Context full</A.ToggleGroupItem>
-      </A.ToggleGroup>
       <A.Conversation aria-label="Assistant">
         <A.ConversationContent>
           {turn.input !== undefined && <A.Message from="user"><A.MessageContent>{turn.input}</A.MessageContent></A.Message>}
@@ -61,6 +55,14 @@ function Thread({ restored }) {
           <A.PromptInputSubmit />
         </A.PromptInputToolbar>
       </A.PromptInput>
+      <details className="preview-fixtures"><summary>Example fixtures</summary>
+        <A.ToggleGroup type="single" size="sm" aria-label="Make the next send fail" value={failure} onValueChange={(v) => setFailure(/** @type {any} */ (v) || 'none')}>
+          <A.ToggleGroupItem value="none">Works</A.ToggleGroupItem>
+          <A.ToggleGroupItem value="offline">Offline</A.ToggleGroupItem>
+          <A.ToggleGroupItem value="rate-limited">Rate limited</A.ToggleGroupItem>
+          <A.ToggleGroupItem value="context-full">Context full</A.ToggleGroupItem>
+        </A.ToggleGroup>
+      </details>
     </div>
   );
 }
