@@ -82,21 +82,29 @@ export interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> 
 }
 /**
  * Rows are the record: they sit on the ground with `line` dividers. The header stays flush until rows scroll under it,
- * then rises. Rows that change place are carried there. Each row's height is drawn as one slab by its first cell.
+ * then rises: under its own scroll with `maxHeight`, otherwise under the page's scroller, where it sticks below
+ * `--alt-sticky-top` (AppShell sets it to its top bar). Rows that change place are carried there. Each row's height is drawn as one slab by its first cell.
  */
 export const Table = React.forwardRef<HTMLTableElement, TableProps>(function Table({ maxHeight, underlay, className, children, ...rest }, ref) {
   const wrap = React.useRef<HTMLDivElement>(null);
   const table = React.useRef<HTMLTableElement>(null);
   React.useImperativeHandle(ref, () => table.current as HTMLTableElement);
-  const [edges, setEdges] = React.useState({ top: false, bottom: false, start: false, end: false });
+  const scrolls = maxHeight !== undefined;
+  const [edges, setEdges] = React.useState({ top: false, bottom: false, start: false, end: false, page: !scrolls });
   const measure = React.useCallback(() => {
-    const el = wrap.current;
-    if (!el) return;
-    const top = el.scrollTop > 1, bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+    const el = wrap.current, t = table.current;
+    if (!el || !t) return;
+    // Without maxHeight, and while it fits sideways, the table isn't a scroller of its own: the frame lets go of
+    // overflow and the header sticks to the page's scroller instead (data-page), rising once rows pass under it.
+    const page = !scrolls && t.offsetWidth <= el.clientWidth + 1;
+    // The cells stick, not the row: how far the first header cell has slid down the table says rows are under it.
+    const th = t.tHead?.rows[0]?.cells[0];
+    const top = page ? !!th && th.getBoundingClientRect().top - t.getBoundingClientRect().top > 1 : el.scrollTop > 1;
+    const bottom = !page && el.scrollTop + el.clientHeight < el.scrollHeight - 1;
     // Sideways, for a table wider than its frame on a phone (#260): which edges have more.
-    const x = Math.abs(el.scrollLeft), start = x > 1, end = x + el.clientWidth < el.scrollWidth - 1;
-    setEdges((p) => (p.top === top && p.bottom === bottom && p.start === start && p.end === end ? p : { top, bottom, start, end }));
-  }, []);
+    const x = Math.abs(el.scrollLeft), start = !page && x > 1, end = !page && x + el.clientWidth < el.scrollWidth - 1;
+    setEdges((p) => (p.top === top && p.bottom === bottom && p.start === start && p.end === end && p.page === page ? p : { top, bottom, start, end, page }));
+  }, [scrolls]);
   useIsoLayoutEffect(() => {
     const t = table.current;
     if (!t) return;
@@ -105,13 +113,15 @@ export const Table = React.forwardRef<HTMLTableElement, TableProps>(function Tab
     const ro = new ResizeObserver(fit);
     ro.observe(t);
     if (wrap.current) ro.observe(wrap.current);
-    return () => ro.disconnect();
-  }, [measure]);
+    // Whatever scrolls the page (the window, AppShell's page, a ScrollArea) moves the header too.
+    const onScroll = () => measure();
+    if (!scrolls) document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => { ro.disconnect(); document.removeEventListener('scroll', onScroll, { capture: true }); };
+  }, [measure, scrolls]);
   useCarry(table, 'tbody > tr[data-row]', 'data-row');
-  const scrolls = maxHeight !== undefined;
   return (
     <div ref={wrap} className="alt-table-wrap" data-top={edges.top ? '' : undefined} data-bottom={edges.bottom ? '' : undefined}
-      data-more-start={edges.start ? '' : undefined} data-more-end={edges.end ? '' : undefined}
+      data-more-start={edges.start ? '' : undefined} data-more-end={edges.end ? '' : undefined} data-page={edges.page ? '' : undefined}
       style={scrolls ? { maxHeight } : undefined} onScroll={measure}
       {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': rest['aria-label'] } : {})}>
       {underlay}

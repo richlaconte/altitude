@@ -1638,7 +1638,7 @@ button.alt-lane-name:focus-visible { outline: 2px solid var(--accent-ink); outli
 .alt-sidebar[data-rail] .alt-sidebar-header .alt-sidebar-text { display: none; }
 .alt-sidebar-badge { position: absolute; right: var(--space-2); z-index: 2; pointer-events: none; }
 .alt-sidebar[data-rail] .alt-sidebar-badge { right: 2px; top: 0; transform: scale(0.8); }
-.alt-shell-page { position: relative; flex: 1; min-width: 0; min-height: 0; overflow: auto; }
+.alt-shell-page { position: relative; flex: 1; min-width: 0; min-height: 0; overflow: auto; --alt-sticky-top: 52px; /* the top bar's height */ }
 .alt-topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: var(--space-2); height: 52px; padding: 0 var(--space-4); border-bottom: 1px solid var(--line); background: var(--surface-ground); transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
 .alt-topbar[data-under] { background: var(--surface-raised); box-shadow: var(--elev-1); }
 .alt-shell-sentinel { display: block; height: 1px; margin-bottom: -1px; }
@@ -2472,7 +2472,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   transition: box-shadow var(--dur-travel-2) var(--ease-rise);
 }
 .alt-scroll[data-top] .alt-scroll-header { box-shadow: var(--elev-2); }
-.alt-scroll-body { overflow: auto; outline: none; scrollbar-width: thin; }
+.alt-scroll-body { overflow: auto; outline: none; scrollbar-width: thin; --alt-sticky-top: 0px; }
 .alt-scroll-body:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
 .alt-scroll-lip { position: absolute; left: 0; right: 0; height: 24px; pointer-events: none; opacity: 0; transition: opacity var(--dur-travel-2) var(--ease-rise); z-index: 1; }
 .alt-scroll-lip[data-edge="top"] { top: 0; box-shadow: var(--lip-top); }
@@ -2853,6 +2853,11 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-table-tools-end > .alt-input { flex: 0 1 auto; min-width: 0; }
 .alt-table-tools-end > .alt-input input { min-width: 0; }
 .alt-table-wrap { position: relative; isolation: isolate; overflow: auto; scrollbar-width: thin; outline: none; }
+/* Without maxHeight, a table that fits sideways isn't a scroller of its own (data-page): its header sticks to the page's
+   scroller instead, below whatever already sticks there (--alt-sticky-top: AppShell's top bar sets it; a nested scroller
+   resets it). */
+.alt-table-wrap[data-page] { overflow: visible; }
+.alt-table-wrap[data-page] .alt-th { top: var(--alt-sticky-top, 0px); }
 .alt-table-wrap:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-md); }
 .alt-table-wrap::after { content: ""; position: sticky; z-index: 4; bottom: 0; display: block; height: 24px; margin-top: -24px; pointer-events: none; box-shadow: var(--lip-bottom); opacity: 0; transition: opacity var(--dur-travel-2) var(--ease-rise); }
 .alt-table-wrap[data-bottom]::after { opacity: 1; }
