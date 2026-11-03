@@ -87,6 +87,11 @@ jobs:
       - name: Build Storybook
         run: npm run build-storybook
 
+      # The example apps' stories (#428): one provider, the drawer without page controls, the toolbar's scheme and motion.
+      - name: Example apps in Storybook
+        working-directory: build
+        run: node ../scripts/record-check.mjs storybook-examples node checks/storybook-examples.mjs
+
       # The landing page is served at the Pages root and Storybook under /storybook/.
       - name: Build the landing page
         run: |

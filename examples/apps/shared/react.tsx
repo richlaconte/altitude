@@ -108,9 +108,12 @@ export interface FixturesDrawerProps<S> {
   /** Modes offered. Default: all of them. */
   modes?: DemoMode[];
   events?: ExternalEvent[];
-  /** The page modes, owned by ExampleFrame. */
-  page: PageModes;
-  onPageChange: (page: PageModes) => void;
+  /**
+   * The page modes, owned by ExampleFrame. Without them the drawer has no page controls: in Storybook the toolbar owns
+   * the scheme, motion and contrast, and a control that did nothing would be worse than none (#428).
+   */
+  page?: PageModes;
+  onPageChange?: (page: PageModes) => void;
 }
 
 export interface PageModes { scheme: BuiltInScheme; accent: string; reduced: boolean; more: boolean }
@@ -121,7 +124,7 @@ export function FixturesDrawer<S>({ service, modes, events = [], page, onPageCha
   const [said, setSaid] = React.useState('');
   const offered = DEMO_MODES.filter((m) => !modes || modes.includes(m.value));
   const setMode = (mode: DemoMode, once: boolean) => { service.setMode(mode, { once }); setSaid(modeAnnouncement(mode, once && mode !== 'success')); };
-  const set = (patch: Partial<PageModes>) => onPageChange({ ...page, ...patch });
+  const set = (patch: Partial<PageModes>) => { if (page && onPageChange) onPageChange({ ...page, ...patch }); };
 
   const content = (
     <div className="ex-drawer-body">
@@ -139,7 +142,7 @@ export function FixturesDrawer<S>({ service, modes, events = [], page, onPageCha
           <div className="ex-actions">{events.map((e) => <Button key={e.label} size="sm" onClick={e.run}>{e.label}</Button>)}</div>
         </section>
       )}
-      <section className="ex-group" aria-labelledby="ex-page">
+      {page && onPageChange && <section className="ex-group" aria-labelledby="ex-page">
         <h3 id="ex-page" className="ex-group-title">The page</h3>
         <Tabs variant="segmented" value={page.scheme} onValueChange={(v) => set({ scheme: v as BuiltInScheme })}>
           <TabsList aria-label="Scheme">{SCHEMES.map((s) => <TabsTrigger key={s.id} value={s.id}>{s.label}</TabsTrigger>)}</TabsList>
@@ -150,7 +153,7 @@ export function FixturesDrawer<S>({ service, modes, events = [], page, onPageCha
         </div>
         <Switch checked={page.reduced} onCheckedChange={(reduced) => set({ reduced })} label="Reduced motion" />
         <Switch checked={page.more} onCheckedChange={(more) => set({ more })} label="More contrast" />
-      </section>
+      </section>}
       <section className="ex-group ex-log" aria-labelledby="ex-log">
         <div className="ex-log-head">
           <h3 id="ex-log" className="ex-group-title">Requests</h3>
@@ -181,7 +184,7 @@ export function FixturesDrawer<S>({ service, modes, events = [], page, onPageCha
     <aside className="ex-drawer" aria-labelledby="ex-drawer-title">
       <h2 id="ex-drawer-title" className="ex-drawer-title">Example fixtures</h2>
       <p className="ex-caption">This example runs on a simulated service in your browser. Nothing is sent anywhere, and a simulated save proves nothing about a real server.</p>
-      <Accordion items={[{ value: 'fixtures', title: 'Server, page and request log', content }]} type="single" defaultValue={[]} />
+      <Accordion items={[{ value: 'fixtures', title: page && onPageChange ? 'Server, page and request log' : 'Server and request log', content }]} type="single" defaultValue={[]} />
       <span className="ex-sr" role="status">{said}</span>
     </aside>
   );
@@ -195,7 +198,30 @@ export interface ExampleFrameProps<S> {
   children: React.ReactNode;
 }
 
-/** One AltitudeProvider around the app and its fixtures drawer, with the page modes the drawer controls. */
+export interface ExampleContentProps<S> extends ExampleFrameProps<S> {
+  /** The page modes and their setter, when the drawer should offer them (ExampleFrame passes both; Storybook neither). */
+  page?: PageModes;
+  onPageChange?: (page: PageModes) => void;
+}
+
+/**
+ * The app and its fixtures drawer, without a provider: for a host that already has one, like Storybook, whose decorator
+ * wraps every story in a single AltitudeProvider. ExampleFrame is this plus the provider and the page modes.
+ */
+export function ExampleContent<S>({ service, modes, events, page, onPageChange, children }: ExampleContentProps<S>) {
+  return (
+    <>
+      <div className="ex-app">{children}</div>
+      <FixturesDrawer service={service} modes={modes} events={events} page={page} onPageChange={onPageChange} />
+    </>
+  );
+}
+
+/**
+ * One AltitudeProvider around the app and its fixtures drawer, with the page modes the drawer controls. It also puts the
+ * scheme on the body, so the page behind the app matches; that stays here, not in ExampleContent, because a host with
+ * its own provider owns the body too.
+ */
 export function ExampleFrame<S>({ service, modes, events, children }: ExampleFrameProps<S>) {
   const [page, setPage] = React.useState<PageModes>(() => ({ scheme: systemScheme(), accent: 'scheme', reduced: false, more: false }));
   React.useLayoutEffect(() => { document.body.setAttribute('data-theme', page.scheme); }, [page.scheme]);
@@ -207,8 +233,7 @@ export function ExampleFrame<S>({ service, modes, events, children }: ExampleFra
       contrast={page.more ? 'more' : 'system'}
       className="ex-frame"
     >
-      <div className="ex-app">{children}</div>
-      <FixturesDrawer service={service} modes={modes} events={events} page={page} onPageChange={setPage} />
+      <ExampleContent service={service} modes={modes} events={events} page={page} onPageChange={setPage}>{children}</ExampleContent>
     </AltitudeProvider>
   );
 }
