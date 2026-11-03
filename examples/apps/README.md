@@ -12,6 +12,7 @@ They aren't part of the package. Each app imports `altitude-design` by name, as 
 | Fenwick Tools admin console | `admin-console/` | settings, members, billing, API keys, security and the audit log on one workspace: every change is logged, conflicts come from other admins (#401) |
 | Sprint 24 planning | `planning-board/` | a board, table, schedule and epics over one record: moves that hover until they land and go back with a reason when the server refuses (#402). Its Assistant toggle adds a scripted assistant whose proposed changes show on the cards until a person accepts them (#408) |
 | Book an appointment | `booking/` | a phone-first booking flow from treatment to paid booking: a real held time that says when it ends, a text code, review with every charge, and cancelling as easily as booking (#403) |
+| Storefront health | `service-health/` | an on-call report on eight services: a takeaway written by a burn-rate rule from the error budget, never the all-clear when a panel failed or a service went quiet; live charts that pause; one panel failing while the rest load; stale data that says so; declaring an incident that names who it pages and can't happen twice (#406) |
 
 ## Running them
 
@@ -23,6 +24,7 @@ cd build && node checks/example-admin-console.mjs   # the admin console driven t
 cd build && node checks/example-planning-board.mjs  # the planning board driven through #402's fixtures
 cd build && node checks/example-agent-operations.mjs  # the assistant on the planning board, through #408's fixtures
 cd build && node checks/example-booking.mjs         # the booking flow driven through #403's fixtures, at phone width
+cd build && node checks/example-service-health.mjs  # the health report's rules as units, then #406's fixtures in a browser
 ```
 
 `npm run typecheck` type-checks the apps along with the components.

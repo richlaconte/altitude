@@ -1,0 +1,4 @@
+{
+  "title": "Storefront health · Altitude example",
+  "description": "An Altitude example app: an on-call engineer's report on eight services, with a takeaway written from error budgets, live data that pauses, one panel failing while the rest load, a service that stops reporting, and declaring an incident."
+}

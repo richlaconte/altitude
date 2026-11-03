@@ -1,0 +1,34 @@
+/* Storefront health (#406). The report frame: the lead chart, then what's around it, smaller. Tokens only. */
+.sh { max-width: 1120px; margin: 0 auto; padding: var(--space-8) var(--space-4); display: grid; gap: var(--space-6); }
+.sh-lead { display: grid; gap: var(--space-3); }
+.sh-lead-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-3); }
+.sh-lead-failed { display: grid; gap: var(--space-3); }
+.sh-label { margin: 0; color: var(--ink-muted); font: 500 13px/18px var(--font-sans); }
+.sh-lead-takeaway { margin: 0; font: 600 22px/30px var(--font-sans); }
+.sh-h2 { margin: 0; font: 600 18px/26px var(--font-sans); }
+.sh-h3 { margin: 0 0 var(--space-1); font: 600 15px/22px var(--font-sans); }
+.sh-around { display: grid; gap: var(--space-3); }
+.sh-numbers { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: var(--space-5); align-items: start; }
+.sh-panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.sh-panel-body { display: grid; gap: var(--space-3); }
+.sh-pair { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-5); align-items: start; }
+.sh-caption { color: var(--ink-muted); font: 400 13px/18px var(--font-sans); }
+.sh-refresh-failed { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); color: var(--ink); font: 400 13px/18px var(--font-sans); }
+.sh-table { min-width: 640px; }
+.sh-panel-body:has(> .sh-table), .sh-panel-body:has(> div > .sh-table) { overflow-x: auto; }
+.sh-link { all: unset; cursor: pointer; font: 600 14px/20px var(--font-sans); color: var(--ink); border-radius: var(--radius-sm); }
+.sh-link:hover { text-decoration: underline; }
+.sh-link:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.sh-incidents { display: grid; gap: var(--space-4); }
+.sh-incident-body { display: grid; gap: var(--space-3); }
+.sh-incident-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.sh-incident-head h2:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-sm); }
+.sh-update { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: var(--space-3); }
+.sh-declare { display: grid; gap: var(--space-4); }
+.sh-detail { display: grid; gap: var(--space-5); padding-bottom: var(--space-6); }
+.sh-detail-status { margin: 0; display: grid; gap: var(--space-2); justify-items: start; }
+.sh-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 760px) {
+  .sh-numbers, .sh-pair { grid-template-columns: minmax(0, 1fr); }
+  .sh-update { grid-template-columns: 1fr; }
+}
