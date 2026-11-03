@@ -27,7 +27,7 @@ const Alarm = () => (
   </svg>
 );
 
-/** RadioGroup has no error state of its own and can't sit in a Field, so its label and error are laid out by hand. */
+/** RadioGroup has no error state of its own and can't sit in a Field, so its label and error are laid out by hand. Replace with Field when #442 lands. */
 function Choices({ id, label, error, value, onValueChange, orientation, children }: {
   id: string; label: string; error?: string; value: string; onValueChange: (v: string) => void; orientation?: 'horizontal'; children: React.ReactNode;
 }) {
