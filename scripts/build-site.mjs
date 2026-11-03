@@ -8,15 +8,24 @@ import { build } from 'esbuild';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tokensCss } from './tokens-css.mjs';
 import { buildLlms } from './build-llms.mjs';
-import { buildExamples } from './build-examples.mjs';
+import { buildExamples, exampleSlugs } from './build-examples.mjs';
 
 const out = 'site-dist';
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
+// The example apps, from each app's own app.json, so the band can't drift from them (#399): the product's name without
+// the page title's suffix, and what it is, from the page description. The smallest, Team notes, goes last.
+const exampleApps = exampleSlugs().map((slug) => {
+  const m = JSON.parse(readFileSync(`examples/apps/${slug}/app.json`, 'utf8'));
+  const what = m.description.replace(/^.*?Altitude example app: /, '');
+  return { slug, title: m.title.replace(/ · Altitude example$/, ''), what: what.charAt(0).toUpperCase() + what.slice(1) };
+}).sort((a, b) => (a.slug === 'hello') - (b.slug === 'hello'));
+
 // The landing page's facts, counted from the repository so they can't drift: the version, the numbered experiments
-// in Research, the check scripts and the framework's task patterns.
+// in Research, the check scripts, the framework's task patterns and the example apps.
 const site = {
+  examples: exampleApps,
   version: JSON.parse(readFileSync('package.json', 'utf8')).version,
   experiments: (readFileSync('project/Research.md', 'utf8').match(/^### E\d+ /gm) || []).length,
   checks: readdirSync('build/checks').filter((f) => f.endsWith('.mjs')).length,

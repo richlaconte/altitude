@@ -25,6 +25,8 @@ Composing a new screen? Choose its frame from the task with [screen layout](patt
 | Setup checklist, empty states, tours, what's new | [Onboarding](patterns/onboarding.md) |
 | A new screen: choose its frame (editor, decision, report, triage, flow, records) from the task | [Screen layout](patterns/screen-layout.md) |
 
+Worked examples: [complete example apps](https://richlaconte.github.io/altitude/#examples) put several of these patterns together in one fictional product (an admin console, a planning board, a booking flow), on a simulated server you can make slow, fail, lose a response or conflict. They show how the contracts compose. They aren't templates to copy, and a save that lands there proves nothing about a real server.
+
 Before implementation, capture a short design record in the application's normal documentation: user goal, audience, primary action, consequence, data shape, selected patterns, applicable states, and unresolved product decisions. Infer routine details from the existing product. Do not invent permissions, persistence, cancellation, rollback or undo. Ask only when an unknown changes consequences or the task itself.
 
 Use `altitude patterns "edit settings" --json` to discover contracts and `altitude explain ALT-EDIT-001` for a rule's scope and evidence. Read [principles](principles.md) for ownership and [evidence.json](evidence.json) for source authority. The generated `index.json` and `llms.txt` route to these same sources; they are not separately authored manuals.
