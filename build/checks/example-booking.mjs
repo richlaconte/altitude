@@ -51,6 +51,9 @@ for (const scheme of ['daylight', 'nightfall']) {
   const page = await ctx.newPage();
   const errors = []; page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
   await open(page);
+  // #441: mounted in a phone column, the auto stepper goes down the page rather than wrapping its row.
+  const stepper = await page.evaluate(() => { const s = document.querySelector('.alt-stepper'); const tops = [...s.querySelectorAll(':scope > li')].map((li) => li.offsetTop); return { o: s.dataset.orientation, rows: new Set(tops).size, n: tops.length }; });
+  expect(stepper.o === 'vertical' && stepper.rows === stepper.n, `${scheme}: at phone width the stepper is vertical, one step per row (${JSON.stringify(stepper)})`);
   const steps = [];
   const look = async () => steps.push({ h: await heading(page), h1: await page.locator('.ex-app h1').count(), p: await primaries(page), s: await sideways(page) });
   await look();

@@ -45,12 +45,20 @@ export function Stepper({ steps, current, onStepChange, orientation: orientation
     ro.observe(el);
     return () => ro.disconnect();
   }, [orientationProp]);
-  React.useEffect(() => { setFits(true); }, [width, steps.length]);
+  // One writer (#441): a new width or step count first tries the row again, then the next pass measures it. Both
+  // happen in layout effects, before paint. A separate passive reset could land after the measurement and undo it.
+  const tried = React.useRef('');
   useIsoLayoutEffect(() => {
+    if (orientationProp !== 'auto') return;
+    const key = `${width}:${steps.length}`;
+    if (tried.current !== key) {
+      tried.current = key;
+      if (!fits) { setFits(true); return; }
+    }
     const items = list.current?.querySelectorAll(':scope > li');
-    if (orientationProp !== 'auto' || !fits || !items || items.length < 2) return;
+    if (!fits || !items || items.length < 2) return;
     if ((items[items.length - 1] as HTMLElement).offsetTop > (items[0] as HTMLElement).offsetTop + 2) setFits(false);
-  }, [fits, width]);
+  }, [fits, width, steps.length, orientationProp]);
   const orientation = orientationProp === 'auto' ? (fits ? 'horizontal' : 'vertical') : orientationProp;
   // The motion is derived in the same render that changes the states, so the rise's delay is in place before its
   // transition starts (setting it in an effect would be a frame late and the new step would rise at once).
