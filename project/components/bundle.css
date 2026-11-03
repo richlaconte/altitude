@@ -1307,7 +1307,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-code { --alt-code-lh: 20px; margin: 0; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-ground); color: var(--ink); overflow: hidden; }
 .alt-code[data-streaming] { border-left: 2px dashed var(--line-control); }
 .alt-code-tabs { gap: 0; }
-.alt-code-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: 44px; padding: 6px 6px 6px var(--space-4); border-bottom: 1px solid var(--line); }
+.alt-code-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: 44px; padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); /* Copy stands space-2 in from the rounded corner */ border-bottom: 1px solid var(--line); }
 .alt-code-head .alt-tabs-list { padding: 2px; }
 .alt-code-head .alt-tabs-trigger { height: 26px; padding: 0 var(--space-2); font-size: 13px; }
 .alt-code-title { font: 500 13px/18px var(--font-sans); color: var(--ink); }
@@ -1802,7 +1802,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    a stronger tint; a changed property shows the old value struck through beside the new. Signs and words carry it, never
    colour alone. Long unchanged runs fold behind lids. ── */
 .alt-diff { margin: 0; min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-ground); overflow: hidden; }
-.alt-diff-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: 6px 6px 6px var(--space-4); border-bottom: 1px solid var(--line); }
+.alt-diff-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); /* Copy stands space-2 in from the rounded corner */ border-bottom: 1px solid var(--line); }
 .alt-diff-caption { font: 500 13px/18px var(--font-sans); color: var(--ink); }
 .alt-diff-summary { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
 /* The buttons wrap rather than run past the frame, which clips them (a review's four don't fit a phone on one line). */
@@ -2878,6 +2878,10 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   border-radius: var(--radius-md); background: var(--row-bg); box-shadow: var(--row-sh);
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise);
 }
+/* A body row's slab stands 2px in from its row on every side, so two raised or sunk rows next to each other keep a
+   space-1 seam of ground between them and never meet the table's edge corner to corner (README, "Spacing and radius").
+   The header's slab stays full: rows scroll under it. */
+.alt-tr > .alt-td:first-child::before { top: 2px; bottom: 2px; left: 2px; width: calc(var(--alt-row-w) - 4px); }
 .alt-table-wrap[data-top] .alt-table-head .alt-tr { --row-bg: var(--surface-raised); --row-sh: var(--elev-2); }
 .alt-table-wrap[data-top] .alt-th { border-bottom-color: transparent; }
 .alt-tr[data-interactive] { cursor: pointer; }
@@ -3624,14 +3628,18 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 }
 
 /* ── InlineEdit: one value edited where it sits. The value's text lives in a slot with the control's own inset (12px
-   and a transparent 1px border, as .alt-input and .alt-select-trigger have) and font, at the control's height, and the
-   line reaches 13px past its column on each side so the text itself lines up with the page. Opening puts the control in
-   the same slot: the text stays exactly where it was and only the well (floor, walls, border) fades in around it. Save
-   and Cancel take the Edit button's place on the same row; notes under the line (an error, the key hint, "Choose to
-   save") arrive as the line's glide reaches them. The status is announced, never shown. ── */
+   and a transparent 1px border, as .alt-input and .alt-select-trigger have) and font, at the control's height, inside
+   its column. Opening puts the control in the same slot, so only the well (floor, walls, border) fades in around the
+   text. Save and Cancel take the Edit button's place on the same row; notes under the line (an error, the key hint,
+   "Choose to save") arrive as the line's glide reaches them. The status is announced, never shown. ── */
 .alt-inline-edit { min-width: 0; }
 .alt-inline-edit-surface { min-width: 0; border-radius: var(--radius-md); }
-.alt-inline-edit-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; margin-inline: -13px; }
+.alt-inline-edit-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
+/* Nothing reaches past the column (README, "Spacing and radius"): a parent that clips, or has no padding, would cut the
+   open field off. With the default Edit button the value sits on the column's edge, and opening moves its text in by the
+   field's inset as the well appears around it. A value you point at (pencil, field, value) keeps that inset at rest, so
+   the shape drawn on hover and the field opened in its place leave the text where it is. */
+.alt-inline-edit[data-trigger="button"][data-state="read"] .alt-inline-edit-slot { padding-inline: 0; border-inline-width: 0; }
 .alt-inline-edit-slot, .alt-inline-edit-slot-box { flex: 0 1 auto; min-width: 0; }
 .alt-inline-edit[data-state]:not([data-state="read"]) .alt-inline-edit-slot-box { flex: 1 1 14rem; }
 .alt-inline-edit-slot {
@@ -3706,10 +3714,17 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-edit-region { min-width: 0; --alt-er-pad: var(--space-3); }
 .alt-edit-region[data-layout="in-place"] { --alt-er-pad: calc(var(--space-2) + 13px); }
 /* The editor's padding and border are there in read mode too, under a matching negative margin, so lifting it changes
-   colour and shadow but never moves the record; the afterglow fills that padded box, so it never sits against the text. */
+   colour and shadow but never moves the record; the afterglow fills that padded box, so it never sits against the text.
+   That margin stays within the space-2 a list row or section gives it, so the card never spills into its neighbours. */
 .alt-edit-region-surface { min-width: 0; margin: calc(-1 * (var(--space-2) + 1px)) calc(-1 * (var(--alt-er-pad) + 1px)); padding: var(--space-2) var(--alt-er-pad); border: 1px solid transparent; border-radius: var(--radius-lg);
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise), border-color var(--dur-travel-1) var(--ease-rise); }
 .alt-edit-region:not([data-state="read"]) .alt-edit-region-surface { border-color: var(--line-control); }
+/* Editing, the card grows downward (the form is taller than the record anyway): the action row stands space-4 above
+   the bottom edge so Save's lip never meets the border, and stacked fields get space-3 at the top. In place, the
+   fields sit where the values were, so the top stays put. (README, "Spacing and radius".) :where keeps these below
+   the overrides that strip the card, as in a table's edit row. */
+:where(.alt-edit-region:not([data-state="read"])) .alt-edit-region-surface { padding-bottom: var(--space-4); }
+:where(.alt-edit-region:not([data-state="read"]):not([data-layout="in-place"])) .alt-edit-region-surface { padding-top: var(--space-3); }
 .alt-edit-region-view { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2) var(--space-3); flex-wrap: wrap; }
 .alt-edit-region-values { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
 .alt-edit-region-form { display: grid; gap: var(--space-4); min-width: 0; --alt-from-y: 0px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
@@ -4321,7 +4336,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 @media (hover: hover) { .alt-inline-edit-plate:hover:not(:disabled) { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); } }
 .alt-inline-edit-plate:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
 .alt-inline-edit-plate:disabled { cursor: default; }
-.alt-inline-edit-plate[data-empty] { margin-left: 13px; padding-inline: 8px; border: 1px dashed var(--line-control); background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); font-size: 13px; }
+.alt-inline-edit-plate[data-empty] { padding-inline: 8px; border: 1px dashed var(--line-control); background: var(--surface-well); box-shadow: var(--well); color: var(--ink-muted); font-size: 13px; }
 @media (hover: hover) { .alt-inline-edit-plate[data-empty]:hover:not(:disabled) { background: var(--surface-trench); box-shadow: var(--trench); transform: none; color: var(--ink); } }
 @media (hover: hover) { [data-contrast="more"] .alt-inline-edit-plate:hover:not(:disabled) { box-shadow: 0 2px 0 0 var(--ink); } }
 @media (forced-colors: active) { .alt-inline-edit-plate[data-empty] { border: 1px dashed CanvasText; } .alt-inline-edit-plate:hover { outline: 1px solid CanvasText; } }

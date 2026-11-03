@@ -19,7 +19,7 @@ So "it renders and looks finished" proves nothing. Each rule below has to be che
 
 | Law | How generated interfaces break it | Altitude's answer |
 |---|---|---|
-| **Proximity** (Gestalt): things near each other read as a group | Large gaps inside a group and none between groups; one spacing value everywhere | Distinctiveness rule 4 (tight within a group, wider between groups); padding grows with altitude; LA6 render check |
+| **Proximity** (Gestalt): things near each other read as a group | Large gaps inside a group and none between groups; one spacing value everywhere | Distinctiveness rule 4 (tight within a group, wider between groups); padding grows with altitude; controls stand `space-2` in from a drawn edge and rounded neighbours never touch (README, "Spacing and radius"); LA6 and `spacing.mjs` render checks |
 | **Focal point and isolation** (von Restorff): the one different thing is the one remembered | Every button, CTA and stat at the same weight; emphasis on information the task doesn't need | Law 1 (altitude is importance, one thing at level 5); `ALT-VISUAL-002` one primary per view; LA4, LA7 |
 | **Hick–Hyman law**: decision time grows with the number of equal choices | Rows of equal-weight actions and options | One primary action; the rest secondary, ghost or in an overflow menu (`ALT-VISUAL-002`) |
 | **Fitts's law** and WCAG 2.5.8 target size | Small targets, dense icon rows, inline links with no padding | Theming ("Density and target size"), Mobile, the 24px minimum and the phone check |
