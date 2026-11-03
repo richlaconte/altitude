@@ -13,7 +13,7 @@ import {
   Tabs, TabsList, TabsTrigger, Toaster, toast,
 } from '../project/components/src/index';
 /** Injected by scripts/build-site.mjs, counted from the repository at build time. */
-declare const __SITE__: { version: string; experiments: number; checks: number; patterns: number };
+declare const __SITE__: { version: string; experiments: number; checks: number; patterns: number; examples: { slug: string; title: string; what: string }[] };
 import type { BuiltInScheme } from '../project/components/src/index';
 type Level = NonNullable<React.ComponentProps<typeof Surface>['level']>;
 import { agentSetup, arrivalCode, insideAvatar, insideAwait, installTabs, quickStart, yourCode } from './snippets';
@@ -517,6 +517,19 @@ function Page() {
                 <p className="lede small"><a href="agent.html">Watch one agent run through every state</a>: a proposal that’s raised and not pending, an answer streaming on a dashed rule, a failed step in a trench, seven agents on one job.</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="band" id="examples" aria-labelledby="examples-title">
+          <div className="wrap">
+            <div className="section-head">
+              <h2 className="h2" id="examples-title">Whole products, on their worst day.</h2>
+              <p className="lede">The patterns above, put together in fictional products. Each one runs on a simulated server: open the fixtures drawer under it and make the next save slow, fail, lose its response or conflict, then see what the product does.</p>
+            </div>
+            <ul className="patterns">
+              {__SITE__.examples.map((e) => <li key={e.slug}><a href={`examples/${e.slug}.html`}>{e.title}</a><span>{e.what}</span></li>)}
+            </ul>
+            <p className="lede small">The server is a timer in your browser. Nothing is sent anywhere, and a save that lands here proves nothing about a real one.</p>
           </div>
         </section>
 
