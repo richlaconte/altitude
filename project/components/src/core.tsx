@@ -165,7 +165,9 @@ export function useApproach(enabled = true) {
 /* ───────────────────────── icons (1.75 stroke, Lucide-compatible grid) ───────────────────────── */
 
 type IconProps = React.SVGProps<SVGSVGElement> & { size?: number };
-const icon = (paths: React.ReactNode) => ({ size = 16, ...rest }: IconProps) => (
+/** One of the line icons the components ship: a 24px grid at 1.75 stroke in currentColor. `size` is in pixels (default 16). */
+export type IconComponent = (props: IconProps) => React.ReactElement;
+const icon = (paths: React.ReactNode): IconComponent => ({ size = 16, ...rest }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}
     strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...rest}>{paths}</svg>
 );

@@ -42,6 +42,12 @@ const tokens:ChartTokens={'data-1':'#123456'};const themed:string[]=echartsTheme
 // Column definitions can be typed before they're passed (#427).
 import type {DataTableColumn} from 'altitude-design';
 const columns:DataTableColumn<{name:string}>[]=[{key:'name',header:'Project'}];void columns;
+// An app types its own wrappers and data with the props and data types the components are built from (#432).
+import {Button} from 'altitude-design';
+import type {ButtonProps,SelectOption,MenuItem,Tone,BoardMove} from 'altitude-design';
+const SaveButton=(props:Omit<ButtonProps,'variant'>)=>React.createElement(Button,{variant:'primary',...props});
+const regions:SelectOption[]=[{value:'iad',label:'Virginia'}];const tone:Tone='caution';
+const menu:MenuItem={label:'Rename',onSelect:()=>{}};const moved=(m:BoardMove)=>m.to.column;void [SaveButton,regions,tone,menu,moved];
 function Example(){const form=useEditRecord({initialValue:{name:''},validationMode:'submit',validate:value=>value.name?{}:{name:'Enter a name'},save:async value=>({ok:true,value})});return React.createElement(ErrorSummary,{errors:[{id:'name',label:'Name',message:form.errors.name||''}]});}
 // @ts-expect-error validation policy is required
 useEditRecord({initialValue:{name:''},validate:()=>({}),save:async value=>({ok:true,value})});
