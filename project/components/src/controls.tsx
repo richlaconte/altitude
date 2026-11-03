@@ -68,7 +68,7 @@ export const CardHeader = ({ className, ...p }: React.HTMLAttributes<HTMLDivElem
  * Text that may still be on its way: `undefined` while your data loads (`{user?.name}`), a promise, or one promise among
  * plain text. `null` renders nothing.
  */
-type PromisedText<E> = Omit<React.HTMLAttributes<E>, 'children'> & {
+export type PromisedTextProps<E> = Omit<React.HTMLAttributes<E>, 'children'> & {
   children?: React.ReactNode | PromiseLike<React.ReactNode> | Array<React.ReactNode | PromiseLike<React.ReactNode>>;
   /** While the text is on its way, its imprint: `lines` (one for a title, two for a description) and `width`. `false`: render what you pass as it is, and let promises suspend to your own boundary. */
   skeleton?: SkeletonOption;
@@ -96,9 +96,9 @@ function PendingText({ children, skeleton, lines, width, required }: { children:
     </Await>
   );
 }
-export const CardTitle = ({ className, children, skeleton, ...p }: PromisedText<HTMLHeadingElement>) =>
+export const CardTitle = ({ className, children, skeleton, ...p }: PromisedTextProps<HTMLHeadingElement>) =>
   <h3 className={cx('alt-card-title', className)} {...p}><PendingText skeleton={skeleton} lines={1} width="55%" required>{children}</PendingText></h3>;
-export const CardDescription = ({ className, children, skeleton, ...p }: PromisedText<HTMLParagraphElement>) =>
+export const CardDescription = ({ className, children, skeleton, ...p }: PromisedTextProps<HTMLParagraphElement>) =>
   <p className={cx('alt-card-desc', className)} {...p}><PendingText skeleton={skeleton} lines={2} required={false}>{children}</PendingText></p>;
 export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
   /** The body holds a Suspense boundary: while anything of yours inside it suspends, or its text (`{user?.bio}`) is undefined while the card's other parts are, it's `lines` lines of imprint (default 3). `false` suspends to your own boundary. */
@@ -644,8 +644,11 @@ export function Progress({ value = null, max = 100, className, ...rest }: Progre
 
 /* ───────────────────────── Badge ───────────────────────── */
 
+/** The status vocabulary Badge and Alert share. Each tone pairs its colour with an icon or word, so it never relies on colour alone. */
+export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical';
+
 export interface BadgeProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'> {
-  tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical';
+  tone?: Tone;
   /**
    * plate (default): an indicator plate set flush into the page. tinted: the plate takes its tone's colour.
    * outline: a hairline only. count: a number that wants attention; it floats above the page and pops when it changes.
@@ -839,7 +842,7 @@ export function Skeleton({ loaded, shape = 'block', lines = 3, width, height, ra
 
 const toneIcon = { neutral: Icons.Info, accent: Icons.Info, positive: Icons.CircleCheck, caution: Icons.AlertTriangle, critical: Icons.AlertCircle };
 export interface AlertProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'>, Pick<DepthProps, 'settle'> {
-  tone?: 'neutral' | 'accent' | 'positive' | 'caution' | 'critical';
+  tone?: Tone;
   /** flat (default): a sheet laid on the page, it informs. raised: a card above the page, it asks you to act. */
   variant?: 'flat' | 'raised';
   title?: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode;
