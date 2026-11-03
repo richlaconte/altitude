@@ -4870,11 +4870,13 @@ const DG_SEED = [
 ];
 const dgWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const dgMoney = v => v === '' || v === null || v === undefined ? '' : String(v);
+// Each cell's id, from its row's id and its column's key: an ErrorSummary links to a cell with the same function.
+const dgCell = (rowId, key) => `inventory-${rowId}-${key}`;
 function App() {
   const [rows, setRows] = React.useState(DG_SEED);
   const apply = changes => setRows(list => list.map(row => changes.reduce((r, c) => c.rowId === r.id ? { ...r, [c.key]: c.draft } : r, row)));
   return <div className="dg-demo">
-    <A.DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name}
+    <A.DataGrid aria-label="Inventory" rows={rows} getRowId={r => r.id} getRowLabel={r => r.name} cellId={dgCell}
       columns={[
         { key: 'name', header: 'Name', editable: true, validate: v => String(v).trim() ? undefined : 'Enter a name.' },
         { key: 'sku', header: 'SKU' },
@@ -4895,6 +4897,9 @@ function App() {
       onCellsSave={async changes => { await dgWait(300); apply(changes); return { ok: true }; }}
       onUndo={last => apply(last.map(c => ({ ...c, draft: c.previousValue })))} />
     <p>Arrows move, type to replace, Enter or F2 to edit, Tab and Enter save and move. Shift+arrows select; copy and paste a block from a spreadsheet. Ctrl+Z undoes.</p>
+    {/* Before the catalogue is published, every product that isn't retired needs stock: the summary links to each cell. */}
+    <A.ErrorSummary title="Before you publish"
+      errors={rows.filter(r => r.status !== 'retired' && !(r.stock > 0)).map(r => ({ id: dgCell(r.id, 'stock'), label: `${r.name} stock`, message: 'add stock, or retire it' }))} />
   </div>;
 }
 

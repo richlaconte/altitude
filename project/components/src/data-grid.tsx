@@ -56,6 +56,8 @@ export interface DataGridProps<T> {
   /** Check every cell against its column's `validate` at rest, not only while it's edited: an invalid value lies in a
    * trench on critical-soft, with its problem in the cell's description. For data that arrived from elsewhere (an import). */
   showInvalid?: boolean;
+  /** Gives each cell this id (from its row's id and column's key), for ErrorSummary links; focusing a cell makes it the active one. */
+  cellId?: (rowId: string, columnKey: string) => string;
   maxHeight?: number | string;
   className?: string;
 }
@@ -71,7 +73,7 @@ const printable = (e: React.KeyboardEvent) => e.key.length === 1 && !e.ctrlKey &
  * rises flush and the cell settles. A pending cell holds a small raised plate; a failed one drops to a trench. Range
  * selection is a tint, not a height: choosing a target isn't live content.
  */
-export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, onCellsSave, onUndo, showInvalid, maxHeight, className, ...aria }: DataGridProps<T>) {
+export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, onCellsSave, onUndo, showInvalid, cellId, maxHeight, className, ...aria }: DataGridProps<T>) {
   const [active, setActive] = React.useState<Pos>({ r: 0, c: 0 });
   const [anchor, setAnchor] = React.useState<Pos | null>(null);
   const [editing, setEditing] = React.useState<Editing | null>(null);
@@ -107,6 +109,18 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
       if (el instanceof HTMLInputElement) { const n = caretEnd.current ? el.value.length : 0; el.setSelectionRange(n, el.value.length > 0 && !caretEnd.current ? el.value.length : n); }
     } else grid.current?.querySelector<HTMLElement>(`[data-cell="${active.r}:${active.c}"]`)?.focus();
   });
+  // Focus from anywhere (an ErrorSummary link to a cellId, the app's own code) makes that cell the active one, so the
+  // roving tab stop and the next arrow key start from where you are, not from the cell that was active before (#469).
+  // A sticky column doesn't cover it: focus() scrolls a cell into view as if nothing were pinned over it.
+  const focused = (el: HTMLElement, r: number, c: number) => {
+    if (!editing && (active.r !== r || active.c !== c)) { setAnchor(null); setActive({ r, c }); }
+    if (el.dataset.sticky !== undefined) return;
+    const pin = el.parentElement?.querySelector<HTMLElement>(':scope > [data-sticky]');
+    const scroller = el.closest<HTMLElement>('.alt-table-wrap');
+    if (!pin || !scroller) return;
+    const under = pin.getBoundingClientRect().right - el.getBoundingClientRect().left;
+    if (under > 0) scroller.scrollLeft -= under;
+  };
   const go = (p: Pos, extend = false) => { const next = clamp(p); if (extend) setAnchor((a) => a ?? active); else setAnchor(null); setActive(next); wantFocus.current = 'cell'; };
 
   const save = async (changes: DataGridChange<T>[]) => {
@@ -254,7 +268,8 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
             const fail = failed[k];
             const invalid = showInvalid && !isEditing && !fail && !pending.includes(k) ? col.validate?.(valueOf(r, c), row) : undefined;
             const name = `${label(col)}, ${getRowLabel(row)}`;
-            return <td key={col.key} role="gridcell" className="alt-td alt-grid-cell" data-align={col.align} data-sticky={col.sticky ? '' : undefined} data-cell={`${r}:${c}`} aria-colindex={c + 1}
+            return <td key={col.key} id={cellId?.(getRowId(row), col.key)} role="gridcell" className="alt-td alt-grid-cell" data-align={col.align} data-sticky={col.sticky ? '' : undefined} data-cell={`${r}:${c}`} aria-colindex={c + 1}
+              onFocus={(e) => { if (e.target === e.currentTarget) focused(e.currentTarget, r, c); }}
               tabIndex={isActive && !isEditing ? 0 : -1} aria-readonly={!col.editable} aria-selected={inRange(r, c) || isActive}
               aria-invalid={fail || invalid ? true : undefined} aria-busy={pending.includes(k) || undefined} aria-describedby={fail || invalid ? `${auto}-${k}-err` : undefined}
               data-invalid={invalid ? '' : undefined} data-active={isActive ? '' : undefined} data-range={inRange(r, c) ? '' : undefined} data-editing={isEditing ? '' : undefined}

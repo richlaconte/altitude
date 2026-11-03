@@ -42,6 +42,7 @@ const DG_SEED = [
 ];
 const dgWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const dgMoney = (v) => v === "" || v === null || v === void 0 ? "" : String(v);
+const dgCell = (rowId, key) => `inventory-${rowId}-${key}`;
 function App() {
   const [rows, setRows] = React.useState(DG_SEED);
   const apply = (changes) => setRows((list) => list.map((row) => changes.reduce((r, c) => c.rowId === r.id ? { ...r, [c.key]: c.draft } : r, row)));
@@ -52,6 +53,7 @@ function App() {
       rows,
       getRowId: (r) => r.id,
       getRowLabel: (r) => r.name,
+      cellId: dgCell,
       columns: [
         { key: "name", header: "Name", editable: true, validate: (v) => String(v).trim() ? void 0 : "Enter a name." },
         { key: "sku", header: "SKU" },
@@ -96,7 +98,13 @@ function App() {
       },
       onUndo: (last) => apply(last.map((c) => ({ ...c, draft: c.previousValue })))
     }
-  ), /* @__PURE__ */ React.createElement("p", null, "Arrows move, type to replace, Enter or F2 to edit, Tab and Enter save and move. Shift+arrows select; copy and paste a block from a spreadsheet. Ctrl+Z undoes."));
+  ), /* @__PURE__ */ React.createElement("p", null, "Arrows move, type to replace, Enter or F2 to edit, Tab and Enter save and move. Shift+arrows select; copy and paste a block from a spreadsheet. Ctrl+Z undoes."), /* @__PURE__ */ React.createElement(
+    A.ErrorSummary,
+    {
+      title: "Before you publish",
+      errors: rows.filter((r) => r.status !== "retired" && !(r.stock > 0)).map((r) => ({ id: dgCell(r.id, "stock"), label: `${r.name} stock`, message: "add stock, or retire it" }))
+    }
+  ));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

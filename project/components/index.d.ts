@@ -1317,6 +1317,12 @@ export interface DataGridProps<T> {
   onUndo?: (last: DataGridChange<T>[]) => void;
   /** Check every cell against its column's `validate` at rest, not only while it's edited: an invalid value lies in a trench on critical-soft, with its problem in the cell's description. For data that arrived from elsewhere (an import). */
   showInvalid?: boolean;
+  /**
+   * Gives each cell this id, built from its row's id and its column's key, so it survives sorting and moves. Build an
+   * ErrorSummary's links with the same function: following one focuses the cell, which becomes the active cell (arrow
+   * keys and Tab start from it). Without it cells have no id.
+   */
+  cellId?: (rowId: string, columnKey: string) => string;
   maxHeight?: number | string;
   className?: string;
 }
