@@ -51,7 +51,7 @@ function Thread({ restored }) {
         onSubmit={({ text }) => { turn.submit(text); }}>
         <A.PromptInputTextarea placeholder="Ask about the release" />
         <A.PromptInputToolbar>
-          <A.Meter className="ac-context" label="Context" value={used} max={100} high={80} critical={95} format={(v) => `${v}% of context used`} />
+          <A.Meter className="ac-context" label="Context" value={used} max={100} high={80} critical={95} format={(v) => `${v}%`} />
           <A.PromptInputSubmit />
         </A.PromptInputToolbar>
       </A.PromptInput>

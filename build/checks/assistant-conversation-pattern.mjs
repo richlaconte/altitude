@@ -41,7 +41,7 @@ await box.press('Enter'); await page.waitForTimeout(700);
 r = await read();
 expect(/too long to continue/.test(r.alert ?? '') && await page.locator('.alt-alert button:has-text("Start a new conversation")').count() === 1, 'context full offers a new conversation');
 const meter = await page.evaluate(() => document.querySelector('.ac-context [role="meter"], .ac-context[role="meter"]')?.getAttribute('aria-valuetext') ?? document.querySelector('.ac-context')?.textContent);
-expect(/% of context used/.test(meter ?? ''), `the context meter speaks in words (${meter})`);
+expect(/^\d+% of 100%(, [a-z]+)?$/.test(meter ?? ''), `the context meter reads its value once, as a share of the window (${meter})`);
 await page.click('button:has-text("Reload mid-answer")'); await page.waitForTimeout(300);
 a = await answer();
 expect(a.stream === 'error' && /Interrupted/.test(await page.evaluate(() => document.querySelector('.ac-note')?.textContent ?? '')) && a.retry, `after a reload, an unfinished answer is interrupted with Retry (${JSON.stringify(a)})`);
