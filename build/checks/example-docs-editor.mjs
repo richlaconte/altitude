@@ -175,6 +175,9 @@ for (const [scheme, width] of [['light', 1280], ['dark', 1280], ['light', 375]])
   expect(/In review · Maya Chen/.test(await page.locator('.de').textContent()) && await page.locator('.ex-app .alt-btn[data-variant="primary"]').count() === 0, 'review: requested, the plate replaces the primary');
   await event(page, 'Maya Chen comments on “Booking travel”');
   expect(/door to door/.test(await page.locator('section[aria-labelledby="de-h-booking"]').textContent()), 'review: the comment arrives under its section');
+  // A comment thread is its own primary scope (#480): outside the threads, the page still has at most one primary.
+  const outside = await page.evaluate(() => [...document.querySelectorAll('.ex-app .alt-btn[data-variant="primary"]')].filter((b) => b.getClientRects().length && !b.closest('.alt-comments')).length);
+  expect(outside <= 1, `review: with comments showing, at most one primary outside the comment threads (${outside})`);
   await event(page, 'Maya Chen suggests changes to “Expenses”');
   const diff = page.locator('section[aria-labelledby="de-h-expenses"] .de-suggestion');
   expect(await diff.count() === 1, 'review: the suggestion arrives as a DiffView to review');
