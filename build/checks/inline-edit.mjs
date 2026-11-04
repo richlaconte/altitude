@@ -38,7 +38,7 @@ const mount = async (page, options = {}) => {
       Object.assign(api, { setValue, setDisabled, setShow });
       const props = {
         value, label: 'Record name', required: options.required ?? true, maxLength: options.maxLength,
-        disabled, leave: options.leave, actions: options.actions, focusFallback: () => options.invalidFallback ? document.createElement('button') : document.getElementById('fallback'),
+        disabled, leave: options.leave, actions: options.actions, pending: options.pending, focusFallback: () => options.invalidFallback ? document.createElement('button') : document.getElementById('fallback'),
         onValueChange: value => { api.publications.push(value); setValue(value); if (options.removeOnPublish) setShow(false); },
         onSave: (draft, context) => {
           api.calls.push({ draft, context });
@@ -287,6 +287,24 @@ try {
     check(await page.locator('#inline-contract .alt-input').getByRole('button', { name: 'Save changes', exact: true }).isDisabled(), 'AC-10 the check is unavailable while validating');
     await resolveCheck(page, 'Choose a different name.'); await page.getByRole('alert').waitFor();
     check(await input(page).inputValue() === 'Checking inline' && await page.locator('#inline-contract .alt-inline-edit-icons').count() === 1, 'AC-11 an error shows below the field and the icons stay'); await page.close(); }
+
+  // #513: pending="value". The editor folds back to the value being written at once; it hovers, keeps focus and says to
+  // wait on Escape; success settles; a rejection opens the editor again with the draft and the caret at its end.
+  { const page = await open(); await mount(page, { pending: 'value' }); await edit(page);
+    await input(page).fill('Folded draft'); await save(page); await waitState(page, 'saving');
+    const group = page.locator('#inline-contract .alt-inline-edit');
+    check(await group.getAttribute('data-folded') === '' && await page.locator('#inline-contract input').count() === 0 &&
+      (await group.locator('.alt-inline-edit-value').textContent()) === 'Folded draft' && await group.locator('.alt-inline-edit-surface').getAttribute('data-status') === 'pending',
+      'PV-01 while the write runs, the editor has folded back to the value being written, which hovers as pending');
+    check(await page.evaluate(() => !!document.activeElement?.closest('#inline-contract')), 'PV-02 focus stays in the field (on its Edit button), not lost to the page');
+    await page.keyboard.press('Escape');
+    check(await group.getAttribute('data-state') === 'saving' && (await page.locator('#inline-contract [role="status"]').textContent()) === 'Saving changes. Wait for the result.', 'PV-03 Escape doesn\'t abandon the write and says to wait');
+    await resolveSave(page, { ok: false, error: 'That name is taken.' }); await page.getByRole('alert').waitFor();
+    const back = await page.evaluate(() => { const i = document.querySelector('#inline-contract input'); return i && { value: i.value, focused: document.activeElement === i, caret: i.selectionStart === i.value.length && i.selectionEnd === i.value.length, readonly: i.readOnly }; });
+    check(back?.value === 'Folded draft' && back.focused && back.caret && !back.readonly, `PV-04 a rejection opens the editor again with the draft, the caret at its end (${JSON.stringify(back)})`);
+    await save(page); await waitState(page, 'saving'); await resolveSave(page, { ok: true, value: 'Folded draft' }, 1); await read(page);
+    check(JSON.stringify(await api(page, 'publications')) === '["Folded draft"]' && await group.getAttribute('data-folded') === null, 'PV-05 then success settles it and publishes once');
+    await page.close(); }
 
   // #494: a single-line value that wraps at rest. It keeps the field's inset above its first line and below its last, the
   // pencil sits on the first line, the seam is under the text, and it opens in a field that wraps the same way (no line

@@ -7822,7 +7822,7 @@ function App() {
         <A.PropertyListItem label="Name" value={trip.name} onSave={tripSave} onValueChange={tripSet('name')} required />
         <A.PropertyListItem label="Email" value={trip.email} onSave={tripSave} onValueChange={tripSet('email')} required />
         <A.PropertyListItem label="Dates" value={`${trip.start} to ${trip.end}`} />
-        <A.PropertyListItem label="Phone" value={trip.phone} emptyLabel="Add phone number" onSave={tripSave} onValueChange={tripSet('phone')} />
+        <A.PropertyListItem label="Phone" value={trip.phone} emptyLabel="Add phone number" pending="value" onSave={tripSave} onValueChange={tripSet('phone')} />
       </A.PropertyList>
     </section>
   </div>;

@@ -121,7 +121,7 @@ function App() {
     /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Name", value: trip.name, onSave: tripSave, onValueChange: tripSet("name"), required: true }),
     /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Email", value: trip.email, onSave: tripSave, onValueChange: tripSet("email"), required: true }),
     /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Dates", value: `${trip.start} to ${trip.end}` }),
-    /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Phone", value: trip.phone, emptyLabel: "Add phone number", onSave: tripSave, onValueChange: tripSet("phone") })
+    /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Phone", value: trip.phone, emptyLabel: "Add phone number", pending: "value", onSave: tripSave, onValueChange: tripSet("phone") })
   )));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));

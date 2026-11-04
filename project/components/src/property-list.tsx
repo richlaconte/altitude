@@ -44,6 +44,8 @@ export interface PropertyListItemProps<V> {
   onValueChange?: (canonical: V) => void;
   editor?: (control: InlineEditControl<V>) => React.ReactNode;
   commit?: 'explicit' | 'on-choose';
+  /** InlineEdit's `pending`: 'value' folds a typed value back to the list while it's written. Default 'editor'. */
+  pending?: 'editor' | 'value';
   validate?: (draft: V) => string | undefined | Promise<string | undefined>;
   required?: boolean;
   isEqual?: (a: V, b: V) => boolean;
@@ -114,7 +116,7 @@ function AutoFocusFirst({ root }: { root: React.RefObject<HTMLDivElement | null>
 }
 
 /** One property. With onSave its value is an editable plate (InlineEdit); without, read-only text. */
-export function PropertyListItem<V>({ label, value, renderValue, emptyLabel = 'Not set', onSave, onValueChange, editor, commit, validate, required, isEqual, shortcut, proposed, onProposalResolved, className }: PropertyListItemProps<V>) {
+export function PropertyListItem<V>({ label, value, renderValue, emptyLabel = 'Not set', onSave, onValueChange, editor, commit, pending, validate, required, isEqual, shortcut, proposed, onProposalResolved, className }: PropertyListItemProps<V>) {
   const { locked, proposedBy, register, announce } = React.useContext(Ctx);
   const show = (v: V) => (isEmpty(v) ? <span className="alt-property-empty">{emptyLabel}</span> : renderValue ? renderValue(v) : String(v));
   const read = show(value);
@@ -154,7 +156,7 @@ export function PropertyListItem<V>({ label, value, renderValue, emptyLabel = 'N
         </span>}
       </div>
       : onSave ? <InlineEdit<V> label={label} value={value} trigger="value" emptyLabel={emptyLabel} editLabel={`Change ${name}`}
-        renderValue={renderValue} editor={editor} commit={commit} validate={validate} required={required} isEqual={isEqual} shortcut={shortcut?.toLowerCase()}
+        renderValue={renderValue} editor={editor} commit={commit} pending={pending} validate={validate} required={required} isEqual={isEqual} shortcut={shortcut?.toLowerCase()}
         disabled={locked} onSave={onSave} onValueChange={(v) => onValueChange?.(v)} /> : read}
     </dd>
   </div>;
