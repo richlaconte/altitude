@@ -29,6 +29,7 @@ The [framework pilot](../framework) measures workflow behaviour (drafts, pending
 node --test evals/adherence/score.test.mjs                   # the scorer's own fixtures (also in check:framework)
 node evals/adherence/score.mjs <build>...                    # a line per build
 node evals/adherence/score.mjs <build>... --json > scores.json
+node evals/adherence/compare.mjs a=scores-a.json b=scores-b.json --briefs <adherence brief ids>   # pooled rates, intervals, per-brief rows
 ```
 
 ## Adherence briefs
@@ -62,3 +63,4 @@ Generations cost money and time: about 45 USD for three samples of eight briefs 
 ## Results
 
 - [2026-11-02, baseline](results/2026-11-02/REPORT.md): the 30 builds of the 31 Oct distinctiveness run, scored without generating anything new.
+- [2026-11-03, 0.2.1 against 0.6.15](results/2026-11-03/REPORT.md): 36 builds each from the registry. No invented API in either; 0.6.15 builds use the newer components where 0.2.1 builds re-implemented them, at about 1.3× the cost and turns. Compare conditions with `compare.mjs`.

@@ -1,0 +1,2314 @@
+[
+  {
+    "build": "claude-altitude--assistant-proposal--s1",
+    "condition": "claude-altitude",
+    "brief": "assistant-proposal",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 19,
+      "elements": 21,
+      "names": [
+        "AILabel",
+        "AltitudeProvider",
+        "Breadcrumb",
+        "Card",
+        "CardContent",
+        "CardDescription",
+        "CardHeader",
+        "CardTitle",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "Select",
+        "Switch",
+        "Timeline",
+        "TimelineItem",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.761978,
+      "turns": 18,
+      "ms": 115541
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--assistant-proposal--s2",
+    "condition": "claude-altitude",
+    "brief": "assistant-proposal",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 12,
+      "elements": 16,
+      "names": [
+        "AILabel",
+        "AltitudeProvider",
+        "Badge",
+        "Breadcrumb",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "Select",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.6988491999999998,
+      "turns": 18,
+      "ms": 104311
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--assistant-proposal--s3",
+    "condition": "claude-altitude",
+    "brief": "assistant-proposal",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 16,
+      "elements": 19,
+      "names": [
+        "AILabel",
+        "AltitudeProvider",
+        "Breadcrumb",
+        "Card",
+        "CardContent",
+        "CardDescription",
+        "CardHeader",
+        "CardTitle",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "Select",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7444398,
+      "turns": 20,
+      "ms": 114870
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--assistant-proposal--s4",
+    "condition": "claude-altitude",
+    "brief": "assistant-proposal",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 16,
+      "elements": 20,
+      "names": [
+        "AILabel",
+        "AltitudeProvider",
+        "Card",
+        "CardContent",
+        "CardDescription",
+        "CardHeader",
+        "CardTitle",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "RelativeTime",
+        "Select",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.8252885999999998,
+      "turns": 23,
+      "ms": 146538
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--assistant-proposal--s5",
+    "condition": "claude-altitude",
+    "brief": "assistant-proposal",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 13,
+      "elements": 17,
+      "names": [
+        "AILabel",
+        "AltitudeProvider",
+        "Breadcrumb",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "RelativeTime",
+        "Select",
+        "Switch",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.0331578,
+      "turns": 29,
+      "ms": 165859
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--board-refusal--s1",
+    "condition": "claude-altitude",
+    "brief": "board-refusal",
+    "files": 4,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 11,
+      "elements": 10,
+      "names": [
+        "AltitudeProvider",
+        "Board",
+        "BoardCard",
+        "BoardColumn",
+        "BoardMove",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Switch",
+        "Toaster",
+        "toast"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.0838784,
+      "turns": 29,
+      "ms": 213845
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--board-refusal--s2",
+    "condition": "claude-altitude",
+    "brief": "board-refusal",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 12,
+      "elements": 12,
+      "names": [
+        "AltitudeProvider",
+        "Board",
+        "BoardCard",
+        "BoardColumn",
+        "BoardMove",
+        "Icons",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Switch",
+        "Toaster",
+        "toast"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.0539998000000002,
+      "turns": 31,
+      "ms": 215338
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--board-refusal--s3",
+    "condition": "claude-altitude",
+    "brief": "board-refusal",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 10,
+      "elements": 10,
+      "names": [
+        "AltitudeProvider",
+        "Board",
+        "BoardCard",
+        "BoardColumn",
+        "BoardMove",
+        "Icons",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Switch"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.0136224000000003,
+      "turns": 34,
+      "ms": 199463
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--board-refusal--s4",
+    "condition": "claude-altitude",
+    "brief": "board-refusal",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 12,
+      "elements": 11,
+      "names": [
+        "AltitudeProvider",
+        "Badge",
+        "Board",
+        "BoardCard",
+        "BoardColumn",
+        "BoardMove",
+        "BoardPlace",
+        "Icons",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Switch"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.6757890000000002,
+      "turns": 22,
+      "ms": 129582
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--board-refusal--s5",
+    "condition": "claude-altitude",
+    "brief": "board-refusal",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 10,
+      "elements": 12,
+      "names": [
+        "AltitudeProvider",
+        "Board",
+        "BoardCard",
+        "BoardColumn",
+        "BoardMove",
+        "Icons",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Switch"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.1049567999999999,
+      "turns": 38,
+      "ms": 216448
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--booking-choice--s1",
+    "condition": "claude-altitude",
+    "brief": "booking-choice",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 13,
+      "elements": 18,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Button",
+        "Card",
+        "DatePicker",
+        "ErrorSummary",
+        "Field",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Radio",
+        "RadioGroup"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7038287999999999,
+      "turns": 20,
+      "ms": 108201
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--booking-choice--s2",
+    "condition": "claude-altitude",
+    "brief": "booking-choice",
+    "files": 4,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 16,
+      "elements": 19,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Button",
+        "Card",
+        "DatePicker",
+        "ErrorSummary",
+        "Field",
+        "FieldErrors",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Radio",
+        "RadioGroup",
+        "WorkflowStatus",
+        "useEditRecord"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7265887999999999,
+      "turns": 20,
+      "ms": 120785
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--booking-choice--s3",
+    "condition": "claude-altitude",
+    "brief": "booking-choice",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 10,
+      "elements": 18,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Button",
+        "DatePicker",
+        "ErrorSummary",
+        "Field",
+        "Input",
+        "Radio",
+        "RadioGroup",
+        "WorkflowStatus"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.9002912000000001,
+      "turns": 27,
+      "ms": 153622
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--booking-choice--s4",
+    "condition": "claude-altitude",
+    "brief": "booking-choice",
+    "files": 4,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 16,
+      "elements": 20,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Button",
+        "DatePicker",
+        "EditRecordResult",
+        "ErrorSummary",
+        "Field",
+        "FieldErrors",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Radio",
+        "RadioGroup",
+        "WorkflowStatus",
+        "useEditRecord"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7783626000000001,
+      "turns": 26,
+      "ms": 125011
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--booking-choice--s5",
+    "condition": "claude-altitude",
+    "brief": "booking-choice",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 15,
+      "elements": 18,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Button",
+        "DatePicker",
+        "ErrorSummary",
+        "Field",
+        "FieldErrors",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Radio",
+        "RadioGroup",
+        "WorkflowStatus",
+        "useEditRecord"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.662654,
+      "turns": 16,
+      "ms": 89428
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--dashboard-a--s1",
+    "condition": "claude-altitude",
+    "brief": "dashboard-a",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 13,
+      "elements": 32,
+      "names": [
+        "AltitudeProvider",
+        "BarChart",
+        "Card",
+        "CardContent",
+        "ChartAnnotation",
+        "ChartContainer",
+        "LineChart",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Sparkline",
+        "Stat",
+        "StatGroup"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7618206,
+      "turns": 19,
+      "ms": 117902
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--dashboard-a--s2",
+    "condition": "claude-altitude",
+    "brief": "dashboard-a",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 11,
+      "elements": 26,
+      "names": [
+        "AltitudeProvider",
+        "BarChart",
+        "Card",
+        "CardContent",
+        "ChartContainer",
+        "LineChart",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Stat",
+        "StatGroup"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7490837999999999,
+      "turns": 21,
+      "ms": 123713
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--dashboard-b--s1",
+    "condition": "claude-altitude",
+    "brief": "dashboard-b",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 18,
+      "elements": 27,
+      "names": [
+        "AltitudeProvider",
+        "BarChart",
+        "Button",
+        "Card",
+        "CardContent",
+        "ChartAnnotation",
+        "ChartContainer",
+        "DataTable",
+        "DataTableColumn",
+        "Field",
+        "LineChart",
+        "PageHeader",
+        "PageHeaderTitle",
+        "Select",
+        "Sparkline",
+        "Stat",
+        "StatGroup",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.4828496,
+      "turns": 31,
+      "ms": 237431
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--dashboard-b--s2",
+    "condition": "claude-altitude",
+    "brief": "dashboard-b",
+    "files": 4,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 31,
+      "elements": 47,
+      "names": [
+        "AltitudeProvider",
+        "BarChart",
+        "Button",
+        "Card",
+        "CardContent",
+        "CardDescription",
+        "CardHeader",
+        "CardTitle",
+        "ChartAnnotation",
+        "ChartContainer",
+        "Field",
+        "LineChart",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Select",
+        "Sparkline",
+        "Stat",
+        "StatGroup",
+        "Table",
+        "TableBody",
+        "TableCaption",
+        "TableCell",
+        "TableFooter",
+        "TableHead",
+        "TableHeader",
+        "TableRow",
+        "Tabs",
+        "TabsContent",
+        "TabsList",
+        "TabsTrigger"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.6547991999999998,
+      "turns": 40,
+      "ms": 297171
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--record-view-a--s1",
+    "condition": "claude-altitude",
+    "brief": "record-view-a",
+    "files": 4,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 21,
+      "elements": 53,
+      "names": [
+        "AltitudeProvider",
+        "Avatar",
+        "Badge",
+        "Breadcrumb",
+        "Field",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "Select",
+        "Table",
+        "TableBody",
+        "TableCell",
+        "TableHead",
+        "TableHeader",
+        "TableRow",
+        "Timeline",
+        "TimelineItem",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.5257801999999996,
+      "turns": 39,
+      "ms": 227060
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--record-view-a--s2",
+    "condition": "claude-altitude",
+    "brief": "record-view-a",
+    "files": 5,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 25,
+      "elements": 49,
+      "names": [
+        "AltitudeProvider",
+        "Avatar",
+        "Badge",
+        "Breadcrumb",
+        "Button",
+        "Dialog",
+        "Field",
+        "Input",
+        "Link",
+        "PageHeader",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "RelativeTime",
+        "Select",
+        "Table",
+        "TableBody",
+        "TableCell",
+        "TableHead",
+        "TableHeader",
+        "TableRow",
+        "Textarea",
+        "Timeline",
+        "TimelineItem",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.4196494000000002,
+      "turns": 26,
+      "ms": 233832
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--record-view-b--s1",
+    "condition": "claude-altitude",
+    "brief": "record-view-b",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 25,
+      "elements": 37,
+      "names": [
+        "AltitudeProvider",
+        "Badge",
+        "Breadcrumb",
+        "DiffView",
+        "EditRegion",
+        "EditRegionForm",
+        "EditRegionTrigger",
+        "EditRegionValue",
+        "EditRegionView",
+        "Field",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Select",
+        "Table",
+        "TableBody",
+        "TableCaption",
+        "TableCell",
+        "TableHead",
+        "TableHeader",
+        "TableRow",
+        "Timeline",
+        "TimelineItem",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.141853,
+      "turns": 20,
+      "ms": 170113
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--record-view-b--s2",
+    "condition": "claude-altitude",
+    "brief": "record-view-b",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 23,
+      "elements": 46,
+      "names": [
+        "AltitudeProvider",
+        "Badge",
+        "Breadcrumb",
+        "DiffView",
+        "Field",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "Select",
+        "Table",
+        "TableBody",
+        "TableCaption",
+        "TableCell",
+        "TableHead",
+        "TableHeader",
+        "TableRow",
+        "Timeline",
+        "TimelineItem",
+        "Toaster",
+        "Tone"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.2987701999999999,
+      "turns": 29,
+      "ms": 190145
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--records-a--s1",
+    "condition": "claude-altitude",
+    "brief": "records-a",
+    "files": 4,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 16,
+      "elements": 23,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Badge",
+        "Button",
+        "DataTable",
+        "DataTableColumn",
+        "EmptyState",
+        "Icons",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Toaster",
+        "Tone",
+        "WorkflowStatus",
+        "useAsyncCollection"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.9276624,
+      "turns": 24,
+      "ms": 144430
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--records-a--s2",
+    "condition": "claude-altitude",
+    "brief": "records-a",
+    "files": 4,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 17,
+      "elements": 22,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Badge",
+        "Button",
+        "DataTable",
+        "DataTableColumn",
+        "EmptyState",
+        "Field",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "RelativeTime",
+        "Toaster",
+        "Tone",
+        "WorkflowStatus",
+        "useAsyncCollection"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7910780000000002,
+      "turns": 19,
+      "ms": 139019
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--records-b--s1",
+    "condition": "claude-altitude",
+    "brief": "records-b",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 19,
+      "elements": 25,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Badge",
+        "Button",
+        "CopyButton",
+        "DataTable",
+        "DataTableColumn",
+        "EmptyState",
+        "Field",
+        "IconComponent",
+        "Icons",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "RelativeTime",
+        "Tone",
+        "WorkflowStatus",
+        "useAsyncCollection"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 1.009228,
+      "turns": 28,
+      "ms": 165184
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--records-b--s2",
+    "condition": "claude-altitude",
+    "brief": "records-b",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 15,
+      "elements": 17,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Badge",
+        "Button",
+        "DataTable",
+        "DataTableColumn",
+        "EmptyState",
+        "Field",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Tone",
+        "WorkflowStatus",
+        "useAsyncCollection"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.8471339999999999,
+      "turns": 20,
+      "ms": 142596
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--settings-a--s1",
+    "condition": "claude-altitude",
+    "brief": "settings-a",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 16,
+      "elements": 29,
+      "names": [
+        "AltitudeProvider",
+        "Breadcrumb",
+        "Button",
+        "Dialog",
+        "EditRecordResult",
+        "ErrorSummary",
+        "Field",
+        "Input",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "SettingsSection",
+        "WorkflowStatus",
+        "useEditRecord"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7909182,
+      "turns": 19,
+      "ms": 129156
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--settings-a--s2",
+    "condition": "claude-altitude",
+    "brief": "settings-a",
+    "files": 5,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 21,
+      "elements": 34,
+      "names": [
+        "Alert",
+        "AltitudeProvider",
+        "Breadcrumb",
+        "Button",
+        "Card",
+        "CardContent",
+        "CardHeader",
+        "CardTitle",
+        "Dialog",
+        "ErrorSummary",
+        "Field",
+        "Input",
+        "LeaveReason",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "SettingsSection",
+        "WorkflowStatus",
+        "useEditRecord"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.9280117999999998,
+      "turns": 23,
+      "ms": 167304
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--settings-b--s1",
+    "condition": "claude-altitude",
+    "brief": "settings-b",
+    "files": 5,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 21,
+      "elements": 34,
+      "names": [
+        "AltitudeProvider",
+        "Breadcrumb",
+        "Button",
+        "Card",
+        "CardContent",
+        "CardHeader",
+        "CardTitle",
+        "Dialog",
+        "ErrorSummary",
+        "Field",
+        "Input",
+        "LeaveReason",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "SettingsSection",
+        "Toaster",
+        "WorkflowStatus",
+        "useEditRecord"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.9152306000000001,
+      "turns": 26,
+      "ms": 149158
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--settings-b--s2",
+    "condition": "claude-altitude",
+    "brief": "settings-b",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 23,
+      "elements": 33,
+      "names": [
+        "AltitudeProvider",
+        "Breadcrumb",
+        "Button",
+        "Card",
+        "CardContent",
+        "CardHeader",
+        "CardTitle",
+        "Dialog",
+        "ErrorSummary",
+        "Field",
+        "FieldErrors",
+        "Input",
+        "LeaveReason",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "PropertyList",
+        "PropertyListItem",
+        "SaveBar",
+        "SettingsSection",
+        "Switch",
+        "WorkflowStatus",
+        "useEditRecord"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.9578680000000002,
+      "turns": 29,
+      "ms": 165015
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--usage-quota--s1",
+    "condition": "claude-altitude",
+    "brief": "usage-quota",
+    "files": 2,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 14,
+      "elements": 25,
+      "names": [
+        "AltitudeProvider",
+        "Card",
+        "CardContent",
+        "CardDescription",
+        "CardHeader",
+        "CardTitle",
+        "ChartContainer",
+        "LineChart",
+        "Meter",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Stat",
+        "StatGroup"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7066091999999999,
+      "turns": 17,
+      "ms": 96844
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--usage-quota--s2",
+    "condition": "claude-altitude",
+    "brief": "usage-quota",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 15,
+      "elements": 18,
+      "names": [
+        "AltitudeProvider",
+        "Button",
+        "Card",
+        "CardContent",
+        "CardDescription",
+        "CardHeader",
+        "CardTitle",
+        "ChartContainer",
+        "ChartReference",
+        "LineChart",
+        "Meter",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Toaster"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.8440835999999998,
+      "turns": 22,
+      "ms": 134647
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--usage-quota--s3",
+    "condition": "claude-altitude",
+    "brief": "usage-quota",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 10,
+      "elements": 11,
+      "names": [
+        "AltitudeProvider",
+        "Card",
+        "CardContent",
+        "ChartContainer",
+        "ChartReference",
+        "LineChart",
+        "Meter",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.9357234,
+      "turns": 26,
+      "ms": 139971
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--usage-quota--s4",
+    "condition": "claude-altitude",
+    "brief": "usage-quota",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 14,
+      "elements": 17,
+      "names": [
+        "AltitudeProvider",
+        "Card",
+        "CardContent",
+        "CardDescription",
+        "CardHeader",
+        "CardTitle",
+        "ChartAnnotation",
+        "ChartContainer",
+        "ChartReference",
+        "LineChart",
+        "Meter",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.7912496,
+      "turns": 17,
+      "ms": 108513
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  },
+  {
+    "build": "claude-altitude--usage-quota--s5",
+    "condition": "claude-altitude",
+    "brief": "usage-quota",
+    "files": 3,
+    "usesAltitude": true,
+    "api": {
+      "unknownExports": 0,
+      "unknownProps": 0,
+      "details": []
+    },
+    "used": {
+      "identifiers": 15,
+      "elements": 21,
+      "names": [
+        "AltitudeProvider",
+        "Card",
+        "CardContent",
+        "CardDescription",
+        "CardHeader",
+        "CardTitle",
+        "ChartAnnotation",
+        "ChartContainer",
+        "ChartReference",
+        "LineChart",
+        "Meter",
+        "PageHeader",
+        "PageHeaderDescription",
+        "PageHeaderTitle",
+        "Stat"
+      ]
+    },
+    "rates": {
+      "unknownExportsPer100": 0,
+      "unknownPropsPer100": 0
+    },
+    "handRolled": {
+      "total": 0,
+      "byElement": {}
+    },
+    "probes": {
+      "meter-format-words": 0
+    },
+    "cost": {
+      "usd": 0.9004088,
+      "turns": 23,
+      "ms": 129249
+    },
+    "buildResult": "passed",
+    "rules": {
+      "ALT-TOKEN-001": 0,
+      "ALT-SETUP-002": 0,
+      "ALT-SETUP-003": 0,
+      "ALT-CHART-001": 0,
+      "ALT-COPY-001": 0,
+      "ALT-PRIMARY-001": 0,
+      "ALT-VISUAL-004": 0
+    },
+    "colourLiterals": 0,
+    "errors": 0,
+    "reviews": 0,
+    "findings": []
+  }
+]

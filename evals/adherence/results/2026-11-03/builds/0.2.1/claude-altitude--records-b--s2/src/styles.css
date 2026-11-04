@@ -1,0 +1,32 @@
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+.page-header h1 { margin: 0; font-size: 28px; line-height: 1.2; }
+.eyebrow { margin: 0 0 var(--space-1); color: var(--ink-muted); font-size: 13px; }
+.summary { margin: var(--space-2) 0 0; color: var(--ink-muted); font-size: 14px; }
+.header-actions { display: flex; align-items: center; gap: var(--space-3); }
+.updated { color: var(--ink-muted); font-size: 13px; }
+.search-bar { margin-bottom: var(--space-4); }
+.search-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: var(--space-2); }
+.search-row { display: flex; gap: var(--space-2); align-items: center; }
+.search-input { flex: 0 1 420px; }
+.search-status { margin: var(--space-2) 0 0; font-size: 13px; color: var(--ink-muted); }
+.mono { font-family: var(--font-mono); font-size: 13px; white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+.lane { white-space: nowrap; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}

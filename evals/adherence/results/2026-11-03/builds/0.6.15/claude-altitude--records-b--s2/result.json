@@ -1,0 +1,44 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "num_turns": 20,
+  "duration_ms": 142142,
+  "duration_api_ms": 139228,
+  "total_cost_usd": 0.8471339999999999,
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 38,
+    "cache_creation_input_tokens": 53803,
+    "cache_read_input_tokens": 800790,
+    "output_tokens": 12820,
+    "output_tokens_details": {
+      "thinking_tokens": 1430
+    },
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 53803,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "global",
+    "iterations": [
+      {
+        "input_tokens": 2,
+        "output_tokens": 815,
+        "cache_read_input_tokens": 61986,
+        "cache_creation_input_tokens": 829,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 829
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard",
+    "fallback_credit": null
+  }
+}
