@@ -38,7 +38,7 @@ const mount = async (page, options = {}) => {
       Object.assign(api, { setValue, setDisabled, setShow });
       const props = {
         value, label: 'Record name', required: options.required ?? true, maxLength: options.maxLength,
-        disabled, leave: options.leave, focusFallback: () => options.invalidFallback ? document.createElement('button') : document.getElementById('fallback'),
+        disabled, leave: options.leave, actions: options.actions, focusFallback: () => options.invalidFallback ? document.createElement('button') : document.getElementById('fallback'),
         onValueChange: value => { api.publications.push(value); setValue(value); if (options.removeOnPublish) setShow(false); },
         onSave: (draft, context) => {
           api.calls.push({ draft, context });
@@ -259,6 +259,37 @@ try {
   { const page = await open(); await mount(page); await edit(page); await input(page).fill('Kept by default');
     await page.locator('#elsewhere').click(); await input(page).focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
     check(await input(page).inputValue() === 'Kept by default', 'LV-13 by default, an outside press and Tab out keep the session'); await page.close(); }
+
+  // actions="inline" (#486): Save and Cancel as icon buttons inside the field's trailing end.
+  { const page = await open(); await mount(page, { actions: 'inline' }); await edit(page);
+    const group = page.locator('#inline-contract .alt-inline-edit');
+    const iconSave = group.locator('.alt-input').getByRole('button', { name: 'Save changes', exact: true });
+    const iconCancel = group.locator('.alt-input').getByRole('button', { name: 'Cancel', exact: true });
+    check(await iconSave.count() === 1 && await iconCancel.count() === 1 && await group.locator('.alt-inline-edit-actions').count() === 0, 'AC-01 Save and Cancel sit inside the field, with no button row');
+    const sizes = await group.locator('.alt-inline-edit-icons .alt-btn').evaluateAll(bs => bs.map(b => { const r = b.getBoundingClientRect(); return Math.min(r.width, r.height); }));
+    check(sizes.length === 2 && sizes.every(n => n >= 24), `AC-02 each icon button is at least 24px (${sizes})`);
+    await input(page).focus(); await page.keyboard.press('Tab');
+    check(await iconSave.evaluate(el => document.activeElement === el), 'AC-03 Tab goes from the input to Save');
+    await page.keyboard.press('Tab'); check(await iconCancel.evaluate(el => document.activeElement === el), 'AC-04 then to Cancel');
+    await page.keyboard.press('Tab'); check(await page.locator('#elsewhere').evaluate(el => document.activeElement === el), 'AC-05 then out of the group');
+    await input(page).fill('Inline save'); await iconSave.click(); await waitState(page, 'saving');
+    check(await iconSave.getAttribute('data-loading') !== null && await iconCancel.isDisabled(), 'AC-06 while saving, Save shows loading and Cancel is unavailable');
+    await resolveSave(page, { ok: true, value: 'Inline save' }); await read(page);
+    check(JSON.stringify(await api(page, 'publications')) === '["Inline save"]', 'AC-07 the check saves once through the same submit');
+    await edit(page); await input(page).fill('Dropped'); await iconCancel.click(); await read(page);
+    check((await api(page, 'calls')).length === 1 && await page.getByRole('button', { name: 'Edit Record name', exact: true }).evaluate(el => document.activeElement === el), 'AC-08 the cross cancels and returns focus to Edit');
+    await edit(page); await input(page).fill('Mine'); await page.evaluate(() => window.inlineHarness.setValue('Theirs')); await waitState(page, 'conflict');
+    check(await iconSave.isDisabled() && await page.getByRole('button', { name: 'Use current value' }).isVisible(), 'AC-09 a conflict disables the check and offers Use current value');
+    await iconCancel.click(); await read(page); await page.close(); }
+
+  { const page = await open(); await mount(page, { actions: 'inline', validate: 'deferred' }); await edit(page); await input(page).fill('Checking inline');
+    await input(page).press('Enter'); await waitState(page, 'validating');
+    check(await page.locator('#inline-contract .alt-input').getByRole('button', { name: 'Save changes', exact: true }).isDisabled(), 'AC-10 the check is unavailable while validating');
+    await resolveCheck(page, 'Choose a different name.'); await page.getByRole('alert').waitFor();
+    check(await input(page).inputValue() === 'Checking inline' && await page.locator('#inline-contract .alt-inline-edit-icons').count() === 1, 'AC-11 an error shows below the field and the icons stay'); await page.close(); }
+
+  { const page = await open(); await mount(page, { actions: 'inline', multiline: true, required: false }); await edit(page);
+    check(await page.locator('#inline-contract .alt-inline-edit-icons').count() === 0 && await page.locator('#inline-contract .alt-inline-edit-actions').getByRole('button', { name: 'Save changes' }).count() === 1, 'AC-12 multiline ignores actions="inline"'); await page.close(); }
 
   const fixture = async (page, name, slow = false) => {
     await page.getByText('Choose the next fixture', { exact: true }).click();

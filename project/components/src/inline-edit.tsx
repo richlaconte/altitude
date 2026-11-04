@@ -63,6 +63,12 @@ export interface InlineEditProps<V = string> {
    * an error or conflict is shown. Nothing is ever saved on leaving.
    */
   leave?: 'keep' | 'cancel';
+  /**
+   * Where Save and Cancel go while editing. 'buttons' (default): a Save button and a Cancel button take Edit's place on
+   * the line. 'inline': a check (Save) and a cross (Cancel) inside the field's trailing end, for tight places such as a
+   * table cell. Applies to the default Input; ignored with multiline or a custom editor.
+   */
+  actions?: 'buttons' | 'inline';
 }
 type Session<V> = {
   generation: number;
@@ -111,7 +117,7 @@ function caretFrom(event: React.MouseEvent, text: HTMLElement | null, length: nu
 export function InlineEdit<V = string>({ value, onValueChange, onSave, label, validate, required = false, maxLength,
   disabled = false, editLabel = `Edit ${label}`, saveLabel = 'Save changes', cancelLabel = 'Cancel',
   focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is, multiline = false, rows = 3, maxRows = 12,
-  trigger: triggerMode = 'button', hint = 'none', emptyLabel = 'Not set', shortcut, settleDuration = 5000, leave = 'keep' }: InlineEditProps<V>): React.ReactElement {
+  trigger: triggerMode = 'button', hint = 'none', emptyLabel = 'Not set', shortcut, settleDuration = 5000, leave = 'keep', actions: placement = 'buttons' }: InlineEditProps<V>): React.ReactElement {
   const [session, setSession] = React.useState<Session<V> | null>(null);
   const [announcement, setAnnouncement] = useLingeringStatus();
   const [settled, setSettled] = React.useState(0);
@@ -197,7 +203,8 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
         if (canFocus(area.current)) { const end = at ?? area.current.value.length; area.current.focus(); area.current.setSelectionRange(end, end); }
       } else if (canFocus(input.current)) {
         input.current.focus();
-        if (at === null) input.current.select(); else input.current.setSelectionRange(at, at);
+        // Selecting scrolls a long value to its end; put its start back where the read text was, so nothing moves.
+        if (at === null) { input.current.select(); input.current.scrollLeft = 0; } else input.current.setSelectionRange(at, at);
       }
     }
     if (!session && returnFocus.current) {
@@ -351,6 +358,13 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const describedBy = session?.error ? errorId : (onChoose || textarea) ? hintId : undefined;
   const glowProps = glowing ? { ...glow, style: { ...glow.style, '--dur-settle': `${settleDuration}ms` } as React.CSSProperties } : {};
   const locked = saving || validating || !!session?.conflicted;
+  // actions="inline": Save and Cancel as icon buttons at the field's trailing end, the same submit and cancel as the row.
+  const inlineActions = placement === 'inline' && !editor && !textarea;
+  const icons = session && inlineActions ? <span className="alt-inline-edit-icons">
+    <Button type="button" variant="ghost" size="sm" square aria-label={saveLabel} loading={saving} disabled={disabled || validating || session.conflicted}
+      onClick={() => { void submit(); }}><Icons.Check size={16} /></Button>
+    <Button type="button" variant="ghost" size="sm" square aria-label={cancelLabel} disabled={saving} onClick={cancel}><Icons.X size={16} /></Button>
+  </span> : undefined;
   const srLabel = <label className="alt-sr" htmlFor={controlId}>{label}</label>;
 
   const readSlot = triggerMode === 'button'
@@ -373,10 +387,12 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
           readOnly={locked} invalid={!!session.error} aria-required={required || undefined} aria-describedby={describedBy}
           onChange={event => change(event.target.value as unknown as V)} />
       : <Input ref={input} id={controlId} value={session.draft as unknown as string} maxLength={maxLength} disabled={disabled}
-          readOnly={locked} invalid={!!session.error} aria-required={required || undefined} aria-describedby={describedBy}
+          readOnly={locked} invalid={!!session.error} aria-required={required || undefined} aria-describedby={describedBy} trailing={icons}
           onChange={event => change(event.target.value as unknown as V)} />}</div>);
 
-  const actions = session ? <div className="alt-inline-edit-actions">
+  const actions = session ? inlineActions ? session.conflicted && !saving && <div className="alt-inline-edit-actions">
+    <Button type="button" onClick={useCurrent}>Use current value</Button>
+  </div> : <div className="alt-inline-edit-actions">
     {session.conflicted && !saving && <Button type="button" onClick={useCurrent}>Use current value</Button>}
     {(!onChoose || session.failed) && <Button type="button" variant="primary" loading={saving} disabled={disabled || validating || session.conflicted}
       onClick={() => { void submit(); }}>{onChoose ? 'Try again' : saveLabel}</Button>}
@@ -386,7 +402,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   </div>;
 
   return <div ref={root} className={cx('alt-inline-edit', className)} role="group" aria-label={label}
-    data-state={session?.phase ?? 'read'} data-trigger={triggerMode} data-multiline={textarea ? '' : undefined} onKeyDown={session ? onKeyDown : undefined}
+    data-state={session?.phase ?? 'read'} data-trigger={triggerMode} data-actions={inlineActions ? 'inline' : undefined} data-multiline={textarea ? '' : undefined} onKeyDown={session ? onKeyDown : undefined}
     onBlur={session && leave === 'cancel' ? onLeaveFocus : undefined}>
     <Surface className="alt-inline-edit-surface" level={0} status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
       <div className="alt-inline-edit-line">{session ? editSlot : readSlot}{actions}</div>

@@ -808,6 +808,12 @@ export interface InlineEditProps<V = string> {
    * an error or conflict is shown. Nothing is ever saved on leaving.
    */
   leave?: 'keep' | 'cancel';
+  /**
+   * Where Save and Cancel go while editing. 'buttons' (default): a Save button and a Cancel button take Edit's place on
+   * the line. 'inline': a check (Save) and a cross (Cancel) inside the field's trailing end, for tight places such as a
+   * table cell. Applies to the default Input; ignored with multiline or a custom editor.
+   */
+  actions?: 'buttons' | 'inline';
 }
 export declare function InlineEdit<V = string>(props: InlineEditProps<V>): React.ReactElement;
 

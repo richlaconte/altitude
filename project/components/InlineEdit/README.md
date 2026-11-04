@@ -51,6 +51,23 @@ By default (`leave="keep"`), a session stays open until Save, Cancel or Escape, 
 
 Use it where several editors share a screen (a table, a property list) and a half-open one left behind would be a problem. Keep the default where the text takes effort to type.
 
+### Save and Cancel in the field: `actions`
+
+In a table cell, a property list or a card title, a Save button and a Cancel button beside the field take room and wrap onto their own line at narrow widths. `actions="inline"` puts them inside the field's trailing end instead: a check that saves and a cross that cancels.
+
+```tsx
+<InlineEdit label="Task title" value={title} onValueChange={setTitle} onSave={save} actions="inline" />
+// Edit mode: [ Task title…            ✓  ✕ ]
+```
+
+- **The same actions.** The check runs the same save as Save: it shows loading while saving, and it's unavailable while checking or blocked by a conflict. The cross is Cancel, unavailable while saving. Enter and Escape work as they always do. Their accessible names are `saveLabel` and `cancelLabel` (“Save changes”, “Cancel”).
+- **A visible way out stays.** The cross keeps a visible way to cancel for pointer and touch users, with or without `leave="cancel"`.
+- **Errors and conflicts.** An error still appears below the field. In a conflict, “Use current value” appears beside the field, and “Current value” below it.
+- **Order and size.** Tab goes from the input to the check, then the cross, then out of the group. Each is a small ghost square button (`size-control-sm`, above the 24px minimum target), in the field's well with no lift. The icons use `currentColor`, so they follow forced colours.
+- **Where it applies.** The default Input. With `multiline` or a custom `editor`, it's ignored and the buttons stay beside the field. With `commit="on-choose"` there's no Save to place anyway.
+
+Default `actions="buttons"`.
+
 ## External updates and lifecycle
 
 An observed `value` change during editing, validation or error retains the draft and blocks Save. The region shows the latest saved value and “Use current value”. That explicit action replaces the draft and baseline and refocuses the input; Cancel displays the latest record.
@@ -364,8 +381,8 @@ function InlineWaysToOpen() {
   return <section aria-labelledby="inline-ways-title">
     <h2 id="inline-ways-title">Ways to open</h2>
     <div className="inline-demo-props">
-      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Pencil on hover, with a seam</span>
-        <InlineEdit label="Project name" trigger="pencil" hint="seam" value={values.project} onValueChange={set('project')} onSave={save} required /></div>
+      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Pencil on hover, with a seam; Save and Cancel in the field</span>
+        <InlineEdit label="Project name" trigger="pencil" hint="seam" actions="inline" value={values.project} onValueChange={set('project')} onSave={save} required /></div>
       <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, with a seam; leaving cancels</span>
         <InlineEdit label="Meeting title" trigger="field" hint="seam" leave="cancel" value={values.meeting} onValueChange={set('meeting')} onSave={save} required /></div>
       <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, empty</span>
