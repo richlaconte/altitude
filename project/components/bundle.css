@@ -1874,7 +1874,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-diff-hunk[data-decision] { margin-inline: 0; border-radius: 0; background: none; box-shadow: none; }
 .alt-diff-hunk[data-decision="reject"] { color: var(--ink-muted); }
 .alt-diff-hunk[data-decision="reject"] .alt-diff-line { opacity: 0.6; }
-.alt-diff-hunk-bar { position: sticky; left: 0; display: flex; align-items: center; justify-content: flex-end; gap: 2px; width: min(100%, 100cqw); padding: 2px 6px 2px 28px; font: 500 12.5px/17px var(--font-sans); }
+.alt-diff-hunk-bar { position: sticky; left: 0; display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); width: min(100%, 100cqw); padding: var(--space-1) var(--space-2) var(--space-2) 28px; font: 500 12.5px/17px var(--font-sans); }
 .alt-diff-hunk-state { display: inline-flex; align-items: center; gap: 5px; margin-right: auto; color: var(--ink-muted); }
 .alt-diff-hunk-folded { display: block; width: 100%; padding: 4px var(--space-4) 4px 28px; border: 0; background: none; color: var(--ink-muted); font: 500 12.5px/17px var(--font-sans); text-align: left; cursor: pointer; }
 .alt-diff-hunk-folded:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: -2px; }
