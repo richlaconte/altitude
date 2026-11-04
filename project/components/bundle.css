@@ -1904,7 +1904,9 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-savebar {
   position: fixed; left: 50%; bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-floating); translate: -50% 0;
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); width: max-content; max-width: calc(100vw - 32px);
-  padding: 8px 8px 8px var(--space-4); border-radius: var(--radius-lg); background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink);
+  /* The primary button's wall (wall-2) hangs below its face, so the bottom inset adds it: the slab, wall included,
+     sits centred in the bar (#497). */
+  padding: 8px 8px calc(8px + var(--wall-2)) var(--space-4); border-radius: var(--radius-lg); background: var(--surface-floating); box-shadow: var(--elev-3); color: var(--ink);
   transition: opacity var(--dur-travel-3) var(--ease-rise), transform var(--dur-travel-3) var(--ease-rise), background-color var(--dur-travel-2), box-shadow var(--dur-travel-2);
 }
 .alt-savebar[data-state="closed"] { opacity: 0; transform: translateY(calc(16px * var(--alt-travel))); transition-timing-function: var(--ease-settle); }
