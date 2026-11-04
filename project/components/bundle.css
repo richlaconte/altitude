@@ -775,6 +775,9 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 @keyframes alt-receipt-in { from { opacity: 0; } }
 /* Like every pending surface, it only shows as pending after dur-grace, so a fast write never flickers. */
 .alt-receipt[data-status="pending"] { background: var(--surface-lifted); border-radius: var(--radius-md); transition: background-color var(--dur-travel-1) var(--ease-rise) var(--dur-grace); animation-fill-mode: forwards; }
+/* When the write lands, the pending plate fades back to the ground rather than vanishing in one frame (#505); its corners
+   stay rounded until it has gone. */
+.alt-receipt[data-removed]:not([data-status="pending"]) { transition: background-color var(--dur-travel-1) var(--ease-sink), border-radius 0s linear var(--dur-travel-1); }
 .alt-receipt[data-leaving] { pointer-events: none; }
 .alt-receipt[data-leaving] > .alt-receipt-note, .alt-receipt[data-leaving] > .alt-receipt-action { animation: alt-lifted-off calc(var(--dur-travel-3) * 0.7) var(--ease-sink) both; }
 @media (forced-colors: active) { .alt-receipt[data-removed] { outline: 1px solid CanvasText; outline-offset: -1px; } }
