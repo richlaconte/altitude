@@ -21,7 +21,7 @@
 import * as React from 'react';
 import {
   Alert, Avatar, Badge, Breadcrumb, Button, CommentThread, Dialog, DiffView, EditRegion, EditRegionForm, EditRegionView, Field,
-  Input, PageHeader, PageHeaderDescription, PageHeaderTitle, Select, Skeleton, Surface, SyncIndicator, Textarea, Timeline,
+  Input, PageHeader, PageHeaderDescription, PageHeaderTitle, PrimaryScope, Select, Skeleton, Surface, SyncIndicator, Textarea, Timeline,
   TimelineItem, diffChanges, diffLines,
 } from 'altitude-design';
 import type { DiffDecision, SyncState, ThreadComment } from 'altitude-design';
@@ -317,9 +317,11 @@ function Comments({ section, comments, onAdded }: { section: Section; comments: 
     } catch { setLocal((l) => l.map((x) => (x.id === c.id ? { ...x, status: 'failed' } : x))); }
   };
   const shown = [...comments.filter((c) => !local.some((l) => l.id === c.id)), ...local];
-  return <CommentThread aria-label={`Comments on ${section.heading}`} comments={shown}
+  // The thread is its own part with its own action (Comment), so it's its own primary scope: the page's one primary
+  // stays Request review or Publish (#480).
+  return <PrimaryScope name={`comments on ${section.heading}`}><CommentThread aria-label={`Comments on ${section.heading}`} comments={shown}
     onPost={(body) => void send({ id: `c-${Date.now().toString(36)}`, author: { name: 'Sam Rivera' }, body, createdAt: Date.now(), mine: true })}
-    onRetry={(id) => { const c = local.find((x) => x.id === id); if (c) void send(c); }} />;
+    onRetry={(id) => { const c = local.find((x) => x.id === id); if (c) void send(c); }} /></PrimaryScope>;
 }
 
 /** The document's details: a small record edited deliberately, so EditRegion's explicit Save fits here. */
