@@ -2092,7 +2092,13 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    cross-fading without travel. An empty composer's Send is flush and faint but stays focusable (aria-disabled).
    Dragging a file over drops the well to a trench, as DropZone. ── */
 .alt-prompt { position: relative; }
+/* Not clipped like other multiline fields: a toolbar control's menu (a model Select, opening upward) floats out of the
+   well at level 3 (#496). The drop overlay takes the well's corners instead. */
 .alt-prompt-well { position: relative; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-lg); }
+.alt-input.alt-prompt-well[data-multiline] { overflow: visible; }
+/* The well is its own stacking context, so while something in it is open the whole prompt rises to the floating layer
+   and its menu isn't painted under whatever follows on the page. */
+.alt-prompt:has([aria-expanded="true"]) { z-index: var(--z-floating); }
 .alt-prompt-well .alt-prompt-text { width: 100%; min-height: 24px; resize: none; transition: height var(--dur-travel-2) var(--ease-glide); }
 .alt-prompt-files { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 /* @ mentions and / commands (#283): the list is a floating Combobox list (level 3) rising above the composer, grouped
@@ -2132,7 +2138,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   background: var(--surface-well); background-image: none; color: var(--ink-faint); box-shadow: 0 0 0 0 var(--wall-c), var(--elev-0); transform: none; cursor: not-allowed;
 } }
 .alt-prompt-well[data-drop="over"] { background: var(--accent-soft); box-shadow: var(--trench); border-color: var(--accent-ink); }
-.alt-prompt-drop { position: absolute; inset: 0; display: grid; place-items: center; font: 500 14px/20px var(--font-sans); color: var(--accent-ink); background: color-mix(in oklab, var(--accent-soft), transparent 15%); pointer-events: none; }
+.alt-prompt-drop { position: absolute; inset: 0; border-radius: inherit; display: grid; place-items: center; font: 500 14px/20px var(--font-sans); color: var(--accent-ink); background: color-mix(in oklab, var(--accent-soft), transparent 15%); pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .alt-prompt-text { transition: none; } }
 [data-motion="reduced"] .alt-prompt-text { transition: none; }
 @media (forced-colors: active) { .alt-prompt-send[aria-disabled] { border: 1px solid GrayText; color: GrayText; } .alt-prompt-well[data-drop="over"] { border: 2px dashed CanvasText; } }
