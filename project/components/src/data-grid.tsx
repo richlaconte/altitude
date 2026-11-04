@@ -81,6 +81,11 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
   const [failed, setFailed] = React.useState<Record<string, { error: string; draft: unknown }>>({});
   const [settled, setSettled] = React.useState<string[]>([]);
   const [announcement, setAnnouncement] = React.useState('');
+  // Pressing on a cell and dragging extends the range to the cell under the pointer (#501). The range is announced once,
+  // when the drag ends, not at every cell it crosses.
+  const [dragging, setDragging] = React.useState(false);
+  const stopDrag = React.useRef<(() => void) | null>(null);
+  React.useEffect(() => () => stopDrag.current?.(), []);
   const grid = React.useRef<HTMLTableElement>(null);
   const field = React.useRef<HTMLInputElement>(null);
   const history = React.useRef<DataGridChange<T>[][]>([]);
@@ -122,6 +127,46 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
     if (under > 0) scroller.scrollLeft -= under;
   };
   const go = (p: Pos, extend = false) => { const next = clamp(p); if (extend) setAnchor((a) => a ?? active); else setAnchor(null); setActive(next); wantFocus.current = 'cell'; };
+  const startDrag = (e: React.MouseEvent, from: Pos) => {
+    stopDrag.current?.();
+    const table = grid.current, scroller = table?.closest<HTMLElement>('.alt-table-wrap') ?? null;
+    if (!table) return;
+    let x = e.clientX, y = e.clientY, last = from, moved = false, raf = 0;
+    const cellAt = (): Pos | null => {
+      const el = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-cell]');
+      if (!el || !table.contains(el)) return null;
+      const [r, c] = el.dataset.cell!.split(':').map(Number);
+      return { r, c };
+    };
+    const track = () => {
+      const p = cellAt();
+      if (p && (p.r !== last.r || p.c !== last.c)) {
+        if (!moved) { moved = true; setDragging(true); setAnchor((a) => a ?? from); }
+        last = p; setActive(p); wantFocus.current = 'cell';
+      }
+    };
+    // Near the scroller's edges it scrolls, faster the closer the pointer, and the range follows.
+    const edge = () => {
+      raf = 0;
+      if (!scroller || !moved) return;
+      const b = scroller.getBoundingClientRect(), zone = 28;
+      const dx = x < b.left + zone ? -(b.left + zone - x) : x > b.right - zone ? x - (b.right - zone) : 0;
+      const dy = y < b.top + zone ? -(b.top + zone - y) : y > b.bottom - zone ? y - (b.bottom - zone) : 0;
+      if (!dx && !dy) return;
+      scroller.scrollLeft += Math.max(-24, Math.min(24, dx / 2)); scroller.scrollTop += Math.max(-24, Math.min(24, dy / 2));
+      track(); raf = requestAnimationFrame(edge);
+    };
+    const move = (ev: MouseEvent) => { x = ev.clientX; y = ev.clientY; track(); if (!raf) raf = requestAnimationFrame(edge); };
+    const up = () => stop();
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up);
+      stopDrag.current = null;
+      if (mounted.current) setDragging(false);
+    };
+    window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+    stopDrag.current = stop;
+  };
 
   const save = async (changes: DataGridChange<T>[]) => {
     if (!changes.length) return true;
@@ -246,7 +291,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
   };
 
   const rangeText = range && (range.r1 > range.r0 || range.c1 > range.c0) ? `${range.r1 - range.r0 + 1} by ${range.c1 - range.c0 + 1} cells selected` : '';
-  return <div className={cx('alt-data-grid', className)}>
+  return <div className={cx('alt-data-grid', className)} data-dragging={dragging ? '' : undefined}>
     <Table ref={grid} role="grid" maxHeight={maxHeight} aria-label={aria['aria-label']} aria-labelledby={aria['aria-labelledby']} aria-rowcount={R + 1} aria-colcount={C}
       aria-describedby={auto + '-keys'} aria-multiselectable onKeyDown={onGridKey} onCopy={onCopy} onPaste={onPaste}
       onBlur={(e) => {
@@ -278,6 +323,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
                 if (isEditing) return;
                 if (editing && !commit()) { e.preventDefault(); return; } // clicking another cell commits, as in a spreadsheet
                 e.preventDefault(); go({ r, c }, e.shiftKey);
+                if (e.button === 0) startDrag(e, e.shiftKey ? (anchor ?? active) : { r, c });
               }}
               onDoubleClick={() => begin(r, c)}>
               {isEditing ? (editing!.custom
@@ -303,7 +349,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
     </Table>
     <span id={auto + '-keys'} hidden>Arrows move. Enter or F2 edits, or just type. Enter saves and moves down, Tab saves and moves right, Escape discards. Shift and arrows select a range; copy and paste work as in a spreadsheet.</span>
     <span className="alt-grid-sr" role="status" aria-live="polite" aria-atomic="true">{announcement}</span>
-    <span className="alt-grid-sr" aria-live="polite" aria-atomic="true">{rangeText}</span>
+    <span className="alt-grid-sr" aria-live="polite" aria-atomic="true">{dragging ? '' : rangeText}</span>
   </div>;
 }
 

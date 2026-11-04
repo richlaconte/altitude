@@ -56,7 +56,7 @@ The APG grid, with spreadsheet editing:
 | | Tab / Shift+Tab | save and move right / left |
 | | Escape | discard the draft |
 
-Clicking another cell saves the open one and moves there, as in a spreadsheet; moving focus out of the grid keeps the draft open and marks it “Not saved yet”, rather than saving or discarding it. Nothing acts during IME composition. Announcements are batched: “Saved”, “4 cells saved”, “1 cell couldn't be saved: Price must be at least 0”, “3 by 4 cells selected”.
+**With a pointer**: Shift+click extends the range; pressing on a cell and dragging to another selects the block between them, and the grid scrolls when the pointer nears its edges. The range is announced once, when the drag ends. No drag starts from the cell being edited, and a click without dragging is still one cell. On touch a tap selects a cell and a drag scrolls. Clicking another cell saves the open one and moves there, as in a spreadsheet; moving focus out of the grid keeps the draft open and marks it “Not saved yet”, rather than saving or discarding it. Nothing acts during IME composition. Announcements are batched: “Saved”, “4 cells saved”, “1 cell couldn't be saved: Price must be at least 0”, “3 by 4 cells selected”.
 
 ## Props
 

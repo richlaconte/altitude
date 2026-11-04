@@ -72,6 +72,18 @@ try {
   { const page = await open();
     await cell(page, 0, 3).click(); await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+ArrowDown');
     check(await page.locator('[aria-selected="true"]').count() === 3, 'DG-19 Shift+arrows select a range (aria-selected)');
+    // #501: press on a cell and drag to another: the range follows the pointer, and is announced once, at the end.
+    const a0 = await cell(page, 0, 2).boundingBox(), b0 = await cell(page, 2, 3).boundingBox();
+    await page.mouse.move(a0.x + a0.width / 2, a0.y + a0.height / 2); await page.mouse.down();
+    await page.mouse.move(b0.x + b0.width / 2, b0.y + b0.height / 2, { steps: 8 });
+    const mid = await page.evaluate(() => ({ n: document.querySelectorAll('[data-range]').length, live: [...document.querySelectorAll('.alt-data-grid .alt-grid-sr[aria-live]')].map(e => e.textContent).join('|') }));
+    check(mid.n === 6 && !mid.live.includes('cells selected'), `DG-19a dragging extends the range to the cell under the pointer, and says nothing yet (${JSON.stringify(mid)})`);
+    await page.mouse.up();
+    await said(page, '3 by 2 cells selected');
+    check(await at(page) === '2:3' && await page.locator('[data-range][aria-selected="true"]').count() === 6, 'DG-19b letting go keeps the range, announced, with the active cell where the drag ended');
+    await page.mouse.click(a0.x + a0.width / 2, a0.y + a0.height / 2);
+    check(await page.locator('[data-range]').count() === 0 && await at(page) === '0:2', 'DG-19c a click without dragging is still a single cell');
+    await cell(page, 0, 3).click(); await page.keyboard.press('Shift+ArrowDown'); await page.keyboard.press('Shift+ArrowDown');
     await said(page, '3 by 1 cells selected');
     const copied = await page.evaluate(() => { const d = new DataTransfer(); document.activeElement.dispatchEvent(new ClipboardEvent('copy', { clipboardData: d, bubbles: true, cancelable: true })); return d.getData('text/plain'); });
     check(copied === '120\n34\n0', 'DG-20 copy gives the range as tab-separated text');
