@@ -2,7 +2,11 @@
    ticket's conversation first, its properties beside it, narrower. Tokens only. */
 .si { max-width: 1280px; margin: 0 auto; padding: var(--space-8) var(--space-4); display: grid; gap: var(--space-4); }
 .si > * { min-width: 0; }
-.si-panes { width: 100%; height: 720px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+/* The inbox is the chosen view's folder panel (#492): the raised sheet the chosen tab belongs to, edge to edge, so the
+   panes sit on the sheet rather than on a second surface beside the tabs. */
+.alt-tabs > .si-folder.alt-tabs-content { padding: 0; overflow: hidden; }
+.si-panes { width: 100%; height: 720px; }
+.si-panes .alt-resizable-panel { background: none; }
 .si-list { overflow-y: auto; padding: var(--space-2); }
 .si-detail { overflow-y: auto; min-width: 0; }
 .si-pad { padding: var(--space-3); }
