@@ -812,6 +812,8 @@ export interface InlineEditProps<V = string> {
   editor?: (control: InlineEditControl<V>) => React.ReactNode;
   /** 'on-choose': a single-choice editor saves as soon as a value is chosen, and Save is hidden; once the list closes, the editor folds back to the chosen value, which hovers while the write runs. Default 'explicit'. */
   commit?: 'explicit' | 'on-choose';
+  /** Where a written value waits for the server. 'editor' (default): the editor stays open, read-only, Save loading. 'value': the editor folds back at once to the value being written, which hovers as pending; a rejection or conflict opens it again with the draft and the caret at its end. */
+  pending?: 'editor' | 'value';
   /** An unchanged draft closes without a write, and an equal observed value isn't an external change. Default Object.is. */
   isEqual?: (a: V, b: V) => boolean;
   /** A Textarea instead of the Input: Enter inserts a newline and Ctrl/Cmd+Enter saves. Default false. */
@@ -1050,6 +1052,8 @@ export interface PropertyListItemProps<V> {
   onValueChange?: (canonical: V) => void;
   editor?: (control: InlineEditControl<V>) => React.ReactNode;
   commit?: 'explicit' | 'on-choose';
+  /** InlineEdit's `pending`: 'value' folds a typed value back to the list while it's written. Default 'editor'. */
+  pending?: 'editor' | 'value';
   validate?: (draft: V) => string | undefined | Promise<string | undefined>;
   required?: boolean;
   isEqual?: (a: V, b: V) => boolean;

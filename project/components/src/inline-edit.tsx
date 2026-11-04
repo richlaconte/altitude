@@ -69,6 +69,13 @@ export interface InlineEditProps<V = string> {
    * table cell. Applies to the default Input; ignored with multiline or a custom editor.
    */
   actions?: 'buttons' | 'inline';
+  /**
+   * Where a written value waits for the server (#513). 'editor' (default): the editor stays open, read-only, with Save
+   * loading. 'value': the editor folds back at once to the value being written, which hovers as pending; a rejection or
+   * a conflict opens the editor again with the draft, the message and the caret at its end. commit="on-choose" always
+   * folds, once its list has closed.
+   */
+  pending?: 'editor' | 'value';
 }
 type Session<V> = {
   generation: number;
@@ -78,7 +85,7 @@ type Session<V> = {
   error?: string;
   failed?: boolean;
   conflicted?: boolean;
-  /** commit="on-choose": the list has closed, so the editor has folded back to the value, which hovers while the write runs. */
+  /** The editor has folded back to the value, which hovers while the write runs: commit="on-choose" once its list has closed, or pending="value". */
   folded?: boolean;
 };
 const SAVE_ERROR = 'We couldn’t save this change. Try again.';
@@ -124,7 +131,7 @@ function caretFrom(event: React.MouseEvent, text: HTMLElement | null, length: nu
 export function InlineEdit<V = string>({ value, onValueChange, onSave, label, validate, required = false, maxLength,
   disabled = false, editLabel = `Edit ${label}`, saveLabel = 'Save changes', cancelLabel = 'Cancel',
   focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is, multiline = false, rows = 3, maxRows = 12,
-  trigger: triggerMode = 'button', hint = 'none', emptyLabel = 'Not set', shortcut, settleDuration = 5000, leave = 'keep', actions: placement = 'buttons' }: InlineEditProps<V>): React.ReactElement {
+  trigger: triggerMode = 'button', hint = 'none', emptyLabel = 'Not set', shortcut, settleDuration = 5000, leave = 'keep', actions: placement = 'buttons', pending: pendingAt = 'editor' }: InlineEditProps<V>): React.ReactElement {
   const [session, setSession] = React.useState<Session<V> | null>(null);
   const [announcement, setAnnouncement] = useLingeringStatus();
   const [settled, setSettled] = React.useState(0);
@@ -264,7 +271,11 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const unfold = (active: Session<V>) => {
     if (!active.folded) return;
     active.folded = false;
-    if (root.current?.contains(document.activeElement)) selectInput.current = true;
+    if (root.current?.contains(document.activeElement)) {
+      selectInput.current = true;
+      // Back to typing where they left off, not with the whole draft selected to be replaced.
+      if (!editor && typeof active.draft === 'string') caretAt.current = active.draft.length;
+    }
   };
   const fail = (active: Session<V>, error: string, failed = false) => {
     if (!valid(active)) return;
@@ -292,7 +303,10 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
       if (disabledNow.current) { active.phase = 'editing'; setSession({ ...active }); setAnnouncement(''); return; }
     }
     // This phase is a synchronous in-flight lock, including for synchronous onSave implementations.
-    active.phase = 'saving'; setSession({ ...active }); setAnnouncement('Saving changes');
+    active.phase = 'saving';
+    // pending="value": the editor folds back to the value being written at once; it hovers while the write runs.
+    if (!onChoose && pendingAt === 'value') { plateFocus.current = !!root.current?.contains(document.activeElement); active.folded = true; capture(); }
+    setSession({ ...active }); setAnnouncement('Saving changes');
     // On-choose: once the list has closed, the editor folds back to the chosen value, which hovers while the write runs
     // (Elevation, Editing in place). It doesn't wait for the write: only an error or a conflict opens the editor again.
     const listClosed = onChoose ? afterPopup(root.current).then(() => {

@@ -128,7 +128,7 @@ export default function App() {
         <PropertyListItem label="Name" value={trip.name} onSave={tripSave} onValueChange={tripSet('name')} required />
         <PropertyListItem label="Email" value={trip.email} onSave={tripSave} onValueChange={tripSet('email')} required />
         <PropertyListItem label="Dates" value={`${trip.start} to ${trip.end}`} />
-        <PropertyListItem label="Phone" value={trip.phone} emptyLabel="Add phone number" onSave={tripSave} onValueChange={tripSet('phone')} />
+        <PropertyListItem label="Phone" value={trip.phone} emptyLabel="Add phone number" pending="value" onSave={tripSave} onValueChange={tripSet('phone')} />
       </PropertyList>
     </section>
   </div>;
