@@ -1,4 +1,4 @@
-<!-- @dsCard group="Navigation" height=330 subtitle="Descend into children, ascend back" -->
+<!-- @dsCard group="Navigation" height=660 subtitle="Descend into children, ascend back; with a direction where levels look alike" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -43,7 +43,7 @@ const tree = { id: "ws", title: "Workspace", children: [
   { id: "st", title: "Settings", description: "Members, billing, domains", content: "Workspace settings." }
 ] };
 function App() {
-  return /* @__PURE__ */ React.createElement("div", { className: "wrap" }, /* @__PURE__ */ React.createElement(A.Drilldown, { root: tree }));
+  return /* @__PURE__ */ React.createElement("div", { className: "wrap col" }, /* @__PURE__ */ React.createElement(A.Drilldown, { root: tree }), /* @__PURE__ */ React.createElement("p", { className: "cap" }, 'With transition="slide", the same stack has a direction: deeper comes in from the end, back from the start.'), /* @__PURE__ */ React.createElement(A.Drilldown, { root: tree, transition: "slide" }));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
 </script>

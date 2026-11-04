@@ -1691,7 +1691,11 @@ export declare function Stepper(props: StepperProps): React.ReactElement;
 
 /** A place in a Drilldown. Without content, a node with children lists them; with both, the content shows and opens its children itself (a chart's `drill`). */
 export interface DrillNode { id: string; title: React.ReactNode; description?: React.ReactNode; content?: React.ReactNode; children?: DrillNode[] }
-export interface DrilldownProps extends React.HTMLAttributes<HTMLDivElement> { root: DrillNode }
+export interface DrilldownProps extends React.HTMLAttributes<HTMLDivElement> {
+  root: DrillNode;
+  /** 'stack' (default): the child is laid on top, the parent pressed beneath. 'slide': still a stack, but the child travels in from the inline end and the parent off toward the start; back reverses it. */
+  transition?: 'stack' | 'slide';
+}
 /** Descend into children, ascend back; the breadcrumb steps down a notch per level. */
 export declare function Drilldown(props: DrilldownProps): React.ReactElement;
 /** Inside a Drilldown's content: open one of the current node's children by id. Null outside a Drilldown. */

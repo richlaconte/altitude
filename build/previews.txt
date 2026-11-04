@@ -2991,7 +2991,7 @@ function App() {
   );
 }
 
-=== Drilldown | <!-- @dsCard group="Navigation" height=330 subtitle="Descend into children, ascend back" -->
+=== Drilldown | <!-- @dsCard group="Navigation" height=660 subtitle="Descend into children, ascend back; with a direction where levels look alike" -->
 --- css
 .wrap { max-width: 460px; }
 --- jsx
@@ -3003,7 +3003,15 @@ const tree = { id: 'ws', title: 'Workspace', children: [
     { id: 'prev', title: 'Preview', description: '3 branches', content: 'Preview deployments for open pull requests.' } ] },
   { id: 'bc', title: 'Beacon', description: 'Internal dashboard', content: 'No deployments yet.' },
   { id: 'st', title: 'Settings', description: 'Members, billing, domains', content: 'Workspace settings.' } ] };
-function App() { return <div className="wrap"><A.Drilldown root={tree} /></div>; }
+function App() {
+  return (
+    <div className="wrap col">
+      <A.Drilldown root={tree} />
+      <p className="cap">With transition="slide", the same stack has a direction: deeper comes in from the end, back from the start.</p>
+      <A.Drilldown root={tree} transition="slide" />
+    </div>
+  );
+}
 
 
 === Tree | <!-- @dsCard group="Navigation" height=620 subtitle="A hierarchy seen at once and changed in place: rename, add, carry into a folder" -->
