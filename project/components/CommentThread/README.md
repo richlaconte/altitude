@@ -14,7 +14,7 @@ Comments on a task, a document, a design or a deal: write with @mentions, post, 
 
 **Accessibility.** Comments are articles in a list. The composer is a [combobox](https://www.w3.org/WAI/ARIA/apg/patterns/combobox/) textarea while mentioning (`aria-activedescendant`). ⌘Enter or Ctrl+Enter posts. New comments from others are announced politely and batched ("2 new comments"). Typing indicators aren't announced. Under forced colours the composer is dashed, a pending comment dotted and a failed one dashed thick. Under reduced motion the typing dots don't pulse.
 
-**Props:** `comments` (`{ id, author: { name, avatar? }, body, createdAt, status?, mentions?, mine?, deleted? }[]`); `resolved` (`{ by }` or false); `onPost`; `onResolve`; `onReopen`; `onRetry`; `onDelete`; `onUndoDelete`; `mentionable`; `typing` (names); `aria-label`.
+**Props:** `comments` (`{ id, author: { name, avatar? }, body, createdAt, status?, mentions?, mine?, deleted? }[]`); `resolved` (`{ by }` or false); `onPost` (without it there is no composer: a read-only thread, or one whose replies are written elsewhere; someone typing still shows); `onResolve`; `onReopen`; `onRetry`; `onDelete`; `onUndoDelete`; `mentionable`; `typing` (names); `aria-label`.
 
 **You provide:** the comments and their states (your app adds a pending comment when it posts, and marks it failed or posted), and who can be mentioned. Rich text is out of scope; a rich editor plugs in through the editor adapter.
 
