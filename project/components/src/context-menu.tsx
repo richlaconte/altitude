@@ -21,34 +21,14 @@ export interface ContextMenuProps {
  * flush row doesn't lift out of its table. Every action here must also be reachable another way.
  */
 export function ContextMenu({ items, children, 'aria-label': label = 'Actions', onOpenChange }: ContextMenuProps) {
-  const [at, setAt] = React.useState<{ x: number; y: number; byKey: boolean } | null>(null);
+  const [at, setAt] = React.useState<ContextAt | null>(null);
   const [list, setList] = React.useState<MenuEntry[]>([]);
   const target = React.useRef<HTMLElement | null>(null);
-  const panel = React.useRef<HTMLDivElement>(null);
   const press = React.useRef<{ t: number; x: number; y: number } | undefined>(undefined);
   const id = React.useId();
-  const { mounted, state } = usePresence(!!at, EXIT_3);
-  // Where the menu sits once it's measured (flipped at the viewport's edges); until then, where it was opened.
-  const [pos, setPos] = React.useState<{ x: number; y: number } | null>(null);
 
-  const open = (x: number, y: number, byKey: boolean) => { setList(typeof items === 'function' ? items() : items); setPos(null); setAt({ x, y, byKey }); onOpenChange?.(true); };
+  const open = (x: number, y: number, byKey: boolean) => { setList(typeof items === 'function' ? items() : items); setAt({ x, y, byKey }); onOpenChange?.(true); };
   const close = React.useCallback((back = true) => { setAt(null); onOpenChange?.(false); if (back) target.current?.focus({ preventScroll: true }); }, [onOpenChange]);
-
-  // Kept inside the viewport: flipped left or up when it would run off an edge. The Layer mounts a render late, so
-  // this runs until the panel exists and has been placed once.
-  useIsoLayoutEffect(() => {
-    if (!at || !panel.current || pos) return;
-    const r = panel.current.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
-    setPos({ x: at.x + r.width > vw - 8 ? Math.max(8, at.x - r.width) : at.x, y: at.y + r.height > vh - 8 ? Math.max(8, at.y - r.height) : at.y });
-  });
-  React.useEffect(() => {
-    if (!at) return;
-    const outside = (e: Event) => { if (!panel.current?.contains(e.target as Node)) close(false); };
-    const away = () => close(false);
-    document.addEventListener('pointerdown', outside, true);
-    window.addEventListener('blur', away); window.addEventListener('resize', away); window.addEventListener('scroll', away, true);
-    return () => { document.removeEventListener('pointerdown', outside, true); window.removeEventListener('blur', away); window.removeEventListener('resize', away); window.removeEventListener('scroll', away, true); };
-  }, [at, close]);
 
   const child = children;
   const trigger = React.cloneElement(child, {
@@ -76,10 +56,45 @@ export function ContextMenu({ items, children, 'aria-label': label = 'Actions', 
   });
   return <>
     {trigger}
-    {mounted && <Layer>
-      <div ref={panel} className="alt-context" style={{ left: (pos ?? at ?? { x: 0 }).x, top: (pos ?? at ?? { y: 0 }).y }} aria-label={label}>
-        <MenuPanel items={list} id={id} state={state} className="alt-context-menu" startFirst={at?.byKey} onClose={() => close(true)} />
-      </div>
-    </Layer>}
+    <ContextMenuLayer at={at} items={list} id={id} label={label} onClose={close} />
   </>;
+}
+
+export type ContextAt = { x: number; y: number; byKey: boolean };
+/**
+ * The menu itself, for a component that owns its own trigger (a Tree row, whose aria-expanded already means something):
+ * placed at `at`, kept inside the viewport, closed by a press outside, blur, resize or scroll (onClose(false)) or by
+ * choosing or Escape (onClose(true): put focus back on the thing).
+ */
+export function ContextMenuLayer({ at, items, id, label = 'Actions', onClose }: { at: ContextAt | null; items: MenuEntry[]; id: string; label?: string; onClose: (back?: boolean) => void }) {
+  const panel = React.useRef<HTMLDivElement>(null);
+  const { mounted, state } = usePresence(!!at, EXIT_3);
+  // Where the menu sits once it's measured (flipped at the viewport's edges); until then, where it was opened.
+  const [pos, setPos] = React.useState<{ x: number; y: number } | null>(null);
+  const shown = React.useRef<ContextAt | null>(null);
+  // Each opening is a fresh menu, even if the last one is still fading out (its active item, its focus).
+  const opening = React.useRef(0);
+  if (at !== shown.current) { shown.current = at; if (at) opening.current++; if (pos) setPos(null); }
+  // Kept inside the viewport: flipped left or up when it would run off an edge. The Layer mounts a render late, so
+  // this runs until the panel exists and has been placed once.
+  useIsoLayoutEffect(() => {
+    if (!at || !panel.current || pos) return;
+    const r = panel.current.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
+    setPos({ x: at.x + r.width > vw - 8 ? Math.max(8, at.x - r.width) : at.x, y: at.y + r.height > vh - 8 ? Math.max(8, at.y - r.height) : at.y });
+  });
+  const latestClose = React.useRef(onClose); latestClose.current = onClose;
+  React.useEffect(() => {
+    if (!at) return;
+    const close = (back: boolean) => latestClose.current(back);
+    const outside = (e: Event) => { if (!panel.current?.contains(e.target as Node)) close(false); };
+    const away = () => close(false);
+    document.addEventListener('pointerdown', outside, true);
+    window.addEventListener('blur', away); window.addEventListener('resize', away); window.addEventListener('scroll', away, true);
+    return () => { document.removeEventListener('pointerdown', outside, true); window.removeEventListener('blur', away); window.removeEventListener('resize', away); window.removeEventListener('scroll', away, true); };
+  }, [at]);
+  return <>{mounted && <Layer>
+    <div ref={panel} className="alt-context" style={{ left: (pos ?? at ?? { x: 0 }).x, top: (pos ?? at ?? { y: 0 }).y }} aria-label={label}>
+      <MenuPanel key={opening.current} items={items} id={id} state={state} className="alt-context-menu" startFirst={at?.byKey} onClose={() => latestClose.current(true)} />
+    </div>
+  </Layer>}</>;
 }

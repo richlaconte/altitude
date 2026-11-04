@@ -1746,6 +1746,8 @@ export interface TreeProps<T> {
   onCreate?: (request: TreeTarget & { name: string }) => TreeCreateResult<T> | Promise<TreeCreateResult<T>>;
   /** Delete. Your removal policy (recovery or confirmation) applies; the tree only asks. */
   onRemove?: (item: T) => void;
+  /** A node's actions, opened by right-click, long-press, Shift+F10 or the Menu key (ContextMenu's menu, level 3); focus returns to the node on close. Every action must also be reachable another way. */
+  rowMenu?: (item: T) => MenuEntry[];
   className?: string;
 }
 /** A hierarchy seen all at once and changed in place: rename (F2), create, carry (Space or drag) and remove. */

@@ -56,6 +56,7 @@ The APG tree view, plus editing:
 | Space | pick up (announced): ↑/↓ move between slots, → into the node above, ← out of the parent, Space or Enter drop, Escape cancel. Without `onMove`, Space selects |
 | Alt+↑ / Alt+↓ | move one step without picking up |
 | Delete | `onRemove`; focus moves to the next node, else the previous |
+| Shift+F10, the Menu key | with `rowMenu`: the focused node's actions, first one active; Escape or choosing returns focus to the node |
 
 Only one node is in the Tab sequence. `TreeHandle.startCreate(parentId, index?)` and `startRename(id)` give pointer users the same actions from a toolbar.
 
@@ -68,6 +69,7 @@ Only one node is in the Tab sequence. `TreeHandle.startCreate(parentId, index?)`
 | `selectionMode`, `selected`, `defaultSelected`, `onSelectedChange` | `'single'` (default) or `'none'` |
 | `onAction`, `renderItem` | Enter's action; draw a node's label |
 | `onRename`, `onMove`, `canDrop`, `onCreate`, `onRemove` | the writes, as above. `TreeTarget.index` is the place among the children once the node has left its old one |
+| `rowMenu` | `(item) => MenuEntry[]`: a node's actions, opened by right-click, long-press, Shift+F10 or the Menu key. It's `ContextMenu`'s menu (Floating, level 3); the node it belongs to is outlined 2px in `accent-ink`, never lifted, and announces `aria-haspopup="menu"`. On touch with `onMove`, a press-and-hold let go where it began is the long-press (the menu); held and moved, it carries the node. Put only actions that are reachable another way here (F2, Delete, the toolbar) |
 
 ## You provide
 
@@ -81,7 +83,7 @@ The data, the writes and their concurrency guards, and the removal policy (recov
 
 ## Demo and verification
 
-The `Tree` section of `build/previews.txt` is a page tree with a toolbar; the demo service rejects names over 40 characters and moves out of Archive. `node checks/tree.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG keys and RTL, rename (cancel, rejection, save), create (sibling and child), keyboard carry (up, down, indent, outdent, cancel, drop, a rejected move, `canDrop`), Alt+↓, Delete with focus repair, pointer carry into a closed node (spring-loaded) and onto a slot, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+The `Tree` section of `build/previews.txt` is a page tree with a toolbar; the demo service rejects names over 40 characters and moves out of Archive. `node checks/tree.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG keys and RTL, rename (cancel, rejection, save), create (sibling and child), keyboard carry (up, down, indent, outdent, cancel, drop, a rejected move, `canDrop`), Alt+↓, Delete with focus repair, pointer carry into a closed node (spring-loaded) and onto a slot, the row menu (right-click, Shift+F10, the Menu key, a touch long-press, focus return), and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **On touch.** With `onMove`, a swipe on a row scrolls; a press-and-hold picks it up, then a drag moves it.
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
@@ -105,7 +107,17 @@ import { Tree } from 'altitude-design';
     return { ok: true };
   }}
   onCreate={async ({ parentId, index, name }) => { await treeWait(250); const page = { id: 'new-' + ++seq.current, title: name }; setPages(list => treeInsert(list, parentId, index, page)); return { ok: true, value: page }; }}
-  onRemove={page => setPages(list => treeRemove(list, page.id))} />
+  onRemove={page => setPages(list => treeRemove(list, page.id))}
+  rowMenu={page => {
+    const at = treeFind(pages, page.id);
+    return [
+      { label: 'Rename', shortcut: 'F2', onSelect: () => tree.current.startRename(page.id) },
+      { label: page.children ? 'New page inside' : 'New page after', shortcut: page.children ? 'Ctrl+Shift+Enter' : 'Ctrl+Enter',
+        onSelect: () => page.children ? tree.current.startCreate(page.id) : tree.current.startCreate(at.parent, at.index + 1) },
+      { type: 'separator' },
+      { label: 'Delete', shortcut: 'Delete', tone: 'critical', onSelect: () => setPages(list => treeRemove(list, page.id)) },
+    ];
+  }} />
 ```
 
 The full preview, as rendered in Storybook and checked in CI (`tree-demo`, `tree-demo-tools`, `tree-demo-icon`, `tree-demo-panel` are the preview page's own layout classes, not Altitude's):
@@ -159,11 +171,21 @@ export default function App() {
           return { ok: true };
         }}
         onCreate={async ({ parentId, index, name }) => { await treeWait(250); const page = { id: 'new-' + ++seq.current, title: name }; setPages(list => treeInsert(list, parentId, index, page)); return { ok: true, value: page }; }}
-        onRemove={page => setPages(list => treeRemove(list, page.id))} />
+        onRemove={page => setPages(list => treeRemove(list, page.id))}
+        rowMenu={page => {
+          const at = treeFind(pages, page.id);
+          return [
+            { label: 'Rename', shortcut: 'F2', onSelect: () => tree.current.startRename(page.id) },
+            { label: page.children ? 'New page inside' : 'New page after', shortcut: page.children ? 'Ctrl+Shift+Enter' : 'Ctrl+Enter',
+              onSelect: () => page.children ? tree.current.startCreate(page.id) : tree.current.startCreate(at.parent, at.index + 1) },
+            { type: 'separator' },
+            { label: 'Delete', shortcut: 'Delete', tone: 'critical', onSelect: () => setPages(list => treeRemove(list, page.id)) },
+          ];
+        }} />
     </div>
     <div className="tree-demo-panel" aria-live="polite">
       <h3>{current ? current.page.title : 'No page selected'}</h3>
-      <p>F2 renames. Ctrl+Enter adds a page after, Ctrl+Shift+Enter one inside. Space picks a page up: arrows move it, → puts it inside the page above, Space drops. Or drag it onto a folder.</p>
+      <p>F2 renames. Ctrl+Enter adds a page after, Ctrl+Shift+Enter one inside. Space picks a page up: arrows move it, → puts it inside the page above, Space drops. Or drag it onto a folder. Right-click a page, long-press it, or press Shift+F10 for its actions.</p>
     </div>
   </div>;
 }

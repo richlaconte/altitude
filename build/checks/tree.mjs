@@ -74,8 +74,9 @@ try {
     await item(page, 'Team handbook').focus(); await page.keyboard.press('Space');
     await page.waitForTimeout(50); check(await item(page, 'Team handbook').getAttribute('data-carried') === 'keys' && (await status(page)).includes('Picked up Team handbook'), 'TR-23 Space picks a node up and says how to move it');
     // ARIA 1.2: treeitem supports these states and properties (plus the global ones); aria-pressed isn't among them.
+    // aria-haspopup is one: its "Used in Roles" lists treeitem (a row with a rowMenu, #500).
     const misused = await page.evaluate(() => {
-      const allowed = new Set(['aria-level', 'aria-setsize', 'aria-posinset', 'aria-expanded', 'aria-selected', 'aria-checked', 'aria-busy',
+      const allowed = new Set(['aria-haspopup', 'aria-level', 'aria-setsize', 'aria-posinset', 'aria-expanded', 'aria-selected', 'aria-checked', 'aria-busy',
         'aria-disabled', 'aria-label', 'aria-labelledby', 'aria-describedby', 'aria-controls', 'aria-owns', 'aria-current', 'aria-hidden', 'aria-invalid', 'aria-keyshortcuts', 'aria-roledescription']);
       return [...document.querySelectorAll('[role="treeitem"]')].flatMap(el => [...el.attributes].map(a => a.name).filter(n => n.startsWith('aria-') && !allowed.has(n)));
     });
@@ -129,6 +130,45 @@ try {
     await page.mouse.up();
     await page.waitForFunction(() => document.querySelector('.alt-tree-status[aria-live="assertive"]').textContent.startsWith('Moved Colour'));
     check((await order(page)).includes('  Colour\n  Logo usage'), 'TR-37 dropping on a slot moves it there');
+    await page.close(); }
+
+  // #500: rowMenu. Right-click, Shift+F10 / the Menu key, and a touch press-and-hold let go where it began.
+  { const page = await open();
+    const roadmap = item(page, 'Roadmap');
+    check(await roadmap.getAttribute('aria-haspopup') === 'menu', 'TR-38 a row with a menu says so (aria-haspopup="menu")');
+    await roadmap.click({ button: 'right' });
+    const menu = page.getByRole('menu');
+    await menu.waitFor();
+    check(await roadmap.getAttribute('data-context-open') === '' && await roadmap.getAttribute('aria-expanded') !== 'true' && await roadmap.getAttribute('aria-controls') === await menu.getAttribute('id'),
+      'TR-39 right-click opens the row\'s menu; the row is marked (outline, aria-controls) without touching aria-expanded');
+    check(JSON.stringify(await menu.getByRole('menuitem').allTextContents().then(t => t.map(x => x.replace(/F2|Ctrl\+Shift\+Enter|Ctrl\+Enter|Delete$/, '').trim()))) === '["Rename","New page after","Delete"]', 'TR-40 its items are rowMenu(item)\'s');
+    await menu.getByRole('menuitem', { name: /Rename/ }).click();
+    await page.getByRole('textbox', { name: 'Rename Roadmap' }).waitFor();
+    check(true, 'TR-41 choosing an item runs it (Rename opens the well)');
+    await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+    await roadmap.focus(); await page.keyboard.press('Shift+F10');
+    await menu.waitFor();
+    // The menu takes focus once it's open (a frame after it mounts).
+    await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menu');
+    check(await page.evaluate(() => { const m = document.activeElement; const a = m?.getAttribute('aria-activedescendant'); return m?.getAttribute('role') === 'menu' && !!a && document.getElementById(a)?.textContent.startsWith('Rename'); }),
+      'TR-42 Shift+F10 opens it from the keyboard, its first item active');
+    await page.keyboard.press('Escape'); await menu.waitFor({ state: 'detached' });
+    check(await focused(page) === 'Roadmap' && await roadmap.getAttribute('data-context-open') === null, 'TR-43 Escape closes it and focus returns to the row');
+    await roadmap.focus(); await page.keyboard.press('ContextMenu'); await menu.waitFor();
+    await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menu');
+    check(true, 'TR-44 the Menu key opens it too');
+    await page.keyboard.press('Escape'); await menu.waitFor({ state: 'detached' });
+    // Touch: with onMove, holding picks a row up; let go without moving, it's the long-press: the menu, not a carry.
+    const box = await item(page, 'Colour').boundingBox();
+    await page.evaluate(({ x, y }) => {
+      const el = document.elementFromPoint(x, y);
+      el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, clientX: x, clientY: y }));
+    }, { x: box.x + 40, y: box.y + box.height / 2 });
+    await page.waitForTimeout(700);
+    await page.evaluate(({ x, y }) => window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 7, pointerType: 'touch', isPrimary: true, button: 0, clientX: x, clientY: y })), { x: box.x + 40, y: box.y + box.height / 2 });
+    await menu.waitFor(); await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menu');
+    check(await page.locator('[role="treeitem"][data-carried]').count() === 0 && await item(page, 'Colour').getAttribute('data-context-open') === '', 'TR-45 a touch press-and-hold let go in place opens the menu, and nothing is carried');
+    await page.keyboard.press('Escape');
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
