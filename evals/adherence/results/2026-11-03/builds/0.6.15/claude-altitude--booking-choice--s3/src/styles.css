@@ -1,0 +1,23 @@
+body { margin: 0; background: var(--surface-ground); color: var(--ink); font-family: var(--font-sans); }
+
+.hd-page { max-width: 36rem; margin: 0 auto; padding: var(--space-8) var(--space-4) var(--space-12); }
+.hd-header { margin-bottom: var(--space-6); }
+.hd-header h1 { margin: 0 0 var(--space-2); font: 600 28px/34px var(--font-sans); letter-spacing: -0.015em; }
+.hd-clinic { margin: 0 0 var(--space-2); font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.hd-muted { color: var(--ink-muted); max-width: 70ch; margin: 0; }
+
+.hd-form { display: grid; gap: var(--space-6); }
+.hd-actions { display: flex; justify-content: flex-start; }
+
+.hd-outcome { display: grid; gap: var(--space-4); justify-items: start; }
+.hd-outcome h2 { margin: 0; font: 600 19px/26px var(--font-sans); letter-spacing: -0.01em; }
+.hd-outcome h2:focus { outline: none; }
+.hd-outcome p { margin: 0; max-width: 70ch; }
+.hd-ref { font-family: var(--font-mono); font-weight: 500; }
+.hd-answers { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-5); margin: 0; }
+.hd-answers dt { color: var(--ink-muted); }
+.hd-answers dd { margin: 0; overflow-wrap: anywhere; }
+
+.hd-note { margin-top: var(--space-8); font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+
+.hd-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

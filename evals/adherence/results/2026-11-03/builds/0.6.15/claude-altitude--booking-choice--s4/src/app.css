@@ -1,0 +1,98 @@
+body {
+  margin: 0;
+  background: var(--surface-ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+.page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5);
+  --alt-page-pad: var(--space-5);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 18rem;
+  gap: var(--space-12);
+  margin-top: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 52rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+}
+
+.lead form,
+.confirmation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 36rem;
+}
+
+.confirmation:focus {
+  outline: none;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+}
+
+.details {
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.details h2 {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.details address {
+  display: flex;
+  flex-direction: column;
+  font-style: normal;
+  margin-bottom: var(--space-4);
+}
+
+.details dl {
+  margin: 0 0 var(--space-4);
+}
+
+.details dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.details dt,
+.details dd {
+  margin: 0;
+}
+
+.details dd {
+  color: var(--ink);
+}
+
+.details p {
+  margin: 0 0 var(--space-3);
+}
+
+.details a {
+  color: var(--accent-ink);
+}
+
+.details .note {
+  font-size: 0.8125rem;
+}

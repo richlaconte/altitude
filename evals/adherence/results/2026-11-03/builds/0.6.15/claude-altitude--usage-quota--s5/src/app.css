@@ -1,0 +1,22 @@
+.usage-page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-12);
+  --alt-page-pad: var(--space-5);
+}
+
+.usage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--space-5);
+  margin-top: var(--space-6);
+}
+
+.usage-stack {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.usage-chart {
+  margin-top: var(--space-5);
+}

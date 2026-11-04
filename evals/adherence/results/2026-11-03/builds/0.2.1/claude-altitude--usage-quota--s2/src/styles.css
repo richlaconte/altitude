@@ -1,0 +1,51 @@
+body { margin: 0; background: var(--surface-ground); }
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.page-head h1 { margin: 0; font-size: 28px; }
+
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-6); }
+.card-head-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+.stat { margin: 0 0 var(--space-3); }
+.stat-value { font-size: 32px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat-of { color: var(--ink-muted); }
+.meta { margin: var(--space-3) 0 0; color: var(--ink-muted); font-size: 14px; }
+.meta strong { color: var(--ink); font-weight: 600; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* chart */
+.chart { position: relative; width: 100%; margin-top: var(--space-4); }
+.chart svg { display: block; overflow: visible; }
+.chart svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--radius-sm); }
+.chart-grid { stroke: var(--line); stroke-width: 1; }
+.chart-axis { fill: var(--ink-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chart-label { fill: var(--ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-dot { fill: var(--accent); stroke: var(--surface-raised); stroke-width: 2; }
+.chart-crosshair { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart-tip {
+  position: absolute;
+  pointer-events: none;
+  min-width: 150px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-floating);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elev-3);
+  font-size: 13px;
+  z-index: 2;
+}
+.chart-tip-date { color: var(--ink-muted); }
+.chart-tip-value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart-tip-delta { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.chart-tip-note { margin-top: var(--space-1); color: var(--ink); }

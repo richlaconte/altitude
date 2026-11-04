@@ -1,0 +1,19 @@
+body { margin: 0; background: var(--surface-ground); color: var(--ink); font-family: var(--font-sans); }
+
+.app { max-width: 1120px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+.app-head { display: flex; gap: var(--space-6); align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: var(--space-6); }
+.app-head h1 { margin: 0 0 var(--space-2); font-size: 1.5rem; }
+.app-help { margin: 0; max-width: 62ch; color: var(--ink-muted); line-height: 1.5; }
+
+.app-board > .alt-board-col { flex: 1 1 0; min-width: 260px; }
+.col-title { display: inline-flex; align-items: center; gap: var(--space-2); }
+
+.ticket { display: flex; flex-direction: column; gap: var(--space-2); }
+.ticket-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.ticket-id { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-muted); }
+.ticket-title { font-weight: 600; line-height: 1.35; }
+.ticket-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+.ticket-assignee { display: inline-flex; align-items: center; gap: var(--space-2); }
+.ticket-state { color: var(--ink-muted); }
+.ticket-error { display: flex; gap: var(--space-2); align-items: flex-start; color: var(--ink); line-height: 1.4; }
+.ticket-error svg { flex: none; color: var(--critical); margin-top: 1px; }

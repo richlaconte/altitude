@@ -1,0 +1,52 @@
+.desk {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.desk-outcome {
+  margin: 0;
+  min-height: 1.5em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-muted);
+}
+
+.desk-outcome:empty {
+  display: none;
+}
+
+.ticket-meta {
+  display: block;
+  color: var(--ink-muted);
+}
+
+.ticket-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  color: var(--ink);
+}
+
+.ticket-note svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.ticket-note--failed svg {
+  color: var(--critical);
+}
+
+.desk-fixtures {
+  color: var(--ink-muted);
+}
+
+.desk-fixtures summary {
+  cursor: pointer;
+  margin-bottom: var(--space-2);
+}

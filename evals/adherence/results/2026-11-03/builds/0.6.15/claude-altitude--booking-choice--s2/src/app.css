@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  background: var(--surface-ground);
+  color: var(--ink);
+}
+
+.appt-page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-5);
+}
+
+.appt-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: var(--space-8);
+  align-items: start;
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 48rem) {
+  .appt-layout { grid-template-columns: 1fr; }
+}
+
+.appt-card { padding: var(--space-6); }
+
+.appt-fields {
+  display: grid;
+  gap: var(--space-6);
+  margin-top: var(--space-2);
+}
+
+.appt-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: var(--space-6);
+}
+
+.appt-heading { margin: 0 0 var(--space-3); font-size: 1.1875rem; font-weight: 600; letter-spacing: -0.01em; }
+.appt-subheading { margin: 0 0 var(--space-1); font-size: 0.9375rem; font-weight: 600; }
+.appt-body { margin: 0 0 var(--space-4); max-width: 70ch; }
+.appt-caption { margin: var(--space-3) 0 0; color: var(--ink-muted); font-size: 0.8125rem; max-width: 70ch; }
+.appt-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.appt-link { color: var(--accent-ink); }
+.appt-failure { margin-top: var(--space-6); }
+
+.appt-details, .appt-hours { margin: 0; display: grid; gap: var(--space-2); }
+.appt-details > div, .appt-hours > div { display: flex; justify-content: space-between; gap: var(--space-4); }
+.appt-details dt, .appt-hours dt { color: var(--ink-muted); }
+.appt-details dd, .appt-hours dd { margin: 0; text-align: end; }
+.appt-hours { margin-top: var(--space-4); font-size: 0.8125rem; }
+
+.appt-visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

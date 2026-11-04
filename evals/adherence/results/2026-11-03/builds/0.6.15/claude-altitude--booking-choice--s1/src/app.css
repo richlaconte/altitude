@@ -1,0 +1,28 @@
+body { margin: 0; background: var(--surface-ground); color: var(--ink); font-family: var(--font-sans); }
+
+.kd-page { max-width: 64rem; margin: 0 auto; padding: var(--space-8) var(--space-5); }
+
+.kd-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
+  gap: var(--space-8);
+  align-items: start;
+  margin-top: var(--space-6);
+}
+@media (max-width: 760px) {
+  .kd-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+.kd-lead { max-width: 36rem; }
+.kd-form, .kd-sent { display: grid; gap: var(--space-5); }
+.kd-actions { display: flex; gap: var(--space-3); padding-top: var(--space-2); }
+
+.kd-clinic { padding: var(--space-5); }
+.kd-clinic p { margin: 0 0 var(--space-4); }
+.kd-h2 { margin: 0 0 var(--space-3); font-size: inherit; font-weight: 600; }
+.kd-muted { color: var(--ink-muted); }
+
+.kd-hours, .kd-summary { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); margin: 0 0 var(--space-4); }
+.kd-hours dt, .kd-summary dt { color: var(--ink-muted); }
+.kd-hours dd, .kd-summary dd { margin: 0; }
+.kd-hours dd { font-family: var(--font-mono); }

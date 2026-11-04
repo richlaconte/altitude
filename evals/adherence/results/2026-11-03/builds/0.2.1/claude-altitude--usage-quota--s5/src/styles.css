@@ -1,0 +1,44 @@
+body { margin: 0; background: var(--surface-ground); color: var(--ink); font-family: var(--font-sans); }
+
+.page { max-width: 1040px; margin: 0 auto; padding: 40px 24px 64px; display: flex; flex-direction: column; gap: 20px; }
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.page-head h1 { margin: 0 0 4px; font: 600 28px/36px var(--font-sans); letter-spacing: -0.02em; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.card-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.figure { margin: 0 0 12px; font: 600 36px/44px var(--font-sans); letter-spacing: -0.02em; }
+.figure-of { font-size: 16px; font-weight: 400; color: var(--ink-muted); letter-spacing: 0; }
+.meta { margin: 8px 0 0; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.trend-summary .meta { margin-top: 2px; }
+
+.meter-caution .alt-progress-fill { background: var(--caution); }
+
+.trend-summary { display: flex; flex-wrap: wrap; gap: 16px 40px; margin-bottom: 20px; }
+.trend-value { font: 600 22px/28px var(--font-sans); }
+.trend-value span { font-size: 14px; color: var(--positive); margin-right: 2px; vertical-align: 2px; }
+
+.num { font-variant-numeric: tabular-nums; }
+
+/* chart */
+.chart { position: relative; width: 100%; margin-top: 16px; }
+.chart svg { display: block; overflow: visible; outline: none; touch-action: pan-y; }
+.chart svg:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.chart .grid { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
+.chart .quota-line { stroke: var(--ink-faint); stroke-width: 1; shape-rendering: crispEdges; }
+.chart .quota-label { font-size: 12px; fill: var(--ink-muted); font-weight: 600; }
+.chart .tick { font-size: 12px; fill: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.chart .series-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .series-dot { fill: var(--accent); stroke: var(--surface-raised); stroke-width: 2; }
+.chart .crosshair { stroke: var(--ink-faint); stroke-width: 1; shape-rendering: crispEdges; }
+.chart .direct-label { font-size: 12px; fill: var(--ink-muted); }
+.chart .direct-label.strong { font-size: 13px; font-weight: 600; fill: var(--ink); }
+
+.chart-tip {
+  position: absolute; pointer-events: none; white-space: nowrap;
+  padding: 8px 10px; border-radius: 8px;
+  background: var(--surface-floating); box-shadow: var(--elev-3);
+}
+.chart-tip-value { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--ink); }
+.chart-tip-label { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+.line-key { display: inline-block; width: 12px; height: 2px; border-radius: 1px; background: var(--accent); }

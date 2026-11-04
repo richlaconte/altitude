@@ -1,0 +1,141 @@
+body {
+  margin: 0;
+  background: var(--surface-ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+}
+
+.page-header h1 {
+  margin: var(--space-1) 0 var(--space-6);
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.8125rem;
+}
+
+.record-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.fields {
+  margin: 0;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--line);
+}
+
+.field-row:first-child {
+  border-top: 0;
+}
+
+.field-label {
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+  padding-top: var(--space-2);
+}
+
+.field-body {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.has-proposal .field-body {
+  grid-template-columns: 1fr 1.4fr;
+}
+
+.has-proposal .field-label {
+  padding-top: calc(var(--space-2) + 1.25rem);
+}
+
+.column-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.current-value {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  min-height: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.has-proposal .current-value {
+  color: var(--ink-muted);
+}
+
+.proposal-card {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.proposal-value {
+  font-weight: 600;
+}
+
+.proposal-reason {
+  margin: var(--space-2) 0 var(--space-3);
+  color: var(--ink-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.proposal-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.person {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.footnote {
+  margin-top: var(--space-4);
+  color: var(--ink-faint);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 720px) {
+  .field-row,
+  .has-proposal .field-body {
+    grid-template-columns: 1fr;
+  }
+  .field-label,
+  .has-proposal .field-label {
+    padding-top: 0;
+  }
+}

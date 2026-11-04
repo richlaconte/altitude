@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  background: var(--surface-ground);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+a { color: var(--accent-ink); }
+
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.clinic-header {
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.clinic-name { margin: 0; font-weight: 600; font-size: 18px; }
+.clinic-meta { margin: 4px 0 0; font-size: 14px; color: var(--ink-muted); }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+}
+
+.form-column { max-width: 560px; }
+.form-column h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.2; letter-spacing: -0.01em; }
+.lede { margin: 0 0 28px; color: var(--ink-muted); line-height: 1.5; }
+
+.error-summary { margin-bottom: 28px; outline: none; border-radius: var(--radius-lg); }
+.error-summary:focus-visible { outline: 3px solid var(--critical); outline-offset: 3px; }
+.error-summary ul { margin: 6px 0 0; padding-left: 18px; }
+.error-summary li + li { margin-top: 4px; }
+.error-summary a { color: var(--critical); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+
+.form { display: flex; flex-direction: column; gap: 24px; }
+
+.type-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.type-fieldset legend { padding: 0; margin-bottom: 10px; }
+.type-fieldset[data-invalid] {
+  padding-left: 14px;
+  border-left: 3px solid var(--critical);
+}
+
+.actions { padding-top: 4px; }
+
+.sidebar {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+.sidebar h2 { margin: 0 0 8px; font-size: 15px; color: var(--ink); }
+.sidebar h2:not(:first-child) { margin-top: 28px; }
+.sidebar p { margin: 0; }
+
+.hours {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  margin: 0;
+}
+.hours dd { margin: 0; }
+
+.sent-title { display: flex; align-items: center; gap: 10px; outline: none; }
+.sent-title svg { color: var(--positive); }
+.form-column > .sent-title { margin-bottom: 20px; }
+
+.summary {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 0;
+  font-size: 14px;
+}
+.summary dt { color: var(--ink-muted); }
+.summary dd { margin: 0; }
+.mono { font-family: var(--font-mono); }

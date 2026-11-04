@@ -1,0 +1,29 @@
+body { margin: 0; background: var(--surface-ground); color: var(--ink); font-family: var(--font-sans); }
+.page { max-width: 1120px; margin: 0 auto; padding: var(--space-8) var(--space-6); }
+.page-head { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-8); align-items: flex-end; justify-content: space-between; margin-bottom: var(--space-4); }
+.page-head h1 { margin: 0 0 var(--space-2); font-size: 24px; line-height: 32px; }
+.page-head p { margin: 0; max-width: 62ch; }
+.muted { color: var(--ink-muted); font-size: 14px; line-height: 20px; }
+kbd { font: 500 12px/1 var(--font-mono); padding: 2px 5px; border: 1px solid var(--line-control); border-radius: 4px; }
+
+.board .column { flex: 1 1 0; min-width: 260px; }
+.col-title { display: inline-flex; align-items: center; gap: var(--space-2); }
+
+.ticket-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 6px; }
+.ticket-id { font: 500 12px/1 var(--font-mono); color: var(--ink-muted); }
+.ticket-title { font-weight: 600; font-size: 14px; line-height: 20px; }
+.unassigned { font-style: italic; }
+.alt-board-card .ticket-note { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.alt-board-card .ticket-error { align-items: flex-start; color: var(--critical); }
+/* The pending/failed animations set transform, which would override the Board's carry transforms. */
+.alt-board[data-carrying] .alt-board-card[data-status] { animation: none; }
+.ticket-error svg { flex: none; margin-top: 1px; }
+
+.below { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-8); margin-top: var(--space-6); }
+.below h2 { margin: 0 0 var(--space-2); font-size: 14px; line-height: 20px; }
+.rules { margin: 0; padding-left: 18px; }
+.log { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 20px; }
+.log time { font-family: var(--font-mono); color: var(--ink-muted); margin-right: 6px; }
+.log li[data-ok="false"] { color: var(--critical); }
+.log li[data-ok="true"] { color: var(--positive); }
+@media (max-width: 720px) { .below { grid-template-columns: 1fr; } }

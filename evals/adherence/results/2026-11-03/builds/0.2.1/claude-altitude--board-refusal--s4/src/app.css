@@ -1,0 +1,25 @@
+body { margin: 0; }
+
+.desk { max-width: 1120px; margin: 0 auto; padding: var(--space-6, 32px) var(--space-4, 16px); font-family: var(--font-sans); color: var(--ink); }
+
+.desk-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4, 16px); flex-wrap: wrap; }
+.desk-head h1 { margin: 0 0 4px; font: 600 24px/32px var(--font-sans); }
+.desk-sub { margin: 0; max-width: 62ch; font: 400 14px/22px var(--font-sans); color: var(--ink-muted); }
+
+.desk-rules { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: var(--space-4, 16px) 0 0; padding: 0; list-style: none; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.desk-rules li::before { content: "•"; margin-right: 6px; }
+
+.desk-board .alt-board-col { flex: 1 1 0; min-width: 260px; }
+.desk-coltitle { display: inline-flex; align-items: center; gap: 8px; }
+
+.desk-card { display: block; }
+.desk-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.desk-id { font: 500 12px/1 var(--font-mono); color: var(--ink-muted); }
+.desk-title { font: 500 14px/20px var(--font-sans); }
+.desk-card em { font-style: normal; color: var(--critical-ink, var(--ink-muted)); }
+
+.desk-card[data-saving] { opacity: 0.8; cursor: progress; }
+.desk-status { display: flex; align-items: center; gap: 6px; margin-top: 8px; font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+
+.desk-card[data-refused] { outline: 2px solid var(--critical, #c4352b); outline-offset: 1px; }
+.desk-refused { margin-top: 8px; padding: 6px 8px; border-radius: var(--radius-sm, 6px); background: var(--critical-soft, color-mix(in oklab, #c4352b 12%, transparent)); color: var(--critical-ink, var(--ink)); font: 400 12.5px/17px var(--font-sans); }

@@ -120,6 +120,14 @@ export const PROBES = [
   },
 ];
 
+/** Turns from the transcript's result event (or a committed result.json holding just that event): run.json's usage doesn't record them. */
+function turns(build) {
+  const file = ['result.json', 'generation.jsonl'].map((f) => join(build, f)).find(existsSync);
+  if (!file) return null;
+  const m = [...readFileSync(file, 'utf8').matchAll(/"num_turns":\s*(\d+)/g)].pop();
+  return m ? Number(m[1]) : null;
+}
+
 export function score(build) {
   const src = existsSync(join(build, 'src')) ? join(build, 'src') : build;
   const run = existsSync(join(build, 'run.json')) ? JSON.parse(readFileSync(join(build, 'run.json'), 'utf8')) : {};
@@ -137,7 +145,7 @@ export function score(build) {
     rates: apiScore && use ? { unknownExportsPer100: per100(apiScore.unknownExports), unknownPropsPer100: per100(apiScore.unknownProps) } : null,
     handRolled: usesAltitude ? handRolled(text) : null,
     probes: Object.fromEntries(PROBES.map((p) => [p.id, text.reduce((n, f) => n + p.test(f.text), 0)])),
-    cost: run.usage ? { usd: run.usage.costUSD ?? null, turns: run.usage.turns ?? run.usage.numTurns ?? null, ms: run.elapsedMs ?? null } : null,
+    cost: run.usage ? { usd: run.usage.costUSD ?? null, turns: run.usage.turns ?? run.usage.numTurns ?? turns(build), ms: run.elapsedMs ?? null } : null,
     buildResult: run.build ?? null,
     rules, colourLiterals: rules['ALT-TOKEN-001'],
     errors: findings.filter((f) => f.kind === 'deterministic').length,
