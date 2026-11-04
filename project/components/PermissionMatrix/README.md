@@ -3,7 +3,7 @@
 Roles against permissions: "Admins can manage billing, Members can invite, Viewers can only read". The same grid serves notification preferences (events against channels).
 
 **Elevation.** The grid is settled: the record of who can do what, on the ground with `line` dividers.
-- **An editable grant is a choice**, built like a `Checkbox`: an empty trench that the accent pours into when granted.
+- **An editable grant is a choice**, built like a `Checkbox`: an empty trench that the accent pours into when granted. At rest the grid reads as a record, not a sheet of form controls: a granted cell shows only its check on the ground, in `accent-ink`, and an ungranted one is empty. The checkbox build comes up where you're about to act: across the row under the pointer, and on the focused or pressed cell. Screens without hover always show it, and in forced colours an editable cell keeps a dashed edge.
 - **An inherited or fixed grant is already decided**, so it's a flush stamped check (or a dash when not granted), muted, like a done `Checklist` item. It's pressed into the record, not drawn as a disabled checkbox, because it isn't unavailable. A `locked` role (an owner) has every permission, stamped.
 - **The active cell** is a 2px `accent-ink` ring, never a height, as in `DataGrid`.
 - **Saving:** a toggled cell whose `onChange` returns a promise hovers as pending until it settles, then takes the afterglow. A rejection reverts it.
@@ -60,7 +60,7 @@ export default function App() {
     <div className="col">
       <PermissionMatrix aria-label="Role permissions" roles={roles} permissions={perms} value={grants} inherited={inherited}
         onChange={(role, perm, on) => new Promise((r) => setTimeout(() => { setGrants((g) => ({ ...g, [role]: { ...g[role], [perm]: on } })); r(); }, 600))} />
-      <p className="cap">Editable grants are checkboxes. Owner's and inherited grants are stamped into the record: they're decided, not unavailable. Arrow keys move; Space toggles.</p>
+      <p className="cap">Editable grants show their check (or nothing); point at a row or move with the arrow keys and they become checkboxes. Owner's and inherited grants are stamped into the record in grey: they're decided, not unavailable. Space toggles.</p>
     </div>
   );
 }

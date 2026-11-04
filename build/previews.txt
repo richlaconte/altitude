@@ -4953,7 +4953,7 @@ function App() {
     <div className="col">
       <A.PermissionMatrix aria-label="Role permissions" roles={roles} permissions={perms} value={grants} inherited={inherited}
         onChange={(role, perm, on) => new Promise((r) => setTimeout(() => { setGrants((g) => ({ ...g, [role]: { ...g[role], [perm]: on } })); r(); }, 600))} />
-      <p className="cap">Editable grants are checkboxes. Owner's and inherited grants are stamped into the record: they're decided, not unavailable. Arrow keys move; Space toggles.</p>
+      <p className="cap">Editable grants show their check (or nothing); point at a row or move with the arrow keys and they become checkboxes. Owner's and inherited grants are stamped into the record in grey: they're decided, not unavailable. Space toggles.</p>
     </div>
   );
 }

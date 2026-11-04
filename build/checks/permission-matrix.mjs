@@ -49,6 +49,24 @@ await page.waitForTimeout(500);
 c = await cell('Remove members, Member');
 expect(c.status === null && (c.settle === 'a' || c.settle === 'b') && (await said()) === 'Remove members granted to Member.', `then it settles and is announced (${await said()})`);
 
+// #495: at rest an editable cell reads as part of the record: a granted one is its accent-ink check on the ground with no
+// trench, an ungranted one shows nothing. The checkbox build comes up across the row under the pointer and on the focused cell.
+const look = (name) => page.evaluate((n) => { const b = document.querySelector(`[aria-label="${n}"]`), t = b.querySelector('.alt-check-track'), m = b.querySelector('.alt-check-mark'), f = b.querySelector('.alt-check-fill');
+  const cs = getComputedStyle(t); return { trench: cs.boxShadow !== 'none' || cs.backgroundColor !== 'rgba(0, 0, 0, 0)', fill: +getComputedStyle(f).opacity, mark: getComputedStyle(m).color }; }, name);
+const accentInk = await page.evaluate(() => { const p = document.createElement('span'); p.style.color = 'var(--accent-ink)'; document.querySelector('.alt-matrix').append(p); const c = getComputedStyle(p).color; p.remove(); return c; });
+await page.evaluate(() => document.activeElement?.blur());
+await page.mouse.move(5, 5); await page.waitForTimeout(300);
+let rest = await look('Invite members, Admin'), empty = await look('Invite members, Viewer');
+expect(!rest.trench && rest.fill === 0 && rest.mark === accentInk, `at rest a granted editable cell is an accent-ink check on the ground, no trench (${JSON.stringify(rest)})`);
+expect(!empty.trench, `at rest an ungranted editable cell shows no box (${JSON.stringify(empty)})`);
+const row = await page.locator('[aria-label="Invite members, Viewer"]').boundingBox();
+await page.mouse.move(row.x + row.width / 2, row.y + row.height / 2); await page.waitForTimeout(300);
+const hovered = await look('Invite members, Viewer'), sameRow = await look('Invite members, Admin'), otherRow = await look('Remove members, Viewer');
+expect(hovered.trench && sameRow.trench && sameRow.fill === 1 && !otherRow.trench, 'pointing at a row brings up its cells\' checkboxes, and only that row\'s');
+await page.mouse.move(5, 5);
+await page.focus('[aria-label="Create projects, Viewer"]'); await page.waitForTimeout(300);
+expect((await look('Create projects, Viewer')).trench, 'the focused cell shows its checkbox');
+
 console.log(`PermissionMatrix: ${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
 await browser.close();

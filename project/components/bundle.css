@@ -1975,8 +1975,23 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-matrix-box[data-on] .alt-check-track { border-color: var(--accent); }
 .alt-matrix-stamp { display: grid; place-items: center; width: 22px; height: 22px; color: var(--ink-muted); }
 .alt-matrix-dash { display: block; width: 10px; height: 2px; border-radius: 1px; background: var(--ink-faint); }
+/* At rest the grid reads as a record, not a sheet of form controls (#495): a granted editable cell is a check on the
+   ground in accent-ink (stronger than the muted stamp of a fixed grant), an ungranted one is empty. The checkbox build,
+   the trench and the poured accent, comes up only where you're about to act: across the row under the pointer, and on
+   the focused or pressed cell. Screens without hover always show it. The check and aria-checked carry granted either way. */
+@media (hover: hover) {
+  .alt-matrix-grid tbody tr:not(:hover) .alt-matrix-box:not([data-fixed]):not(:focus-visible):not(:active) .alt-check-track { border-color: transparent; background: transparent; box-shadow: none; }
+  .alt-matrix-grid tbody tr:not(:hover) .alt-matrix-box:not([data-fixed]):not(:focus-visible):not(:active) .alt-check-fill { opacity: 0; }
+  .alt-matrix-grid tbody tr:not(:hover) .alt-matrix-box:not([data-fixed]):not(:focus-visible):not(:active) .alt-check-mark { color: var(--accent-ink); }
+  .alt-matrix-box:not([data-fixed]) .alt-check-track { transition: border-color var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
+  .alt-matrix-box:not([data-fixed]) .alt-check-mark { transition: color var(--dur-travel-1) var(--ease-rise); }
+}
+@media (hover: hover) { .alt-matrix-box:not([data-fixed]):hover .alt-check-track { border-color: var(--ink-muted); }
+  .alt-matrix-box[data-on]:not([data-fixed]):hover .alt-check-track { border-color: var(--accent); } }
 [data-contrast="more"] .alt-matrix-box:focus-visible { box-shadow: 0 0 0 3px var(--accent-ink); }
-@media (forced-colors: active) { .alt-matrix-box:focus-visible { box-shadow: none; outline: 2px solid Highlight; } .alt-matrix-dash { background: CanvasText; } }
+@media (forced-colors: active) { .alt-matrix-box:focus-visible { box-shadow: none; outline: 2px solid Highlight; } .alt-matrix-dash { background: CanvasText; }
+  /* Editable cells keep a dashed edge at rest, so they still read as choices next to the stamped fixed ones. */
+  .alt-matrix-grid tbody tr .alt-matrix-box:not([data-fixed]) .alt-check-track { border: 1px dashed CanvasText !important; } }
 
 /* ── PlanPicker: plans are positions in one choice, so the cards lie flush on the ground (a line rim) and one raised
    mark, the radio thumb's build, travels to the chosen card's corner on ease-glide; the chosen card also takes an
