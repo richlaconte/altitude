@@ -5909,8 +5909,8 @@ function InlineWaysToOpen() {
   return <section aria-labelledby="inline-ways-title">
     <h2 id="inline-ways-title">Ways to open</h2>
     <div className="inline-demo-props">
-      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Pencil on hover, with a seam</span>
-        <A.InlineEdit label="Project name" trigger="pencil" hint="seam" value={values.project} onValueChange={set('project')} onSave={save} required /></div>
+      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Pencil on hover, with a seam; Save and Cancel in the field</span>
+        <A.InlineEdit label="Project name" trigger="pencil" hint="seam" actions="inline" value={values.project} onValueChange={set('project')} onSave={save} required /></div>
       <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, with a seam; leaving cancels</span>
         <A.InlineEdit label="Meeting title" trigger="field" hint="seam" leave="cancel" value={values.meeting} onValueChange={set('meeting')} onSave={save} required /></div>
       <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, empty</span>

@@ -3781,6 +3781,10 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-inline-edit-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); margin-inline-start: auto; }
 .alt-inline-edit-actions .alt-btn { max-width: 100%; white-space: normal; }
 .alt-inline-edit-note { margin: var(--space-2) 0 0; }
+/* actions="inline": Save and Cancel inside the field's trailing end, in its well, with no lift (#486). */
+.alt-inline-edit-icons { display: inline-flex; gap: 2px; margin-inline-end: -6px; }
+.alt-inline-edit-icons .alt-btn[data-square][data-size="sm"] { width: var(--size-control-sm); height: var(--size-control-sm); color: var(--ink-muted); }
+.alt-inline-edit-icons .alt-btn[data-square][data-size="sm"]:first-child:not(:disabled) { color: var(--ink); }
 .alt-inline-edit-current { color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
 /* Multiline: the slot takes the textarea's inset and the whole width; Edit, then Save and Cancel, sit under it on the right. */
 .alt-inline-edit[data-multiline] .alt-inline-edit-slot, .alt-inline-edit[data-multiline] .alt-inline-edit-slot-box { flex: 1 1 100%; }
