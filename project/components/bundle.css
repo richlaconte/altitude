@@ -3468,8 +3468,8 @@ button.alt-barlist-item:focus-visible, a.alt-barlist-item:focus-visible { outlin
    with the critical path in data-1 and every other span in data-context, its words ink-muted; a failed span keeps its
    colour and adds a hatch, a status icon and the word "Failed". The rows are Table rows in a treegrid: they lift one
    level on hover and are tinted accent-soft and raised one level when selected, while the bar takes a 2px ink
-   outline. A span's detail opens flush beneath its row. Under 560px of its own width, each row stacks: name and
-   timings, then the bar across the full width. */
+   outline. A span's detail opens flush beneath its row. Under 640px of its own width, each row stacks: name and
+   timings, then the bar across the full width (640, the bundle's narrow width). */
 .alt-spans { display: grid; gap: var(--space-2); min-width: 0; container-type: inline-size; }
 .alt-spans-summary { margin: 0; color: var(--ink); font: 400 13px/18px var(--font-sans); }
 .alt-spans-grid { display: grid; grid-template-columns: minmax(160px, 34%) 72px 80px minmax(0, 1fr); min-width: 0; outline: none; }
@@ -3513,7 +3513,7 @@ button.alt-barlist-item:focus-visible, a.alt-barlist-item:focus-visible { outlin
 @media (hover: hover) { .alt-spans-row:hover .alt-spans-bar { outline: 2px solid var(--ink); outline-offset: 1px; } }
 .alt-spans-detail { padding: var(--space-2) var(--space-3) var(--space-3) calc(var(--space-6) + 0px); border-bottom: 1px solid var(--line); }
 .alt-spans-detail > [role="gridcell"] { grid-column: 1 / -1; min-width: 0; }
-@container (max-width: 560px) {
+@container (max-width: 640px) {
   .alt-spans-grid { grid-template-columns: minmax(0, 1fr) auto auto; }
   .alt-spans-head .alt-spans-c-bar { display: none; }
   .alt-spans-row { grid-template-columns: subgrid; row-gap: 0; }
