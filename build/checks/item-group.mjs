@@ -117,6 +117,20 @@ try {
     await page.keyboard.press('Space'); await page.keyboard.press('ArrowUp'); await page.keyboard.press('ArrowUp'); await page.keyboard.press('ArrowUp'); await page.keyboard.press('Space');
     await page.waitForFunction(() => document.querySelector('.alt-item-sr[aria-live="assertive"]').textContent.includes('dropped. Position 1 of 4'));
     check((await titles(page))[0] === 'Audit log' && await focusedName(page) === 'Move Audit log', 'IG-14 Space drops it, keeping focus on its grip');
+    // #503: reorder by pointer, dragging the grip.
+    const grip = await page.getByRole('button', { name: 'Move Audit log', exact: true }).boundingBox();
+    const lastSlat = await hooks(page).locator('.alt-item-slat').last().boundingBox();
+    const gx = grip.x + grip.width / 2, gy = grip.y + grip.height / 2;
+    await page.mouse.move(gx, gy); await page.mouse.down(); await page.mouse.move(gx, gy + 12, { steps: 3 });
+    const lifted = await page.evaluate(() => { const s = document.querySelector('.alt-item-slat[data-pulled]'); return s && { key: s.querySelector('.alt-item-title')?.textContent, shadow: getComputedStyle(s).boxShadow !== 'none', well: !!document.querySelector('.alt-item-well') }; });
+    check(lifted?.key === 'Audit log' && lifted.shadow && lifted.well, 'IG-15 dragging a grip lifts its slat, with a well where it will land');
+    await page.mouse.move(gx, lastSlat.y + lastSlat.height - 4, { steps: 10 });
+    const following = await page.evaluate(() => { const s = document.querySelector('.alt-item-slat[data-pulled]'); return parseFloat(s.style.transform.replace(/[^\d.-]/g, '')) || 0; });
+    check(following > 100 && JSON.stringify(await titles(page)) === '["Audit log","Production","Staging EU","Billing events"]', `IG-16 it follows the pointer while the list keeps its order until the drop (${following}px)`);
+    await page.mouse.up();
+    await page.waitForFunction(() => document.querySelector('.alt-item-sr[aria-live="assertive"]').textContent.includes('Audit log dropped. Position 4 of 4'));
+    check((await titles(page)).at(-1) === 'Audit log' && await focusedName(page) === 'Move Audit log' && await page.getByRole('button', { name: 'Move Audit log', exact: true }).getAttribute('aria-pressed') === 'false',
+      'IG-17 letting go drops it there through onReorder, focus on its grip, not left picked up by the click');
     await page.close(); }
 
   // Several removals at once close together, and reduced motion closes the gap at once.

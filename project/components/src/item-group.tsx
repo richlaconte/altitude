@@ -69,6 +69,11 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
   const [adding, setAdding] = React.useState(false);
   const [carry, setCarry] = React.useState<{ key: string; index: number; from: number } | null>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
+  // A slat dragged by its grip with a pointer (#503): it follows the pointer at level 3 while the slats it passes make
+  // room, over a well where it will land; letting go drops it as Space does. The DOM keeps its order until then.
+  const [pull, setPull] = React.useState<{ key: string; from: number; to: number; dy: number } | null>(null);
+  const press = React.useRef<{ key: string; y: number; id: number; from: number; keys: string[]; tops: number[]; hs: number[]; moved: boolean } | null>(null);
+  const swallowClick = React.useRef(false);
   // Items removed from `items` whose slot is still shown: a receipt held in place (recoverable), or a slat gliding
   // shut (confirmed). `after` is the key it followed, so it keeps its place among the slats that remain.
   const [gone, setGone] = React.useState<Gone<T>[]>([]);
@@ -190,11 +195,11 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
     setCarry({ key: getKey(item), index: i, from: i }); wantFocus.current = `${getKey(item)}|grip`;
     say(`Picked up ${getLabel(item)}. Position ${i + 1} of ${items.length}. ↑ and ↓ move it, Space drops it, Escape cancels.`);
   };
-  const drop = async () => {
-    if (!carry || !onReorder) return;
-    const c = carry, item = items.find((x) => getKey(x) === c.key)!;
+  const drop = async (c = carry) => {
+    if (!c || !onReorder) return;
+    const item = items.find((x) => getKey(x) === c.key)!;
     if (c.index === c.from) { setCarry(null); wantFocus.current = `${c.key}|grip`; say(`${getLabel(item)} dropped in place.`); return; }
-    const next = ordered;
+    const next = items.filter((x) => getKey(x) !== c.key); next.splice(c.index, 0, item);
     setBusy(c.key);
     let result: ItemGroupResult;
     try { result = asResult(await onReorder(next)); } catch { result = { ok: false, error: SAVE_ERROR }; }
@@ -202,6 +207,42 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
     setBusy(null); setCarry(null); wantFocus.current = `${c.key}|grip`;
     if (!result.ok) { setFailure(result.error); say(`${result.error} ${getLabel(item)} is back at position ${c.from + 1}.`); return; }
     settle(c.key); say(`${getLabel(item)} dropped. Position ${c.index + 1} of ${items.length}.`);
+  };
+  // Pointer: press the grip and move 4px to pick the slat up; where its middle is among the others is where it lands.
+  const onGripDown = (item: T) => (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0 || !onReorder || busy || carry || editing) return;
+    const keys = items.map(getKey);
+    const els = keys.map((k) => root.current?.querySelector<HTMLElement>(`.alt-item-slat[data-item="${CSS.escape(k)}"]`));
+    if (els.some((el) => !el)) return;
+    press.current = { key: getKey(item), y: e.clientY, id: e.pointerId, from: keys.indexOf(getKey(item)), keys,
+      tops: els.map((el) => el!.offsetTop), hs: els.map((el) => el!.offsetHeight), moved: false };
+  };
+  const onGripMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const p = press.current; if (!p || e.pointerId !== p.id) return;
+    const dy = e.clientY - p.y;
+    if (!p.moved) {
+      if (Math.abs(dy) < 4) return;
+      p.moved = true; e.currentTarget.setPointerCapture(p.id);
+      say(`Picked up ${getLabel(items[p.from])}. Position ${p.from + 1} of ${items.length}.`);
+    }
+    const middle = p.tops[p.from] + p.hs[p.from] / 2 + dy;
+    let to = 0;
+    p.tops.forEach((t, i) => { if (i !== p.from && t + p.hs[i] / 2 < middle) to++; });
+    setPull((was) => { if (was && was.to !== to) say(`Position ${to + 1} of ${items.length}`); return { key: p.key, from: p.from, to, dy }; });
+  };
+  const onGripUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const p = press.current; press.current = null;
+    if (!p || !p.moved) return;
+    swallowClick.current = true;
+    if (e.currentTarget.hasPointerCapture(p.id)) e.currentTarget.releasePointerCapture(p.id);
+    const to = pull?.to ?? p.from;
+    setPull(null);
+    wantFocus.current = `${p.key}|grip`;
+    if (e.type === 'pointercancel') { say(`Move cancelled. ${getLabel(items[p.from])} is back at position ${p.from + 1}.`); return; }
+    // Held in its new place while the write runs, as a keyboard drop is.
+    const c = { key: p.key, index: to, from: p.from };
+    if (to !== p.from) setCarry(c);
+    void drop(c);
   };
   const onGripKey = (item: T) => (e: React.KeyboardEvent) => {
     const key = getKey(item);
@@ -238,8 +279,22 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
     </EditRegion>;
   };
 
-  return <div ref={root} className={cx('alt-item-group', className)} data-carrying={carry ? '' : undefined}>
+  // While a slat is pulled: its offset, the room the others make for it, and the well where it will land.
+  const pulled = pull && press.current ? press.current : null;
+  const shiftOf = (key: string) => {
+    if (!pull || !pulled) return undefined;
+    const i = pulled.keys.indexOf(key); if (i < 0) return undefined;
+    if (key === pull.key) return pull.dy;
+    const h = pulled.hs[pull.from];
+    if (pull.from < pull.to && i > pull.from && i <= pull.to) return -h;
+    if (pull.to < pull.from && i >= pull.to && i < pull.from) return h;
+    return 0;
+  };
+  const well = pull && pulled ? { top: pull.to <= pull.from ? pulled.tops[pull.to] : pulled.tops[pull.to] + pulled.hs[pull.to] - pulled.hs[pull.from], height: pulled.hs[pull.from] } : null;
+
+  return <div ref={root} className={cx('alt-item-group', className)} data-carrying={carry || pull ? '' : undefined}>
     {display.length > 0 ? <ul className="alt-item-list" role="list" tabIndex={-1} aria-label={aria['aria-label']} aria-labelledby={aria['aria-labelledby']}>
+      {well && <li className="alt-item-well" aria-hidden="true" style={{ top: well.top, height: well.height }} />}
       {display.map((item, i) => {
         const key = getKey(item);
         const isEditing = editing === key;
@@ -250,13 +305,16 @@ export function ItemGroup<T extends Record<string, unknown>>({ items, getKey, ge
         const label = getLabel(item);
         // Only what ItemGroup itself says; the receipt's own pending, afterglow and busy state come through otherwise.
         const own = { ...(busy === key ? { 'data-status': 'pending', 'aria-busy': true } : null), ...(settled === key ? { 'data-settle': '' } : null) };
-        return <RemovalReceipt as="li" key={key} className="alt-item-slat" data-item={key} data-editing={isEditing ? '' : undefined} data-carried={carry?.key === key ? '' : undefined}
+        const shift = shiftOf(key);
+        return <RemovalReceipt as="li" key={key} className="alt-item-slat" data-item={key} data-editing={isEditing ? '' : undefined} data-carried={carry?.key === key || pull?.key === key ? '' : undefined}
+          data-pulled={pull?.key === key ? '' : undefined} style={shift ? { transform: `translateY(${shift}px)` } : undefined}
           {...own} removed={held} pending={held && g?.undoing} arrive={arriving.has(key)}
           title={<>{label} is removed.<span className="alt-item-sr"> Undo is available.</span></>}
           action={removal?.kind === 'recoverable' && <Button size="sm" aria-label={`Undo removal of ${label}`} onClick={() => { void undo(key); }}>Undo</Button>}
           onClosed={() => closed(key)} focusFallback={() => addRef.current ?? root.current?.querySelector<HTMLElement>('.alt-item-list') ?? null}>
           {onReorder && !isEditing && <button type="button" className="alt-item-grip" aria-label={`Move ${getLabel(item)}`} aria-pressed={carry?.key === key}
-            aria-describedby={undefined} onKeyDown={onGripKey(item)} onClick={() => { if (!carry) pick(item); }}
+            aria-describedby={undefined} onKeyDown={onGripKey(item)} onClick={() => { if (swallowClick.current) { swallowClick.current = false; return; } if (!carry) pick(item); }}
+            onPointerDown={onGripDown(item)} onPointerMove={onGripMove} onPointerUp={onGripUp} onPointerCancel={onGripUp}
             ><Grip /></button>}
           <div className="alt-item-body">
             {isEditing ? editor(item) : renderItem(item, {
