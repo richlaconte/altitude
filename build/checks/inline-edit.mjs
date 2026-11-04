@@ -38,7 +38,7 @@ const mount = async (page, options = {}) => {
       Object.assign(api, { setValue, setDisabled, setShow });
       const props = {
         value, label: 'Record name', required: options.required ?? true, maxLength: options.maxLength,
-        disabled, focusFallback: () => options.invalidFallback ? document.createElement('button') : document.getElementById('fallback'),
+        disabled, leave: options.leave, focusFallback: () => options.invalidFallback ? document.createElement('button') : document.getElementById('fallback'),
         onValueChange: value => { api.publications.push(value); setValue(value); if (options.removeOnPublish) setShow(false); },
         onSave: (draft, context) => {
           api.calls.push({ draft, context });
@@ -215,6 +215,50 @@ try {
     await page.evaluate(() => window.inlineHarness.setDisabled(true)); await page.locator('#inline-contract .alt-inline-edit').evaluate(el => { el.tabIndex = -1; el.focus(); });
     await resolveSave(page, { ok: true, value: 'Invalid fallback' }); await read(page);
     check(await page.locator('#inline-contract .alt-inline-edit').evaluate(el => document.activeElement === el), 'detached fallback is ignored without moving focus'); await page.close(); }
+
+  // leave="cancel" (#485): leaving cancels as Cancel does, never saves and never pulls focus back.
+  { const page = await open(); await mount(page, { leave: 'cancel' }); await edit(page); await input(page).fill('Typed then left');
+    await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
+    check(await input(page).count() === 1 && await page.getByRole('button', { name: 'Cancel', exact: true }).evaluate(el => document.activeElement === el), 'LV-01 moving focus within the group (to Save, then Cancel) keeps the session');
+    await input(page).evaluate(el => el.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: null })));
+    await page.waitForTimeout(30);
+    check(await input(page).count() === 1, 'LV-02 focus going to no element (another window or tab) is not leaving');
+    await page.locator('#elsewhere').click(); await read(page);
+    check((await api(page, 'calls')).length === 0 && (await api(page, 'publications')).length === 0 && await page.locator('#inline-contract .alt-inline-edit-value').textContent() === 'Original name', 'LV-03 an outside press cancels without a write');
+    check(await page.locator('#elsewhere').evaluate(el => document.activeElement === el), 'LV-04 cancelling on leave leaves focus where the person went');
+    await edit(page); await input(page).fill('Tabbed away'); await input(page).focus();
+    await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await read(page);
+    check((await api(page, 'calls')).length === 0 && await page.locator('#elsewhere').evaluate(el => document.activeElement === el), 'LV-05 Tab out of the group cancels and focus stays on the next control');
+    await edit(page); await input(page).fill('Body press'); await page.mouse.click(900, 700); await read(page);
+    check((await api(page, 'calls')).length === 0, 'LV-06 a press on the page itself cancels');
+    await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'cancel' }); await edit(page); await input(page).fill('Sent');
+    await save(page); await waitState(page, 'saving'); await page.locator('#elsewhere').click();
+    check(await page.locator('#inline-contract .alt-inline-edit').getAttribute('data-state') === 'saving', 'LV-07 leaving while saving does nothing');
+    await resolveSave(page, { ok: false, error: 'The server declined this name.' }); await waitState(page, 'error');
+    await page.locator('#elsewhere').click(); await page.waitForTimeout(30);
+    check(await input(page).inputValue() === 'Sent' && await page.getByRole('alert').isVisible(), 'LV-08 after a failed save, leaving keeps the text and the message');
+    await input(page).fill('Changed'); await page.evaluate(() => window.inlineHarness.setValue('External')); await waitState(page, 'conflict');
+    await page.locator('#elsewhere').click(); await page.waitForTimeout(30);
+    check(await input(page).inputValue() === 'Changed' && await page.getByRole('button', { name: 'Use current value' }).isVisible(), 'LV-09 during a conflict, leaving keeps the session');
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click(); await read(page); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'cancel', validate: 'deferred' }); await edit(page); await input(page).fill('Checking');
+    await save(page); await waitState(page, 'validating'); await page.locator('#elsewhere').click();
+    check(await page.locator('#inline-contract .alt-inline-edit').getAttribute('data-state') === 'validating', 'LV-10 leaving while checking does nothing');
+    await resolveCheck(page, undefined); await waitState(page, 'saving'); await resolveSave(page, { ok: true, value: 'Checking' }); await read(page);
+    check(JSON.stringify(await api(page, 'publications')) === '["Checking"]', 'LV-11 the checked draft still saves once'); await page.close(); }
+
+  { const page = await open(); await mount(page, { value: 'a', editor: 'select', save: 'sync', leave: 'cancel' }); await edit(page);
+    const trigger = page.locator('#inline-contract .alt-select-trigger');
+    await trigger.press('Enter'); await page.getByRole('option', { name: 'Bravo' }).click(); await read(page);
+    check(JSON.stringify(await api(page, 'publications')) === '["b"]', 'LV-12 choosing from a custom editor\'s list is not leaving');
+    await page.close(); }
+
+  { const page = await open(); await mount(page); await edit(page); await input(page).fill('Kept by default');
+    await page.locator('#elsewhere').click(); await input(page).focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
+    check(await input(page).inputValue() === 'Kept by default', 'LV-13 by default, an outside press and Tab out keep the session'); await page.close(); }
 
   const fixture = async (page, name, slow = false) => {
     await page.getByText('Choose the next fixture', { exact: true }).click();
@@ -430,7 +474,8 @@ try {
     check(await pencil.evaluate(el => document.activeElement === el), 'IP-09 Escape returns focus to the value');
 
     const field = page.getByRole('button', { name: 'Meeting title: Quarterly planning review. Edit Meeting title', exact: true });
-    const fieldAt = await field.boundingBox();
+    // Measure where hover will find it: hovering scrolls a field below the fold into view, which isn't the field moving.
+    await field.scrollIntoViewIfNeeded(); const fieldAt = await field.boundingBox();
     await field.hover(); await settled();
     check(await field.evaluate(el => getComputedStyle(el).borderTopColor !== 'rgba(0, 0, 0, 0)' && getComputedStyle(el, '::after').opacity === '0') && JSON.stringify(await field.boundingBox()) === JSON.stringify(fieldAt), 'IP-10 hovering draws the field around the value, replacing the seam, moving nothing');
     const valueBox = await field.locator('.alt-inline-edit-value').boundingBox();

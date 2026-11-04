@@ -57,6 +57,12 @@ export interface InlineEditProps<V = string> {
   shortcut?: string;
   /** How long a saved value's afterglow takes to fade, in ms. Default 5000. */
   settleDuration?: number;
+  /**
+   * What leaving the field does: focus moving out of the group, or a pointer pressed outside it. 'keep' (default) leaves
+   * the session open. 'cancel' cancels it as Cancel does, without moving focus, except while checking or saving, or while
+   * an error or conflict is shown. Nothing is ever saved on leaving.
+   */
+  leave?: 'keep' | 'cancel';
 }
 type Session<V> = {
   generation: number;
@@ -105,7 +111,7 @@ function caretFrom(event: React.MouseEvent, text: HTMLElement | null, length: nu
 export function InlineEdit<V = string>({ value, onValueChange, onSave, label, validate, required = false, maxLength,
   disabled = false, editLabel = `Edit ${label}`, saveLabel = 'Save changes', cancelLabel = 'Cancel',
   focusFallback, className, renderValue, editor, commit = 'explicit', isEqual = Object.is, multiline = false, rows = 3, maxRows = 12,
-  trigger: triggerMode = 'button', hint = 'none', emptyLabel = 'Not set', shortcut, settleDuration = 5000 }: InlineEditProps<V>): React.ReactElement {
+  trigger: triggerMode = 'button', hint = 'none', emptyLabel = 'Not set', shortcut, settleDuration = 5000, leave = 'keep' }: InlineEditProps<V>): React.ReactElement {
   const [session, setSession] = React.useState<Session<V> | null>(null);
   const [announcement, setAnnouncement] = useLingeringStatus();
   const [settled, setSettled] = React.useState(0);
@@ -300,6 +306,34 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
     setSession({ ...active });
     if (onChoose) void submit();
   };
+  // Inside the group, or inside a popup it points at (a portalled list or calendar), counts as staying.
+  const owns = (node: Node | null) => {
+    const box = root.current;
+    if (!box || !node) return false;
+    if (box.contains(node)) return true;
+    return [...box.querySelectorAll('[aria-controls], [aria-owns]')].some(el =>
+      `${el.getAttribute('aria-controls') ?? ''} ${el.getAttribute('aria-owns') ?? ''}`.split(/\s+/).some(id => !!id && !!document.getElementById(id)?.contains(node)));
+  };
+  // leave="cancel": the same path as Cancel, but focus stays wherever the person went. A dispatched write or a running check
+  // can't be abandoned, and an error or conflict stays until the person has seen it and their text isn't lost.
+  const leaveNow = React.useRef(() => {});
+  leaveNow.current = () => {
+    const active = current.current;
+    if (leave !== 'cancel' || !active || active.phase === 'saving' || active.phase === 'validating' || active.error) return;
+    setAnnouncement(''); returnFocus.current = false; generation.current++;
+    capture(); publishSession(null);
+  };
+  React.useEffect(() => {
+    if (leave !== 'cancel' || !session) return;
+    const down = (event: PointerEvent) => { if (!owns(event.target as Node)) leaveNow.current(); };
+    document.addEventListener('pointerdown', down, true);
+    return () => document.removeEventListener('pointerdown', down, true);
+  }, [leave, session !== null]);
+  // Only focus that went somewhere counts. With no relatedTarget it went to another window or tab, or was dropped
+  // (a control disabled or removed); a press on the page itself is the pointerdown above.
+  const onLeaveFocus = (event: React.FocusEvent) => {
+    if (event.relatedTarget && !owns(event.relatedTarget as Node)) leaveNow.current();
+  };
   const useCurrent = () => {
     const active = current.current;
     if (!active || active.phase === 'saving') return;
@@ -352,7 +386,8 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   </div>;
 
   return <div ref={root} className={cx('alt-inline-edit', className)} role="group" aria-label={label}
-    data-state={session?.phase ?? 'read'} data-trigger={triggerMode} data-multiline={textarea ? '' : undefined} onKeyDown={session ? onKeyDown : undefined}>
+    data-state={session?.phase ?? 'read'} data-trigger={triggerMode} data-multiline={textarea ? '' : undefined} onKeyDown={session ? onKeyDown : undefined}
+    onBlur={session && leave === 'cancel' ? onLeaveFocus : undefined}>
     <Surface className="alt-inline-edit-surface" level={0} status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
       <div className="alt-inline-edit-line">{session ? editSlot : readSlot}{actions}</div>
       {session?.error && <p className="alt-field-error alt-inline-edit-note" id={errorId} role="alert" data-arrive=""><Icons.AlertCircle size={14} />{session.error}</p>}

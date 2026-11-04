@@ -802,6 +802,12 @@ export interface InlineEditProps<V = string> {
   shortcut?: string;
   /** How long a saved value's afterglow takes to fade, in ms. Default 5000. */
   settleDuration?: number;
+  /**
+   * What leaving the field does: focus moving out of the group, or a pointer pressed outside it. 'keep' (default) leaves
+   * the session open. 'cancel' cancels it as Cancel does, without moving focus, except while checking or saving, or while
+   * an error or conflict is shown. Nothing is ever saved on leaving.
+   */
+  leave?: 'keep' | 'cancel';
 }
 export declare function InlineEdit<V = string>(props: InlineEditProps<V>): React.ReactElement;
 

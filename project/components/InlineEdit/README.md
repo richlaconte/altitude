@@ -30,11 +30,26 @@ A transport timeout does not prove a write failed. Before throwing or returning 
 
 ## Editing and validation
 
-Typing changes local text without trimming. Cancel and Escape discard that text; blur, outside clicks and Tab do nothing to the session. Enter saves (Ctrl/Cmd+Enter with `multiline`), except while IME composition is active (including legacy key code 229). Composition Escape also remains with the IME. Input Enter prevents a surrounding form from submitting.
+Typing changes local text without trimming. Cancel and Escape discard that text; by default, blur, outside clicks and Tab do nothing to the session (see `leave` below). Enter saves (Ctrl/Cmd+Enter with `multiline`), except while IME composition is active (including legacy key code 229). Composition Escape also remains with the IME. Input Enter prevents a surrounding form from submitting.
 
 Saving an exact unchanged value closes without validation, persistence, publication or afterglow. `required` defaults to false; when true it rejects the empty string using HTML required semantics. Spaces stay legal unless application validation rejects them. `maxLength` uses JavaScript/HTML UTF-16 string length and the native input limit. Optional `validate(draft)` runs only on Save and returns a user-facing error string or `undefined`, synchronously or as a promise. Use validation to reject whitespace-only or duplicate names when your application requires it.
 
 While validation runs, the input is read-only and Save is unavailable; Cancel and Escape remain usable. Late validation results cannot affect a cancelled or replaced session. During persistence the input stays read-only, Save shows loading and Cancel is unavailable. Escape announces “Saving changes. Wait for the result.” It does not cancel a dispatched write. Duplicate and reentrant submissions dispatch at most once. A failed save preserves editable input and the original baseline for retry; typing clears ordinary errors.
+
+### Leaving the field: `leave`
+
+By default (`leave="keep"`), a session stays open until Save, Cancel or Escape, so a misplaced click never throws typed text away. With `leave="cancel"`, leaving ends it the way Cancel does: the draft is discarded, the value goes back to read mode, and nothing is saved. There is no autosave either way.
+
+```tsx
+<InlineEdit label="File name" value={name} onValueChange={setName} onSave={save} leave="cancel" />
+// Type a new name, then click elsewhere or Tab out: the old name is back, nothing saved.
+```
+
+- **What counts as leaving.** Focus moving to something outside the group (Tab past Cancel, a click on another control, focus moved by the application), or a pointer pressed outside it, including a tap on touch screens. Save, Cancel, “Use current value” and a custom editor's own popup are inside, including a popup rendered elsewhere that a control in the group points at with `aria-controls` or `aria-owns`. Switching to another window or tab isn't leaving, and neither is focus being dropped because a control was disabled or removed.
+- **When it waits.** While checking or saving, leaving does nothing: a check that's running or a write that's been sent can't be abandoned, just as Escape can't cancel a write. While an error or a conflict is shown, the session also stays open, so the person's text and the recovery message aren't lost before they've seen them. Cancel or Escape still closes it.
+- **Focus.** Cancelling because the person left never moves focus back to Edit; it stays where they went (“Completion never steals focus”). A press on a part of the page that can't take focus leaves focus on the page, as it would anyway.
+
+Use it where several editors share a screen (a table, a property list) and a half-open one left behind would be a problem. Keep the default where the text takes effort to type.
 
 ## External updates and lifecycle
 
@@ -351,8 +366,8 @@ function InlineWaysToOpen() {
     <div className="inline-demo-props">
       <div className="inline-demo-prop"><span className="inline-demo-prop-label">Pencil on hover, with a seam</span>
         <InlineEdit label="Project name" trigger="pencil" hint="seam" value={values.project} onValueChange={set('project')} onSave={save} required /></div>
-      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, with a seam</span>
-        <InlineEdit label="Meeting title" trigger="field" hint="seam" value={values.meeting} onValueChange={set('meeting')} onSave={save} required /></div>
+      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, with a seam; leaving cancels</span>
+        <InlineEdit label="Meeting title" trigger="field" hint="seam" leave="cancel" value={values.meeting} onValueChange={set('meeting')} onSave={save} required /></div>
       <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, empty</span>
         <InlineEdit label="Owner" trigger="field" hint="seam" emptyLabel="Add an owner" value={values.owner} onValueChange={set('owner')} onSave={save} /></div>
     </div>
