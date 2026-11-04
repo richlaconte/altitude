@@ -3285,6 +3285,7 @@ export interface CommentThreadProps {
   comments: ThreadComment[];
   /** The thread is resolved: stamped, muted and collapsed to one line, kept in place. */
   resolved?: { by: string } | false;
+  /** Posting a comment. Without it the thread has no composer (a read-only thread, or one whose replies are written elsewhere); someone typing still shows. */
   onPost?: (body: string, mentions: Mentionable[]) => void;
   onResolve?: () => void;
   onReopen?: () => void;
