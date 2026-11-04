@@ -1395,10 +1395,12 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
    the next page loads the thumb is held pressed. Previous and Next are ghost buttons, flush and faint at the ends. ── */
 .alt-pager { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
 .alt-pager-pages { display: inline-flex; align-items: center; gap: 2px; margin: 0; padding: 0; list-style: none; }
+/* Every slot is as wide as the widest page number (--alt-pager-digits, set from pageCount) and pageRange always gives
+   the same number of slots, so the track keeps one width from page to page (#499). */
 .alt-pager-track { position: relative; display: inline-flex; align-items: center; gap: 2px; padding: var(--space-1); border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-well); box-shadow: var(--well); }
 .alt-pager-track li { display: flex; }
 .alt-pager-page {
-  position: relative; z-index: 1; display: inline-grid; place-items: center; min-width: 30px; height: 28px; padding: 0 var(--space-2); border: 0; border-radius: calc(var(--radius-md) - var(--space-1));
+  position: relative; z-index: 1; display: inline-grid; place-items: center; min-width: max(30px, calc(var(--alt-pager-digits, 1ch) + 2 * var(--space-2))); height: 28px; padding: 0 var(--space-2); border: 0; border-radius: calc(var(--radius-md) - var(--space-1));
   background: none; color: var(--ink-muted); font: 500 13px/18px var(--font-sans); font-variant-numeric: tabular-nums; text-decoration: none; cursor: pointer;
   transition: color var(--dur-travel-1) var(--ease-rise);
 }
@@ -1411,7 +1413,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 .alt-pager-thumb { position: absolute; top: var(--space-1); bottom: var(--space-1); left: 0; border-radius: calc(var(--radius-md) - var(--space-1)); background: var(--surface-raised); background-image: var(--alt-sheen); box-shadow: var(--elev-1); pointer-events: none; }
 .alt-pager-thumb[data-ready] { transition: transform var(--dur-travel-1) var(--ease-glide), width var(--dur-travel-1) var(--ease-glide), box-shadow var(--dur-travel-1), opacity var(--dur-travel-1); }
 .alt-pager-thumb[data-loading] { box-shadow: var(--elev-0); background-image: none; }
-.alt-pager-gap { display: inline-grid; place-items: center; min-width: 24px; color: var(--ink-faint); font: 500 13px/18px var(--font-sans); }
+.alt-pager-gap { display: inline-grid; place-items: center; min-width: max(30px, calc(var(--alt-pager-digits, 1ch) + 2 * var(--space-2))); color: var(--ink-faint); font: 500 13px/18px var(--font-sans); }
 .alt-pager-step { gap: 4px; text-decoration: none; }
 .alt-pager-step[aria-disabled] { color: var(--ink-faint); cursor: default; pointer-events: none; }
 .alt-pager-summary { font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
