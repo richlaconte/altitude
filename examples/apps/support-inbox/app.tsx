@@ -17,7 +17,7 @@ import * as React from 'react';
 import {
   Alert, Badge, Button, CommandPalette, CommentThread, Field, InboxItem, InboxList, Kbd, NotificationCenter, PageHeader,
   PageHeaderDescription, PageHeaderTitle, PrimaryScope, PropertyList, PropertyListItem, RelativeTime, ResizableHandle, ResizablePanel,
-  ResizablePanelGroup, Select, Skeleton, Suggestion, Suggestions, SyncIndicator, Tabs, TabsList, TabsTrigger, Textarea,
+  ResizablePanelGroup, Select, Skeleton, Suggestion, Suggestions, SyncIndicator, Tabs, TabsContent, TabsList, TabsTrigger, Textarea,
 } from 'altitude-design';
 import type { InboxListHandle, ThreadComment, Tone } from 'altitude-design';
 import { DemoError, errorMessage, isDemoError, useDemoQuery, useDemoService } from '../shared/react';
@@ -219,19 +219,23 @@ export function App() {
       </PageHeader>
       <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
         <TabsList aria-label="Views">{VIEWS.map((v) => <TabsTrigger key={v.id} value={v.id}>{v.label} ({tickets.filter(v.test).length})</TabsTrigger>)}</TabsList>
+        {/* The panes are the chosen view's panel (#492): the tab and the inbox it filters are one sheet. The panel's value
+            follows the view, so the panes stay mounted (and keep their sizes and scroll) as the view changes. */}
+        <TabsContent value={view} className="si-folder">
+          <ResizablePanelGroup className="si-panes" narrowPanel={open ? 1 : 0} onNarrowChange={setNarrow} autoSaveId="support-inbox">
+            <ResizablePanel defaultSize={36} minSize={24} aria-label="Tickets" className="si-list">
+              {shown.length ? <InboxList<Ticket> ref={list} aria-label={`Tickets: ${VIEWS.find((v) => v.id === view)!.label}`} items={shown} getKey={(t) => t.id}
+                selected={open} onSelectedChange={choose}
+                renderItem={(t) => <InboxItem title={t.subject} from={t.requester} unread={t.unread} preview={t.messages[t.messages.length - 1]?.body}
+                  time={<RelativeTime date={t.updatedAt} tooltip={false} />} status={<Badge tone={TONE[t.status]}>{t.status}</Badge>}
+                  viewers={t.viewers.filter((v) => v.name !== ME).map((v) => ({ name: v.name, presence: 2 as const, replying: v.replying }))} />} />
+                : <p className="si-meta si-pad">Nothing in {VIEWS.find((v) => v.id === view)!.label}.</p>}
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel aria-label="Open ticket" className="si-detail">{detail}</ResizablePanel>
+          </ResizablePanelGroup>
+        </TabsContent>
       </Tabs>
-      <ResizablePanelGroup className="si-panes" narrowPanel={open ? 1 : 0} onNarrowChange={setNarrow} autoSaveId="support-inbox">
-        <ResizablePanel defaultSize={36} minSize={24} aria-label="Tickets" className="si-list">
-          {shown.length ? <InboxList<Ticket> ref={list} aria-label={`Tickets: ${VIEWS.find((v) => v.id === view)!.label}`} items={shown} getKey={(t) => t.id}
-            selected={open} onSelectedChange={choose}
-            renderItem={(t) => <InboxItem title={t.subject} from={t.requester} unread={t.unread} preview={t.messages[t.messages.length - 1]?.body}
-              time={<RelativeTime date={t.updatedAt} tooltip={false} />} status={<Badge tone={TONE[t.status]}>{t.status}</Badge>}
-              viewers={t.viewers.filter((v) => v.name !== ME).map((v) => ({ name: v.name, presence: 2 as const, replying: v.replying }))} />} />
-            : <p className="si-meta si-pad">Nothing in {VIEWS.find((v) => v.id === view)!.label}.</p>}
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel aria-label="Open ticket" className="si-detail">{detail}</ResizablePanel>
-      </ResizablePanelGroup>
       <CommandPalette open={palette} onOpenChange={setPalette} items={[
         { id: 'go', label: 'Go to ticket', items: tickets.map((t) => ({ id: t.id, label: `${t.subject}`, keywords: [t.id, t.requester], onSelect: () => { choose(t.id); setView('all'); } })) },
         { id: 'act', label: ticket ? `This ticket: ${ticket.subject}` : 'This ticket', items: ticket ? [
