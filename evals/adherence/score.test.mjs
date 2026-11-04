@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { score } from './score.mjs';
+import { PROBES, score } from './score.mjs';
 
 function build(files) {
   const dir = mkdtempSync(join(tmpdir(), 'altitude-adherence-fixture-'));
@@ -71,4 +71,56 @@ test('an app that does not use Altitude gets no API score, but its colours still
     assert.equal(s.api, null);
     assert.equal(s.colourLiterals, 1);
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('used counts the Altitude API a build reaches for, and gives the per-100 rates their denominator', () => {
+  const dir = build({
+    'main.tsx': `import { AltitudeProvider, Button, Card, Fake } from 'altitude-design';
+import * as A from 'altitude-design';
+export function App() {
+  return <AltitudeProvider><Card><Button>Save changes</Button><Button variant="ghost">Cancel</Button></Card><A.Badge>New</A.Badge><Fake /></AltitudeProvider>;
+}
+`,
+  });
+  try {
+    const s = score(dir);
+    assert.deepEqual(s.used.names, ['AltitudeProvider', 'Badge', 'Button', 'Card', 'Fake']);
+    assert.equal(s.used.identifiers, 5);
+    assert.equal(s.used.elements, 6, 'AltitudeProvider, Card, two Buttons, A.Badge and Fake');
+    assert.equal(s.api.unknownExports, 1);
+    assert.equal(s.rates.unknownExportsPer100, 20);
+    assert.equal(s.rates.unknownPropsPer100, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('handRolled counts raw controls in an Altitude app, and nothing in one that uses the components', () => {
+  const avoid = build({
+    'main.tsx': `import { AltitudeProvider } from 'altitude-design';
+export function App() {
+  return <AltitudeProvider><input type="text" /><select><option>EU</option></select><button>Save changes</button><table><tbody /></table><div role="dialog" /></AltitudeProvider>;
+}
+`,
+  });
+  const use = build({
+    'main.tsx': `import { AltitudeProvider, Button, Input } from 'altitude-design';
+export function App() { return <AltitudeProvider><Input aria-label="Name" /><Button>Save changes</Button></AltitudeProvider>; }
+`,
+  });
+  try {
+    const a = score(avoid), b = score(use);
+    assert.equal(a.handRolled.total, 5, JSON.stringify(a.handRolled));
+    assert.deepEqual(a.handRolled.byElement, { input: 1, select: 1, button: 1, table: 1, 'role="dialog"': 1 });
+    assert.equal(b.handRolled.total, 0, 'Altitude components (<Input>, <Button>) are not raw controls');
+  } finally { rmSync(avoid, { recursive: true, force: true }); rmSync(use, { recursive: true, force: true }); }
+});
+
+test('the Meter format probe (#447) catches words after the number, and leaves a number format alone', () => {
+  const probe = PROBES.find((p) => p.id === 'meter-format-words');
+  assert.equal(probe.test('<Meter label="Seats" value={12} max={40} format={(v) => `${v} of 40 seats used`} />'), 1);
+  assert.equal(probe.test('<Meter label="Context" value={used} max={max} format={(n) => n + " tokens used"} />'), 1);
+  assert.equal(probe.test('<Meter label="Storage" value={42} max={100} format={(v) => `${v}%`} />'), 0);
+  assert.equal(probe.test('<Meter label="Storage" value={4.2} max={10} format={(v) => `${v.toFixed(1)} GB`} />'), 0, 'a unit is not words');
+  assert.equal(probe.test('<Stat label="Seats" format={(v) => `${v} of 40 seats used`} />'), 0, 'only Meter');
+  const dir = build({ 'main.tsx': `import { Meter } from 'altitude-design';\nexport const M = () => <Meter label="Seats" value={12} max={40} format={(v) => \`\${v} of 40 seats used\`} />;\n` });
+  try { assert.equal(score(dir).probes['meter-format-words'], 1); } finally { rmSync(dir, { recursive: true, force: true }); }
 });

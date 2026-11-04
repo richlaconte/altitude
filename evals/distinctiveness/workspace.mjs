@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here=fileURLToPath(new URL('./',import.meta.url));
 export const quiet={stdio:'pipe',timeout:300000};
+// `tarball` is a packed tarball's path, or a registry spec ("altitude-design@0.2.1", "altitude-design@latest") so a run
+// measures what `npm install` delivers (#419). Returns what was installed, for run.json.
 export function setup(condition,workspace,tarball){
  if(condition==='claude-plain'){writeFileSync(join(workspace,'README.md'),'# Product workspace\n\nWrite the requested screen as a single self-contained `index.html` in this folder.\n');return;}
  if(condition==='claude-shadcn'){
@@ -13,12 +15,16 @@ export function setup(condition,workspace,tarball){
   return;
  }
  mkdirSync(join(workspace,'src'));
- writeFileSync(join(workspace,'package.json'),JSON.stringify({name:'product-workspace',private:true,type:'module',scripts:{build:'node build.mjs'},dependencies:{'altitude-design':tarball,react:'19.3.0','react-dom':'19.3.0'},devDependencies:{esbuild:'0.28.2'}},null,2));
+ writeFileSync(join(workspace,'package.json'),JSON.stringify({name:'product-workspace',private:true,type:'module',scripts:{build:'node build.mjs'},dependencies:{'altitude-design':/^altitude-design@/.test(tarball||'')?tarball.slice('altitude-design@'.length):tarball,react:'19.3.0','react-dom':'19.3.0'},devDependencies:{esbuild:'0.28.2'}},null,2));
  execFileSync('npm',['install','--ignore-scripts','--no-audit','--no-fund'],{cwd:workspace,...quiet});
  writeFileSync(join(workspace,'README.md'),'# Product workspace\n\nImplement the requested screen in `src/main.tsx` and any files under `src/`. React and Altitude are installed. `npm run build` writes `dist/`.\n');
  // altitude.css, not the pilot's no-fonts file: shadcn's starter bundles its font too.
  writeFileSync(join(workspace,'src/main.tsx'),`import * as React from 'react';import {createRoot} from 'react-dom/client';import {AltitudeProvider} from 'altitude-design';import 'altitude-design/altitude.css';function App(){return <main><h1>Workspace</h1></main>};createRoot(document.getElementById('root')!).render(<AltitudeProvider><App/></AltitudeProvider>);`);
  writeFileSync(join(workspace,'build.mjs'),`import {build} from 'esbuild';import{mkdirSync,writeFileSync}from'node:fs';mkdirSync('dist',{recursive:true});await build({entryPoints:['src/main.tsx'],bundle:true,outfile:'dist/app.js',jsx:'transform',loader:{'.woff2':'file','.woff':'file','.svg':'file','.png':'file'},define:{'process.env.NODE_ENV':'"production"'}});writeFileSync('dist/index.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Workspace</title><link rel="stylesheet" href="app.css"></head><body><div id="root"></div><script src="app.js"></script></body></html>');`);
  const installed=JSON.parse(readFileSync(join(workspace,'node_modules/altitude-design/package.json'),'utf8'));
- execFileSync(process.execPath,[join(workspace,'node_modules/altitude-design',installed.bin.altitude),'init','--client','claude','--apply'],{cwd:workspace,...quiet});
+ let integrity=null;try{integrity=JSON.parse(readFileSync(join(workspace,'package-lock.json'),'utf8')).packages?.['node_modules/altitude-design']?.integrity??null;}catch{}
+ // Versions before the CLI (0.2.1) have no `altitude init`: the agent gets the package alone, which is what that version gave.
+ const cli=installed.bin?.altitude;
+ if(cli)execFileSync(process.execPath,[join(workspace,'node_modules/altitude-design',cli),'init','--client','claude','--apply'],{cwd:workspace,...quiet});
+ return {spec:tarball,version:installed.version,integrity,init:cli?'applied':'unavailable (no altitude CLI in this version)'};
 }
