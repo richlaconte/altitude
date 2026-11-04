@@ -57,6 +57,18 @@ expect((await read()).items.length === 4, 'it\'s kept in place and can be shown'
 await page.click('button:has-text("Reopen")');
 expect((await read()).resolved === null && await page.locator('textarea').count() === 1, 'Reopen brings back the composer');
 
+// #476: without onPost there's no composer (nowhere for a comment to go), and someone typing still shows.
+const bare = await page.evaluate(async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const { AltitudeProvider, CommentThread } = window.Altitude;
+  window.ReactDOM.createRoot(host).render(window.React.createElement(AltitudeProvider, null, window.React.createElement(CommentThread, {
+    'aria-label': 'Read only', typing: ['Maya Chen'], comments: [{ id: 'x1', author: { name: 'Priya' }, body: 'Hello', createdAt: Date.now() }] })));
+  await new Promise((r) => setTimeout(r, 300));
+  const t = host.querySelector('section[aria-label="Read only"]');
+  return { fields: t.querySelectorAll('textarea').length, buttons: [...t.querySelectorAll('button')].map((b) => b.textContent), typing: t.querySelector('.alt-comments-typing')?.textContent ?? '' };
+});
+expect(bare.fields === 0 && !bare.buttons.includes('Comment') && /Maya Chen/.test(bare.typing), `without onPost: no composer, the typing line stays (${JSON.stringify(bare)})`);
+
 console.log(`CommentThread: ${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
 await browser.close();
