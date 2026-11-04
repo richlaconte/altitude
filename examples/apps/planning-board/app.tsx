@@ -9,7 +9,7 @@
 // move, and a move against an old version is a conflict. Starting the sprint is refused while a planned card has no
 // estimate, with the reason in words.
 import * as React from 'react';
-import { Alert, Button, PageHeader, PageHeaderDescription, PageHeaderTitle, Sheet, SheetHeader, SheetTitle, Tabs, TabsContent, TabsList, TabsTrigger, WorkflowStatus } from 'altitude-design';
+import { Alert, Button, PageHeader, PageHeaderDescription, PageHeaderTitle, Sheet, SheetHeader, SheetTitle, Tabs, TabsContent, TabsList, TabsTrigger, Toaster, WorkflowStatus } from 'altitude-design';
 import { DemoResource, errorMessage, isDemoError, useDemoQuery } from '../shared/react';
 import { SPRINT_END, SPRINT_START, service } from './data';
 import type { BoardData } from './data';
@@ -94,6 +94,7 @@ export function App() {
       )}
       <CardSheet q={q} id={open} onClose={() => setOpen(null)} assistant={P} />
       <WorkflowStatus>{status}</WorkflowStatus>
+      <Toaster />
     </main>
   );
 }

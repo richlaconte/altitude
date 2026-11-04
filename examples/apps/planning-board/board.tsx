@@ -3,7 +3,7 @@
 // teammate is holding it, it's offline), the card goes back where it came from and says why, on the card and aloud.
 // A conflict adopts the server's board. A lost response is reconciled by reading the board back.
 import * as React from 'react';
-import { AILabel, Board, BoardCard, BoardColumn, Button } from 'altitude-design';
+import { AILabel, Board, BoardCard, BoardColumn, Button, toast } from 'altitude-design';
 import type { BoardMove } from 'altitude-design';
 import type { DemoQuery } from '../shared/react';
 import { errorMessage, isDemoError } from '../shared/react';
@@ -12,7 +12,7 @@ import type { BoardData, Card, ColumnId } from './data';
 import { short } from './assistant-script';
 import type { Proposal, Proposals } from './assistant';
 
-type Write = { status: 'pending' | 'committed' | 'failed'; note: string };
+type Write = { status: 'pending' | 'committed' | 'failed'; note?: string };
 
 const place = (cols: Record<ColumnId, string[]>, id: string, column: ColumnId, index: number) => {
   const next = Object.fromEntries(Object.entries(cols).map(([k, v]) => [k, v.filter((x) => x !== id)])) as Record<ColumnId, string[]>;
@@ -20,6 +20,7 @@ const place = (cols: Record<ColumnId, string[]>, id: string, column: ColumnId, i
   next[column].splice(Math.max(0, Math.min(index, next[column].length)), 0, id);
   return next;
 };
+const FAILED_FOR = 8000;
 const meta = (k: Card) => [k.epic, k.assignee ?? 'Unassigned', k.points ? `${k.points} pts` : 'No estimate'].join(' · ');
 
 export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardData>; onOpen: (id: string) => void; say: (s: string) => void; assistant?: Proposals }) {
@@ -31,6 +32,8 @@ export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardDat
     window.clearTimeout(timers.current[id]);
     setWrites((s) => ({ ...s, [id]: w }));
     if (w?.status === 'committed') timers.current[id] = window.setTimeout(() => setWrites((s) => ({ ...s, [id]: undefined })), 1600);
+    // A refused move's trench lasts as long as the toast that explains it.
+    if (w?.status === 'failed') timers.current[id] = window.setTimeout(() => setWrites((s) => (s[id]?.status === 'failed' ? { ...s, [id]: undefined } : s)), FAILED_FOR);
   };
   React.useEffect(() => () => Object.values(timers.current).forEach((t) => window.clearTimeout(t)), []);
 
@@ -70,7 +73,9 @@ export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardDat
     const to = locate(latest.current.columns, cardId);
     if (to.column === origin.column && to.index === origin.index) { mark(cardId, undefined); return; }
     const k = latest.current.cards[cardId];
-    mark(cardId, { status: 'pending', note: 'Moving…' });
+    // Quiet while it's on its way (#490): the card has already landed, adds no line and keeps its height. It only hovers
+    // if the write is slow (BoardCard waits dur-grace); only a failure says anything.
+    mark(cardId, { status: 'pending' });
     try {
       const b = await service.request<BoardData>('cards.move', { id: cardId, column: to.column, index: to.index, rev: origin.rev });
       q.setData(() => b);
@@ -84,17 +89,23 @@ export function BoardView({ q, onOpen, say, assistant }: { q: DemoQuery<BoardDat
           if (b.columns[to.column].includes(cardId)) { mark(cardId, { status: 'committed', note: '' }); say(`${k.title} moved to ${COLUMN_TITLE[to.column]}.`); return; }
         } catch { /* fall through: say it wasn't moved */ }
       }
-      let note: string;
+      let note: string, retry: (() => void) | undefined;
       if (isDemoError(e, 'conflict')) {
         const now = e.current as BoardData | undefined;
         if (now) q.setData(() => now);
         note = `Someone else moved this card first${now ? `. It’s in ${COLUMN_TITLE[locate(now.columns, cardId).column]}` : ''}.`;
       } else {
         q.setData((d) => (d ? { ...d, columns: place(d.columns, cardId, origin.column, origin.index) } : d));
-        note = `Couldn’t move it: ${errorMessage(e)} It’s back in ${COLUMN_TITLE[origin.column]}.`;
+        note = `${errorMessage(e)} It’s back in ${COLUMN_TITLE[origin.column]}.`;
+        retry = () => {
+          const at = locate(latest.current.columns, cardId);
+          move({ cardId, from: at, to } as BoardMove);
+        };
       }
-      mark(cardId, { status: 'failed', note });
-      say(`${k.title}: ${note}`);
+      // The card goes back (or to where the server has it) in a trench; the toast says why, with Retry where it can work.
+      mark(cardId, { status: 'failed' });
+      toast({ tone: 'critical', title: `Couldn’t move “${k.title}”`, description: note, duration: FAILED_FOR, announce: false, ...(retry ? { action: { label: 'Retry', onClick: retry } } : {}) });
+      say(`Couldn’t move ${k.title}. ${note}`);
     }
   };
   const move = ({ cardId, from, to }: BoardMove) => {
