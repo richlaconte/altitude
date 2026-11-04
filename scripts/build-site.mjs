@@ -52,7 +52,7 @@ const fontImport = (components.match(/^@import url\('([^']+)'\);/) || [])[1];
 const css = [tokensCss('project/tokens.json'), components.replace(/^@import[^\n]*\n/, ''), readFileSync('site/site.css', 'utf8')].join('\n');
 
 const title = 'Altitude';
-const description = 'A design and HCI framework for agent-built React applications. Task guidance, workflow hooks and interaction checks share Altitude’s elevation language.';
+const description = 'React components where height shows state: settled content on the ground, anything live above it, anything to fill below it. With guidance and checks for the coding agents that build with them.';
 const fonts = fontImport
   ? `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${fontImport}">`
   : '';
