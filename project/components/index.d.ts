@@ -2868,7 +2868,7 @@ export declare function BreadcrumbPage(props: React.HTMLAttributes<HTMLSpanEleme
 export declare function BreadcrumbSeparator(props: { children?: React.ReactNode }): null;
 export declare function BreadcrumbEllipsis(props: { items: BreadcrumbEntry[]; onNavigate?: (item: BreadcrumbEntry) => void }): React.ReactElement;
 
-/** The pages shown: the first, the last, the current one and `siblings` either side, with a gap where pages are skipped. */
+/** The pages shown: the first, the last, the current one and `siblings` either side, with a gap where pages are skipped. Always `2 * siblings + 5` entries (or every page, when there are no more), so the control keeps its width. */
 export declare function pageRange(page: number, count: number, siblings?: number): (number | 'gap')[];
 export interface PaginationProps extends Omit<React.HTMLAttributes<HTMLElement>, 'onChange'> {
   /** The current page, from 1. */

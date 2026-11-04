@@ -3,18 +3,20 @@ import { cx, Icons, useIsoLayoutEffect } from './core';
 
 /* ───────────────────────── Pagination ───────────────────────── */
 
-/** The pages shown: the first, the last, the current one and `siblings` either side, with a gap where pages are skipped. */
+/**
+ * The pages shown: the first, the last, the current one and `siblings` either side, with a gap where pages are skipped.
+ * The list always has the same length for a given count (`2 * siblings + 5` slots, or every page when there are no
+ * more than that): near an end it shows more pages on that side instead of dropping a gap, so the control keeps its
+ * width and Previous and Next stay under the pointer from page to page. A gap never stands for a single page.
+ */
 export function pageRange(page: number, count: number, siblings = 1): (number | 'gap')[] {
-  const want = new Set([1, count, ...Array.from({ length: siblings * 2 + 1 }, (_, i) => page - siblings + i)].filter((p) => p >= 1 && p <= count));
-  const sorted = [...want].sort((a, b) => a - b), out: (number | 'gap')[] = [];
-  sorted.forEach((p, i) => {
-    const prev = sorted[i - 1];
-    // A gap of exactly one page shows that page: "…" would take as much room and say less.
-    if (prev !== undefined && p - prev === 2) out.push(prev + 1);
-    else if (prev !== undefined && p - prev > 2) out.push('gap');
-    out.push(p);
-  });
-  return out;
+  const slots = siblings * 2 + 5;
+  const run = (from: number, to: number) => Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => from + i);
+  if (count <= slots) return run(1, count);
+  const p = Math.min(Math.max(page, 1), count);
+  if (p <= siblings + 3) return [...run(1, slots - 2), 'gap', count];
+  if (p >= count - siblings - 2) return [1, 'gap', ...run(count - slots + 3, count)];
+  return [1, 'gap', ...run(p - siblings, p + siblings), 'gap', count];
 }
 
 export interface PaginationProps extends Omit<React.HTMLAttributes<HTMLElement>, 'onChange'> {
@@ -71,7 +73,7 @@ export function Pagination({ page, pageCount, onPageChange, total, pageSize, hre
     <nav className={cx('alt-pager', className)} aria-label={label} data-cursor={pageCount === undefined ? '' : undefined} aria-busy={loading || undefined} {...rest}>
       {step(page - 1, 'Previous', <Icons.ChevronDown style={{ transform: 'rotate(90deg)' }} />, first, 'prev')}
       {pageCount !== undefined && (
-        <div ref={track} className="alt-pager-track">
+        <div ref={track} className="alt-pager-track" style={{ '--alt-pager-digits': `${nf.format(pageCount).length}ch` } as React.CSSProperties}>
           <span className="alt-pager-thumb" aria-hidden="true" data-ready={thumb.ready ? '' : undefined} data-loading={loading ? '' : undefined}
             style={{ transform: `translateX(${thumb.x}px)`, width: thumb.w, opacity: thumb.w ? 1 : 0 }} />
           <ol className="alt-pager-pages">{pageRange(page, pageCount, siblings).map((p, i) => p === 'gap'

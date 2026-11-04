@@ -4,7 +4,7 @@ Moves through pages of a collection the server pages: invoices, members, audit e
 
 **Elevation: one thumb that travels.** The page numbers sit in a trench (`surface-well`), and **the current page is one raised thumb that travels to it** on `ease-glide`, as `RadioGroup`'s does. That reads as "you are here, among these", where a row of buttons reads as "any of these does something". Pointing at another page shows a ghost of the thumb there (feedforward). While the next page loads (`loading`), the thumb is held pressed until the rows arrive. Previous and Next are ghost buttons, flush and `ink-faint` at the ends.
 
-**Pages.** It shows the first page, the last, and the current one with `siblings` either side, with "…" where pages are skipped. A gap of a single page shows that page instead, because "…" would take as much room. `pageRange()` gives the same list. **Cursor paging:** leave out `pageCount` and you get Previous, Next (disabled once `hasNext` is false) and "Page 3".
+**Pages.** It shows the first page, the last, and the current one with `siblings` either side, with "…" where pages are skipped. It always shows the same number of slots (`2 * siblings + 5`), each as wide as the longest page number: near an end it shows more pages on that side rather than dropping a gap, so the control keeps its width and Previous and Next don't move under the pointer. A gap never stands for a single page. `pageRange()` gives the same list. **Cursor paging:** leave out `pageCount` and you get Previous, Next (disabled once `hasNext` is false) and "Page 3".
 
 **Summary.** With `total` and `pageSize` it says "41–60 of 214 invoices" (`noun`) in a polite live region, so the change is announced after a page change.
 
