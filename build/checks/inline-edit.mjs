@@ -474,7 +474,8 @@ try {
     check(await pencil.evaluate(el => document.activeElement === el), 'IP-09 Escape returns focus to the value');
 
     const field = page.getByRole('button', { name: 'Meeting title: Quarterly planning review. Edit Meeting title', exact: true });
-    const fieldAt = await field.boundingBox();
+    // Measure where hover will find it: hovering scrolls a field below the fold into view, which isn't the field moving.
+    await field.scrollIntoViewIfNeeded(); const fieldAt = await field.boundingBox();
     await field.hover(); await settled();
     check(await field.evaluate(el => getComputedStyle(el).borderTopColor !== 'rgba(0, 0, 0, 0)' && getComputedStyle(el, '::after').opacity === '0') && JSON.stringify(await field.boundingBox()) === JSON.stringify(fieldAt), 'IP-10 hovering draws the field around the value, replacing the seam, moving nothing');
     const valueBox = await field.locator('.alt-inline-edit-value').boundingBox();
