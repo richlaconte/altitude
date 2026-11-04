@@ -88,8 +88,21 @@ try {
     await page.mouse.move(ev.x + 30, ev.y + 20, { steps: 3 });
     check(await page.locator('.alt-schedule[data-carrying]').count() === 1 && await page.locator('.alt-schedule-slot').count() === 1, 'SC-20 carrying opens the time and shows the slot');
     await page.mouse.move(fri.x + 20, fri.y + 8, { steps: 6 }); await page.mouse.up();
+    // #491: it stays where it was dropped while the write (300ms) runs, not back at its start.
+    const during = [];
+    for (let i = 0; i < 8; i++) { during.push(await where(page, 'e5')); await page.waitForTimeout(25); }
+    check(during.every((c) => c === '2026-10-30T600'), `SC-21a a dropped event stays where it was let go while its write runs (${[...new Set(during)].join(', ')})`);
     await said(page, 'Moved Interview to Friday 30 October, 10:00 to 11:00');
     check(await where(page, 'e5') === '2026-10-30T600', 'SC-21 dropping moves it');
+    // A refused write puts it back where it started (the demo refuses Wednesday mornings).
+    const before = await where(page, 'e5');
+    const box = await page.locator('[data-event="e5"]').boundingBox(), wed = await page.locator('[data-cell="2026-10-28T600"]').boundingBox();
+    await page.mouse.move(box.x + 20, box.y + 8); await page.mouse.down(); await page.mouse.move(box.x + 30, box.y + 20, { steps: 3 });
+    await page.mouse.move(wed.x + 20, wed.y + 8, { steps: 6 }); await page.mouse.up();
+    check(await where(page, 'e5') === '2026-10-28T600', 'SC-21b while a write that will fail runs, the event is where it was dropped');
+    await page.getByRole('alert').filter({ hasText: 'cleaned' }).waitFor();
+    check(await where(page, 'e5') === before, 'SC-21c a refused write puts the event back where it started');
+    await page.getByRole('button', { name: 'Dismiss' }).click();
     // Pointer: draw a new event across empty time.
     const a = await page.locator('[data-cell="2026-10-29T780"]').boundingBox(), b = await page.locator('[data-cell="2026-10-29T870"]').boundingBox();
     await page.mouse.move(a.x + 30, a.y + 2); await page.mouse.down(); await page.mouse.move(b.x + 30, b.y + 4, { steps: 6 });

@@ -27,7 +27,7 @@ Times are local date-times, `'YYYY-MM-DDTHH:mm'` strings with no zone, matching 
 - **Events** are live work items, raised one level like `BoardCard`s (`surface-raised`, `elev-1`, an accent edge on the left), lifting to `elev-2` on hover. Overlapping events share the day side by side, and their names say so.
 - **Carrying** (Space, or a pointer drag): the event floats at level 3, tilted; the days open into wells, as Board columns do, and the slot under the event deepens to a trench with an accent rim, as long as the event (a critical rim where it can't go).
 - **Drawing** a new event across empty time makes a well the length of the drag; releasing raises it into an event with a title field.
-- **Pending** writes hover at level 2 after `dur-grace`; a **failed** one drops to a trench, the event goes back to its old place, and a bar offers Retry.
+- **Pending** writes hover at level 2 after `dur-grace`. A moved or resized event stays where it was dropped while its write runs, and until `events` has the new times; a **failed** one drops to a trench, the event goes back to its old place, and a bar offers Retry.
 - **Held by a collaborator** (`heldBy`): the event wears their `presence-*` outline and name and can't be picked up.
 - **The now line** is `accent-ink`, not `critical`: it isn't status.
 - **A new week** cross-fades; it isn't a change of level.
