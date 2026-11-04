@@ -141,6 +141,10 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   // On a touch-only device the save hint says the touch way, not a shortcut (#262).
   const keyboard = useKeyboardLikely();
   const textarea = multiline && !editor;
+  // A single-line value that wraps at rest opens in a field that wraps the same way, so its text stays where it is (#494).
+  // It's still one line of text: Enter saves and line breaks become spaces.
+  const [wrapped, setWrapped] = React.useState(false);
+  const long = wrapped && !editor && !textarea;
   const trigger = React.useRef<HTMLButtonElement>(null);
   const returnFocus = React.useRef(false);
   const selectInput = React.useRef(false);
@@ -173,9 +177,10 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
     const cs = getComputedStyle(el);
     const line = parseFloat(cs.lineHeight) || LINE;
     const edges = el.offsetHeight - el.clientHeight + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-    el.style.height = Math.min(Math.max(el.scrollHeight, rows * line + edges), maxRows * line + edges) + 'px';
+    const least = long ? 1 : rows;
+    el.style.height = Math.min(Math.max(el.scrollHeight, least * line + edges), maxRows * line + edges) + 'px';
     el.style.overflowY = el.scrollHeight > maxRows * line + edges ? 'auto' : 'hidden';
-  }, [session?.draft, session !== null, rows, maxRows]);
+  }, [session?.draft, session !== null, rows, maxRows, long]);
 
   useIsoLayoutEffect(() => {
     mounted.current = true;
@@ -206,6 +211,9 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
       if (editor) {
         const first = [...editorBox.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []].find(canFocus);
         if (first && !editorBox.current?.contains(document.activeElement)) first.focus();
+      } else if (long) {
+        // As the single-line field: everything selected, or the caret where the value was pressed.
+        if (canFocus(area.current)) { area.current.focus(); if (at === null) area.current.select(); else area.current.setSelectionRange(at, at); }
       } else if (textarea) {
         // Caret at the end (or where the value was pressed): selecting a whole paragraph invites replacing it by accident.
         if (canFocus(area.current)) { const end = at ?? area.current.value.length; area.current.focus(); area.current.setSelectionRange(end, end); }
@@ -240,6 +248,10 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   };
   const begin = (at: number | null = null) => {
     if (disabled || current.current) return;
+    if (!editor && !textarea) {
+      const shown = valueRef.current, line = shown ? parseFloat(getComputedStyle(shown).lineHeight) || LINE : LINE;
+      setWrapped(!!shown && shown.getBoundingClientRect().height > line * 1.5);
+    }
     setAnnouncement(''); setGlowing(false); selectInput.current = true; caretAt.current = at;
     capture(); publishSession({ generation: ++generation.current, phase: 'editing', baseline: value, draft: value });
   };
@@ -325,6 +337,8 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
       event.preventDefault(); event.stopPropagation();
       if (current.current?.phase === 'saving') setAnnouncement('Saving changes. Wait for the result.');
       else cancel();
+    } else if (event.key === 'Enter' && long && event.target === area.current) {
+      event.preventDefault(); event.stopPropagation(); void submit();
     } else if (event.key === 'Enter' && textarea) {
       // Enter writes a newline; Ctrl/Cmd+Enter saves.
       if (event.target === area.current && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.stopPropagation(); void submit(); }
@@ -391,7 +405,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const glowProps = glowing ? { ...glow, style: { ...glow.style, '--dur-settle': `${settleDuration}ms` } as React.CSSProperties } : {};
   const locked = saving || validating || !!session?.conflicted;
   // actions="inline": Save and Cancel as icon buttons at the field's trailing end, the same submit and cancel as the row.
-  const inlineActions = placement === 'inline' && !editor && !textarea;
+  const inlineActions = placement === 'inline' && !editor && !textarea && !long;
   const icons = session && inlineActions ? <span className="alt-inline-edit-icons">
     <Button type="button" variant="ghost" size="sm" square aria-label={saveLabel} loading={saving} disabled={disabled || validating || session.conflicted}
       onClick={() => { void submit(); }}><Icons.Check size={16} /></Button>
@@ -416,7 +430,11 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
         value: session.draft, onValueChange: change, id: controlId, 'aria-describedby': describedBy, invalid: !!session.error,
         readOnly: locked, disabled, autoFocus: true,
       })}</div>
-    : <div className="alt-inline-edit-slot-box" data-slot="">{srLabel}{textarea
+    : <div className="alt-inline-edit-slot-box" data-slot="" data-wrapped={long ? '' : undefined}>{srLabel}{long
+      ? <Textarea ref={area} id={controlId} value={session.draft as unknown as string} maxLength={maxLength} disabled={disabled} rows={1}
+          readOnly={locked} invalid={!!session.error} aria-required={required || undefined} aria-describedby={describedBy}
+          onChange={event => change(event.target.value.replace(/[\r\n]+/g, ' ') as unknown as V)} />
+      : textarea
       ? <Textarea ref={area} id={controlId} value={session.draft as unknown as string} maxLength={maxLength} disabled={disabled} rows={rows}
           readOnly={locked} invalid={!!session.error} aria-required={required || undefined} aria-describedby={describedBy}
           onChange={event => change(event.target.value as unknown as V)} />

@@ -288,6 +288,44 @@ try {
     await resolveCheck(page, 'Choose a different name.'); await page.getByRole('alert').waitFor();
     check(await input(page).inputValue() === 'Checking inline' && await page.locator('#inline-contract .alt-inline-edit-icons').count() === 1, 'AC-11 an error shows below the field and the icons stay'); await page.close(); }
 
+  // #494: a single-line value that wraps at rest. It keeps the field's inset above its first line and below its last, the
+  // pencil sits on the first line, the seam is under the text, and it opens in a field that wraps the same way (no line
+  // moves) and still saves on Enter.
+  { const page = await open();
+    await page.evaluate(() => {
+      const R = window.React, A = window.Altitude, h = R.createElement;
+      document.getElementById('root').style.display = 'none';
+      const host = document.createElement('div'); host.id = 'wrap'; document.body.append(host);
+      function Wrap() { const [v, setV] = R.useState('A much longer title that will wrap across several lines at this width');
+        return h(A.AltitudeProvider, null, h('div', { style: { width: '240px' } }, h(A.InlineEdit, { label: 'Title', trigger: 'pencil', hint: 'seam', value: v, onValueChange: setV, onSave: async d => ({ ok: true, value: d }) }))); }
+      window.ReactDOM.createRoot(host).render(h(Wrap));
+    });
+    const plate = page.locator('#wrap .alt-inline-edit-slot-button'); await plate.waitFor();
+    const rest = await plate.evaluate(b => { const r = b.getBoundingClientRect(), cs = getComputedStyle(b), v = b.querySelector('.alt-inline-edit-value').getBoundingClientRect(),
+      p = b.querySelector('.alt-inline-edit-pencil').getBoundingClientRect(), line = (() => { const t = b.querySelector('.alt-inline-edit-value').firstChild, r = document.createRange(); r.setStart(t, 0); r.setEnd(t, 1); return r.getClientRects()[0].height; })(), seam = getComputedStyle(b, '::after');
+      return { top: v.top - r.top, bottom: r.bottom - v.bottom, lines: Math.round(v.height / line), line, pencilMid: p.top + p.height / 2 - v.top, seamBottom: parseFloat(seam.bottom), padBottom: parseFloat(cs.paddingBottom) + parseFloat(cs.borderBottomWidth) }; });
+    check(rest.lines >= 2 && Math.abs(rest.top - rest.bottom) < 1 && rest.top >= 8, `WR-01 a wrapped value keeps the same inset above its first line and below its last (${rest.lines} lines, ${rest.top}/${rest.bottom})`);
+    check(Math.abs(rest.pencilMid - rest.line / 2) < 1.5, `WR-02 the pencil sits on the first line (${rest.pencilMid})`);
+    check(rest.seamBottom < rest.padBottom, `WR-03 the seam is under the last line, not through it (${rest.seamBottom} < ${rest.padBottom})`);
+    const linesAt = () => page.evaluate(() => { const el = document.querySelector('#wrap .alt-inline-edit-value') ?? document.querySelector('#wrap textarea');
+      if (el.tagName !== 'TEXTAREA') { const r = document.createRange(), t = el.firstChild, out = []; let last = null;
+        for (let i = 0; i < t.length; i++) { r.setStart(t, i); r.setEnd(t, i + 1); const y = Math.round(r.getBoundingClientRect().top); if (last !== null && y > last + 4) out.push(i); last = y; } return { kind: 'read', breaks: out }; }
+      // In the textarea, mirror its text and box to find where its lines break.
+      const m = document.createElement('div'), cs = getComputedStyle(el); Object.assign(m.style, { position: 'absolute', visibility: 'hidden', whiteSpace: 'pre-wrap', overflowWrap: cs.overflowWrap, width: el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) + 'px', font: cs.font, letterSpacing: cs.letterSpacing });
+      m.textContent = el.value; document.body.append(m); const r = document.createRange(), t = m.firstChild, out = []; let last = null;
+      for (let i = 0; i < t.length; i++) { r.setStart(t, i); r.setEnd(t, i + 1); const y = Math.round(r.getBoundingClientRect().top); if (last !== null && y > last + 4) out.push(i); last = y; }
+      m.remove(); return { kind: el.tagName, breaks: out }; });
+    const before = await linesAt();
+    await plate.click();
+    const field = page.getByRole('textbox', { name: 'Title' }); await field.waitFor();
+    const after = await linesAt();
+    check(after.kind === 'TEXTAREA' && JSON.stringify(after.breaks) === JSON.stringify(before.breaks), `WR-04 it opens in a field that wraps where the value did (${JSON.stringify(before.breaks)} → ${JSON.stringify(after.breaks)})`);
+    check(await field.evaluate(el => el.selectionStart === 0 && el.selectionEnd === el.value.length), 'WR-05 the whole value is selected, as in the single-line field');
+    await page.keyboard.press('End'); await page.keyboard.type(' today'); await page.keyboard.press('Enter');
+    await plate.waitFor();
+    check((await page.locator('#wrap .alt-inline-edit-value').textContent()).endsWith('width today'), 'WR-06 Enter saves it, with no line break');
+    await page.close(); }
+
   { const page = await open(); await mount(page, { actions: 'inline', multiline: true, required: false }); await edit(page);
     check(await page.locator('#inline-contract .alt-inline-edit-icons').count() === 0 && await page.locator('#inline-contract .alt-inline-edit-actions').getByRole('button', { name: 'Save changes' }).count() === 1, 'AC-12 multiline ignores actions="inline"'); await page.close(); }
 

@@ -3780,8 +3780,10 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-inline-edit-slot, .alt-inline-edit-slot-box { flex: 0 1 auto; min-width: 0; }
 .alt-inline-edit[data-state]:not([data-state="read"]) .alt-inline-edit-slot-box { flex: 1 1 14rem; }
 .alt-inline-edit-slot {
-  position: relative; box-sizing: border-box; display: flex; align-items: center; max-width: 100%; min-height: max(40px, calc(1lh + 18px));
-  padding: 0 12px; border: 1px solid transparent; border-radius: var(--radius-md);
+  position: relative; box-sizing: border-box; display: flex; align-items: flex-start; max-width: 100%; min-height: max(40px, calc(1lh + 18px));
+  /* The block inset is what centres one line in the field's height, so a value that wraps keeps it above its first line
+     and below its last, and the seam stays under the text (#494). One line lays out exactly as before. */
+  padding: calc((max(40px, calc(1lh + 18px)) - 1lh - 2px) / 2) 12px; border: 1px solid transparent; border-radius: var(--radius-md);
 }
 .alt-inline-edit-value { overflow-wrap: anywhere; min-width: 0; }
 .alt-inline-edit-slot-box > .alt-input:not([data-multiline]) { font: inherit; height: max(40px, calc(1lh + 18px)); }
@@ -3806,6 +3808,10 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-inline-edit[data-multiline] .alt-inline-edit-value { white-space: pre-wrap; }
 .alt-inline-edit[data-multiline] textarea { flex: none; min-height: 0; resize: none; }
 .alt-inline-edit[data-multiline] .alt-inline-edit-actions { margin-inline-start: 0; justify-content: flex-start; }
+/* A value that wrapped at rest opens in a wrapping field (#494): one line of text, laid out as it was read. */
+.alt-inline-edit-slot-box[data-wrapped] textarea { flex: none; min-height: 0; resize: none; }
+/* The pencil's room is kept at the end, so every line breaks where it did at rest. */
+.alt-inline-edit[data-trigger="pencil"] .alt-inline-edit-slot-box[data-wrapped] > .alt-input { padding-inline-end: calc(12px + 15px + var(--space-2)); }
 .alt-inline-edit-keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 
 /* The value as its own button ('pencil', 'field'): the same slot, so its text sits where it always does. */
@@ -3816,7 +3822,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-inline-edit-slot-button[data-empty] .alt-inline-edit-value { color: var(--ink-muted); }
 /* Pencil: a faint well tint and the pencil, whose space is always reserved, so showing it moves nothing. Touch screens
    can't hover, so they always show it. */
-.alt-inline-edit-pencil { flex: none; margin-inline-start: var(--space-2); color: var(--ink-muted); opacity: 0; transition: opacity var(--dur-travel-1) var(--ease-rise); }
+.alt-inline-edit-pencil { flex: none; margin-inline-start: var(--space-2); margin-block-start: calc((1lh - 15px) / 2); color: var(--ink-muted); opacity: 0; transition: opacity var(--dur-travel-1) var(--ease-rise); }
 @media (hover: hover) { .alt-inline-edit[data-trigger="pencil"] .alt-inline-edit-slot-button:hover:not(:disabled) { background: var(--surface-well); } }
 .alt-inline-edit-slot-button:focus-visible .alt-inline-edit-pencil { opacity: 1; }
 @media (hover: hover) { .alt-inline-edit-slot-button:hover:not(:disabled) .alt-inline-edit-pencil { opacity: 1; } }
