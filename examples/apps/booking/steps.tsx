@@ -1,7 +1,7 @@
 // The three steps that collect answers: the treatment, the time, and who's coming. Each renders its own fields from the
 // draft and the errors the flow hands it; the flow owns moving between them.
 import * as React from 'react';
-import { Button, Checkbox, DatePicker, Field, Input, InputOTP, Radio, RadioGroup, Textarea } from 'altitude-design';
+import { Button, Checkbox, DatePicker, Field, Input, InputOTP, Radio, RadioGroup, Textarea, TimeSlot, TimeSlotPicker } from 'altitude-design';
 import { DemoResource, errorMessage, isDemoError, useDemoQuery } from '../shared/react';
 import { ADDON, CODE_MINUTES, TREATMENTS, clock, closed, dayName, firstOpen, lastBookable, masked, money, service } from './data';
 import type { Hold, Slot } from './data';
@@ -62,10 +62,10 @@ function Slots({ date, value, error, onValueChange }: { date: string; value: str
   return (
     <DemoResource query={q} noun={`the times on ${dayName(date)}`}>
       {(slots) => slots.some((s) => s.free) ? (
-        <Field className="bk-choices" label={`Times on ${dayName(date)}`} error={error}>
-          <RadioGroup id={FIELD_ID.time} value={value} onValueChange={onValueChange} orientation="horizontal">
-            {slots.map((s) => <Radio key={s.time} value={s.time} label={s.time} description={s.free ? undefined : 'Booked'} disabled={!s.free && s.time !== value} />)}
-          </RadioGroup>
+        <Field label={`Times on ${dayName(date)}`} error={error}>
+          <TimeSlotPicker id={FIELD_ID.time} value={value} onValueChange={onValueChange} locale="en-GB">
+            {slots.map((s) => <TimeSlot key={s.time} value={s.time} booked={!s.free && s.time !== value} />)}
+          </TimeSlotPicker>
         </Field>
       ) : <p className="bk-quiet" id={FIELD_ID.time} tabIndex={-1}>Every time on {dayName(date)} is booked. Choose another day.</p>}
     </DemoResource>

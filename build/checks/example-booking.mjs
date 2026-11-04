@@ -28,7 +28,7 @@ const primaries = (page) => page.evaluate(() => [...document.querySelectorAll('.
 const sideways = (page) => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 const cont = async (page) => { await page.locator('.bk-actions button[type="submit"]').click(); await wait(page, 900); };
 const text = (page, sel) => page.locator(sel).allTextContents().then((t) => t.join(' '));
-const firstFree = (page) => page.locator('#bk-time label.alt-radio:not([data-disabled])').first();
+const firstFree = (page) => page.locator('#bk-time .alt-slot:not([aria-disabled="true"])').first();
 const details = async (page) => {
   await page.fill('#bk-name', 'Aoife Byrne'); await page.fill('#bk-email', 'aoife@example.com'); await page.fill('#bk-phone', '087 123 4821');
 };
@@ -93,9 +93,9 @@ await page.keyboard.press('ArrowDown'); await wait(page, 100);
 expect(await page.locator('#bk-service input[value="follow-up"]').isChecked() && await page.locator('.alt-error-summary').count() === 0, 'an arrow chooses Follow-up and the error clears');
 await page.keyboard.press('Enter'); await wait(page, 900);
 expect(await heading(page) === 'Choose a time' && await focused(page) === 'bk-step-title', `Enter continues and focus moves to the Time heading (${await focused(page)})`);
-await page.locator('#bk-time input:not([disabled])').first().focus();
+await page.locator('#bk-time .alt-slot:not([aria-disabled="true"])').first().focus();
 await page.keyboard.press('Space'); await wait(page, 100);
-const chosen = await page.locator('#bk-time input:checked').getAttribute('value');
+const chosen = await page.locator('#bk-time .alt-slot[aria-checked="true"]').getAttribute('data-value');
 await page.keyboard.press('Enter'); await wait(page, 1100);
 expect(await heading(page) === 'Your details', 'Space chooses a time and Enter holds it');
 expect(new RegExp(`We’re holding ${chosen} on .* for you until \\d\\d:\\d\\d`).test(await text(page, '.bk-hold')), `the held time says when the hold ends (${await text(page, '.bk-hold')})`);
@@ -110,7 +110,7 @@ expect(/is verified/.test(await text(page, '.bk-verified')), 'typing the code ve
 
 // Back keeps every answer.
 await page.locator('.bk-actions button', { hasText: /^Back$/ }).click(); await wait(page, 500);
-expect(await page.locator(`#bk-time input[value="${chosen}"]`).isChecked(), 'Back to Time keeps the chosen time');
+expect(await page.locator(`#bk-time .alt-slot[data-value="${chosen}"]`).getAttribute('aria-checked') === 'true', 'Back to Time keeps the chosen time');
 await page.locator('.alt-stepper [role="button"]', { hasText: 'Service' }).click(); await wait(page, 500);
 expect(await page.locator('#bk-service input[value="follow-up"]').isChecked(), 'the stepper goes back to Service with the treatment kept');
 await cont(page); await cont(page);
@@ -162,8 +162,8 @@ await cont(page);
 expect(new RegExp(`${held} is no longer available`).test(await text(page, '.bk-review')) && await page.locator('.bk-actions button', { hasText: /^Book and pay/ }).count() === 0, 'the review says the time went and offers no Book and pay');
 expect(await primaries(page) === 1 && await page.locator('.bk-actions button', { hasText: 'Choose another time' }).count() === 1, 'Choose another time is the one primary');
 await page.locator('.bk-actions button', { hasText: 'Choose another time' }).click(); await wait(page, 900);
-expect(await heading(page) === 'Choose a time' && await page.locator('#bk-time input:checked').count() === 0, 'it goes back to Time with the time cleared');
-expect(await page.locator(`#bk-time input[value="${held}"]`).isDisabled(), 'the taken time now shows as booked');
+expect(await heading(page) === 'Choose a time' && await page.locator('#bk-time .alt-slot[aria-checked="true"]').count() === 0, 'it goes back to Time with the time cleared');
+expect(await page.locator(`#bk-time .alt-slot[data-value="${held}"]`).getAttribute('aria-disabled') === 'true', 'the taken time now shows as booked');
 await firstFree(page).click(); await cont(page);
 expect(await heading(page) === 'Check and pay' && await focused(page) === 'bk-change-time' && /Aoife Byrne/.test(await text(page, '.bk-review')), 'Back to review keeps the details and returns to the time');
 

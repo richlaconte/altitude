@@ -19,8 +19,6 @@
 .bk-choice { display: flex; justify-content: space-between; gap: var(--space-3); width: 100%; }
 .bk-choices .alt-check-text { flex: 1; }
 .bk-price { font-variant-numeric: tabular-nums; }
-/* Times wrap as a grid of equal cells, so a thumb finds each one. */
-.bk-choices .alt-radio-group[data-orientation="horizontal"] { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--space-3) var(--space-4); }
 .bk-quiet { margin: 0; color: var(--ink-muted); font: 500 14px/20px var(--font-sans); }
 .bk-hold { margin: 0; padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); font: 400 15px/23px var(--font-sans); }
 .bk-hold[data-tone="caution"] { border-color: var(--caution); background: var(--caution-soft); }
