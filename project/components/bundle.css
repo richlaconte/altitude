@@ -2028,8 +2028,8 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   .alt-matrix-box:not([data-fixed]) .alt-check-track { transition: border-color var(--dur-travel-1) var(--ease-rise), background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise); }
   .alt-matrix-box:not([data-fixed]) .alt-check-mark { transition: color var(--dur-travel-1) var(--ease-rise); }
 }
-.alt-matrix-box:not([data-fixed]):hover .alt-check-track { border-color: var(--ink-muted); }
-.alt-matrix-box[data-on]:not([data-fixed]):hover .alt-check-track { border-color: var(--accent); }
+@media (hover: hover) { .alt-matrix-box:not([data-fixed]):hover .alt-check-track { border-color: var(--ink-muted); }
+  .alt-matrix-box[data-on]:not([data-fixed]):hover .alt-check-track { border-color: var(--accent); } }
 [data-contrast="more"] .alt-matrix-box:focus-visible { box-shadow: 0 0 0 3px var(--accent-ink); }
 @media (forced-colors: active) { .alt-matrix-box:focus-visible { box-shadow: none; outline: 2px solid Highlight; } .alt-matrix-dash { background: CanvasText; }
   /* Editable cells keep a dashed edge at rest, so they still read as choices next to the stamped fixed ones. */
