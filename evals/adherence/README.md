@@ -14,6 +14,11 @@ The [framework pilot](../framework) measures workflow behaviour (drafts, pending
 | `api.unknownProps` | props a component's declared props don't have (an invented prop) | the same compilation |
 | `rules` | findings of each `altitude check` rule ([`scripts/source-check.mjs`](../../scripts/source-check.mjs)) | text |
 | `colourLiterals` | `ALT-TOKEN-001`: colour literals and Tailwind palette classes instead of tokens | text; comparable across every condition, since it applies to any app |
+| `used` | distinct Altitude exports used (imported, or `A.Name`) and Altitude elements rendered | text. The denominator: zero unknown imports means nothing in a build that hardly touches the API |
+| `rates` | unknown exports and unknown props per 100 Altitude identifiers used | from `api` and `used` |
+| `handRolled` | raw `<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, `<dialog>` and `role="dialog"` in an app that imports `altitude-design` | text. The opposite failure: guidance that scares agents off the API shows up here first |
+| `probes` | contract probes: real props used wrongly, which TypeScript accepts, each seeded from a bug we've seen (`PROBES` in `score.mjs`; the first is `Meter format` returning words, #447) | text, with a passing and a failing fixture each. Add one each time a bug like it is found |
+| `cost` | cost in USD, turns and wall time, from `run.json` | Gloaguen et al.: guidance can cost more for the same result, and only these show it |
 
 - **API errors only.** The compilation is non-strict and stubs every module other than `altitude-design`, so only Altitude's API produces errors.
 - **What's left out.** Render-based measures (tier shares, contrast) belong to the distinctiveness benchmark ("Elevation"). Workflow behaviour belongs to the framework pilot.
@@ -26,7 +31,22 @@ node evals/adherence/score.mjs <build>...                    # a line per build
 node evals/adherence/score.mjs <build>... --json > scores.json
 ```
 
+## Adherence briefs
+
+[`briefs.json`](briefs.json) holds four tasks that can't be done well without API a model is unlikely to have seen, or a contract that's easy to get wrong: a booking form with a required choice and a linked error summary; a board where the server refuses a move; an assistant proposing changes to a record; a usage page with a quota and last month's chart. Each names the contract a build can get wrong. The distinctiveness benchmark's eight briefs stay the control for whether new guidance hurts the easy cases.
+
 ## Comparing two versions of what agents receive
+
+Published versions install from the registry, which measures what `npm install` delivers: `--package altitude-design@0.2.1` or `--package altitude-design@latest` instead of `--tarball`. The resolved version, its integrity and whether `altitude init` ran (0.2.1 has no CLI) are recorded in each build's `run.json` under `package`. For example, the first comparison #419 asks for, 0.2.1 against the current release on the adherence briefs:
+
+```sh
+node evals/distinctiveness/generate.mjs --package altitude-design@0.2.1 --briefs evals/adherence/briefs.json --conditions claude-altitude --out build/test/adherence/0.2.1/builds
+node evals/distinctiveness/generate.mjs --package altitude-design@latest --briefs evals/adherence/briefs.json --conditions claude-altitude --out build/test/adherence/latest/builds
+```
+
+#419 sizes it at 5 samples of the four adherence briefs plus 2 of the eight control briefs: 36 builds per condition, about 25 USD each at the 31 Oct rate. Run each command once per sample with its own `--out`, since a build that already has a `run.json` is kept. Report rates pooled per 100 identifiers with a bootstrap interval over builds, per-brief rows, and cost, turns and time. Don't report significance: binary rates won't separate at this size.
+
+For unreleased changes:
 
 1. **Pack each package.** `npm run build && npm pack --pack-destination build/test/adherence/<label>` on each branch, for example `main` and the branch that changes the init block.
 2. **Generate builds with each tarball** using the distinctiveness harness, which installs the package and runs `altitude init --client claude --apply` as a consumer would. Use a separate `--out` per label and `--conditions claude-altitude`:

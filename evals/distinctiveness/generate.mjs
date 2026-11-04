@@ -18,7 +18,11 @@ const model=option('--model','claude-opus-5-5');
 const parallel=Number(option('--parallel','4'));
 const only=option('--only','');
 const tarball=option('--tarball','')&&resolve(option('--tarball',''));
-const {briefs}=JSON.parse(readFileSync(join(here,'briefs.json'),'utf8'));
+// Or a registry spec, to measure what `npm install` delivers: --package altitude-design@0.2.1 (#419).
+const pkg=option('--package','');
+const source=tarball||pkg;
+// Another brief set with the same shape: --briefs evals/adherence/briefs.json.
+const {briefs}=JSON.parse(readFileSync(option('--briefs','')?resolve(option('--briefs','')):join(here,'briefs.json'),'utf8'));
 // The only words each condition adds to a brief: where the code goes. v0 and Lovable get the brief alone.
 const conditions={
  'claude-plain':{suffix:'Write it as a single self-contained index.html in this folder. You may load libraries from a public CDN.',tools:['Read','Write','Edit','Bash(ls *)'],site:'index.html'},
@@ -26,7 +30,7 @@ const conditions={
  'claude-altitude':{suffix:'Build it in this project with the installed Altitude package. `npm run build` must succeed.',tools:claudeAllowedTools,site:'dist'},
 };
 const picked=option('--conditions',Object.keys(conditions).join(',')).split(',');
-if(picked.includes('claude-altitude')&&!tarball)throw Error('--tarball <altitude-design.tgz> is required for claude-altitude (npm pack after npm run build)');
+if(picked.includes('claude-altitude')&&!source)throw Error('--tarball <altitude-design.tgz> or --package altitude-design@<version> is required for claude-altitude');
 async function generate(condition,brief){
  const id=`${condition}--${brief.id}`,evidence=join(out,id);
  if(existsSync(join(evidence,'run.json'))){console.log(id,'kept');return;}
@@ -36,7 +40,8 @@ async function generate(condition,brief){
  const meta={id,condition,brief:brief.id,task:brief.task,domain:brief.domain,prompt,promptSHA256:sha256(prompt),model,startedAt:new Date().toISOString()};
  try{
   meta.toolVersion=execFileSync('claude',['--version'],{encoding:'utf8'}).trim();
-  setup(condition,workspace,tarball);
+  const installed=setup(condition,workspace,condition==='claude-altitude'?source:undefined);
+  if(installed)meta.package=installed;
   execFileSync('git',['init','-q'],{cwd:workspace});
   meta.dependencies=existsSync(join(workspace,'package.json'))?JSON.parse(readFileSync(join(workspace,'package.json'),'utf8')).dependencies:{};
   // The tarball is named, not located: its path is a local one, and its hash identifies it.
