@@ -11,8 +11,7 @@
 // stale data says when it was true. Missing data is drawn as a gap and reads "No data", never healthy.
 // Each panel is its own query, so one can fail while the rest stay. Every live chart is pausable (WCAG 2.2.2), one
 // switch pauses the whole page, and only changes of status are announced.
-// Not here: a span waterfall (Altitude has none; the detail ranks the slowest request's spans as a BarList and says
-// so), and rolling back a deploy.
+// Not here: rolling back a deploy.
 import * as React from 'react';
 import {
   Alert, Badge, Button, Card, CardContent, CardHeader, CardTitle, ChartAnnotation, ChartContainer, ChartReference, Heatmap,

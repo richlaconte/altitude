@@ -7,7 +7,7 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
 ## The rules
 
 1. **The data is the record.** The plot is ground, and its marks are flat ink on it: no cast shadow, no wall, no sheen, no tonal lift and no gradient, ever. Length and position are the most accurately read magnitude channels and depth is one of the weakest; shadowed and 3D bars cost accuracy. A sheen on a bar would also say "press it" (E4), which a bar usually can't honour.
-2. **Bars stand on the ground line.** The zero baseline is the chart's ground line, a 1px `ink-muted` rule, the same line the `Stepper` and the `Drilldown` staircase stand on. Bar charts always include zero; a bar that starts above zero misstates its length.
+2. **Bars stand on the ground line.** The zero baseline is the chart's ground line, a 1px `ink-muted` rule, the same line the `Stepper` and the `Drilldown` staircase stand on. Bar charts always include zero; a bar that starts above zero misstates its length. Interval marks (`SpanWaterfall`, `Schedule`) are different: each one's offset is when it started and its length is how long it lasted, on one shared axis. So they sit on the axis's zero, which is a 1px `ink-muted` rule at the start, over a 1px `line` track per row, rather than on a baseline of their own.
 3. **Height belongs to the chart's chrome, not to its data.** Every live part of a chart is a component you already know (see **Every part, by its build** below). Nothing new is invented for charts.
 4. **Hover is a promise, in charts too.** On a static chart the crosshair and readout appear and the marks don't respond. A grid has no crosshair, so a `Heatmap` outlines the cell under its readout in 2px `ink` instead, with no pointer cursor: that's the crosshair, not a promise. Only marks that do something when clicked show a hover outline and a pointer cursor. Marks never lift: a bar lifted off the ground line, or one casting a shadow below its top edge, misstates its value.
 5. **Colour does one job per chart.** Pick one:
@@ -30,6 +30,7 @@ Choose by the job the data does, not by what looks rich.
 |---|---|
 | Change over time | `LineChart`; `AreaChart` for a total and its parts |
 | Compare amounts across categories | `BarChart`; `BarList` for a ranked top-N |
+| Where one operation spent its time (nested intervals on one clock) | `SpanWaterfall` |
 | One headline number | `Stat`, with a `Sparkline` for its trend |
 | A value within a known range | `Meter` (a password's strength too, in `PasswordInput`) |
 | A value per cell over two dimensions | `Heatmap` |

@@ -1,0 +1,65 @@
+<!-- @dsCard group="Charts" height=640 subtitle="Where one request spent its time: flat bars on one clock from 0, nested under their callers, the critical path in focus" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpanWaterfall — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.sw { max-width: 860px; display: grid; gap: 12px; }
+.sw-detail { display: grid; gap: 4px; margin: 0; font: 400 13px/18px var(--font-sans); }
+.sw-detail dt { color: var(--ink-muted); } .sw-detail dd { margin: 0 0 4px; font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const SW_SPANS = [
+  { id: "root", name: "POST /checkout/confirm", start: 0, duration: 2410 },
+  { id: "auth", parent: "root", name: "auth.session", start: 2, duration: 9 },
+  { id: "db", parent: "root", name: "db: load basket", start: 12, duration: 84 },
+  { id: "inv", parent: "root", name: "inventory.reserve", start: 14, duration: 61 },
+  { id: "pay", parent: "root", name: "payments.authorise", start: 98, duration: 2290, status: "failed" },
+  { id: "a1", parent: "pay", name: "attempt 1", start: 100, duration: 800, status: "failed" },
+  { id: "a2", parent: "pay", name: "attempt 2", start: 920, duration: 800, status: "failed" },
+  { id: "a3", parent: "pay", name: "attempt 3", start: 1740, duration: 640 },
+  { id: "card", parent: "a3", name: "card-network.charge", start: 1760, duration: 590 },
+  { id: "render", parent: "root", name: "render confirmation", start: 2388, duration: 20 }
+];
+const SW_ATTRS = { pay: [["http.status", "409"], ["error", "duplicate idempotency key"], ["retries", "2"]], a1: [["error", "timeout after 800 ms"]], a2: [["error", "timeout after 800 ms"]] };
+function App() {
+  const [path, setPath] = React.useState(true);
+  return /* @__PURE__ */ React.createElement("div", { className: "sw" }, /* @__PURE__ */ React.createElement(A.Switch, { label: "Highlight the critical path", checked: path, onCheckedChange: setPath }), /* @__PURE__ */ React.createElement(
+    A.SpanWaterfall,
+    {
+      "aria-label": "Spans of the slowest checkout request",
+      spans: SW_SPANS,
+      criticalPath: path,
+      summary: "2.41 s in all; payments.authorise took 95% of it, two of its three attempts timing out.",
+      renderDetail: (s) => /* @__PURE__ */ React.createElement("dl", { className: "sw-detail" }, (SW_ATTRS[s.id] ?? [["span.id", s.id]]).map(([k, v]) => /* @__PURE__ */ React.createElement(React.Fragment, { key: k }, /* @__PURE__ */ React.createElement("dt", null, k), /* @__PURE__ */ React.createElement("dd", null, v))))
+    }
+  ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, "\u2191 and \u2193 move between spans, \u2192 and \u2190 open and close a caller, Enter opens a span\u2019s attributes."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
