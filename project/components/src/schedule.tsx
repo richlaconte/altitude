@@ -108,6 +108,9 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const [failure, setFailure] = React.useState<{ key: string; error: string; retry: () => void } | null>(null);
   const [renaming, setRenaming] = React.useState<{ key: string; title: string; error?: string } | null>(null);
   const [settled, setSettled] = React.useState<string | null>(null);
+  // A dropped event stays where it was let go while its write runs, and until `events` catches up (#491); a failure puts
+  // it back. `done` marks a write that succeeded, `seen` the events it succeeded against.
+  const [landing, setLanding] = React.useState<{ key: string; day: string; start: number; end: number; done?: boolean; seen?: readonly T[] } | null>(null);
   const [polite, setPolite] = React.useState('');
   const [assertive, setAssertive] = React.useState('');
   const grid = React.useRef<HTMLDivElement>(null);
@@ -119,11 +122,14 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const say = (text: string) => { setAssertive(''); requestAnimationFrame(() => mounted.current && setAssertive(text)); };
 
   const byKey = new Map(events.map((e) => [getKey(e), e]));
+  // The events as last rendered, for a write that finishes after the parent has already published its result.
+  const eventsNow = React.useRef(events); eventsNow.current = events;
   // Events by day, with overlapping ones laid out side by side in lanes.
   const placed = React.useMemo(() => {
     const out: Placed<T>[] = [];
     for (const day of days) {
-      const list = events.map((event) => ({ event, key: getKey(event), s: split(getStart(event)), e: split(getEnd(event)) }))
+      const list = events.map((event) => { const key = getKey(event);
+        return landing?.key === key ? { event, key, s: { day: landing.day, min: landing.start }, e: { day: landing.day, min: landing.end } } : { event, key, s: split(getStart(event)), e: split(getEnd(event)) }; })
         .filter((x) => x.s.day === day).map((x) => ({ event: x.event, key: x.key, day, start: x.s.min, end: x.e.day === day ? x.e.min : 24 * 60, lane: 0, lanes: 1, overlaps: [] as string[] }))
         .sort((a, b) => a.start - b.start || b.end - a.end);
       let cluster: Placed<T>[] = [], clusterEnd = -1;
@@ -139,7 +145,14 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
       close();
     }
     return out;
-  }, [events, date, view]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [events, date, view, landing]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Once the write has succeeded, the override goes as soon as `events` has the new times, or has changed at all.
+  React.useEffect(() => {
+    if (!landing?.done) return;
+    const event = byKey.get(landing.key);
+    const s = event && split(getStart(event));
+    if (!event || events !== landing.seen || (s!.day === landing.day && s!.min === landing.start)) setLanding(null);
+  }, [events, landing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const spanText = (day: string, s: number, e: number) => `${longDay.format(utc(day))}, ${clockText(s)} to ${clockText(e)}`;
   const nameOf = (p: Placed<T>) => [`${getLabel(p.event)}, ${spanText(p.day, p.start, p.end)}`, p.overlaps.length && `overlaps with ${p.overlaps.join(', ')}`,
@@ -179,9 +192,12 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     if (!onChange) return;
     setFocus({ day: c.day, min: c.start }); wantFocus.current = 'cell';
     const next = { id: c.key, start: at(c.day, c.start), end: at(c.day, c.end) };
+    const land = { key: c.key, day: c.day, start: c.start, end: c.end };
+    setLanding(land);
     const ok = await write(c.key, c.kind === 'resize' ? 'Changing the end time' : 'Moving', () => onChange(next, event), () => void commitCarry(c));
-    if (ok) say(`${c.kind === 'resize' ? 'Changed' : 'Moved'} ${getLabel(event)} to ${spanText(c.day, c.start, c.end)}`);
-    else { say(`${getLabel(event)} is back in its place.`); moveFocus(s0.day, s0.min); }
+    if (!mounted.current) return;
+    if (ok) { setLanding((l) => (l && l.key === land.key && l.start === land.start && l.day === land.day ? { ...l, done: true, seen: eventsNow.current } : l)); say(`${c.kind === 'resize' ? 'Changed' : 'Moved'} ${getLabel(event)} to ${spanText(c.day, c.start, c.end)}`); }
+    else { setLanding((l) => (l?.key === land.key ? null : l)); say(`${getLabel(event)} is back in its place.`); moveFocus(s0.day, s0.min); }
   };
   const create = async () => {
     if (!draft || !onCreate) return;
