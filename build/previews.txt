@@ -3069,11 +3069,21 @@ function App() {
           return { ok: true };
         }}
         onCreate={async ({ parentId, index, name }) => { await treeWait(250); const page = { id: 'new-' + ++seq.current, title: name }; setPages(list => treeInsert(list, parentId, index, page)); return { ok: true, value: page }; }}
-        onRemove={page => setPages(list => treeRemove(list, page.id))} />
+        onRemove={page => setPages(list => treeRemove(list, page.id))}
+        rowMenu={page => {
+          const at = treeFind(pages, page.id);
+          return [
+            { label: 'Rename', shortcut: 'F2', onSelect: () => tree.current.startRename(page.id) },
+            { label: page.children ? 'New page inside' : 'New page after', shortcut: page.children ? 'Ctrl+Shift+Enter' : 'Ctrl+Enter',
+              onSelect: () => page.children ? tree.current.startCreate(page.id) : tree.current.startCreate(at.parent, at.index + 1) },
+            { type: 'separator' },
+            { label: 'Delete', shortcut: 'Delete', tone: 'critical', onSelect: () => setPages(list => treeRemove(list, page.id)) },
+          ];
+        }} />
     </div>
     <div className="tree-demo-panel" aria-live="polite">
       <h3>{current ? current.page.title : 'No page selected'}</h3>
-      <p>F2 renames. Ctrl+Enter adds a page after, Ctrl+Shift+Enter one inside. Space picks a page up: arrows move it, → puts it inside the page above, Space drops. Or drag it onto a folder.</p>
+      <p>F2 renames. Ctrl+Enter adds a page after, Ctrl+Shift+Enter one inside. Space picks a page up: arrows move it, → puts it inside the page above, Space drops. Or drag it onto a folder. Right-click a page, long-press it, or press Shift+F10 for its actions.</p>
     </div>
   </div>;
 }

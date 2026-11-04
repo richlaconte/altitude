@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { cssMs, cx, Icons, touchHold, useIsoLayoutEffect } from './core';
+import { ContextAt, ContextMenuLayer } from './context-menu';
+import type { MenuEntry } from './overlays';
 
 export type TreeResult = { ok: true } | { ok: false; error: string };
 export type TreeCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -46,6 +48,11 @@ export interface TreeProps<T> {
   onCreate?: (request: TreeTarget & { name: string }) => TreeCreateResult<T> | Promise<TreeCreateResult<T>>;
   /** Delete. Your removal policy (recovery or confirmation) applies; the tree only asks. */
   onRemove?: (item: T) => void;
+  /**
+   * A row's actions, opened by right-click, long-press, Shift+F10 or the Menu key on the focused row (ContextMenu's menu,
+   * at level 3); focus returns to the row on close. Every action must also be reachable another way (F2, Delete, …).
+   */
+  rowMenu?: (item: T) => MenuEntry[];
   className?: string;
 }
 
@@ -61,7 +68,12 @@ const ms = cssMs;
  */
 function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, hasChildren, loadChildren, expanded: expandedProp,
   defaultExpanded = [], onExpandedChange, selectionMode = 'single', selected: selectedProp, defaultSelected = null, onSelectedChange,
-  onAction, renderItem, onRename, onMove, canDrop, onCreate, onRemove, className, ...aria }: TreeProps<T>, ref: React.Ref<TreeHandle>) {
+  onAction, renderItem, onRename, onMove, canDrop, onCreate, onRemove, rowMenu, className, ...aria }: TreeProps<T>, ref: React.Ref<TreeHandle>) {
+  // The row menu (#500): one menu for the tree, for the row it was opened on.
+  const [menu, setMenu] = React.useState<{ key: string; at: ContextAt } | null>(null);
+  // Kept after closing: the menu is still drawn while it fades out.
+  const [menuItems, setMenuItems] = React.useState<{ label: string; items: MenuEntry[] }>({ label: 'Actions', items: [] });
+  const menuId = React.useId();
   const [innerExpanded, setInnerExpanded] = React.useState<string[]>(defaultExpanded);
   const expanded = expandedProp ?? innerExpanded;
   const setExpanded = (next: string[]) => { if (!expandedProp) setInnerExpanded(next); onExpandedChange?.(next); };
@@ -129,6 +141,18 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
     else if (current) rowRefs.current.get(current)?.focus({ preventScroll: false });
   });
   const focusRow = (key: string | null) => { if (!key) return; setFocus(key); wantFocus.current = true; };
+  const openMenu = (row: Row<T>, x: number, y: number, byKey: boolean) => {
+    if (!rowMenu || renaming || carry) return;
+    const items = rowMenu(row.item);
+    if (!items.length) return;
+    // The row becomes the roving stop; focus itself goes to the menu, and comes back to the row on close.
+    setFocus(row.key);
+    setMenuItems({ label: `Actions for ${getLabel(row.item)}`, items });
+    setMenu({ key: row.key, at: { x, y, byKey } });
+  };
+  // Focus goes straight back to the row, as ContextMenu's does to its thing, before the chosen action runs (which may
+  // move it on, to a rename well); a deferred request would outlive this menu and pull focus from the next one.
+  const closeMenu = (back = true) => { const key = menu?.key ?? null; setMenu(null); if (back && key) rowRefs.current.get(key)?.focus({ preventScroll: true }); };
 
   const toggle = (row: Row<T>, open = !row.expanded) => {
     if (!row.branch || open === row.expanded) return;
@@ -224,6 +248,12 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
     const i = visibleKeys.indexOf(row.key);
     const mod = e.ctrlKey || e.metaKey;
     if (carry?.mode === 'keys') { carryKey(e, row, forward, back); return; }
+    if (rowMenu && ((e.shiftKey && e.key === 'F10') || e.key === 'ContextMenu')) {
+      e.preventDefault();
+      const r = e.currentTarget.getBoundingClientRect(), label = e.currentTarget.querySelector('.alt-tree-label')?.getBoundingClientRect();
+      openMenu(row, (label?.left ?? r.left) + Math.min(24, (label?.width ?? r.width) / 2), r.bottom, true);
+      return;
+    }
     if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && onMove) {
       e.preventDefault();
       const info = byKey.get(row.key)!;
@@ -299,7 +329,7 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
     const el = rowRefs.current.get(row.key)!;
     const box = el.getBoundingClientRect();
     const start = { x: e.clientX, y: e.clientY };
-    let moving = false;
+    let moving = false, travelled = false;
     const info = byKey.get(row.key)!;
     const from = { parentId: info.parentKey, index: info.index };
     // On touch a row is picked up by press-and-hold, so a vertical swipe still scrolls (#255).
@@ -311,6 +341,7 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
     });
     const move = (ev: PointerEvent) => {
       if (!armed) return;
+      if (Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 10) travelled = true;
       if (!moving && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 5) return;
       if (!moving) { moving = true; setCarry({ key: row.key, from, to: from, mode: 'pointer' }); }
       setPointer({ x: ev.clientX, y: ev.clientY, dx: start.x - box.left, dy: start.y - box.top, w: box.width });
@@ -326,6 +357,8 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
       release?.();
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel);
       window.clearTimeout(springTimer.current); setPointer(null);
+      // On touch, a press-and-hold let go where it began is the row's long-press: its menu, not a carry.
+      if (moving && e.pointerType === 'touch' && rowMenu && !travelled) { setCarry(null); openMenu(row, start.x, start.y, false); return; }
       if (moving) void latestDrop.current();
     };
     const cancel = () => { release?.(); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel); setPointer(null); setCarry(null); };
@@ -419,7 +452,13 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
             onKeyDown={(e) => onKeyDown(e, row)} onFocus={(e) => { if (e.target === e.currentTarget) setFocus(row.key); }}
             onClick={(e) => { if ((e.target as HTMLElement).closest('.alt-tree-name')) return; setFocus(row.key); if (!(e.target as HTMLElement).closest('.alt-tree-chevron')) select(row.key); }}
             onDoubleClick={(e) => { if (!(e.target as HTMLElement).closest('.alt-tree-chevron, .alt-tree-name')) { if (row.branch) toggle(row); else onAction?.(row.item); } }}
-            onPointerDown={(e) => startPointer(e, row)}>
+            aria-haspopup={rowMenu ? 'menu' : undefined} aria-controls={menu?.key === row.key ? menuId : undefined} data-context-open={menu?.key === row.key ? '' : undefined}
+            onContextMenu={rowMenu ? (e) => { if ((e.nativeEvent as PointerEvent).pointerType === 'touch' && onMove) { e.preventDefault(); return; } e.preventDefault(); openMenu(row, e.clientX, e.clientY, false); } : undefined}
+            onPointerDown={(e) => {
+              startPointer(e, row);
+              // Without onMove there's no hold to carry: a long press is only the menu.
+              if (rowMenu && !onMove && e.pointerType === 'touch') touchHold(e, () => openMenu(row, e.clientX, e.clientY, false));
+            }}>
             <span className="alt-tree-indent" aria-hidden="true" />
             {row.branch ? <span className="alt-tree-chevron" aria-hidden="true" data-open={row.expanded ? '' : undefined} onClick={() => toggle(row)}><Icons.ChevronDown size={14} /></span>
               : <span className="alt-tree-leaf" aria-hidden="true" />}
@@ -442,6 +481,7 @@ function TreeInner<T>({ items, getKey, getLabel, getChildren = () => undefined, 
       <span className="alt-tree-label">{renderItem ? renderItem(carriedRow.item) : getLabel(carriedRow.item)}</span>
       {(getChildren(carriedRow.item)?.length ?? 0) > 0 && <span className="alt-tree-count">+{countDescendants(carriedRow.item, getChildren)}</span>}
     </div>}
+    {rowMenu && <ContextMenuLayer at={menu?.at ?? null} items={menuItems.items} id={menuId} label={menuItems.label} onClose={closeMenu} />}
     <span className="alt-tree-status" role="status" aria-live="polite" aria-atomic="true">{polite}</span>
     <span className="alt-tree-status" aria-live="assertive" aria-atomic="true">{assertive}</span>
   </div>;
