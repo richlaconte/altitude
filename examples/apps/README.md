@@ -15,6 +15,7 @@ They aren't part of the package. Each app imports `altitude-design` by name, as 
 | Storefront health | `service-health/` | an on-call report on eight services: a takeaway written by a burn-rate rule from the error budget, never the all-clear when a panel failed or a service went quiet; live charts that pause; one panel failing while the rest load; stale data that says so; declaring an incident that names who it pages and can't happen twice (#406) |
 | Travel policy editor | `docs-editor/` | the whole sync pattern in one editor: sections that save as you type and hover until they land, offline edits that wait and go in order, a conflict with someone else's save shown as both versions, a session that ends mid-save with nothing lost, details saved deliberately with EditRegion, and a review round with comments, suggested changes decided one by one, and a Publish that can't happen twice (#405) |
 | October expenses | `expense-reports/` | one report between two people, switched in the drawer: the employee imports card transactions (two bad rows fixed or skipped before anything is imported), edits cells by keyboard, attaches receipts through a Sheet, and submits once even when the response is lost; the manager approves, or returns it with a reason asked in place, and the employee sees why even mid-edit (#407) |
+| Support inbox | `support-inbox/` | a queue worked one ticket at a time in the list-and-detail frame (InboxList): new tickets arrive without moving the one you're on, a teammate's presence and reply show on the ticket and leave your draft alone, a reply hovers, fails into a trench with Retry, or waits offline and sends once, and a reassignment under you is said in an Alert that keeps your draft (#404) |
 
 ## Running them
 
@@ -29,6 +30,7 @@ cd build && node checks/example-booking.mjs         # the booking flow driven th
 cd build && node checks/example-service-health.mjs  # the health report's rules as units, then #406's fixtures in a browser
 cd build && node checks/example-docs-editor.mjs     # the docs editor driven through #405's fixtures: no text lost, nothing written twice
 cd build && node checks/example-expense-reports.mjs  # both people through #407's fixtures: import, receipts, submit once, return and approve
+cd build && node checks/example-support-inbox.mjs    # the inbox through #404's fixtures: arrivals that don't move you, drafts kept, replies sent once
 ```
 
 `npm run typecheck` type-checks the apps along with the components.
