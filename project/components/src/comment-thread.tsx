@@ -147,10 +147,11 @@ export function CommentThread({ comments, resolved, onPost, onResolve, onReopen,
         </div>
       ) : null}
       {(!resolved || showResolved) && list}
-      {!resolved && (
+      {/* Without onPost there's nowhere for a comment to go, so there's no field (#476); someone typing still shows. */}
+      {!resolved && (onPost || typingText || (onResolve && comments.length > 0)) && (
         <div className="alt-comments-compose">
           {typingText && <p className="alt-comments-typing" aria-hidden="true"><span className="alt-comments-dots"><i /><i /><i /></span>{typingText}</p>}
-          <div className="alt-comments-field">
+          {onPost && <div className="alt-comments-field">
             <div className="alt-input" data-multiline="" data-approach="56">
               <textarea ref={area} value={text} placeholder="Add a comment — @ to mention" aria-label="Add a comment" rows={2}
                 role="combobox" aria-autocomplete="list" aria-expanded={listOpen} aria-controls={listOpen ? `${id}-list` : undefined}
@@ -164,11 +165,11 @@ export function CommentThread({ comments, resolved, onPost, onResolve, onReopen,
                   onMouseDown={(e) => e.preventDefault()} onClick={() => choose(p)} onPointerMove={() => setActive(i)}><span aria-hidden="true"><Avatar name={p.name} size={20} /></span><span className="alt-comments-name">{p.name}</span></div>)}
               </div>
             )}
-          </div>
-          <div className="alt-comments-actions">
+          </div>}
+          {(onPost || (onResolve && comments.length > 0)) && <div className="alt-comments-actions">
             {onResolve && comments.length > 0 && <Button size="sm" variant="ghost" onClick={onResolve}><Icons.Check size={14} />Resolve</Button>}
-            <Button size="sm" variant="primary" onClick={post} disabled={!text.trim()} aria-keyshortcuts="Meta+Enter Control+Enter">Comment</Button>
-          </div>
+            {onPost && <Button size="sm" variant="primary" onClick={post} disabled={!text.trim()} aria-keyshortcuts="Meta+Enter Control+Enter">Comment</Button>}
+          </div>}
         </div>
       )}
       <span className="alt-sr" aria-live="polite">{said}</span>
