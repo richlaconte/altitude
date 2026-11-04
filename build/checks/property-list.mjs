@@ -32,6 +32,12 @@ try {
     check(true, 'PL-06 the change is announced (“Status set to Done”)');
     await issue.getByRole('button', { name: 'Priority: Add priority. Change priority' }).click();
     await issue.locator('.alt-select-trigger').press('Enter'); await page.getByRole('option', { name: 'High' }).click();
+    // #504: once the list has closed, the editor folds back to the chosen value, which hovers while the write runs.
+    const priority = issue.locator('.alt-inline-edit[aria-label="Priority"]');
+    await priority.and(page.locator('[data-folded]')).waitFor();
+    check(await priority.locator('.alt-select').count() === 0 && await priority.getAttribute('data-state') === 'saving' &&
+      await priority.locator('.alt-inline-edit-surface').getAttribute('data-status') === 'pending' && await focused(page) === 'Priority: High. Saving',
+      'PL-07a while the write runs, the editor has closed onto the chosen value, which hovers as pending and keeps focus');
     await issue.getByRole('button', { name: 'Priority: High. Change priority' }).waitFor();
     check(await issue.getByRole('button', { name: 'Priority: High. Change priority' }).getAttribute('data-empty') === null, 'PL-07 setting an unset value fills it');
     await issue.getByRole('button', { name: /^Estimate/ }).click();
@@ -58,6 +64,34 @@ try {
     await upper.locator('.alt-property-list').evaluate(el => el.setAttribute('tabindex', '-1'));
     await upper.locator('.alt-property-list').focus(); await page.keyboard.press('p');
     check(await upper.locator('.alt-inline-edit[aria-label="Priority"]').getAttribute('data-state') === 'editing', 'PL-13 shortcut="P" opens on the P key');
+    await page.close(); }
+
+  // #504: a rejected on-choose write opens the editor again, on the chosen value, with the error and focus in it.
+  { const page = await open();
+    await page.evaluate(() => {
+      const R = window.React, A = window.Altitude, h = R.createElement;
+      const host = document.createElement('div'); host.id = 'fold'; document.body.prepend(host);
+      const items = [{ value: 'low', label: 'Low' }, { value: 'high', label: 'High' }];
+      function Demo() {
+        const [v, setV] = R.useState('low');
+        return h(A.AltitudeProvider, null, h(A.PropertyList, { 'aria-label': 'Fold' }, h(A.PropertyListItem, { label: 'Priority', value: v, commit: 'on-choose',
+          renderValue: x => items.find(i => i.value === x)?.label, onValueChange: setV, editor: c => h(A.Select, { ...c, items }),
+          onSave: () => new Promise(resolve => { window.__settle = resolve; }) })));
+      }
+      window.ReactDOM.createRoot(host).render(h(Demo));
+    });
+    const fold = page.locator('#fold .alt-inline-edit');
+    await page.locator('#fold').getByRole('button', { name: 'Priority: Low. Change priority' }).click();
+    await page.locator('#fold .alt-select-trigger').press('Enter'); await page.getByRole('option', { name: 'High' }).click();
+    await fold.and(page.locator('[data-folded]')).waitFor();
+    await page.keyboard.press('Escape');
+    check(await fold.getAttribute('data-state') === 'saving' && (await fold.getByRole('status').textContent()) === 'Saving changes. Wait for the result.',
+      'PL-15 Escape on the folded value doesn\'t abandon the write, and says to wait');
+    await page.evaluate(() => window.__settle({ ok: false, error: 'High needs a reason.' }));
+    await fold.getByRole('alert').waitFor();
+    check(await fold.locator('.alt-select-value').textContent() === 'High' && await fold.getAttribute('data-folded') === null &&
+      await page.evaluate(() => !!document.activeElement?.closest('#fold .alt-select')),
+      'PL-16 a rejected write opens the editor again on the chosen value, with the error, focus in it');
     await page.close(); }
 
   { const page = await open();

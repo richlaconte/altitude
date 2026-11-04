@@ -778,7 +778,7 @@ export interface InlineEditProps<V = string> {
   renderValue?: (value: V) => React.ReactNode;
   /** Edit mode. Default: the existing Input for a string. */
   editor?: (control: InlineEditControl<V>) => React.ReactNode;
-  /** 'on-choose': a single-choice editor saves as soon as a value is chosen, and Save is hidden. Default 'explicit'. */
+  /** 'on-choose': a single-choice editor saves as soon as a value is chosen, and Save is hidden; once the list closes, the editor folds back to the chosen value, which hovers while the write runs. Default 'explicit'. */
   commit?: 'explicit' | 'on-choose';
   /** An unchanged draft closes without a write, and an equal observed value isn't an external change. Default Object.is. */
   isEqual?: (a: V, b: V) => boolean;
