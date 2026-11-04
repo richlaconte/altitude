@@ -1,0 +1,29 @@
+/* Support inbox (#404). The list-and-detail frame: the ticket list beside the open ticket, in resizable panes; the
+   ticket's conversation first, its properties beside it, narrower. Tokens only. */
+.si { max-width: 1280px; margin: 0 auto; padding: var(--space-8) var(--space-4); display: grid; gap: var(--space-4); }
+.si > * { min-width: 0; }
+.si-panes { width: 100%; height: 720px; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.si-list { overflow-y: auto; padding: var(--space-2); }
+.si-detail { overflow-y: auto; min-width: 0; }
+.si-pad { padding: var(--space-3); }
+.si-ticket { display: grid; gap: var(--space-4); padding: var(--space-4) var(--space-5); align-content: start; }
+.si-empty { place-items: center; min-height: 240px; }
+.si-ticket-head { display: grid; gap: var(--space-1); }
+.si-h2 { margin: 0; font: 600 19px/26px var(--font-sans); color: var(--ink); border-radius: var(--radius-sm); }
+.si-h2:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.si-h3 { margin: 0; font: 600 14px/20px var(--font-sans); color: var(--ink); }
+.si-meta { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); color: var(--ink-muted); font: 400 13px/18px var(--font-sans); }
+.si-presence { margin: 0; color: var(--ink); font: 500 13px/18px var(--font-sans); }
+.si-ticket-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 240px); gap: var(--space-5); align-items: start; }
+@container (max-width: 640px) { .si-ticket-body { grid-template-columns: minmax(0, 1fr); } }
+.si-detail { container-type: inline-size; }
+.si-convo { display: grid; gap: var(--space-3); min-width: 0; }
+.si-composer { display: grid; gap: var(--space-2); }
+.si-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.si-hint { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-muted); font: 400 12px/16px var(--font-sans); }
+/* Internal notes: a word in the heading and a caution edge, never colour alone. */
+.si-notes { display: grid; gap: var(--space-2); padding: var(--space-3); border-radius: var(--radius-md); box-shadow: inset 3px 0 0 var(--caution), inset 0 0 0 1px var(--line); background: var(--caution-soft); }
+.si-back { justify-self: start; }
+.si-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 700px) { .si-panes { height: auto; min-height: 560px; } }
+@media (forced-colors: active) { .si-notes { border: 1px solid CanvasText; border-left-width: 3px; box-shadow: none; } }
