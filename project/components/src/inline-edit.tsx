@@ -78,6 +78,8 @@ type Session<V> = {
   error?: string;
   failed?: boolean;
   conflicted?: boolean;
+  /** commit="on-choose": the list has closed, so the editor has folded back to the value, which hovers while the write runs. */
+  folded?: boolean;
 };
 const SAVE_ERROR = 'We couldn’t save this change. Try again.';
 const CHANGED = 'The saved value changed. Review the current value before saving.';
@@ -87,8 +89,13 @@ const LINE = 21; // .alt-input textarea line-height, when the value's own font d
 const isEmpty = (value: unknown) => value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0);
 const showValue = (value: unknown, empty = 'Not set') => isEmpty(value) ? empty : String(value);
 // Let a closing popup (a Select's list sinking) finish before the editor itself settles: the two never move at once.
-const afterMotion = (element: HTMLElement | null) => !element?.getAnimations ? Promise.resolve() : Promise.race([
-  Promise.all(element.getAnimations({ subtree: true }).filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined))),
+// A chosen value's list (or calendar) closing: only the popup's own motion, so a pending surface's transitions don't hold it.
+const POPUP = '[role="listbox"], [role="dialog"], [role="grid"], .alt-pop';
+// Two frames first: the choice is still being published, and the popup only starts closing once it has rendered.
+const frames = () => new Promise<void>(resolve => { if (typeof requestAnimationFrame === 'undefined') resolve(); else requestAnimationFrame(() => requestAnimationFrame(() => resolve())); });
+const afterPopup = (element: HTMLElement | null) => !element?.getAnimations ? Promise.resolve() : Promise.race([
+  frames().then(() => Promise.all(element.getAnimations({ subtree: true }).filter(a => a.effect?.getTiming().iterations !== Infinity &&
+    (a.effect as KeyframeEffect | null)?.target instanceof Element && !!((a.effect as KeyframeEffect).target as Element).closest(POPUP)).map(a => a.finished.catch(() => undefined)))),
   new Promise(resolve => setTimeout(resolve, 400)),
 ]);
 
@@ -140,6 +147,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const caretAt = React.useRef<number | null>(null);
   const editorBox = React.useRef<HTMLDivElement>(null);
   const announceValue = React.useRef(false);
+  const plateFocus = React.useRef(false);
   const valueRef = React.useRef<HTMLSpanElement>(null);
   const fieldId = React.useId();
   const onChoose = commit === 'on-choose';
@@ -207,6 +215,12 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
         if (at === null) { input.current.select(); input.current.scrollLeft = 0; } else input.current.setSelectionRange(at, at);
       }
     }
+    // On-choose: the editor folded back to the value while the write runs; keep focus on it, as on success.
+    if (session?.folded && plateFocus.current) {
+      plateFocus.current = false;
+      // aria-disabled while saving, but it still holds focus (canFocus would refuse it), so Escape is still heard.
+      if (trigger.current?.isConnected) trigger.current.focus();
+    }
     if (!session && returnFocus.current) {
       returnFocus.current = false;
       const target = canFocus(trigger.current) ? trigger.current : focusFallback?.();
@@ -234,8 +248,15 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
     if (!active || active.phase === 'saving') return;
     setAnnouncement(''); close();
   };
+  // A folded on-choose session opens its editor again (to show an error or a conflict), with focus back in it.
+  const unfold = (active: Session<V>) => {
+    if (!active.folded) return;
+    active.folded = false;
+    if (root.current?.contains(document.activeElement)) selectInput.current = true;
+  };
   const fail = (active: Session<V>, error: string, failed = false) => {
     if (!valid(active)) return;
+    unfold(active);
     active.phase = 'error'; active.error = error; active.failed = failed;
     setAnnouncement(''); capture(); setSession({ ...active });
   };
@@ -260,11 +281,19 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
     }
     // This phase is a synchronous in-flight lock, including for synchronous onSave implementations.
     active.phase = 'saving'; setSession({ ...active }); setAnnouncement('Saving changes');
+    // On-choose: once the list has closed, the editor folds back to the chosen value, which hovers while the write runs
+    // (Elevation, Editing in place). It doesn't wait for the write: only an error or a conflict opens the editor again.
+    const listClosed = onChoose ? afterPopup(root.current).then(() => {
+      if (!valid(active) || active.phase !== 'saving') return;
+      plateFocus.current = !!root.current?.contains(document.activeElement);
+      active.folded = true; capture(); setSession({ ...active });
+    }) : undefined;
     let result: InlineEditSaveResult<V>;
     try { result = await onSave(draft, { previousValue: active.baseline }); }
     catch { result = { ok: false, error: SAVE_ERROR }; }
     if (!valid(active)) return;
     if (active.conflicted) {
+      unfold(active);
       active.phase = 'conflict'; active.error = CHANGED_DURING_SAVE; active.failed = false;
       capture(); setSession({ ...active }); setAnnouncement(''); return;
     }
@@ -273,10 +302,12 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
       fail(active, SAVE_ERROR, true); return;
     }
     if (!result.ok) { fail(active, result.error, true); return; }
-    if (onChoose) {
-      await afterMotion(root.current);
+    if (listClosed) {
+      // The list closes first, then the value settles.
+      await listClosed;
       if (!valid(active)) return;
       if (active.conflicted) {
+        unfold(active);
         active.phase = 'conflict'; active.error = CHANGED_DURING_SAVE; active.failed = false;
         capture(); setSession({ ...active }); setAnnouncement(''); return;
       }
@@ -349,10 +380,11 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   };
 
   const saving = session?.phase === 'saving';
+  const folded = saving && !!session?.folded;
   const validating = session?.phase === 'validating';
   const display = (shown: V) => isEmpty(shown) && (renderValue === undefined || ownButton) ? emptyLabel : renderValue ? renderValue(shown) : showValue(shown, emptyLabel);
   const [valueText, setValueText] = React.useState('');
-  useIsoLayoutEffect(() => { if (ownButton && !session) setValueText(valueRef.current?.textContent?.trim() ?? ''); });
+  useIsoLayoutEffect(() => { if (ownButton && (!session || session.folded)) setValueText(valueRef.current?.textContent?.trim() ?? ''); });
   const controlId = fieldId + '-control';
   const errorId = fieldId + '-error', hintId = fieldId + '-hint';
   const describedBy = session?.error ? errorId : (onChoose || textarea) ? hintId : undefined;
@@ -367,13 +399,15 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   </span> : undefined;
   const srLabel = <label className="alt-sr" htmlFor={controlId}>{label}</label>;
 
+  // Folded: the chosen value, shown where the editor was while it's written.
+  const shown = folded ? session!.draft : value;
   const readSlot = triggerMode === 'button'
-    ? <div className="alt-inline-edit-slot" data-slot="" {...glowProps}><span ref={valueRef} className="alt-inline-edit-value">{display(value)}</span></div>
+    ? <div className="alt-inline-edit-slot" data-slot="" {...glowProps}><span ref={valueRef} className="alt-inline-edit-value">{display(shown)}</span></div>
     : <button ref={trigger} type="button" className={triggerMode === 'value' ? 'alt-inline-edit-plate' : 'alt-inline-edit-slot alt-inline-edit-slot-button'} data-slot=""
-        data-empty={isEmpty(value) ? '' : undefined} data-hint={hint !== 'none' ? hint : undefined} disabled={disabled} {...glowProps}
-        aria-label={`${label}: ${valueText || showValue(value, emptyLabel)}. ${editLabel}`} aria-keyshortcuts={shortcut}
+        data-empty={isEmpty(shown) ? '' : undefined} data-hint={hint !== 'none' ? hint : undefined} disabled={disabled} aria-disabled={folded || undefined} {...glowProps}
+        aria-label={folded ? `${label}: ${valueText || showValue(shown, emptyLabel)}. Saving` : `${label}: ${valueText || showValue(value, emptyLabel)}. ${editLabel}`} aria-keyshortcuts={folded ? undefined : shortcut}
         onClick={(event) => begin(triggerMode === 'field' && typeof value === 'string' && !editor ? caretFrom(event, valueRef.current, value.length) : null)}>
-        <span ref={valueRef} className="alt-inline-edit-value">{display(value)}</span>
+        <span ref={valueRef} className="alt-inline-edit-value">{display(shown)}</span>
         {triggerMode === 'pencil' && <Icons.Pencil className="alt-inline-edit-pencil" size={15} />}
       </button>;
 
@@ -390,7 +424,9 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
           readOnly={locked} invalid={!!session.error} aria-required={required || undefined} aria-describedby={describedBy} trailing={icons}
           onChange={event => change(event.target.value as unknown as V)} />}</div>);
 
-  const actions = session ? inlineActions ? session.conflicted && !saving && <div className="alt-inline-edit-actions">
+  const actions = folded ? !ownButton && <div className="alt-inline-edit-actions">
+    <Button ref={trigger} type="button" variant="ghost" aria-disabled onClick={() => undefined}>{editLabel}</Button>
+  </div> : session ? inlineActions ? session.conflicted && !saving && <div className="alt-inline-edit-actions">
     <Button type="button" onClick={useCurrent}>Use current value</Button>
   </div> : <div className="alt-inline-edit-actions">
     {session.conflicted && !saving && <Button type="button" onClick={useCurrent}>Use current value</Button>}
@@ -402,14 +438,14 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   </div>;
 
   return <div ref={root} className={cx('alt-inline-edit', className)} role="group" aria-label={label}
-    data-state={session?.phase ?? 'read'} data-trigger={triggerMode} data-actions={inlineActions ? 'inline' : undefined} data-multiline={textarea ? '' : undefined} onKeyDown={session ? onKeyDown : undefined}
+    data-state={session?.phase ?? 'read'} data-folded={folded ? '' : undefined} data-trigger={triggerMode} data-actions={inlineActions ? 'inline' : undefined} data-multiline={textarea ? '' : undefined} onKeyDown={session ? onKeyDown : undefined}
     onBlur={session && leave === 'cancel' ? onLeaveFocus : undefined}>
     <Surface className="alt-inline-edit-surface" level={0} status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
-      <div className="alt-inline-edit-line">{session ? editSlot : readSlot}{actions}</div>
+      <div className="alt-inline-edit-line">{session && !folded ? editSlot : readSlot}{actions}</div>
       {session?.error && <p className="alt-field-error alt-inline-edit-note" id={errorId} role="alert" data-arrive=""><Icons.AlertCircle size={14} />{session.error}</p>}
       {session && !session.error && textarea && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">
         {keyboard ? <span className="alt-inline-edit-keys">{apple ? <Kbd aria-label="Command">⌘</Kbd> : <Kbd>Ctrl</Kbd>}+<Kbd>Enter</Kbd> to save</span> : 'Save to keep it'}</p>}
-      {session && !session.error && onChoose && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">Choose to save</p>}
+      {session && !folded && !session.error && onChoose && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">Choose to save</p>}
       {session?.conflicted && <p className="alt-inline-edit-current alt-inline-edit-note" data-arrive="">Current value: <span>{display(value)}</span></p>}
     </Surface>
     <span className="alt-sr" role="status" aria-live="polite" aria-atomic="true">{announcement}</span>
