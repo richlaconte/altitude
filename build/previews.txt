@@ -5911,8 +5911,8 @@ function InlineWaysToOpen() {
     <div className="inline-demo-props">
       <div className="inline-demo-prop"><span className="inline-demo-prop-label">Pencil on hover, with a seam</span>
         <A.InlineEdit label="Project name" trigger="pencil" hint="seam" value={values.project} onValueChange={set('project')} onSave={save} required /></div>
-      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, with a seam</span>
-        <A.InlineEdit label="Meeting title" trigger="field" hint="seam" value={values.meeting} onValueChange={set('meeting')} onSave={save} required /></div>
+      <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, with a seam; leaving cancels</span>
+        <A.InlineEdit label="Meeting title" trigger="field" hint="seam" leave="cancel" value={values.meeting} onValueChange={set('meeting')} onSave={save} required /></div>
       <div className="inline-demo-prop"><span className="inline-demo-prop-label">Field on hover, empty</span>
         <A.InlineEdit label="Owner" trigger="field" hint="seam" emptyLabel="Add an owner" value={values.owner} onValueChange={set('owner')} onSave={save} /></div>
     </div>
