@@ -43,7 +43,7 @@ A recoverable removal leaves its result where the slat was, as a [RemovalReceipt
 - **Slats** are the record: flush on the ground with `line` dividers, as Table rows, in a plain `ul`. Actions are visible ghost buttons, not hover-only.
 - **Editing**: one slat at a time lifts into its EditRegion, a static raised card holding the fields; its neighbours stay flush and readable. Opening another while one is open keeps the first and moves focus back to it.
 - **The add slat** is an opening: a dashed well (an `EmptyState`-style button) that deepens to a trench under the pointer or focus. Activating it rises into an empty editor in the same place; once added, the new slat settles with an afterglow and a fresh add slat is ready below.
-- **Reordering**: a slat picked up by its grip floats at level 3, tilted, shown where it will land; the slot it leaves opens as a well.
+- **Reordering**: a slat picked up by its grip floats at level 3, tilted, shown where it will land; the slot it leaves opens as a well. By keyboard: Space picks it up, ↑/↓ carry it, Space drops, Escape puts it back. By pointer (mouse, pen or touch): drag the grip; the slat follows the pointer while the others glide aside, a well opens where its middle would land, and letting go drops it through the same `onReorder`.
 - **Pending** removals and reorders hover at level 2 after `dur-grace`; known failures are a critical Alert, and the list is unchanged.
 - **Removed** (recoverable): once `onRemove` resolves, the slat's contents cross-fade (`dur-travel-2`) to its receipt in the same slot: a check, “<label> is removed.” in `ink-muted` on the ground, and Undo.
   - **The hold.** The receipt holds for `dur-linger`, pausing while it's pointed at or focused and waiting while a mouse is still over the list. Then it lifts off and the gap glides shut (`dur-travel-3`, `ease-glide`). Removals due within 250ms of each other close together.
@@ -72,7 +72,7 @@ Parts: `Item`, `ItemMedia` (`variant` icon, image or avatar), `ItemContent`, `It
 
 ## You provide
 
-The records, the writes and their concurrency guards, and the recovery policy and its inverse operation. Pointer reordering, multi-select and bulk actions aren't covered yet.
+The records, the writes and their concurrency guards, and the recovery policy and its inverse operation. Multi-select and bulk actions aren't covered yet.
 
 ## Do and don't
 
