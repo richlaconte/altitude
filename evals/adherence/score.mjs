@@ -11,6 +11,12 @@
 //   api.unknownProps     props passed to a component whose declared props don't have them (an invented prop)
 //   rules                findings from `altitude check`'s rules (scripts/source-check.mjs), by rule ID
 //   colourLiterals       ALT-TOKEN-001 findings: comparable across conditions, since it applies to any app
+//   used                 distinct Altitude exports used (imported, or A.Name) and Altitude elements rendered: the
+//                        denominator, so a build that avoids the API can't look adherent (#419)
+//   rates                unknown exports and props per 100 Altitude identifiers used
+//   handRolled           raw <button>, <input>, <select>, <textarea>, <table>, <dialog> and role="dialog" in an app that
+//                        imports altitude-design: the opposite failure, avoidance
+//   probes               real props used wrongly, each a test seeded from a bug we've seen (PROBES below)
 // Both API counts come from TypeScript against the package's sources (what npm consumers get), in non-strict mode;
 // modules other than altitude-design that a build imports are stubbed, so only Altitude's API is judged.
 // Render-based measures (what text sits on which tier, contrast) are the distinctiveness benchmark's
@@ -60,15 +66,79 @@ function api(src) {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
+const sources = (src) => walk(src).filter((f) => /\.(jsx?|tsx?|html)$/.test(f)).map((f) => ({ file: relative(src, f), text: readFileSync(f, 'utf8') }));
+
+/** Which Altitude exports a build uses, and how many Altitude elements it renders. */
+export function used(files) {
+  const names = new Set(), namespaces = new Set();
+  for (const { text } of files) {
+    for (const m of text.matchAll(/import\s*(?:type\s*)?\{([^}]*)\}\s*from\s*['"]altitude-design['"]/g))
+      for (const part of m[1].split(',')) { const n = part.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0].trim(); if (n) names.add(n); }
+    for (const m of text.matchAll(/import\s*\*\s*as\s+(\w+)\s*from\s*['"]altitude-design['"]/g)) namespaces.add(m[1]);
+  }
+  for (const { text } of files) for (const ns of namespaces) for (const m of text.matchAll(new RegExp(`\\b${ns}\\.([A-Za-z]\\w*)`, 'g'))) names.add(m[1]);
+  const components = [...names].filter((n) => /^[A-Z]/.test(n));
+  let elements = 0;
+  for (const { text } of files) {
+    for (const c of components) elements += (text.match(new RegExp(`<${c}\\b`, 'g')) ?? []).length;
+    for (const ns of namespaces) elements += (text.match(new RegExp(`<${ns}\\.[A-Z]\\w*\\b`, 'g')) ?? []).length;
+  }
+  return { identifiers: names.size, elements, names: [...names].sort() };
+}
+
+/** Raw controls an Altitude app built by hand: avoidance looks like adherence unless it's counted. */
+export function handRolled(files) {
+  const out = {};
+  for (const { text } of files) {
+    for (const m of text.matchAll(/<(button|input|select|textarea|table|dialog)\b/g)) out[m[1]] = (out[m[1]] ?? 0) + 1;
+    const dialogs = (text.match(/role=["'{]+dialog/g) ?? []).length;
+    if (dialogs) out['role="dialog"'] = (out['role="dialog"'] ?? 0) + dialogs;
+  }
+  return { total: Object.values(out).reduce((n, v) => n + v, 0), byElement: out };
+}
+
+/** The opening tag of each <Name …> in a text, up to its end (props may hold arrows, so a plain [^>]* won't do). */
+function tags(text, name) {
+  const out = [];
+  for (const m of text.matchAll(new RegExp(`<${name}\\b`, 'g'))) {
+    let depth = 0, i = m.index + m[0].length;
+    for (; i < text.length; i++) { const c = text[i]; if (c === '{') depth++; else if (c === '}') depth--; else if (c === '>' && depth === 0) break; }
+    out.push(text.slice(m.index, i + 1));
+  }
+  return out;
+}
+
+/**
+ * Contract probes: a real prop used wrongly, which TypeScript accepts. Each is seeded from a bug we've actually seen,
+ * with a passing and a failing fixture in score.test.mjs. Add one each time a bug like it is found.
+ */
+export const PROBES = [
+  {
+    id: 'meter-format-words', issue: '#447',
+    says: 'Meter format formats the number; words after it repeat the label or the reading ("12 of 40 seats used").',
+    test: (text) => tags(text, 'Meter').filter((t) => /format=\{\s*\(?\s*\w+\s*\)?\s*=>\s*`[^`]*\$\{[^}]+\}[^`]*?\s[a-zA-Z]{3,}[^`]*`/.test(t) || /format=\{\s*\(?\s*\w+\s*\)?\s*=>\s*\w+\s*\+\s*['"]\s+[a-zA-Z]{3,}/.test(t)).length,
+  },
+];
+
 export function score(build) {
   const src = existsSync(join(build, 'src')) ? join(build, 'src') : build;
   const run = existsSync(join(build, 'run.json')) ? JSON.parse(readFileSync(join(build, 'run.json'), 'utf8')) : {};
   const { files, findings } = scan(src, { tokenNames });
   const rules = Object.fromEntries(Object.keys(RULES).map((id) => [id, findings.filter((f) => f.ruleId === id && (id !== 'ALT-SETUP-003' || f.kind === 'deterministic')).length]));
   const usesAltitude = walk(src).some((f) => /\.[jt]sx?$/.test(f) && /from\s+['"]altitude-design['"]/.test(readFileSync(f, 'utf8')));
+  const text = sources(src);
+  const apiScore = usesAltitude ? api(src) : null;
+  const use = usesAltitude ? used(text) : null;
+  const per100 = (n) => (use && use.identifiers ? Math.round((n / use.identifiers) * 10000) / 100 : null);
   return {
     build: basename(build), condition: run.condition || null, brief: run.brief || null, files, usesAltitude,
-    api: usesAltitude ? api(src) : null,
+    api: apiScore,
+    used: use,
+    rates: apiScore && use ? { unknownExportsPer100: per100(apiScore.unknownExports), unknownPropsPer100: per100(apiScore.unknownProps) } : null,
+    handRolled: usesAltitude ? handRolled(text) : null,
+    probes: Object.fromEntries(PROBES.map((p) => [p.id, text.reduce((n, f) => n + p.test(f.text), 0)])),
+    cost: run.usage ? { usd: run.usage.costUSD ?? null, turns: run.usage.turns ?? run.usage.numTurns ?? null, ms: run.elapsedMs ?? null } : null,
+    buildResult: run.build ?? null,
     rules, colourLiterals: rules['ALT-TOKEN-001'],
     errors: findings.filter((f) => f.kind === 'deterministic').length,
     reviews: findings.filter((f) => f.kind !== 'deterministic').length,
@@ -81,5 +151,5 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (!builds.length) { console.error('usage: node evals/adherence/score.mjs <build>... [--json]'); process.exit(2); }
   const scores = builds.map((b) => score(resolve(b)));
   if (process.argv.includes('--json')) console.log(JSON.stringify(scores, null, 2));
-  else for (const s of scores) console.log(`${s.build}: ${s.files} files; unknown exports ${s.api?.unknownExports ?? '–'}, unknown props ${s.api?.unknownProps ?? '–'}, colour literals ${s.colourLiterals}, errors ${s.errors}, reviews ${s.reviews}`);
+  else for (const s of scores) console.log(`${s.build}: ${s.files} files; Altitude identifiers ${s.used?.identifiers ?? '–'}, elements ${s.used?.elements ?? '–'}; unknown exports ${s.api?.unknownExports ?? '–'} (${s.rates?.unknownExportsPer100 ?? '–'}/100), unknown props ${s.api?.unknownProps ?? '–'} (${s.rates?.unknownPropsPer100 ?? '–'}/100); hand-rolled ${s.handRolled?.total ?? '–'}; probes ${Object.entries(s.probes).map(([k, v]) => `${k} ${v}`).join(', ')}; colour literals ${s.colourLiterals}, errors ${s.errors}, reviews ${s.reviews}`);
 }
