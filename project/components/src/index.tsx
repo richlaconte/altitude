@@ -50,6 +50,8 @@ export { Artifact, ArtifactHeader, ArtifactVersions, ArtifactContent, ArtifactRe
 export type { ArtifactProps, ArtifactHeaderProps, ArtifactVersionsProps, ArtifactContentProps, ArtifactReferenceProps, ArtifactStatus } from './artifact';
 export { ThreadList, ThreadListGroup, ThreadListItem, ThreadListNew, groupByDate } from './thread-list';
 export { InboxList, InboxItem } from './inbox-list';
+export { SpanWaterfall, criticalPathOf, formatMs } from './span-waterfall';
+export type { Span, SpanWaterfallProps } from './span-waterfall';
 export type { InboxListProps, InboxItemProps, InboxListHandle } from './inbox-list';
 export type { ThreadListProps, ThreadListItemProps, ThreadListGroupProps, ThreadStatus } from './thread-list';
 export { AgentFleet, AgentFleetGroup, AgentFleetItem, AgentRequests, AgentRequest, AgentLanes, summarizeFleet, groupAgents, needsYou, formatSpan } from './agent-fleet';

@@ -1,16 +1,23 @@
 // One service, drilled into from its row or from a deploy on the lead chart (#406): a Sheet, so the report stays where
 // it was. Its status and error budget, saturation (the fourth golden signal), its deploys, where the slowest request
 // spent its time, and a log excerpt.
-// The slowest request's spans are ranked as a BarList, which is a ranked top-N of amounts. They aren't a waterfall:
-// a waterfall shows when each span ran and which waited on which, and Altitude doesn’t draw one yet (#466).
+// The slowest request's spans are a SpanWaterfall (#466): when each ran, for how long, which waited on which, with the
+// critical path in focus. Its summary is written from the spans, as a takeaway would be.
 // The log is a CodeBlock, a fixed excerpt of the record; a live tail would be a Terminal with Stop.
 import * as React from 'react';
 import {
-  Alert, Badge, BarList, Button, CodeBlock, Meter, Sheet, SheetDescription, SheetHeader, SheetTitle, Timeline, TimelineItem,
+  Alert, Badge, Button, CodeBlock, Meter, SpanWaterfall, formatMs, Sheet, SheetDescription, SheetHeader, SheetTitle, Timeline, TimelineItem,
 } from 'altitude-design';
 import { errorMessage, useDemoQuery } from '../shared/react';
 import { formatRate, HEALTH, hhmm, service, serviceName } from './data';
 import type { DetailAnswer, Reading, Store } from './data';
+
+/** Written from the spans: how long, and which child of the request took most of it. */
+const spanSummary = (spans: DetailAnswer['spans'], total: number) => {
+  const top = spans.filter((x) => x.parent === 'root').sort((a, b) => b.duration - a.duration)[0];
+  const failed = spans.filter((x) => x.status === 'failed').length;
+  return `${formatMs(total)} in all${top ? `; ${top.name} took ${Math.round((top.duration / Math.max(1, total)) * 100)}% of it` : ''}${failed ? `, with ${failed} failed ${failed === 1 ? 'span' : 'spans'}` : ''}.`;
+};
 
 /** A service's status: a word and an icon. No data is a neutral plate with no lamp, never positive. */
 export function StatusBadge({ reading }: { reading: Reading }) {
@@ -54,8 +61,7 @@ function DetailBody({ id }: { id: string }) {
 
       <section aria-labelledby="sh-spans">
         <h3 id="sh-spans" className="sh-h3">Where the slowest request spent its time</h3>
-        <p className="sh-caption">{`${ms(d.slowest)} in all, ranked by span. Spans can overlap, so this isn't a timeline of the request.`}</p>
-        <BarList aria-labelledby="sh-spans" data={d.spans} format={ms} sort="desc" noun="spans" />
+        <SpanWaterfall aria-labelledby="sh-spans" spans={d.spans} criticalPath summary={spanSummary(d.spans, d.slowest)} />
       </section>
 
       <section aria-labelledby="sh-deploys">

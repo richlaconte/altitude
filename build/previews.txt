@@ -1715,6 +1715,36 @@ function App() {
   );
 }
 
+=== SpanWaterfall | <!-- @dsCard group="Charts" height=640 subtitle="Where one request spent its time: flat bars on one clock from 0, nested under their callers, the critical path in focus" -->
+--- css
+.sw { max-width: 860px; display: grid; gap: 12px; }
+.sw-detail { display: grid; gap: 4px; margin: 0; font: 400 13px/18px var(--font-sans); }
+.sw-detail dt { color: var(--ink-muted); } .sw-detail dd { margin: 0 0 4px; font-family: var(--font-mono); }
+--- jsx
+const SW_SPANS = [
+  { id: "root", name: "POST /checkout/confirm", start: 0, duration: 2410 },
+  { id: "auth", parent: "root", name: "auth.session", start: 2, duration: 9 },
+  { id: "db", parent: "root", name: "db: load basket", start: 12, duration: 84 },
+  { id: "inv", parent: "root", name: "inventory.reserve", start: 14, duration: 61 },
+  { id: "pay", parent: "root", name: "payments.authorise", start: 98, duration: 2290, status: "failed" },
+  { id: "a1", parent: "pay", name: "attempt 1", start: 100, duration: 800, status: "failed" },
+  { id: "a2", parent: "pay", name: "attempt 2", start: 920, duration: 800, status: "failed" },
+  { id: "a3", parent: "pay", name: "attempt 3", start: 1740, duration: 640 },
+  { id: "card", parent: "a3", name: "card-network.charge", start: 1760, duration: 590 },
+  { id: "render", parent: "root", name: "render confirmation", start: 2388, duration: 20 }
+];
+const SW_ATTRS = { pay: [["http.status", "409"], ["error", "duplicate idempotency key"], ["retries", "2"]], a1: [["error", "timeout after 800 ms"]], a2: [["error", "timeout after 800 ms"]] };
+function App() {
+  const [path, setPath] = React.useState(true);
+  return <div className="sw">
+    <A.Switch label="Highlight the critical path" checked={path} onCheckedChange={setPath} />
+    <A.SpanWaterfall aria-label="Spans of the slowest checkout request" spans={SW_SPANS} criticalPath={path}
+      summary="2.41 s in all; payments.authorise took 95% of it, two of its three attempts timing out."
+      renderDetail={(s) => <dl className="sw-detail">{(SW_ATTRS[s.id] ?? [["span.id", s.id]]).map(([k, v]) => <React.Fragment key={k}><dt>{k}</dt><dd>{v}</dd></React.Fragment>)}</dl>} />
+    <p className="cap">↑ and ↓ move between spans, → and ← open and close a caller, Enter opens a span’s attributes.</p>
+  </div>;
+}
+
 === BarList | <!-- @dsCard group="Charts" height=640 subtitle="A ranked list whose rows are their own bars; only rows that act lift" -->
 --- css
 .bl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 960px; }

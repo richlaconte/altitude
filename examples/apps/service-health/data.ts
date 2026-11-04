@@ -5,6 +5,7 @@
 // tell the truth. "Skip ahead a minute" in the drawer moves the simulated clock ahead of the real one.
 import { createDemoService, reject } from '../shared/react';
 import type { ExternalEvent } from '../shared/react';
+import type { Span } from 'altitude-design';
 
 // ---- Services and time -------------------------------------------------------------------------------------------
 
@@ -221,7 +222,8 @@ export interface ServicesAnswer { asOf: number; rows: ServiceRow[]; traffic: Arr
 export interface EndpointsAnswer { asOf: number; items: Array<{ name: string; value: number }> }
 export interface DetailAnswer {
   asOf: number; service: ServiceInfo; reading: Reading; saturation: number; deploys: Deploy[];
-  spans: Array<{ name: string; value: number }>; slowest: number; log: string;
+  /** The slowest request's spans, in ms from its start. */
+  spans: Span[]; slowest: number; log: string;
 }
 
 const ENDPOINTS: Record<string, Array<[string, number]>> = {
@@ -312,10 +314,19 @@ export const service = createDemoService<Store>({
         if (!info) reject('not-found', 'There’s no such service.');
         const i = SERVICES.indexOf(info!);
         const bad = s.scenario === 'bad-deploy' && s.minute > DEPLOY_MINUTE && info!.id === 'checkout';
-        const spans: Array<[string, number]> = bad
-          ? [['payments.authorise (3 attempts)', 2310], ['db: load basket', 84], ['inventory.reserve', 61], ['render confirmation', 22]]
-          : [['payments.authorise', 410], ['db: load basket', 78], ['inventory.reserve', 58], ['render confirmation', 20]];
-        const own: Array<[string, number]> = info!.id === 'checkout' ? spans : [[`${info!.id}: handler`, Math.round(info!.p50 * 3.1)], ['db: query', Math.round(info!.p50 * 1.2)], ['cache: lookup', 9]];
+        // The slowest request's spans, on one clock from its start: retries in sequence under their caller.
+        const checkout: Span[] = bad
+          ? [{ id: 'root', name: 'POST /checkout/confirm', start: 0, duration: 2410 }, { id: 'db', parent: 'root', name: 'db: load basket', start: 12, duration: 84 },
+            { id: 'inv', parent: 'root', name: 'inventory.reserve', start: 14, duration: 61 }, { id: 'pay', parent: 'root', name: 'payments.authorise', start: 98, duration: 2290, status: 'failed' },
+            { id: 'a1', parent: 'pay', name: 'attempt 1', start: 100, duration: 800, status: 'failed' }, { id: 'a2', parent: 'pay', name: 'attempt 2', start: 920, duration: 800, status: 'failed' },
+            { id: 'a3', parent: 'pay', name: 'attempt 3', start: 1740, duration: 640 }, { id: 'render', parent: 'root', name: 'render confirmation', start: 2388, duration: 22 }]
+          : [{ id: 'root', name: 'POST /checkout/confirm', start: 0, duration: 548 }, { id: 'db', parent: 'root', name: 'db: load basket', start: 10, duration: 78 },
+            { id: 'inv', parent: 'root', name: 'inventory.reserve', start: 12, duration: 58 }, { id: 'pay', parent: 'root', name: 'payments.authorise', start: 92, duration: 410 },
+            { id: 'render', parent: 'root', name: 'render confirmation', start: 520, duration: 20 }];
+        const h = Math.round(info!.p50 * 3.1), q = Math.round(info!.p50 * 1.2);
+        const own: Span[] = info!.id === 'checkout' ? checkout
+          : [{ id: 'root', name: `${info!.id}: handler`, start: 0, duration: h + 4 }, { id: 'cache', parent: 'root', name: 'cache: lookup', start: 2, duration: 9 },
+            { id: 'db', parent: 'root', name: 'db: query', start: 12, duration: q }];
         const t = new Date(s.anchor).toISOString().slice(11, 16); // logs are UTC, and say so with Z
         const log = bad
           ? `${t}:58Z WARN  checkout  payments.authorise timed out after 800ms (attempt 1 of 3)\n${t}:59Z WARN  checkout  payments.authorise timed out after 800ms (attempt 2 of 3)\n${t}:59Z ERROR checkout  payments.authorise: 409 duplicate idempotency key\n${t}:59Z ERROR checkout  POST /checkout/confirm 502 in 2.4s`
@@ -323,7 +334,7 @@ export const service = createDemoService<Store>({
         return {
           asOf: s.anchor, service: info!, reading: readService(info!.id, s),
           saturation: bad ? 0.86 : 0.38 + 0.05 * i, deploys: s.deploys.filter((d) => d.service === info!.id).sort((a, b) => b.minute - a.minute).map((d) => deployOut(s, d)),
-          spans: own.map(([name, value]) => ({ name, value })), slowest: own.reduce((n, [, v]) => n + v, 0), log,
+          spans: own, slowest: Math.max(...own.map((x) => x.start + x.duration)), log,
         };
       },
     },

@@ -141,7 +141,7 @@ for (const [name, opts] of [['forced colours', { forced: true }], ['reduced moti
   let sheet = await page.locator('[role="dialog"]').textContent();
   expect(/Checkout/.test(sheet) && /Where the slowest request spent its time/.test(sheet) && /Ana Ruiz deployed 4f2c: Retry payment authorisation on timeout/.test(sheet) && /duplicate idempotency key/.test(sheet),
     'the deploy annotation opens Checkout: its spans, its deploy and its log');
-  expect(/isn't a timeline of the request/.test(sheet), 'the spans say they aren’t a waterfall');
+  expect(/payments\.authorise took 95% of it, with 3 failed spans/.test(sheet) && await page.locator('[role="dialog"] [role="treegrid"] [data-span]').count() >= 5, 'the slowest request is a span waterfall with its summary');
   let found = await axe(page, '[role="dialog"]');
   expect(!found.length, `axe is clean on the service detail (${found.join(', ')})`);
   await page.keyboard.press('Escape'); await wait(page, 500);

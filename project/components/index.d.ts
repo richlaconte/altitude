@@ -3678,6 +3678,49 @@ export declare function InboxList<T>(props: InboxListProps<T> & { ref?: React.Re
 /** One row of an InboxList: fixed slots, so every row is named in the same order. */
 export declare function InboxItem(props: InboxItemProps): React.ReactElement;
 
+export interface Span {
+  id: string;
+  /** The span that called it. Omit for the root. */
+  parent?: string;
+  name: string;
+  /** Milliseconds from the request's start (the root's start is 0). */
+  start: number;
+  /** Milliseconds it ran. */
+  duration: number;
+  /** failed: a hatch, a status icon and "Failed" in words; its colour stays what focus gives it. */
+  status?: 'ok' | 'failed';
+}
+export interface SpanWaterfallProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
+  spans: Span[];
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  /** Milliseconds → words, for the columns, the axis and the names. Default formatMs: "84 ms" under a second, "2.41 s" from a second up. */
+  format?: (ms: number) => string;
+  /** Your summary, written from the data. Default: a factual one ("14 spans over 2.41 s. Longest: payments.authorise, 2.31 s (96%). 1 failed."), not a takeaway. */
+  summary?: React.ReactNode;
+  /** Highlight the critical path, the spans the request waited on (colour's one job is then focus): true computes it (criticalPathOf), or pass its span ids. Off by default. */
+  criticalPath?: boolean | string[];
+  /** A span's detail (its attributes: a PropertyList, a CodeBlock), opened flush beneath its row by Enter. */
+  renderDetail?: (span: Span) => React.ReactNode;
+  /** Expanded callers, by id. Controlled with onExpandedChange; uncontrolled from defaultExpandedDepth. */
+  expanded?: string[];
+  onExpandedChange?: (ids: string[]) => void;
+  /** Callers shallower than this start expanded. Default 2. */
+  defaultExpandedDepth?: number;
+  selected?: string | null;
+  onSelectedChange?: (id: string) => void;
+}
+/**
+ * Where one request spent its time (#466): each span a flat bar at when it started, as long as it ran, on one clock from
+ * 0, indented under its caller. A treegrid (the table view is the chart): ↑/↓ move, →/← expand, collapse or move to the
+ * child or parent, Enter opens the detail flush beneath, Space selects. Selected rows rise like Table's; bars never lift.
+ */
+export declare function SpanWaterfall(props: SpanWaterfallProps): React.ReactElement;
+/** The critical path: from the root's end, walk back through the child that ends last before that point (recursively), then on from its start, as trace viewers such as Jaeger do. */
+export declare function criticalPathOf(spans: Span[]): string[];
+/** "84 ms" under a second, "2.41 s" from a second up. */
+export declare function formatMs(ms: number): string;
+
 export type AgentState = 'queued' | 'working' | 'needs-input' | 'blocked' | 'stalled' | 'failed' | 'done' | 'stopped';
 export type AgentNeeds = 'approval' | 'question' | 'review';
 export interface AgentFleetProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -3951,7 +3994,7 @@ declare global {
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
       Artifact: typeof Artifact; ArtifactHeader: typeof ArtifactHeader; ArtifactVersions: typeof ArtifactVersions; ArtifactContent: typeof ArtifactContent; ArtifactReference: typeof ArtifactReference;
-      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem;
+      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem; SpanWaterfall: typeof SpanWaterfall; criticalPathOf: typeof criticalPathOf; formatMs: typeof formatMs;
       AgentFleet: typeof AgentFleet; AgentFleetGroup: typeof AgentFleetGroup; AgentFleetItem: typeof AgentFleetItem; AgentRequests: typeof AgentRequests; AgentRequest: typeof AgentRequest; AgentLanes: typeof AgentLanes; summarizeFleet: typeof summarizeFleet; groupAgents: typeof groupAgents; needsYou: typeof needsYou; formatSpan: typeof formatSpan;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
