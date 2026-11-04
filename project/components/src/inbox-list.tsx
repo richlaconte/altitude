@@ -113,17 +113,24 @@ function InboxListInner<T>({ items, getKey, renderItem, selected: selectedProp, 
   const [said, setSaid] = React.useState('');
   // Nothing moves under you: the row under the pointer, or the focused one, keeps its place on screen.
   const hovered = React.useRef<string | null>(null);
-  const tops = React.useRef(new Map<string, number>());
   const anchorKey = () => {
     const active = document.activeElement as HTMLElement | null;
     const focused = active && box.current?.contains(active) ? active.closest<HTMLElement>('[data-inbox-key]')?.dataset.inboxKey : undefined;
     return focused ?? hovered.current;
   };
+  // Where the anchor row is on screen before this render commits: read during render, while the DOM is still the old one.
+  const before = React.useRef<{ key: string; top: number } | null>(null);
+  if (typeof document !== 'undefined' && box.current) {
+    const k = anchorKey(), el = k ? optionEl(k) : null;
+    before.current = k && el ? { key: k, top: el.getBoundingClientRect().top } : null;
+  }
   useIsoLayoutEffect(() => {
-    // Keep the anchor row (focused, else under the pointer) where it was at the last render.
-    const k = anchorKey(), was = k ? tops.current.get(k) : undefined, el = k ? optionEl(k) : null;
-    if (el && was !== undefined) { const shift = el.offsetTop - was; if (shift) scrollerOf(el).scrollTop += shift; }
-    tops.current = new Map(Array.from(box.current?.querySelectorAll<HTMLElement>('[data-inbox-key]') ?? []).map((r) => [r.dataset.inboxKey!, r.offsetTop]));
+    // Keep the anchor row (focused, else under the pointer) where it was on screen before this update. Measured on screen,
+    // after layout, so whatever the browser's own scroll anchoring already did (on the page, which overflow-anchor on the
+    // list can't switch off) is counted once, not added to (#478).
+    const a = before.current, el = a ? optionEl(a.key) : null;
+    if (a && el) { const moved = el.getBoundingClientRect().top - a.top; if (Math.abs(moved) >= 1) scrollerOf(el).scrollTop += moved; }
+    before.current = null;
 
     const now = new Set(keys);
     if (seen.current === null) { seen.current = now; return; }

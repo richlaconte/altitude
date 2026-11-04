@@ -72,6 +72,17 @@ try {
     await page.waitForFunction(() => document.querySelectorAll('[role="option"]').length === 8);
     { const ha = await top(page, 'Invoice for March'); check(Math.abs(ha - hb) <= 1, `${scheme}: an arrival doesn't move the row under the pointer (${hb} → ${ha})`); }
 
+    // When the page is what scrolls (#478): the browser's own anchoring and the list's must not add up.
+    await page.addStyleTag({ content: '.ibx { height: auto !important; } .ibx-list { overflow: visible !important; } body { min-height: 2400px; }' });
+    await page.evaluate(() => window.scrollTo(0, 200)); await page.waitForTimeout(100);
+    await page.locator('[role="option"]', { hasText: 'Wrong size sent' }).focus();
+    await page.evaluate(() => { const o = [...document.querySelectorAll('[role="option"]')].find((x) => x.textContent.includes('Wrong size sent')); window.scrollBy(0, o.getBoundingClientRect().top - 300); });
+    const pb = await top(page, 'Wrong size sent');
+    await deliver(page);
+    await page.waitForFunction(() => document.querySelectorAll('[role="option"]').length === 9);
+    const pa = await top(page, 'Wrong size sent');
+    check(await focusedTitle(page) === 'Wrong size sent' && Math.abs(pa - pb) <= 1, `${scheme}: with the page scrolling, an arrival leaves the focused row in place (${pb} → ${pa})`);
+
     // Forced colours: the open row has a border.
     await page.emulateMedia({ forcedColors: 'active' });
     const border = await page.locator('[role="option"][aria-selected="true"]').evaluate((el) => getComputedStyle(el).borderTopStyle);
