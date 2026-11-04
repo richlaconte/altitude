@@ -24,6 +24,11 @@ import { App as DocsEditorApp, events as docsEvents, service as docsService } fr
 import docsMeta from '../../examples/apps/docs-editor/app.json';
 import '../../examples/apps/docs-editor/app.css';
 
+import { App as ExpenseApp, events as expenseEvents, service as expenseService } from '../../examples/apps/expense-reports/app';
+import { Controls as ExpenseControls } from '../../examples/apps/expense-reports/controls';
+import expenseMeta from '../../examples/apps/expense-reports/app.json';
+import '../../examples/apps/expense-reports/app.css';
+
 import { App as HelloApp, events as helloEvents, service as helloService } from '../../examples/apps/hello/app';
 import helloMeta from '../../examples/apps/hello/app.json';
 import '../../examples/apps/hello/app.css';
@@ -56,4 +61,5 @@ export const Booking = story('Booking', bookingMeta, () => <ExampleContent servi
 export const PlanningBoard = story('Planning board', boardMeta, () => <ExampleContent service={boardService} events={boardEvents}><PlanningBoardApp /></ExampleContent>);
 export const ServiceHealth = story('Service health', healthMeta, () => { healthLive.start(); return <ExampleContent service={healthService} events={healthEvents} controls={<HealthControls />}><ServiceHealthApp /></ExampleContent>; });
 export const DocsEditor = story('Docs editor', docsMeta, () => <ExampleContent service={docsService} events={docsEvents} session><DocsEditorApp /></ExampleContent>);
+export const ExpenseReports = story('Expense reports', expenseMeta, () => <ExampleContent service={expenseService} events={expenseEvents} controls={<ExpenseControls />}><ExpenseApp /></ExampleContent>);
 export const Hello = story('Hello (starter)', helloMeta, () => <ExampleContent service={helloService} events={helloEvents}><HelloApp /></ExampleContent>);

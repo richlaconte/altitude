@@ -1,0 +1,22 @@
+/* Expense reports (#407). The employee's records frame (the grid, with its totals beside it) and the manager's
+   decision frame (the choice and its consequence first, the evidence after). Tokens only. */
+.er { max-width: 1180px; margin: 0 auto; padding: var(--space-8) var(--space-4); display: grid; gap: var(--space-5); }
+.er-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 280px); gap: var(--space-6); align-items: start; }
+@media (max-width: 960px) { .er-layout { grid-template-columns: minmax(0, 1fr); } }
+.er-grid, .er-side, .er-step, .er-evidence { display: grid; gap: var(--space-3); min-width: 0; }
+.er-h2 { margin: 0; font: 600 17px/24px var(--font-sans); color: var(--ink); border-radius: var(--radius-sm); }
+.er-h2:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.er-hint, .er-note { margin: 0; color: var(--ink-muted); font: 400 13px/18px var(--font-sans); }
+.er-note strong { color: var(--ink); font-weight: 600; }
+.er-lead { margin: 0; font: 400 16px/24px var(--font-sans); color: var(--ink); }
+.er-receipt { font: 400 13px/18px var(--font-sans); color: var(--ink); overflow-wrap: anywhere; }
+.er-map { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); }
+.er-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.er-sheet { display: grid; gap: var(--space-3); padding: 0 var(--space-5) var(--space-5); }
+.er-choice { display: grid; gap: var(--space-3); max-width: 680px; outline: none; border-radius: var(--radius-md); }
+.er-choice:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 4px; }
+.er-consequence { margin: 0; font: 400 16px/24px var(--font-sans); color: var(--ink); }
+.er-stamp { margin: 0; font: 600 14px/20px var(--font-sans); color: var(--ink); }
+.er-evidence { padding-top: var(--space-3); border-top: 1px solid var(--line); }
+.er-evidence .alt-table-wrap { overflow-x: auto; }
+.er-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
