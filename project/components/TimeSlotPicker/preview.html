@@ -1,0 +1,60 @@
+<!-- @dsCard group="Inputs" height=560 subtitle="One open time from a day's slots: free times are openings, the chosen one is filled, booked ones lie flush" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TimeSlotPicker — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.tsp { max-width: 560px; }
+.tsp-actions { display: flex; gap: var(--space-2); align-items: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const TSP_TAKEN = ["09:00", "10:30", "13:30", "14:00", "16:00"];
+const TSP_SLOTS = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"].map((time) => ({ time, booked: TSP_TAKEN.includes(time) }));
+function App() {
+  const [time, setTime] = React.useState("");
+  const [error, setError] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [booked, setBooked] = React.useState("");
+  const reload = () => {
+    setLoading(true);
+    setTimeout(() => setLoading(false), 900);
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "col tsp" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Times on Tuesday 10 November", error }, /* @__PURE__ */ React.createElement(A.TimeSlotPicker, { value: time, onValueChange: (t) => {
+    setTime(t);
+    setError("");
+  }, locale: "en-US", loading }, TSP_SLOTS.map((s) => /* @__PURE__ */ React.createElement(A.TimeSlot, { key: s.time, value: s.time, booked: s.booked })))), /* @__PURE__ */ React.createElement("div", { className: "tsp-actions" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "primary", onClick: () => {
+    if (!time) {
+      setError("Choose a time.");
+      return;
+    }
+    setBooked(time);
+  } }, "Hold this time"), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", onClick: reload }, "Reload the day")), /* @__PURE__ */ React.createElement("p", { className: "cap" }, booked ? `Holding ${booked}. ` : "", "Tab to the times, then arrows move between free ones (\u2191 and \u2193 by row) and Space or Enter chooses. Booked times are struck through and skipped. Hold without choosing to see the error."));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

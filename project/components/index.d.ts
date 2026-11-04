@@ -439,6 +439,38 @@ export interface RadioGroupProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   id?: string;
 }
 export declare function RadioGroup(props: RadioGroupProps): React.ReactElement;
+
+export interface TimeSlotPickerProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'> {
+  /** The chosen time, as a TimeSlot's value ("09:30"). '' for none. */
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  /** Formats each slot's time ("9:30 AM", "09:30"). Default: the browser's. */
+  locale?: string;
+  /** Set by Field when there's an error: the free slots take the critical tint and rim. */
+  invalid?: boolean;
+  required?: boolean;
+  disabled?: boolean;
+  /** The day's slots are loading: imprints at slot size, and aria-busy. */
+  loading?: boolean;
+  /** How many imprints while loading. Default 12. */
+  loadingCount?: number;
+  /** TimeSlot items, in time order. */
+  children?: React.ReactNode;
+}
+export interface TimeSlotProps {
+  /** The time, "HH:MM" on a 24-hour clock. It's the value and, formatted for `locale`, the label. */
+  value: string;
+  /** Taken: lies flush, struck through, says "Booked", and can't be chosen. */
+  booked?: boolean;
+  /** The label as given instead of the formatted time. */
+  label?: React.ReactNode;
+  className?: string;
+}
+/** One open time from a day's slots: free times are wells, the chosen one is filled with a raised check, booked ones lie flush. Arrows move between free times (↑/↓ by row), Space chooses, Enter submits the form it's in. */
+export declare function TimeSlotPicker(props: TimeSlotPickerProps): React.ReactElement;
+/** One time in a TimeSlotPicker. */
+export declare function TimeSlot(props: TimeSlotProps): React.ReactElement;
 export interface RadioProps { value: string; label?: React.ReactNode; description?: React.ReactNode; disabled?: boolean; className?: string }
 export declare function Radio(props: RadioProps): React.ReactElement;
 
@@ -3995,7 +4027,7 @@ declare global {
     Altitude: {
       AltitudeProvider: typeof AltitudeProvider; useAltitude: typeof useAltitude; Icons: typeof Icons; Surface: typeof Surface; Button: typeof Button;
       Card: typeof Card; CardHeader: typeof CardHeader; CardTitle: typeof CardTitle; CardDescription: typeof CardDescription; CardContent: typeof CardContent; CardFooter: typeof CardFooter;
-      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; ItemGroup: typeof ItemGroup; RemovalReceipt: typeof RemovalReceipt; Item: typeof Item; ItemMedia: typeof ItemMedia; ItemContent: typeof ItemContent; ItemTitle: typeof ItemTitle; ItemDescription: typeof ItemDescription; ItemActions: typeof ItemActions; ItemSeparator: typeof ItemSeparator; PropertyList: typeof PropertyList; PropertyListItem: typeof PropertyListItem; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; Switch: typeof Switch;
+      Input: typeof Input; InlineEdit: typeof InlineEdit; EditRegion: typeof EditRegion; EditRegionView: typeof EditRegionView; EditRegionForm: typeof EditRegionForm; EditRegionTrigger: typeof EditRegionTrigger; EditRegionActions: typeof EditRegionActions; ItemGroup: typeof ItemGroup; RemovalReceipt: typeof RemovalReceipt; Item: typeof Item; ItemMedia: typeof ItemMedia; ItemContent: typeof ItemContent; ItemTitle: typeof ItemTitle; ItemDescription: typeof ItemDescription; ItemActions: typeof ItemActions; ItemSeparator: typeof ItemSeparator; PropertyList: typeof PropertyList; PropertyListItem: typeof PropertyListItem; Textarea: typeof Textarea; Field: typeof Field; Checkbox: typeof Checkbox; RadioGroup: typeof RadioGroup; Radio: typeof Radio; TimeSlotPicker: typeof TimeSlotPicker; TimeSlot: typeof TimeSlot; Switch: typeof Switch;
       Tabs: typeof Tabs; TabsList: typeof TabsList; TabsTrigger: typeof TabsTrigger; TabsContent: typeof TabsContent;
       Slider: typeof Slider; Progress: typeof Progress; Badge: typeof Badge; Avatar: typeof Avatar; AvatarGroup: typeof AvatarGroup;
       Skeleton: typeof Skeleton; Alert: typeof Alert; AlertStack: typeof AlertStack; Accordion: typeof Accordion; Kbd: typeof Kbd; useKeyboardLikely: typeof useKeyboardLikely;

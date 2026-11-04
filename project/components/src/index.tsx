@@ -50,6 +50,8 @@ export { Artifact, ArtifactHeader, ArtifactVersions, ArtifactContent, ArtifactRe
 export type { ArtifactProps, ArtifactHeaderProps, ArtifactVersionsProps, ArtifactContentProps, ArtifactReferenceProps, ArtifactStatus } from './artifact';
 export { ThreadList, ThreadListGroup, ThreadListItem, ThreadListNew, groupByDate } from './thread-list';
 export { InboxList, InboxItem } from './inbox-list';
+export { TimeSlotPicker, TimeSlot } from './time-slot-picker';
+export type { TimeSlotPickerProps, TimeSlotProps } from './time-slot-picker';
 export { SpanWaterfall, criticalPathOf, formatMs } from './span-waterfall';
 export type { Span, SpanWaterfallProps } from './span-waterfall';
 export type { InboxListProps, InboxItemProps, InboxListHandle } from './inbox-list';

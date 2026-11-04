@@ -322,6 +322,48 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 /* An option that can't be chosen (a booked time) isn't part of the problem: it keeps its disabled reading. */
 .alt-radio-group[data-invalid] .alt-check[data-disabled] input:not(:checked) + .alt-check-track { background: var(--surface-ground); border-color: var(--line); }
 
+/* ── TimeSlotPicker (#489): one open time from a day's slots, as a grid of openings. A free time is a well you can put
+   the booking in (Sunk −1, surface-well); the chosen one is filled: the accent pours in from the middle and a raised
+   check (surface-raised, elev-1) sits under the time, as a Checkbox's does. Every slot has room for a second line (the
+   check, or "Booked"), so choosing moves nothing. A booked time is part of the record, so it lies flush
+   on the ground, muted and struck through, and says "Booked". Choosing pours over dur-travel-1 on ease-rise and the
+   previous time drains on ease-sink; the mark doesn't slide between slots, since they wrap across rows. Invalid: the
+   free wells take the critical tint and rim (Elevation, "Validity"). ── */
+.alt-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--space-2); min-width: 0; }
+.alt-slots:focus { outline: none; }
+.alt-slot {
+  position: relative; isolation: isolate; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; min-height: 56px; padding: 6px var(--space-2) 10px;
+  border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-well); box-shadow: var(--well); color: var(--ink);
+  font: 500 15px/20px var(--font-sans); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur-travel-1) var(--ease-sink), color var(--dur-travel-1) var(--ease-sink);
+}
+@media (hover: hover) { .alt-slot:hover:not([aria-disabled="true"]):not([data-chosen]) { border-color: var(--line-control); } }
+.alt-slot:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-slot-fill { position: absolute; inset: -1px; z-index: -1; border-radius: inherit; background: var(--accent); opacity: 0; clip-path: circle(0% at 50% 50%);
+  transition: clip-path var(--dur-travel-1) var(--ease-sink), opacity var(--dur-travel-1) var(--ease-sink); }
+.alt-slot-mark { position: absolute; bottom: 4px; left: 50%; translate: -50% 0; display: grid; place-items: center; width: 15px; height: 15px; border-radius: var(--radius-full);
+  background: var(--surface-raised); box-shadow: var(--elev-1); color: var(--accent-ink); opacity: 0; scale: 0.5;
+  transition: opacity var(--dur-travel-1) var(--ease-sink), scale var(--dur-travel-1) var(--ease-sink); }
+.alt-slot[data-chosen] { border-color: var(--accent); color: var(--on-accent); transition-timing-function: var(--ease-rise); }
+.alt-slot[data-chosen] .alt-slot-fill { opacity: 1; clip-path: circle(75% at 50% 50%); transition-timing-function: var(--ease-rise); }
+.alt-slot[data-chosen] .alt-slot-mark { opacity: 1; scale: 1; transition-timing-function: var(--ease-rise); }
+.alt-slot[data-booked] { background: var(--surface-ground); box-shadow: var(--elev-0); border-color: transparent; color: var(--ink-muted); cursor: default; }
+.alt-slot[data-booked] .alt-slot-time { text-decoration: line-through; text-decoration-thickness: 1px; }
+.alt-slot-booked { font: 500 12px/16px var(--font-sans); }
+.alt-slots[aria-disabled="true"] .alt-slot:not([data-booked]) { cursor: default; opacity: 0.55; }
+.alt-slots[data-invalid] .alt-slot:not([data-booked]):not([data-chosen]) { background: var(--critical-soft); border-color: var(--critical); box-shadow: var(--trench); }
+.alt-slot-imprint { display: block; height: 56px; border-radius: var(--radius-md); }
+@media (prefers-reduced-motion: reduce) { .alt-slot, .alt-slot-fill, .alt-slot-mark { transition: none; } }
+[data-motion="reduced"] :is(.alt-slot, .alt-slot-fill, .alt-slot-mark) { transition: none; }
+@media (prefers-contrast: more) { .alt-slot:not([data-booked]) { border-color: var(--line-control); } }
+[data-contrast="more"] .alt-slot:not([data-booked]) { border-color: var(--line-control); }
+@media (forced-colors: active) {
+  .alt-slot { border: 1px dashed CanvasText; }
+  .alt-slot[data-chosen] { border: 2px solid Highlight; }
+  .alt-slot[data-chosen] .alt-slot-mark { border: 1px solid CanvasText; }
+  .alt-slot[data-booked] { border: 1px solid GrayText; color: GrayText; }
+}
+
 /* ── Switch: a trench with a raised thumb; the accent pours in behind the thumb. ── */
 .alt-switch {
   --track: 36px; --tw: 18px;

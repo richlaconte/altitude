@@ -4663,6 +4663,37 @@ function App() {
   </div>;
 }
 
+=== TimeSlotPicker | <!-- @dsCard group="Inputs" height=560 subtitle="One open time from a day's slots: free times are openings, the chosen one is filled, booked ones lie flush" -->
+--- css
+.tsp { max-width: 560px; }
+.tsp-actions { display: flex; gap: var(--space-2); align-items: center; }
+--- jsx
+// Booked times, from the fictional diary.
+const TSP_TAKEN = ['09:00', '10:30', '13:30', '14:00', '16:00'];
+const TSP_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00']
+  .map((time) => ({ time, booked: TSP_TAKEN.includes(time) }));
+function App() {
+  const [time, setTime] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [booked, setBooked] = React.useState('');
+  const reload = () => { setLoading(true); setTimeout(() => setLoading(false), 900); };
+  return (
+    <div className="col tsp">
+      <A.Field label="Times on Tuesday 10 November" error={error}>
+        <A.TimeSlotPicker value={time} onValueChange={(t) => { setTime(t); setError(''); }} locale="en-US" loading={loading}>
+          {TSP_SLOTS.map((s) => <A.TimeSlot key={s.time} value={s.time} booked={s.booked} />)}
+        </A.TimeSlotPicker>
+      </A.Field>
+      <div className="tsp-actions">
+        <A.Button variant="primary" onClick={() => { if (!time) { setError('Choose a time.'); return; } setBooked(time); }}>Hold this time</A.Button>
+        <A.Button variant="ghost" onClick={reload}>Reload the day</A.Button>
+      </div>
+      <p className="cap">{booked ? `Holding ${booked}. ` : ''}Tab to the times, then arrows move between free ones (↑ and ↓ by row) and Space or Enter chooses. Booked times are struck through and skipped. Hold without choosing to see the error.</p>
+    </div>
+  );
+}
+
 === DatePicker | <!-- @dsCard group="Inputs" height=760 subtitle="Type a date or pick it: the chosen day carries the one raised mark; presets for a dashboard's range" -->
 --- css
 .dp-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px 32px; max-width: 760px; align-items: start; }
