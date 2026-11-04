@@ -30,6 +30,8 @@ const mode = async (page, label) => { await drawer(page); await page.locator('.e
 const event = async (page, label) => { await drawer(page); await page.locator('.ex-drawer button', { hasText: label }).click(); await wait(page, 800); };
 const tab = async (page, name) => { await page.locator('.ex-app [role="tab"]', { hasText: name }).first().click(); await wait(page, 600); };
 const column = (page, col) => page.evaluate((c) => [...document.querySelectorAll(`[data-board-col="${c}"] [data-board-card]`)].map((e) => e.getAttribute('data-board-card')), col);
+// The toasts on screen, newest last.
+const toasts = (page) => page.locator('.alt-toast').allTextContents().then((t) => t.join(' | '));
 const card = (page, id) => page.evaluate((i) => { const e = document.querySelector(`[data-board-card="${i}"]`); return e ? { status: e.getAttribute('data-status'), note: e.querySelector('.pb-note')?.textContent ?? '', col: e.closest('[data-board-col]')?.getAttribute('data-board-col') } : null; }, id);
 const moves = (page) => page.evaluate(() => [...document.querySelectorAll('.ex-log-row .ex-log-op')].filter((e) => e.textContent === 'cards.move').length);
 const primaries = (page) => page.evaluate(() => [...document.querySelectorAll('.ex-app .alt-btn[data-variant="primary"]')].filter((b) => b.getClientRects().length && !b.closest('[role="dialog"]')).length);
@@ -71,23 +73,26 @@ for (const scheme of ['daylight', 'nightfall']) {
   expect((await column(page, 'doing')).length === 3, 'a third card goes into In progress');
   await carry(page, 'c10', ['ArrowRight', 'Space']); await wait(page, 1300);
   const refused = await card(page, 'c10');
-  expect(refused?.col === 'sprint' && refused.status === 'failed' && /In progress is full/.test(refused.note) && /back in Sprint 24/.test(refused.note), `a fourth is refused and goes back, saying why (${JSON.stringify(refused)})`);
+  const told = await toasts(page);
+  expect(refused?.col === 'sprint' && refused.status === 'failed' && refused.note === '' && /In progress is full/.test(told) && /back in Sprint 24/.test(told) && /Retry/.test(told),
+    `a fourth is refused and goes back; a toast says why and offers Retry, and the card adds no line (#490) (${JSON.stringify(refused)}; ${told})`);
   expect(/In progress is full/.test(await page.locator('.ex-app [role="status"], .ex-app .alt-sr').allTextContents().then((t) => t.join(' '))), 'the refusal is announced');
   expect(await page.evaluate(() => getComputedStyle(document.querySelector('[data-board-card="c10"]')).boxShadow.includes('inset')), 'the refused card sits in a trench');
 
   // ---- Slow, conflict, offline, lost ----------------------------------------------------------------------------
   await mode(page, 'Slow');
   await carry(page, 'c9', ['ArrowLeft', 'Space']); await wait(page, 1100);
-  expect((await card(page, 'c9'))?.status === 'pending', 'a slow move hovers while it’s on its way');
+  const slow = await card(page, 'c9');
+  expect(slow?.status === 'pending' && slow.note === '', `a slow move hovers while it’s on its way, with no "Moving…" line changing its height (#490) (${JSON.stringify(slow)})`);
   await wait(page, 2600);
   expect((await card(page, 'c9'))?.col === 'backlog' && (await card(page, 'c9'))?.status !== 'failed', 'then it lands');
   await mode(page, 'Conflict');
   await carry(page, 'c5', ['ArrowRight', 'Space']); await wait(page, 1300);
-  expect(/Someone else moved this card first/.test((await card(page, 'c5'))?.note ?? '') && (await card(page, 'c5'))?.col === 'backlog', 'a conflict adopts the server’s board and says so');
+  expect(/Someone else moved this card first/.test(await toasts(page)) && (await card(page, 'c5'))?.col === 'backlog', 'a conflict adopts the server’s board and says so');
   await mode(page, 'Offline');
   await carry(page, 'c2', ['ArrowRight', 'Space']); await wait(page, 900);
   const off = await card(page, 'c2');
-  expect(off?.col === 'backlog' && /can't reach the server/i.test(off.note), `an offline move goes back and says so (${JSON.stringify(off)})`);
+  expect(off?.col === 'backlog' && /can.t reach the server/i.test(await toasts(page)), `an offline move goes back and says so (${JSON.stringify(off)})`);
   await mode(page, 'Lose the response');
   await carry(page, 'c2', ['ArrowRight', 'Space']); await wait(page, 2900);
   const lost = await card(page, 'c2');
