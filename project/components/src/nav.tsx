@@ -19,6 +19,12 @@ const DrillContext = React.createContext<{ open: (id: string) => boolean } | nul
 export function useDrilldown() { return React.useContext(DrillContext); }
 export interface DrilldownProps extends React.HTMLAttributes<HTMLDivElement> {
   root: DrillNode;
+  /**
+   * 'stack' (default): the child is laid on top and the parent pressed beneath it. 'slide': still a stack, but the child
+   * travels in from the inline end as it's laid on and the parent moves off toward the start (back reverses it), so
+   * where you went reads as a direction as well as a depth.
+   */
+  transition?: 'stack' | 'slide';
 }
 
 /**
@@ -26,7 +32,7 @@ export interface DrilldownProps extends React.HTMLAttributes<HTMLDivElement> {
  * builds a staircase — every step stands on the same ground line and each deeper place is a taller
  * step — and the view sits on a pile whose thickness is how deep you are. Going back lifts sheets off the top.
  */
-export function Drilldown({ root, className, ...rest }: DrilldownProps) {
+export function Drilldown({ root, className, transition = 'stack', ...rest }: DrilldownProps) {
   const [path, setPath] = React.useState<DrillNode[]>([root]);
   const [dir, setDir] = React.useState<'down' | 'up'>('down');
   const [out, setOut] = React.useState<DrillNode | null>(null);
@@ -71,7 +77,7 @@ export function Drilldown({ root, className, ...rest }: DrilldownProps) {
 
   const sheets = Math.min(depth, 3);
   return (
-    <div className={cx('alt-drill', className)} data-dir={dir} {...rest}>
+    <div className={cx('alt-drill', className)} data-dir={dir} data-transition={transition === 'slide' ? 'slide' : undefined} {...rest}>
       <nav className="alt-crumbs" aria-label="Location">
         <ol>
           {path.map((n, i) => (

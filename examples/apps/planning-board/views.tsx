@@ -108,5 +108,5 @@ export function EpicsView({ q }: { q: DemoQuery<BoardData> }) {
       return { id: e, title: e, description: `${done} of ${mine.length} done`, children: mine.map(story) };
     }),
   };
-  return <Drilldown root={root} aria-label="Epics" />;
+  return <Drilldown root={root} aria-label="Epics" transition="slide" />;
 }

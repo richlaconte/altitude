@@ -2645,6 +2645,19 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-drill[data-dir="down"] .alt-drill-view[data-phase="out"] { animation: alt-pressed-under calc(var(--dur-travel-3) * 0.7) var(--ease-sink) both; }
 .alt-drill[data-dir="up"] .alt-drill-view[data-phase="in"] { animation: alt-from-under var(--dur-travel-3) var(--ease-rise) both; }
 .alt-drill[data-dir="up"] .alt-drill-view[data-phase="out"] { animation: alt-lifted-off calc(var(--dur-travel-3) * 0.7) var(--ease-sink) both; }
+/* transition="slide" (#498): the same stack, with a direction. Going down, the child is laid on travelling in from the
+   inline end while the parent moves off toward the start; going back, the reverse. Lateral travel at one level
+   (ease-glide), multiplied by --alt-travel, so under reduced motion it's the cross-fade alone. */
+.alt-drill[data-transition="slide"] { --alt-drill-x: 1; }
+.alt-drill[data-transition="slide"]:dir(rtl) { --alt-drill-x: -1; }
+.alt-drill[data-transition="slide"][data-dir="down"] .alt-drill-view[data-phase="in"] { animation: alt-drill-from-end var(--dur-travel-3) var(--ease-glide) both; }
+.alt-drill[data-transition="slide"][data-dir="down"] .alt-drill-view[data-phase="out"] { animation: alt-drill-to-start var(--dur-travel-3) var(--ease-glide) both; }
+.alt-drill[data-transition="slide"][data-dir="up"] .alt-drill-view[data-phase="in"] { animation: alt-drill-from-start var(--dur-travel-3) var(--ease-glide) both; }
+.alt-drill[data-transition="slide"][data-dir="up"] .alt-drill-view[data-phase="out"] { animation: alt-drill-to-end var(--dur-travel-3) var(--ease-glide) both; }
+@keyframes alt-drill-from-end { from { opacity: 0; transform: translateX(calc(48px * var(--alt-drill-x) * var(--alt-travel))); } }
+@keyframes alt-drill-to-start { to { opacity: 0; transform: translateX(calc(-48px * var(--alt-drill-x) * var(--alt-travel))); } }
+@keyframes alt-drill-from-start { from { opacity: 0; transform: translateX(calc(-48px * var(--alt-drill-x) * var(--alt-travel))); } }
+@keyframes alt-drill-to-end { to { opacity: 0; transform: translateX(calc(48px * var(--alt-drill-x) * var(--alt-travel))); } }
 @keyframes alt-laid-on { from { opacity: 0; transform: translateY(calc(-8px * var(--alt-travel))) scale(calc(1 + 0.02 * var(--alt-travel))); } }
 @keyframes alt-pressed-under { to { opacity: 0; transform: translateY(calc(6px * var(--alt-travel))) scale(calc(1 - 0.03 * var(--alt-travel))); } }
 @keyframes alt-from-under { from { opacity: 0; transform: translateY(calc(6px * var(--alt-travel))) scale(calc(1 - 0.03 * var(--alt-travel))); } }
