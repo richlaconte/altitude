@@ -4271,6 +4271,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    A saving cell holds a small raised plate after dur-grace; a failed cell drops to a trench with a critical mark; a
    landed value settles, and a pasted range settles as one change. ── */
 .alt-data-grid { min-width: 0; }
+.alt-data-grid[data-dragging] { cursor: cell; user-select: none; }
 .alt-data-grid .alt-table { table-layout: fixed; }
 .alt-grid-head { display: inline-flex; align-items: center; gap: 4px; }
 .alt-grid-pencil { display: inline-flex; color: var(--ink-faint); }
