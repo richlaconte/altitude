@@ -59,6 +59,7 @@ Choose by the job the data does, not by what looks rich.
 | An overview brush | sunk and raised | the range `Slider`: the series a flat line in a trench, the chosen window a raised lens (level 1, `accent` rim, clear face) whose grips are the thumbs; outside it the overview recedes to 35% |
 | Drilling in | ground, stacked | a `Drilldown`: the detail is laid on top, the staircase shows the way back |
 | Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are solid 1px `ink-muted`, because dashes mean projected |
+| Where the data came from (`source`) | ground | one flush line under the plot at caption size in `ink-muted`: source (a `Link`), count, "Updated 2 minutes ago"; stale is the `caution` icon and the word, and the marks don't change (E167) |
 | Loading | sunk | an imprint (`Await`), at the chart's own size |
 | No data | sunk | an opening (`EmptyState`) that says why and what to do |
 | Projected or incomplete data | ground | not yet the record: dashed or hatched, and labelled as such |

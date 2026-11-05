@@ -2456,6 +2456,59 @@ function App() {
   );
 }
 
+=== ChartSource | <!-- @dsCard group="Charts" height=960 subtitle="Where the data came from, when it was read and how many records: one flush line, and stale said in words" -->
+--- css
+.csrc { display: grid; gap: 16px; }
+.csrc .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .csrc .two { grid-template-columns: 1fr; } }
+--- jsx
+// Fourteen days of orders and refunds, read from two places at different times.
+const csrcDays = Array.from({ length: 14 }, (_, i) => ({ day: new Date(Date.UTC(2026, 9, 23 + i)).toISOString().slice(0, 10), orders: Math.round(1180 + 140 * Math.sin(i / 2) + i * 12), refunds: Math.round(38 + 9 * Math.cos(i / 3)) }));
+const csrcMin = 60_000;
+function App() {
+  // Times are relative to when the page opened, so the words stay true: read 2 minutes ago, 3 hours ago, and 14 minutes ago.
+  const [opened] = React.useState(() => Date.now());
+  const total = csrcDays.reduce((n, d) => n + d.orders, 0);
+  return (
+    <div className="csrc">
+      <A.StatGroup aria-label="Last 14 days" source={{ name: 'Orders warehouse', href: '#/sources/orders', asOf: opened - 2 * csrcMin }} locale="en-GB">
+        <A.Stat label="Orders" value={total} locale="en-GB" />
+        <A.Stat label="Refund rate" value={`${(csrcDays.reduce((n, d) => n + d.refunds, 0) / total * 100).toFixed(1)}%`} />
+        <A.Stat label="Busiest day" value="Sat 1 Nov" />
+      </A.StatGroup>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="csrc1">Orders per day</A.CardTitle><A.CardDescription>Read two minutes ago: the line names the source, the count and the time</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="csrc1" config={{ orders: { label: 'Orders' } }} aspect={3.4} locale="en-GB"
+            source={{ name: 'Orders warehouse', href: '#/sources/orders', asOf: opened - 2 * csrcMin, count: csrcDays.length, noun: 'days' }}>
+            <A.BarChart data={csrcDays} x="day" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <div className="two">
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="csrc2">Refunds per day</A.CardTitle><A.CardDescription>Read three hours ago, stale after one: said in words, the marks unchanged</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="csrc2" config={{ refunds: { label: 'Refunds' } }} aspect={1.8} locale="en-GB"
+              source={{ name: 'Payments export', asOf: opened - 180 * csrcMin, count: 524, noun: 'refunds', staleAfter: 60 * csrcMin }}>
+              <A.LineChart data={csrcDays} x="day" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="csrc3">Orders, last 7 days</A.CardTitle><A.CardDescription>Stale after 15 minutes: read 14 minutes ago, so it turns stale while you watch</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="csrc3" config={{ orders: { label: 'Orders' } }} aspect={1.8} locale="en-GB"
+              source={{ name: 'Orders warehouse', asOf: opened - 14 * csrcMin, staleAfter: 15 * csrcMin }}>
+              <A.LineChart data={csrcDays.slice(-7)} x="day" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+      </div>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {
