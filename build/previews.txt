@@ -2456,6 +2456,91 @@ function App() {
   );
 }
 
+=== ChartScope | <!-- @dsCard group="Charts" height=1180 subtitle="One record, many views: one slice, pointer, window, selection and palette across a page" -->
+--- css
+.cs { display: grid; gap: 16px; }
+.cs .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .cs .two { grid-template-columns: 1fr; } }
+--- jsx
+// Two days of a service-health dashboard, hourly: error rates per service, latency for the fleet, and incidents.
+const csHours = Array.from({ length: 48 }, (_, i) => new Date(Date.UTC(2026, 10, 3, i)).toISOString());
+const csWave = (i, k) => Math.max(0.05, 0.4 + 0.25 * Math.sin((i + k * 7) / 5));
+const csErrors = csHours.map((t, i) => ({
+  t,
+  checkout: +(csWave(i, 0) + (i >= 30 && i <= 34 ? 2.6 - Math.abs(i - 32) * 0.5 : 0)).toFixed(2),
+  search: +(csWave(i, 1) * 0.8).toFixed(2),
+  payments: +(csWave(i, 2) * 1.1 + (i >= 31 && i <= 33 ? 0.9 : 0)).toFixed(2),
+}));
+const csLatency = csHours.map((t, i) => ({ t, p50: Math.round(118 + 12 * Math.sin(i / 4) + (i >= 30 && i <= 34 ? 40 : 0)), p99: Math.round(410 + 60 * Math.sin(i / 3) + (i >= 30 && i <= 34 ? 520 - Math.abs(i - 32) * 120 : 0)) }));
+const csIncidents = [
+  { id: 'INC-412', service: 'checkout', title: 'Card tokeniser timeouts', opened: csHours[30], minutes: 74 },
+  { id: 'INC-413', service: 'payments', title: 'Ledger writes retrying', opened: csHours[31], minutes: 41 },
+  { id: 'INC-409', service: 'search', title: 'Index lag after deploy', opened: csHours[9], minutes: 22 },
+  { id: 'INC-414', service: 'checkout', title: 'Promo code lookups slow', opened: csHours[40], minutes: 12 },
+];
+const csNames = { checkout: 'Checkout', search: 'Search', payments: 'Payments' };
+const csPct = (v) => `${v.toFixed(1)}%`;
+const csMs = (v) => `${Math.round(v)} ms`;
+const csWhen = new Intl.DateTimeFormat('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+function csIn(rows, w) {
+  if (!w) return rows;
+  const a = w.start ? Date.parse(w.start) : -Infinity, b = w.end ? Date.parse(w.end) : Infinity;
+  return rows.filter((r) => { const t = Date.parse(r.t ?? r.opened); return t >= a && t <= b; });
+}
+function App() {
+  const [range, setRange] = React.useState({ start: csHours[24], end: csHours[47] });
+  const [picked, setPicked] = React.useState([]);
+  const shown = csIn(csErrors, range);
+  // The bars and the stats are the same slice: the app re-counts them for the window, as it would from its API.
+  const byService = Object.keys(csNames).map((service) => ({ service, rate: +(shown.reduce((t, r) => t + r[service], 0) / Math.max(1, shown.length)).toFixed(2) }));
+  const incidents = csIn(csIncidents, range);
+  const fmtRange = (w) => `${csWhen.format(new Date(w.start))} – ${csWhen.format(new Date(w.end))}`;
+  return (
+    <A.ChartScope className="cs" aria-label="Service health" by="service" noun="services"
+      slice={`${fmtRange(range)} UTC · production`} window={range} onWindowChange={setRange} selected={picked} onSelectedChange={setPicked}>
+      <A.StatGroup>
+        <A.Stat label="Mean error rate" value={byService.reduce((t, s) => t + s.rate, 0) / byService.length} format={csPct} />
+        <A.Stat label="Peak p99 latency" value={Math.max(...csIn(csLatency, range).map((r) => r.p99))} format={csMs} />
+        <A.Stat label="Incidents opened" value={incidents.length} />
+      </A.StatGroup>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="cs1">Error rate by service</A.CardTitle><A.CardDescription>Point anywhere: every chart over the same hours marks the same hour. Drag the lens: every chart and stat follows.</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="cs1" config={{ checkout: { label: 'Checkout', format: csPct }, search: { label: 'Search', format: csPct }, payments: { label: 'Payments', format: csPct } }} aspect={3.2} locale="en-GB" yFormat={csPct}>
+            <A.LineChart data={csErrors} x="t"><A.ChartBrush /></A.LineChart>
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <div className="two">
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="cs2">Latency, all services</A.CardTitle></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="cs2" config={{ p50: { label: 'p50 (median)', format: csMs }, p99: { label: 'p99', format: csMs } }} aspect={1.8} locale="en-GB" yFormat={csMs}>
+              <A.LineChart data={csLatency} x="t" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="cs3">Mean error rate by service</A.CardTitle><A.CardDescription>Choose a bar to filter every view to that service</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="cs3" config={{ rate: { label: 'Mean error rate', format: csPct } }} aspect={1.8} locale="en-GB" xFormat={(v) => csNames[v] ?? String(v)}>
+              <A.BarChart data={byService} x="service" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+      </div>
+      <A.DataTable aria-label="Incidents" noun="incidents" rows={incidents} getRowId={(r) => r.id}
+        columns={[
+          { key: 'id', header: 'Incident' },
+          { key: 'service', header: 'Service', cell: (r) => csNames[r.service] },
+          { key: 'title', header: 'What happened' },
+          { key: 'opened', header: 'Opened', cell: (r) => csWhen.format(new Date(r.opened)) },
+          { key: 'minutes', header: 'Minutes', align: 'end' },
+        ]} />
+    </A.ChartScope>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

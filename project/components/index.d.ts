@@ -1412,6 +1412,8 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   /** Filter in place: return 'match' or 'miss' per row, or undefined when no filter is active. */
   relevance?: (row: T) => 'match' | 'miss' | undefined;
+  /** Inside a ChartScope: a selection made in any chart sinks the rows that carry the scope's `by` key and miss. false stands apart; or say how a row matches. Your own `relevance` wins where it says miss. */
+  scope?: false | ChartScopeView;
   /** Adds move handles (pointer, or Space and the arrow keys); hidden while sorted. */
   onReorder?: (rows: T[]) => void;
   maxHeight?: number | string;
@@ -2012,6 +2014,8 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   announce?: (data: ChartDatum[], previous: ChartDatum[] | null) => string | null | undefined;
   /** While a chart type's relevance filters, how the frame says how many match. Default "4 of 12 match". */
   countLabel?: (matches: number, total: number) => string;
+  /** How the chart takes part in a ChartScope around it: false to stand apart (its own pointer, window, selection and palette), or how its records match a selection and which entity a chosen record stands for. Default: records match by the scope's `by` key, and series keys are entities. */
+  scope?: false | ChartScopeView;
 }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; /** An uncertainty band's row, keyed by a block of its fill. */ range?: boolean; }
@@ -2073,6 +2077,48 @@ export interface ChartBrushProps {
  * aria-valuetext is the date). Drag the lens to pan, a grip to resize, or press outside it to centre the window there.
  */
 export declare function ChartBrush(props: ChartBrushProps): React.ReactElement | null;
+/** An entity's value: a series key ("checkout"), or a value of the scope's `by` key in a record ("EU"). */
+export type ChartScopeValue = string | number;
+/** A fixed stretch of x, both ends included: what a ChartBrush sets and a DateRangePicker gives. */
+export interface ChartScopeWindow { start?: string | number | null; end?: string | number | null }
+/** What a chart or a table may override about how it takes part in its scope. */
+export interface ChartScopeView {
+  /** Whether a record matches the selected values: true, false, or undefined when the selection says nothing about it. */
+  match?: (d: Record<string, unknown>, selected: ChartScopeValue[]) => boolean | undefined;
+  /** The entity a record stands for when chosen, instead of `d[by]`; null when it stands for none. */
+  select?: (d: Record<string, unknown>) => ChartScopeValue | null | undefined;
+}
+export interface ChartScopeProps extends Omit<React.HTMLAttributes<HTMLElement>, 'onChange'> {
+  /** The slice every view shows, in words, said once: "Last 30 days · EU". The scope appends what a selection filters to. */
+  slice?: React.ReactNode;
+  /** The key that names an entity in a record ("service", "region"). Records carrying it can be selected from any chart, and a selection recedes the misses in every chart and table that carries it. Series keys are entities too. */
+  by?: string;
+  /** What the entities are called, for the caption's count: "4 of 12 services". Default "items". */
+  noun?: string;
+  /** The selected entities, controlled: one value, several, or null for none. */
+  selected?: ChartScopeValue | ChartScopeValue[] | null;
+  defaultSelected?: ChartScopeValue | ChartScopeValue[] | null;
+  /** When a chart's mark, Clear or Escape changes the selection: the values now selected (empty for none). */
+  onSelectedChange?: (selected: ChartScopeValue[]) => void;
+  /** The window every chart over time or numbers shows, controlled. One ChartBrush anywhere in the scope sets it. */
+  window?: ChartScopeWindow | null;
+  defaultWindow?: ChartScopeWindow | null;
+  onWindowChange?: (window: ChartScopeWindow) => void;
+  /** One colour per entity across every chart in the scope. true (default): each series key takes the next slot the first time a chart draws it, held for the scope's life. An array fixes the order. false: each chart keeps its config order. A series' own config.color always wins. */
+  palette?: boolean | string[];
+  /** Render the slice caption at the top. Default true; place a ChartScopeCaption yourself with false. */
+  caption?: boolean;
+}
+/**
+ * One record, many views (#529): wrap the charts, stats and tables that show one slice. One pointer reads across them (a
+ * sibling with the same kind of x marks the same x with the crosshair rule; the readout opens only where the pointer
+ * is), one brush moves every chart over time, a mark chosen in one chart recedes what misses in all of them at 35%,
+ * positions held, and one entity keeps one colour in all of them. The slice is said once, in a flush caption that's
+ * announced politely per change; Escape in any chart clears the selection.
+ */
+export declare function ChartScope(props: ChartScopeProps): React.ReactElement;
+/** The scope's slice in words, with what a selection filters to and a Clear. Rendered by ChartScope unless `caption={false}`; place it yourself to put the slice elsewhere. Its children replace the scope's `slice`. */
+export declare function ChartScopeCaption(props: React.HTMLAttributes<HTMLParagraphElement>): React.ReactElement | null;
 /** Changes what a chart's readout shows; the readout is on for every chart. Place it inside the chart type or the container. */
 export declare function ChartTooltip(props: { content?: React.ReactElement<ChartTooltipContentProps> }): null;
 export interface ChartReferenceProps {
