@@ -173,7 +173,20 @@ function Harness({ k }) {
   );
 }
 
-const CSS = `.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
+const STYLES = `.ah-views{display:grid;gap:12px;max-width:1100px}.ah-views>.alt-tabs{justify-self:start}
+.ah-phone{width:min(100%,440px);height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;display:flex;background:var(--surface-ground)}
+.cs{display:flex;flex-direction:column;flex:1;min-width:0;padding:8px 12px 6px;gap:8px}
+.cs-head{display:flex;align-items:center;gap:2px}.cs-title{flex:1;min-width:0;padding:0 6px}
+.cs-title h2{margin:0;font:600 15px/20px var(--font-sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-title p{margin:0;font:400 12px/16px var(--font-mono);color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs .alt-convo{flex:1;min-height:0}
+.cs-time{margin:2px 0 0;text-align:end;font:400 12px/16px var(--font-sans);color:var(--ink-muted)}
+.cs-grow{flex:1}.cs-model{width:auto;min-width:0}
+.cs-context{display:flex;align-items:center;gap:14px;padding:2px 4px 0;font:400 12.5px/17px var(--font-mono);color:var(--ink-muted)}
+.cs-context>span{display:inline-flex;align-items:center;gap:6px}.cs-context>.alt-btn{margin-inline-start:-8px}
+.cs-status{display:flex;gap:8px;margin:0;padding:0 4px;font:400 12px/16px var(--font-mono);color:var(--ink-muted)}
+@media (max-width:480px){.cs-wide{display:none}}
+.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
 .ah-frame .alt-shell-page{display:flex;flex-direction:column;overflow:hidden}.ah-frame .alt-inset{flex:1;min-height:0;display:flex;flex-direction:column}
 .ah-main{display:flex;flex-direction:column;gap:12px;flex:1;padding:12px 0;min-height:0}.ah-main .alt-convo{flex:1;min-height:0;margin:0 -12px 0 0}
 .ah-rail{display:flex;align-items:center;gap:8px 12px}.ah-moments{position:relative;display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
@@ -215,8 +228,111 @@ function useRail(k) {
   }, [scan]);
   return { ref: rail, onScroll: scan, 'data-more-start': edges.start ? '' : undefined, 'data-more-end': edges.end ? '' : undefined };
 }
+/** A coding session on a phone: one finished turn, folded the way a coding agent folds it, built only from the parts above. */
+const TURN_EDIT = { before: 'export function indexOf() {\n  const entered = new Map()\n}', after: 'export function indexOf() {\n  const entered = new Map();\n  const turns = new Map();\n}' };
+const TURN_WRITE = 'export function turnStepsOf() {\n  return [];\n}';
+/** A new file is all additions: drop the empty line diffLines reads as removed from "nothing". */
+const NEW_FILE = A.diffLines('', TURN_WRITE).filter((o) => o.kind !== 'del');
+const ANSWER = 'Done — the fold counts steps now.\n\n```ts\nexport function turnStepsOf(turn) {\n  return turn.steps.filter((s) => s.kind !== \'reasoning\');\n}\n```\n\nThe fold now says what the turn did and counts its steps, and I saved what a turn fold is to memory: forget anything that\'s wrong.';
+/** @type {import('altitude-design').PromptMention[]} */
+const FILES = [{ id: 'f1', label: 'web/turns.ts', kind: 'file' }, { id: 'f2', label: 'web/turn-count.ts', kind: 'file' }];
+const MODELS = [{ value: 'beam-low', label: 'Beam · low' }, { value: 'beam-high', label: 'Beam · high' }, { value: 'arc', label: 'Arc' }];
+const at = (h, m) => new Date(2026, 10, 5, h, m).getTime();
+const clock = (t) => new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(t);
+const Glyph = ({ d }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
+const SEARCH = 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4', GRID = 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', FOLDER = 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', BRANCH = 'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9';
+
+/** What "remember what a turn fold is" wrote: two new memories and one it corrected. */
+const MEMORIES = [
+  { id: 'm1', text: 'A turn fold groups one turn\'s tool steps under a single summary line.' },
+  { id: 'm2', text: 'The fold counts steps, not tool calls.', change: 'updated', previous: 'The fold counts tool calls.' },
+  { id: 'm3', text: 'A fold opens by itself when a step fails or waits for approval.' },
+];
+
+function CodingSession() {
+  const [memories, setMemories] = React.useState(/** @type {import('altitude-design').TraceMemoryItem[]} */ (MEMORIES));
+  const setForgotten = (/** @type {string} */ id, /** @type {boolean} */ forgotten) => setMemories((ms) => ms.map((m) => (m.id === id ? { ...m, forgotten } : m)));
+  const main = React.useRef(/** @type {HTMLDivElement | null} */ (null));
+  // Open where the screenshot is: the latest turn's fold in view, scrolled up from the end, so "Jump to latest" shows.
+  React.useEffect(() => {
+    const el = main.current?.querySelector('.alt-convo-scroll'), turn = main.current?.querySelector('.cs-turn');
+    if (el && turn) el.scrollTop = /** @type {HTMLElement} */ (turn).offsetTop - 12;
+  }, []);
+  return (
+    <div className="cs" ref={main}>
+      <header className="cs-head">
+        <A.Button variant="ghost" size="sm" square aria-label="Show sessions"><A.Icons.PanelLeft /></A.Button>
+        <div className="cs-title">
+          <h2>Is the demo build still running?</h2>
+          <p>scratch/lab-demo on cachyos-x8664</p>
+        </div>
+        <A.Button variant="ghost" size="sm" square aria-label="Sessions" className="cs-wide"><Glyph d={GRID} /></A.Button>
+        <A.Button variant="ghost" size="sm" square aria-label="Notifications"><A.Icons.Bell /></A.Button>
+        <A.Button variant="ghost" size="sm" square aria-label="Search" className="cs-wide"><Glyph d={SEARCH} /></A.Button>
+        <A.Button variant="ghost" size="sm" square aria-label="More"><A.Icons.More /></A.Button>
+      </header>
+      <A.Conversation aria-label="Is the demo build still running?">
+        <A.ConversationContent>
+          <A.Message from="user">
+            <A.MessageContent>Is the demo build still running?</A.MessageContent>
+            <A.MessageActions onCopy onEdit={() => {}} />
+          </A.Message>
+          <A.Message from="assistant">
+            <A.MessageContent><A.Markdown>{'Yes: `lab-demo` has been building for 6 minutes and is on the last step.'}</A.Markdown></A.MessageContent>
+            <A.MessageActions onCopy onRegenerate={() => {}} />
+          </A.Message>
+          <A.ConversationCheckpoint label="Before the fold change" at={at(8, 46)} locale="en" consequence="Files changed after this point go back to how they were. The later turns are kept as a branch." onRestore={() => {}} onReturn={() => {}} />
+          <A.Message from="user" className="cs-turn">
+            <A.MessageContent>Change the fold to count steps, and remember what a turn fold is.</A.MessageContent>
+            <p className="cs-time"><time dateTime={new Date(at(8, 47)).toISOString()}>{clock(at(8, 47))}</time></p>
+            <A.MessageActions onCopy onEdit={() => {}} />
+          </A.Message>
+          <A.Message from="assistant">
+            {/* One fold for the turn (the screenshot nests the same fold twice). Its lid is worked out from the steps,
+                and names the memory writes, which outlive the session. Open here because it's the turn just finished. */}
+            <A.Trace aria-label="Change the fold to count steps" collapsible defaultOpen>
+              <A.TraceStep tool="edit" title="web/turns.ts" detail="2 edits" changes={{ added: 2, removed: 1 }} status="done" duration={140} result="2 edits applied to web/turns.ts">
+                <A.DiffView caption="web/turns.ts" before={TURN_EDIT.before} after={TURN_EDIT.after} />
+              </A.TraceStep>
+              <A.TraceStep tool="write" title="web/turn-count.ts" detail="new file · 3 lines" changes={{ added: 3, removed: 0 }} status="done" duration={90} result="Wrote web/turn-count.ts">
+                <A.DiffView caption="web/turn-count.ts · new file" before="" after={TURN_WRITE} hunks={NEW_FILE} />
+              </A.TraceStep>
+              <A.TraceStep tool="memory" title={`${memories.length} memories`} status="done" duration={60}>
+                <A.TraceMemory items={memories} onForget={(id) => setForgotten(id, true)} onRestore={(id) => setForgotten(id, false)} />
+              </A.TraceStep>
+              <A.TraceStep tool="dream" title="close the chapter" status="done" duration={1800}
+                result="Chapter closed at an ending: the turn-fold work is the chapter, and it ended with the lab screenshots." />
+            </A.Trace>
+            <A.MessageContent><A.Markdown>{ANSWER}</A.Markdown></A.MessageContent>
+            <A.MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />
+          </A.Message>
+        </A.ConversationContent>
+        <A.ConversationScrollButton />
+      </A.Conversation>
+      <A.PromptInput onSubmit={() => {}} onAttach={() => {}} accept="image/*,text/*"
+        mentionable={(q) => FILES.filter((f) => f.label.includes(q))}
+        commands={[{ name: 'review', description: 'Review the changes' }, { name: 'compact', description: 'Summarise the session so far' }]}>
+        <A.PromptInputTextarea placeholder="Message… @ files, / commands, $ skills, # prompts" aria-label="Message" />
+        <A.PromptInputToolbar>
+          <A.PromptInputAttach label="Add files" />
+          <A.Select size="sm" aria-label="Model" items={MODELS} defaultValue="beam-low" className="cs-model" />
+          <span className="cs-grow" />
+          <A.PromptInputDictate />
+          <A.PromptInputSubmit />
+        </A.PromptInputToolbar>
+        <div className="cs-context">
+          <span><Glyph d={FOLDER} />lab-demo</span>
+          <span><Glyph d={BRANCH} />ape/aaac99cb</span>
+          <A.Button variant="ghost" size="sm" square aria-label="Session history"><A.Icons.Clock /></A.Button>
+        </div>
+      </A.PromptInput>
+      <p className="cs-status"><span>project</span><span aria-label="0 tokens per second">↓0 tok/s</span></p>
+    </div>
+  );
+}
+
 /** The rail of moments above the harness, and the note for the moment shown. */
-function App({ start = 3 }) {
+function Run({ start = 3 }) {
   const [k, setK] = React.useState(start);
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState('');
@@ -234,7 +350,7 @@ function App({ start = 3 }) {
   };
   return (
     <div className="ah" ref={root}>
-      <style>{CSS}</style>
+      <style>{STYLES}</style>
       <nav className="ah-rail" aria-label="Moments in the run">
         <ol className="ah-moments" {...rail}>
           {MOMENTS.map((m, i) => (
@@ -249,6 +365,21 @@ function App({ start = 3 }) {
     </div>
   );
 }
+/** Two views: every state of a scripted run, and one finished turn of a coding session on a phone. */
+function App({ start = 3 }) {
+  const [view, setView] = React.useState('run');
+  return (
+    <div className="ah-views">
+      <A.Tabs variant="segmented" value={view} onValueChange={setView}>
+        <A.TabsList aria-label="Harness view">
+          <A.TabsTrigger value="run">Every state</A.TabsTrigger>
+          <A.TabsTrigger value="session">Coding session</A.TabsTrigger>
+        </A.TabsList>
+      </A.Tabs>
+      {view === 'run' ? <Run start={start} /> : <div className="ah-phone"><style>{STYLES}</style><CodingSession /></div>}
+    </div>
+  );
+}
 // preview:end
-export { MOMENTS, EVENTS, stateAt, Harness, App };
+export { MOMENTS, EVENTS, stateAt, Harness, CodingSession, Run, App };
 export default App;

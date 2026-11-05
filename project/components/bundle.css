@@ -877,14 +877,14 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   font: 500 15px/22px var(--font-sans); text-align: left; cursor: pointer;
   transition: background-color var(--dur-travel-1) var(--ease-rise), box-shadow var(--dur-travel-1) var(--ease-rise);
 }
-@media (hover: hover) { .alt-acc-item[data-state="closed"] .alt-acc-trigger:hover {
+@media (hover: hover) { .alt-acc-item[data-state="closed"] > .alt-acc-heading .alt-acc-trigger:hover {
   background: color-mix(in oklab, var(--surface-raised) 55%, transparent); box-shadow: 0 0 0 1px color-mix(in oklab, var(--ink) 5%, transparent), 0 1px 2px var(--alt-cast);
 } }
 .alt-acc-chevron { flex: none; color: var(--ink-muted); transition: transform var(--dur-travel-3) var(--ease-settle); }
 @media (hover: hover) { .alt-acc-trigger:hover .alt-acc-chevron { transform: translateY(calc(2px * var(--alt-travel))); } }
-.alt-acc-item[data-state="open"] .alt-acc-chevron { transform: rotate(180deg); }
+.alt-acc-item[data-state="open"] > .alt-acc-heading .alt-acc-chevron { transform: rotate(180deg); }
 .alt-acc-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-travel-3) var(--ease-glide); }
-.alt-acc-item[data-state="open"] .alt-acc-panel { grid-template-rows: 1fr; }
+.alt-acc-item[data-state="open"] > .alt-acc-panel { grid-template-rows: 1fr; }
 .alt-acc-panel > div { overflow: hidden; }
 /* The compartment: content sits in an opening under the lid, its back wall just visible below the rim. */
 .alt-acc-content {
@@ -894,7 +894,7 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
   font: 400 14px/21px var(--font-sans); color: var(--ink-muted);
   opacity: 0; transform: translateY(calc(-4px * var(--alt-travel))); transition: opacity var(--dur-travel-1) var(--ease-sink), transform var(--dur-travel-1) var(--ease-sink);
 }
-.alt-acc-item[data-state="open"] .alt-acc-content { opacity: 1; transform: none; transition: opacity var(--dur-travel-3) var(--ease-rise) 60ms, transform var(--dur-travel-3) var(--ease-rise) 60ms; }
+.alt-acc-item[data-state="open"] > .alt-acc-panel > div > .alt-acc-content { opacity: 1; transform: none; transition: opacity var(--dur-travel-3) var(--ease-rise) 60ms, transform var(--dur-travel-3) var(--ease-rise) 60ms; }
 
 /* ── Kbd: a tiny raised key that presses when its key is held. ── */
 .alt-kbd {
@@ -2471,6 +2471,30 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 [data-motion="reduced"] .alt-trace-thought-title { animation: none; }
 @media (forced-colors: active) { .alt-trace-thought[data-status="streaming"] .alt-trace-reasoning { border-left: 1px dotted CanvasText; } }
 .alt-trace-item:last-child .alt-step-line { display: none; }
+/* A turn behind one lid (Trace collapsible): the lid says what it did; the steps are the record inside. */
+.alt-trace-fold > .alt-acc-item > .alt-acc-heading .alt-acc-trigger { font-size: 14px; }
+.alt-trace-fold > .alt-acc-item > .alt-acc-panel .alt-acc-content > .alt-trace { padding: 4px 0 0; }
+/* A tool step's header: the tool in code type, what it acted on, and the lines it changed. Signs carry the meaning. */
+.alt-trace-verb { font: 500 12.5px/18px var(--font-mono); color: var(--ink-muted); }
+.alt-trace-target { overflow-wrap: anywhere; }
+.alt-trace .alt-step-title:has(.alt-trace-verb) .alt-trace-target { font-family: var(--font-mono); font-size: 13px; }
+.alt-trace-changes { margin-inline-start: 8px; font: 500 12.5px/18px var(--font-mono); color: var(--ink-muted); white-space: nowrap; }
+.alt-trace-changes [data-sign="add"] { color: var(--positive); }
+.alt-trace-changes [data-sign="del"] { color: var(--critical); }
+.alt-trace-changes [data-zero] { color: inherit; }
+.alt-trace-result { margin: 0; font: 400 12.5px/18px var(--font-mono); color: var(--ink-muted); overflow-wrap: anywhere; }
+/* Memory written by the assistant: flush in the record behind a 1px rule, what changed in words, Forget beside each. */
+.alt-trace-memory { padding: 2px 0 2px 12px; border-left: 1px solid var(--line-control); }
+.alt-trace-memory-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.alt-trace-mem { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) auto; align-items: baseline; gap: 2px 10px; padding: 4px 0; }
+.alt-trace-mem-word { font: 500 12.5px/19px var(--font-sans); color: var(--ink-muted); }
+.alt-trace-mem-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.alt-trace-mem-text { font: 400 13.5px/19px var(--font-sans); color: var(--ink); }
+.alt-trace-mem-prev { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.alt-trace-mem[data-forgotten] .alt-trace-mem-text, .alt-trace-mem[data-change="removed"] .alt-trace-mem-text { color: var(--ink-muted); }
+.alt-trace-mem-act { align-self: center; }
+@media (forced-colors: active) { .alt-trace-memory { border-left-color: CanvasText; } }
+
 @media (forced-colors: active) { .alt-step[data-state="failed"] { border: 3px dashed CanvasText; } }
 
 /* ── AILabel: marks what AI made. A label is part of the record, so it's a flush Badge plate with a small static icon
