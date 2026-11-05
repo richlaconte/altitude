@@ -1,6 +1,6 @@
 # Connected charts: research and synthesis
 
-November 2026 · a second design research pass over the chart library, ending in fourteen draft issues ([issues/](issues/)). The first pass, [Charts with Altitude's voice](../charts/README.md) (October 2026), asked why the charts read as generic and answered with emphasis, words, comparison and recency; its eleven issues (#184–#194) have all shipped.
+November 2026 · a second design research pass over the chart library, ending in fourteen issues filed under the [Connected charts](https://github.com/richlaconte/altitude/milestone/5) milestone (drafts in [issues/](issues/), umbrella #528). The first pass, [Charts with Altitude's voice](../charts/README.md) (October 2026), asked why the charts read as generic and answered with emphasis, words, comparison and recency; its eleven issues (#184–#194) have all shipped.
 
 **The question, again.** With a takeaway, focus, comparison, pins and `since` built, the charts still feel like a good chart library rather than a different idea of what a chart in a product is. What's left that only Altitude's philosophy would do?
 
@@ -107,26 +107,26 @@ Charts' rule 8 says a chart never travels alone, and the keyboard path (after Ol
 
 ## 6. The draft issues
 
-| # | Kind | Title | Depends on | Priority |
-|---|---|---|---|---|
-| [00](issues/00-docs-charts-second-pass.md) | docs (umbrella) | Docs: Charts chapter, second pass — one record, many views; claims you can check | — | P2 |
-| [01](issues/01-new-chartscope.md) | new component | New: ChartScope — one slice, one pointer and one palette across every chart on a page | — | P1 |
-| [02](issues/02-new-chartgrid.md) | new component | New: ChartGrid — small multiples with one axis, one legend and one pointer | 01 | P1 |
-| [03](issues/03-linechart-common-base.md) | enhancement | LineChart, AreaChart: index series to a common base, or read them as change | — | P2 |
-| [04](issues/04-chartcontainer-cite.md) | enhancement | ChartContainer: a takeaway whose figures cite their marks | — | P1 |
-| [05](issues/05-chartcontainer-source.md) | enhancement | ChartContainer, Stat: say where the data came from and when it was read | — | P2 |
-| [06](issues/06-chartconfig-definition.md) | enhancement | ChartConfig: a definition for each measure, on hand at the legend, the readout and the table | 05 | P3 |
-| [07](issues/07-new-histogram.md) | new component | New: Histogram — how values are spread, with every bin named | — | P2 |
-| [08](issues/08-new-funnel.md) | new component | New: Funnel — the steps of a process and where people leave it | — | P2 |
-| [09](issues/09-new-unitchart.md) | new component | New: UnitChart — how many in a hundred, as counted marks | — | P3 |
-| [10](issues/10-chartcontainer-sonify.md) | enhancement, accessibility | ChartContainer: play a series by ear from the keyboard path | — | P2 |
-| [11](issues/11-provider-chart-defaults.md) | enhancement | AltitudeProvider: chart defaults for a whole app (inline y labels, direct labels, patterns, banking) | — | P2 |
-| [12](issues/12-cli-chart-rules.md) | enhancement | CLI: altitude check rules for charts, Altitude's own and Recharts' | — | P2 |
-| [13](issues/13-conversation-chart-answer.md) | enhancement | Conversation: a chart in an agent's answer carries its label, its source and its citations | 04, 05 | P3 |
+| # | Issue | Kind | Title | Depends on | Priority |
+|---|---|---|---|---|---|
+| [00](issues/00-docs-charts-second-pass.md) | #528 | docs (umbrella) | Docs: Charts chapter, second pass — one record, many views; claims you can check | — | P2 |
+| [01](issues/01-new-chartscope.md) | #529 | new component | New: ChartScope — one slice, one pointer and one palette across every chart on a page | — | P1 |
+| [02](issues/02-new-chartgrid.md) | #530 | new component | New: ChartGrid — small multiples with one axis, one legend and one pointer | 01 | P1 |
+| [03](issues/03-linechart-common-base.md) | #531 | enhancement | LineChart, AreaChart: index series to a common base, or read them as change | — | P2 |
+| [04](issues/04-chartcontainer-cite.md) | #532 | enhancement | ChartContainer: a takeaway whose figures cite their marks | — | P1 |
+| [05](issues/05-chartcontainer-source.md) | #533 | enhancement | ChartContainer, Stat: say where the data came from and when it was read | — | P2 |
+| [06](issues/06-chartconfig-definition.md) | #534 | enhancement | ChartConfig: a definition for each measure, on hand at the legend, the readout and the table | 05 | P3 |
+| [07](issues/07-new-histogram.md) | #535 | new component | New: Histogram — how values are spread, with every bin named | — | P2 |
+| [08](issues/08-new-funnel.md) | #536 | new component | New: Funnel — the steps of a process and where people leave it | — | P2 |
+| [09](issues/09-new-unitchart.md) | #537 | new component | New: UnitChart — how many in a hundred, as counted marks | — | P3 |
+| [10](issues/10-chartcontainer-sonify.md) | #538 | enhancement, accessibility | ChartContainer: play a series by ear from the keyboard path | — | P2 |
+| [11](issues/11-provider-chart-defaults.md) | #539 | enhancement | AltitudeProvider: chart defaults for a whole app (inline y labels, direct labels, patterns, banking) | — | P2 |
+| [12](issues/12-cli-chart-rules.md) | #540 | enhancement | CLI: altitude check rules for charts, Altitude's own and Recharts' | — | P2 |
+| [13](issues/13-conversation-chart-answer.md) | #541 | enhancement | Conversation: a chart in an agent's answer carries its label, its source and its citations | 04, 05 | P3 |
 
 **Suggested order.** 01 first: it's the largest change to how a page of charts behaves and 02 builds on its pointer. 04 and 05 together: they share one design review (what a chart says about itself above and below the plot) and 13 waits on both. 11 and 12 are independent and cheap, and they're what makes the rest reach agents' builds. 07, 08, 09, 03, 10 and 06 are independent.
 
-Each draft follows its template in `.github/ISSUE_TEMPLATE/` and uses only tokens from `project/tokens.json`. To file one, strip the header comment and pass the rest as the body:
+Each draft follows its template in `.github/ISSUE_TEMPLATE/` and uses only tokens from `project/tokens.json`. They were filed on 5 November 2026 as `needs-design` proposals, each a sub-issue of #528, with #530 blocked by #529, #534 by #533 and #541 by #532 and #533. The command that filed them, for the record:
 
 ```sh
 sed '1,/^-->$/d' issues/01-new-chartscope.md > /tmp/body.md
