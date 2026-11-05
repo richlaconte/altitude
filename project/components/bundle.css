@@ -3167,6 +3167,10 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    are selective and wear ink, never a series colour. ── */
 .alt-bar-label { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
 @media (forced-colors: active) { .alt-bar-label { fill: CanvasText; } }
+/* A series named at its bars (#539, directLabels="auto"): over the first group, or beside the last stack. Ink, never the
+   series colour, flush on the plot like a line's end label; the bar keeps its own colour and pattern. */
+.alt-bar-name { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); }
+@media (forced-colors: active) { .alt-bar-name { fill: CanvasText; } }
 
 /* ── Not yet the record (#67): a period still being counted or a forecast. A pending write hovers, but a pending mark
    can't, since lifting a bar misstates it; so it's drawn with pattern and a word instead. Bars are hatched at 45° in

@@ -22,6 +22,8 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
 8. **A chart never travels alone.** As height never travels alone: every chart has a written summary, a keyboard path through its data, a table view, and direct labels or patterns so no series is told apart by colour alone.
 9. **Say one thing first.** A chart that makes a point leads with it: a `takeaway` is the chart's heading ("Cedar deployed nearly three times as often as Delta"), and its title becomes the small label above. Readers fixate on and recall the words at the top, and take away what they say, even against the chart (E102). So the takeaway is authored, never generated: write it from the data shown, as a trend or a comparison rather than a restatement of the encoding ("Deploys by team" is a title, not a takeaway). The application owns its truth, as it owns persistence. A row of equal dashboard cards can do without one; a chart in a report rarely should.
 
+**Set once for an app.** The rules above are what a chart does by default, but the guide's positive recommendations (inline y labels, series named at their marks, banked lines) are opt-ins, so the package doesn't change under apps that haven't chosen them (E103). An app chooses them once, on its provider: `<AltitudeProvider charts={{ yLabels: 'inline', directLabels: 'auto' }}>`. A chart's own prop still wins.
+
 ## Choosing a form
 
 Choose by the job the data does, not by what looks rich.

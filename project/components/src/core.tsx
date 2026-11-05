@@ -415,6 +415,12 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
    */
   loading?: 'sweep' | 'breath';
   /**
+   * Chart defaults for everything inside (#539): the guide's recommended chart settings, set once for an app instead of
+   * on every chart. A prop on a chart still wins, and a nested provider overrides key by key. Without it every chart
+   * default is as before. Recommended: charts={{ yLabels: 'inline', directLabels: 'auto' }}.
+   */
+  charts?: ChartDefaults;
+  /**
    * The whole app is in a mode people must never mistake for the normal app: test mode, viewing as a customer,
    * read-only, a preview. Height can't say "this whole ground is different", so it's said in words and a border: a
    * flush strip naming the mode at the top, a 2px frame around the viewport, and a plate in every Dialog and Sheet.
@@ -475,6 +481,32 @@ export function usePrimaryRegistration(el: React.RefObject<HTMLElement | null>, 
 
 /** The provider's loading style, for the parts of loading that aren't only CSS (RevealGroup's budget, Card's grouping). */
 export const LoadingStyleContext = React.createContext<'sweep' | 'breath'>('sweep');
+
+/** Chart defaults an AltitudeProvider sets for every chart inside it (#539). Each is the ChartContainer prop of the same name. */
+export interface ChartDefaults {
+  /** Where the value axis's labels go: 'inline' runs the plot full width with labels above their gridlines. Default 'gutter'. */
+  yLabels?: 'gutter' | 'inline';
+  /** 'banked' banks line charts to 45° (it applies to line charts only; others keep their aspect). */
+  aspect?: 'banked';
+  /**
+   * Label series at their marks rather than only in a legend. 'auto': where there's room (a line's ends, the first group
+   * of grouped bars, the last stack's segments), and a legend is dropped once every series is labelled. true: always,
+   * as under forced colours. Default false.
+   */
+  directLabels?: boolean | 'auto';
+  /** Tell series apart by pattern as well as colour. Default false (always on under forced colours and in print). */
+  patterns?: boolean;
+  /** The locale for chart numbers and dates. Default the reader's. */
+  locale?: string;
+  /** The crosshair and readout. Default true. */
+  tooltip?: boolean;
+  /** Add the Chart | Table control to every chart. Default false. */
+  views?: boolean;
+  /** The readout's series indicator. Default 'line'. */
+  indicator?: 'line' | 'dot';
+}
+/** The chart defaults of the nearest AltitudeProviders, merged outer to inner. */
+export const ChartDefaultsContext = React.createContext<ChartDefaults>({});
 /** The app's mode, for Dialog and Sheet to name it in their headers. */
 export const ModeContext = React.createContext<AppMode | null>(null);
 /** The mode's name as a plate, for headers of things that float above the page (Dialog, Sheet). */
@@ -483,7 +515,10 @@ export function ModePlate() {
   return mode ? <span className="alt-badge alt-mode-plate" data-tone={mode.tone ?? 'caution'} data-variant="plate">{mode.label}</span> : null;
 }
 
-export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', density = 'auto', recede = true, approach = true, loading, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
+export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', density = 'auto', recede = true, approach = true, loading, mode, devChecks, charts, className, style, children, ...rest }: AltitudeProviderProps) {
+  const outerCharts = React.useContext(ChartDefaultsContext);
+  const chartKey = charts ? JSON.stringify(charts) : '';
+  const chartDefaults = React.useMemo(() => (charts ? { ...outerCharts, ...charts } : outerCharts), [outerCharts, chartKey]); // eslint-disable-line react-hooks/exhaustive-deps
   // Breath holds for everything inside the provider that sets it (its CSS matches any breath ancestor), so a nested
   // provider can turn it on but not back off.
   const inherited = React.useContext(LoadingStyleContext);
@@ -559,7 +594,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
         data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined} data-density={density === 'auto' ? undefined : density}
         data-approach-off={approach ? undefined : ''} data-loading={loading} style={{ ...accentVars, ...style }} {...rest}>
         {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
-        <LoadingStyleContext.Provider value={loadingStyle}><PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
+        <ChartDefaultsContext.Provider value={chartDefaults}><LoadingStyleContext.Provider value={loadingStyle}><PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
           {mode && (
             <section className="alt-mode-strip" data-tone={mode.tone ?? 'caution'} aria-label={mode.label}>
               <strong className="alt-mode-label">{mode.label}</strong>
@@ -571,7 +606,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
           <div className="alt-layers" ref={setHost} />
           {mode && <div className="alt-mode-frame" data-tone={mode.tone ?? 'caution'} aria-hidden="true" />}
           {mode && <span className="alt-sr" aria-live="polite">{modeSaid}</span>}
-        </ModeContext.Provider></PrimaryScopeCtx.Provider></LoadingStyleContext.Provider>
+        </ModeContext.Provider></PrimaryScopeCtx.Provider></LoadingStyleContext.Provider></ChartDefaultsContext.Provider>
       </div>
     </AltitudeContext.Provider>
   );
