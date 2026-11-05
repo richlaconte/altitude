@@ -58,6 +58,7 @@ Choose by the job the data does, not by what looks rich.
 | A legend that only labels | ground | a plate set flush, like a `Badge`; better still, label the series directly |
 | An overview brush | sunk and raised | the range `Slider`: the series a flat line in a trench, the chosen window a raised lens (level 1, `accent` rim, clear face) whose grips are the thumbs; outside it the overview recedes to 35% |
 | Drilling in | ground, stacked | a `Drilldown`: the detail is laid on top, the staircase shows the way back |
+| A figure that cites its mark (`ChartCite`) | ground, lifts on hover and focus | `InlineCitation`'s plate in the sentence, in `ink` with the series' marker; it rings the cited mark in 2px `accent-ink` and opens the readout there; Enter pins it (E166) |
 | Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are solid 1px `ink-muted`, because dashes mean projected |
 | Loading | sunk | an imprint (`Await`), at the chart's own size |
 | No data | sunk | an opening (`EmptyState`) that says why and what to do |

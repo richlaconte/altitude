@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cssMs, cx, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
+import { cssMs, cx, DevChecksContext, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
 import { Button, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
 import { useDrilldown } from './nav';
 import { DataTable } from './collections';
@@ -1109,7 +1109,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const interactive = !!(info.onSelect || info.drill);
   const sameX = (a: unknown, b: unknown) => String(a) === String(b) || (isTimeLike(a) && isTimeLike(b) && toTime(a) === toTime(b));
   // Pinned readings (#190): a reading set down on the plot as a plate, at most pinMax, oldest first.
-  const pinMax = !grid && !xy && info.pinnable ? (info.pinnable === true ? 2 : Math.max(1, Math.floor(info.pinnable))) : 0;
+  // Cites (#532) pin what they cite, so a chart with cites holds two pins even when the plot itself doesn't pin.
+  const [citeCount, setCiteCount] = React.useState(0);
+  const plotPins = !grid && !xy && !!info.pinnable;
+  const pinMax = plotPins ? (info.pinnable === true ? 2 : Math.max(1, Math.floor(info.pinnable as number))) : !grid && !xy && citeCount ? 2 : 0;
   const [pinsOwn, setPinsOwn] = React.useState<Array<string | number>>([]);
   const pins = pinMax ? (info.pins ?? pinsOwn).filter((x) => data.some((d) => sameX(d[xKey], x))).slice(-pinMax) : [];
   const setPins = (next: Array<string | number>) => { info.onPinsChange?.(next); if (info.pins === undefined) setPinsOwn(next); };
@@ -1379,6 +1382,59 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     setPinSaid(`Pinned ${formatX(x)}: ${pinValues(d, true)}.${next.length === 2 ? ' ' + pinDiff(true, next) : ''}`);
   };
   const unpin = (x: unknown) => { const next = pins.filter((p) => !sameX(p, x)); setPins(next); setPinSaid(`Pin removed, ${formatX(x)}.`); };
+
+  // Citations (#532): a figure in the sentence resolved to the records it comes from, lit on the plot while it's read.
+  const [citeOn, setCiteOn] = React.useState<CiteTarget | null>(null);
+  const spanUnit = (a: ChartDatum, b: ChartDatum, n: number) => {
+    if (kind !== 'time' || n < 2) return n === 1 ? 'record' : 'records';
+    const step = (toTime(b[xKey]) - toTime(a[xKey])) / (n - 1);
+    const unit = Math.abs(step - DAY) < DAY * 0.1 ? 'day' : Math.abs(step - HOUR) < HOUR * 0.1 ? 'hour' : Math.abs(step - 7 * DAY) < DAY ? 'week' : step > 27 * DAY && step < 32 * DAY ? 'month' : 'record';
+    return unit + 's';
+  };
+  const resolveCite = (p: ChartCiteProps): CiteTarget | null => {
+    const key = p.series ?? series[0]?.key;
+    const s = allSeries.find((q) => q.key === key);
+    if (!s || grid || xy) return null;
+    let idx: number[];
+    if (p.records) idx = data.map((d, i) => (p.records!(d) ? i : -1)).filter((i) => i >= 0);
+    else {
+      if (p.x == null) return null;
+      const xv = p.x instanceof Date ? p.x.toISOString() : p.x;
+      const end = data.findIndex((d) => sameX(d[xKey], xv));
+      if (end < 0) return null;
+      const n = Math.max(1, Math.floor(p.window ?? 1));
+      idx = Array.from({ length: Math.min(n, end + 1) }, (_, j) => end - Math.min(n, end + 1) + 1 + j);
+    }
+    const vals = idx.map((i) => data[i][s.key]).filter((v): v is number => typeof v === 'number' && isFinite(v));
+    if (!vals.length) return null;
+    const sum = vals.reduce((t, v) => t + v, 0);
+    const value = vals.length === 1 && idx.length === 1 ? vals[0] : p.aggregate === 'sum' ? sum : sum / vals.length;
+    const end = idx[idx.length - 1], first = data[idx[0]], last = data[end];
+    // An average is said one place finer than the records themselves, as a mean reference line is.
+    const places = Math.min(4, Math.max(0, ...vals.map((v) => (String(v).split('.')[1] ?? '').length)));
+    const words = s.format(idx.length === 1 || p.aggregate === 'sum' ? value : Number(value.toFixed(places + 1)));
+    const short = idx.length === 1 ? '' : `${p.aggregate === 'sum' ? 'total' : 'average'} of ${idx.length} ${spanUnit(first, last, idx.length)}`;
+    const span = short && !p.records ? `${short} to ${formatX(last[xKey])}` : short;
+    const at = idx.length === 1 ? `${formatX(last[xKey])}` : span;
+    return { idx, end, series: s.key, value, band: idx.length > 1 && !p.records, words, span, short, marker: encode(s.key).marker,
+      label: idx.length === 1 ? `${s.label} on ${formatX(last[xKey])}` : `${s.label}, ${span}`,
+      name: `${s.label}, ${at}: ${words}` };
+  };
+  const citeKey = (t: CiteTarget) => `${t.series}|${t.idx.join(',')}`;
+  const citeApi = React.useRef<CiteApi>(null as unknown as CiteApi);
+  const registerCite = React.useCallback(() => { setCiteCount((n) => n + 1); return () => setCiteCount((n) => n - 1); }, []);
+  citeApi.current = {
+    resolve: resolveCite,
+    light: (t) => { setCiteOn((c) => (t && c && citeKey(c) === citeKey(t) ? c : t)); show(t ? t.end : null); },
+    pin: (t) => { const x = data[t.end]?.[xKey]; if (x === undefined) return; if (pins.some((p) => sameX(p, x))) unpin(x); else pinAt(data[t.end]); },
+    pinned: (t) => { const x = data[t.end]?.[xKey]; return x !== undefined && pins.some((p) => sameX(p, x)); },
+    register: registerCite,
+  };
+  const citeValue = React.useMemo<CiteApi>(() => ({
+    resolve: (p) => citeApi.current.resolve(p), light: (t) => citeApi.current.light(t), pin: (t) => citeApi.current.pin(t),
+    pinned: (t) => citeApi.current.pinned(t), register: registerCite,
+  // A new value each time the records, the series or the pins change, so cites re-resolve and re-say themselves.
+  }), [data, configKey, hiddenKey, pins.join('|'), registerCite]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The keyboard path (#63): the plot is one Tab stop holding three levels, summary → series → points. Enter goes
   // deeper and Escape comes back, as in Tree and Drilldown; a roving tabindex keeps one node in the tab order.
@@ -1816,7 +1872,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // A tap (released before the hold that shows the readout) selects or drills, where marks act.
     if (interactive && e.pointerType === 'touch' && h && !sticky.current) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) activate(d); }
     // With the touch readout open, a quick tap on the plot pins the reading (#190).
-    else if (!interactive && pinMax && e.pointerType === 'touch' && h?.open && Date.now() - (h.t ?? 0) < 250 && Math.hypot(e.clientX - h.x, e.clientY - h.y) < 8) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); }
+    else if (!interactive && plotPins && e.pointerType === 'touch' && h?.open && Date.now() - (h.t ?? 0) < 250 && Math.hypot(e.clientX - h.x, e.clientY - h.y) < 8) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); }
   };
   /** The record a shown mark stands for, by its key: the shown rows glide, but what's chosen is the record itself. */
   const recordAt = (i: number) => { const shown = top.ctx.data[i]; if (!shown) return null; const k = rowKey(shown); return data.find((d) => rowKey(d) === k) ?? null; };
@@ -1824,7 +1880,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if ((e.target as HTMLElement).closest('button, a, .alt-chart-note')) return;
     if ((e.nativeEvent as PointerEvent).pointerType === 'touch') return;
     // Where a click doesn't select or drill, it pins the reading under the pointer (#190).
-    if (!interactive) { if (pinMax && tooltipOn) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); } return; }
+    if (!interactive) { if (plotPins && tooltipOn) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); } return; }
     const i = nearest(e.clientX, e.clientY);
     const d = i === null ? null : recordAt(i);
     if (d) activate(d);
@@ -1907,7 +1963,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // Escape clears the last pin, then a selection, then goes back up a level. P pins the reading at the point (#190).
     if (e.key === 'Escape' && pins.length) { e.preventDefault(); e.stopPropagation(); unpin(pins[pins.length - 1]); return; }
     if (e.key === 'Escape' && selecting) { e.preventDefault(); e.stopPropagation(); info.onSelect?.(null); return; }
-    if ((e.key === 'p' || e.key === 'P') && pinMax && at.level === 'points' && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); const d = recordAt(at.p); if (d) pinAt(d); return; }
+    if ((e.key === 'p' || e.key === 'P') && plotPins && at.level === 'points' && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); const d = recordAt(at.p); if (d) pinAt(d); return; }
     if (at.level === 'summary') {
       // Into the records at the chart type's first (Ctrl+Home): the leftmost dot, the grid's first cell.
       const first = single && childType?.chartMove ? childType.chartMove(childProps, top.ctx, 0, { key: 'Home', ctrlKey: true, metaKey: false } as React.KeyboardEvent) ?? 0 : 0;
@@ -2007,13 +2063,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const content = tipEl?.props.content ?? <ChartTooltipContent indicator={own?.indicator} />;
     return (
       <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
-        {React.cloneElement(content, { label: own ? own.label : d[xKey], payload, formatX: own ? String : formatX, note: (() => { const st = statusOf(d); const words = [st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' && !selecting ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })(),
-          action: [interactive ? actionWord(d) : '', !pinMax ? '' : pins.some((p) => sameX(p, d[xKey])) ? 'Pinned' : navFocused ? 'P to pin' : interactive ? '' : sticky.current ? 'Tap to pin' : 'Click to pin'].filter(Boolean).join(' · ') || undefined })}
+        {React.cloneElement(content, { label: own ? own.label : d[xKey], payload, formatX: own ? String : formatX, note: (() => { const st = statusOf(d); const cited = citeOn && citeOn.span && data[citeOn.end] && rowKey(data[citeOn.end]) === rowKey(d) ? `Cited: ${citeOn.short}, ${citeOn.words}` : ''; const words = [cited, st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' && !selecting ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })(),
+          action: [interactive ? actionWord(d) : '', !plotPins ? (pins.some((p) => sameX(p, d[xKey])) ? 'Pinned' : '') : pins.some((p) => sameX(p, d[xKey])) ? 'Pinned' : navFocused ? 'P to pin' : interactive ? '' : sticky.current ? 'Tap to pin' : 'Click to pin'].filter(Boolean).join(' · ') || undefined })}
       </div>
     );
   })();
 
   return (
+    <CiteContext.Provider value={citeValue}>
     <ChartContext.Provider value={top.ctx}>
       <figure className={cx('alt-chart', className)} style={{ ...vars, ...style }} aria-labelledby={labelledBy}
         aria-describedby={[takeId, descId, sumId].filter(Boolean).join(' ')} {...rest}>
@@ -2059,6 +2116,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                           : <line key={t.v} x1={0} x2={pw} y1={at} y2={at} opacity={t.a < 1 ? t.a : undefined} />;
                       })}
                     </g>
+                    {/* A cited stretch (#532): a flat line-coloured band under the records the figure covers. */}
+                    {i === layers.length - 1 && citeOn?.band && (() => {
+                      const rows = citeOn.idx.map((j) => ctx.data[j]).filter(Boolean);
+                      if (!rows.length) return null;
+                      const xs = rows.map((d) => ctx.xOf(d)), half = ctx.x.kind === 'band' ? ctx.x.step / 2 : rows.length > 1 ? (Math.max(...xs) - Math.min(...xs)) / (rows.length - 1) / 2 : 4;
+                      const a = Math.max(0, Math.min(...xs) - half), b = Math.min(horizontal ? ph : pw, Math.max(...xs) + half);
+                      return horizontal ? <rect className="alt-chart-cite-band" x={0} y={a} width={pw} height={b - a} /> : <rect className="alt-chart-cite-band" x={a} y={0} width={b - a} height={ph} />;
+                    })()}
                     {i === layers.length - 1 && tooltipOn && ctx.active && !grid && !xy && (() => {
                       const at = Math.round(ctx.xOf(ctx.active)) + 0.5;
                       return horizontal ? <line className="alt-chart-crosshair" x1={0} x2={pw} y1={at} y2={at} /> : <line className="alt-chart-crosshair" x1={at} x2={at} y1={0} y2={ph} />;
@@ -2120,6 +2185,19 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                       </g>
                     )}
                     {/* Hover is a promise: only where a click selects or drills, the record under the pointer is outlined in 2px ink. */}
+                    {/* The cited mark (#532): the keyboard's 2px accent-ink ring, flat on the record; never a lift. */}
+                    {i === layers.length - 1 && citeOn && !citeOn.band && (
+                      <g className="alt-chart-cite-ring" aria-hidden="true">
+                        {citeOn.idx.slice(0, 24).map((j) => {
+                          const d = ctx.data[j];
+                          if (!d) return null;
+                          const path = childType?.chartMark?.(childProps, ctx, d, citeOn.series);
+                          if (path) return <path key={j} d={path} />;
+                          const [px, py] = ChartPointFn ? ChartPointFn(childProps, ctx, d, citeOn.series) : [ctx.xOf(d), ctx.y(d[citeOn.series] as number)];
+                          return <circle key={j} cx={px} cy={py} r={7} />;
+                        })}
+                      </g>
+                    )}
                     {i === layers.length - 1 && interactive && ctx.active && (
                       <g className="alt-chart-hover" aria-hidden="true" key={rowKey(ctx.active)}>
                         {ctx.series.filter((s2) => typeof ctx.active![s2.key] === 'number').map((s2) => {
@@ -2254,6 +2332,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         </figcaption>
       </figure>
     </ChartContext.Provider>
+    </CiteContext.Provider>
   );
 }
 
@@ -2350,6 +2429,93 @@ const IMPRINT_DOTS = [[8, 74], [15, 62], [21, 78], [28, 55], [35, 66], [42, 48],
  * A takeaway, as the chart's heading. When its words change with the data it cross-fades (dur-travel-2), as a Stat's
  * value does, without the afterglow: the marks' changes already spend the attention.
  */
+/* ───────────────────────── citations (#532) ───────────────────────── */
+
+export interface ChartCiteProps {
+  /** The x of the record the figure comes from. With `window`, the last of the records it covers. */
+  x?: string | number | Date;
+  /** The series the figure reads. Default: the chart's first shown series. */
+  series?: string;
+  /** The figure is over the `window` records ending at `x` (an average, or a sum with `aggregate="sum"`). */
+  window?: number;
+  /** The figure is over the records this picks, instead of `x`. */
+  records?: (d: ChartDatum) => boolean;
+  /** How a figure over several records is made. Default 'mean'. */
+  aggregate?: 'mean' | 'sum';
+  /** The figure, as the sentence says it: "39 a day", "80", "3.2%". */
+  children: React.ReactNode;
+  className?: string;
+}
+/** What a cite resolves to in its chart: the records it covers, the value they make, and what to say about it. */
+interface CiteTarget { idx: number[]; end: number; series: string; value: number; band: boolean; name: string; words: string; label: string; span: string; short: string; marker: ChartMarkerShape }
+interface CiteApi {
+  resolve: (p: ChartCiteProps) => CiteTarget | null;
+  light: (t: CiteTarget | null) => void;
+  pin: (t: CiteTarget) => void;
+  pinned: (t: CiteTarget) => boolean;
+  register: () => () => void;
+}
+const CiteContext = React.createContext<CiteApi | null>(null);
+
+/** The first number in a figure as written, with its sign, decimals and a K/M/B/T suffix: "1.2K users" → 1200 (±50). */
+export function readFigure(text: string): { value: number; tolerance: number } | null {
+  const m = /([-−+]?)(\d[\d,   ]*(?:\.\d+)?|\.\d+)\s*([kKmMbBtT](?![a-z]))?/.exec(text);
+  if (!m) return null;
+  const digits = m[2].replace(/[,   ]/g, '');
+  const dec = (digits.split('.')[1] ?? '').length;
+  const mult = ({ k: 1e3, m: 1e6, b: 1e9, t: 1e12 } as Record<string, number>)[(m[3] ?? '').toLowerCase()] ?? 1;
+  const sign = m[1] === '-' || m[1] === '−' ? -1 : 1;
+  return { value: sign * parseFloat(digits) * mult, tolerance: 0.5 * Math.pow(10, -dec) * mult + 1e-9 };
+}
+const textOf = (n: React.ReactNode): string => (n == null || typeof n === 'boolean' ? '' : typeof n === 'string' || typeof n === 'number' ? String(n)
+  : Array.isArray(n) ? n.map(textOf).join('') : React.isValidElement(n) ? textOf((n.props as { children?: React.ReactNode }).children) : '');
+const warnedCites = new Set<string>();
+
+/**
+ * A figure in a chart's takeaway, description or summary that cites the mark it comes from (#532). It's InlineCitation's
+ * flush plate at text size, in ink, with the series' marker shape: pointing at it or focusing it lights the mark with
+ * the keyboard's ring and opens the readout there (a window lays a flat band under the stretch it covers); Enter or a
+ * click pins the reading, so the check settles into the record. With the provider's devChecks on, a cite whose x isn't
+ * in the data, or whose figure isn't the record's value at the format's precision, warns.
+ */
+export function ChartCite(props: ChartCiteProps) {
+  const api = React.useContext(CiteContext);
+  const dev = React.useContext(DevChecksContext);
+  const target = api?.resolve(props) ?? null;
+  const figure = textOf(props.children);
+  React.useEffect(() => api?.register(), [api?.register]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A figure that isn't in the data is a defect, not a style: say so while building.
+  const said = target ? `${target.series}|${target.end}|${target.value}|${figure}` : `missing|${String(props.x)}|${props.series ?? ''}|${figure}`;
+  React.useEffect(() => {
+    if (!dev || !api || warnedCites.has(said)) return;
+    let problem = '';
+    if (!target) problem = `ChartCite: '${figure}' cites ${props.series ?? 'a series'} at ${props.x instanceof Date ? props.x.toISOString() : String(props.x ?? '(no x)')}, which isn't in the chart's data.`;
+    else {
+      const read = readFigure(figure);
+      const shown = readFigure(target.words);
+      const near = (r: { value: number; tolerance: number } | null, v: number) => !!r && Math.abs(r.value - v) <= r.tolerance + Math.abs(v) * 1e-9;
+      // Right if the figure is the value at the figure's own precision, or as the series' format says it.
+      if (read && !near(read, target.value) && !(shown && Math.abs(read.value - shown.value) <= Math.max(read.tolerance, shown.tolerance))) {
+        problem = `ChartCite: '${figure}' cites ${target.label}, which is ${target.words}.`;
+      }
+    }
+    if (problem) { warnedCites.add(said); console.warn(problem); }
+  }, [dev, said]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!api) return <>{props.children}</>;
+  if (!target) return <span className={cx('alt-chart-cite', props.className)} data-missing="">{props.children}</span>;
+  const pinned = api.pinned(target);
+  return (
+    <button type="button" className={cx('alt-chart-cite', props.className)} data-pinned={pinned ? '' : undefined}
+      aria-label={`${figure}, cites ${target.name}. ${pinned ? 'Pinned.' : 'Press Enter to pin.'}`}
+      onPointerEnter={() => api.light(target)} onPointerLeave={(e) => { if (document.activeElement !== e.currentTarget) api.light(null); }}
+      onFocus={() => api.light(target)} onBlur={() => api.light(null)}
+      onClick={() => api.pin(target)}>
+      <svg className="alt-chart-cite-mark" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><ChartMarker shape={target.marker} x={5} y={5} size={7} color="currentColor" /></svg>
+      {props.children}
+    </button>
+  );
+}
+
 function ChartTakeaway({ id, children }: { id: string; children: React.ReactNode }) {
   const text = typeof children === 'string' ? children : null;
   const [prev, setPrev] = React.useState<{ text: string; key: number } | null>(null);

@@ -483,6 +483,9 @@ export function ModePlate() {
   return mode ? <span className="alt-badge alt-mode-plate" data-tone={mode.tone ?? 'caution'} data-variant="plate">{mode.label}</span> : null;
 }
 
+/** Whether the nearest AltitudeProvider runs its development checks (`devChecks`), for components that warn. */
+export const DevChecksContext = React.createContext(false);
+
 export function AltitudeProvider({ scheme, accent, motion = 'system', contrast = 'system', density = 'auto', recede = true, approach = true, loading, mode, devChecks, className, style, children, ...rest }: AltitudeProviderProps) {
   // Breath holds for everything inside the provider that sets it (its CSS matches any breath ancestor), so a nested
   // provider can turn it on but not back off.
@@ -559,7 +562,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
         data-motion={motion === 'system' ? undefined : motion} data-contrast={contrast === 'more' ? 'more' : undefined} data-density={density === 'auto' ? undefined : density}
         data-approach-off={approach ? undefined : ''} data-loading={loading} style={{ ...accentVars, ...style }} {...rest}>
         {custom && <style>{schemeCss(schemeSel, custom.tokens)}</style>}
-        <LoadingStyleContext.Provider value={loadingStyle}><PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
+        <DevChecksContext.Provider value={checks}><LoadingStyleContext.Provider value={loadingStyle}><PrimaryScopeCtx.Provider value={pageScope}><ModeContext.Provider value={mode ?? null}>
           {mode && (
             <section className="alt-mode-strip" data-tone={mode.tone ?? 'caution'} aria-label={mode.label}>
               <strong className="alt-mode-label">{mode.label}</strong>
@@ -571,7 +574,7 @@ export function AltitudeProvider({ scheme, accent, motion = 'system', contrast =
           <div className="alt-layers" ref={setHost} />
           {mode && <div className="alt-mode-frame" data-tone={mode.tone ?? 'caution'} aria-hidden="true" />}
           {mode && <span className="alt-sr" aria-live="polite">{modeSaid}</span>}
-        </ModeContext.Provider></PrimaryScopeCtx.Provider></LoadingStyleContext.Provider>
+        </ModeContext.Provider></PrimaryScopeCtx.Provider></LoadingStyleContext.Provider></DevChecksContext.Provider>
       </div>
     </AltitudeContext.Provider>
   );
