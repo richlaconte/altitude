@@ -208,10 +208,10 @@ function Page() {
           </a>
           <div className="nav-end">
             <nav className="nav-links" aria-label="Site">
-              <a href={LINKS.storybook}>Components</a>
-              <a className="nav-local" href={LINKS.guide}>Guide</a>
+              <a href={LINKS.storybook} target="_blank" rel="noopener noreferrer">Components</a>
+              <a className="nav-local" href={LINKS.guide} target="_blank" rel="noopener noreferrer">Guide</a>
               <a className="nav-local" href="#examples">Examples</a>
-              <a className="nav-local" href={LINKS.github}>GitHub</a>
+              <a className="nav-local" href={LINKS.github} target="_blank" rel="noopener noreferrer">GitHub</a>
             </nav>
             <Tabs variant="segmented" className="scheme-toggle" value={scheme} onValueChange={(v) => setScheme(v as BuiltInScheme)}>
               <TabsList aria-label="Colour scheme">{SCHEMES.map((s) => <TabsTrigger key={s.id} value={s.id}>{s.label}</TabsTrigger>)}</TabsList>
@@ -232,7 +232,7 @@ function Page() {
                 in-between states right.
               </p>
               <div className="hero-actions">
-                <a className="alt-btn" data-variant="primary" data-size="lg" href={LINKS.storybook}><span className="alt-btn-label">Browse components</span></a>
+                <a className="alt-btn" data-variant="primary" data-size="lg" href={LINKS.storybook} target="_blank" rel="noopener noreferrer"><span className="alt-btn-label">Browse components</span></a>
                 <a className="alt-btn" data-variant="secondary" data-size="lg" href="#agents"><span className="alt-btn-label">Set up your agent</span></a>
               </div>
               <CodeBlock className="hero-install" title="Install" tabs={installTabs} syntax={syntax} />
@@ -249,7 +249,7 @@ function Page() {
               <h2 className="h2" id="loading-title">Skeletons you don't write.</h2>
               <p className="lede">
                 Pass your data as you already do. While it's undefined, each component holds its own shape; when it arrives,
-                the content rises into place. No loading flags. <a href={LINKS.awaitDocs}>Read the loading guide</a>.
+                the content rises into place. No loading flags. <a href={LINKS.awaitDocs} target="_blank" rel="noopener noreferrer">Read the loading guide</a>.
               </p>
             </div>
             <SuspenseDemo />
@@ -266,7 +266,7 @@ function Page() {
               <ul className="points">
                 <li>
                   <strong>Guidance in the package.</strong> {__SITE__.patterns} task patterns: editing a record, finding records,
-                  billing, sign-in, sync and more. Your agent reads the copy that matches your installed version. <a href={LINKS.framework}>See the patterns</a>.
+                  billing, sign-in, sync and more. Your agent reads the copy that matches your installed version. <a href={LINKS.framework} target="_blank" rel="noopener noreferrer">See the patterns</a>.
                 </li>
                 <li>
                   <strong>A checker.</strong> <code>altitude check</code> flags hard-coded colours, a missing provider, pie charts
@@ -274,7 +274,7 @@ function Page() {
                 </li>
                 <li>
                   <strong>Components for the agent itself.</strong> Proposals, streaming answers, traces and a fleet of agents
-                  on one job. <a href="agent.html">Watch an agent run</a>.
+                  on one job. <a href="agent.html" target="_blank" rel="noopener noreferrer">Watch an agent run</a>.
                 </li>
               </ul>
               <CodeBlock title="Point your agent at the installed guidance" language="sh" code={agentSetup} syntax={syntax} />
@@ -283,7 +283,7 @@ function Page() {
               <h3 className="h3">Example apps you can break</h3>
               <p className="lede small">Whole products on a simulated server in your browser. Make the next save slow, fail, lose its response or conflict, and see what the product does.</p>
               <ul className="example-links">
-                {__SITE__.examples.map((e) => <li key={e.slug}><a href={`examples/${e.slug}.html`}>{e.title}</a></li>)}
+                {__SITE__.examples.map((e) => <li key={e.slug}><a href={`examples/${e.slug}.html`} target="_blank" rel="noopener noreferrer">{e.title}</a></li>)}
               </ul>
             </div>
           </div>
@@ -296,11 +296,11 @@ function Page() {
               <p className="lede">React 18.2 or 19. The props mirror shadcn/ui, so most of it will feel familiar.</p>
               <p className="lede small">
                 The rules come from perception research and {__SITE__.experiments} experiments measured in Altitude's own
-                rendering. <a href={LINKS.research}>Research</a> records what's proven, what isn't yet, and what was dropped.
+                rendering. <a href={LINKS.research} target="_blank" rel="noopener noreferrer">Research</a> records what's proven, what isn't yet, and what was dropped.
               </p>
               <div className="start-links">
-                <a className="alt-btn" data-variant="primary" data-size="md" href={LINKS.storybook}><span className="alt-btn-label">Browse components</span></a>
-                <a href={LINKS.guide}>Read the design guide</a>
+                <a className="alt-btn" data-variant="primary" data-size="md" href={LINKS.storybook} target="_blank" rel="noopener noreferrer"><span className="alt-btn-label">Browse components</span></a>
+                <a href={LINKS.guide} target="_blank" rel="noopener noreferrer">Read the design guide</a>
               </div>
             </div>
             <div className="start-code">
@@ -314,10 +314,10 @@ function Page() {
         <div className="wrap foot-row">
           <span>Altitude · MIT licence · this page is built with Altitude</span>
           <nav className="nav-links" aria-label="Elsewhere">
-            <a href={LINKS.storybook}>Storybook</a>
-            <a href={LINKS.npm}>npm</a>
-            <a href={LINKS.github}>GitHub</a>
-            <a href={`${LINKS.github}/issues/new/choose`}>Report an issue</a>
+            <a href={LINKS.storybook} target="_blank" rel="noopener noreferrer">Storybook</a>
+            <a href={LINKS.npm} target="_blank" rel="noopener noreferrer">npm</a>
+            <a href={LINKS.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href={`${LINKS.github}/issues/new/choose`} target="_blank" rel="noopener noreferrer">Report an issue</a>
           </nav>
         </div>
       </footer>

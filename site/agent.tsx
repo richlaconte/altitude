@@ -27,7 +27,7 @@ function Page() {
       <header className="nav">
         <div className="wrap nav-row">
           <a className="brand" href="./" aria-label="Altitude, home"><span className="mark" aria-hidden="true"><i /><i /><i /></span>Altitude</a>
-          <nav className="nav-links" aria-label="Site"><a href="./">Home</a><a href="./storybook/">Components</a><a href="https://github.com/richlaconte/altitude">GitHub</a></nav>
+          <nav className="nav-links" aria-label="Site"><a href="./">Home</a><a href="./storybook/" target="_blank" rel="noopener noreferrer">Components</a><a href="https://github.com/richlaconte/altitude" target="_blank" rel="noopener noreferrer">GitHub</a></nav>
         </div>
       </header>
       <main>
