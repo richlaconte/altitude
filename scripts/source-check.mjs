@@ -38,6 +38,14 @@ export const RULES = {
   'ALT-SETUP-002': { kind: 'deterministic', title: "Altitude's stylesheet is imported" },
   'ALT-SETUP-003': { kind: 'deterministic', title: 'The app is wrapped in AltitudeProvider' },
   'ALT-CHART-001': { kind: 'deterministic', title: 'No pie or donut charts' },
+  'ALT-CHART-002': { kind: 'deterministic', title: 'One axis per plot' },
+  'ALT-CHART-003': { kind: 'deterministic', title: 'Bars stand on zero' },
+  'ALT-CHART-004': { kind: 'deterministic', title: 'Marks are flat ink' },
+  'ALT-CHART-005': { kind: 'deterministic', title: 'Colour does one job' },
+  'ALT-CHART-006': { kind: 'deterministic', title: 'Every chart has a name' },
+  'ALT-CHART-007': { kind: 'deterministic', title: 'No decorative entrances' },
+  'ALT-CHART-008': { kind: 'contextual-review', title: 'A chart that leads a report says one thing first' },
+  'ALT-CHART-009': { kind: 'contextual-review', title: 'Importance is emphasis' },
   'ALT-COPY-001': { kind: 'deterministic', title: 'Buttons name their outcome, never OK or Submit' },
   'ALT-PRIMARY-001': { kind: 'contextual-review', title: 'One primary action per view' },
   'ALT-VISUAL-004': { kind: 'contextual-review', title: "Controls keep Altitude's elevation" },
@@ -45,6 +53,125 @@ export const RULES = {
 
 // tokenNames: custom property names from the installed tokens.css, so `ink: '#…'` inside a custom scheme (which
 // defines tokens rather than bypassing them) isn't reported.
+/** The names a file imports from a module: named imports (by their local name) and namespace imports (`A` in `A.Bar`). */
+function importsFrom(text, mod) {
+  const named = new Map(), spaces = new Set();
+  const q = mod.replace(/[/.]/g, (c) => '\\' + c);
+  for (const m of text.matchAll(new RegExp(`import\\s+(?:type\\s+)?((?:(?!\\bimport\\b)[^;])*?)\\s+from\\s*['"]${q}['"]`, 'g'))) {
+    const clause = m[1];
+    const ns = clause.match(/\*\s+as\s+(\w+)/);
+    if (ns) spaces.add(ns[1]);
+    const braces = clause.match(/\{([^}]*)\}/);
+    if (braces) for (const part of braces[1].split(',')) { const [orig, local] = part.trim().replace(/^type\s+/, '').split(/\s+as\s+/); if (orig) named.set((local ?? orig).trim(), orig.trim()); }
+  }
+  /** The module's own name for a JSX tag ("A.BarChart" or a local alias), or null when the tag isn't from it. */
+  const of = (tag) => { const dot = tag.indexOf('.'); return dot > 0 ? (spaces.has(tag.slice(0, dot)) ? tag.slice(dot + 1) : null) : named.get(tag) ?? null; };
+  return { any: named.size > 0 || spaces.size > 0, of };
+}
+
+/**
+ * Every JSX element in `text` whose tag (bare or namespaced) a module names one of `names`: its opening tag, its
+ * children up to the matching close (empty when self-closing) and its line. Braces and quotes are tracked, so an arrow
+ * or a comparison inside a prop doesn't end the tag. No parser: good enough for the shapes generated apps write.
+ */
+function elements(text, from, names) {
+  const out = [];
+  for (const m of text.matchAll(/<((?:\w+\.)?[A-Z]\w*)(?=[\s/>])/g)) {
+    const own = from.of(m[1]);
+    if (!own || !names.includes(own)) continue;
+    let i = m.index + m[0].length, depth = 0, quote = null;
+    for (; i < text.length; i++) {
+      const c = text[i];
+      if (quote) { if (c === quote) quote = null; continue; }
+      if (c === '"' || c === "'" || c === '`') { if (depth === 0 || c === '`' || /[=(,:\[{\s]/.test(text[i - 1])) quote = c; continue; }
+      if (c === '{') depth++; else if (c === '}') depth--; else if (c === '>' && depth === 0) break;
+    }
+    const tag = text.slice(m.index, i + 1);
+    let body = '';
+    if (!/\/\s*>$/.test(tag)) { const close = text.indexOf(`</${m[1]}>`, i); body = close < 0 ? '' : text.slice(i + 1, close); }
+    out.push({ name: own, tag, body, line: text.slice(0, m.index).split('\n').length });
+  }
+  return out;
+}
+const prop = (tag, name) => new RegExp(`\\s${name.replace(/[-]/g, '\\-')}(?=[\\s=/>])`).test(tag);
+const spread = (tag) => /\{\s*\.\.\./.test(tag);
+const RECHARTS_CHARTS = ['LineChart', 'BarChart', 'AreaChart', 'ComposedChart', 'ScatterChart', 'RadarChart'];
+const RECHARTS_MARKS = ['Bar', 'Line', 'Area', 'Scatter', 'Pie', 'Radar', 'RadialBar', 'Funnel'];
+const ALTITUDE_CHARTS = ['BarChart', 'LineChart', 'AreaChart', 'ScatterChart', 'Heatmap', 'DotPlot', 'Sparkline', 'SpanWaterfall'];
+const RESERVED_HUE = /^(?:accent|accent-ink|accent-soft|presence-[1-3])$/;
+
+/** The chart rules (ALT-CHART-002 to -009) for one source file. `add(id, line, observed, repair)`. */
+function chartRules(text, rawLines, add) {
+  const rc = importsFrom(text, 'recharts'), alt = importsFrom(text, 'altitude-design');
+  const skip = (id, line) => ignored(rawLines, line - 1, id);
+  const say = (id, line, observed, repair) => { if (!skip(id, line)) add(id, line, observed.replace(/\s+/g, ' ').trim().slice(0, 160), repair); };
+  if (rc.any) {
+    for (const c of elements(text, rc, RECHARTS_CHARTS)) {
+      // ALT-CHART-002: two value axes on one plot.
+      const axes = elements(c.body, rc, ['YAxis']);
+      const ids = new Set([...c.body.matchAll(/\byAxisId=\{?\s*['"]?([\w-]+)/g)].map((m) => m[1]));
+      if (axes.length > 1 || ids.size > 1) say('ALT-CHART-002', c.line, c.tag, 'Two measures of different scale are two charts, small multiples, or indexed to a common base: two scales on one plot invite a correlation the data never made (Charts.md, rule 6).');
+      // ALT-CHART-003: a bar chart's value axis that doesn't start at zero.
+      const bars = c.name === 'BarChart' || elements(c.body, rc, ['Bar']).length > 0;
+      if (bars) for (const a of axes) {
+        const d = a.tag.match(/\bdomain=\{\s*\[\s*([^,\]]+)/);
+        const lo = d && d[1].trim().replace(/^['"]|['"]$/g, '');
+        if (lo && (/^(dataMin|auto)/.test(lo) || (/^-?\d+(\.\d+)?$/.test(lo) && Number(lo) > 0))) say('ALT-CHART-003', c.line + a.line - 1, a.tag, "Keep zero on a bar chart's value axis: a bar that starts above zero misstates its length. Values where zero isn't meaningful are a DotPlot (Charts.md, rule 2).");
+      }
+      // ALT-CHART-006: a chart with no accessible name, or its accessibility layer turned off.
+      if (/\baccessibilityLayer=\{\s*false\s*\}/.test(c.tag) || (!spread(c.tag) && !prop(c.tag, 'title') && !prop(c.tag, 'aria-label') && !prop(c.tag, 'aria-labelledby')))
+        say('ALT-CHART-006', c.line, c.tag, 'Name the chart (title, aria-label or aria-labelledby) and keep accessibilityLayer on: a chart has a name, a summary, a keyboard path and a table view (Charts.md, rule 8).');
+    }
+    for (const m of elements(text, rc, RECHARTS_MARKS)) {
+      // ALT-CHART-004: a gradient, a filter (a shadow or glow) or a fully rounded bar.
+      const r = m.tag.match(/\bradius=\{\s*(\[[^\]]*\]|\d+(?:\.\d+)?)\s*\}/);
+      const corners = r ? (r[1].startsWith('[') ? r[1].slice(1, -1).split(',').map(Number) : [Number(r[1])]) : [];
+      const roundFoot = m.name === 'Bar' && (corners.length === 1 ? corners[0] > 0 : corners.length === 4 && (corners[2] > 0 || corners[3] > 0));
+      if (/\bfill=\{?\s*['"`]url\(#/.test(m.tag) || prop(m.tag, 'filter') || /\bstyle=\{\{[^}]*\bfilter\s*:/.test(m.tag) || roundFoot)
+        say('ALT-CHART-004', m.line, m.tag, "Draw marks as flat ink in a series colour: no gradient, shadow, glow or sheen, and round only a bar's data end. Depth costs accuracy, and a sheen says press it (Charts.md, rule 1).");
+      // ALT-CHART-005: a reserved hue on a series.
+      const hue = m.tag.match(/\b(?:fill|stroke)=\{?\s*['"`]var\(--([\w-]+)\)/);
+      if (hue && RESERVED_HUE.test(hue[1])) say('ALT-CHART-005', m.line, m.tag, `Colour a series from the data palette (var(--data-1) to var(--data-6), var(--data-other)): ${hue[1]} already means something else in Altitude (Charts.md, rule 5).`);
+      // ALT-CHART-007: an entrance animation (Recharts animates marks in by default).
+      const anim = m.tag.match(/\bisAnimationActive(?:=\{\s*([^}]*?)\s*\})?(?=[\s/>])/);
+      const begin = m.tag.match(/\banimationBegin=\{\s*(\d+)/);
+      if (!anim || anim[1] === undefined || anim[1] === 'true' || (begin && Number(begin[1]) > 0))
+        say('ALT-CHART-007', m.line, m.tag, "Set isAnimationActive={false}, or a reduced-motion-aware value that's false on first render: a chart is simply there, and nothing grows from the baseline for decoration (Charts.md, rule 7).");
+    }
+  }
+  if (alt.any) {
+    const containers = elements(text, alt, ['ChartContainer']);
+    containers.forEach((c, n) => {
+      const whole = c.tag + c.body;
+      // ALT-CHART-003: a fixed y domain above zero on a bar chart.
+      const y = c.tag.match(/\byDomain=\{\s*\[\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\]/);
+      if (y && (Number(y[1]) > 0 || Number(y[2]) < 0) && elements(c.body, alt, ['BarChart']).length)
+        say('ALT-CHART-003', c.line, c.tag, "Leave yDomain off a bar chart, or include zero in it: a bar that starts above zero misstates its length (Charts.md, rule 2).");
+      // ALT-CHART-006: a chart with no name.
+      if (!spread(c.tag) && !prop(c.tag, 'title') && !prop(c.tag, 'aria-label') && !prop(c.tag, 'aria-labelledby'))
+        say('ALT-CHART-006', c.line, c.tag, 'Give the ChartContainer a title, or aria-labelledby pointing at the CardTitle that names it (Charts.md, rule 8).');
+      // ALT-CHART-008: the first chart in a page's main content, with no takeaway.
+      if (n === 0 && /<main[\s>]/.test(text) && !prop(c.tag, 'takeaway'))
+        say('ALT-CHART-008', c.line, c.tag, 'If this chart leads a report, give it a takeaway: the one thing it says, written from the data shown (Charts.md, rule 9). A row of equal dashboard cards can do without one.');
+      // ALT-CHART-009: three or more series in an inline config with nothing said to matter.
+      const cfg = c.tag.match(/\bconfig=\{\{([\s\S]*?)\}\}(?=[\s/>])/);
+      const series = cfg ? (cfg[1].match(/\blabel\s*:/g) || []).length : 0;
+      if (series >= 3 && !prop(c.tag, 'takeaway') && !/\sfocus=/.test(whole))
+        say('ALT-CHART-009', c.line, c.tag, `${series} series and nothing says which matters: give the chart type focus for the series it's about, or a takeaway that names it (Charts.md, rule 5, "Focus").`);
+    });
+    // ALT-CHART-004: a filter (a drop shadow, a glow) on one of Altitude's charts.
+    for (const m of elements(text, alt, ALTITUDE_CHARTS))
+      if (prop(m.tag, 'filter') || /\bstyle=\{\{[^}]*\bfilter\s*:/.test(m.tag))
+        say('ALT-CHART-004', m.line, m.tag, "Remove the filter: a chart's marks are flat ink on the ground, and a shadow on a bar misstates its value (Charts.md, rule 1).");
+    // ALT-CHART-005: a series config that takes the accent, a presence hue or a status colour.
+    const lines = text.split('\n');
+    lines.forEach((l, i) => {
+      const m = l.match(/\blabel\s*:[^{}]*\bcolor\s*:\s*['"](accent[\w-]*|presence-[1-3]|positive|caution|critical)['"]|\bcolor\s*:\s*['"](accent[\w-]*|presence-[1-3]|positive|caution|critical)['"][^{}]*\blabel\s*:/);
+      if (m) say('ALT-CHART-005', i + 1, l, `A series' color is a data slot (data-1 to data-6, data-other): ${m[1] ?? m[2]} already means something else. Status that means good or bad goes with an icon and a word (Charts.md, rule 5).`);
+    });
+  }
+}
+
 export function scan(root, { tokenNames = new Set() } = {}) {
   const findings = [];
   const add = (id, file, line, observed, repair) => findings.push({ ruleId: id, kind: RULES[id].kind, status: RULES[id].kind === 'deterministic' ? 'fail' : 'review', file: file && relative(root, file), line, observed, expected: RULES[id].title, repair, verification: `altitude explain ${id}` });
@@ -85,6 +212,15 @@ export function scan(root, { tokenNames = new Set() } = {}) {
       // ALT-VISUAL-004: an elevation override on a control whose height carries meaning.
       const lift = line.match(/<(?:\w+\.)?(Input|Textarea|Select|Combobox|Button|Switch|Checkbox)\b[^>]*(boxShadow|box-shadow|\bshadow-(?!none)[\w-]+|\btranslate-y-|\btransform\s*:)/);
       if (lift && !skip('ALT-VISUAL-004')) add('ALT-VISUAL-004', file, at, line.trim().slice(0, 160), `Remove the override: a ${lift[1]}'s height is how it says whether you press it or fill it. Use the component's variant or size props instead.`);
+    });
+    if (!css) chartRules(text, rawLines, (id, line, observed, repair) => add(id, file, line, observed, repair));
+    // ALT-CHART-005: shadcn/ui's chart colours mapped to anything but the data palette (Theming.md, "With shadcn/ui").
+    lines.forEach((line, i) => {
+      for (const m of line.matchAll(/['"]?--chart-(\d+)['"]?\s*:\s*['"]?([^;'"}\n]+)/g)) {
+        const v = m[2].trim();
+        if (!/^var\(--data-(?:[1-6]|other)\)$/.test(v) && !ignored(rawLines, i, 'ALT-CHART-005'))
+          add('ALT-CHART-005', file, i + 1, line.trim().slice(0, 160), `Map --chart-${m[1]} to the data palette, var(--data-${Math.min(6, Number(m[1]) || 1)}): series colours come from data-1 to data-6, never the accent, a status colour or a literal (Theming.md, "With shadcn/ui").`);
+      }
     });
     if (!css) {
       const n = (text.match(/<(?:\w+\.)?AltitudeProvider\b/g) || []).length;

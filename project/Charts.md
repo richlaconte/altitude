@@ -22,6 +22,8 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
 8. **A chart never travels alone.** As height never travels alone: every chart has a written summary, a keyboard path through its data, a table view, and direct labels or patterns so no series is told apart by colour alone.
 9. **Say one thing first.** A chart that makes a point leads with it: a `takeaway` is the chart's heading ("Cedar deployed nearly three times as often as Delta"), and its title becomes the small label above. Readers fixate on and recall the words at the top, and take away what they say, even against the chart (E102). So the takeaway is authored, never generated: write it from the data shown, as a trend or a comparison rather than a restatement of the encoding ("Deploys by team" is a title, not a takeaway). The application owns its truth, as it owns persistence. A row of equal dashboard cards can do without one; a chart in a report rarely should.
 
+**Checked, not assumed.** `altitude check` reports what it can read of these rules from an app's source, in Altitude's charts and in Recharts'. These fail the run: pie and donut charts (`ALT-CHART-001`), two axes on one plot (`-002`, rule 6), bars off zero (`-003`, rule 2), gradients, filters and fully rounded bars (`-004`, rule 1), reserved hues on a series (`-005`, rule 5), an unnamed chart (`-006`, rule 8) and marks that animate in (`-007`, rule 7). These are listed for review: a chart that leads a page with no takeaway (`-008`, rule 9), and three or more series with nothing said to matter (`-009`, rule 5). `altitude explain <ID>` says why.
+
 ## Choosing a form
 
 Choose by the job the data does, not by what looks rich.
