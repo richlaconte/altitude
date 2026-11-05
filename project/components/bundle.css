@@ -2487,7 +2487,7 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-trace-memory { padding: 2px 0 2px 12px; border-left: 1px solid var(--line-control); }
 .alt-trace-memory-list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .alt-trace-mem { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) auto; align-items: baseline; gap: 2px 10px; padding: 4px 0; }
-.alt-trace-mem-word { font: 600 11.5px/18px var(--font-sans); color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.alt-trace-mem-word { font: 500 12.5px/19px var(--font-sans); color: var(--ink-muted); }
 .alt-trace-mem-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .alt-trace-mem-text { font: 400 13.5px/19px var(--font-sans); color: var(--ink); }
 .alt-trace-mem-prev { font: 400 12.5px/17px var(--font-sans); color: var(--ink-muted); }
