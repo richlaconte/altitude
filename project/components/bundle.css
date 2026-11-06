@@ -3340,6 +3340,19 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   .alt-chart-readout-action { border-top-color: CanvasText; }
 }
 
+/* ── ChartScope (#529): one record, many views. A scope is a context, not a surface: it adds no level, no shadow and
+   no frame, so the cards inside keep their own level 1 on the ground. Its one visible part is the slice said in words,
+   a flush caption at text-caption weight in ink-muted (the selection in ink, with a ghost Clear), like a chart's own
+   "Filtered to EU". A sibling chart marks the shared x with the same 1px line-control crosshair rule and opens no
+   readout, so one page has one readout. A shared selection recedes misses to 35% in place, as a filter does. ── */
+.alt-chart-scope { display: grid; gap: var(--space-4); min-width: 0; }
+.alt-chart-scope-caption { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); min-height: 32px; }
+.alt-chart-scope-caption p { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-chart-scope-filter { color: var(--ink); font-weight: 500; }
+@media (forced-colors: active) {
+  .alt-chart-scope-caption p, .alt-chart-scope-filter { color: CanvasText; }
+}
+
 /* ── Live charts (#66): show the new state at once and leave a fading trace (phosphor). A new or changed mark carries
    a 2px ink outline (an outline, not height or a glow) that holds for the first second and decays over dur-settle on
    ease-decay, with its value beside it for that first second. A whole refresh is one change: the "Updated" caption
