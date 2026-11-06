@@ -10,6 +10,8 @@ Names each series, and optionally lets people hide and show series. Every chart 
 
 **Accessibility.** A static legend is a list named "Series". A toggle legend is an APG toolbar named "Series" holding `aria-pressed` buttons, one per series, so a long legend is one Tab stop: ←/→ (or ↑/↓) move between keys, Home and End go to the ends, and Space or Enter toggles. Toggling is announced politely ("Costs hidden. 2 of 3 series shown.").
 
+**Definitions.** A series with a `definition` in its config gets an info button beside its key, opening a `HoverCard` on hover and focus (in a toggle legend it sits beside the switch, never inside it). See [ChartContainer](../ChartContainer/README.md), "What a measure means".
+
 **Props.** `ChartLegend` takes `content`: a `ChartLegendContent` with these options:
 
 - `toggle`: make the keys switches;

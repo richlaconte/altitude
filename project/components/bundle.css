@@ -3277,6 +3277,17 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   .alt-unit-legend, .alt-unit-label, .alt-unit-value, .alt-unit-value strong, .alt-unit-tone { color: CanvasText; }
   .alt-unit-mark:focus-visible { outline-color: Highlight; }
 }
+/* A measure's definition (#534): an info button flush beside the legend key or table header that names the series,
+   the icon in ink-muted with a 2px accent-ink ring on focus; it opens a HoverCard (floating, level 3) with the words.
+   A lone series says its definition under the title, as a description. */
+.alt-chart-definition { display: inline-grid; place-items: center; width: 20px; height: 20px; margin: -2px 0 -2px 2px; padding: 0; border: 0; border-radius: var(--radius-xs); background: none; color: var(--ink-muted); cursor: help; vertical-align: middle; }
+.alt-chart-definition:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+@media (hover: hover) { .alt-chart-definition:hover { color: var(--ink); } }
+.alt-chart-definition-card { max-width: 280px; }
+.alt-chart-definition-text { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink); }
+.alt-chart-definition-text strong { font-weight: 600; }
+.alt-chart-th { display: inline-flex; align-items: center; gap: 2px; }
+@media (forced-colors: active) { .alt-chart-definition { color: CanvasText; } .alt-chart-definition:focus-visible { outline-color: Highlight; } }
 /* The y mode (#531): an indexed or % change reading says what its axis reads once, flush at caption size in ink-muted
    above the plot ("Index, 1 Jan 2026 = 100"), never in colour; the base is a reference line at 100, or the ground line
    at zero. The reader's switch is a choice, so it's ToggleGroup's segmented build (sunk well, raised pill). */

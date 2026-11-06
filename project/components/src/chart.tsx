@@ -6,7 +6,7 @@ import { useDrilldown } from './nav';
 import { DataTable } from './collections';
 import { EmptyState } from './empty';
 import { Arrive, Await, isPromise, readPromised, useArrival, useHasWaited, useReportWaiting } from './suspense';
-import { markTipClosed, tipIsWarm } from './overlays';
+import { HoverCard, markTipClosed, tipIsWarm } from './overlays';
 import { ChartScopeCrosshair, scopeCarries, scopeRelevance, useScope, useScopeNames, type ChartScopeView } from './chart-scope';
 import { SourceLine, sourceSentence, type DataSource } from './source-line';
 
@@ -22,6 +22,12 @@ export interface ChartSeriesConfig {
   format?: (value: number) => string;
   /** The series' colour slot. Default: its place in the config (the first is data-1); a seventh and later are data-other. */
   color?: ChartSlot;
+  /**
+   * What the measure means (#534): "Signed in at least once in the last 28 days." Read where the series is named: an
+   * info button beside its legend key and its table header opens it in a HoverCard (on hover and focus), and the
+   * series' node on the keyboard path says it once. A single series with no legend says it under the title.
+   */
+  definition?: React.ReactNode;
 }
 /** Each data key a chart draws, mapped to its label, format and colour slot. The order is the colour order, fixed for the chart's life. */
 export type ChartConfig = Record<string, ChartSeriesConfig>;
@@ -535,6 +541,8 @@ ChartTooltip.chartTooltip = true;
 
 export interface ChartLegendItem {
   key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; marker?: ChartMarkerShape;
+  /** What the measure means (#534), opened from an info button beside the key. */
+  definition?: React.ReactNode;
   /** Outside the chart's focus (#188): its label recedes to ink-muted. */
   context?: boolean;
   /** In the chart's focus: said as "highlighted". */
@@ -573,6 +581,16 @@ function Swatch({ item, swatch }: { item: ChartLegendItem; swatch: 'rect' | 'lin
  * while the series is shown, inside a ghost button that lifts when pointed at. The keys form one toolbar (one Tab
  * stop; ←/→ between keys), each an aria-pressed button; the last shown series can't be hidden.
  */
+/** The info button that opens a measure's definition (#534): flush, ink-muted, named for what it answers. */
+export function ChartDefinition({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <HoverCard side="bottom" align="start" className="alt-chart-definition-card"
+      trigger={<button type="button" className="alt-chart-definition" aria-label={`What ${label} means`}><Icons.Info size={14} /></button>}>
+      <p className="alt-chart-definition-text"><strong>{label}</strong> {children}</p>
+    </HoverCard>
+  );
+}
+
 export function ChartLegendContent({ toggle = false, label = 'Series', items = [], swatch = 'rect', onToggle }: ChartLegendContentProps) {
   const id = React.useId();
   const [focus, setFocus] = React.useState(0);
@@ -582,7 +600,7 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
   if (!toggle) {
     return (
       <div className="alt-chart-legend" role="list" aria-label={label}>
-        {items.map((i) => <span key={i.key} role="listitem" className="alt-legend-key" data-context={i.context ? '' : undefined}><Swatch item={i} swatch={swatch} /><span>{i.label}</span>{i.highlighted && <span className="alt-sr">, highlighted</span>}</span>)}
+        {items.map((i) => <span key={i.key} role="listitem" className="alt-legend-key" data-context={i.context ? '' : undefined}><Swatch item={i} swatch={swatch} /><span>{i.label}</span>{i.highlighted && <span className="alt-sr">, highlighted</span>}{i.definition != null && <ChartDefinition label={i.label}>{i.definition}</ChartDefinition>}</span>)}
       </div>
     );
   }
@@ -596,7 +614,8 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
       {items.map((i, n) => {
         const last = !i.hidden && shown === 1;
         return (
-          <button key={i.key} ref={(el) => { refs.current[n] = el; }} type="button" className="alt-legend-key" data-context={i.context ? "" : undefined} tabIndex={n === focus ? 0 : -1}
+          <React.Fragment key={i.key}>
+          <button ref={(el) => { refs.current[n] = el; }} type="button" className="alt-legend-key" data-context={i.context ? "" : undefined} tabIndex={n === focus ? 0 : -1}
             aria-pressed={!i.hidden} aria-disabled={last || undefined} aria-describedby={last ? `${id}-last` : undefined}
             onFocus={() => setFocus(n)}
             onClick={() => {
@@ -609,6 +628,9 @@ export function ChartLegendContent({ toggle = false, label = 'Series', items = [
             <span className="alt-legend-swatch" data-shown={i.hidden ? undefined : ''}><Swatch item={i} swatch="rect" /></span>
             <span>{i.label}</span>{i.highlighted && <span className="alt-sr">, highlighted</span>}
           </button>
+          {/* Beside the switch, never inside it: a button in a button can't be reached. */}
+          {i.definition != null && <ChartDefinition label={i.label}>{i.definition}</ChartDefinition>}
+          </React.Fragment>
         );
       })}
       <span id={`${id}-last`} hidden>At least one series stays shown.</span>
@@ -1942,11 +1964,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const selectedWords = selectedRecord ? labelOf(selectedRecord) : hasSelection ? formatX(info.selected) : '';
   const titleId = title ? `${id}-t` : undefined, takeId = takeaway ? `${id}-k` : undefined, descId = description ? `${id}-d` : undefined, sumId = `${id}-s`;
   // The head: a title, or with a takeaway, the title as a label over the takeaway as the heading; then the description.
-  const head = (title || takeaway || description) ? (
+  // A single series with no legend says what it means under the title (#534), so its definition is never out of reach.
+  const soleDefinition = !legendEl && allSeries.length === 1 ? config[allSeries[0].key]?.definition : undefined;
+  const head = (title || takeaway || description || soleDefinition != null) ? (
     <div className="alt-chart-head" data-takeaway={takeaway ? '' : undefined}>
       {title && <div id={titleId} className="alt-chart-title">{title}</div>}
       {takeaway && <ChartTakeaway id={takeId!}>{takeaway}</ChartTakeaway>}
       {description && <p id={descId} className="alt-chart-desc">{description}</p>}
+      {soleDefinition != null && <p id={`${id}-def`} className="alt-chart-desc alt-chart-defined">{soleDefinition}</p>}
     </div>
   ) : null;
   const labelledBy = (rest['aria-labelledby'] as string | undefined) ?? titleId;
@@ -1973,7 +1998,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       ...allSeries.map((s) => {
         // Indexed or as change (#531), the table keeps the values and adds the reading beside each.
         const k = mode === 'value' ? s.key : `__raw:${s.key}`, f = mode === 'value' ? s.format : rawFormatOf(s.key);
-        return { key: s.key, header: s.label, align: 'end' as const,
+        const def = config[s.key]?.definition;
+        return { key: s.key, header: def != null ? <span className="alt-chart-th">{s.label}<ChartDefinition label={s.label}>{def}</ChartDefinition></span> : s.label, align: 'end' as const,
           cell: (d: ChartDatum) => (isNum(d[k]) ? f(d[k] as number) : '—'), sortValue: (d: ChartDatum) => (isNum(d[k]) ? (d[k] as number) : -Infinity) };
       }),
       ...(mode === 'value' ? [] : allSeries.map((s) => ({ key: `__mode:${s.key}`, header: `${s.label}, ${mode === 'indexed' ? 'index' : '% change'}`, align: 'end' as const,
@@ -2157,8 +2183,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const summaryText = (typeof summary === 'string' ? summary : generated) + overlayWords;
   const seriesName = (si: number) => {
     const s = series[si];
+    // What the measure means (#534), said once here at the series level, never per point.
+    const def = textOf(config[s.key]?.definition).trim();
+    const label = def ? `${s.label}, defined as ${def.replace(/\.$/, '')}` : s.label;
     const vals = data.filter((d) => num(d[s.key]));
-    if (!vals.length) return `${s.label}, no values.`;
+    if (!vals.length) return `${label}, no values.`;
     const vs = vals.map((d) => d[s.key] as number);
     const lo = Math.min(...vs), hi = Math.max(...vs);
     let tail = '';
@@ -2166,7 +2195,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       const rel = vs[0] !== 0 ? (vs[vs.length - 1] - vs[0]) / Math.abs(vs[0]) : vs[vs.length - 1] - vs[0];
       tail = Math.abs(rel) < 0.02 ? ', flat' : rel > 0 ? ', rising' : ', falling';
     } else tail = `, highest at ${formatX(vals[vs.indexOf(hi)][xKey])}`;
-    return `${s.label}, ${vals.length} ${vals.length === 1 ? 'point' : 'points'}, ${s.format(lo)} to ${s.format(hi)}${tail}.`;
+    return `${label}, ${vals.length} ${vals.length === 1 ? 'point' : 'points'}, ${s.format(lo)} to ${s.format(hi)}${tail}.`;
   };
   const pointName = (si: number, pi: number) => {
     const s = series[si], d = data[pi];
@@ -2451,7 +2480,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     <CiteContext.Provider value={citeValue}>
     <ChartContext.Provider value={top.ctx}>
       <figure className={cx('alt-chart', className)} style={{ ...vars, ...style }} aria-labelledby={labelledBy}
-        aria-describedby={[takeId, descId, sumId].filter(Boolean).join(' ')} {...rest}>
+        aria-describedby={[takeId, descId, soleDefinition != null ? `${id}-def` : null, sumId].filter(Boolean).join(' ')} {...rest}>
         {!viewsOn && head}
         {!viewsOn && modeRow}
         {!viewsOn && playButton && <div className="alt-chart-tools">{playButton}</div>}
@@ -2710,7 +2739,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           </div>
         )}
         {legendEl && !legendDropped && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
-          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, marker: e.marker, hidden: hidden.includes(s.key), context: e.context, highlighted: !!focusKeys && !e.context }; }),
+          items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, definition: config[s.key]?.definition, fill: e.fill, stroke: e.stroke, dash: e.dash, marker: e.marker, hidden: hidden.includes(s.key), context: e.context, highlighted: !!focusKeys && !e.context }; }),
           swatch: info.swatch ?? 'rect',
           onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
         })}
