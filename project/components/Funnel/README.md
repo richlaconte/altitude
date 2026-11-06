@@ -28,8 +28,6 @@ How many people reached each step of a process, and where they left: visited →
 Not yet: a `ChartScope` selection across steps.
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
-
-<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
 ## Example
 
 `Funnel` as first used in its preview:
