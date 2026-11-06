@@ -14,7 +14,7 @@ A frequency, said so it's felt as a count: "18 of every 100 trial accounts conve
 
 `total` is limited to 400: past that, the number is said instead, and `devChecks` warns. A count that large isn't counted by eye. Ten marks a row by default, 20 above 200 marks; each mark is between 10px and 18px (E42).
 
-**Accessibility.** One `figure`, named by `label`. With a rate or groups, the grid is an `img` named by the summary: "Trial accounts that convert: 18 of every 100 accounts. The rest: 82." With records it's a `grid`, and each mark says its name, its tone and its place ("INV-1046, Globex, Paid late. 7 of 40. Press Enter to open it."). A count change recolours the marks at once over `dur-travel-3`, as one change with no stagger; under reduced motion, in place.
+**Accessibility.** One `figure`, named by `label`. With a rate or groups, the grid is an `img` named by the summary: "Trial accounts that convert: 18 of every 100 accounts. The rest: 82." With records it's a `grid`, and each mark says its name, its tone and its place ("INV-1046, Tidewater Clinic, Paid late. 7 of 40. Press Enter to open it."). A count change recolours the marks at once over `dur-travel-3`, as one change with no stagger; under reduced motion, in place.
 
 ```tsx
 <UnitChart label="Trial accounts that convert" total={100} value={18} noun="accounts" />
@@ -48,7 +48,7 @@ import * as React from 'react';
 import { Card, CardContent, UnitChart } from 'altitude-design';
 
 // Forty invoices this month, three of them paid late.
-const ucInvoices = Array.from({ length: 40 }, (_, i) => ({ id: `INV-${1040 + i}`, customer: ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli'][i % 5], late: [6, 19, 33].includes(i) }));
+const ucInvoices = Array.from({ length: 40 }, (_, i) => ({ id: `INV-${1040 + i}`, customer: ['Harrow Freight', 'Tidewater Clinic', 'Kestrel Dental', 'Larkspur Bakery', 'Fenwick Tools'][i % 5], late: [6, 19, 33].includes(i) }));
 export default function App() {
   const [open, setOpen] = React.useState(null);
   return (

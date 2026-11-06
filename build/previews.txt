@@ -2904,7 +2904,7 @@ function App() {
 @media (max-width: 860px) { .uc { grid-template-columns: 1fr; } }
 --- jsx
 // Forty invoices this month, three of them paid late.
-const ucInvoices = Array.from({ length: 40 }, (_, i) => ({ id: `INV-${1040 + i}`, customer: ['Acme', 'Globex', 'Initech', 'Umbrella', 'Hooli'][i % 5], late: [6, 19, 33].includes(i) }));
+const ucInvoices = Array.from({ length: 40 }, (_, i) => ({ id: `INV-${1040 + i}`, customer: ['Harrow Freight', 'Tidewater Clinic', 'Kestrel Dental', 'Larkspur Bakery', 'Fenwick Tools'][i % 5], late: [6, 19, 33].includes(i) }));
 function App() {
   const [open, setOpen] = React.useState(null);
   return (
