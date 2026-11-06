@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { ChartDefaultsContext, cssMs, cx, DevChecksContext, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
 import { Button, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
+import { ToggleGroup, ToggleGroupItem } from './toggle';
 import { useDrilldown } from './nav';
 import { DataTable } from './collections';
 import { EmptyState } from './empty';
@@ -1057,6 +1058,20 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   /** While a chart type's `relevance` filters, how the frame says how many match. Default "4 of 12 match". */
   countLabel?: (matches: number, total: number) => string;
   /**
+   * How a line or area chart reads its values (#531). 'value' (default): as they are. 'indexed': each series divided by
+   * its value at `base` and drawn ×100, so measures of different scale share one axis (Charts rule 6); the axis says
+   * "Index, Jan 2026 = 100" and a reference line marks 100. 'change': the percentage change from `base`, zero the
+   * ground line. The readout, each point's name and the table keep the value beside the reading. Stacks, bands and
+   * `compare` keep their values; bars are never indexed (rule 2).
+   */
+  yMode?: 'value' | 'indexed' | 'change';
+  /** The x the series are indexed to. Default the first record's. A series with no value there starts at its next one. */
+  base?: string | number | Date;
+  /** A Values | Indexed | % change control the reader can switch, built like segmented Tabs. `yMode` is where it starts. */
+  modes?: boolean;
+  /** When the reader switches the mode with `modes`. */
+  onYModeChange?: (mode: 'value' | 'indexed' | 'change') => void;
+  /**
    * How the chart takes part in a ChartScope around it (#529): false to stand apart (its own pointer, window, selection
    * and palette), or how its records match a selection and which entity a chosen record stands for, when the scope's
    * `by` key isn't in them. Default: records match by the scope's `by` key, and series keys are entities.
@@ -1135,7 +1150,7 @@ function useSeriesFade(targets: Record<string, number>, plotRef: React.RefObject
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
   zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
-  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, scope: scopeProp, source, directLabels: directLabelsProp = false, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, yMode: yModeProp, base, modes = false, onYModeChange, scope: scopeProp, source, directLabels: directLabelsProp = false, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const defaults = React.useContext(ChartDefaultsContext);
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
@@ -1190,7 +1205,40 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // Inline y labels (#193) sit above their gridlines, so the top one needs room above the plot.
   const inlineY = yLabels === 'inline' && axes && !info.plot && info.layout !== 'horizontal';
   const TOP = TOP_GAP + (info.top ?? 0) + (inlineY ? 14 : 0);
-  const data = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
+  const dataRaw = (info.data ?? dataProp ?? (childProps.data as ChartDatum[] | undefined) ?? []) as ChartDatum[];
+  // Indexed or as change (#531): every series rebased once here, so the axis, the marks, the summary and the keyboard
+  // all read the same numbers; each record keeps its value under `__raw:<key>` for the readout, names and table.
+  const [modeOwn, setModeOwn] = React.useState<'value' | 'indexed' | 'change'>(yModeProp ?? 'value');
+  const modeAsked = modes ? modeOwn : yModeProp ?? 'value';
+  const rebasable = /^(Line|Area) chart$/.test(info.kind ?? '') && !info.band && !info.compare;
+  const mode = rebasable ? modeAsked : 'value';
+  const setMode = (m: string) => { const next = m === 'indexed' || m === 'change' ? m : 'value'; onYModeChange?.(next); setModeOwn(next); };
+  const xEarly = xProp ?? info.x ?? (childProps.x as string | undefined) ?? '';
+  const baseKey = base instanceof Date ? base.getTime() : base;
+  const baseIdx = mode === 'value' || !dataRaw.length ? -1 : baseKey == null ? 0 : Math.max(0, dataRaw.findIndex((d) => {
+    const v = d[xEarly];
+    return String(v) === String(baseKey) || (isTimeLike(v) && (isTimeLike(baseKey) || typeof baseKey === 'number') && toTime(v) === toTime(baseKey));
+  }));
+  const data = React.useMemo(() => {
+    if (mode === 'value' || baseIdx < 0) return dataRaw;
+    const keys = Object.keys(config);
+    const bases: Record<string, number | undefined> = {};
+    for (const k of keys) for (let i = baseIdx; i < dataRaw.length; i++) { const v = dataRaw[i][k]; if (typeof v === 'number' && isFinite(v) && v !== 0) { bases[k] = v; break; } }
+    return dataRaw.map((d) => {
+      const o: ChartDatum = { ...d };
+      for (const k of keys) {
+        const v = d[k], b = bases[k];
+        o[`__raw:${k}`] = v;
+        o[k] = typeof v === 'number' && isFinite(v) && b ? (mode === 'indexed' ? (v / b) * 100 : (v / Math.abs(b) - Math.sign(b)) * 100) : null;
+      }
+      return o;
+    });
+  }, [dataRaw, mode, baseIdx, Object.keys(config).join('|')]); // eslint-disable-line react-hooks/exhaustive-deps
+  const modeNf = React.useMemo(() => new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }), [locale]);
+  const modeFormat = mode === 'indexed' ? (v: number) => modeNf.format(v)
+    : mode === 'change' ? (v: number) => `${v > 0.05 ? '+' : v < -0.05 ? '−' : ''}${modeNf.format(Math.abs(v))}%` : null;
+  /** A series' own format, for its values beside the reading. */
+  const rawFormatOf = (k: string) => config[k]?.format ?? info.format ?? ((v: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(v));
   // A chart that draws its own plot: a grid of cells has no value axis to read a reference or an event against.
   const grid = info.plot === 'grid', xy = info.plot === 'xy';
   // Focus (#188): the series or records the chart is about keep their colours; the rest are context.
@@ -1202,6 +1250,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const marks: MarkShape | null = markKind && { kind: markKind, stacked: /stacked/i.test(info.kind ?? ''), shares: /shares/i.test(info.kind ?? '') };
   const childType = chartChild?.type as ChartChild | undefined;
   const refs = grid ? [] : overlayKids.filter((k) => (k.type as ChartChild).chartReference).map((k) => k.props as unknown as ChartReferenceProps);
+  // Indexed (#531): 100 is the base, a reference line named for it ("1 Jan 2026 = 100"); its label is set once x is formatted.
+  const baseRef: ChartReferenceProps = { y: 100, label: '' };
+  if (mode === 'indexed' && !grid) refs.push(baseRef);
   const notes = grid ? [] : overlayKids.filter((k) => (k.type as ChartChild).chartAnnotation).map((k) => k.props as unknown as ChartAnnotationProps);
   // The band's series, by default the config's first: hiding it hides the band rather than moving it to another series.
   const bandInfo = info.band ? { ...info.band, series: info.band.series ?? Object.keys(config)[0] } : undefined;
@@ -1268,7 +1319,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   };
   const actionWord = (d: ChartDatum) => (info.drill ? 'Select to open' : chosen(d) ? 'Select to clear' : 'Select to filter');
   // A chart type that needs zero (bars) gets it whatever the prop says: a bar that starts above zero misstates its length.
-  const zero = info.zero === true ? true : zeroProp ?? info.zero ?? true;
+  // An index reads around 100, so it needn't reach zero; a change reads around zero, which is its ground line.
+  const zero = info.zero === true ? true : mode === 'indexed' ? zeroProp === true : mode === 'change' ? true : zeroProp ?? info.zero ?? true;
 
   const defs: Array<{ key: string; label: string; color?: ChartSlot; format?: (v: number) => string }> = info.series ?? Object.keys(config).map((key) => ({ key, ...config[key] }));
   const configKey = defs.map((c) => `${c.key}:${c.label}:${c.color ?? ''}`).join('|') + '/' + Object.entries(config).map(([k, c]) => `${k}:${c.label}`).join('|');
@@ -1278,9 +1330,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       const c = defs[i];
       // In a scope (#529) the entity's slot is the page's, not this config's place, unless the series pins one.
       const slot = c.color ?? scope?.slot(key) ?? (i < 6 ? (`data-${i + 1}` as ChartSlot) : 'data-other');
-      return { key, label: c.label, slot, color: `var(--${slot})`, format: c.format ?? info.format ?? ((v: number) => nf.format(v)) };
+      return { key, label: c.label, slot, color: `var(--${slot})`, format: modeFormat ?? c.format ?? info.format ?? ((v: number) => nf.format(v)) };
     });
-  }, [configKey, locale, info.format, scope?.paletteKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [configKey, locale, info.format, scope?.paletteKey, mode]); // eslint-disable-line react-hooks/exhaustive-deps
   // A scope's selection that names this chart's series (#529): the others recede to 35% where they stand, cross-fading.
   const scopeSeries = scope && !scopeRecords && scope.selected.length && allSeries.some((q) => scope.has(q.key)) ? allSeries.filter((q) => scope.has(q.key)).map((q) => q.key) : null;
   const scopeFade = useSeriesFade(scopeSeries ? Object.fromEntries(allSeries.map((q) => [q.key, scopeSeries.includes(q.key) ? 1 : 0.35])) : {}, plotRef);
@@ -1289,7 +1341,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
 
   const sample = data.find((d) => d[xKey] != null)?.[xKey];
   const kind = xScaleProp ?? info.xScale ?? (isTimeLike(sample) ? 'time' : typeof sample === 'number' ? 'linear' : 'band');
-  const fmtY = yFormat ?? info.yFormat ?? series[0]?.format ?? ((v: number) => new Intl.NumberFormat(locale).format(v));
+  const fmtY = modeFormat ?? yFormat ?? info.yFormat ?? series[0]?.format ?? ((v: number) => new Intl.NumberFormat(locale).format(v));
   const W = size?.w ?? 0, H = size?.h ?? 0;
   const horizontal = info.layout === 'horizontal' && kind === 'band';
   // A live window slides only along a time or linear x (see useChartMotion), so only then are the marks clipped to the plot.
@@ -1479,6 +1531,18 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const shortDate = React.useMemo(() => new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }), [locale]);
   const bandLabel = (v: unknown) => (xFormat ? xFormat(v) : datedBands ? shortDate.format(new Date(toTime(v))) : String(v));
   const formatX = xFormat ?? info.xFormat ?? (datedBands ? (v: unknown) => fullDate.format(new Date(toTime(v))) : kind === 'time' ? (v: unknown) => (intraday ? dateTime : fullDate).format(new Date(toTime(v))) : kind === 'linear' ? (v: unknown) => nfX.format(Number(v)) : (v: unknown) => String(v));
+  // The mode in words (#531): what the axis reads, said once at its top, first in the summary, and in every name.
+  const baseName = baseIdx >= 0 ? formatX(dataRaw[baseIdx][xKey]) : '';
+  baseRef.label = `${baseName} = 100`;
+  const modeUnit = mode === 'indexed' ? `Index, ${baseName} = 100` : mode === 'change' ? `% change from ${baseName}` : '';
+  const modeSentence = mode === 'indexed' ? `Indexed to ${baseName} = 100.` : mode === 'change' ? `Change from ${baseName}.` : '';
+  /** A reading with its value beside it: "index 118, 1,954" or "+18% from 1 Jan 2026, 1,954"; just the value in 'value' mode. */
+  const readingWords = (s: ChartSeries, d: ChartDatum) => {
+    const v = d[s.key] as number, raw = d[`__raw:${s.key}`];
+    if (mode === 'value') return s.format(v);
+    const was = typeof raw === 'number' && isFinite(raw) ? `, ${rawFormatOf(s.key)(raw)}` : '';
+    return mode === 'indexed' ? `index ${s.format(v)}${was}` : `${s.format(v)} from ${baseName}${was}`;
+  };
   // Pinned readings (#190), in words: the plate's short label, what's read aloud, and two pins' difference.
   const pinRecord = (x: unknown) => data.find((d) => sameX(d[xKey], x));
   const pinX = (x: unknown) => (kind === 'band' ? bandLabel(x) : kind === 'time' ? (intraday ? dateTime : shortDate).format(new Date(toTime(x))) : formatX(x));
@@ -1853,7 +1917,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const most = top ? `, most of all ${info.label ? info.label(top.d) : formatX(top.d[xKey])}${sinceSeries.length > 1 ? ` (${allSeries.find((q) => q.key === top!.k)?.label})` : ''}, ${sinceSentence(top.d, top.k, fmt(top.k)).replace(` ${since.label}.`, '').toLowerCase()}` : '';
     return ` ${changedCount} of ${data.length} changed ${since.label}${most}.`;
   })();
-  const generated = (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf)) + cmpWords + sinceWords;
+  const generated = (modeSentence ? modeSentence + ' ' : '') + (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf)) + cmpWords + sinceWords;
   /** A record's short name: the chart type's, or its x. */
   const labelOf = (d: ChartDatum) => (info.label ? info.label(d) : formatX(d[xKey]));
   // The entities this chart draws, named, so the scope's caption can say "Filtered to Checkout" (#529).
@@ -1894,8 +1958,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const columns = info.columns ?? [
       { key: '__x', header: xLabel ?? (xKey.charAt(0).toUpperCase() + xKey.slice(1)), cell: (d: ChartDatum) => formatX(d[xKey]),
         sortValue: (d: ChartDatum) => (kind === 'band' ? (datedBands ? toTime(d[xKey]) : String(d[xKey])) : kind === 'time' ? toTime(d[xKey]) : Number(d[xKey])) },
-      ...allSeries.map((s) => ({ key: s.key, header: s.label, align: 'end' as const,
-        cell: (d: ChartDatum) => (isNum(d[s.key]) ? s.format(d[s.key] as number) : '—'), sortValue: (d: ChartDatum) => (isNum(d[s.key]) ? (d[s.key] as number) : -Infinity) })),
+      ...allSeries.map((s) => {
+        // Indexed or as change (#531), the table keeps the values and adds the reading beside each.
+        const k = mode === 'value' ? s.key : `__raw:${s.key}`, f = mode === 'value' ? s.format : rawFormatOf(s.key);
+        return { key: s.key, header: s.label, align: 'end' as const,
+          cell: (d: ChartDatum) => (isNum(d[k]) ? f(d[k] as number) : '—'), sortValue: (d: ChartDatum) => (isNum(d[k]) ? (d[k] as number) : -Infinity) };
+      }),
+      ...(mode === 'value' ? [] : allSeries.map((s) => ({ key: `__mode:${s.key}`, header: `${s.label}, ${mode === 'indexed' ? 'index' : '% change'}`, align: 'end' as const,
+        cell: (d: ChartDatum) => (isNum(d[s.key]) ? s.format(d[s.key] as number) : '—'), sortValue: (d: ChartDatum) => (isNum(d[s.key]) ? (d[s.key] as number) : -Infinity) }))),
       ...(total ? [{ key: '__total', header: 'Total', align: 'end' as const, cell: (d: ChartDatum) => allSeries[0].format(sum(d)), sortValue: sum }] : []),
       ...(bandInfo ? [{ key: '__band', header: bandInfo.label, align: 'end' as const,
         cell: (d: ChartDatum) => { const b = bandInfo!, f = allSeries.find((s) => s.key === b.series)?.format ?? fmtY; return isNum(d[b.low]) && isNum(d[b.high]) ? `${f(d[b.low] as number)}–${f(d[b.high] as number)}` : '—'; } }] : []),
@@ -1963,6 +2033,19 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     return out;
   })();
 
+  /** The mode (#531): what the axis reads, once, and the reader's switch when there is one. */
+  const modeRow = rebasable && (modes || mode !== 'value') && (
+          <div className="alt-chart-ymode">
+            {modeUnit && <span className="alt-chart-ymode-unit">{modeUnit}</span>}
+            {modes && (
+              <ToggleGroup type="single" size="sm" value={modeAsked} onValueChange={(v) => v && setMode(v)} aria-label="Read the values as">
+                <ToggleGroupItem value="value">Values</ToggleGroupItem>
+                <ToggleGroupItem value="indexed">Indexed</ToggleGroupItem>
+                <ToggleGroupItem value="change">% change</ToggleGroupItem>
+              </ToggleGroup>
+            )}
+          </div>
+        );
   /** With views on: the head beside a Chart | Table control, and the two views stacked in one box, cross-fading. */
   const wrapViews = (plot: React.ReactElement) => !viewsOn ? plot : (
     <Tabs variant="segmented" value={view} onValueChange={setView} className="alt-chart-tabs">
@@ -1973,6 +2056,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           <TabsTrigger value="table">Table</TabsTrigger>
         </TabsList>
       </div>
+      {modeRow}
       <div className="alt-chart-views">
         <TabsContent value="chart" forceMount tabIndex={-1} className="alt-chart-view">{plot}</TabsContent>
         <TabsContent value="table" forceMount tabIndex={-1} className="alt-chart-view" data-view="table"><div className="alt-chart-tablebox">{table}</div></TabsContent>
@@ -2082,7 +2166,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     }
     const v = d[s.key];
     const st = statusOf(d);
-    let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? s.format(v) : 'no data'}${st ? `, ${CHART_STATUS_WORDS[st].toLowerCase()}` : ''}.`;
+    let out = `${formatX(d[xKey])}, ${s.label}, ${num(v) ? readingWords(s, d) : 'no data'}${st ? `, ${CHART_STATUS_WORDS[st].toLowerCase()}` : ''}.`;
     // A mark that glows because it changed since a snapshot says how, below, rather than just "Changed."
     if (glowing(rowKey(d), s.key) && !sinceSentence(d, s.key, s.format)) out += ' Changed.';
     if (relevanceOf(d) === 'miss' && !selecting) out += ' Not matching.';
@@ -2199,7 +2283,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       .filter((s) => typeof d[s.key] === 'number' && isFinite(d[s.key] as number) && top.ctx.alpha(null, s.key) > 0.5)
       .flatMap((s) => {
         const e = encode(s.key);
-        const item: ChartTooltipItem = { key: s.key, label: s.label, value: d[s.key] as number, text: top.ctx.format(s.key, d[s.key] as number), color: e.stroke, dash: e.dash };
+        // Indexed or as change (#531), the readout shows both figures: "118 · $104K".
+        const raw = d[`__raw:${s.key}`];
+        const both = mode !== 'value' && typeof raw === 'number' && isFinite(raw) ? ` · ${rawFormatOf(s.key)(raw)}` : '';
+        const item: ChartTooltipItem = { key: s.key, label: s.label, value: d[s.key] as number, text: top.ctx.format(s.key, d[s.key] as number) + both, color: e.stroke, dash: e.dash };
         const b = bandInfo;
         if (!b || b.series !== s.key || !num(d[b.low]) || !num(d[b.high])) return [item];
         // The uncertainty band's row: its low and high, named by what the band is ("Range 10th–90th percentile").
@@ -2244,6 +2331,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       <figure className={cx('alt-chart', className)} style={{ ...vars, ...style }} aria-labelledby={labelledBy}
         aria-describedby={[takeId, descId, sumId].filter(Boolean).join(' ')} {...rest}>
         {!viewsOn && head}
+        {!viewsOn && modeRow}
         {wrapViews(<div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
           data-stage={stage} data-patterns={patterns ? '' : undefined} data-refreshing={refreshing ? '' : undefined} aria-busy={refreshing || undefined} style={height != null ? { height } : fitHeight != null ? { height: fitHeight } : { aspectRatio: String(aspect) }}
           onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { if (holdTouch.current) { window.clearTimeout(holdTouch.current.timer); holdTouch.current = null; } }} onClick={onClick} onPointerLeave={onPointerLeave} onPointerEnter={onPointerEnter}

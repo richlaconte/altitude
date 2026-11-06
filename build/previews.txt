@@ -2594,6 +2594,42 @@ function App() {
   );
 }
 
+=== ChartIndexed | <!-- @dsCard group="Charts" height=1120 subtitle="Measures of different scale on one axis: indexed to a common base, or read as % change" -->
+--- css
+.cix { display: grid; gap: 16px; }
+--- jsx
+// Signups (hundreds) and revenue (hundreds of thousands) for ten months: one axis can't hold both as values.
+const cixMonths = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01', '2026-07-01', '2026-08-01', '2026-09-01', '2026-10-01'];
+const cixGrowth = cixMonths.map((m, i) => ({ m, signups: Math.round(1650 + 120 * i + 90 * Math.sin(i)), revenue: Math.round(88000 + 2600 * i * i / 3 + 1500 * Math.cos(i)) }));
+const cixCount = new Intl.NumberFormat('en-GB');
+const cixMoney = (v) => `$${Math.round(v / 1000)}K`;
+// Three regions an order of magnitude apart, monthly orders: as change, each says how far it moved, not how big it is.
+const cixRegions = cixMonths.map((m, i) => ({ m, na: Math.round(42000 * (1 + 0.012 * i)), eu: Math.round(18000 * (1 + 0.03 * i + 0.01 * Math.sin(i))), apac: Math.round(2400 * (1 + 0.07 * i)) }));
+function App() {
+  return (
+    <div className="cix">
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="cix1">Signups and revenue since January</A.CardTitle><A.CardDescription>Both start at 100: revenue grew faster. Switch to Values to see why they can't share an axis as they are.</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="cix1" config={{ signups: { label: 'Signups', format: (v) => cixCount.format(v) }, revenue: { label: 'Revenue', format: cixMoney } }}
+            yMode="indexed" modes aspect={2.8} locale="en-GB" xFormat={(v) => new Date(v).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' })} views>
+            <A.LineChart data={cixGrowth} x="m" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="cix2">Orders by region, change since January</A.CardTitle><A.CardDescription>Asia Pacific is the smallest region and grew the most.</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="cix2" config={{ na: { label: 'North America', format: (v) => cixCount.format(v) }, eu: { label: 'Europe', format: (v) => cixCount.format(v) }, apac: { label: 'Asia Pacific', format: (v) => cixCount.format(v) } }}
+            yMode="change" aspect={2.8} locale="en-GB" xFormat={(v) => new Date(v).toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' })}>
+            <A.LineChart data={cixRegions} x="m" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === ChartDefaults | <!-- @dsCard group="Charts" height=1300 subtitle="The guide's chart defaults set once on the provider: inline y labels and series named at their marks" -->
 --- css
 .cdf { display: grid; gap: 16px; }
