@@ -3399,6 +3399,21 @@ button.alt-chart-cite:focus-visible { background: var(--surface-raised); box-sha
   .alt-chart-cite-band { fill: none; stroke: CanvasText; stroke-dasharray: 2 3; }
 }
 
+/* ── The source line (#533): where a chart's or a stat's data came from, when it was read and how many records are
+   behind it. It's the record's own account of itself, so it lies flush on the ground at caption weight in ink-muted,
+   like journalism's source line; its name may be a Link. Stale is said with the caution icon and the word, and the
+   marks it describes don't change: the record is still the record, only old. Becoming stale takes the afterglow once. */
+.alt-source { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.alt-source .alt-reltime { color: inherit; }
+.alt-source-stale { display: inline-flex; align-items: center; gap: 4px; color: var(--ink); font-weight: 500; }
+.alt-source-stale svg { color: var(--caution); flex: none; }
+.alt-stat-source { margin-top: var(--space-1); }
+.alt-stat-group-sourced { display: grid; gap: var(--space-2); }
+@media (forced-colors: active) {
+  .alt-source, .alt-source-stale { color: CanvasText; }
+  .alt-source-stale svg { color: CanvasText; }
+}
+
 /* ── References and annotations (#68): what a chart is read against. A reference line is 1px ink-muted and solid,
    because dashes mean projected; a status threshold wears caution or critical, with its icon in the label. A band is a
    flat line-coloured fill (a decorative token, so it isn't read as data or as an opening), under the marks. Labels are

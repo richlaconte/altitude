@@ -2019,6 +2019,8 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   countLabel?: (matches: number, total: number) => string;
   /** How the chart takes part in a ChartScope around it: false to stand apart (its own pointer, window, selection and palette), or how its records match a selection and which entity a chosen record stands for. Default: records match by the scope's `by` key, and series keys are entities. */
   scope?: false | ChartScopeView;
+  /** Where the data came from, when it was read and how many records: one flush line under the plot, "Source: Billing database · 1,954 records · Updated 2 minutes ago", "Stale" past `staleAfter`. The summary ends with it. In a live chart it replaces the "Updated" caption. */
+  source?: DataSource;
 }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; /** An uncertainty band's row, keyed by a block of its fill. */ range?: boolean; }
@@ -2507,6 +2509,21 @@ export interface StatChange {
   /** Formats the size of the change, without its sign ("Up"/"Down" are words). Default: a percentage. */
   format?: (magnitude: number) => string;
 }
+/** Where a chart's or a stat's data came from, when it was read and how much of it there is (#533). */
+export interface DataSource {
+  /** Where the data lives, or the query that made it: "Billing database". A string, or your own Link. */
+  name?: React.ReactNode;
+  /** Makes a string `name` a Link to where the data lives. */
+  href?: string;
+  /** When the data was read: said relative ("Updated 2 minutes ago", the exact time on hover and focus) and kept true as time passes. */
+  asOf?: Date | string | number;
+  /** How many records are behind it: "1,954 records". */
+  count?: number;
+  /** What a record is called, plural: "orders". Default "records". */
+  noun?: string;
+  /** After how many milliseconds since `asOf` the data is stale: the line then leads with a caution icon and "Stale". The marks don't change. */
+  staleAfter?: number;
+}
 export interface StatProps extends Omit<React.HTMLAttributes<HTMLElement>, 'children'> {
   /** What the number is. It names the stat. */
   label: React.ReactNode;
@@ -2521,6 +2538,8 @@ export interface StatProps extends Omit<React.HTMLAttributes<HTMLElement>, 'chil
   trend?: React.ReactNode;
   /** More context, in a caption under the change. */
   help?: React.ReactNode;
+  /** Where the number came from and when it was read: a flush line under it. In a StatGroup, give the group one source instead. */
+  source?: DataSource;
   /** 'hero': the value in text-display. Once per view. */
   size?: 'default' | 'hero';
   /** Announce a changed value politely. */
@@ -2529,7 +2548,12 @@ export interface StatProps extends Omit<React.HTMLAttributes<HTMLElement>, 'chil
 }
 /** A headline number, flush on what it sits on, with its change in words and an arrow; colour only when you say which way is good. */
 export declare function Stat(props: StatProps): React.ReactElement;
-export interface StatGroupProps extends React.HTMLAttributes<HTMLDivElement> { 'aria-label'?: string }
+export interface StatGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  'aria-label'?: string;
+  /** One source for every stat in the row: a single line under it, said once rather than per stat. */
+  source?: DataSource;
+  locale?: string;
+}
 /** A row of stats that wrap to fit and land together. */
 export declare function StatGroup(props: StatGroupProps): React.ReactElement;
 export interface MeterSegment {

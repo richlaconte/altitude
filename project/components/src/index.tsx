@@ -141,6 +141,7 @@ export type { ScatterChartProps } from './scatter-chart';
 export { DotPlot } from './dot-plot';
 export type { DotPlotProps } from './dot-plot';
 export { ChartBrush } from './chart-brush';
+export type { DataSource } from './source-line';
 export type { ChartBrushProps } from './chart-brush';
 export { ChartScope, ChartScopeCaption } from './chart-scope';
 export type { ChartScopeProps, ChartScopeView, ChartScopeValue, ChartScopeWindow } from './chart-scope';

@@ -62,6 +62,7 @@ Choose by the job the data does, not by what looks rich.
 | Drilling in | ground, stacked | a `Drilldown`: the detail is laid on top, the staircase shows the way back |
 | A figure that cites its mark (`ChartCite`) | ground, lifts on hover and focus | `InlineCitation`'s plate in the sentence, in `ink` with the series' marker; it rings the cited mark in 2px `accent-ink` and opens the readout there; Enter pins it (E166) |
 | Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are solid 1px `ink-muted`, because dashes mean projected |
+| Where the data came from (`source`) | ground | one flush line under the plot at caption size in `ink-muted`: source (a `Link`), count, "Updated 2 minutes ago"; stale is the `caution` icon and the word, and the marks don't change (E167) |
 | Loading | sunk | an imprint (`Await`), at the chart's own size |
 | No data | sunk | an opening (`EmptyState`) that says why and what to do |
 | Projected or incomplete data | ground | not yet the record: dashed or hatched, and labelled as such |

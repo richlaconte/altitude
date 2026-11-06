@@ -7,6 +7,7 @@ import { EmptyState } from './empty';
 import { Arrive, Await, isPromise, readPromised, useArrival, useHasWaited, useReportWaiting } from './suspense';
 import { markTipClosed, tipIsWarm } from './overlays';
 import { ChartScopeCrosshair, scopeCarries, scopeRelevance, useScope, useScopeNames, type ChartScopeView } from './chart-scope';
+import { SourceLine, sourceSentence, type DataSource } from './source-line';
 
 /* ───────────────────────── config ───────────────────────── */
 
@@ -1027,6 +1028,13 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
    * `by` key isn't in them. Default: records match by the scope's `by` key, and series keys are entities.
    */
   scope?: false | ChartScopeView;
+  /**
+   * Where the data came from, when it was read and how many records are behind it (#533): one flush line under the
+   * plot, "Source: Billing database · 1,954 records · Updated 2 minutes ago". Past `staleAfter` it says "Stale" with a
+   * caution icon; the marks don't change. The summary ends with it, absolute ("as of 5 Nov 2026, 12:04"). In a `live`
+   * chart it takes the place of the "Updated 12:04" caption, its time the last update unless you give `asOf`.
+   */
+  source?: DataSource;
 }
 /** Internal: how the loading wrapper tells the frame about held updates. */
 interface ChartFrameLive { queued?: boolean; onHold?: (held: boolean) => void; pausedNow?: boolean; setPaused?: (paused: boolean) => void; }
@@ -1087,7 +1095,7 @@ function useSeriesFade(targets: Record<string, number>, plotRef: React.RefObject
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
   zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
-  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, scope: scopeProp, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, scope: scopeProp, source, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -1876,6 +1884,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const svgKids = kids.filter((k) => typeof k.type === 'string' || !(k.type as ChartChild).chartHtml);
   const htmlKids = kids.filter((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartHtml);
   const top = draw(layers[layers.length - 1].frame);
+  // Where the data came from (#533); a live chart's last update is its time unless the author gives one.
+  const src: DataSource | undefined = source ? { ...source, asOf: source.asOf ?? (live && updatedAt !== null ? updatedAt : undefined) } : undefined;
+  const sourceWords = sourceSentence(src, locale);
   const countText = filtered ? (countLabel ?? ((m: number, n: number) => `${m} of ${n} match`))(matchCount, data.length) : '';
   // References and annotations are read after the summary, written or generated: "1 annotation: v2 launch, Mar 4, 2026."
   const overlayWords = (() => {
@@ -1895,6 +1906,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // The scope's selection, in the same words as its caption, so a chart read alone still says its slice.
     if (scope?.sentence && (scopeRecords || scopeSeries)) out += ` ${scope.sentence}`;
     if (pins.length) out += ` Pinned: ${pins.map((x) => `${formatX(x)}, ${pinValues(pinRecord(x), true)}`).join('; ')}.`;
+    if (sourceWords) out += ` ${sourceWords}`;
     return out;
   })();
 
@@ -2415,9 +2427,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         )}
         {live && (
           <div className="alt-chart-live">
-            <span className="alt-chart-updated" {...captionDepth}>
-              {pausedNow ? 'Paused. ' : ''}{updatedAt !== null ? `Updated ${clock.format(new Date(updatedAt))}` : 'Live'}{queued && !pausedNow ? ' · new data when you move away' : queued ? ' · new data waiting' : ''}
-            </span>
+            {/* With a source, its line says when; this caption keeps only what's paused or waiting. */}
+            {(!src || pausedNow || queued) && <span className="alt-chart-updated" {...(src ? {} : captionDepth)}>
+              {pausedNow ? 'Paused. ' : ''}{src ? '' : updatedAt !== null ? `Updated ${clock.format(new Date(updatedAt))}` : 'Live'}{queued && !pausedNow ? `${src ? 'New' : ' · new'} data when you move away` : queued ? `${src ? 'New' : ' · new'} data waiting` : ''}
+            </span>}
             {pausable && <Switch label="Pause updates" checked={pausedNow} onCheckedChange={(v) => setPaused?.(v)} />}
             <span className="alt-sr" aria-live="polite">{said}</span>
           </div>
@@ -2433,6 +2446,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           {summary ?? generated}
           {summary && overlayWords ? <span className="alt-sr">{overlayWords}</span> : !summary && overlayWords}
         </figcaption>
+        {src && data.length > 0 && <SourceLine source={src} locale={locale} className="alt-chart-source" glow={live ? captionGlow : undefined} />}
       </figure>
     </ChartContext.Provider>
     </CiteContext.Provider>
