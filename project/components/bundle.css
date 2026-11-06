@@ -3200,6 +3200,29 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   .alt-hist-line line { stroke: CanvasText; }
   .alt-hist-line text { fill: CanvasText; stroke: Canvas; }
 }
+/* ── Funnel (#536): where people leave a process. Steps run down the page in data order, each a flat data-1 bar from
+   one left edge on the ground, so adjacent counts compare as aligned lengths. The drop-off between two steps is said,
+   not drawn: a flush plate in the gutter (a sunk-tinted face, a 1px hairline edge, ink text, the down-right arrow in
+   ink-muted); a drop the author calls bad wears a critical edge and icon with the words "Steep drop". The period
+   before is a 2px ink tick, as compare draws it. Never a tapering shape: that's area, not length. ── */
+.alt-funnel-bar { stroke-width: 1px; }
+.alt-funnel-count { fill: var(--ink); font: 500 13px/19px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-funnel-count[data-inside] { fill: var(--alt-chart-bg); }
+.alt-funnel-was { stroke: var(--ink); stroke-width: 2; }
+.alt-funnel-drop rect { fill: color-mix(in oklab, var(--surface-ground), var(--surface-well) 70%); stroke: color-mix(in oklab, var(--ink) 12%, transparent); stroke-width: 1px; }
+.alt-funnel-drop text { fill: var(--ink); font: 500 12.5px/17px var(--font-sans); font-variant-numeric: tabular-nums; }
+.alt-funnel-drop .alt-funnel-icon { stroke: var(--ink-muted); color: var(--ink-muted); }
+.alt-funnel-drop[data-bad] rect { stroke: var(--critical); }
+.alt-funnel-drop[data-bad] .alt-funnel-icon { color: var(--critical); stroke: var(--critical); }
+[data-contrast="more"] .alt-funnel-bar { stroke: var(--ink); }
+@media (forced-colors: active) {
+  .alt-funnel-bar { stroke: Canvas; }
+  .alt-funnel-count, .alt-funnel-drop text { fill: CanvasText; }
+  .alt-funnel-count[data-inside] { fill: Canvas; }
+  .alt-funnel-was { stroke: CanvasText; }
+  .alt-funnel-drop rect { fill: Canvas; stroke: CanvasText; }
+  .alt-funnel-drop .alt-funnel-icon { color: CanvasText; stroke: CanvasText; }
+}
 /* The y mode (#531): an indexed or % change reading says what its axis reads once, flush at caption size in ink-muted
    above the plot ("Index, 1 Jan 2026 = 100"), never in colour; the base is a reference line at 100, or the ground line
    at zero. The reader's switch is a choice, so it's ToggleGroup's segmented build (sunk well, raised pill). */

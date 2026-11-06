@@ -2787,6 +2787,64 @@ function App() {
   );
 }
 
+=== Funnel | <!-- @dsCard group="Charts" height=860 subtitle="Where people leave a process: steps on one left edge, each drop said in the gutter" -->
+--- css
+.fn { display: grid; gap: 16px; }
+.fn .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .fn .two { grid-template-columns: 1fr; } }
+--- jsx
+const fnOctober = [
+  { name: 'Visited pricing', people: 3120 },
+  { name: 'Started signup', people: 1984 },
+  { name: 'Signed up', people: 1946 },
+  { name: 'Activated', people: 1204 },
+  { name: 'Paid', people: 418 },
+];
+const fnSeptember = [
+  { name: 'Visited pricing', people: 2870 },
+  { name: 'Started signup', people: 1790 },
+  { name: 'Signed up', people: 1702 },
+  { name: 'Activated', people: 1130 },
+  { name: 'Paid', people: 377 },
+];
+const fnInbox = [
+  { name: 'Opened', people: 860 },
+  { name: 'Replied', people: 312 },
+  { name: 'Booked a call', people: 141 },
+];
+const fnCount = new Intl.NumberFormat('en-GB');
+const fnConfig = { people: { label: 'People', format: (v) => fnCount.format(v) } };
+function App() {
+  const [picked, setPicked] = React.useState(null);
+  return (
+    <div className="fn">
+      <A.Card>
+        <A.CardContent>
+          <A.ChartContainer config={fnConfig} title="Signup funnel, October" takeaway="Two in three people who activate never pay: the last step loses 65%" height={300} locale="en-GB" views>
+            <A.Funnel data={fnOctober} step="name" value="people" dropoff="both" bad={(s) => s.drop > 0.5} />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <div className="two">
+        <A.Card>
+          <A.CardContent>
+            <A.ChartContainer config={fnConfig} title="Against September" description="The tick is September's count" height={300} locale="en-GB">
+              <A.Funnel data={fnOctober} step="name" value="people" compare={{ data: fnSeptember, label: 'September' }} />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+        <A.Card>
+          <A.CardContent>
+            <A.ChartContainer config={fnConfig} title="Outreach, this week" description={picked ? `Showing who left before ${picked}` : 'Choose a step to see who left before it'} height={200} locale="en-GB">
+              <A.Funnel data={fnInbox} step="name" value="people" dropoff="count" selected={picked} onSelect={(d) => setPicked(d ? d.name : null)} />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+      </div>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {
