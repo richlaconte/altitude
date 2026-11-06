@@ -2050,6 +2050,8 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   modes?: boolean;
   /** When the reader switches the mode with `modes`. */
   onYModeChange?: (mode: 'value' | 'indexed' | 'change') => void;
+  /** Play a series by ear: a Play button in the frame (it becomes Stop), and Space on the plot's summary or a series. Pitch is value over two octaves, time is x, over `duration` ms (default 3000, 6000 past 200 points); a gridline crossing clicks and a gap is silence. Narrated politely (range, extremes, trend) unless `narrate: false`. Escape stops; ←/→ while playing stop and scrub. Nothing plays without a press. */
+  sonify?: boolean | { duration?: number; narrate?: boolean };
 }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; /** An uncertainty band's row, keyed by a block of its fill. */ range?: boolean; }
