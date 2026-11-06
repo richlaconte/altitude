@@ -2649,6 +2649,40 @@ function App() {
   );
 }
 
+=== ChartDefinitions | <!-- @dsCard group="Charts" height=560 subtitle="What a measure means, where it's read: two cards whose 'Active users' differ, each defined" -->
+--- css
+.cdf { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .cdf { grid-template-columns: 1fr; } }
+--- jsx
+// Two teams' "Active users": the same words, two definitions, two sizes.
+const cdfWeeks = ['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28', '2026-10-05', '2026-10-12', '2026-10-19', '2026-10-26'];
+const cdfProduct = cdfWeeks.map((w, i) => ({ w, active: 4200 + 60 * i, new: 380 + 15 * Math.sin(i) * 10 }));
+const cdfGrowth = cdfWeeks.map((w, i) => ({ w, active: Math.round(2900 + 40 * i + 120 * Math.sin(i)) }));
+const cdfCount = new Intl.NumberFormat('en-GB');
+const cdfFmt = (v) => cdfCount.format(Math.round(v));
+function App() {
+  return (
+    <div className="cdf">
+      <A.Card>
+        <A.CardContent>
+          <A.ChartContainer title="Product: weekly users" aspect={1.6} locale="en-GB" views
+            config={{ active: { label: 'Active users', format: cdfFmt, definition: 'Signed in at least once in the last 28 days.' }, new: { label: 'New users', format: cdfFmt, definition: 'Created an account that week.' } }}>
+            <A.LineChart data={cdfProduct} x="w"><A.ChartLegend /></A.LineChart>
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardContent>
+          <A.ChartContainer title="Growth: weekly users" aspect={1.6} locale="en-GB"
+            config={{ active: { label: 'Active users', format: cdfFmt, definition: 'Opened the app at least once that week.' } }}>
+            <A.LineChart data={cdfGrowth} x="w" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === ChartDefaults | <!-- @dsCard group="Charts" height=1300 subtitle="The guide's chart defaults set once on the provider: inline y labels and series named at their marks" -->
 --- css
 .cdf { display: grid; gap: 16px; }

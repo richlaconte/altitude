@@ -1855,6 +1855,8 @@ export interface ChartSeriesConfig {
   format?: (value: number) => string;
   /** The series' colour slot. Default: its place in the config (the first is data-1); a seventh and later are data-other. */
   color?: ChartSlot;
+  /** What the measure means: "Signed in at least once in the last 28 days." An info button beside its legend key and table header opens it in a HoverCard (hover and focus); the series' node on the keyboard path says it once; a lone series with no legend says it under the title. */
+  definition?: React.ReactNode;
 }
 /** Each data key a chart draws, mapped to its label, format and colour slot. The order is the colour order, fixed for the chart's life. */
 export type ChartConfig = Record<string, ChartSeriesConfig>;
@@ -2079,7 +2081,7 @@ export declare function ChartTooltipContent(props: ChartTooltipContentProps): Re
  * compared by its total.
  */
 export interface ChartCompare { key?: string; data?: ChartDatum[]; label: string; series?: string }
-export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; /** Outside the chart's focus: its label recedes. */ context?: boolean; /** In the chart's focus: said as "highlighted". */ highlighted?: boolean; }
+export interface ChartLegendItem { key: string; label: string; fill: string; stroke: string; dash?: string; hidden: boolean; /** The series' marker shape, for a 'marker' swatch. */ marker?: ChartMarkerShape; /** Outside the chart's focus: its label recedes. */ context?: boolean; /** In the chart's focus: said as "highlighted". */ highlighted?: boolean; /** What the measure means, opened from an info button beside the key. */ definition?: React.ReactNode; }
 export interface ChartLegendContentProps {
   /** Let people hide and show series: each key becomes an aria-pressed button in a toolbar. Default false. */
   toggle?: boolean;
