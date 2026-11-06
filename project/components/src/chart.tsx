@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChartDefaultsContext, cssMs, cx, DevChecksContext, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
+import { AnnounceContext, ChartDefaultsContext, cssMs, cx, DevChecksContext, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
 import { Button, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
 import { ToggleGroup, ToggleGroupItem } from './toggle';
 import { useDrilldown } from './nav';
@@ -2801,6 +2801,16 @@ export function ChartContainer(given: ChartContainerProps) {
   if (!waiting && !pending && now !== undefined) last.current = now ?? [];
   useReportWaiting(waiting);
   const arrival = useArrival(waiting);
+  // In a Conversation (#541), a chart that waited for its data says once that it's ready, so there's a figure to enter.
+  const announceReady = React.useContext(AnnounceContext);
+  const waited = React.useRef(false);
+  React.useEffect(() => {
+    if (waiting) { waited.current = true; return; }
+    if (!waited.current) return;
+    waited.current = false;
+    const name = textOf(props.title ?? props['aria-label']).trim();
+    announceReady?.(`Chart ready${name ? `: ${name}` : ''}.`);
+  }, [waiting]); // eslint-disable-line react-hooks/exhaustive-deps
   // Live (#66): while someone reads the plot, or while paused, keep showing what was there; apply what came when they leave.
   const [held, setHeld] = React.useState(false);
   const [pausedOwn, setPausedOwn] = React.useState(false);

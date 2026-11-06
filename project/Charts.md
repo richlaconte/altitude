@@ -95,6 +95,7 @@ Choose by the job the data does, not by what looks rich.
 These are the elevation signals a chart adds to **Elevation**'s table:
 
 - **Amounts** are never height. They are length and position on a flat plot standing on the ground line.
+- **Made by an agent.** A chart in an assistant's answer is an imprint until its query's rows land, then says where it came from (`source`), who wrote its takeaway (`AILabel`) and which marks its figures come from (`ChartCite`); see `Conversation`, "A chart in an answer" (E175).
 - **Marks that act.** Only where a click selects or drills do marks respond to the pointer, with a 2px `ink` outline and the action in the readout. A selection keeps its colour and recedes the rest, and a drill opens the child chart in `Drilldown` (E41).
 - **Filtered in place.** A filter recedes misses to 35% where they stand and holds the axis, so positions survive; the frame says how many match (E40). In a `ChartScope` a selection made in any chart does the same in every chart and table that carries the entity, and the scope says it once (E165).
 - **Live.** A live chart shows a change at once and leaves a fading `ink` outline on the mark; a whole refresh glows the "Updated" caption instead. Its window glides with time, and it holds still while someone reads it, with a switch to pause it (E39).
