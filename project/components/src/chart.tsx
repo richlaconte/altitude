@@ -1074,6 +1074,14 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   /** When the reader switches the mode with `modes`. */
   onYModeChange?: (mode: 'value' | 'indexed' | 'change') => void;
   /**
+   * Play a series by ear (#538): a Play button in the frame (it becomes Stop), and Space on the plot's summary or a
+   * series. Pitch is value over two octaves (the axis's floor is the lowest note), time is x, over `duration` ms
+   * (default 3000, 6000 past 200 points); a gridline crossing clicks and a gap is silence. Narrated through a polite
+   * live region (the series and its range, its extremes as they pass, its trend), unless `narrate: false`. Escape or
+   * Stop ends it; ←/→ while playing stop and scrub, each point's tone following. Nothing plays without a press.
+   */
+  sonify?: boolean | { duration?: number; narrate?: boolean };
+  /**
    * How the chart takes part in a ChartScope around it (#529): false to stand apart (its own pointer, window, selection
    * and palette), or how its records match a selection and which entity a chosen record stands for, when the scope's
    * `by` key isn't in them. Default: records match by the scope's `by` key, and series keys are entities.
@@ -1152,7 +1160,7 @@ function useSeriesFade(targets: Record<string, number>, plotRef: React.RefObject
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
   zero: zeroProp, yDomain, yFormat, xFormat, bandPadding: bandPaddingProp, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
-  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, yMode: yModeProp, base, modes = false, onYModeChange, scope: scopeProp, source, directLabels: directLabelsProp = false, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, yMode: yModeProp, base, modes = false, onYModeChange, sonify, scope: scopeProp, source, directLabels: directLabelsProp = false, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const defaults = React.useContext(ChartDefaultsContext);
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
@@ -2055,6 +2063,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     <Tabs variant="segmented" value={view} onValueChange={setView} className="alt-chart-tabs">
       <div className="alt-chart-bar">
         {head ?? <div className="alt-chart-head" />}
+        {playButton}
         <TabsList aria-label="View">
           <TabsTrigger value="chart">Chart</TabsTrigger>
           <TabsTrigger value="table">Table</TabsTrigger>
@@ -2205,11 +2214,116 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     data.forEach((d, i) => { const dd = Math.abs(top.ctx.xOf(d) - at); if (dd < bd) { bd = dd; best = i; } });
     return best;
   };
+
+  // By ear (#538): pitch for value, time for x, one series at a time; narrated in words; never on its own.
+  const sonifyOpts = sonify && !grid ? (sonify === true ? {} : sonify) : null;
+  const [playing, setPlaying] = React.useState(false);
+  const [playAt, setPlayAt] = React.useState<number | null>(null);
+  const [playSaid, setPlaySaid] = React.useState('');
+  const audio = React.useRef<{ ctx: AudioContext; raf: number; timers: number[] } | null>(null);
+  const scrubbing = React.useRef(false);
+  const stackedSum = /stacked/i.test(info.kind ?? '');
+  const playSeries = () => (nav.level !== 'summary' ? series[navOrder[navS]] : series[navOrder[0]]) ?? series[0];
+  const playValue = (d: ChartDatum | undefined, key: string) => {
+    if (!d) return null;
+    if (stackedSum) { let t = 0, any = false; for (const q of series) { const v = d[q.key]; if (num(v)) { t += v; any = true; } } return any ? t : null; }
+    const v = d[key]; return num(v) ? v : null;
+  };
+  const pitchOf = (v: number) => { const [a, b] = ny.domain; return 220 * 2 ** (2 * Math.max(0, Math.min(1, (v - a) / ((b - a) || 1)))); };
+  const audioCtx = (): AudioContext | null => {
+    const AC = typeof window === 'undefined' ? undefined : (window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext);
+    return AC ? new AC() : null;
+  };
+  const stopPlay = (said?: string) => {
+    const a = audio.current;
+    if (a) { cancelAnimationFrame(a.raf); a.timers.forEach((t) => window.clearTimeout(t)); try { void a.ctx.close(); } catch { /* already closed */ } }
+    audio.current = null;
+    setPlaying(false); setPlayAt(null);
+    if (said !== undefined) setPlaySaid(said);
+  };
+  React.useEffect(() => () => { const a = audio.current; if (a) { cancelAnimationFrame(a.raf); a.timers.forEach((t) => window.clearTimeout(t)); try { void a.ctx.close(); } catch { /* closed */ } } }, []);
+  /** One short tone at a value, for scrubbing. */
+  const blip = (v: number | null) => {
+    if (v === null) return;
+    const c = audioCtx(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(pitchOf(v), c.currentTime);
+    g.gain.setValueAtTime(0.16, c.currentTime); g.gain.setValueAtTime(0, c.currentTime + 0.14);
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.16);
+    window.setTimeout(() => { try { void c.close(); } catch { /* closed */ } }, 400);
+  };
+  const startPlay = () => {
+    if (!sonifyOpts || !data.length) return;
+    const q = playSeries(); if (!q) return;
+    const c = audioCtx(); if (!c) { setPlaySaid('Sound isn’t available in this browser.'); return; }
+    stopPlay();
+    const n = data.length, ms = sonifyOpts.duration ?? (n > 200 ? 6000 : 3000);
+    // From the keyboard's place, even after a click on Play took the focus.
+    const from = nav.level === 'points' && navP < n - 1 ? navP : 0;
+    const count = n - from, step = ms / 1000 / Math.max(1, count - 1);
+    const osc = c.createOscillator(), gain = c.createGain();
+    osc.type = 'sine'; osc.connect(gain); gain.connect(c.destination);
+    const t0 = c.currentTime + 0.05;
+    const vals = data.map((d) => playValue(d, q.key));
+    gain.gain.setValueAtTime(0, c.currentTime);
+    for (let i = from; i < n; i++) {
+      const t = t0 + (i - from) * step, v = vals[i];
+      // A gap is silence, never bridged.
+      if (v === null) { gain.gain.setValueAtTime(0, t); continue; }
+      osc.frequency.setValueAtTime(pitchOf(v), t); gain.gain.setValueAtTime(0.16, t);
+      // A gridline crossed between two values clicks, once.
+      const pv = i > from ? vals[i - 1] : null;
+      if (pv !== null && i > from && ny.ticks.some((tk) => (pv < tk && v >= tk) || (pv > tk && v <= tk))) {
+        const k = c.createOscillator(), kg = c.createGain(), tc = t - step / 2;
+        k.type = 'square'; k.frequency.setValueAtTime(1800, tc); kg.gain.setValueAtTime(0, c.currentTime); kg.gain.setValueAtTime(0.05, tc); kg.gain.setValueAtTime(0, tc + 0.012);
+        k.connect(kg); kg.connect(c.destination); k.start(tc); k.stop(tc + 0.02);
+      }
+    }
+    const tEnd = t0 + (count - 1) * step + Math.min(step, 0.2);
+    gain.gain.setValueAtTime(0, tEnd); osc.start(t0); osc.stop(tEnd + 0.05);
+    const narrate = sonifyOpts.narrate !== false;
+    const fmt = q.format;
+    const shown = vals.slice(from).filter((v): v is number => v !== null);
+    const label = stackedSum ? 'the total' : q.label;
+    const timers: number[] = [];
+    if (narrate && shown.length) {
+      setPlaySaid(`Playing ${label}, ${fmt(Math.min(...shown))} to ${fmt(Math.max(...shown))}, ${count} ${count === 1 ? 'point' : 'points'}.`);
+      // The extremes as they pass, in words.
+      const hiI = vals.indexOf(Math.max(...shown), from), loI = vals.indexOf(Math.min(...shown), from);
+      for (const [i, w] of [[hiI, 'Highest'], [loI, 'Lowest']] as Array<[number, string]>) {
+        if (i < 0) continue;
+        timers.push(window.setTimeout(() => setPlaySaid(`${w}, ${fmt(vals[i]!)}, ${formatX(data[i][xKey])}.`), (0.05 + (i - from) * step) * 1000));
+      }
+    } else setPlaySaid('');
+    const startedAt = performance.now();
+    const first = shown[0], last = shown[shown.length - 1];
+    const tick = () => {
+      const i = from + Math.round((performance.now() - startedAt) / 1000 / step);
+      if (i > n - 1) {
+        const Label = label.charAt(0).toUpperCase() + label.slice(1);
+        // Said at the series' own precision: two values that read the same are the same to the listener.
+        stopPlay(narrate && shown.length ? `Ended. ${fmt(first) === fmt(last) ? `${Label} ends where it began, at ${fmt(last)}` : `${Label} ${last > first ? 'rises' : 'falls'} from ${fmt(first)} to ${fmt(last)}`}.` : '');
+        return;
+      }
+      setPlayAt(i);
+      if (audio.current) audio.current.raf = requestAnimationFrame(tick);
+    };
+    audio.current = { ctx: c, raf: requestAnimationFrame(tick), timers };
+    setPlaying(true); setPlayAt(from);
+  };
+  const playButton = sonifyOpts ? (
+    <Button variant="secondary" size="sm" className="alt-chart-play" onClick={() => (playing ? stopPlay('Stopped.') : startPlay())}>{playing ? 'Stop' : 'Play'}</Button>
+  ) : null;
   const onNavKey = (e: React.KeyboardEvent) => {
     const n = series.length, m = data.length, page = Math.max(1, Math.round(m * 0.1));
     const at: Nav = { level: nav.level, s: navS, p: navP };
     let next: Nav | null = null;
     // The chart type may move the keyboard itself: a grid by row and column.
+    // By ear (#538): Escape stops; Space plays from the summary or a series; an arrow while playing stops and scrubs.
+    if (sonifyOpts && e.key === 'Escape' && playing) { e.preventDefault(); e.stopPropagation(); stopPlay('Stopped.'); return; }
+    if (sonifyOpts && e.key === ' ' && at.level !== 'points') { e.preventDefault(); e.stopPropagation(); if (playing) stopPlay('Stopped.'); else startPlay(); return; }
+    if (sonifyOpts && playing && /^Arrow/.test(e.key)) { stopPlay(''); scrubbing.current = true; }
+    if (e.key === 'Escape') scrubbing.current = false;
     const moved = at.level === 'points' && childType?.chartMove && /^(Arrow|Home$|End$|Page)/.test(e.key) ? childType.chartMove(childProps, top.ctx, at.p, e) : null;
     // Escape clears the last pin, then a selection, then goes back up a level. P pins the reading at the point (#190).
     if (e.key === 'Escape' && pins.length) { e.preventDefault(); e.stopPropagation(); unpin(pins[pins.length - 1]); return; }
@@ -2245,7 +2359,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') next = { ...at, s: (at.s + ((e.key === 'ArrowDown') !== !!info.seriesUp ? 1 : -1) + n) % n };
       else if (e.key === 'Escape') next = single ? { ...at, level: 'summary' } : { ...at, level: 'series' };
     }
-    if (next) { e.preventDefault(); e.stopPropagation(); go(next); }
+    if (next) {
+      e.preventDefault(); e.stopPropagation(); go(next);
+      // Scrubbing: the tone follows the keyboard.
+      if (scrubbing.current && next.level === 'points') { const q = series[navOrder[next.s]] ?? series[0]; if (q) blip(playValue(data[next.p], q.key)); }
+    }
   };
   const ChartPointFn = (chartChild?.type as ChartChild | undefined)?.chartPoint;
   const nodes = (() => {
@@ -2336,6 +2454,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         aria-describedby={[takeId, descId, sumId].filter(Boolean).join(' ')} {...rest}>
         {!viewsOn && head}
         {!viewsOn && modeRow}
+        {!viewsOn && playButton && <div className="alt-chart-tools">{playButton}</div>}
+        {sonifyOpts && <span className="alt-sr" aria-live="polite">{playSaid}</span>}
         {wrapViews(<div ref={plotRef} className="alt-chart-plot" role="group" aria-roledescription="chart" aria-labelledby={labelledBy} aria-describedby={sumId}
           data-stage={stage} data-patterns={patterns ? '' : undefined} data-refreshing={refreshing ? '' : undefined} aria-busy={refreshing || undefined} style={height != null ? { height } : fitHeight != null ? { height: fitHeight } : { aspectRatio: String(aspect) }}
           onPointerMove={onPointerMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { if (holdTouch.current) { window.clearTimeout(holdTouch.current.timer); holdTouch.current = null; } }} onClick={onClick} onPointerLeave={onPointerLeave} onPointerEnter={onPointerEnter}
@@ -2388,6 +2508,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                     {i === layers.length - 1 && scope && tooltipOn && !ctx.active && !grid && !xy && (
                       <ChartScopeCrosshair scope={scope} self={id} kind={kind} at={(v) => scopeAt(ctx, v)} length={horizontal ? pw : ph} horizontal={horizontal} />
                     )}
+                    {/* The playhead (#538): the crosshair, moving at the playback rate. */}
+                    {i === layers.length - 1 && playAt !== null && ctx.data[playAt] && !grid && (() => {
+                      const at = Math.round(ctx.xOf(ctx.data[playAt])) + 0.5;
+                      return horizontal ? <line className="alt-chart-crosshair" data-play="" x1={0} x2={pw} y1={at} y2={at} /> : <line className="alt-chart-crosshair" data-play="" x1={at} x2={at} y1={0} y2={ph} />;
+                    })()}
                     {i === layers.length - 1 && tooltipOn && ctx.active && !grid && !xy && (() => {
                       const at = Math.round(ctx.xOf(ctx.active)) + 0.5;
                       return horizontal ? <line className="alt-chart-crosshair" x1={0} x2={pw} y1={at} y2={at} /> : <line className="alt-chart-crosshair" x1={at} x2={at} y1={0} y2={ph} />;

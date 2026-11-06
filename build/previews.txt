@@ -2630,6 +2630,25 @@ function App() {
   );
 }
 
+=== ChartByEar | <!-- @dsCard group="Charts" height=520 subtitle="A series by ear: Play, or Space on the plot, plays pitch for value over time, narrated" -->
+--- jsx
+// Two days of checkout's error rate, hourly, with an incident at hour 30 and a gap where the collector was down.
+const earHours = Array.from({ length: 48 }, (_, i) => new Date(Date.UTC(2026, 10, 3, i)).toISOString());
+const earRows = earHours.map((t, i) => ({ t, rate: i >= 18 && i <= 20 ? null : +(0.4 + 0.25 * Math.sin(i / 5) + (i >= 30 && i <= 34 ? 2.6 - Math.abs(i - 32) * 0.5 : 0)).toFixed(2) }));
+const earPct = (v) => `${v.toFixed(1)}%`;
+function App() {
+  return (
+    <A.Card>
+      <A.CardContent>
+        <A.ChartContainer config={{ rate: { label: 'Error rate', format: earPct } }} title="Checkout error rate, last 48 hours"
+          description="Press Play, or focus the chart and press Space, to hear it: higher is higher. Escape stops." aspect={2.8} locale="en-GB" yFormat={earPct} sonify>
+          <A.LineChart data={earRows} x="t" />
+        </A.ChartContainer>
+      </A.CardContent>
+    </A.Card>
+  );
+}
+
 === ChartDefaults | <!-- @dsCard group="Charts" height=1300 subtitle="The guide's chart defaults set once on the provider: inline y labels and series named at their marks" -->
 --- css
 .cdf { display: grid; gap: 16px; }

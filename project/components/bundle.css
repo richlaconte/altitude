@@ -3223,6 +3223,11 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   .alt-funnel-drop rect { fill: Canvas; stroke: CanvasText; }
   .alt-funnel-drop .alt-funnel-icon { color: CanvasText; stroke: CanvasText; }
 }
+/* By ear (#538): Play is a secondary Button (raised, level 1, a thing you press), set right in the frame beside the
+   view control, and its name says what a press does next (Play, then Stop). The playhead is the crosshair itself, a
+   1px line-control rule moving at the playback rate: it's the pointer, not a change, so it doesn't ease. */
+.alt-chart-tools { display: flex; justify-content: flex-end; gap: var(--space-2); min-height: 32px; }
+.alt-chart-bar .alt-chart-play { margin-left: auto; }
 /* The y mode (#531): an indexed or % change reading says what its axis reads once, flush at caption size in ink-muted
    above the plot ("Index, 1 Jan 2026 = 100"), never in colour; the base is a reference line at 100, or the ground line
    at zero. The reader's switch is a choice, so it's ToggleGroup's segmented build (sunk well, raised pill). */
