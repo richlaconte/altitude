@@ -3228,6 +3228,55 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
    1px line-control rule moving at the playback rate: it's the pointer, not a change, so it doesn't ease. */
 .alt-chart-tools { display: flex; justify-content: flex-end; gap: var(--space-2); min-height: 32px; }
 .alt-chart-bar .alt-chart-play { margin-left: auto; }
+/* ── UnitChart (#537): a frequency felt as a count. A grid of counted marks flat on the ground, Heatmap's grid with its
+   2px parting: each mark a flat square at radius-xs, the counted ones in data-1 (or a group's slot), the rest in
+   data-context, a fraction filling a mark from the left. The number is always said beside the marks in ink, because
+   marks alone read as less serious than the figure. Status only when a record means good or bad, with its word and
+   icon in the legend. A mark that acts takes the 2px ink outline on hover and the keyboard's accent-ink ring; it never
+   lifts. A count change recolours the marks at once over dur-travel-3, one change, no stagger. ── */
+.alt-unit { margin: 0; display: grid; gap: var(--space-2); min-width: 0; }
+.alt-unit-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
+.alt-unit-label { font: 500 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-unit-value { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.alt-unit-value strong { font: 600 22px/28px var(--font-sans); color: var(--ink); letter-spacing: -0.01em; }
+.alt-unit-grid { display: grid; grid-template-columns: repeat(var(--alt-unit-cols, 10), minmax(10px, 18px)); gap: 2px; justify-content: start; }
+.alt-unit-row { display: contents; }
+.alt-unit-mark { position: relative; aspect-ratio: 1; border-radius: var(--radius-xs); background: var(--data-context); overflow: hidden; transition: background-color var(--dur-travel-3) var(--ease-glide); }
+.alt-unit-part { background: var(--data-1); }
+.alt-unit-legend [data-slot="data-context"] .alt-unit-swatch { background: var(--data-context); }
+.alt-unit-mark[data-slot="data-1"], .alt-unit-part[data-slot="data-1"], .alt-unit-legend [data-slot="data-1"] .alt-unit-swatch { background: var(--data-1); }
+.alt-unit-mark[data-slot="data-2"], .alt-unit-part[data-slot="data-2"], .alt-unit-legend [data-slot="data-2"] .alt-unit-swatch { background: var(--data-2); }
+.alt-unit-mark[data-slot="data-3"], .alt-unit-part[data-slot="data-3"], .alt-unit-legend [data-slot="data-3"] .alt-unit-swatch { background: var(--data-3); }
+.alt-unit-mark[data-slot="data-4"], .alt-unit-part[data-slot="data-4"], .alt-unit-legend [data-slot="data-4"] .alt-unit-swatch { background: var(--data-4); }
+.alt-unit-mark[data-slot="data-5"], .alt-unit-part[data-slot="data-5"], .alt-unit-legend [data-slot="data-5"] .alt-unit-swatch { background: var(--data-5); }
+.alt-unit-mark[data-slot="data-6"], .alt-unit-part[data-slot="data-6"], .alt-unit-legend [data-slot="data-6"] .alt-unit-swatch { background: var(--data-6); }
+.alt-unit-mark[data-slot="data-other"] { background: var(--data-other); }
+.alt-unit-mark[data-slot="critical"] { background: var(--critical); }
+.alt-unit-mark[data-slot="caution"] { background: var(--caution); }
+.alt-unit-mark[data-slot="positive"] { background: var(--positive); }
+.alt-unit-part { position: absolute; inset: 0 auto 0 0; }
+.alt-unit-mark[data-acts] { cursor: pointer; }
+@media (hover: hover) { .alt-unit-mark[data-acts]:hover { outline: 2px solid var(--ink); outline-offset: 1px; } }
+.alt-unit-mark:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-unit-legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); margin: 0; padding: 0; list-style: none; font: 400 13px/19px var(--font-sans); color: var(--ink); font-variant-numeric: tabular-nums; }
+.alt-unit-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.alt-unit-swatch { width: 10px; height: 10px; border-radius: var(--radius-xs); background: var(--data-1); }
+.alt-unit-tone { display: inline-flex; }
+.alt-unit-legend [data-slot="critical"] .alt-unit-tone { color: var(--critical); }
+.alt-unit-legend [data-slot="caution"] .alt-unit-tone { color: var(--caution); }
+.alt-unit-legend [data-slot="positive"] .alt-unit-tone { color: var(--positive); }
+[data-contrast="more"] .alt-unit-mark:not([data-slot="data-context"]) { box-shadow: inset 0 0 0 1px var(--ink); }
+[data-contrast="more"] .alt-unit-mark[data-slot="data-context"] { box-shadow: inset 0 0 0 1px var(--line-control); }
+@media (prefers-reduced-motion: reduce) { .alt-unit-mark { transition: none; } }
+@media (forced-colors: active) {
+  .alt-unit-mark, .alt-unit-mark[data-slot] { background: Canvas; box-shadow: inset 0 0 0 1px CanvasText; forced-color-adjust: none; }
+  .alt-unit-mark[data-slot]:not([data-slot="data-context"]), .alt-unit-part, .alt-unit-swatch { background: CanvasText; forced-color-adjust: none; }
+  .alt-unit-legend [data-slot] .alt-unit-swatch { background: CanvasText; }
+  .alt-unit-grid .alt-unit-mark:is([data-slot="data-2"], [data-slot="data-4"], [data-slot="data-6"]), .alt-unit-legend :is([data-slot="data-2"], [data-slot="data-4"], [data-slot="data-6"]) .alt-unit-swatch { background: repeating-linear-gradient(45deg, CanvasText 0 2px, Canvas 2px 4px); }
+  .alt-unit-legend [data-slot="data-context"] .alt-unit-swatch { background: Canvas; box-shadow: inset 0 0 0 1px CanvasText; }
+  .alt-unit-legend, .alt-unit-label, .alt-unit-value, .alt-unit-value strong, .alt-unit-tone { color: CanvasText; }
+  .alt-unit-mark:focus-visible { outline-color: Highlight; }
+}
 /* The y mode (#531): an indexed or % change reading says what its axis reads once, flush at caption size in ink-muted
    above the plot ("Index, 1 Jan 2026 = 100"), never in colour; the base is a reference line at 100, or the ground line
    at zero. The reader's switch is a choice, so it's ToggleGroup's segmented build (sunk well, raised pill). */

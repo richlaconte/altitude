@@ -44,6 +44,7 @@ Choose by the job the data does, not by what looks rich.
 | One measure across many groups, or measures of different scale | `ChartGrid`: small multiples, one panel per group on a shared scale |
 | Values where zero isn't meaningful, averages with their spread, or before and after per category | `DotPlot` |
 | Part of a whole | a stacked `BarChart`, or a segmented `Meter` |
+| How many in a hundred (a rate or a risk to feel) | `UnitChart`: that many counted marks, the number said beside them |
 
 **No pie or donut charts.** Angle and area are read less accurately than position and length, so a part of a whole is a stacked bar or a segmented meter. **No 3D, ever**, for the reasons in rule 1.
 

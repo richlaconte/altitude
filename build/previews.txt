@@ -2864,6 +2864,39 @@ function App() {
   );
 }
 
+=== UnitChart | <!-- @dsCard group="Charts" height=360 subtitle="A frequency felt as a count: so many marks of every hundred, the number said beside them" -->
+--- css
+.uc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 860px) { .uc { grid-template-columns: 1fr; } }
+--- jsx
+// Forty invoices this month, three of them paid late.
+const ucInvoices = Array.from({ length: 40 }, (_, i) => ({ id: `INV-${1040 + i}`, customer: ['Harrow Freight', 'Tidewater Clinic', 'Kestrel Dental', 'Larkspur Bakery', 'Fenwick Tools'][i % 5], late: [6, 19, 33].includes(i) }));
+function App() {
+  const [open, setOpen] = React.useState(null);
+  return (
+    <div className="uc">
+      <A.Card>
+        <A.CardContent>
+          <A.UnitChart label="Trial accounts that convert" total={100} value={18} noun="accounts" />
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardContent>
+          <A.UnitChart label="Seats on the Team plan" total={40} columns={10} noun="seats" restLabel="unassigned"
+            groups={[{ key: 'active', label: 'Active', value: 31 }, { key: 'invited', label: 'Invited', value: 6 }]} />
+        </A.CardContent>
+      </A.Card>
+      <A.Card>
+        <A.CardContent>
+          <A.UnitChart label="Invoices this month" units={ucInvoices} getKey={(i) => i.id} getLabel={(i) => `${i.id}, ${i.customer}`} noun="invoices"
+            tone={(i) => (i.late ? 'critical' : undefined)} toneLabels={{ critical: 'Paid late' }} onSelect={(i) => setOpen(i.id)} />
+          <p style={{ margin: '8px 0 0', font: '400 13px/19px var(--font-sans)', color: 'var(--ink-muted)' }}>{open ? `Opened ${open}` : 'Choose an invoice to open it'}</p>
+        </A.CardContent>
+      </A.Card>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {
