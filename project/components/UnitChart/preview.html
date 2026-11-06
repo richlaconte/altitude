@@ -1,0 +1,65 @@
+<!-- @dsCard group="Charts" height=360 subtitle="A frequency felt as a count: so many marks of every hundred, the number said beside them" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UnitChart — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.uc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 860px) { .uc { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const ucInvoices = Array.from({ length: 40 }, (_, i) => ({ id: `INV-${1040 + i}`, customer: ["Acme", "Globex", "Initech", "Umbrella", "Hooli"][i % 5], late: [6, 19, 33].includes(i) }));
+function App() {
+  const [open, setOpen] = React.useState(null);
+  return /* @__PURE__ */ React.createElement("div", { className: "uc" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.UnitChart, { label: "Trial accounts that convert", total: 100, value: 18, noun: "accounts" }))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.UnitChart,
+    {
+      label: "Seats on the Team plan",
+      total: 40,
+      columns: 10,
+      noun: "seats",
+      restLabel: "unassigned",
+      groups: [{ key: "active", label: "Active", value: 31 }, { key: "invited", label: "Invited", value: 6 }]
+    }
+  ))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.UnitChart,
+    {
+      label: "Invoices this month",
+      units: ucInvoices,
+      getKey: (i) => i.id,
+      getLabel: (i) => `${i.id}, ${i.customer}`,
+      noun: "invoices",
+      tone: (i) => i.late ? "critical" : void 0,
+      toneLabels: { critical: "Paid late" },
+      onSelect: (i) => setOpen(i.id)
+    }
+  ), /* @__PURE__ */ React.createElement("p", { style: { margin: "8px 0 0", font: "400 13px/19px var(--font-sans)", color: "var(--ink-muted)" } }, open ? `Opened ${open}` : "Choose an invoice to open it"))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

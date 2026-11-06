@@ -2597,6 +2597,41 @@ export interface FunnelProps {
  * ChartContainer whose config names the count.
  */
 export declare function Funnel(props: FunnelProps): React.ReactElement | null;
+export interface UnitChartGroup { key: string; label: string; value: number }
+export interface UnitChartProps<T = Record<string, unknown>> extends Omit<React.HTMLAttributes<HTMLElement>, 'onSelect'> {
+  /** What is counted, as the figure's name: "Trial accounts that convert". */
+  label: string;
+  /** How many marks. Default 100, said "of every 100"; at most 400 (above, the number is said instead and devChecks warns). With `units`, the number of records, said "of 40". */
+  total?: number;
+  /** How many are counted (one group). A fraction fills the last mark from the left. */
+  value?: number;
+  /** Two or more counted groups, each in its own data slot, with a direct label and its count. */
+  groups?: UnitChartGroup[];
+  /** Each mark is a record: the grid becomes a keyboard path (one Tab stop, arrows by row and column), and `tone` and `onSelect` apply per record. */
+  units?: T[];
+  /** A record's id. Default its index. */
+  getKey?: (unit: T) => string;
+  /** A record's name, for its mark. */
+  getLabel?: (unit: T) => string;
+  /** Status for a record that means good or bad: its mark wears the status colour, and the legend says the word with its icon. */
+  tone?: (unit: T) => 'positive' | 'caution' | 'critical' | undefined;
+  /** The words for each tone in the legend and summary: { critical: 'Late' }. */
+  toneLabels?: Partial<Record<'positive' | 'caution' | 'critical', string>>;
+  /** What to do when a record's mark is chosen (Enter, Space or a click). */
+  onSelect?: (unit: T) => void;
+  /** What a mark is, plural: "accounts". */
+  noun?: string;
+  /** What the rest are called in words. Default "the rest". */
+  restLabel?: string;
+  /** Marks per row. Default 10 (20 above 200 marks). */
+  columns?: number;
+}
+/**
+ * A frequency felt as a count (#537): `total` flat marks on the ground with `value` counted, the number said beside
+ * them ("18 of every 100 accounts"). Groups take the data palette and are labelled with their counts; the rest is
+ * data-context. With `units`, each mark is a record you can walk and choose.
+ */
+export declare function UnitChart<T = Record<string, unknown>>(props: UnitChartProps<T>): React.ReactElement;
 /** A sliding window over x: a span of time, or the last N records. */
 export interface ChartWindow {
   minutes?: number; hours?: number; days?: number; points?: number;
