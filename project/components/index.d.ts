@@ -2535,6 +2535,37 @@ export interface DotPlotProps {
  * after per category. Dots lie flat on the ground, ringed in the plot's colour; with no zero there's no ground line.
  */
 export declare function DotPlot(props: DotPlotProps): React.ReactElement;
+/** One bin of a Histogram: its range, how many values fall in it, their share, and the records themselves. */
+export interface HistogramBin { start: number; end: number; open?: 'above' | 'below'; count: number; share: number; records: Record<string, unknown>[] }
+export interface HistogramProps {
+  /** The records, one per value. undefined or a promise while they load; null or [] when there are none. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** The key of the value in each record, and its entry in the container's config (its label and format). */
+  value: string;
+  /** How to bin: a count of bins, a bin `width`, or explicit edges. Default Freedman–Diaconis, the width snapped to a 1–2–5 number. Values past explicit edges fall in an open-ended bin ("≥ 1 s"). */
+  bins?: number | { width: number } | number[];
+  /** 'bars' (default), or 'dots': a quantile dot plot of `dots` dots, each an equal share of the values. */
+  mode?: 'bars' | 'dots';
+  /** How many dots in a quantile dot plot. Default 20 (5% each). */
+  dots?: number;
+  /** Lines to read the spread against: the median, and percentiles ([95] draws p95). */
+  show?: { median?: boolean; percentiles?: number[] };
+  /** Read the spread as the running share at or below each bin's end: a step line, its axis 0–100%. */
+  cumulative?: boolean;
+  /** What a value is called, plural: "requests". Default "values". */
+  noun?: string;
+  /** The selected bin, by its start, and what to do when one is chosen (null clears). */
+  selected?: number | null;
+  onSelect?: (bin: HistogramBin | null) => void;
+  empty?: ChartEmpty;
+  tooltip?: boolean;
+}
+/**
+ * How a set of values is spread (#535): bins as flat bars touching on a continuous axis, standing on the ground line,
+ * each named by its range ("180–200 ms: 42 requests (12%)"). mode="dots" draws a quantile dot plot; cumulative the
+ * share at or below. Place inside a ChartContainer whose config names the value.
+ */
+export declare function Histogram(props: HistogramProps): React.ReactElement | null;
 /** A sliding window over x: a span of time, or the last N records. */
 export interface ChartWindow {
   minutes?: number; hours?: number; days?: number; points?: number;

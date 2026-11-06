@@ -1,6 +1,6 @@
 {
   "name": "altitude-design",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "description": "A design and HCI framework for agent-built React web applications, where height is the interface.",
   "keywords": [
     "react",
