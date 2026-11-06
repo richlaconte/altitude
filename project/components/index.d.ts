@@ -2042,6 +2042,14 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   source?: DataSource;
   /** Label series at their marks rather than only in a legend. 'auto': where there's room (a line's ends, the first group of grouped bars, the last stack's segments), and a legend that only labels is dropped once every series is named. true: always, as under forced colours. Default false, or the provider's charts.directLabels. */
   directLabels?: boolean | 'auto';
+  /** How a line or area chart reads its values. 'value' (default) as they are; 'indexed' each series ÷ its value at `base` × 100, the axis saying "Index, Jan 2026 = 100" and a reference line at 100; 'change' the % change from `base`, zero the ground line. The readout, point names and table keep the value beside the reading. Stacks, bands and compare keep their values; bars are never indexed. */
+  yMode?: 'value' | 'indexed' | 'change';
+  /** The x the series are indexed to. Default the first record's; a series with no value there starts at its next one. */
+  base?: string | number | Date;
+  /** A Values | Indexed | % change control the reader can switch (segmented, as ToggleGroup type="single"). `yMode` is where it starts. */
+  modes?: boolean;
+  /** When the reader switches the mode with `modes`. */
+  onYModeChange?: (mode: 'value' | 'indexed' | 'change') => void;
 }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; /** An uncertainty band's row, keyed by a block of its fill. */ range?: boolean; }

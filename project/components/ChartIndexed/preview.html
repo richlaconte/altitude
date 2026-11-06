@@ -1,0 +1,69 @@
+<!-- @dsCard group="Charts" height=1120 subtitle="Measures of different scale on one axis: indexed to a common base, or read as % change" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartIndexed — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.cix { display: grid; gap: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const cixMonths = ["2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01", "2026-05-01", "2026-06-01", "2026-07-01", "2026-08-01", "2026-09-01", "2026-10-01"];
+const cixGrowth = cixMonths.map((m, i) => ({ m, signups: Math.round(1650 + 120 * i + 90 * Math.sin(i)), revenue: Math.round(88e3 + 2600 * i * i / 3 + 1500 * Math.cos(i)) }));
+const cixCount = new Intl.NumberFormat("en-GB");
+const cixMoney = (v) => `$${Math.round(v / 1e3)}K`;
+const cixRegions = cixMonths.map((m, i) => ({ m, na: Math.round(42e3 * (1 + 0.012 * i)), eu: Math.round(18e3 * (1 + 0.03 * i + 0.01 * Math.sin(i))), apac: Math.round(2400 * (1 + 0.07 * i)) }));
+function App() {
+  return /* @__PURE__ */ React.createElement("div", { className: "cix" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cix1" }, "Signups and revenue since January"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Both start at 100: revenue grew faster. Switch to Values to see why they can't share an axis as they are.")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      "aria-labelledby": "cix1",
+      config: { signups: { label: "Signups", format: (v) => cixCount.format(v) }, revenue: { label: "Revenue", format: cixMoney } },
+      yMode: "indexed",
+      modes: true,
+      aspect: 2.8,
+      locale: "en-GB",
+      xFormat: (v) => new Date(v).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" }),
+      views: true
+    },
+    /* @__PURE__ */ React.createElement(A.LineChart, { data: cixGrowth, x: "m" })
+  ))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cix2" }, "Orders by region, change since January"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Asia Pacific is the smallest region and grew the most.")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      "aria-labelledby": "cix2",
+      config: { na: { label: "North America", format: (v) => cixCount.format(v) }, eu: { label: "Europe", format: (v) => cixCount.format(v) }, apac: { label: "Asia Pacific", format: (v) => cixCount.format(v) } },
+      yMode: "change",
+      aspect: 2.8,
+      locale: "en-GB",
+      xFormat: (v) => new Date(v).toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })
+    },
+    /* @__PURE__ */ React.createElement(A.LineChart, { data: cixRegions, x: "m" })
+  ))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

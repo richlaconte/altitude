@@ -14,6 +14,8 @@ Change over time: latency over a day, revenue over a year, one series or a few c
 
 **Props:** `data` and `x`; `curve` (`'linear'` or `'monotone'`); `y={{ format }}` to format the axis; `endLabels` to turn end labels on or off (default on for up to four series, and always under forced colours and in print). `status` and `boundary` (below); `band={{ low, high, series?, label? }}` for an uncertainty band. `linePath(points, curve)` is exported for your own marks: it draws the same path, gaps and all.
 
+**Indexed, or as change.** `yMode="indexed"` (with `base`) or `"change"` on the container rebases every line to a common start, so measures of different scale share one axis: see [ChartContainer](../ChartContainer/README.md), "Indexed, or as change".
+
 **Selecting and drilling.** `selected` and `onSelect` make the marks a selection that cross-filters the rest of a dashboard, and `drill` opens a level down inside a `Drilldown`. Hover only promises what a click does. See [ChartContainer](../ChartContainer/README.md), "Marks you can select or drill into".
 
 **Filtering in place.** `relevance={(d) => 'match' | 'miss' | undefined}` recedes misses to 35% and keeps everything in place; `rescale` fits the axis to the matches. See [ChartContainer](../ChartContainer/README.md), "Filtering in place".
