@@ -34,8 +34,6 @@ How a set of values is spread: request latencies, order sizes, scores, time to f
 Not yet: `relevance`, `focus` and `compare` (the period before as an outline).
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
-
-<!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
 ## Example
 
 `Histogram` as first used in its preview:
