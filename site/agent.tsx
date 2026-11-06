@@ -35,7 +35,7 @@ function Page() {
           <div className="wrap">
             <div className="section-head">
               <h1 className="display" id="agent-title">Altitude for agents</h1>
-              <p className="lead">One agent run, “Add annual pricing to the pricing page”, played through a complete harness. The states that matter most only show up mid-run, for a second: pick any of them below. Every moment is drawn by the components as they ship; nothing here is a mock-up.</p>
+              <p className="lead">One agent run, “Add annual pricing to the pricing page”, played through a complete harness. The states that matter most only show up mid-run, for a second: pick any of them below. Every moment is drawn by the components as they ship; nothing here is a mock-up. Switch to Coding session for the same parts on a phone: the last turn folded to one line that says what it did, the live turn open, and the header saying what the session needs from you.</p>
             </div>
             <div className="agent-modes" role="group" aria-label="Modes">
               <Tabs variant="segmented" value={scheme} onValueChange={(v) => setScheme(v as BuiltInScheme)}>

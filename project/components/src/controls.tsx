@@ -961,11 +961,14 @@ export interface AccordionProps extends Omit<React.HTMLAttributes<HTMLDivElement
   items: AccordionItem[];
   type?: 'single' | 'multiple';
   defaultValue?: string[];
+  /** The open items, controlled. */
+  value?: string[];
+  onValueChange?: (value: string[]) => void;
 }
-export function Accordion({ items, type = 'single', defaultValue = [], className, ...rest }: AccordionProps) {
-  const [open, setOpen] = React.useState<string[]>(defaultValue);
+export function Accordion({ items, type = 'single', defaultValue = [], value, onValueChange, className, ...rest }: AccordionProps) {
+  const [open, setOpen] = useControllable(value, defaultValue, onValueChange);
   const id = React.useId();
-  const toggle = (v: string) => setOpen((o) => o.includes(v) ? o.filter((x) => x !== v) : type === 'single' ? [v] : [...o, v]);
+  const toggle = (v: string) => setOpen(open.includes(v) ? open.filter((x) => x !== v) : type === 'single' ? [v] : [...open, v]);
   return (
     <div className={cx('alt-acc', className)} {...rest}>
       {items.map((it) => {

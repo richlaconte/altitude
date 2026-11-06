@@ -40,7 +40,7 @@ export { Conversation, ConversationContent, ConversationScrollButton, Message, M
 export type { MessageStatus } from './conversation';
 export { Confirmation } from './confirmation';
 export type { ConfirmationState } from './confirmation';
-export { Trace, TraceParallel, TraceStep, TraceToolCall, TraceReasoning } from './trace';
+export { Trace, TraceParallel, TraceStep, TraceToolCall, TraceReasoning, TraceMemory, describeTally } from './trace';
 export type { TraceStepStatus } from './trace';
 export type { SuggestionProps } from './controls';
 export { AILabel } from './ai-label';
@@ -219,4 +219,4 @@ export type { TimelineItemProps, TimelineProps } from './timeline';
 export type { ToggleGroupItemProps, ToggleGroupMultipleProps, ToggleGroupProps, ToggleGroupSingleProps, ToggleProps } from './toggle';
 export type { ToolbarButtonProps, ToolbarProps, ToolbarToggleProps } from './toolbar';
 export type { TourProps } from './tour';
-export type { TraceParallelProps, TraceProps, TraceReasoningProps, TraceStepProps, TraceToolCallProps } from './trace';
+export type { TraceParallelProps, TraceProps, TraceReasoningProps, TraceStepProps, TraceToolCallProps, TraceMemoryProps, TraceMemoryItem, TraceTally } from './trace';

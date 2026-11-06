@@ -682,6 +682,9 @@ export interface AccordionProps extends Omit<React.HTMLAttributes<HTMLDivElement
   /** Default 'single'. */
   type?: 'single' | 'multiple';
   defaultValue?: string[];
+  /** The open items, controlled. */
+  value?: string[];
+  onValueChange?: (value: string[]) => void;
 }
 export declare function Accordion(props: AccordionProps): React.ReactElement;
 
@@ -3594,7 +3597,13 @@ export interface ConfirmationProps {
 export declare function Confirmation(props: ConfirmationProps): React.ReactElement;
 
 export type TraceStepStatus = 'planned' | 'running' | 'done' | 'failed' | 'awaiting-approval';
-export interface TraceProps extends React.OlHTMLAttributes<HTMLOListElement> { 'aria-label': string }
+export interface TraceProps extends React.OlHTMLAttributes<HTMLOListElement> {
+  'aria-label': string;
+  /** A turn's steps behind one lid that says what they did, from the steps: "Edited 2 files · Saved 3 memories · Ran 4 tools", with "4 steps · all done" beside it. Top-level Traces only. */
+  collapsible?: boolean;
+  /** Open to begin with. Default: open while a step runs, waits or fails. Never closes by itself; opens by itself when a step fails or waits for approval. */
+  defaultOpen?: boolean;
+}
 /** An agent's steps as a vertical Stepper: done flush and stamped, running raised, planned imprinted, failed in a trench. */
 export declare function Trace(props: TraceProps): React.ReactElement;
 export interface TraceParallelProps {
@@ -3606,7 +3615,16 @@ export interface TraceParallelProps {
 /** Steps that run at once, in a labelled group with a bracket: "Subagents · 3 in parallel · 2 of 3 done". A Trace inside a TraceStep is a nested run behind a lid. */
 export declare function TraceParallel(props: TraceParallelProps): React.ReactElement;
 export interface TraceStepProps {
+  /** What the step did, or with `tool`, what it acted on ("web/turns.ts"). */
   title: string;
+  /** The tool it called, before the title in code type ("edit"). Counted in a collapsible Trace's "Ran 4 tools". */
+  tool?: string;
+  /** A short tally after the status: "2 edits". */
+  detail?: string;
+  /** Lines added and removed in the file named by `title`: "+2 −1", read as "2 lines added, 1 removed". Counted in "Edited 2 files". */
+  changes?: { added: number; removed: number };
+  /** What came back, in a sentence, under the detail: "2 edits applied to web/turns.ts". */
+  result?: React.ReactNode;
   /** 'auto': derived from the steps inside (a nested Trace or TraceParallel): running while any runs, done only when all are. */
   status: TraceStepStatus | 'auto';
   /** Milliseconds it took. */
@@ -3633,6 +3651,32 @@ export interface TraceReasoningProps {
 }
 /** Reasoning, closed by default behind "Thought for 12s". */
 export declare function TraceReasoning(props: TraceReasoningProps): React.ReactElement;
+export interface TraceMemoryItem {
+  id: string;
+  /** What's remembered, as the assistant will read it later. */
+  text: string;
+  /** Default 'added'. */
+  change?: 'added' | 'updated' | 'removed';
+  /** For 'updated': what it said before. */
+  previous?: string;
+  /** Forgotten by the person: struck through with Undo, and not counted. */
+  forgotten?: boolean;
+}
+export interface TraceMemoryProps {
+  items: TraceMemoryItem[];
+  /** Shows Forget on each memory. It runs at once; leave the item with `forgotten` so it offers Undo. */
+  onForget?: (id: string) => void;
+  /** Undo for a forgotten memory; Restore for one the assistant removed. */
+  onRestore?: (id: string) => void;
+  /** Names the group. Default "Memory". */
+  label?: string;
+  className?: string;
+}
+/** What the assistant wrote to memory, in words ("New", "Updated", "Removed"), each with Forget that runs at once and leaves Undo. Put it in a TraceStep. */
+export declare function TraceMemory(props: TraceMemoryProps): React.ReactElement;
+export interface TraceTally { files: number; memories: { added: number; updated: number; removed: number }; tools: number; steps: number }
+/** A collapsible Trace's lid in words: "Edited 2 files · Saved 3 memories · Ran 4 tools". */
+export declare function describeTally(tally: TraceTally): string;
 
 export interface AISource { title: string; url?: string }
 export interface AILabelProps {
@@ -4099,7 +4143,7 @@ declare global {
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
       AILabel: typeof AILabel;
-      Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning;
+      Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning; TraceMemory: typeof TraceMemory; describeTally: typeof describeTally;
       Confirmation: typeof Confirmation;
       Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; ConversationCheckpoint: typeof ConversationCheckpoint; MessageActions: typeof MessageActions;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit; PromptInputDictate: typeof PromptInputDictate;
