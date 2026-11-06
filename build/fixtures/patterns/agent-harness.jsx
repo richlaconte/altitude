@@ -173,7 +173,19 @@ function Harness({ k }) {
   );
 }
 
-const CSS = `.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
+const STYLES = `.ah-views{display:grid;gap:12px;max-width:1100px}.ah-views>.alt-tabs{justify-self:start}
+.ah-phone{width:min(100%,440px);height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;display:flex;background:var(--surface-ground)}
+.cs{display:flex;flex-direction:column;flex:1;min-width:0;padding:8px 12px 12px;gap:8px}
+.cs-head{display:flex;align-items:flex-start;gap:2px}.cs-status{align-items:flex-start}.cs-status .alt-badge{margin-top:1px}.cs-title{flex:1;min-width:0;padding:2px 6px 0}
+.cs-title h2{margin:0;font:600 15px/20px var(--font-sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-status{display:flex;align-items:center;gap:8px;margin:2px 0 0;min-width:0;font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.cs-status>span:last-child{min-width:0}.cs-status .alt-badge{flex:none}
+.cs-status>svg{flex:none;color:var(--positive)}
+.cs .alt-convo{flex:1;min-height:0}
+.cs-grow{flex:1}.cs-model{width:auto;min-width:0}
+.cs-context{display:flex;align-items:center;gap:14px;padding:2px 4px 0;font:400 12.5px/17px var(--font-mono);color:var(--ink-muted)}
+.cs-context>span{display:inline-flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
 .ah-frame .alt-shell-page{display:flex;flex-direction:column;overflow:hidden}.ah-frame .alt-inset{flex:1;min-height:0;display:flex;flex-direction:column}
 .ah-main{display:flex;flex-direction:column;gap:12px;flex:1;padding:12px 0;min-height:0}.ah-main .alt-convo{flex:1;min-height:0;margin:0 -12px 0 0}
 .ah-rail{display:flex;align-items:center;gap:8px 12px}.ah-moments{position:relative;display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
@@ -215,8 +227,121 @@ function useRail(k) {
   }, [scan]);
   return { ref: rail, onScroll: scan, 'data-more-start': edges.start ? '' : undefined, 'data-more-end': edges.end ? '' : undefined };
 }
+/** A coding session on a phone: the last turn folded to one line that says what it did, the current turn open because a
+ * step is waiting for the person, and the header saying the session's state in words. Built only from the parts above. */
+const TURN_EDIT = { before: 'export function indexOf() {\n  const entered = new Map()\n}', after: 'export function indexOf() {\n  const entered = new Map();\n  const turns = new Map();\n}' };
+const TURN_WRITE = 'export function turnStepsOf() {\n  return [];\n}';
+/** A new file is all additions: drop the empty line diffLines reads as removed from "nothing". */
+const NEW_FILE = A.diffLines('', TURN_WRITE).filter((o) => o.kind !== 'del');
+/** @type {import('altitude-design').PromptMention[]} */
+const FILES = [{ id: 'f1', label: 'web/turns.ts', kind: 'file' }, { id: 'f2', label: 'web/turn-count.ts', kind: 'file' }];
+const MODELS = [{ value: 'beam-low', label: 'Beam · low' }, { value: 'beam-high', label: 'Beam · high' }, { value: 'arc', label: 'Arc' }];
+const Glyph = ({ d }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
+const FOLDER = 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', BRANCH = 'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9';
+
+/** What "remember what a turn fold is" wrote: two new memories and one it corrected. */
+const MEMORIES = [
+  { id: 'm1', text: 'A turn fold groups one turn\'s tool steps under a single summary line.' },
+  { id: 'm2', text: 'The fold counts steps, not tool calls.', change: 'updated', previous: 'The fold counts tool calls.' },
+  { id: 'm3', text: 'A fold opens by itself when a step fails or waits for approval.' },
+];
+/** The session's state in one line: what every harness puts first, because it's what the person came back to find out. */
+const SESSION = {
+  requested: { plate: { tone: 'caution', word: 'Needs approval' }, words: 'Open a pull request?' },
+  running: { plate: { tone: 'accent', word: 'Working' }, words: 'Opening the pull request' },
+  done: { plate: null, words: 'Pull request #112 opened' },
+  rejected: { plate: null, words: 'Stopped before the pull request' },
+};
+
+function CodingSession() {
+  const [memories, setMemories] = React.useState(/** @type {import('altitude-design').TraceMemoryItem[]} */ (MEMORIES));
+  const setForgotten = (/** @type {string} */ id, /** @type {boolean} */ forgotten) => setMemories((ms) => ms.map((m) => (m.id === id ? { ...m, forgotten } : m)));
+  const [approval, setApproval] = React.useState(/** @type {'requested' | 'running' | 'done' | 'rejected'} */ ('requested'));
+  const approve = () => { setApproval('running'); setTimeout(() => setApproval('done'), 900); };
+  const main = React.useRef(/** @type {HTMLDivElement | null} */ (null));
+  // Open at the end of the thread, where the live turn is, as the person would find it.
+  React.useEffect(() => { const el = main.current?.querySelector('.alt-convo-scroll'); if (el) el.scrollTop = el.scrollHeight; }, [approval]);
+  const state = SESSION[approval];
+  return (
+    <div className="cs" ref={main}>
+      <header className="cs-head">
+        <A.Button variant="ghost" size="sm" square aria-label="Show sessions"><A.Icons.PanelLeft /></A.Button>
+        <div className="cs-title">
+          <h2>Count steps in the turn fold</h2>
+          <p className="cs-status" role="status">
+            {state.plate ? <A.Badge tone={/** @type {any} */ (state.plate.tone)} variant="soft" lamp>{state.plate.word}</A.Badge> : <A.Icons.CircleCheck size={16} aria-label="Done" />}
+            <span>{state.words}</span>
+          </p>
+        </div>
+        <A.Button variant="ghost" size="sm" square aria-label="More"><A.Icons.More /></A.Button>
+      </header>
+      <A.Conversation aria-label="Count steps in the turn fold">
+        <A.ConversationContent>
+          <A.Message from="user">
+            <A.MessageContent>Change the fold to count steps, and remember what a turn fold is.</A.MessageContent>
+            <A.MessageActions onCopy onEdit={() => {}} />
+          </A.Message>
+          <A.Message from="assistant">
+            {/* A finished turn is one line: what it did, counted from its steps. The steps, their diffs and the memory
+                writes are behind the lid, one press away; nothing in them needs the person now. */}
+            <A.Trace aria-label="Change the fold to count steps" collapsible>
+              <A.TraceStep tool="edit" title="web/turns.ts" detail="2 edits" changes={{ added: 2, removed: 1 }} status="done">
+                <A.DiffView caption="web/turns.ts" before={TURN_EDIT.before} after={TURN_EDIT.after} />
+              </A.TraceStep>
+              <A.TraceStep tool="write" title="web/turn-count.ts" detail="new file" changes={{ added: 3, removed: 0 }} status="done">
+                <A.DiffView caption="web/turn-count.ts · new file" before="" after={TURN_WRITE} hunks={NEW_FILE} />
+              </A.TraceStep>
+              <A.TraceStep tool="memory" title={`${memories.length} memories`} status="done">
+                <A.TraceMemory items={memories} onForget={(id) => setForgotten(id, true)} onRestore={(id) => setForgotten(id, false)} />
+              </A.TraceStep>
+              <A.TraceStep tool="run" title="npm test" detail="12 passed" status="done" />
+            </A.Trace>
+            <A.MessageContent><A.Markdown>{'Done: the fold counts steps now, and `turnStepsOf` leaves reasoning out of the count. I saved what a turn fold is to memory; forget any of it that\'s wrong.'}</A.Markdown></A.MessageContent>
+            <A.MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />
+          </A.Message>
+          <A.Message from="user">
+            <A.MessageContent>Run the whole suite, then open a pull request.</A.MessageContent>
+            <A.MessageActions onCopy onEdit={() => {}} />
+          </A.Message>
+          <A.Message from="assistant">
+            {/* The live turn. What ran is one folded line; the proposal is the only raised thing in the thread, outside the
+                fold so it's never behind a lid, and the header says the same in words. Approving adds the push as a step. */}
+            <A.Trace aria-label="Run the suite and open a pull request" collapsible>
+              <A.TraceStep tool="run" title="npm test -- --coverage" detail="48 passed" status="done" />
+              {(approval === 'running' || approval === 'done') && <A.TraceStep tool="gh" title="pr create --base main" detail={approval === 'done' ? '#112' : undefined} status={approval === 'running' ? 'running' : 'done'} />}
+            </A.Trace>
+            {approval !== 'rejected' && <A.Confirmation state={approval} title="Open a pull request" consequence="Pushes ape/aaac99cb and opens a pull request against main in lab-demo."
+              approveLabel="Open pull request" rejectLabel="Not now" runningLabel="Opening…" doneLabel="Opened" resolvedBy="you"
+              scopes={[{ value: 'session', label: 'Allow pushes for this session' }]} onApprove={approve} onReject={() => setApproval('rejected')} />}
+            {approval === 'rejected' && <A.Confirmation state="rejected" title="Open a pull request" consequence="Pushes ape/aaac99cb and opens a pull request against main in lab-demo." resolvedBy="you" />}
+            {approval === 'done' && <A.MessageContent><A.Markdown>{'Opened [pull request #112](#pr-112): 2 files changed, 48 tests passing.'}</A.Markdown></A.MessageContent>}
+            {approval === 'rejected' && <A.MessageContent><A.Markdown>{'The suite passes. Say when you want the pull request.'}</A.Markdown></A.MessageContent>}
+          </A.Message>
+        </A.ConversationContent>
+        <A.ConversationScrollButton />
+      </A.Conversation>
+      <A.PromptInput status={approval === 'running' ? 'streaming' : 'ready'} onSubmit={() => {}} onStop={() => {}} onAttach={() => {}} accept="image/*,text/*"
+        mentionable={(q) => FILES.filter((f) => f.label.includes(q))}
+        commands={[{ name: 'review', description: 'Review the changes' }, { name: 'compact', description: 'Summarise the session so far' }]}>
+        <A.PromptInputTextarea placeholder="Message… @ files, / commands" aria-label="Message" />
+        <A.PromptInputToolbar>
+          <A.PromptInputAttach label="Add files" />
+          <A.Select size="sm" aria-label="Model" items={MODELS} defaultValue="beam-low" className="cs-model" />
+          <span className="cs-grow" />
+          <A.PromptInputDictate />
+          <A.PromptInputSubmit />
+        </A.PromptInputToolbar>
+        <div className="cs-context">
+          <span><Glyph d={FOLDER} />lab-demo</span>
+          <span><Glyph d={BRANCH} />ape/aaac99cb</span>
+        </div>
+      </A.PromptInput>
+    </div>
+  );
+}
+
 /** The rail of moments above the harness, and the note for the moment shown. */
-function App({ start = 3 }) {
+function Run({ start = 3 }) {
   const [k, setK] = React.useState(start);
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState('');
@@ -234,7 +359,7 @@ function App({ start = 3 }) {
   };
   return (
     <div className="ah" ref={root}>
-      <style>{CSS}</style>
+      <style>{STYLES}</style>
       <nav className="ah-rail" aria-label="Moments in the run">
         <ol className="ah-moments" {...rail}>
           {MOMENTS.map((m, i) => (
@@ -249,6 +374,21 @@ function App({ start = 3 }) {
     </div>
   );
 }
+/** Two views: every state of a scripted run, and a coding session on a phone with its last turn folded and the live one open. */
+function App({ start = 3 }) {
+  const [view, setView] = React.useState('run');
+  return (
+    <div className="ah-views">
+      <A.Tabs variant="segmented" value={view} onValueChange={setView}>
+        <A.TabsList aria-label="Harness view">
+          <A.TabsTrigger value="run">Every state</A.TabsTrigger>
+          <A.TabsTrigger value="session">Coding session</A.TabsTrigger>
+        </A.TabsList>
+      </A.Tabs>
+      {view === 'run' ? <Run start={start} /> : <div className="ah-phone"><style>{STYLES}</style><CodingSession /></div>}
+    </div>
+  );
+}
 // preview:end
-export { MOMENTS, EVENTS, stateAt, Harness, App };
+export { MOMENTS, EVENTS, stateAt, Harness, CodingSession, Run, App };
 export default App;

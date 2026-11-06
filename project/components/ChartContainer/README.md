@@ -35,6 +35,21 @@ With `contrast="more"`, lines are 3px, adjacent marks are 3px apart, fills get a
 </ChartContainer>
 ```
 
+**A claim points at its mark (`ChartCite`).** A figure in the takeaway, the description or a written summary can cite the record it comes from, so a reader checks the sentence against the marks in one gesture rather than taking it on trust (E166). Wrap the figure: `<ChartCite x="2026-10-31">80</ChartCite>` cites one record; `x` with `window={13}` cites the average of the 13 records ending there (`aggregate="sum"` for a total); `records={(d) => …}` cites the records a test picks. `series` picks the series (default the first shown).
+
+- **At rest** it's `InlineCitation`'s flush plate at text size, in `ink`, never a series colour (Charts rule 5), with the series' marker shape in `ink-muted`.
+- **Pointed at or focused**, it lifts one level, as `InlineCitation` does, because it acts. The cited mark takes the keyboard's 2px `accent-ink` ring, flat on the ground, and the readout opens at the record. A window lays a flat `line` band under the stretch, and the readout says "Cited: average of 13 days, 39.3". Leaving takes it all away.
+- **Enter or a click pins the reading** (as a pin, E107), so the check settles into the record, and pressing it again unpins. A chart with cites holds two pins even when the plot itself doesn't pin, and Escape on the plot still takes the last pin off first.
+- **Named** "80, cites Signups, 31 Oct 2026: 80. Press Enter to pin." Each cite is a button in the page's Tab order, not inside the plot's one stop. The figure's description includes them, so a screen reader hears the takeaway with its citations, then the summary.
+- **Checked while you build.** With the provider's `devChecks` on (the default outside production), a cite whose `x` isn't in the data, or whose figure isn't the record's value at the figure's own precision or the series' format, warns: "ChartCite: '80' cites Signups on 31 Oct 2026, which is 76." A figure that isn't in the data is a defect, not a style. The figure is read from the plate's text, the first number with its decimals and any K/M/B suffix.
+
+```tsx
+<ChartContainer config={{ signups: { label: 'Signups' } }} title="Daily signups"
+  takeaway={<>Signups doubled after the pricing change, from <ChartCite x="2026-10-13" window={13}>39 a day</ChartCite> to <ChartCite x="2026-10-31" window={18}>80</ChartCite></>}>
+  <LineChart data={rows} x="day" />
+</ChartContainer>
+```
+
 **Axis text.** Tick labels are captions: 13px, weight 400, `ink-muted`, tabular figures. Weight 500 is for labels on controls, so axis text is lighter, and the frame's words rank below the marks, the ground line and the references. (This changed from 500 12.5px in #193, with no API change.) `yLabels="inline"` sets each y label just above its gridline at the plot's left, on a halo of the plot's colour, so the plot runs the card's full width: 56px more in a 440px card, about a fifth of the plot at phone width. The top label carries the unit ("250 ms"), the rest only the number. A label that would sit on a line, an area or a bar is left out, and its gridline stays. The ground line goes unlabelled, because it's zero. It's for vertical cartesian charts; the default stays `'gutter'`.
 
 **The keyboard path.** The plot is one Tab stop: a layer of focusable nodes over the SVG, one level at a time, with a roving tabindex. After Olli and Data Navigator, it goes from the summary to the series to the data:
@@ -114,6 +129,14 @@ A `RevealGroup` around a row of charts and stats lands them together.
 - **It doesn't chatter.** Nothing is announced per tick. `announce={(data, previous) => …}` returns a sentence for what matters ("Error rate crossed 2%"), said politely.
 
 **Series named at their marks.** `directLabels` (#539): `'auto'` names each series at its marks where there's room. A line names its end (more than four lines too, while the names fit down the plot at 16px). Grouped bars name their first group's bars, each name over its bar, where it clears the bars beside it and the other names (never on a mark, E101). A vertical stack names its last segments to its right, where a segment is at least 14px tall. Once every shown series is named, a legend that only labels is dropped, while a legend you toggle stays. `true` names series wherever the chart type can, as under forced colours and in print. Default `false`, or the provider's `charts.directLabels`. Every chart setting can come from the provider (`AltitudeProvider charts`); a prop on the chart wins.
+
+**Where the data came from.** `source={{ name, href, asOf, count, noun, staleAfter }}` adds one line under the plot, after the summary, flush at caption size in `ink-muted`: "Source: Billing database · 1,954 records · Updated 2 minutes ago" (#533). A string `name` with `href` is a `Link` to where the data lives or the query that made it. `asOf` is a `RelativeTime`, so it stays true as time passes and gives the exact time on hover and focus. The generated summary ends with the source in absolute words ("Source: Billing database, 1,954 records, as of 5 Nov 2026, 12:04."), because a sentence doesn't tick. Past `staleAfter` (milliseconds) the line leads with a `caution` icon and the word "Stale". The marks don't change, because the record is still the record, only old. Becoming stale takes the afterglow once and is said politely once. In a `live` chart the line takes the place of the "Updated 12:04" caption, its time the last update unless you give `asOf`. A "Refresh" beside it is your `Button`. See E167.
+
+```tsx
+<ChartContainer config={config} source={{ name: 'Billing database', href: '/sources/billing', asOf: readAt, count: rows.length, staleAfter: 15 * 60_000 }}>
+  <BarChart data={rows} x="day" />
+</ChartContainer>
+```
 
 **References and annotations.** [`ChartReference`](../ChartReference/README.md) draws a target, a limit, a normal range or the mean as a flush 1px line or a flat band, and `ChartAnnotation` marks an event on x with a `Badge` plate and a leader. Place them inside the chart type or the container. The frame draws them, so their labels are laid out together and kept clear of each other, and they're read after the summary.
 

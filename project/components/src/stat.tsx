@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cx, useDepth } from './core';
 import { Badge } from './controls';
+import { SourceLine, type DataSource } from './source-line';
 import { Arrive, Await, isPromise, readPromised, RevealGroup, useArrival, useHasWaited, useReportWaiting } from './suspense';
 
 export interface StatChange {
@@ -33,6 +34,8 @@ export interface StatProps extends Omit<React.HTMLAttributes<HTMLElement>, 'chil
   good?: 'up' | 'down';
   /** A trend beside the value, usually a decorative Sparkline. */
   trend?: React.ReactNode;
+  /** Where the number came from and when it was read (#533): a flush line under it. In a StatGroup, give the group one source instead. */
+  source?: DataSource;
   /** More context, in a caption under the change: "Signed in at least once in 28 days." */
   help?: React.ReactNode;
   /** 'hero' sets the value in text-display, for the one number a view leads with. Once per view. */
@@ -69,7 +72,7 @@ function PromisedText({ p }: { p: PromiseLike<unknown> }) {
   return <span className="alt-stat-text">{readPromised(p) as React.ReactNode}</span>;
 }
 
-function StatFace({ label, value, format, change, good, trend, help, size = 'default', live, locale, className, waiting, arrival, ...rest }: Omit<StatProps, 'value'> & { value: unknown; waiting?: boolean; arrival?: PromiseLike<void> | null }) {
+function StatFace({ label, value, format, change, good, trend, help, size = 'default', live, locale, source, className, waiting, arrival, ...rest }: Omit<StatProps, 'value'> & { value: unknown; waiting?: boolean; arrival?: PromiseLike<void> | null }) {
   const id = React.useId();
   const nf = React.useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const pf = React.useMemo(() => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 1 }), [locale]);
@@ -130,6 +133,7 @@ function StatFace({ label, value, format, change, good, trend, help, size = 'def
           {help && <span className="alt-stat-help">{help}</span>}
         </div>
       )}
+      {source && <SourceLine source={source} locale={locale} className="alt-stat-source" />}
       {live && <span className="alt-sr" aria-live="polite">{said}</span>}
     </section>
   );
@@ -146,15 +150,19 @@ function formatWhenLanded(p: PromiseLike<unknown>, fmt: (n: number) => string) {
 export interface StatGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Names the row of stats for assistive technology: "This month". */
   'aria-label'?: string;
+  /** One source for every stat in the row (#533): a single line under it, said once rather than per stat. */
+  source?: DataSource;
+  locale?: string;
 }
 /**
  * A row of stats that land together: their values stay imprints until the slowest arrives, then rise at once
  * (RevealGroup). They wrap to fit, each at least 180px wide.
  */
-export function StatGroup({ className, children, ...rest }: StatGroupProps) {
+export function StatGroup({ className, children, source, locale, ...rest }: StatGroupProps) {
+  const group = <div role="group" className={cx('alt-stat-group', className)} {...rest}>{children}</div>;
   return (
     <RevealGroup>
-      <div role="group" className={cx('alt-stat-group', className)} {...rest}>{children}</div>
+      {source ? <div className="alt-stat-group-sourced">{group}<SourceLine source={source} locale={locale} className="alt-stat-source" /></div> : group}
     </RevealGroup>
   );
 }

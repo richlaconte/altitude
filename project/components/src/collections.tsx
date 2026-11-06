@@ -6,6 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from './toggle';
 import { Pagination } from './pagination';
 import { EditRegion, EditRegionBinder, EditRegionForm, EditRegionSaveResult } from './edit-region';
 import { Pile } from './pile';
+import { scopeCarries, scopeRelevance, useScope, type ChartScopeView } from './chart-scope';
 import { Arrive, Await, hint, isPromise, Promised, readPromised, SkeletonOption, useArrival, useHasWaited, useReportWaiting } from './suspense';
 
 /* ───────────────────────── shared: carrying things to their new places (FLIP) ───────────────────────── */
@@ -247,6 +248,12 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   /** Filter in place: matches rise, misses sink. Return undefined when no filter is active. */
   relevance?: (row: T) => 'match' | 'miss' | undefined;
+  /**
+   * Inside a ChartScope (#529), a selection made in any chart is a filter here too, in the same language: rows that
+   * carry the scope's `by` key and miss sink in place. false stands apart; or say how a row matches. Your own
+   * `relevance` wins where it says miss.
+   */
+  scope?: false | ChartScopeView;
   /** Adds move handles: rows can be picked up and dropped (pointer, or Space and the arrow keys). Hidden while sorted. */
   onReorder?: (rows: T[]) => void;
   maxHeight?: number | string;
@@ -343,10 +350,17 @@ function DataTableLanded<T>(props: Omit<DataTableProps<T>, 'skeleton'>) {
   return <DataTableFace {...props} rows={readPromised(props.rows) ?? []} />;
 }
 function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, selected, defaultSelected = [], onSelectedChange, actions, toolbar,
-  sort, defaultSort = null, onSortChange, onRowClick, relevance, onReorder, maxHeight, empty = 'Nothing here yet.', className,
+  sort, defaultSort = null, onSortChange, onRowClick, onReorder, maxHeight, empty = 'Nothing here yet.', className,
   renderExpanded, renderEditor, onSave, onRowChange, expanded, defaultExpanded = [], onExpandedChange, expandMode = 'single',
   columnVisibility, defaultColumnVisibility = {}, onColumnVisibilityChange, columnOrder, defaultColumnOrder, onColumnOrderChange,
-  density, defaultDensity = 'comfortable', onDensityChange, columnsMenu, pagination, selection, onSelectionChange, matchingTotal, actionsPlacement = 'toolbar', noun = 'rows', ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
+  density, defaultDensity = 'comfortable', onDensityChange, columnsMenu, pagination, selection, onSelectionChange, matchingTotal, actionsPlacement = 'toolbar', noun = 'rows', scope: scopeProp, relevance: ownRelevance, ...rest }: Omit<DataTableProps<T>, 'skeleton' | 'rows'> & { rows: T[] }) {
+  const scope = useScope(scopeProp === false);
+  const scopeView = scopeProp === false ? undefined : scopeProp;
+  const scoped = scopeCarries(scope, scopeView, rows as unknown as Record<string, unknown>[]) && !!scope?.selected.length;
+  const relevance = scoped ? (r: T) => {
+    const own = ownRelevance?.(r), shared = scopeRelevance(scope, scopeView, r as unknown as Record<string, unknown>);
+    return own === 'miss' || shared === 'miss' ? 'miss' : own ?? shared;
+  } : ownRelevance;
   const [visibility, setVisibility] = useControllable(columnVisibility, defaultColumnVisibility, onColumnVisibilityChange);
   const [order, setOrder] = useControllable<string[]>(columnOrder, defaultColumnOrder ?? columns.map((c) => c.key), onColumnOrderChange);
   const [dens, setDens] = useControllable(density, defaultDensity, onDensityChange);

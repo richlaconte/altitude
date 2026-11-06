@@ -16,7 +16,7 @@ function syncTimer() {
   if (run && timer === undefined) timer = window.setInterval(tickAll, TICK);
   if (!run && timer !== undefined) { window.clearInterval(timer); timer = undefined; }
 }
-function useNow() {
+export function useNow() {
   const [now, setNow] = React.useState(() => Date.now());
   React.useEffect(() => {
     const f = () => setNow(Date.now());

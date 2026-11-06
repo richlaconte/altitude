@@ -1,11 +1,13 @@
 import * as React from 'react';
-import { ChartDefaultsContext, cssMs, cx, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
+import { ChartDefaultsContext, cssMs, cx, DevChecksContext, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
 import { Button, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
 import { useDrilldown } from './nav';
 import { DataTable } from './collections';
 import { EmptyState } from './empty';
 import { Arrive, Await, isPromise, readPromised, useArrival, useHasWaited, useReportWaiting } from './suspense';
 import { markTipClosed, tipIsWarm } from './overlays';
+import { ChartScopeCrosshair, scopeCarries, scopeRelevance, useScope, useScopeNames, type ChartScopeView } from './chart-scope';
+import { SourceLine, sourceSentence, type DataSource } from './source-line';
 
 /* ───────────────────────── config ───────────────────────── */
 
@@ -1028,6 +1030,19 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   /** While a chart type's `relevance` filters, how the frame says how many match. Default "4 of 12 match". */
   countLabel?: (matches: number, total: number) => string;
   /**
+   * How the chart takes part in a ChartScope around it (#529): false to stand apart (its own pointer, window, selection
+   * and palette), or how its records match a selection and which entity a chosen record stands for, when the scope's
+   * `by` key isn't in them. Default: records match by the scope's `by` key, and series keys are entities.
+   */
+  scope?: false | ChartScopeView;
+  /**
+   * Where the data came from, when it was read and how many records are behind it (#533): one flush line under the
+   * plot, "Source: Billing database · 1,954 records · Updated 2 minutes ago". Past `staleAfter` it says "Stale" with a
+   * caution icon; the marks don't change. The summary ends with it, absolute ("as of 5 Nov 2026, 12:04"). In a `live`
+   * chart it takes the place of the "Updated 12:04" caption, its time the last update unless you give `asOf`.
+   */
+  source?: DataSource;
+  /**
    * Label series at their marks rather than only in a legend (#539). 'auto': where there's room (a line's ends, the
    * first group of grouped bars, the last stack's segments), and a legend that only labels is dropped once every series
    * is labelled. true: always, as under forced colours. Default false, or the provider's charts.directLabels.
@@ -1046,6 +1061,45 @@ const cssKey = (k: string) => k.replace(/[^\w-]/g, '-');
 /** The room above the plot, for marks and labels that reach past its top. */
 const TOP_GAP = 8;
 
+/** Where another chart's x falls on this plot, in px along x, or null when this chart has no such x (#529). */
+function scopeAt(ctx: ChartContextValue, v: unknown): number | null {
+  const sx = ctx.x;
+  if (sx.kind === 'band') return sx.domain.includes(String(v)) ? sx(String(v)) + sx.bandwidth / 2 : null;
+  const t = sx.kind === 'time' ? toTime(v) : Number(v);
+  if (!isFinite(t) || t < Math.min(...sx.domain) || t > Math.max(...sx.domain)) return null;
+  return (sx as LinearScale)(t);
+}
+
+/**
+ * Per-series opacity that cross-fades to its target over dur-travel-1 on ease-glide, as a filter's receding does
+ * (Charts 15); under reduced motion the duration is 0 and it changes in place. Keys not in `targets` are 1.
+ */
+function useSeriesFade(targets: Record<string, number>, plotRef: React.RefObject<HTMLElement | null>): Record<string, number> {
+  const key = Object.entries(targets).map(([k, v]) => `${k}:${v}`).join('|');
+  const [now, setNow] = React.useState<Record<string, number>>(targets);
+  const cur = React.useRef(now);
+  cur.current = now;
+  React.useEffect(() => {
+    const from = cur.current;
+    const keys = [...new Set([...Object.keys(from), ...Object.keys(targets)])];
+    const to = Object.fromEntries(keys.map((k) => [k, targets[k] ?? 1]));
+    if (keys.every((k) => (from[k] ?? 1) === to[k])) return;
+    const cs = plotRef.current ? getComputedStyle(plotRef.current) : null;
+    const ms = cs && parseFloat(cs.getPropertyValue('--alt-travel')) === 0 ? 0 : cssMs(cs, '--dur-travel-1', 240);
+    if (!ms) { setNow(to); return; }
+    const start = performance.now();
+    let raf = 0;
+    const step = (t: number) => {
+      const e = glide(clamp01((t - start) / ms));
+      setNow(Object.fromEntries(keys.map((k) => [k, lerp(from[k] ?? 1, to[k], e)])));
+      if (e < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  return now;
+}
+
 /**
  * The frame every chart shares: a figure that sizes the plot, turns data into positions, draws the axes, the
  * gridlines and the ground line, gives each series its label, format and colour slot, and names and summarises the
@@ -1054,7 +1108,7 @@ const TOP_GAP = 8;
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
   zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
-  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, directLabels: directLabelsProp = false, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, scope: scopeProp, source, directLabels: directLabelsProp = false, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const defaults = React.useContext(ChartDefaultsContext);
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
@@ -1082,7 +1136,15 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const brushEl = findPart<Record<string, unknown>>('chartBrush', children) ?? findPart<Record<string, unknown>>('chartBrush', ownProps.children as React.ReactNode);
   const [brushWindow, setBrushWindow] = React.useState<{ start: string | number; end: string | number } | undefined>(undefined);
   const fullData = (brushEl ? (Array.isArray(ownProps.data) ? ownProps.data : Array.isArray(dataProp) ? dataProp : []) : []) as ChartDatum[];
-  const childProps = brushEl && chartChild ? { ...ownProps, data: fullData, x: ownProps.x ?? xProp, window: ownProps.window ?? brushWindow } : ownProps;
+  // A scope (#529) shares one window across every chart over time or numbers; a brush anywhere in it sets that window.
+  const scope = useScope(scopeProp === false);
+  const scopeView = scopeProp === false ? undefined : scopeProp;
+  const rawRows = (Array.isArray(ownProps.data) ? ownProps.data : Array.isArray(dataProp) ? dataProp : []) as ChartDatum[];
+  const rawX = (ownProps.x as string | undefined) ?? xProp;
+  const rawSample = rawX ? rawRows.find((d) => d[rawX] != null)?.[rawX] : undefined;
+  const scopeWindow = scope?.window && (isTimeLike(rawSample) || typeof rawSample === 'number') ? scope.window : undefined;
+  const sharedWindow = scope ? scopeWindow : brushWindow;
+  const childProps = chartChild && (brushEl || sharedWindow) ? { ...ownProps, ...(brushEl ? { data: fullData, x: ownProps.x ?? xProp } : {}), window: ownProps.window ?? sharedWindow } : ownProps;
 
   // The legend, and which series it has hidden. Hidden series keep their slots; the chart is drawn without them.
   const legendEl = findPart<{ content?: React.ReactElement<ChartLegendContentProps> }>('chartLegend', children) ?? findPart('chartLegend', childProps.children as React.ReactNode);
@@ -1122,10 +1184,13 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const xKey = xProp ?? info.x ?? (childProps.x as string | undefined) ?? '';
   // Selection (#69): the chosen record keeps its colour and the rest recede, in the same language as a filter.
   const drillCtx = useDrilldown();
-  const interactive = !!(info.onSelect || info.drill);
+  let interactive = !!(info.onSelect || info.drill);
   const sameX = (a: unknown, b: unknown) => String(a) === String(b) || (isTimeLike(a) && isTimeLike(b) && toTime(a) === toTime(b));
   // Pinned readings (#190): a reading set down on the plot as a plate, at most pinMax, oldest first.
-  const pinMax = !grid && !xy && info.pinnable ? (info.pinnable === true ? 2 : Math.max(1, Math.floor(info.pinnable))) : 0;
+  // Cites (#532) pin what they cite, so a chart with cites holds two pins even when the plot itself doesn't pin.
+  const [citeCount, setCiteCount] = React.useState(0);
+  const plotPins = !grid && !xy && !!info.pinnable;
+  const pinMax = plotPins ? (info.pinnable === true ? 2 : Math.max(1, Math.floor(info.pinnable as number))) : !grid && !xy && citeCount ? 2 : 0;
   const [pinsOwn, setPinsOwn] = React.useState<Array<string | number>>([]);
   const pins = pinMax ? (info.pins ?? pinsOwn).filter((x) => data.some((d) => sameX(d[xKey], x))).slice(-pinMax) : [];
   const setPins = (next: Array<string | number>) => { info.onPinsChange?.(next); if (info.pins === undefined) setPinsOwn(next); };
@@ -1143,24 +1208,37 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const changedCount = sinceMap ? data.filter(changedRec).length : 0;
   const [onlyChanged, setOnlyChanged] = React.useState(false);
   const showOnlyChanged = onlyChanged && !!sinceMap && changedCount > 0;
+  // A scope's selection (#529) is a filter in this chart too, when its records carry the entity: misses recede, in place.
+  const scopeRecords = scopeCarries(scope, scopeView, data);
+  const scopeRel = (d: ChartDatum) => (scopeRecords ? scopeRelevance(scope, scopeView, d) : undefined);
   const userRelevance = (d: ChartDatum): 'match' | 'miss' | undefined => {
     // "Only what changed" recedes the rest where they stand, in the language of a filter.
     if (showOnlyChanged) return changedRec(d) ? 'match' : 'miss';
-    const v = info.relevance?.(d); return v === 'match' || v === 'miss' ? v : undefined;
+    const v = info.relevance?.(d), own = v === 'match' || v === 'miss' ? v : undefined;
+    const shared = scopeRel(d);
+    return own === 'miss' || shared === 'miss' ? 'miss' : own ?? shared;
   };
-  const filtered = (!!info.relevance || showOnlyChanged) && data.some((d) => userRelevance(d) !== undefined);
+  const filtered = (!!info.relevance || showOnlyChanged || scopeRecords) && data.some((d) => userRelevance(d) !== undefined);
+  // Said once, by the scope's caption: this chart counts matches in its own frame only for its own filter.
+  const scopeOnly = scopeRecords && !info.relevance && !showOnlyChanged;
   const matchCount = filtered ? data.filter((d) => userRelevance(d) !== 'miss').length : 0;
   // A chart whose records have their own identity selects by it: the selected record, or its id.
   const selectedId = hasSelection && info.id ? (typeof info.selected === 'object' ? info.id(info.selected as ChartDatum) : String(info.selected)) : null;
   const isSelected = (d: ChartDatum) => hasSelection && (info.id ? info.id(d) === selectedId : sameX(d[xKey], info.selected));
   const selecting = hasSelection && data.some(isSelected);
   const relevanceOf = (d: ChartDatum): 'match' | 'miss' | undefined => (selecting ? (isSelected(d) && userRelevance(d) !== 'miss' ? 'match' : 'miss') : userRelevance(d));
+  // In a scope, a chart whose records carry the entity selects it for every view, unless it selects or drills itself.
+  const scopeEntity = (d: ChartDatum) => { const v = scopeView?.select ? scopeView.select(d) : scope?.by ? d[scope.by] : undefined; return typeof v === 'string' || typeof v === 'number' ? v : null; };
+  const scopeSelects = !!scope && scopeRecords && !info.onSelect && !info.drill && data.some((d) => scopeEntity(d) !== null);
+  if (scopeSelects) interactive = true;
+  const chosen = (d: ChartDatum) => (scopeSelects ? scope!.has(scopeEntity(d)) : isSelected(d));
   /** A record chosen by click, tap, Enter or Space: drill into it, or select it (choosing the selected one clears). */
   const activate = (d: ChartDatum) => {
     if (info.drill) { const id = info.drill(d); if (id !== null && id !== undefined) drillCtx?.open(String(id)); return; }
+    if (scopeSelects) { const v = scopeEntity(d); if (v !== null) scope!.toggle(v); return; }
     info.onSelect?.(isSelected(d) ? null : d);
   };
-  const actionWord = (d: ChartDatum) => (info.drill ? 'Select to open' : isSelected(d) ? 'Select to clear' : 'Select to filter');
+  const actionWord = (d: ChartDatum) => (info.drill ? 'Select to open' : chosen(d) ? 'Select to clear' : 'Select to filter');
   // A chart type that needs zero (bars) gets it whatever the prop says: a bar that starts above zero misstates its length.
   const zero = info.zero === true ? true : zeroProp ?? info.zero ?? true;
 
@@ -1170,10 +1248,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const nf = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
     return defs.map(({ key }, i) => {
       const c = defs[i];
-      const slot = c.color ?? (i < 6 ? (`data-${i + 1}` as ChartSlot) : 'data-other');
+      // In a scope (#529) the entity's slot is the page's, not this config's place, unless the series pins one.
+      const slot = c.color ?? scope?.slot(key) ?? (i < 6 ? (`data-${i + 1}` as ChartSlot) : 'data-other');
       return { key, label: c.label, slot, color: `var(--${slot})`, format: c.format ?? info.format ?? ((v: number) => nf.format(v)) };
     });
-  }, [configKey, locale, info.format]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [configKey, locale, info.format, scope?.paletteKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A scope's selection that names this chart's series (#529): the others recede to 35% where they stand, cross-fading.
+  const scopeSeries = scope && !scopeRecords && scope.selected.length && allSeries.some((q) => scope.has(q.key)) ? allSeries.filter((q) => scope.has(q.key)).map((q) => q.key) : null;
+  const scopeFade = useSeriesFade(scopeSeries ? Object.fromEntries(allSeries.map((q) => [q.key, scopeSeries.includes(q.key) ? 1 : 0.35])) : {}, plotRef);
   const hiddenKey = hidden.join('|');
   const series = React.useMemo(() => allSeries.filter((s) => !hidden.includes(s.key)), [allSeries, hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1397,6 +1479,59 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     setPinSaid(`Pinned ${formatX(x)}: ${pinValues(d, true)}.${next.length === 2 ? ' ' + pinDiff(true, next) : ''}`);
   };
   const unpin = (x: unknown) => { const next = pins.filter((p) => !sameX(p, x)); setPins(next); setPinSaid(`Pin removed, ${formatX(x)}.`); };
+
+  // Citations (#532): a figure in the sentence resolved to the records it comes from, lit on the plot while it's read.
+  const [citeOn, setCiteOn] = React.useState<CiteTarget | null>(null);
+  const spanUnit = (a: ChartDatum, b: ChartDatum, n: number) => {
+    if (kind !== 'time' || n < 2) return n === 1 ? 'record' : 'records';
+    const step = (toTime(b[xKey]) - toTime(a[xKey])) / (n - 1);
+    const unit = Math.abs(step - DAY) < DAY * 0.1 ? 'day' : Math.abs(step - HOUR) < HOUR * 0.1 ? 'hour' : Math.abs(step - 7 * DAY) < DAY ? 'week' : step > 27 * DAY && step < 32 * DAY ? 'month' : 'record';
+    return unit + 's';
+  };
+  const resolveCite = (p: ChartCiteProps): CiteTarget | null => {
+    const key = p.series ?? series[0]?.key;
+    const s = allSeries.find((q) => q.key === key);
+    if (!s || grid || xy) return null;
+    let idx: number[];
+    if (p.records) idx = data.map((d, i) => (p.records!(d) ? i : -1)).filter((i) => i >= 0);
+    else {
+      if (p.x == null) return null;
+      const xv = p.x instanceof Date ? p.x.toISOString() : p.x;
+      const end = data.findIndex((d) => sameX(d[xKey], xv));
+      if (end < 0) return null;
+      const n = Math.max(1, Math.floor(p.window ?? 1));
+      idx = Array.from({ length: Math.min(n, end + 1) }, (_, j) => end - Math.min(n, end + 1) + 1 + j);
+    }
+    const vals = idx.map((i) => data[i][s.key]).filter((v): v is number => typeof v === 'number' && isFinite(v));
+    if (!vals.length) return null;
+    const sum = vals.reduce((t, v) => t + v, 0);
+    const value = vals.length === 1 && idx.length === 1 ? vals[0] : p.aggregate === 'sum' ? sum : sum / vals.length;
+    const end = idx[idx.length - 1], first = data[idx[0]], last = data[end];
+    // An average is said one place finer than the records themselves, as a mean reference line is.
+    const places = Math.min(4, Math.max(0, ...vals.map((v) => (String(v).split('.')[1] ?? '').length)));
+    const words = s.format(idx.length === 1 || p.aggregate === 'sum' ? value : Number(value.toFixed(places + 1)));
+    const short = idx.length === 1 ? '' : `${p.aggregate === 'sum' ? 'total' : 'average'} of ${idx.length} ${spanUnit(first, last, idx.length)}`;
+    const span = short && !p.records ? `${short} to ${formatX(last[xKey])}` : short;
+    const at = idx.length === 1 ? `${formatX(last[xKey])}` : span;
+    return { idx, end, series: s.key, value, band: idx.length > 1 && !p.records, words, span, short, marker: encode(s.key).marker,
+      label: idx.length === 1 ? `${s.label} on ${formatX(last[xKey])}` : `${s.label}, ${span}`,
+      name: `${s.label}, ${at}: ${words}` };
+  };
+  const citeKey = (t: CiteTarget) => `${t.series}|${t.idx.join(',')}`;
+  const citeApi = React.useRef<CiteApi>(null as unknown as CiteApi);
+  const registerCite = React.useCallback(() => { setCiteCount((n) => n + 1); return () => setCiteCount((n) => n - 1); }, []);
+  citeApi.current = {
+    resolve: resolveCite,
+    light: (t) => { setCiteOn((c) => (t && c && citeKey(c) === citeKey(t) ? c : t)); show(t ? t.end : null); },
+    pin: (t) => { const x = data[t.end]?.[xKey]; if (x === undefined) return; if (pins.some((p) => sameX(p, x))) unpin(x); else pinAt(data[t.end]); },
+    pinned: (t) => { const x = data[t.end]?.[xKey]; return x !== undefined && pins.some((p) => sameX(p, x)); },
+    register: registerCite,
+  };
+  const citeValue = React.useMemo<CiteApi>(() => ({
+    resolve: (p) => citeApi.current.resolve(p), light: (t) => citeApi.current.light(t), pin: (t) => citeApi.current.pin(t),
+    pinned: (t) => citeApi.current.pinned(t), register: registerCite,
+  // A new value each time the records, the series or the pins change, so cites re-resolve and re-say themselves.
+  }), [data, configKey, hiddenKey, pins.join('|'), registerCite]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The keyboard path (#63): the plot is one Tab stop holding three levels, summary → series → points. Enter goes
   // deeper and Escape comes back, as in Tree and Drilldown; a roving tabindex keeps one node in the tab order.
@@ -1625,7 +1760,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     }
     const ctx: ChartContextValue = {
       width: pw, height: ph, x, y, xOf, ground, data: frame.rows.map((r) => r.d), xKey, config, series: frame.series,
-      alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? frame.seriesAlpha.get(key) ?? 1 : 1),
+      alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? (frame.seriesAlpha.get(key) ?? 1) * (scopeFade[key] ?? 1) : 1),
       format: (key, v) => (frame.series.find((s) => s.key === key)?.format ?? fmtY)(v),
       formatX, horizontal, encode, patterns, directLabels: env.forced || env.print || directLabelsProp === true, autoLabels: directLabelsProp === 'auto',
       emphasis,
@@ -1633,7 +1768,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       setActive: (i) => show(i),
       strokeWidth: env.more ? 3 : 2, gap: env.more ? 3 : 2,
       status: statusOf, hasStatus: !!info.status, statusRanges: { record, pending },
-      relevance: relevanceOf, hasRelevance: !!info.relevance || !!info.onSelect || !!sinceMap, relevanceRegions,
+      relevance: relevanceOf, hasRelevance: !!info.relevance || !!info.onSelect || !!sinceMap || scopeRecords, relevanceRegions,
       sinceOld: sinceMap ? (d, k) => (changedAt(d, k) ? sinceWas(d, k) : null) : null,
     };
     return { ctx, left, pw, ph, xTicks, boundaryAt, refGeo, noteGeo, yInline };
@@ -1688,6 +1823,12 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const generated = (focusWords ? focusWords + ' ' : '') + (info.summary ?? describe(info.kind ?? 'Chart', series, data, xKey, formatX, kind, statusOf)) + cmpWords + sinceWords;
   /** A record's short name: the chart type's, or its x. */
   const labelOf = (d: ChartDatum) => (info.label ? info.label(d) : formatX(d[xKey]));
+  // The entities this chart draws, named, so the scope's caption can say "Filtered to Checkout" (#529).
+  const scopeNames: Array<[string, string]> = !scope ? [] : [
+    ...allSeries.map((q) => [q.key, q.label] as [string, string]),
+    ...(scopeRecords ? data.map((d) => { const v = scopeEntity(d); return v === null ? null : [String(v), scope.by && !scopeView?.select && String(d[xKey]) !== String(v) ? String(v) : labelOf(d)] as [string, string]; }).filter((e): e is [string, string] => !!e) : []),
+  ];
+  useScopeNames(scope, id, scopeNames);
   const selectedRecord = selecting ? data.find(isSelected) : undefined;
   const selectedWords = selectedRecord ? labelOf(selectedRecord) : hasSelection ? formatX(info.selected) : '';
   const titleId = title ? `${id}-t` : undefined, takeId = takeaway ? `${id}-k` : undefined, descId = description ? `${id}-d` : undefined, sumId = `${id}-s`;
@@ -1753,7 +1894,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       onChange: ([i, j]: [number, number]) => {
         const w = { start: fullData[i][xKey] as string | number, end: fullData[j][xKey] as string | number };
         (ownProps.onWindowChange as ((w: { start: string | number; end: string | number }) => void) | undefined)?.(w);
-        if (ownProps.window === undefined) setBrushWindow(w);
+        if (ownProps.window === undefined) { if (scope) scope.setWindow(w); else setBrushWindow(w); }
       },
     };
   })() : undefined;
@@ -1761,6 +1902,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const svgKids = kids.filter((k) => typeof k.type === 'string' || !(k.type as ChartChild).chartHtml);
   const htmlKids = kids.filter((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartHtml);
   const top = draw(layers[layers.length - 1].frame);
+  // Where the data came from (#533); a live chart's last update is its time unless the author gives one.
+  const src: DataSource | undefined = source ? { ...source, asOf: source.asOf ?? (live && updatedAt !== null ? updatedAt : undefined) } : undefined;
+  const sourceWords = sourceSentence(src, locale);
   // Every series labelled at its marks (#539): a legend that only labels says nothing more, so it goes; one you toggle stays.
   const legendDropped = directLabelsProp === 'auto' && !!legendEl && !legendOpts.toggle && !!childType?.chartLabelsAll && W > 0 && childType.chartLabelsAll(infoProps, top.ctx);
   const countText = filtered ? (countLabel ?? ((m: number, n: number) => `${m} of ${n} match`))(matchCount, data.length) : '';
@@ -1778,8 +1922,11 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     }
     if (notes.length) out += ` ${notes.length} ${notes.length === 1 ? 'annotation' : 'annotations'}: ${notes.map((n) => `${n.label}, ${formatX(n.x)}`).join('; ')}.`;
     if (selecting) out += ` Filtered to ${selectedWords}.`;
-    else if (filtered) out += ` ${countText}.`;
+    else if (filtered && !scopeOnly) out += ` ${countText}.`;
+    // The scope's selection, in the same words as its caption, so a chart read alone still says its slice.
+    if (scope?.sentence && (scopeRecords || scopeSeries)) out += ` ${scope.sentence}`;
     if (pins.length) out += ` Pinned: ${pins.map((x) => `${formatX(x)}, ${pinValues(pinRecord(x), true)}`).join('; ')}.`;
+    if (sourceWords) out += ` ${sourceWords}`;
     return out;
   })();
 
@@ -1836,7 +1983,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // A tap (released before the hold that shows the readout) selects or drills, where marks act.
     if (interactive && e.pointerType === 'touch' && h && !sticky.current) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) activate(d); }
     // With the touch readout open, a quick tap on the plot pins the reading (#190).
-    else if (!interactive && pinMax && e.pointerType === 'touch' && h?.open && Date.now() - (h.t ?? 0) < 250 && Math.hypot(e.clientX - h.x, e.clientY - h.y) < 8) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); }
+    else if (!interactive && plotPins && e.pointerType === 'touch' && h?.open && Date.now() - (h.t ?? 0) < 250 && Math.hypot(e.clientX - h.x, e.clientY - h.y) < 8) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); }
   };
   /** The record a shown mark stands for, by its key: the shown rows glide, but what's chosen is the record itself. */
   const recordAt = (i: number) => { const shown = top.ctx.data[i]; if (!shown) return null; const k = rowKey(shown); return data.find((d) => rowKey(d) === k) ?? null; };
@@ -1844,7 +1991,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if ((e.target as HTMLElement).closest('button, a, .alt-chart-note')) return;
     if ((e.nativeEvent as PointerEvent).pointerType === 'touch') return;
     // Where a click doesn't select or drill, it pins the reading under the pointer (#190).
-    if (!interactive) { if (pinMax && tooltipOn) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); } return; }
+    if (!interactive) { if (plotPins && tooltipOn) { const i = nearest(e.clientX, e.clientY); const d = i === null ? null : recordAt(i); if (d) pinAt(d); } return; }
     const i = nearest(e.clientX, e.clientY);
     const d = i === null ? null : recordAt(i);
     if (d) activate(d);
@@ -1862,6 +2009,15 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const lastActive = React.useRef<ChartDatum | null>(null);
   if (top.ctx.active) lastActive.current = top.ctx.active;
   const { mounted: tipMounted, state: tipState } = usePresence(tooltipOn && activeIdx !== null && !!top.ctx.active, 160);
+  // The shared pointer (#529): the x under this chart's pointer or keyboard, for every sibling with the same kind of x.
+  const pointedX = tooltipOn && !grid && !xy && top.ctx.active ? top.ctx.active[xKey] : undefined;
+  const pointedKey = pointedX === undefined ? '' : String(kind === 'time' ? toTime(pointedX) : pointedX);
+  React.useEffect(() => {
+    if (!scope) return;
+    if (pointedX !== undefined) scope.pointer.set({ src: id, kind, x: pointedX });
+    else if (scope.pointer.get()?.src === id) scope.pointer.set(null);
+  }, [scope?.pointer, pointedKey, kind]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => () => { if (scope?.pointer.get()?.src === id) scope.pointer.set(null); }, [scope?.pointer]); // eslint-disable-line react-hooks/exhaustive-deps
   const single = series.length <= 1 || !!info.flat;
   const navKey = (n: Nav) => (n.level === 'summary' ? 'sum' : n.level === 'series' ? `s${n.s}` : `p${n.s}-${n.p}`);
   useIsoLayoutEffect(() => { if (wantFocus.current) { navRefs.current.get(wantFocus.current)?.focus(); wantFocus.current = null; } });
@@ -1918,6 +2074,16 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     }
     return `${out} ${pi + 1} of ${data.length}.`;
   };
+  /** In a scope, where another chart's pointer is: the record here nearest that x, so the keyboard picks up the reading (#529). */
+  const sharedP = () => {
+    const p = scope?.pointer.get();
+    if (!p || p.src === id || p.kind !== kind || grid || xy) return null;
+    const at = scopeAt(top.ctx, p.x);
+    if (at === null) return null;
+    let best: number | null = null, bd = Infinity;
+    data.forEach((d, i) => { const dd = Math.abs(top.ctx.xOf(d) - at); if (dd < bd) { bd = dd; best = i; } });
+    return best;
+  };
   const onNavKey = (e: React.KeyboardEvent) => {
     const n = series.length, m = data.length, page = Math.max(1, Math.round(m * 0.1));
     const at: Nav = { level: nav.level, s: navS, p: navP };
@@ -1927,17 +2093,19 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     // Escape clears the last pin, then a selection, then goes back up a level. P pins the reading at the point (#190).
     if (e.key === 'Escape' && pins.length) { e.preventDefault(); e.stopPropagation(); unpin(pins[pins.length - 1]); return; }
     if (e.key === 'Escape' && selecting) { e.preventDefault(); e.stopPropagation(); info.onSelect?.(null); return; }
-    if ((e.key === 'p' || e.key === 'P') && pinMax && at.level === 'points' && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); const d = recordAt(at.p); if (d) pinAt(d); return; }
+    // Then the scope's selection, from any chart in it (#529), before stepping up a level.
+    if (e.key === 'Escape' && scope?.selected.length) { e.preventDefault(); e.stopPropagation(); scope.clear(); return; }
+    if ((e.key === 'p' || e.key === 'P') && plotPins && at.level === 'points' && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); const d = recordAt(at.p); if (d) pinAt(d); return; }
     if (at.level === 'summary') {
       // Into the records at the chart type's first (Ctrl+Home): the leftmost dot, the grid's first cell.
       const first = single && childType?.chartMove ? childType.chartMove(childProps, top.ctx, 0, { key: 'Home', ctrlKey: true, metaKey: false } as React.KeyboardEvent) ?? 0 : 0;
-      if (e.key === 'Enter' || e.key === ' ') next = single ? { level: 'points', s: 0, p: first } : { level: 'series', s: 0, p: 0 };
+      if (e.key === 'Enter' || e.key === ' ') next = single ? { level: 'points', s: 0, p: sharedP() ?? first } : { level: 'series', s: 0, p: 0 };
     } else if (at.level === 'series') {
       const step: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
       if (e.key in step) next = { ...at, s: (at.s + step[e.key] + n) % n };
       else if (e.key === 'Home') next = { ...at, s: 0 };
       else if (e.key === 'End') next = { ...at, s: n - 1 };
-      else if (e.key === 'Enter' || e.key === ' ') next = { level: 'points', s: at.s, p: 0 };
+      else if (e.key === 'Enter' || e.key === ' ') next = { level: 'points', s: at.s, p: sharedP() ?? 0 };
       else if (e.key === 'Escape') next = { ...at, level: 'summary' };
     } else if (interactive && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault(); e.stopPropagation();
@@ -1981,8 +2149,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       const at = horizontal && !ChartPointFn ? [num(v) ? top.ctx.y(v) : top.ctx.ground, top.ctx.xOf(shown)] : [px, py];
       const box = childType?.chartBox?.(childProps, top.ctx, shown);
       return <div {...common(`p${navS}-${i}`, i === navP)} className="alt-chart-node" data-level="point" data-shape={box ? 'cell' : undefined} aria-roledescription={grid ? 'cell' : 'data point'}
-        aria-pressed={info.onSelect && !info.drill ? isSelected(d) : undefined} aria-haspopup={info.drill ? 'true' : undefined}
-        style={box ? { left: top.left + box[0], top: TOP + box[1], width: box[2], height: box[3] } : { left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navOrder[navS], i) + (interactive ? ` Press Enter to ${info.drill ? 'open it' : isSelected(d) ? 'clear the filter' : 'filter to it'}.` : '')} />;
+        aria-pressed={(info.onSelect || scopeSelects) && !info.drill ? chosen(d) : undefined} aria-haspopup={info.drill ? 'true' : undefined}
+        style={box ? { left: top.left + box[0], top: TOP + box[1], width: box[2], height: box[3] } : { left: top.left + at[0] - 7, top: TOP + at[1] - 7, width: 14, height: 14 }} aria-label={pointName(navOrder[navS], i) + (interactive ? ` Press Enter to ${info.drill ? 'open it' : chosen(d) ? 'clear the filter' : 'filter to it'}.` : '')} />;
     });
   })();
 
@@ -2027,13 +2195,14 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const content = tipEl?.props.content ?? <ChartTooltipContent indicator={own?.indicator ?? defaults.indicator} />;
     return (
       <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
-        {React.cloneElement(content, { label: own ? own.label : d[xKey], payload, formatX: own ? String : formatX, note: (() => { const st = statusOf(d); const words = [st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' && !selecting ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })(),
-          action: [interactive ? actionWord(d) : '', !pinMax ? '' : pins.some((p) => sameX(p, d[xKey])) ? 'Pinned' : navFocused ? 'P to pin' : interactive ? '' : sticky.current ? 'Tap to pin' : 'Click to pin'].filter(Boolean).join(' · ') || undefined })}
+        {React.cloneElement(content, { label: own ? own.label : d[xKey], payload, formatX: own ? String : formatX, note: (() => { const st = statusOf(d); const cited = citeOn && citeOn.span && data[citeOn.end] && rowKey(data[citeOn.end]) === rowKey(d) ? `Cited: ${citeOn.short}, ${citeOn.words}` : ''; const words = [cited, st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' && !selecting ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })(),
+          action: [interactive ? actionWord(d) : '', !plotPins ? (pins.some((p) => sameX(p, d[xKey])) ? 'Pinned' : '') : pins.some((p) => sameX(p, d[xKey])) ? 'Pinned' : navFocused ? 'P to pin' : interactive ? '' : sticky.current ? 'Tap to pin' : 'Click to pin'].filter(Boolean).join(' · ') || undefined })}
       </div>
     );
   })();
 
   return (
+    <CiteContext.Provider value={citeValue}>
     <ChartContext.Provider value={top.ctx}>
       <figure className={cx('alt-chart', className)} style={{ ...vars, ...style }} aria-labelledby={labelledBy}
         aria-describedby={[takeId, descId, sumId].filter(Boolean).join(' ')} {...rest}>
@@ -2079,6 +2248,17 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                           : <line key={t.v} x1={0} x2={pw} y1={at} y2={at} opacity={t.a < 1 ? t.a : undefined} />;
                       })}
                     </g>
+                    {/* A cited stretch (#532): a flat line-coloured band under the records the figure covers. */}
+                    {i === layers.length - 1 && citeOn?.band && (() => {
+                      const rows = citeOn.idx.map((j) => ctx.data[j]).filter(Boolean);
+                      if (!rows.length) return null;
+                      const xs = rows.map((d) => ctx.xOf(d)), half = ctx.x.kind === 'band' ? ctx.x.step / 2 : rows.length > 1 ? (Math.max(...xs) - Math.min(...xs)) / (rows.length - 1) / 2 : 4;
+                      const a = Math.max(0, Math.min(...xs) - half), b = Math.min(horizontal ? ph : pw, Math.max(...xs) + half);
+                      return horizontal ? <rect className="alt-chart-cite-band" x={0} y={a} width={pw} height={b - a} /> : <rect className="alt-chart-cite-band" x={a} y={0} width={b - a} height={ph} />;
+                    })()}
+                    {i === layers.length - 1 && scope && tooltipOn && !ctx.active && !grid && !xy && (
+                      <ChartScopeCrosshair scope={scope} self={id} kind={kind} at={(v) => scopeAt(ctx, v)} length={horizontal ? pw : ph} horizontal={horizontal} />
+                    )}
                     {i === layers.length - 1 && tooltipOn && ctx.active && !grid && !xy && (() => {
                       const at = Math.round(ctx.xOf(ctx.active)) + 0.5;
                       return horizontal ? <line className="alt-chart-crosshair" x1={0} x2={pw} y1={at} y2={at} /> : <line className="alt-chart-crosshair" x1={at} x2={at} y1={0} y2={ph} />;
@@ -2140,6 +2320,19 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                       </g>
                     )}
                     {/* Hover is a promise: only where a click selects or drills, the record under the pointer is outlined in 2px ink. */}
+                    {/* The cited mark (#532): the keyboard's 2px accent-ink ring, flat on the record; never a lift. */}
+                    {i === layers.length - 1 && citeOn && !citeOn.band && (
+                      <g className="alt-chart-cite-ring" aria-hidden="true">
+                        {citeOn.idx.slice(0, 24).map((j) => {
+                          const d = ctx.data[j];
+                          if (!d) return null;
+                          const path = childType?.chartMark?.(childProps, ctx, d, citeOn.series);
+                          if (path) return <path key={j} d={path} />;
+                          const [px, py] = ChartPointFn ? ChartPointFn(childProps, ctx, d, citeOn.series) : [ctx.xOf(d), ctx.y(d[citeOn.series] as number)];
+                          return <circle key={j} cx={px} cy={py} r={7} />;
+                        })}
+                      </g>
+                    )}
                     {i === layers.length - 1 && interactive && ctx.active && (
                       <g className="alt-chart-hover" aria-hidden="true" key={rowKey(ctx.active)}>
                         {ctx.series.filter((s2) => typeof ctx.active![s2.key] === 'number').map((s2) => {
@@ -2239,7 +2432,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         </div>)}
         {brushWiring && React.cloneElement(brushEl!, { __brush: brushWiring })}
         {/* Filtered in place: the frame says how many match, in words, so the count never depends on seeing the fade. */}
-        {filtered && !selecting && !(showOnlyChanged && !info.relevance) && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
+        {filtered && !selecting && !scopeOnly && !(showOnlyChanged && !info.relevance) && <p className="alt-chart-count" aria-live="polite">{countText}</p>}
         {/* Changed since a snapshot (#191): the count in words, a switch that shows only what changed. */}
         {sinceMap && since && (
           <div className="alt-chart-since" {...sinceDepth}>
@@ -2254,9 +2447,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
         )}
         {live && (
           <div className="alt-chart-live">
-            <span className="alt-chart-updated" {...captionDepth}>
-              {pausedNow ? 'Paused. ' : ''}{updatedAt !== null ? `Updated ${clock.format(new Date(updatedAt))}` : 'Live'}{queued && !pausedNow ? ' · new data when you move away' : queued ? ' · new data waiting' : ''}
-            </span>
+            {/* With a source, its line says when; this caption keeps only what's paused or waiting. */}
+            {(!src || pausedNow || queued) && <span className="alt-chart-updated" {...(src ? {} : captionDepth)}>
+              {pausedNow ? 'Paused. ' : ''}{src ? '' : updatedAt !== null ? `Updated ${clock.format(new Date(updatedAt))}` : 'Live'}{queued && !pausedNow ? `${src ? 'New' : ' · new'} data when you move away` : queued ? `${src ? 'New' : ' · new'} data waiting` : ''}
+            </span>}
             {pausable && <Switch label="Pause updates" checked={pausedNow} onCheckedChange={(v) => setPaused?.(v)} />}
             <span className="alt-sr" aria-live="polite">{said}</span>
           </div>
@@ -2272,8 +2466,10 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
           {summary ?? generated}
           {summary && overlayWords ? <span className="alt-sr">{overlayWords}</span> : !summary && overlayWords}
         </figcaption>
+        {src && data.length > 0 && <SourceLine source={src} locale={locale} className="alt-chart-source" glow={live ? captionGlow : undefined} />}
       </figure>
     </ChartContext.Provider>
+    </CiteContext.Provider>
   );
 }
 
@@ -2370,6 +2566,93 @@ function ChartLanded({ raw, render, refetch, last }: { raw: unknown; render: (d:
 
 const IMPRINT_BARS = [0.55, 0.8, 0.62, 0.9, 0.7, 0.48, 0.75];
 const IMPRINT_DOTS = [[8, 74], [15, 62], [21, 78], [28, 55], [35, 66], [42, 48], [49, 60], [56, 40], [62, 52], [69, 34], [76, 45], [83, 26], [26, 36], [71, 70], [90, 18]];
+/* ───────────────────────── citations (#532) ───────────────────────── */
+
+export interface ChartCiteProps {
+  /** The x of the record the figure comes from. With `window`, the last of the records it covers. */
+  x?: string | number | Date;
+  /** The series the figure reads. Default: the chart's first shown series. */
+  series?: string;
+  /** The figure is over the `window` records ending at `x` (an average, or a sum with `aggregate="sum"`). */
+  window?: number;
+  /** The figure is over the records this picks, instead of `x`. */
+  records?: (d: ChartDatum) => boolean;
+  /** How a figure over several records is made. Default 'mean'. */
+  aggregate?: 'mean' | 'sum';
+  /** The figure, as the sentence says it: "39 a day", "80", "3.2%". */
+  children: React.ReactNode;
+  className?: string;
+}
+/** What a cite resolves to in its chart: the records it covers, the value they make, and what to say about it. */
+interface CiteTarget { idx: number[]; end: number; series: string; value: number; band: boolean; name: string; words: string; label: string; span: string; short: string; marker: ChartMarkerShape }
+interface CiteApi {
+  resolve: (p: ChartCiteProps) => CiteTarget | null;
+  light: (t: CiteTarget | null) => void;
+  pin: (t: CiteTarget) => void;
+  pinned: (t: CiteTarget) => boolean;
+  register: () => () => void;
+}
+const CiteContext = React.createContext<CiteApi | null>(null);
+
+/** The first number in a figure as written, with its sign, decimals and a K/M/B/T suffix: "1.2K users" → 1200 (±50). */
+export function readFigure(text: string): { value: number; tolerance: number } | null {
+  const m = /([-−+]?)(\d[\d,   ]*(?:\.\d+)?|\.\d+)\s*([kKmMbBtT](?![a-z]))?/.exec(text);
+  if (!m) return null;
+  const digits = m[2].replace(/[,   ]/g, '');
+  const dec = (digits.split('.')[1] ?? '').length;
+  const mult = ({ k: 1e3, m: 1e6, b: 1e9, t: 1e12 } as Record<string, number>)[(m[3] ?? '').toLowerCase()] ?? 1;
+  const sign = m[1] === '-' || m[1] === '−' ? -1 : 1;
+  return { value: sign * parseFloat(digits) * mult, tolerance: 0.5 * Math.pow(10, -dec) * mult + 1e-9 };
+}
+const textOf = (n: React.ReactNode): string => (n == null || typeof n === 'boolean' ? '' : typeof n === 'string' || typeof n === 'number' ? String(n)
+  : Array.isArray(n) ? n.map(textOf).join('') : React.isValidElement(n) ? textOf((n.props as { children?: React.ReactNode }).children) : '');
+const warnedCites = new Set<string>();
+
+/**
+ * A figure in a chart's takeaway, description or summary that cites the mark it comes from (#532). It's InlineCitation's
+ * flush plate at text size, in ink, with the series' marker shape: pointing at it or focusing it lights the mark with
+ * the keyboard's ring and opens the readout there (a window lays a flat band under the stretch it covers); Enter or a
+ * click pins the reading, so the check settles into the record. With the provider's devChecks on, a cite whose x isn't
+ * in the data, or whose figure isn't the record's value at the format's precision, warns.
+ */
+export function ChartCite(props: ChartCiteProps) {
+  const api = React.useContext(CiteContext);
+  const dev = React.useContext(DevChecksContext);
+  const target = api?.resolve(props) ?? null;
+  const figure = textOf(props.children);
+  React.useEffect(() => api?.register(), [api?.register]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A figure that isn't in the data is a defect, not a style: say so while building.
+  const said = target ? `${target.series}|${target.end}|${target.value}|${figure}` : `missing|${String(props.x)}|${props.series ?? ''}|${figure}`;
+  React.useEffect(() => {
+    if (!dev || !api || warnedCites.has(said)) return;
+    let problem = '';
+    if (!target) problem = `ChartCite: '${figure}' cites ${props.series ?? 'a series'} at ${props.x instanceof Date ? props.x.toISOString() : String(props.x ?? '(no x)')}, which isn't in the chart's data.`;
+    else {
+      const read = readFigure(figure);
+      const shown = readFigure(target.words);
+      const near = (r: { value: number; tolerance: number } | null, v: number) => !!r && Math.abs(r.value - v) <= r.tolerance + Math.abs(v) * 1e-9;
+      // Right if the figure is the value at the figure's own precision, or as the series' format says it.
+      if (read && !near(read, target.value) && !(shown && Math.abs(read.value - shown.value) <= Math.max(read.tolerance, shown.tolerance))) {
+        problem = `ChartCite: '${figure}' cites ${target.label}, which is ${target.words}.`;
+      }
+    }
+    if (problem) { warnedCites.add(said); console.warn(problem); }
+  }, [dev, said]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!api) return <>{props.children}</>;
+  if (!target) return <span className={cx('alt-chart-cite', props.className)} data-missing="">{props.children}</span>;
+  const pinned = api.pinned(target);
+  return (
+    <button type="button" className={cx('alt-chart-cite', props.className)} data-pinned={pinned ? '' : undefined}
+      aria-label={`${figure}, cites ${target.name}. ${pinned ? 'Pinned.' : 'Press Enter to pin.'}`}
+      onPointerEnter={() => api.light(target)} onPointerLeave={(e) => { if (document.activeElement !== e.currentTarget) api.light(null); }}
+      onFocus={() => api.light(target)} onBlur={() => api.light(null)}
+      onClick={() => api.pin(target)}>
+      <svg className="alt-chart-cite-mark" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><ChartMarker shape={target.marker} x={5} y={5} size={7} color="currentColor" /></svg>
+      {props.children}
+    </button>
+  );
+}
+
 /**
  * A takeaway, as the chart's heading. When its words change with the data it cross-fades (dur-travel-2), as a Stat's
  * value does, without the afterglow: the marks' changes already spend the attention.

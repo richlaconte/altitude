@@ -2456,6 +2456,144 @@ function App() {
   );
 }
 
+=== ChartScope | <!-- @dsCard group="Charts" height=1180 subtitle="One record, many views: one slice, pointer, window, selection and palette across a page" -->
+--- css
+.cs { display: grid; gap: 16px; }
+.cs .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .cs .two { grid-template-columns: 1fr; } }
+--- jsx
+// Two days of a service-health dashboard, hourly: error rates per service, latency for the fleet, and incidents.
+const csHours = Array.from({ length: 48 }, (_, i) => new Date(Date.UTC(2026, 10, 3, i)).toISOString());
+const csWave = (i, k) => Math.max(0.05, 0.4 + 0.25 * Math.sin((i + k * 7) / 5));
+const csErrors = csHours.map((t, i) => ({
+  t,
+  checkout: +(csWave(i, 0) + (i >= 30 && i <= 34 ? 2.6 - Math.abs(i - 32) * 0.5 : 0)).toFixed(2),
+  search: +(csWave(i, 1) * 0.8).toFixed(2),
+  payments: +(csWave(i, 2) * 1.1 + (i >= 31 && i <= 33 ? 0.9 : 0)).toFixed(2),
+}));
+const csLatency = csHours.map((t, i) => ({ t, p50: Math.round(118 + 12 * Math.sin(i / 4) + (i >= 30 && i <= 34 ? 40 : 0)), p99: Math.round(410 + 60 * Math.sin(i / 3) + (i >= 30 && i <= 34 ? 520 - Math.abs(i - 32) * 120 : 0)) }));
+const csIncidents = [
+  { id: 'INC-412', service: 'checkout', title: 'Card tokeniser timeouts', opened: csHours[30], minutes: 74 },
+  { id: 'INC-413', service: 'payments', title: 'Ledger writes retrying', opened: csHours[31], minutes: 41 },
+  { id: 'INC-409', service: 'search', title: 'Index lag after deploy', opened: csHours[9], minutes: 22 },
+  { id: 'INC-414', service: 'checkout', title: 'Promo code lookups slow', opened: csHours[40], minutes: 12 },
+];
+const csNames = { checkout: 'Checkout', search: 'Search', payments: 'Payments' };
+const csPct = (v) => `${v.toFixed(1)}%`;
+const csMs = (v) => `${Math.round(v)} ms`;
+const csWhen = new Intl.DateTimeFormat('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+function csIn(rows, w) {
+  if (!w) return rows;
+  const a = w.start ? Date.parse(w.start) : -Infinity, b = w.end ? Date.parse(w.end) : Infinity;
+  return rows.filter((r) => { const t = Date.parse(r.t ?? r.opened); return t >= a && t <= b; });
+}
+function App() {
+  const [range, setRange] = React.useState({ start: csHours[24], end: csHours[47] });
+  const [picked, setPicked] = React.useState([]);
+  const shown = csIn(csErrors, range);
+  // The bars and the stats are the same slice: the app re-counts them for the window, as it would from its API.
+  const byService = Object.keys(csNames).map((service) => ({ service, rate: +(shown.reduce((t, r) => t + r[service], 0) / Math.max(1, shown.length)).toFixed(2) }));
+  const incidents = csIn(csIncidents, range);
+  const fmtRange = (w) => `${csWhen.format(new Date(w.start))} – ${csWhen.format(new Date(w.end))}`;
+  return (
+    <A.ChartScope className="cs" aria-label="Service health" by="service" noun="services"
+      slice={`${fmtRange(range)} UTC · production`} window={range} onWindowChange={setRange} selected={picked} onSelectedChange={setPicked}>
+      <A.StatGroup>
+        <A.Stat label="Mean error rate" value={byService.reduce((t, s) => t + s.rate, 0) / byService.length} format={csPct} />
+        <A.Stat label="Peak p99 latency" value={Math.max(...csIn(csLatency, range).map((r) => r.p99))} format={csMs} />
+        <A.Stat label="Incidents opened" value={incidents.length} />
+      </A.StatGroup>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="cs1">Error rate by service</A.CardTitle><A.CardDescription>Point anywhere: every chart over the same hours marks the same hour. Drag the lens: every chart and stat follows.</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="cs1" config={{ checkout: { label: 'Checkout', format: csPct }, search: { label: 'Search', format: csPct }, payments: { label: 'Payments', format: csPct } }} aspect={3.2} locale="en-GB" yFormat={csPct}>
+            <A.LineChart data={csErrors} x="t"><A.ChartBrush /></A.LineChart>
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <div className="two">
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="cs2">Latency, all services</A.CardTitle></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="cs2" config={{ p50: { label: 'p50 (median)', format: csMs }, p99: { label: 'p99', format: csMs } }} aspect={1.8} locale="en-GB" yFormat={csMs}>
+              <A.LineChart data={csLatency} x="t" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="cs3">Mean error rate by service</A.CardTitle><A.CardDescription>Choose a bar to filter every view to that service</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="cs3" config={{ rate: { label: 'Mean error rate', format: csPct } }} aspect={1.8} locale="en-GB" xFormat={(v) => csNames[v] ?? String(v)}>
+              <A.BarChart data={byService} x="service" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+      </div>
+      <A.DataTable aria-label="Incidents" noun="incidents" rows={incidents} getRowId={(r) => r.id}
+        columns={[
+          { key: 'id', header: 'Incident' },
+          { key: 'service', header: 'Service', cell: (r) => csNames[r.service] },
+          { key: 'title', header: 'What happened' },
+          { key: 'opened', header: 'Opened', cell: (r) => csWhen.format(new Date(r.opened)) },
+          { key: 'minutes', header: 'Minutes', align: 'end' },
+        ]} />
+    </A.ChartScope>
+  );
+}
+
+=== ChartSource | <!-- @dsCard group="Charts" height=960 subtitle="Where the data came from, when it was read and how many records: one flush line, and stale said in words" -->
+--- css
+.csrc { display: grid; gap: 16px; }
+.csrc .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .csrc .two { grid-template-columns: 1fr; } }
+--- jsx
+// Fourteen days of orders and refunds, read from two places at different times.
+const csrcDays = Array.from({ length: 14 }, (_, i) => ({ day: new Date(Date.UTC(2026, 9, 23 + i)).toISOString().slice(0, 10), orders: Math.round(1180 + 140 * Math.sin(i / 2) + i * 12), refunds: Math.round(38 + 9 * Math.cos(i / 3)) }));
+const csrcMin = 60_000;
+function App() {
+  // Times are relative to when the page opened, so the words stay true: read 2 minutes ago, 3 hours ago, and 14 minutes ago.
+  const [opened] = React.useState(() => Date.now());
+  const total = csrcDays.reduce((n, d) => n + d.orders, 0);
+  return (
+    <div className="csrc">
+      <A.StatGroup aria-label="Last 14 days" source={{ name: 'Orders warehouse', href: '#/sources/orders', asOf: opened - 2 * csrcMin }} locale="en-GB">
+        <A.Stat label="Orders" value={total} locale="en-GB" />
+        <A.Stat label="Refund rate" value={`${(csrcDays.reduce((n, d) => n + d.refunds, 0) / total * 100).toFixed(1)}%`} />
+        <A.Stat label="Busiest day" value="Sat 1 Nov" />
+      </A.StatGroup>
+      <A.Card>
+        <A.CardHeader><A.CardTitle id="csrc1">Orders per day</A.CardTitle><A.CardDescription>Read two minutes ago: the line names the source, the count and the time</A.CardDescription></A.CardHeader>
+        <A.CardContent>
+          <A.ChartContainer aria-labelledby="csrc1" config={{ orders: { label: 'Orders' } }} aspect={3.4} locale="en-GB"
+            source={{ name: 'Orders warehouse', href: '#/sources/orders', asOf: opened - 2 * csrcMin, count: csrcDays.length, noun: 'days' }}>
+            <A.BarChart data={csrcDays} x="day" />
+          </A.ChartContainer>
+        </A.CardContent>
+      </A.Card>
+      <div className="two">
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="csrc2">Refunds per day</A.CardTitle><A.CardDescription>Read three hours ago, stale after one: said in words, the marks unchanged</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="csrc2" config={{ refunds: { label: 'Refunds' } }} aspect={1.8} locale="en-GB"
+              source={{ name: 'Payments export', asOf: opened - 180 * csrcMin, count: 524, noun: 'refunds', staleAfter: 60 * csrcMin }}>
+              <A.LineChart data={csrcDays} x="day" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="csrc3">Orders, last 7 days</A.CardTitle><A.CardDescription>Stale after 15 minutes: read 14 minutes ago, so it turns stale while you watch</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="csrc3" config={{ orders: { label: 'Orders' } }} aspect={1.8} locale="en-GB"
+              source={{ name: 'Orders warehouse', asOf: opened - 14 * csrcMin, staleAfter: 15 * csrcMin }}>
+              <A.LineChart data={csrcDays.slice(-7)} x="day" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+      </div>
+    </div>
+  );
+}
+
 === ChartDefaults | <!-- @dsCard group="Charts" height=1300 subtitle="The guide's chart defaults set once on the provider: inline y labels and series named at their marks" -->
 --- css
 .cdf { display: grid; gap: 16px; }
@@ -7176,7 +7314,19 @@ function Harness({ k }) {
   );
 }
 
-const CSS = `.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
+const STYLES = `.ah-views{display:grid;gap:12px;max-width:1100px}.ah-views>.alt-tabs{justify-self:start}
+.ah-phone{width:min(100%,440px);height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;display:flex;background:var(--surface-ground)}
+.cs{display:flex;flex-direction:column;flex:1;min-width:0;padding:8px 12px 12px;gap:8px}
+.cs-head{display:flex;align-items:flex-start;gap:2px}.cs-status{align-items:flex-start}.cs-status .alt-badge{margin-top:1px}.cs-title{flex:1;min-width:0;padding:2px 6px 0}
+.cs-title h2{margin:0;font:600 15px/20px var(--font-sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-status{display:flex;align-items:center;gap:8px;margin:2px 0 0;min-width:0;font:400 13px/18px var(--font-sans);color:var(--ink-muted)}
+.cs-status>span:last-child{min-width:0}.cs-status .alt-badge{flex:none}
+.cs-status>svg{flex:none;color:var(--positive)}
+.cs .alt-convo{flex:1;min-height:0}
+.cs-grow{flex:1}.cs-model{width:auto;min-width:0}
+.cs-context{display:flex;align-items:center;gap:14px;padding:2px 4px 0;font:400 12.5px/17px var(--font-mono);color:var(--ink-muted)}
+.cs-context>span{display:inline-flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
 .ah-frame .alt-shell-page{display:flex;flex-direction:column;overflow:hidden}.ah-frame .alt-inset{flex:1;min-height:0;display:flex;flex-direction:column}
 .ah-main{display:flex;flex-direction:column;gap:12px;flex:1;padding:12px 0;min-height:0}.ah-main .alt-convo{flex:1;min-height:0;margin:0 -12px 0 0}
 .ah-rail{display:flex;align-items:center;gap:8px 12px}.ah-moments{position:relative;display:flex;flex-wrap:wrap;flex:1;min-width:0;gap:2px;margin:0;padding:2px;list-style:none;border-radius:var(--radius-md);background:var(--surface-well);box-shadow:var(--well)}
@@ -7218,8 +7368,121 @@ function useRail(k) {
   }, [scan]);
   return { ref: rail, onScroll: scan, 'data-more-start': edges.start ? '' : undefined, 'data-more-end': edges.end ? '' : undefined };
 }
+/** A coding session on a phone: the last turn folded to one line that says what it did, the current turn open because a
+ * step is waiting for the person, and the header saying the session's state in words. Built only from the parts above. */
+const TURN_EDIT = { before: 'export function indexOf() {\n  const entered = new Map()\n}', after: 'export function indexOf() {\n  const entered = new Map();\n  const turns = new Map();\n}' };
+const TURN_WRITE = 'export function turnStepsOf() {\n  return [];\n}';
+/** A new file is all additions: drop the empty line diffLines reads as removed from "nothing". */
+const NEW_FILE = A.diffLines('', TURN_WRITE).filter((o) => o.kind !== 'del');
+/** @type {import('altitude-design').PromptMention[]} */
+const FILES = [{ id: 'f1', label: 'web/turns.ts', kind: 'file' }, { id: 'f2', label: 'web/turn-count.ts', kind: 'file' }];
+const MODELS = [{ value: 'beam-low', label: 'Beam · low' }, { value: 'beam-high', label: 'Beam · high' }, { value: 'arc', label: 'Arc' }];
+const Glyph = ({ d }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
+const FOLDER = 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', BRANCH = 'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9';
+
+/** What "remember what a turn fold is" wrote: two new memories and one it corrected. */
+const MEMORIES = [
+  { id: 'm1', text: 'A turn fold groups one turn\'s tool steps under a single summary line.' },
+  { id: 'm2', text: 'The fold counts steps, not tool calls.', change: 'updated', previous: 'The fold counts tool calls.' },
+  { id: 'm3', text: 'A fold opens by itself when a step fails or waits for approval.' },
+];
+/** The session's state in one line: what every harness puts first, because it's what the person came back to find out. */
+const SESSION = {
+  requested: { plate: { tone: 'caution', word: 'Needs approval' }, words: 'Open a pull request?' },
+  running: { plate: { tone: 'accent', word: 'Working' }, words: 'Opening the pull request' },
+  done: { plate: null, words: 'Pull request #112 opened' },
+  rejected: { plate: null, words: 'Stopped before the pull request' },
+};
+
+function CodingSession() {
+  const [memories, setMemories] = React.useState(/** @type {import('altitude-design').TraceMemoryItem[]} */ (MEMORIES));
+  const setForgotten = (/** @type {string} */ id, /** @type {boolean} */ forgotten) => setMemories((ms) => ms.map((m) => (m.id === id ? { ...m, forgotten } : m)));
+  const [approval, setApproval] = React.useState(/** @type {'requested' | 'running' | 'done' | 'rejected'} */ ('requested'));
+  const approve = () => { setApproval('running'); setTimeout(() => setApproval('done'), 900); };
+  const main = React.useRef(/** @type {HTMLDivElement | null} */ (null));
+  // Open at the end of the thread, where the live turn is, as the person would find it.
+  React.useEffect(() => { const el = main.current?.querySelector('.alt-convo-scroll'); if (el) el.scrollTop = el.scrollHeight; }, [approval]);
+  const state = SESSION[approval];
+  return (
+    <div className="cs" ref={main}>
+      <header className="cs-head">
+        <A.Button variant="ghost" size="sm" square aria-label="Show sessions"><A.Icons.PanelLeft /></A.Button>
+        <div className="cs-title">
+          <h2>Count steps in the turn fold</h2>
+          <p className="cs-status" role="status">
+            {state.plate ? <A.Badge tone={/** @type {any} */ (state.plate.tone)} variant="soft" lamp>{state.plate.word}</A.Badge> : <A.Icons.CircleCheck size={16} aria-label="Done" />}
+            <span>{state.words}</span>
+          </p>
+        </div>
+        <A.Button variant="ghost" size="sm" square aria-label="More"><A.Icons.More /></A.Button>
+      </header>
+      <A.Conversation aria-label="Count steps in the turn fold">
+        <A.ConversationContent>
+          <A.Message from="user">
+            <A.MessageContent>Change the fold to count steps, and remember what a turn fold is.</A.MessageContent>
+            <A.MessageActions onCopy onEdit={() => {}} />
+          </A.Message>
+          <A.Message from="assistant">
+            {/* A finished turn is one line: what it did, counted from its steps. The steps, their diffs and the memory
+                writes are behind the lid, one press away; nothing in them needs the person now. */}
+            <A.Trace aria-label="Change the fold to count steps" collapsible>
+              <A.TraceStep tool="edit" title="web/turns.ts" detail="2 edits" changes={{ added: 2, removed: 1 }} status="done">
+                <A.DiffView caption="web/turns.ts" before={TURN_EDIT.before} after={TURN_EDIT.after} />
+              </A.TraceStep>
+              <A.TraceStep tool="write" title="web/turn-count.ts" detail="new file" changes={{ added: 3, removed: 0 }} status="done">
+                <A.DiffView caption="web/turn-count.ts · new file" before="" after={TURN_WRITE} hunks={NEW_FILE} />
+              </A.TraceStep>
+              <A.TraceStep tool="memory" title={`${memories.length} memories`} status="done">
+                <A.TraceMemory items={memories} onForget={(id) => setForgotten(id, true)} onRestore={(id) => setForgotten(id, false)} />
+              </A.TraceStep>
+              <A.TraceStep tool="run" title="npm test" detail="12 passed" status="done" />
+            </A.Trace>
+            <A.MessageContent><A.Markdown>{'Done: the fold counts steps now, and `turnStepsOf` leaves reasoning out of the count. I saved what a turn fold is to memory; forget any of it that\'s wrong.'}</A.Markdown></A.MessageContent>
+            <A.MessageActions onCopy onRegenerate={() => {}} onFeedback={() => {}} />
+          </A.Message>
+          <A.Message from="user">
+            <A.MessageContent>Run the whole suite, then open a pull request.</A.MessageContent>
+            <A.MessageActions onCopy onEdit={() => {}} />
+          </A.Message>
+          <A.Message from="assistant">
+            {/* The live turn. What ran is one folded line; the proposal is the only raised thing in the thread, outside the
+                fold so it's never behind a lid, and the header says the same in words. Approving adds the push as a step. */}
+            <A.Trace aria-label="Run the suite and open a pull request" collapsible>
+              <A.TraceStep tool="run" title="npm test -- --coverage" detail="48 passed" status="done" />
+              {(approval === 'running' || approval === 'done') && <A.TraceStep tool="gh" title="pr create --base main" detail={approval === 'done' ? '#112' : undefined} status={approval === 'running' ? 'running' : 'done'} />}
+            </A.Trace>
+            {approval !== 'rejected' && <A.Confirmation state={approval} title="Open a pull request" consequence="Pushes ape/aaac99cb and opens a pull request against main in lab-demo."
+              approveLabel="Open pull request" rejectLabel="Not now" runningLabel="Opening…" doneLabel="Opened" resolvedBy="you"
+              scopes={[{ value: 'session', label: 'Allow pushes for this session' }]} onApprove={approve} onReject={() => setApproval('rejected')} />}
+            {approval === 'rejected' && <A.Confirmation state="rejected" title="Open a pull request" consequence="Pushes ape/aaac99cb and opens a pull request against main in lab-demo." resolvedBy="you" />}
+            {approval === 'done' && <A.MessageContent><A.Markdown>{'Opened [pull request #112](#pr-112): 2 files changed, 48 tests passing.'}</A.Markdown></A.MessageContent>}
+            {approval === 'rejected' && <A.MessageContent><A.Markdown>{'The suite passes. Say when you want the pull request.'}</A.Markdown></A.MessageContent>}
+          </A.Message>
+        </A.ConversationContent>
+        <A.ConversationScrollButton />
+      </A.Conversation>
+      <A.PromptInput status={approval === 'running' ? 'streaming' : 'ready'} onSubmit={() => {}} onStop={() => {}} onAttach={() => {}} accept="image/*,text/*"
+        mentionable={(q) => FILES.filter((f) => f.label.includes(q))}
+        commands={[{ name: 'review', description: 'Review the changes' }, { name: 'compact', description: 'Summarise the session so far' }]}>
+        <A.PromptInputTextarea placeholder="Message… @ files, / commands" aria-label="Message" />
+        <A.PromptInputToolbar>
+          <A.PromptInputAttach label="Add files" />
+          <A.Select size="sm" aria-label="Model" items={MODELS} defaultValue="beam-low" className="cs-model" />
+          <span className="cs-grow" />
+          <A.PromptInputDictate />
+          <A.PromptInputSubmit />
+        </A.PromptInputToolbar>
+        <div className="cs-context">
+          <span><Glyph d={FOLDER} />lab-demo</span>
+          <span><Glyph d={BRANCH} />ape/aaac99cb</span>
+        </div>
+      </A.PromptInput>
+    </div>
+  );
+}
+
 /** The rail of moments above the harness, and the note for the moment shown. */
-function App({ start = 3 }) {
+function Run({ start = 3 }) {
   const [k, setK] = React.useState(start);
   const [notes, setNotes] = React.useState(true);
   const [said, setSaid] = React.useState('');
@@ -7237,7 +7500,7 @@ function App({ start = 3 }) {
   };
   return (
     <div className="ah" ref={root}>
-      <style>{CSS}</style>
+      <style>{STYLES}</style>
       <nav className="ah-rail" aria-label="Moments in the run">
         <ol className="ah-moments" {...rail}>
           {MOMENTS.map((m, i) => (
@@ -7249,6 +7512,21 @@ function App({ start = 3 }) {
       {notes && <A.Alert className="ah-note" role="note" title={MOMENTS[k].name}>{MOMENTS[k].note}</A.Alert>}
       <div className="ah-frame"><Harness k={k} /></div>
       <span className="alt-sr" role="status">{said}</span>
+    </div>
+  );
+}
+/** Two views: every state of a scripted run, and a coding session on a phone with its last turn folded and the live one open. */
+function App({ start = 3 }) {
+  const [view, setView] = React.useState('run');
+  return (
+    <div className="ah-views">
+      <A.Tabs variant="segmented" value={view} onValueChange={setView}>
+        <A.TabsList aria-label="Harness view">
+          <A.TabsTrigger value="run">Every state</A.TabsTrigger>
+          <A.TabsTrigger value="session">Coding session</A.TabsTrigger>
+        </A.TabsList>
+      </A.Tabs>
+      {view === 'run' ? <Run start={start} /> : <div className="ah-phone"><style>{STYLES}</style><CodingSession /></div>}
     </div>
   );
 }
@@ -7527,6 +7805,8 @@ const SIGNUPS = Array.from({ length: 31 }, (_, i) => ({ day: `2026-10-${String(i
 const total = SIGNUPS.reduce((n, d) => n + d.signups, 0);
 const before = SIGNUPS.slice(0, 13), after = SIGNUPS.slice(13);
 const mean = (rows) => Math.round(rows.reduce((n, d) => n + d.signups, 0) / rows.length);
+const peak = SIGNUPS.reduce((m, d) => (d.signups > m.signups ? d : m), SIGNUPS[0]);
+const onDay = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', timeZone: 'UTC' });
 function App() {
   return (
     <main className="lr-page">
@@ -7534,9 +7814,11 @@ function App() {
         actions={<A.Button variant="secondary">Export CSV</A.Button>}>
         <A.PageHeaderTitle>Signups, October 2026</A.PageHeaderTitle>
       </A.PageHeader>
-      <A.ChartContainer className="lr-lead" title="Daily signups" takeaway={`Signups doubled after the pricing change on 14 October, from ${mean(before)} a day to ${mean(after)}`}
+      {/* Each figure in the sentence cites the records it comes from: point at it, or focus it, to see them; Enter pins the reading. */}
+      <A.ChartContainer className="lr-lead" title="Daily signups" locale="en-IE"
+        takeaway={<>Signups doubled after the pricing change on 14 October, from <A.ChartCite x="2026-10-13" window={13}>{mean(before)} a day</A.ChartCite> to <A.ChartCite x="2026-10-31" window={18}>{mean(after)}</A.ChartCite></>}
         config={{ signups: { label: 'Signups' } }} aspect={2.6} zero
-        summary={`${total.toLocaleString('en-IE')} signups in October. From 1 to 13 October about ${mean(before)} a day; from 14 October, when the free plan gained a third project, about ${mean(after)} a day.`}>
+        summary={<>{total.toLocaleString('en-IE')} signups in October. From 1 to 13 October about {mean(before)} a day; from 14 October, when the free plan gained a third project, about {mean(after)} a day, with the most on {onDay(peak.day)}: <A.ChartCite x={peak.day}>{peak.signups}</A.ChartCite>.</>}>
         <A.LineChart data={SIGNUPS} x="day" />
       </A.ChartContainer>
       <section className="lr-more" aria-labelledby="lr-more-h">

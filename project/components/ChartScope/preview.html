@@ -1,0 +1,107 @@
+<!-- @dsCard group="Charts" height=1180 subtitle="One record, many views: one slice, pointer, window, selection and palette across a page" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartScope — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.cs { display: grid; gap: 16px; }
+.cs .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .cs .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const csHours = Array.from({ length: 48 }, (_, i) => new Date(Date.UTC(2026, 10, 3, i)).toISOString());
+const csWave = (i, k) => Math.max(0.05, 0.4 + 0.25 * Math.sin((i + k * 7) / 5));
+const csErrors = csHours.map((t, i) => ({
+  t,
+  checkout: +(csWave(i, 0) + (i >= 30 && i <= 34 ? 2.6 - Math.abs(i - 32) * 0.5 : 0)).toFixed(2),
+  search: +(csWave(i, 1) * 0.8).toFixed(2),
+  payments: +(csWave(i, 2) * 1.1 + (i >= 31 && i <= 33 ? 0.9 : 0)).toFixed(2)
+}));
+const csLatency = csHours.map((t, i) => ({ t, p50: Math.round(118 + 12 * Math.sin(i / 4) + (i >= 30 && i <= 34 ? 40 : 0)), p99: Math.round(410 + 60 * Math.sin(i / 3) + (i >= 30 && i <= 34 ? 520 - Math.abs(i - 32) * 120 : 0)) }));
+const csIncidents = [
+  { id: "INC-412", service: "checkout", title: "Card tokeniser timeouts", opened: csHours[30], minutes: 74 },
+  { id: "INC-413", service: "payments", title: "Ledger writes retrying", opened: csHours[31], minutes: 41 },
+  { id: "INC-409", service: "search", title: "Index lag after deploy", opened: csHours[9], minutes: 22 },
+  { id: "INC-414", service: "checkout", title: "Promo code lookups slow", opened: csHours[40], minutes: 12 }
+];
+const csNames = { checkout: "Checkout", search: "Search", payments: "Payments" };
+const csPct = (v) => `${v.toFixed(1)}%`;
+const csMs = (v) => `${Math.round(v)} ms`;
+const csWhen = new Intl.DateTimeFormat("en-GB", { weekday: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+function csIn(rows, w) {
+  if (!w) return rows;
+  const a = w.start ? Date.parse(w.start) : -Infinity, b = w.end ? Date.parse(w.end) : Infinity;
+  return rows.filter((r) => {
+    const t = Date.parse(r.t ?? r.opened);
+    return t >= a && t <= b;
+  });
+}
+function App() {
+  const [range, setRange] = React.useState({ start: csHours[24], end: csHours[47] });
+  const [picked, setPicked] = React.useState([]);
+  const shown = csIn(csErrors, range);
+  const byService = Object.keys(csNames).map((service) => ({ service, rate: +(shown.reduce((t, r) => t + r[service], 0) / Math.max(1, shown.length)).toFixed(2) }));
+  const incidents = csIn(csIncidents, range);
+  const fmtRange = (w) => `${csWhen.format(new Date(w.start))} \u2013 ${csWhen.format(new Date(w.end))}`;
+  return /* @__PURE__ */ React.createElement(
+    A.ChartScope,
+    {
+      className: "cs",
+      "aria-label": "Service health",
+      by: "service",
+      noun: "services",
+      slice: `${fmtRange(range)} UTC \xB7 production`,
+      window: range,
+      onWindowChange: setRange,
+      selected: picked,
+      onSelectedChange: setPicked
+    },
+    /* @__PURE__ */ React.createElement(A.StatGroup, null, /* @__PURE__ */ React.createElement(A.Stat, { label: "Mean error rate", value: byService.reduce((t, s) => t + s.rate, 0) / byService.length, format: csPct }), /* @__PURE__ */ React.createElement(A.Stat, { label: "Peak p99 latency", value: Math.max(...csIn(csLatency, range).map((r) => r.p99)), format: csMs }), /* @__PURE__ */ React.createElement(A.Stat, { label: "Incidents opened", value: incidents.length })),
+    /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cs1" }, "Error rate by service"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Point anywhere: every chart over the same hours marks the same hour. Drag the lens: every chart and stat follows.")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "cs1", config: { checkout: { label: "Checkout", format: csPct }, search: { label: "Search", format: csPct }, payments: { label: "Payments", format: csPct } }, aspect: 3.2, locale: "en-GB", yFormat: csPct }, /* @__PURE__ */ React.createElement(A.LineChart, { data: csErrors, x: "t" }, /* @__PURE__ */ React.createElement(A.ChartBrush, null))))),
+    /* @__PURE__ */ React.createElement("div", { className: "two" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cs2" }, "Latency, all services")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "cs2", config: { p50: { label: "p50 (median)", format: csMs }, p99: { label: "p99", format: csMs } }, aspect: 1.8, locale: "en-GB", yFormat: csMs }, /* @__PURE__ */ React.createElement(A.LineChart, { data: csLatency, x: "t" })))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "cs3" }, "Mean error rate by service"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Choose a bar to filter every view to that service")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { "aria-labelledby": "cs3", config: { rate: { label: "Mean error rate", format: csPct } }, aspect: 1.8, locale: "en-GB", xFormat: (v) => csNames[v] ?? String(v) }, /* @__PURE__ */ React.createElement(A.BarChart, { data: byService, x: "service" }))))),
+    /* @__PURE__ */ React.createElement(
+      A.DataTable,
+      {
+        "aria-label": "Incidents",
+        noun: "incidents",
+        rows: incidents,
+        getRowId: (r) => r.id,
+        columns: [
+          { key: "id", header: "Incident" },
+          { key: "service", header: "Service", cell: (r) => csNames[r.service] },
+          { key: "title", header: "What happened" },
+          { key: "opened", header: "Opened", cell: (r) => csWhen.format(new Date(r.opened)) },
+          { key: "minutes", header: "Minutes", align: "end" }
+        ]
+      }
+    )
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

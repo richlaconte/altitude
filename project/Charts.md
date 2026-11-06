@@ -56,11 +56,15 @@ Choose by the job the data does, not by what looks rich.
 | A clickable mark, hovered | ground | a 2px `ink` outline and a pointer cursor; it never lifts |
 | The readout | floating, level 3 | a `Tooltip`, rising from the side facing its mark |
 | The crosshair | ground | a 1px `line-control` rule, lighter than a reference line's `ink-muted` because it's a pointer, not something to read against; it doesn't move the marks |
+| The scope's shared crosshair | ground | the same rule, in every chart of a `ChartScope` with the same kind of x, at the x the pointer or keyboard is on elsewhere; no readout opens there |
+| The scope's slice | ground | a flush caption at caption size in `ink-muted`, the selection in `ink` with a ghost Clear, polite and said once per change |
 | A legend you can toggle | sunk and raised | a choice, so it's built like the Switch: a trench with a raised mark when the series is on |
 | A legend that only labels | ground | a plate set flush, like a `Badge`; better still, label the series directly |
 | An overview brush | sunk and raised | the range `Slider`: the series a flat line in a trench, the chosen window a raised lens (level 1, `accent` rim, clear face) whose grips are the thumbs; outside it the overview recedes to 35% |
 | Drilling in | ground, stacked | a `Drilldown`: the detail is laid on top, the staircase shows the way back |
+| A figure that cites its mark (`ChartCite`) | ground, lifts on hover and focus | `InlineCitation`'s plate in the sentence, in `ink` with the series' marker; it rings the cited mark in 2px `accent-ink` and opens the readout there; Enter pins it (E166) |
 | Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are solid 1px `ink-muted`, because dashes mean projected |
+| Where the data came from (`source`) | ground | one flush line under the plot at caption size in `ink-muted`: source (a `Link`), count, "Updated 2 minutes ago"; stale is the `caution` icon and the word, and the marks don't change (E167) |
 | Loading | sunk | an imprint (`Await`), at the chart's own size |
 | No data | sunk | an opening (`EmptyState`) that says why and what to do |
 | Projected or incomplete data | ground | not yet the record: dashed or hatched, and labelled as such |
@@ -72,7 +76,7 @@ These are the elevation signals a chart adds to **Elevation**'s table:
 
 - **Amounts** are never height. They are length and position on a flat plot standing on the ground line.
 - **Marks that act.** Only where a click selects or drills do marks respond to the pointer, with a 2px `ink` outline and the action in the readout. A selection keeps its colour and recedes the rest, and a drill opens the child chart in `Drilldown` (E41).
-- **Filtered in place.** A filter recedes misses to 35% where they stand and holds the axis, so positions survive; the frame says how many match (E40).
+- **Filtered in place.** A filter recedes misses to 35% where they stand and holds the axis, so positions survive; the frame says how many match (E40). In a `ChartScope` a selection made in any chart does the same in every chart and table that carries the entity, and the scope says it once (E165).
 - **Live.** A live chart shows a change at once and leaves a fading `ink` outline on the mark; a whole refresh glows the "Updated" caption instead. Its window glides with time, and it holds still while someone reads it, with a switch to pause it (E39).
 - **Read against.** Targets, limits, normal ranges and events (`ChartReference`, `ChartAnnotation`) lie flush with the marks: a solid 1px line, a flat `line` band, a `Badge` plate with a leader. Their words are laid out together so they never overlap each other or cover a mark: plates sit in headroom above the data, and a label moves to its line's other side or end before it covers a line or a bar (E38, E101).
 - **Not yet the record.** A projected value or an incomplete period (this month so far) is dashed or hatched and says so in its label and readout. It's the record to come, so it's drawn as an imprint of the record, not raised as live. Built as `status` on `BarChart`, `LineChart` and `AreaChart`, with a "Today" rule where the record ends and an uncertainty `band` on `LineChart` (E37).
@@ -90,6 +94,7 @@ The chart's choreography is in **Motion** ("Charts"). In short: changed data gli
 ## Dashboards
 
 - Filters sit in one row above the charts they scope (`FilterBar`, and `DateRangePicker` with presets), and every chart, stat and table below re-renders against the same slice. Say which slice in words ("Last 30 days · EU").
+- **One record, many views.** Wrap the views of one slice in a `ChartScope` (#529), and they share a slice, a pointer, a window, a selection and a palette. The slice is said once, as the scope's caption. A pointer in one chart marks the same x in every chart with the same kind of x, but the readout opens only where the pointer is. One `ChartBrush` sets every time chart's window. A mark chosen in one chart is a filter everywhere, in the filter's own language (35%, positions held), and the caption says "Filtered to Checkout" with Clear. One entity keeps one colour in every card (E165).
 - Each chart sits in a `Card` on the ground. The cards are raised because they're things you can work with, not because their data is.
 - The one-summit rule is unchanged: a drill-down is a `Drilldown` or a `Sheet`, never a dialog on a dialog.
 - Headline numbers come first, as `Stat`s, then the charts that explain them, then the table that is the record.

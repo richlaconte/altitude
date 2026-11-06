@@ -1,0 +1,76 @@
+<!-- @dsCard group="Charts" height=960 subtitle="Where the data came from, when it was read and how many records: one flush line, and stale said in words" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartSource — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.csrc { display: grid; gap: 16px; }
+.csrc .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .csrc .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const csrcDays = Array.from({ length: 14 }, (_, i) => ({ day: new Date(Date.UTC(2026, 9, 23 + i)).toISOString().slice(0, 10), orders: Math.round(1180 + 140 * Math.sin(i / 2) + i * 12), refunds: Math.round(38 + 9 * Math.cos(i / 3)) }));
+const csrcMin = 6e4;
+function App() {
+  const [opened] = React.useState(() => Date.now());
+  const total = csrcDays.reduce((n, d) => n + d.orders, 0);
+  return /* @__PURE__ */ React.createElement("div", { className: "csrc" }, /* @__PURE__ */ React.createElement(A.StatGroup, { "aria-label": "Last 14 days", source: { name: "Orders warehouse", href: "#/sources/orders", asOf: opened - 2 * csrcMin }, locale: "en-GB" }, /* @__PURE__ */ React.createElement(A.Stat, { label: "Orders", value: total, locale: "en-GB" }), /* @__PURE__ */ React.createElement(A.Stat, { label: "Refund rate", value: `${(csrcDays.reduce((n, d) => n + d.refunds, 0) / total * 100).toFixed(1)}%` }), /* @__PURE__ */ React.createElement(A.Stat, { label: "Busiest day", value: "Sat 1 Nov" })), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "csrc1" }, "Orders per day"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Read two minutes ago: the line names the source, the count and the time")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      "aria-labelledby": "csrc1",
+      config: { orders: { label: "Orders" } },
+      aspect: 3.4,
+      locale: "en-GB",
+      source: { name: "Orders warehouse", href: "#/sources/orders", asOf: opened - 2 * csrcMin, count: csrcDays.length, noun: "days" }
+    },
+    /* @__PURE__ */ React.createElement(A.BarChart, { data: csrcDays, x: "day" })
+  ))), /* @__PURE__ */ React.createElement("div", { className: "two" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "csrc2" }, "Refunds per day"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Read three hours ago, stale after one: said in words, the marks unchanged")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      "aria-labelledby": "csrc2",
+      config: { refunds: { label: "Refunds" } },
+      aspect: 1.8,
+      locale: "en-GB",
+      source: { name: "Payments export", asOf: opened - 180 * csrcMin, count: 524, noun: "refunds", staleAfter: 60 * csrcMin }
+    },
+    /* @__PURE__ */ React.createElement(A.LineChart, { data: csrcDays, x: "day" })
+  ))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardHeader, null, /* @__PURE__ */ React.createElement(A.CardTitle, { id: "csrc3" }, "Orders, last 7 days"), /* @__PURE__ */ React.createElement(A.CardDescription, null, "Stale after 15 minutes: read 14 minutes ago, so it turns stale while you watch")), /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      "aria-labelledby": "csrc3",
+      config: { orders: { label: "Orders" } },
+      aspect: 1.8,
+      locale: "en-GB",
+      source: { name: "Orders warehouse", asOf: opened - 14 * csrcMin, staleAfter: 15 * csrcMin }
+    },
+    /* @__PURE__ */ React.createElement(A.LineChart, { data: csrcDays.slice(-7), x: "day" })
+  )))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
