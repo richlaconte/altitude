@@ -51,8 +51,6 @@ export const RULES = {
   'ALT-VISUAL-004': { kind: 'contextual-review', title: "Controls keep Altitude's elevation" },
 };
 
-// tokenNames: custom property names from the installed tokens.css, so `ink: '#…'` inside a custom scheme (which
-// defines tokens rather than bypassing them) isn't reported.
 /** The names a file imports from a module: named imports (by their local name) and namespace imports (`A` in `A.Bar`). */
 function importsFrom(text, mod) {
   const named = new Map(), spaces = new Set();
@@ -172,6 +170,8 @@ function chartRules(text, rawLines, add) {
   }
 }
 
+// tokenNames: custom property names from the installed tokens.css, so `ink: '#…'` inside a custom scheme (which
+// defines tokens rather than bypassing them) isn't reported.
 export function scan(root, { tokenNames = new Set() } = {}) {
   const findings = [];
   const add = (id, file, line, observed, repair) => findings.push({ ruleId: id, kind: RULES[id].kind, status: RULES[id].kind === 'deterministic' ? 'fail' : 'review', file: file && relative(root, file), line, observed, expected: RULES[id].title, repair, verification: `altitude explain ${id}` });
