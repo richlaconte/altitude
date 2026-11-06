@@ -38,6 +38,7 @@ Choose by the job the data does, not by what looks rich.
 | One headline number | `Stat`, with a `Sparkline` for its trend |
 | A value within a known range | `Meter` (a password's strength too, in `PasswordInput`) |
 | A value per cell over two dimensions | `Heatmap` |
+| How values are spread | `Histogram`; `mode="dots"` for a quantile dot plot, `cumulative` for the share at or below |
 | How two measures relate | `ScatterChart` |
 | One measure across many groups, or measures of different scale | `ChartGrid`: small multiples, one panel per group on a shared scale |
 | Values where zero isn't meaningful, averages with their spread, or before and after per category | `DotPlot` |

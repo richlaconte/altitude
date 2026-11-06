@@ -3184,6 +3184,22 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
 .alt-chart-axis text { fill: var(--ink-muted); font: 400 13px/19px var(--font-sans); font-variant-numeric: tabular-nums; }
 .alt-chart-axis[data-inline] text { stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; }
 .alt-chart-summary { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); text-wrap: pretty; }
+/* ── Histogram (#535): how values are spread. Counts are lengths on the ground line, so the bins are flat data-1 bars
+   touching on a continuous axis (no band gap), parted only by a hairline of the plot's own colour; quantile dots are
+   flat and ringed in the plot's colour; a cumulative reading is a 2px step line. A median or percentile is a 1px
+   ink-muted line with its name on a halo above the plot, as a reference line is. Nothing lifts; the keyboard's place
+   is the 2px accent-ink ring. ── */
+.alt-hist-bar { stroke: var(--alt-chart-bg); stroke-width: 1px; }
+.alt-hist-dot { stroke: var(--alt-chart-bg); stroke-width: 1.5px; }
+.alt-hist-line line { stroke: var(--ink-muted); stroke-width: 1; shape-rendering: crispEdges; }
+.alt-hist-line text { fill: var(--ink-muted); font: 400 13px/19px var(--font-sans); font-variant-numeric: tabular-nums; stroke: var(--alt-chart-bg); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; }
+[data-contrast="more"] .alt-hist-bar { stroke: var(--ink); }
+[data-contrast="more"] .alt-hist-dot { stroke-width: 2px; }
+@media (forced-colors: active) {
+  .alt-hist-bar, .alt-hist-dot { stroke: Canvas; }
+  .alt-hist-line line { stroke: CanvasText; }
+  .alt-hist-line text { fill: CanvasText; stroke: Canvas; }
+}
 /* The y mode (#531): an indexed or % change reading says what its axis reads once, flush at caption size in ink-muted
    above the plot ("Index, 1 Jan 2026 = 100"), never in colour; the base is a reference line at 100, or the ground line
    at zero. The reader's switch is a choice, so it's ToggleGroup's segmented build (sunk well, raised pill). */

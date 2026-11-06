@@ -139,6 +139,8 @@ export type { HeatmapProps } from './heatmap';
 export { ScatterChart } from './scatter-chart';
 export type { ScatterChartProps } from './scatter-chart';
 export { DotPlot } from './dot-plot';
+export { Histogram } from './histogram';
+export type { HistogramProps, HistogramBin } from './histogram';
 export type { DotPlotProps } from './dot-plot';
 export { ChartBrush } from './chart-brush';
 export type { DataSource } from './source-line';
