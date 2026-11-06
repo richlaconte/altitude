@@ -7429,6 +7429,73 @@ function App() {
   );
 }
 
+=== ChartAnswer | <!-- @dsCard group="Patterns" height=900 subtitle="A chart in an agent's answer: an imprint while the query runs, then its source, its label and figures that cite their marks" -->
+--- css
+.ca { display: flex; flex-direction: column; gap: 12px; max-width: 720px; }
+.ca .alt-convo { height: 760px; }
+.ca-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+--- jsx
+// October's daily signups, with the pricing change on 14 October. Each stretch is made to average a known figure, so the
+// takeaway's numbers are the data's: 39 a day for the 13 days before, 80 for the 17 after.
+const caDays = Array.from({ length: 31 }, (_, i) => new Date(Date.UTC(2026, 9, 1 + i)).toISOString().slice(0, 10));
+const caStretch = (n, mean, k) => { const v = Array.from({ length: n }, (_, i) => Math.round(mean + 6 * Math.sin(i * 1.7 + k))); v[n - 1] += mean * n - v.reduce((a, b) => a + b, 0); return v; };
+const caAll = [...caStretch(13, 39, 1), 58, ...caStretch(17, 80, 2)];
+const caPaid = [...caStretch(13, 11, 3), 17, ...caStretch(17, 29, 4)];
+const caRows = (vals) => caDays.map((day, i) => ({ day, signups: vals[i] }));
+const caMean = (vals, from, to) => Math.round(vals.slice(from, to + 1).reduce((a, b) => a + b, 0) / (to - from + 1));
+const caSql = `select date_trunc('day', created_at) as day, count(*) as signups\nfrom warehouse.accounts\nwhere created_at >= '2026-10-01' and created_at < '2026-11-01'\ngroup by 1 order by 1;`;
+function App() {
+  const [paid, setPaid] = React.useState(false);
+  const [status, setStatus] = React.useState('complete');
+  const [data, setData] = React.useState(() => caRows(caAll));
+  const [readAt, setReadAt] = React.useState(() => Date.now() - 4 * 60_000);
+  const [queryOpen, setQueryOpen] = React.useState(false);
+  // A new question is a new answer: its chart mounts as an imprint and lands, rather than refetching the old one.
+  const [run, setRun] = React.useState(0);
+  const vals = paid ? caPaid : caAll;
+  // A new question runs the query again: the chart is an imprint until the rows land, then the answer completes.
+  const ask = (nextPaid) => {
+    setPaid(nextPaid);
+    setRun((r) => r + 1);
+    setStatus('streaming');
+    const rows = caRows(nextPaid ? caPaid : caAll);
+    setData(new Promise((resolve) => setTimeout(() => { resolve(rows); setReadAt(Date.now()); setTimeout(() => setStatus('complete'), 400); }, 1400)));
+  };
+  // A follow-up that keeps x and the series changes the same chart, which glides: no second chart.
+  const followUp = () => { setPaid(true); setData(caRows(caPaid)); setReadAt(Date.now()); };
+  const before = caMean(vals, 0, 12), after = caMean(vals, 14, 30);
+  return (
+    <div className="ca">
+      <div className="ca-bar">
+        <A.Button size="sm" variant="secondary" onClick={() => ask(false)}>Ask again</A.Button>
+        <A.Button size="sm" variant="secondary" onClick={followUp} disabled={paid}>Follow up: only paid plans</A.Button>
+      </div>
+      <A.Conversation aria-label="Assistant">
+        <A.ConversationContent>
+          <A.Message from="user"><A.MessageContent>Did signups change after the pricing change?</A.MessageContent></A.Message>
+          {paid && <A.Message from="user"><A.MessageContent>Show me only paid plans.</A.MessageContent></A.Message>}
+          <A.Message key={run} from="assistant" status={status}>
+            <A.MessageContent>
+              <p>Yes. {paid ? 'Paid signups' : 'Signups'} roughly doubled after the pricing change on 14 October.</p>
+              <A.ChartContainer config={{ signups: { label: paid ? 'Paid signups' : 'Signups' } }} data={data} title={paid ? 'Daily paid signups, October' : 'Daily signups, October'} aspect={2.4} locale="en-GB" views
+                takeaway={<>{paid ? 'Paid signups' : 'Signups'} doubled after 14 October, from <A.ChartCite x="2026-10-13" window={13}>{before} a day</A.ChartCite> to <A.ChartCite x="2026-10-31" window={17}>{after}</A.ChartCite></>}
+                description={<><A.AILabel subject="Takeaway" model="Assistant (Claude)" sources={[{ title: 'Signups query' }]}>Written from the query's rows; the figures cite the days they average.</A.AILabel> The takeaway was written by the assistant.</>}
+                source={{ name: <A.Link href="#query" onClick={(e) => { e.preventDefault(); setQueryOpen(true); }}>Signups query</A.Link>, asOf: readAt, count: 31, noun: 'days' }}>
+                <A.LineChart x="day" />
+              </A.ChartContainer>
+              <A.Sources items={[{ title: 'Signups query: warehouse.accounts, 31 days', url: '#query' }, { title: 'Pricing change, 14 October', url: '#pricing' }]} />
+            </A.MessageContent>
+          </A.Message>
+        </A.ConversationContent>
+      </A.Conversation>
+      <A.Sheet open={queryOpen} onOpenChange={setQueryOpen}>
+        <A.SheetHeader><A.SheetTitle>Signups query</A.SheetTitle><A.SheetDescription>What the assistant ran to draw the chart.</A.SheetDescription></A.SheetHeader>
+        <A.CodeBlock code={caSql} language="sql" />
+      </A.Sheet>
+    </div>
+  );
+}
+
 === AgentHarness | <!-- @dsCard group="Patterns" height=860 subtitle="A scripted agent run through every state, in a complete harness: jump to any moment" -->
 --- jsx
 /** The moments the rail can jump to, each with the Elevation rule behind what you see. */

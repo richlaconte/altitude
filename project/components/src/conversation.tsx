@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cx, Icons, useDepth } from './core';
+import { AnnounceContext, cx, Icons, useDepth } from './core';
 import { Button, Textarea } from './controls';
 import { CopyButton } from './copy-button';
 import { FormattedNumber } from './formatted-number';
@@ -47,6 +47,7 @@ export function Conversation({ className, children, 'aria-label': label, ...rest
   };
   const announce = React.useCallback((text: string, urgent = false) => setSaid((s) => (urgent ? { ...s, urgent: text } : { ...s, polite: text })), []);
   return (
+    <AnnounceContext.Provider value={announce}>
     <ConversationCtx.Provider value={{ atBottom, toBottom, announce }}>
       <div className={cx('alt-convo', className)} {...rest}>
         {/* A log, but its own announcements are off: streamed text would be read token by token. Completions are said below. */}
@@ -55,6 +56,7 @@ export function Conversation({ className, children, 'aria-label': label, ...rest
         <span className="alt-sr" aria-live="assertive">{said.urgent}</span>
       </div>
     </ConversationCtx.Provider>
+    </AnnounceContext.Provider>
   );
 }
 

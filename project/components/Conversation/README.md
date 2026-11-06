@@ -23,6 +23,15 @@ The thread between a person and an assistant: their messages, the assistant's an
 
 **Checkpoints.** `ConversationCheckpoint` (`label`, `at`, `consequence`, `onRestore`, `onReturn`) marks a point between messages to go back to: a divider reading "Checkpoint · Before editing 6 files · 2:14 PM" with Restore, described by the consequence. It follows the consequential-action contract: with `onReturn` (real recovery), Restore runs at once and leaves "Return to where you were"; without it, Restore asks in a Dialog. Restoring hovers as pending, settles once when done, and sinks into a trench with Retry if it fails; the outcome is announced. Set the later turns aside as a branch rather than deleting them.
 
+**A chart in an answer.** An agent draws charts from queries the reader never saw and writes their takeaways itself, which is the case model-written chart claims need care in. Altitude has every part for it; composed, they read like this (preview: ChartAnswer):
+
+1. **While the query runs**, the chart is a `ChartContainer` whose `data` is the query's promise. It's an imprint at the chart's own size inside the streaming answer, under the answer's dashed rule: not yet the record, never a spinner. A new question is a new answer (key it by the run); the same chart given a new promise is a refetch, and keeps its old marks at half strength instead.
+2. **When it lands**, the marks fade in place, never rising, and the conversation says "Chart ready: Daily signups, October." once, so a screen-reader user knows there's a figure to enter. The answer's rule goes solid when the whole answer is done.
+3. **The takeaway's provenance is said.** An `AILabel` in the chart's description says the assistant wrote the takeaway, and its explanation names the query and the model. The figures are `ChartCite`s, so the reader can press each one and see its mark. Compute the figures from the rows rather than writing them, and `devChecks` warns when one isn't in the data.
+4. **The source line** says the data's source, the row count and the time read (`source`). Its `name` can be a `Link` that opens the query, a `CodeBlock` in a `Sheet`, as `AgentActionPattern` shows a tool call.
+5. **The table view** is one press away (`views`), and a `Sources` list at the answer's end lists the data source beside any documents.
+6. **A follow-up that keeps x and the series** ("only paid plans") changes the same chart, which glides as any data change does (Motion, Charts 1). Otherwise, draw a new chart below.
+
 **You provide:** the messages and their status as your stream reports it. Code inside an answer goes in `CodeBlock`.
 
 ```tsx

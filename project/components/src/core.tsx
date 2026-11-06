@@ -515,6 +515,12 @@ export function ModePlate() {
   return mode ? <span className="alt-badge alt-mode-plate" data-tone={mode.tone ?? 'caution'} data-variant="plate">{mode.label}</span> : null;
 }
 
+/**
+ * The nearest live region that says a part is ready, politely and once (#541): a Conversation provides it, so a chart
+ * that lands inside an answer says "Chart ready: Daily signups" as a streamed answer says it finished.
+ */
+export const AnnounceContext = React.createContext<((text: string) => void) | null>(null);
+
 /** Whether the nearest AltitudeProvider runs its development checks (`devChecks`), for components that warn. */
 export const DevChecksContext = React.createContext(false);
 

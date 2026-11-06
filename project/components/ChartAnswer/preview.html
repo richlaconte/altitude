@@ -1,0 +1,97 @@
+<!-- @dsCard group="Patterns" height=900 subtitle="A chart in an agent's answer: an imprint while the query runs, then its source, its label and figures that cite their marks" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartAnswer — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.ca { display: flex; flex-direction: column; gap: 12px; max-width: 720px; }
+.ca .alt-convo { height: 760px; }
+.ca-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const caDays = Array.from({ length: 31 }, (_, i) => new Date(Date.UTC(2026, 9, 1 + i)).toISOString().slice(0, 10));
+const caStretch = (n, mean, k) => {
+  const v = Array.from({ length: n }, (_, i) => Math.round(mean + 6 * Math.sin(i * 1.7 + k)));
+  v[n - 1] += mean * n - v.reduce((a, b) => a + b, 0);
+  return v;
+};
+const caAll = [...caStretch(13, 39, 1), 58, ...caStretch(17, 80, 2)];
+const caPaid = [...caStretch(13, 11, 3), 17, ...caStretch(17, 29, 4)];
+const caRows = (vals) => caDays.map((day, i) => ({ day, signups: vals[i] }));
+const caMean = (vals, from, to) => Math.round(vals.slice(from, to + 1).reduce((a, b) => a + b, 0) / (to - from + 1));
+const caSql = `select date_trunc('day', created_at) as day, count(*) as signups
+from warehouse.accounts
+where created_at >= '2026-10-01' and created_at < '2026-11-01'
+group by 1 order by 1;`;
+function App() {
+  const [paid, setPaid] = React.useState(false);
+  const [status, setStatus] = React.useState("complete");
+  const [data, setData] = React.useState(() => caRows(caAll));
+  const [readAt, setReadAt] = React.useState(() => Date.now() - 4 * 6e4);
+  const [queryOpen, setQueryOpen] = React.useState(false);
+  const [run, setRun] = React.useState(0);
+  const vals = paid ? caPaid : caAll;
+  const ask = (nextPaid) => {
+    setPaid(nextPaid);
+    setRun((r) => r + 1);
+    setStatus("streaming");
+    const rows = caRows(nextPaid ? caPaid : caAll);
+    setData(new Promise((resolve) => setTimeout(() => {
+      resolve(rows);
+      setReadAt(Date.now());
+      setTimeout(() => setStatus("complete"), 400);
+    }, 1400)));
+  };
+  const followUp = () => {
+    setPaid(true);
+    setData(caRows(caPaid));
+    setReadAt(Date.now());
+  };
+  const before = caMean(vals, 0, 12), after = caMean(vals, 14, 30);
+  return /* @__PURE__ */ React.createElement("div", { className: "ca" }, /* @__PURE__ */ React.createElement("div", { className: "ca-bar" }, /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: () => ask(false) }, "Ask again"), /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: followUp, disabled: paid }, "Follow up: only paid plans")), /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Assistant" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, "Did signups change after the pricing change?")), paid && /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, "Show me only paid plans.")), /* @__PURE__ */ React.createElement(A.Message, { key: run, from: "assistant", status }, /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement("p", null, "Yes. ", paid ? "Paid signups" : "Signups", " roughly doubled after the pricing change on 14 October."), /* @__PURE__ */ React.createElement(
+    A.ChartContainer,
+    {
+      config: { signups: { label: paid ? "Paid signups" : "Signups" } },
+      data,
+      title: paid ? "Daily paid signups, October" : "Daily signups, October",
+      aspect: 2.4,
+      locale: "en-GB",
+      views: true,
+      takeaway: /* @__PURE__ */ React.createElement(React.Fragment, null, paid ? "Paid signups" : "Signups", " doubled after 14 October, from ", /* @__PURE__ */ React.createElement(A.ChartCite, { x: "2026-10-13", window: 13 }, before, " a day"), " to ", /* @__PURE__ */ React.createElement(A.ChartCite, { x: "2026-10-31", window: 17 }, after)),
+      description: /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.AILabel, { subject: "Takeaway", model: "Assistant (Claude)", sources: [{ title: "Signups query" }] }, "Written from the query's rows; the figures cite the days they average."), " The takeaway was written by the assistant."),
+      source: { name: /* @__PURE__ */ React.createElement(A.Link, { href: "#query", onClick: (e) => {
+        e.preventDefault();
+        setQueryOpen(true);
+      } }, "Signups query"), asOf: readAt, count: 31, noun: "days" }
+    },
+    /* @__PURE__ */ React.createElement(A.LineChart, { x: "day" })
+  ), /* @__PURE__ */ React.createElement(A.Sources, { items: [{ title: "Signups query: warehouse.accounts, 31 days", url: "#query" }, { title: "Pricing change, 14 October", url: "#pricing" }] }))))), /* @__PURE__ */ React.createElement(A.Sheet, { open: queryOpen, onOpenChange: setQueryOpen }, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, "Signups query"), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "What the assistant ran to draw the chart.")), /* @__PURE__ */ React.createElement(A.CodeBlock, { code: caSql, language: "sql" })));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
