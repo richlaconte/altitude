@@ -24,6 +24,8 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
 
 **Set once for an app.** The rules above are what a chart does by default, but the guide's positive recommendations (inline y labels, series named at their marks, banked lines) are opt-ins, so the package doesn't change under apps that haven't chosen them (E103). An app chooses them once, on its provider: `<AltitudeProvider charts={{ yLabels: 'inline', directLabels: 'auto' }}>`. A chart's own prop still wins.
 
+**Checked, not assumed.** `altitude check` reports what it can read of these rules from an app's source, in Altitude's charts and in Recharts'. These fail the run: pie and donut charts (`ALT-CHART-001`), two axes on one plot (`-002`, rule 6), bars off zero (`-003`, rule 2), gradients, filters and fully rounded bars (`-004`, rule 1), reserved hues on a series (`-005`, rule 5), an unnamed chart (`-006`, rule 8) and marks that animate in (`-007`, rule 7). These are listed for review: a chart that leads a page with no takeaway (`-008`, rule 9), and three or more series with nothing said to matter (`-009`, rule 5). `altitude explain <ID>` says why.
+
 ## Choosing a form
 
 Choose by the job the data does, not by what looks rich.

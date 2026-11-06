@@ -51,7 +51,7 @@ function Panel({ scheme }: { scheme: BuiltInScheme }) {
         <div className="rounded-xl border bg-card p-4 shadow-sm">
           <h3 className="m-0 mb-2 text-sm font-medium">Visits by platform</h3>
           <ChartContainer config={visits} className="min-h-[200px] w-full" data-chart-name="visits">
-            <BarChart data={months} accessibilityLayer>
+            <BarChart data={months} accessibilityLayer title="Visits by platform">
               <CartesianGrid vertical={false} stroke="var(--line)" />
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tick={tick}
                 tickFormatter={(value: string) => value.slice(0, 3)} />
@@ -69,7 +69,7 @@ function Panel({ scheme }: { scheme: BuiltInScheme }) {
         <div className="rounded-xl border bg-card p-4 shadow-sm">
           <h3 className="m-0 mb-2 text-sm font-medium">Sign-ups and upgrades</h3>
           <ChartContainer config={growth} className="min-h-[200px] w-full" data-chart-name="growth">
-            <AreaChart data={months} accessibilityLayer>
+            <AreaChart data={months} accessibilityLayer title="Sign-ups and upgrades">
               <CartesianGrid vertical={false} stroke="var(--line)" />
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tick={tick}
                 tickFormatter={(value: string) => value.slice(0, 3)} />
