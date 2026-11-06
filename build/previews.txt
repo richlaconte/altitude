@@ -2594,6 +2594,63 @@ function App() {
   );
 }
 
+=== ChartDefaults | <!-- @dsCard group="Charts" height=1300 subtitle="The guide's chart defaults set once on the provider: inline y labels and series named at their marks" -->
+--- css
+.cdf { display: grid; gap: 16px; }
+.cdf .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .cdf .two { grid-template-columns: 1fr; } }
+--- jsx
+// The same charts the Charts previews draw, with nothing set on them: the provider's charts setting does the rest.
+const cdfMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, i) => ({ month, web: 420 + i * 38 + (i % 2) * 30, ios: 310 + i * 22, android: 260 + i * 31 - (i % 3) * 18 }));
+const cdfPlatforms = { web: { label: 'Web' }, ios: { label: 'iOS' }, android: { label: 'Android' } };
+const cdfDays = Array.from({ length: 20 }, (_, i) => {
+  const day = new Date(Date.UTC(2026, 9, 1 + i)).toISOString().slice(0, 10);
+  return Object.fromEntries([['day', day], ...['eu', 'us', 'apac', 'latam', 'mea', 'anz'].map((k, j) => [k, Math.round(120 + j * 34 + 18 * Math.sin(i / 3 + j))])]);
+});
+const cdfRegions = { eu: { label: 'EU' }, us: { label: 'US' }, apac: { label: 'APAC' }, latam: { label: 'LATAM' }, mea: { label: 'MEA' }, anz: { label: 'ANZ' } };
+function App() {
+  return (
+    <A.AltitudeProvider charts={{ yLabels: 'inline', directLabels: 'auto' }}>
+      <div className="cdf">
+        <div className="two">
+          <A.Card>
+            <A.CardHeader><A.CardTitle id="cdf1">Requests by platform, May and June</A.CardTitle><A.CardDescription>Grouped: the first month's bars carry the names where they clear the bars beside them; the legend goes once all three do</A.CardDescription></A.CardHeader>
+            <A.CardContent>
+              <A.ChartContainer aria-labelledby="cdf1" config={cdfPlatforms} aspect={1.6} locale="en-GB">
+                <A.BarChart data={cdfMonths.slice(-2)} x="month"><A.ChartLegend /></A.BarChart>
+              </A.ChartContainer>
+            </A.CardContent>
+          </A.Card>
+          <A.Card>
+            <A.CardHeader><A.CardTitle id="cdf2">Requests by platform, stacked</A.CardTitle><A.CardDescription>Stacked: the last stack's segments carry the names</A.CardDescription></A.CardHeader>
+            <A.CardContent>
+              <A.ChartContainer aria-labelledby="cdf2" config={cdfPlatforms} aspect={1.6} locale="en-GB">
+                <A.BarChart data={cdfMonths} x="month" stack><A.ChartLegend /></A.BarChart>
+              </A.ChartContainer>
+            </A.CardContent>
+          </A.Card>
+        </div>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="cdf3">Daily orders by region</A.CardTitle><A.CardDescription>Six lines: each named at its end while the names fit, inline y labels, and a legend you toggle stays</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="cdf3" config={cdfRegions} aspect={3} locale="en-GB">
+              <A.LineChart data={cdfDays} x="day"><A.ChartLegend content={<A.ChartLegendContent toggle />} /></A.LineChart>
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="cdf4">Requests by platform, as it was</A.CardTitle><A.CardDescription>A chart's own prop still wins: yLabels="gutter" and directLabels={'{false}'}</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="cdf4" config={cdfPlatforms} aspect={3.4} locale="en-GB" yLabels="gutter" directLabels={false}>
+              <A.BarChart data={cdfMonths} x="month"><A.ChartLegend /></A.BarChart>
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+      </div>
+    </A.AltitudeProvider>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

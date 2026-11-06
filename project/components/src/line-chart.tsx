@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { COMPARE_KEY, ChartMarker, ChartRelevance, ChartStatusClip, toTime, useChart, withCompare, type ChartCompare, type ChartConfig, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { COMPARE_KEY, ChartMarker, ChartRelevance, ChartStatusClip, toTime, useChart, withCompare, type ChartCompare, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 
 export interface LineChartProps {
   /** The records, in x order: one per time or value of x. */
@@ -165,7 +165,9 @@ export function linePath(points: Array<[number, number] | null>, curve: 'linear'
  */
 export function LineChart({ curve = 'linear', endLabels, band, compare }: LineChartProps) {
   const { data, series, config, xOf, y, alpha, encode, strokeWidth, patterns, directLabels, height, active, emphasis, status, statusRanges, hasRelevance, relevanceRegions, sinceOld } = useChart();
-  const labelled = endLabels ?? (series.length <= 4 || directLabels);
+  // With directLabels="auto" (#539), more than four lines are labelled too while their labels fit down the plot at 16px.
+  const { autoLabels } = useChart();
+  const labelled = endLabels ?? (series.length <= 4 || directLabels || (autoLabels && series.length * 16 <= height));
   const lines: React.ReactNode[] = [];
   const clip = React.useId().replace(/[^\w-]/g, '');
   const split = statusRanges.pending.length > 0;
@@ -263,10 +265,14 @@ export function LineChart({ curve = 'linear', endLabels, band, compare }: LineCh
   );
 }
 
+/** With directLabels="auto" (#539): every line carries its end label, so a legend that only labels can go. */
+LineChart.chartLabelsAll = (props: Record<string, unknown>, ctx: ChartContextValue): boolean =>
+  (props as unknown as LineChartProps).endLabels !== false && (ctx.series.length <= 4 || ctx.series.length * 16 <= ctx.height);
+
 LineChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): ChartInfo => {
   const p = props as unknown as LineChartProps;
   const labels = Object.values(config).map((c) => c.label);
-  const labelled = p.endLabels ?? labels.length <= 4;
+  const labelled = p.endLabels ?? (labels.length <= 4 || !!props.__autoLabels);
   // The record before (#189), matched by position over the whole record, then windowed with it.
   const cseries = p.compare ? p.compare.series ?? Object.keys(config)[0] : null;
   const src = Array.isArray(p.data) && p.compare && !p.compare.key && p.compare.data && cseries ? withCompare(p.data, p.compare.data, [cseries]) : p.data;

@@ -738,6 +738,188 @@
       "owner": "Altitude maintainers"
     },
     {
+      "id": "ALT-CHART-002",
+      "title": "One axis per plot",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Recharts charts in an Altitude application. Altitude's own charts have one value axis by construction.",
+      "exceptions": [
+        "A second YAxis that is hidden and carries no series is still reported: remove it."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-charts"
+      ],
+      "repair": "Two measures of different scale are two charts, small multiples, or indexed to a common base: two scales on one plot invite a correlation the data never made.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-05",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CHART-003",
+      "title": "Bars stand on zero",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Recharts bar charts (a YAxis domain starting at dataMin, auto or a positive number) and Altitude's ChartContainer holding a BarChart with a literal yDomain that leaves out zero.",
+      "exceptions": [
+        "Values where zero isn't meaningful belong in a DotPlot or a line, not bars."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-charts"
+      ],
+      "repair": "Keep zero on a bar chart's value axis: a bar that starts above zero misstates its length.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-05",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CHART-004",
+      "title": "Marks are flat ink",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Recharts marks (a url(#…) gradient fill, a filter, a radius rounding a bar's foot) and Altitude's chart types (a filter or style filter).",
+      "exceptions": [],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-charts"
+      ],
+      "repair": "Draw marks as flat ink in a series colour: no gradient, shadow, glow or sheen, and round only a bar's data end. Depth costs accuracy, and a sheen says press it.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-05",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CHART-005",
+      "title": "Colour does one job",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "A ChartConfig series given accent, a presence hue or a status colour; a Recharts mark coloured var(--accent…) or var(--presence-…); shadcn/ui's --chart-N custom properties set to anything but var(--data-1…6|other).",
+      "exceptions": [
+        "A series that means good or bad may take a status colour in a chart Altitude doesn't draw, with an icon and a word; mark it with altitude-ignore and the reason."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-charts"
+      ],
+      "repair": "Colour series from the data palette (data-1 to data-6, data-other): the accent, presence and status hues already mean something else.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-05",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CHART-006",
+      "title": "Every chart has a name",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Altitude's ChartContainer without title, aria-label or aria-labelledby; a Recharts chart without a title, aria-label or aria-labelledby, or with accessibilityLayer={false}.",
+      "exceptions": [
+        "Props spread onto the chart ({...props}) aren't read and aren't reported.",
+        "A Recharts chart named by a wrapping role=\"img\" element with aria-label: mark it with altitude-ignore and the reason."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-charts",
+        "wcag22"
+      ],
+      "repair": "Name the chart (title, or aria-labelledby pointing at the heading that names it) and keep Recharts' accessibilityLayer on.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#name-role-value",
+        "https://www.w3.org/TR/WCAG22/#non-text-content"
+      ],
+      "reviewedAt": "2026-11-05",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CHART-007",
+      "title": "No decorative entrances",
+      "authority": "altitude-policy",
+      "diagnosticClass": "deterministic",
+      "applicability": "Recharts marks, which animate in on first render unless isAnimationActive is false: a mark without it, with it true, or with a positive animationBegin stagger.",
+      "exceptions": [
+        "isAnimationActive set from an expression (a reduced-motion or first-render hook) isn't reported."
+      ],
+      "maturity": "supported",
+      "evidenceStatus": "engineering-tested",
+      "sources": [
+        "altitude-charts",
+        "wcag22"
+      ],
+      "repair": "Set isAnimationActive={false}, or a value that's false on first render and under reduced motion: a chart is simply there, and nothing grows from the baseline for decoration.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [
+        "https://www.w3.org/TR/WCAG22/#animation-from-interactions"
+      ],
+      "reviewedAt": "2026-11-05",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CHART-008",
+      "title": "A chart that leads a report says one thing first",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "The first Altitude ChartContainer in a file that renders <main>, with no takeaway.",
+      "exceptions": [
+        "A row of equal dashboard cards can do without a takeaway; whether this chart leads a report is a judgment."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-charts"
+      ],
+      "repair": "Give the chart that leads a report a takeaway: the one thing it says, written from the data shown, as a trend or a comparison.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-05",
+      "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CHART-009",
+      "title": "Importance is emphasis",
+      "authority": "altitude-policy",
+      "diagnosticClass": "contextual-review",
+      "applicability": "An Altitude ChartContainer whose inline config has three or more series, with no focus on its chart type and no takeaway.",
+      "exceptions": [
+        "A chart whose series matter equally (a comparison with no lead) needs neither; a config held in a variable isn't counted."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "altitude-charts"
+      ],
+      "repair": "Say which series matters: focus on the chart type keeps its colour and sets the rest in data-context, and a takeaway names it.",
+      "verification": [
+        "build/checks/source-check.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-05",
+      "owner": "Altitude maintainers"
+    },
+    {
       "id": "ALT-COPY-001",
       "title": "Buttons name their outcome, never OK or Submit",
       "authority": "altitude-policy",

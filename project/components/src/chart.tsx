@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cssMs, cx, DevChecksContext, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
+import { ChartDefaultsContext, cssMs, cx, DevChecksContext, Icons, riseDelay, useDepth, useIsoLayoutEffect, usePresence } from './core';
 import { Button, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from './controls';
 import { useDrilldown } from './nav';
 import { DataTable } from './collections';
@@ -197,8 +197,13 @@ export interface ChartContextValue {
   encode: (seriesKey: string, d?: ChartDatum) => ChartEncoding;
   /** Patterns are on: the `patterns` prop, forced colours or print. */
   patterns: boolean;
-  /** Label series directly at their marks, not only in a legend: on under forced colours and in print. */
+  /** Label series directly at their marks, not only in a legend: on under forced colours and in print, or with directLabels. */
   directLabels: boolean;
+  /**
+   * directLabels="auto" (#539): label series at their marks where there's room (a line's ends, the first group of
+   * grouped bars, the last stack's segments). A chart type that labels every series this way says so with chartLabelsAll.
+   */
+  autoLabels: boolean;
   /** Line width (2, or 3 under contrast="more"), and the gap between adjacent marks (2, or 3). */
   strokeWidth: number;
   gap: number;
@@ -420,6 +425,8 @@ type ChartChild = {
   chartMove?: (props: Record<string, unknown>, ctx: ChartContextValue, index: number, e: React.KeyboardEvent) => number | null;
   /** The box a record's mark fills, in plot coordinates (a cell), so the keyboard's focus ring takes its shape. */
   chartBox?: (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum) => [number, number, number, number] | null;
+  /** With directLabels="auto": whether the chart labels every shown series at its marks, so a legend that only labels can go. */
+  chartLabelsAll?: (props: Record<string, unknown>, ctx: ChartContextValue) => boolean;
   /** A record's whole name for screen readers, instead of "x, series, value". */
   chartName?: (props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum) => string;
   /** The readout for a record, instead of a row per series. */
@@ -1035,6 +1042,12 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
    * chart it takes the place of the "Updated 12:04" caption, its time the last update unless you give `asOf`.
    */
   source?: DataSource;
+  /**
+   * Label series at their marks rather than only in a legend (#539). 'auto': where there's room (a line's ends, the
+   * first group of grouped bars, the last stack's segments), and a legend that only labels is dropped once every series
+   * is labelled. true: always, as under forced colours. Default false, or the provider's charts.directLabels.
+   */
+  directLabels?: boolean | 'auto';
 }
 /** Internal: how the loading wrapper tells the frame about held updates. */
 interface ChartFrameLive { queued?: boolean; onHold?: (held: boolean) => void; pausedNow?: boolean; setPaused?: (paused: boolean) => void; }
@@ -1095,7 +1108,8 @@ function useSeriesFade(targets: Record<string, number>, plotRef: React.RefObject
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
   zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
-  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, scope: scopeProp, source, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, scope: scopeProp, source, directLabels: directLabelsProp = false, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
+  const defaults = React.useContext(ChartDefaultsContext);
   const id = React.useId();
   const plotRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
@@ -1142,7 +1156,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const hidden = legendOpts.hidden ?? hiddenOwn;
   const setHidden = (next: string[]) => { legendOpts.onHiddenChange?.(next); if (legendOpts.hidden === undefined) setHiddenOwn(next); };
   const shownConfig = hidden.length ? Object.fromEntries(Object.entries(config).filter(([k]) => !hidden.includes(k))) : config;
-  const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(childProps, shownConfig) : {};
+  // directLabels="auto" (#539) reaches the chart type's layout as a prop, so it can keep room for the labels.
+  const infoProps = directLabelsProp === 'auto' ? { ...childProps, __autoLabels: true } : childProps;
+  const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(infoProps, shownConfig) : {};
   // Inline y labels (#193) sit above their gridlines, so the top one needs room above the plot.
   const inlineY = yLabels === 'inline' && axes && !info.plot && info.layout !== 'horizontal';
   const TOP = TOP_GAP + (info.top ?? 0) + (inlineY ? 14 : 0);
@@ -1297,7 +1313,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   };
   // Banking (#194): the data area's width ÷ height that sets the segments at 45° on average. Read from the shown series
   // over the y axis's domain, and kept while values glide: only new x values, which cross-fade as a new chart, change it.
-  const banked = (aspect === 'banked' || (aspect == null && info.aspect === 'banked')) && height == null;
+  // The provider's aspect="banked" (#539) applies to line charts only; every other chart keeps its own aspect.
+  const bankDefault = aspect == null && defaults.aspect === 'banked' && info.kind === 'Line chart';
+  const banked = (aspect === 'banked' || (aspect == null && (info.aspect === 'banked' || bankDefault))) && height == null;
   const xSig = banked ? data.map((d) => String(d[xKey])).join('|') + '/' + series.map((s) => s.key).join('|') : '';
   const bankRatio = React.useMemo(() => {
     if (!banked) return null;
@@ -1744,7 +1762,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       width: pw, height: ph, x, y, xOf, ground, data: frame.rows.map((r) => r.d), xKey, config, series: frame.series,
       alpha: (d, key) => (d ? rowAlpha(d) : 1) * (key ? (frame.seriesAlpha.get(key) ?? 1) * (scopeFade[key] ?? 1) : 1),
       format: (key, v) => (frame.series.find((s) => s.key === key)?.format ?? fmtY)(v),
-      formatX, horizontal, encode, patterns, directLabels: env.forced || env.print,
+      formatX, horizontal, encode, patterns, directLabels: env.forced || env.print || directLabelsProp === true, autoLabels: directLabelsProp === 'auto',
       emphasis,
       active: activeIdx !== null ? frame.rows[activeIdx]?.d ?? null : null,
       setActive: (i) => show(i),
@@ -1887,6 +1905,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // Where the data came from (#533); a live chart's last update is its time unless the author gives one.
   const src: DataSource | undefined = source ? { ...source, asOf: source.asOf ?? (live && updatedAt !== null ? updatedAt : undefined) } : undefined;
   const sourceWords = sourceSentence(src, locale);
+  // Every series labelled at its marks (#539): a legend that only labels says nothing more, so it goes; one you toggle stays.
+  const legendDropped = directLabelsProp === 'auto' && !!legendEl && !legendOpts.toggle && !!childType?.chartLabelsAll && W > 0 && childType.chartLabelsAll(infoProps, top.ctx);
   const countText = filtered ? (countLabel ?? ((m: number, n: number) => `${m} of ${n} match`))(matchCount, data.length) : '';
   // References and annotations are read after the summary, written or generated: "1 annotation: v2 launch, Mar 4, 2026."
   const overlayWords = (() => {
@@ -2172,7 +2192,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
       style.left = top.left + px + (side === 'left' ? -6 : 6); style.top = TOP + Math.max(0, py - 16);
     } else if (horizontal) { side = at > (H - TOP - bottom) / 2 ? 'above' : 'below'; style.right = 4; style.top = TOP + at; }
     else { side = top.left + at > W / 2 ? 'left' : 'right'; style.left = top.left + at; style.top = TOP; }
-    const content = tipEl?.props.content ?? <ChartTooltipContent indicator={own?.indicator} />;
+    const content = tipEl?.props.content ?? <ChartTooltipContent indicator={own?.indicator ?? defaults.indicator} />;
     return (
       <div className="alt-chart-readout" aria-hidden="true" data-state={tipState} data-side={side} data-warm={warmTip ? '' : undefined} style={style}>
         {React.cloneElement(content, { label: own ? own.label : d[xKey], payload, formatX: own ? String : formatX, note: (() => { const st = statusOf(d); const cited = citeOn && citeOn.span && data[citeOn.end] && rowKey(data[citeOn.end]) === rowKey(d) ? `Cited: ${citeOn.short}, ${citeOn.words}` : ''; const words = [cited, st ? CHART_STATUS_WORDS[st] : '', relevanceOf(d) === 'miss' && !selecting ? 'Not matching' : ''].filter(Boolean); return words.length ? words.join(', ') : undefined; })(),
@@ -2435,7 +2455,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
             <span className="alt-sr" aria-live="polite">{said}</span>
           </div>
         )}
-        {legendEl && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
+        {legendEl && !legendDropped && React.cloneElement(legendEl.props.content ?? <ChartLegendContent />, {
           items: allSeries.map((s) => { const e = encode(s.key); return { key: s.key, label: s.label, fill: e.fill, stroke: e.stroke, dash: e.dash, marker: e.marker, hidden: hidden.includes(s.key), context: e.context, highlighted: !!focusKeys && !e.context }; }),
           swatch: info.swatch ?? 'rect',
           onToggle: (key: string) => setHidden(hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]),
@@ -2467,7 +2487,11 @@ function settledValue(p: PromiseLike<unknown>) { return settledValues.get(p as o
  * promise (or `refreshing`) while data shows: the old chart stays, at half strength after dur-grace. A rejected
  * promise goes to your error boundary.
  */
-export function ChartContainer(props: ChartContainerProps) {
+export function ChartContainer(given: ChartContainerProps) {
+  // The provider's chart defaults (#539) fill the props a chart leaves unset; a prop on the chart wins.
+  const defaults = React.useContext(ChartDefaultsContext);
+  const props: ChartContainerProps = { ...given };
+  for (const k of ['yLabels', 'patterns', 'locale', 'tooltip', 'views', 'directLabels'] as const) if (props[k] === undefined && defaults[k] !== undefined) (props as unknown as Record<string, unknown>)[k] = defaults[k];
   const kids = React.Children.toArray(props.children).filter(React.isValidElement) as React.ReactElement<Record<string, unknown>>[];
   const chartChild = kids.find((k) => typeof k.type !== 'string' && (k.type as ChartChild).chartInfo);
   const fromChild = !('data' in props) && !!chartChild && 'data' in chartChild.props;

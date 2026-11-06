@@ -27,6 +27,21 @@ export interface CustomScheme {
 /** The status vocabulary Badge and Alert share. Each tone pairs its colour with an icon or word, so it never relies on colour alone. */
 export type Tone = 'neutral' | 'accent' | 'positive' | 'caution' | 'critical';
 
+/** Chart defaults an AltitudeProvider sets for every chart inside it. Each is the ChartContainer prop of the same name. */
+export interface ChartDefaults {
+  /** 'inline' runs the plot full width with labels above their gridlines. Default 'gutter'. */
+  yLabels?: 'gutter' | 'inline';
+  /** 'banked' banks line charts to 45°; other charts keep their aspect. */
+  aspect?: 'banked';
+  /** 'auto': series named at their marks where there's room, and a legend that only labels dropped once every series is named. true: always. Default false. */
+  directLabels?: boolean | 'auto';
+  patterns?: boolean;
+  locale?: string;
+  tooltip?: boolean;
+  views?: boolean;
+  /** The readout's series indicator. Default 'line'. */
+  indicator?: 'line' | 'dot';
+}
 export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivElement> {
   /** A built-in scheme, the name of your own [data-theme] block, or a CustomScheme (which warns in the console if it breaks the invariants). Omit to inherit the scheme set on <html data-theme>. */
   scheme?: Scheme | CustomScheme;
@@ -48,6 +63,8 @@ export interface AltitudeProviderProps extends React.HTMLAttributes<HTMLDivEleme
   approach?: boolean;
   /** How content still on its way waits (#343). 'sweep' (default): light passes over each imprint. 'breath' (experimental): imprints breathe in depth on one page clock, a swell crossing the view; raised content (Await settle="raised") rises past its rest and settles, flush content fills past the ground, and a card's parts land together. Set it on the outer provider: nested providers inherit it and can't turn it off. */
   loading?: 'sweep' | 'breath';
+  /** Chart defaults for every chart inside: the guide's recommended settings set once for an app. A prop on a chart still wins; a nested provider overrides key by key. Without it every default is as before. Recommended: charts={{ yLabels: 'inline', directLabels: 'auto' }}. */
+  charts?: ChartDefaults;
   /** The whole app is in a mode (test mode, viewing as a customer, read-only): a flush strip naming it, a 2px viewport frame, and a plate in every Dialog and Sheet. */
   mode?: AppMode;
   /** Development checks: warns when more than one primary Button is visible in one view (law 1). Default: on when process.env.NODE_ENV isn't 'production'. */
@@ -1894,6 +1911,8 @@ export interface ChartContextValue {
   patterns: boolean;
   /** Label series directly at their marks: on under forced colours and in print. */
   directLabels: boolean;
+  /** directLabels="auto": label series at their marks where there's room. */
+  autoLabels: boolean;
   /** Line width (2, or 3 under contrast="more"), and the gap between adjacent marks (2, or 3). */
   strokeWidth: number;
   gap: number;
@@ -2021,6 +2040,8 @@ export interface ChartContainerProps extends Omit<React.HTMLAttributes<HTMLEleme
   scope?: false | ChartScopeView;
   /** Where the data came from, when it was read and how many records: one flush line under the plot, "Source: Billing database · 1,954 records · Updated 2 minutes ago", "Stale" past `staleAfter`. The summary ends with it. In a live chart it replaces the "Updated" caption. */
   source?: DataSource;
+  /** Label series at their marks rather than only in a legend. 'auto': where there's room (a line's ends, the first group of grouped bars, the last stack's segments), and a legend that only labels is dropped once every series is named. true: always, as under forced colours. Default false, or the provider's charts.directLabels. */
+  directLabels?: boolean | 'auto';
 }
 export interface ChartEmpty { title?: React.ReactNode; description?: React.ReactNode; action?: React.ReactNode; }
 export interface ChartTooltipItem { key: string; label: string; value: number; /** The value as its series formats it. */ text: string; color: string; dash?: string; /** An uncertainty band's row, keyed by a block of its fill. */ range?: boolean; }

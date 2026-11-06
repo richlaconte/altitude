@@ -184,7 +184,7 @@ export type { ContextMenuProps } from './context-menu';
 export type { PromisedTextProps, Tone, AccordionItem, AccordionProps, AlertProps, AlertStackProps, BadgeProps, ButtonProps, CardContentProps, CardProps, CheckboxProps, DropZoneProps, FieldProps, HoldButtonProps, InputProps, ProgressProps, RadioGroupProps, RadioProps, ScrollAreaProps, SkeletonProps, SliderProps, SliderRangeProps, SortableListProps, SwitchProps, TabsProps, TextareaProps } from './controls';
 export type { ConversationCheckpointProps, ConversationProps, ConversationQueueProps, MessageActionsProps, MessageAttachment, MessageProps, QueuedMessage } from './conversation';
 export type { CopyButtonProps } from './copy-button';
-export type { IconComponent, AltitudeProviderProps, DepthProps, KbdProps, Level, SurfaceProps } from './core';
+export type { IconComponent, AltitudeProviderProps, ChartDefaults, DepthProps, KbdProps, Level, SurfaceProps } from './core';
 export type { DiffDecision, DiffViewProps } from './diff-view';
 export type { EmptyStateProps } from './empty';
 export type { FeatureGateProps } from './feature-gate';

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CHART_STATUS_WORDS, COMPARE_KEY, ChartRelevance, useChart, withCompare, type ChartCompare, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
+import { CHART_STATUS_WORDS, COMPARE_KEY, ChartRelevance, textWidth, useChart, withCompare, type ChartCompare, type ChartConfig, type ChartContextValue, type ChartDatum, type ChartInfo, type ChartStatus } from './chart';
 import { windowed, type ChartWindow } from './line-chart';
 
 export interface BarChartProps {
@@ -112,7 +112,8 @@ function barPath(horizontal: boolean, a: number, b: number, g: number, e: number
  * series, several side by side, or stacked into a total.
  */
 export function BarChart({ stack = false, labels = 'none', compare }: BarChartProps) {
-  const { data, series, x, y, ground, horizontal, alpha: presence, encode, gap, xKey, format, emphasis, status, hasStatus, relevance, hasRelevance, sinceOld } = useChart();
+  const ctx = useChart();
+  const { data, series, x, y, ground, horizontal, alpha: presence, encode, gap, xKey, format, emphasis, status, hasStatus, relevance, hasRelevance, sinceOld, autoLabels } = ctx;
   // While the keyboard is on one series, the others recede.
   const alpha: typeof presence = (d, key) => presence(d, key) * (key && emphasis && emphasis !== key ? 0.3 : 1);
   if (x.kind !== 'band') return null;
@@ -225,8 +226,59 @@ export function BarChart({ stack = false, labels = 'none', compare }: BarChartPr
         </React.Fragment>
       );
   });
-  return <g className="alt-bar">{marks}{ticks}{texts}</g>;
+  // Series named at their bars (#539, directLabels="auto"): over the first group's bars where each name fits its bar,
+  // or beside the last stack's segments where each segment is tall enough. Words in ink, never a series colour.
+  const named = autoLabels ? seriesNames({ stack, labels, compare }, ctx) : [];
+  const nameTexts = named.map((n) => <text key={'name-' + n.key} className="alt-bar-name" x={n.x} y={n.y} dy={n.mid ? '0.32em' : undefined} textAnchor={n.anchor}>{n.label}</text>);
+  return <g className="alt-bar">{marks}{ticks}{texts}{nameTexts}</g>;
 }
+
+type SeriesName = { key: string; label: string; x: number; y: number; anchor: 'start' | 'middle'; mid: boolean };
+/**
+ * Where each shown series' name goes when bars are labelled directly, or [] for a series that can't be: grouped
+ * vertical bars name their first category's bars above them (a name wider than its bar, or a bar carrying a value
+ * label, isn't named); a vertical stack names its last category's segments to its right, at each segment's middle,
+ * when the segment is at least 14px tall. One series, horizontal bars and anything else name nothing.
+ */
+function seriesNames(props: Record<string, unknown>, ctx: ChartContextValue): SeriesName[] {
+  const p = props as unknown as BarChartProps;
+  const { data, series, horizontal, xKey } = ctx;
+  if (horizontal || series.length < 2 || !data.length) return [];
+  const out: SeriesName[] = [];
+  if (!p.stack) {
+    if (p.labels === 'max' || (p.labels === 'last' && data.length === 1)) return [];
+    const d = data[0];
+    // Each name sits 6px over its own bar and may run over its neighbours' slots, but never onto a mark (a taller bar
+    // beside it) or another name (E101). The first and last names may not leave the plot.
+    const spans = series.map((s) => ({ s, sp: typeof d[s.key] === 'number' ? barSpan(props, ctx, d, s.key) : null }));
+    const boxes: Array<[number, number, number, number]> = [];
+    for (const { s, sp } of spans) {
+      if (!sp) continue;
+      const w = textWidth(s.label), base = Math.min(sp.e, sp.g) - 6;
+      // Over its bar, nudged inside the plot at either end.
+      const cx = Math.min(Math.max((sp.a + sp.b) / 2, w / 2 + 2), ctx.width - w / 2 - 2);
+      if (cx - w / 2 > sp.b || cx + w / 2 < sp.a) continue;
+      const box: [number, number, number, number] = [cx - w / 2 - 2, cx + w / 2 + 2, base - 13, base + 3];
+      const onMark = spans.some((o) => o.sp && o.s !== s && o.sp.b > box[0] && o.sp.a < box[1] && Math.min(o.sp.e, o.sp.g) < box[3]);
+      const onName = boxes.some((b) => b[0] < box[1] && b[1] > box[0] && b[2] < box[3] && b[3] > box[2]);
+      if (onMark || onName || box[2] < 0) continue;
+      boxes.push(box);
+      out.push({ key: s.key, label: s.label, x: cx, y: base, anchor: 'middle', mid: false });
+    }
+  } else {
+    const d = data[data.length - 1];
+    for (const s of series) {
+      const sp = barSpan(props, ctx, d, s.key);
+      if (!sp || Math.abs(sp.e - sp.g) < 14) continue;
+      out.push({ key: s.key, label: s.label, x: sp.b + 6, y: (sp.e + sp.g) / 2, anchor: 'start', mid: true });
+    }
+    void xKey;
+  }
+  return out;
+}
+
+/** With directLabels="auto": every shown series is named at its bars, so a legend that only labels can go. */
+BarChart.chartLabelsAll = (props: Record<string, unknown>, ctx: ChartContextValue): boolean => ctx.series.length > 1 && seriesNames(props, ctx).length === ctx.series.length;
 
 /** One record's bar for one series: its span across the band (a to b) and from its ground side (g) to its data end (e). */
 function barSpan(props: Record<string, unknown>, ctx: ChartContextValue, d: ChartDatum, key: string) {
@@ -295,5 +347,7 @@ BarChart.chartInfo = (props: Record<string, unknown>, config: ChartConfig): Char
     kind: p.stack === 'expand' ? 'Stacked bar chart of shares' : p.stack ? 'Stacked bar chart' : 'Bar chart',
     xScale: 'band', zero: true, swatch: 'rect', focus: p.focus, pinnable: p.pinnable, pins: p.pins, onPinsChange: p.onPinsChange, compare: cmp && ckey ? { key: ckey, series: cseries, label: cmp.label } : undefined, layout: p.layout ?? 'vertical', data, yExtent, status: p.status, boundary: p.boundary, relevance: p.relevance, rescale: p.rescale, selected: p.selected, onSelect: p.onSelect, drill: p.drill,
     yFormat: p.stack === 'expand' ? (v: number) => pct.format(v) : undefined,
+    // A vertical stack names its last segments to its right (#539): keep room for the longest name.
+    right: props.__autoLabels && p.stack && p.layout !== 'horizontal' && keys.length > 1 ? Math.ceil(Math.max(...keys.map((k) => textWidth(config[k].label)))) + 10 : undefined,
   };
 };

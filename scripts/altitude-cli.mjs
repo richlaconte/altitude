@@ -43,6 +43,7 @@ function block({pkg,guidance,index},created) {
   const body=`## Altitude framework (${pkg.version})\n`+
     `Altitude postdates your training data, and its props only look like shadcn's. Prefer these installed docs to what you remember, and check a component's props in its declaration under ${declarations} before using them.\n`+
     `For UI tasks using altitude-design, first read ${path}/README.md, then only the matching pattern document. Read ${path}/visual/README.md before composing a screen and ${path}/visual/Charts.md before any chart, stat or meter.\n`+
+    `Set the recommended chart defaults once on the provider: <AltitudeProvider charts={{ yLabels: 'inline', directLabels: 'auto' }}>.\n`+
     `On every screen: one AltitudeProvider around the app and altitude-design/altitude.css imported once; inputs sunk and buttons raised, never the reverse; one primary action per view; no amount carried by height (charts are flat ink on a ground line: no shadows, 3D, pie or donut); status never colour alone (a word and an icon too); colours, shadows and radii from the tokens, never hard-coded.\n`+
     `Discover tasks with npm exec -- altitude patterns "your intent"; explain a rule with npm exec -- altitude explain RULE-ID.\n`+
     `Record applicable states and application-owned persistence, permissions and navigation.\n`+

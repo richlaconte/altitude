@@ -11,6 +11,9 @@ import { RULES, scan } from '../../scripts/source-check.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const app = (body) => `import 'altitude-design/altitude.css';\nimport { AltitudeProvider, Button, Input } from 'altitude-design';\nexport function App() { return <AltitudeProvider>${body}</AltitudeProvider>; }\n`;
+// A Recharts file and an Altitude file, as generated apps write them.
+const rc = (body) => `import { BarChart, LineChart, Bar, Line, YAxis } from 'recharts';\nexport function Chart({ d }) { return (\n${body}\n); }\n`;
+const alt = (body) => `import { ChartContainer, BarChart, LineChart, CardTitle, Badge } from 'altitude-design';\nexport function App({ d, c, props }) { return (<>\n${body}\n</>); }\n`;
 const tokenNames = new Set([...readFileSync(resolve(root, 'project/tokens.json'), 'utf8').matchAll(/"(ink|accent|surface-[\w-]+|line)"/g)].map((m) => m[1]).concat(['ink', 'accent']));
 
 // [rule, files that must produce it, files that must not]
@@ -40,6 +43,52 @@ const cases = [
   ['ALT-SETUP-003',
     { 'main.tsx': "import 'altitude-design/altitude.css';\nimport * as A from 'altitude-design';\nexport const App = () => <A.Button>Save changes</A.Button>;" },
     { 'main.tsx': "import 'altitude-design/altitude.css';\nimport * as A from 'altitude-design';\nroot.render(<A.AltitudeProvider><App/></A.AltitudeProvider>);" }],
+  // The chart rules (#540). Recharts files are written as generated apps write them, shadcn/ui's ChartContainer included.
+  ['ALT-CHART-002',
+    { 'Chart.tsx': rc('<LineChart data={d} title="Errors and latency">\n  <YAxis yAxisId="left" />\n  <YAxis yAxisId="right" orientation="right" />\n  <Line dataKey="errors" yAxisId="left" isAnimationActive={false} />\n</LineChart>') },
+    { 'Chart.tsx': rc('<LineChart data={d} title="Errors">\n  <YAxis />\n  <Line dataKey="errors" isAnimationActive={false} />\n</LineChart>') }],
+  ['ALT-CHART-003',
+    { 'Chart.tsx': rc('<BarChart data={d} aria-label="Revenue">\n  <YAxis domain={["dataMin", "dataMax"]} />\n  <Bar dataKey="v" isAnimationActive={false} />\n</BarChart>') },
+    { 'Chart.tsx': rc('<BarChart data={d} aria-label="Revenue">\n  <YAxis domain={[0, "dataMax"]} />\n  <Bar dataKey="v" isAnimationActive={false} />\n</BarChart>'), 'Dots.tsx': rc('<LineChart data={d} title="Temp">\n  <YAxis domain={["dataMin", "dataMax"]} />\n  <Line dataKey="t" isAnimationActive={false} />\n</LineChart>') }],
+  ['ALT-CHART-003',
+    { 'App.tsx': alt('<ChartContainer title="Seats" config={c} yDomain={[40, 100]}>\n  <BarChart data={d} x="plan" />\n</ChartContainer>') },
+    { 'App.tsx': alt('<ChartContainer title="Temperature" config={c} yDomain={[40, 100]}>\n  <LineChart data={d} x="day" />\n</ChartContainer>') }],
+  ['ALT-CHART-004',
+    { 'Chart.tsx': rc('<BarChart data={d} title="Revenue">\n  <defs><linearGradient id="g" /></defs>\n  <Bar dataKey="v" fill="url(#g)" isAnimationActive={false} />\n</BarChart>') },
+    { 'Chart.tsx': rc('<BarChart data={d} title="Revenue">\n  <Bar dataKey="v" fill="var(--data-1)" radius={[4, 4, 0, 0]} isAnimationActive={false} />\n</BarChart>') }],
+  ['ALT-CHART-004',
+    { 'Chart.tsx': rc('<BarChart data={d} title="Revenue">\n  <Bar dataKey="v" radius={8} isAnimationActive={false} />\n</BarChart>') },
+    { 'Chart.tsx': rc('<BarChart data={d} title="Revenue">\n  <Bar dataKey="v" radius={[8, 8, 0, 0]} isAnimationActive={false} />\n</BarChart>') }],
+  ['ALT-CHART-004',
+    { 'App.tsx': alt('<ChartContainer title="Seats" config={c}>\n  <BarChart data={d} x="plan" style={{ filter: "drop-shadow(0 2px 4px var(--ink))" }} />\n</ChartContainer>') },
+    { 'App.tsx': alt('<ChartContainer title="Seats" config={c}>\n  <BarChart data={d} x="plan" />\n</ChartContainer>') }],
+  ['ALT-CHART-005',
+    { 'App.tsx': alt('<ChartContainer title="Seats" config={{ seats: { label: "Seats", color: "accent" } }}>\n  <BarChart data={d} x="plan" />\n</ChartContainer>') },
+    { 'App.tsx': alt('<ChartContainer title="Seats" config={{ seats: { label: "Seats", color: "data-2" } }}>\n  <BarChart data={d} x="plan" />\n</ChartContainer>\n<Badge tone="critical">Failed</Badge>') }],
+  ['ALT-CHART-005',
+    { 'globals.css': ':root {\n  --chart-1: oklch(0.646 0.222 41.116);\n  --chart-2: var(--accent);\n}' },
+    { 'globals.css': ':root {\n  --chart-1: var(--data-1);\n  --chart-2: var(--data-2);\n}' }],
+  ['ALT-CHART-005',
+    { 'Chart.tsx': rc('<LineChart data={d} title="Signups">\n  <Line dataKey="v" stroke="var(--accent)" isAnimationActive={false} />\n</LineChart>') },
+    { 'Chart.tsx': rc('<LineChart data={d} title="Signups">\n  <Line dataKey="v" stroke="var(--data-1)" isAnimationActive={false} />\n</LineChart>') }],
+  ['ALT-CHART-006',
+    { 'App.tsx': alt('<ChartContainer config={c}>\n  <BarChart data={d} x="plan" />\n</ChartContainer>') },
+    { 'App.tsx': alt('<CardTitle id="s">Seats</CardTitle>\n<ChartContainer aria-labelledby="s" config={c}>\n  <BarChart data={d} x="plan" />\n</ChartContainer>\n<ChartContainer title="Seats" config={c}><BarChart data={d} x="plan" /></ChartContainer>\n<ChartContainer {...props} />') }],
+  ['ALT-CHART-006',
+    { 'Chart.tsx': rc('<BarChart data={d} accessibilityLayer={false} title="Revenue">\n  <Bar dataKey="v" isAnimationActive={false} />\n</BarChart>') },
+    { 'Chart.tsx': rc('<BarChart data={d} accessibilityLayer title="Revenue">\n  <Bar dataKey="v" isAnimationActive={false} />\n</BarChart>') }],
+  ['ALT-CHART-007',
+    { 'Chart.tsx': rc('<BarChart data={d} title="Revenue">\n  <Bar dataKey="v" />\n</BarChart>') },
+    { 'Chart.tsx': rc('<BarChart data={d} title="Revenue">\n  <Bar dataKey="v" isAnimationActive={false} />\n  <Bar dataKey="w" isAnimationActive={!reduced && !firstRender} />\n</BarChart>') }],
+  ['ALT-CHART-007',
+    { 'Chart.tsx': rc('<BarChart data={d} title="Revenue">\n  <Bar dataKey="v" isAnimationActive animationBegin={300} />\n</BarChart>') },
+    { 'Chart.tsx': rc('<BarChart data={d} title="Revenue">\n  {/* altitude-ignore: ALT-CHART-007 a deliberate onboarding reveal */}\n  <Bar dataKey="v" />\n</BarChart>') }],
+  ['ALT-CHART-008',
+    { 'Report.tsx': alt('<main>\n  <ChartContainer title="Daily signups" config={c}>\n    <LineChart data={d} x="day" />\n  </ChartContainer>\n</main>') },
+    { 'Report.tsx': alt('<main>\n  <ChartContainer title="Daily signups" takeaway="Signups doubled after the pricing change" config={c}>\n    <LineChart data={d} x="day" />\n  </ChartContainer>\n</main>'), 'Dashboard.tsx': alt('<section>\n  <ChartContainer title="Daily signups" config={c}><LineChart data={d} x="day" /></ChartContainer>\n</section>') }],
+  ['ALT-CHART-009',
+    { 'App.tsx': alt('<ChartContainer title="Requests" config={{ eu: { label: "EU" }, us: { label: "US" }, apac: { label: "APAC" } }}>\n  <LineChart data={d} x="day" />\n</ChartContainer>') },
+    { 'App.tsx': alt('<ChartContainer title="Requests" config={{ eu: { label: "EU" }, us: { label: "US" }, apac: { label: "APAC" } }}>\n  <LineChart data={d} x="day" focus={["eu"]} />\n</ChartContainer>') }],
   ['ALT-COPY-001', { 'App.tsx': app('<Button variant="primary">Submit</Button>') }, { 'App.tsx': app('<Button variant="primary">Send invite</Button>') }],
   ['ALT-COPY-001', { 'App.tsx': app('<A.Button variant="primary">OK</A.Button>') }, { 'App.tsx': app('<A.Button variant="primary">Save changes</A.Button>') }],
   ['ALT-PRIMARY-001',

@@ -10,7 +10,7 @@ It runs the **approach** tracker too, which lets openings react to a pointer bef
 
 **Your own scheme.** `scheme` also takes a custom scheme: `{ name, base, tokens }`, your colour and shadow tokens laid over a built-in scheme (`base`, which supplies anything you leave out and the light or dark handling). The provider scopes them to itself in a stylesheet, so they nest like the built-in schemes and still give way to high contrast. If the scheme breaks the invariants in [Theming](../../Theming.md) (the surface ladder, contrast on every surface, the data palette's gates), it says which in a console warning; `checkScheme(el, { include: ['core', 'data'] })` runs the same test in your own tests. A plain string names your own `[data-theme="…"]` block instead.
 
-**You provide:** `scheme` (a built-in name, your own, a custom scheme, or nothing, to inherit `data-theme` from the page), optionally `accent` as a hex color, `motion`, `approach`, `loading="breath"` to try the experimental breathing imprints (see `Await`), and `recede={false}` if your layout can't tolerate a transform on the app root (for example a `position: fixed` header that must not scale).
+**You provide:** `scheme` (a built-in name, your own, a custom scheme, or nothing, to inherit `data-theme` from the page), optionally `accent` as a hex color, `motion`, `approach`, `loading="breath"` to try the experimental breathing imprints (see `Await`), `charts` for chart defaults (below), and `recede={false}` if your layout can't tolerate a transform on the app root (for example a `position: fixed` header that must not scale).
 
 - Do nest a provider to theme a region differently: a `nightfall` sidebar in a `daylight` app.
 - Do pass your brand color as `accent`; legibility is derived for you, and the chart palette's first series and magnitude ramp follow it (the other series re-order so neighbours stay apart for colour-blind readers).
@@ -45,6 +45,8 @@ Nothing moves: a mode is there from load. Entering it is announced once, politel
 ## One primary per view
 
 Law 1 says the primary action rests at level 2, one per view. With `devChecks` (on by default when `process.env.NODE_ENV` isn't `'production'`), a `Button variant="primary"` registers with the provider while it's mounted. When more than one *visible* primary sits in the same view, one grouped warning names them and law 1. The page is one view, and each `Dialog`, `Sheet` and `Popover` is its own. Wrap independent parts (cards on a dashboard, each with its own task) in `<PrimaryScope>` to make them views of their own. The check is a warning only, it's gone from production builds, and the rule is `ALT-VISUAL-002` (`altitude explain ALT-VISUAL-002`). `PageHeader`'s `primary` slot is where a page's one primary belongs.
+
+**Chart defaults.** `charts={{ yLabels: 'inline', directLabels: 'auto' }}` sets the guide's recommended chart settings once for the app, instead of on every chart (#539). Each key is the `ChartContainer` prop of the same name: `yLabels`, `aspect` (`'banked'`, which applies to line charts only), `directLabels` (`'auto'`, `true` or `false`), `patterns`, `locale`, `tooltip`, `views`, and the readout's `indicator`. A prop on a chart still wins. A nested provider overrides key by key and inherits the rest. Without `charts`, every chart default is as before. The package doesn't flip these defaults itself until people have used them (E103); this is how an app opts in.
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
 ## Example

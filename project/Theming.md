@@ -195,7 +195,7 @@ On `:root` alone, a `nightfall` panel inside a `daylight` page would draw daylig
 
 Delete shadcn's own `--chart-*` values, in `:root` and `.dark` alike. They aren't checked against Altitude's grounds, its status hues or its reserved hues (`accent`, `presence-*`), and the five Altitude slots are (see **The data palette**). A sixth series is `data-6`; past that, fold into `data-other`.
 
-**Recharts props that keep Altitude's rules.** The rules are in [Charts](Charts.md) ("The rules"). These are documentation, not code; set them on your own charts:
+**Recharts props that keep Altitude's rules.** The rules are in [Charts](Charts.md) ("The rules"). Set these on your own charts; `altitude check` reports the ones it can read from source (`ALT-CHART-001` to `-007`):
 
 | Rule | Recharts |
 |---|---|
@@ -204,8 +204,9 @@ Delete shadcn's own `--chart-*` values, in `:root` and `.dark` alike. They aren'
 | Flat marks, rounded only at the data end | `<Bar radius={[4, 4, 0, 0]} />`; no `<defs>` gradients on `<Area>`, a flat `fill` instead |
 | Readout at level 3 | `<ChartTooltipContent indicator="line" className="bg-popover shadow-lg" />`: `surface-floating` and `elev-3` through the mapping above |
 | Hover is a promise | `cursor={false}` on a bar chart's `<ChartTooltip>` (no band behind the category); on a line or area chart `cursor={{ style: { stroke: 'var(--line-control)' } }}`, the crosshair, and `activeDot={false}` on each `<Line>` and `<Area>` |
+| A name | `title="Visits by platform"` on the chart: Recharts sets it as the SVG's `<title>`, so the chart is named, not only the card's heading |
 | Keyboard | keep `accessibilityLayer` (on by default in Recharts 3): the chart is one tab stop and the arrow keys move the readout |
-| Reduced motion | `isAnimationActive={!prefersReducedMotion}` on every mark, from a `matchMedia('(prefers-reduced-motion: reduce)')` hook of your own |
+| Reduced motion | `isAnimationActive={!prefersReducedMotion}` on every mark, from a `matchMedia('(prefers-reduced-motion: reduce)')` hook of your own; `isAnimationActive={false}` is closer still to rule 7, since a chart is simply there |
 | Text in ink | `tick={{ fill: 'var(--ink-muted)' }}` on each axis, never the series colour |
 
 Three things the example found:

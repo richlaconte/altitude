@@ -74,6 +74,12 @@ execFileSync(process.execPath,[join(root,'build/checks/framework-accessibility.m
  writeFileSync(join(consumer,'src/App.tsx'),page('Submit'));
  let failed=null;try{execFileSync(join(consumer,'node_modules/.bin/altitude'),['check','--json'],{cwd:consumer,encoding:'utf8'});}catch(e){failed=JSON.parse(e.stdout);}
  assert.ok(failed&&!failed.ok&&failed.findings.some(f=>f.ruleId==='ALT-COPY-001'),'installed altitude check reports ALT-COPY-001');
+ // A chart rule (#540): an unnamed ChartContainer fails, and explain resolves the rule from the installed guidance.
+ writeFileSync(join(consumer,'src/Chart.tsx'),`import { ChartContainer, BarChart } from 'altitude-design';\nexport const C=({d})=><ChartContainer config={{v:{label:'Seats'}}}><BarChart data={d} x="plan" /></ChartContainer>;\n`);
+ failed=null;try{execFileSync(join(consumer,'node_modules/.bin/altitude'),['check','--json'],{cwd:consumer,encoding:'utf8'});}catch(e){failed=JSON.parse(e.stdout);}
+ assert.ok(failed&&failed.findings.some(f=>f.ruleId==='ALT-CHART-006'),'installed altitude check reports ALT-CHART-006');
+ assert.match(execFileSync(join(consumer,'node_modules/.bin/altitude'),['explain','ALT-CHART-006'],{cwd:consumer,encoding:'utf8'}),/Every chart has a name/,'installed altitude explain resolves ALT-CHART-006');
+ writeFileSync(join(consumer,'src/Chart.tsx'),`import { ChartContainer, BarChart } from 'altitude-design';\nexport const C=({d})=><ChartContainer title="Seats by plan" config={{v:{label:'Seats'}}}><BarChart data={d} x="plan" /></ChartContainer>;\n`);
  writeFileSync(join(consumer,'src/App.tsx'),page('Save changes'));
  assert.equal(JSON.parse(execFileSync(join(consumer,'node_modules/.bin/altitude'),['check','--json'],{cwd:consumer,encoding:'utf8'})).ok,true,'installed altitude check passes a fixed app');}
 console.log('Packed npm consumer: ESM/CommonJS/NodeNext/Bundler types, chart-themes subpath, assets, guidance, CLI (including check), installed workflow transitions passed.');

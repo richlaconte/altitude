@@ -88,6 +88,24 @@ for (const w of [960, 360]) {
   await page.close();
 }
 
+// The provider's default (#539): AltitudeProvider charts={{ yLabels: 'inline' }} sets every chart inside inline, and a
+// chart's own yLabels still wins.
+{
+  const page = await browser.newPage({ viewport: { width: 960, height: 900 } });
+  await page.goto(`file://${T}p-LineChart-daylight.html`);
+  await page.waitForTimeout(400);
+  const got = await page.evaluate(() => new Promise((done) => {
+    const d = document.createElement('div'); d.style.cssText = 'width:520px'; document.body.prepend(d);
+    const A = window.Altitude, h = React.createElement;
+    const rows = [{ k: '2026-01-01', v: 30 }, { k: '2026-01-02', v: 50 }, { k: '2026-01-03', v: 42 }];
+    const chart = (extra) => h(A.ChartContainer, { title: 'V', config: { v: { label: 'V' } }, ...extra }, h(A.LineChart, { data: rows, x: 'k' }));
+    ReactDOM.createRoot(d).render(h(A.AltitudeProvider, { charts: { yLabels: 'inline' } }, chart({}), chart({ yLabels: 'gutter' })));
+    setTimeout(() => done([...d.querySelectorAll('.alt-chart')].map((f) => f.querySelector('[data-axis="y"]')?.hasAttribute('data-inline') ?? false)), 500);
+  }));
+  expect(got[0] === true && got[1] === false, `the provider's yLabels="inline" reaches a chart, and a chart's own yLabels wins (${got})`);
+  await page.close();
+}
+
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
 await browser.close();
