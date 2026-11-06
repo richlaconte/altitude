@@ -145,6 +145,8 @@ export type { DataSource } from './source-line';
 export type { ChartBrushProps } from './chart-brush';
 export { ChartScope, ChartScopeCaption } from './chart-scope';
 export type { ChartScopeProps, ChartScopeView, ChartScopeValue, ChartScopeWindow } from './chart-scope';
+export { ChartGrid } from './chart-grid';
+export type { ChartGridProps } from './chart-grid';
 export type { AreaChartProps } from './area-chart';
 export { Sparkline } from './sparkline';
 export type { SparklineProps } from './sparkline';

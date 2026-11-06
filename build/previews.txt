@@ -2651,6 +2651,63 @@ function App() {
   );
 }
 
+=== ChartGrid | <!-- @dsCard group="Charts" height=960 subtitle="Small multiples: one panel per service or region, one shared scale, one pointer, one Tab stop" -->
+--- css
+.cg { display: grid; gap: 16px; }
+.cg .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .cg .two { grid-template-columns: 1fr; } }
+--- jsx
+// Two days of error rates for eight services, hourly, as long records: one row per service per hour.
+const cgHours = Array.from({ length: 48 }, (_, i) => new Date(Date.UTC(2026, 10, 3, i)).toISOString());
+const cgServices = ['checkout', 'search', 'payments', 'auth', 'catalog', 'cart', 'shipping', 'email'];
+const cgNames = { checkout: 'Checkout', search: 'Search', payments: 'Payments', auth: 'Auth', catalog: 'Catalog', cart: 'Cart', shipping: 'Shipping', email: 'Email' };
+const cgErrors = cgServices.flatMap((service, k) => cgHours.map((t, i) => ({
+  t, service,
+  rate: +(Math.max(0.05, 0.35 + 0.2 * Math.sin((i + k * 5) / 5) + k * 0.04) + (service === 'checkout' && i >= 30 ? 1.4 + 0.3 * Math.sin(i) : 0)).toFixed(2),
+})));
+const cgPct = (v) => `${v.toFixed(1)}%`;
+// Monthly revenue for three regions an order of magnitude apart, in millions.
+const cgMonths = ['2026-01-01', '2026-02-01', '2026-03-01', '2026-04-01', '2026-05-01', '2026-06-01', '2026-07-01', '2026-08-01', '2026-09-01', '2026-10-01'];
+const cgBase = { na: 42, eu: 18, apac: 2.4 };
+const cgRevenue = Object.keys(cgBase).flatMap((region, k) => cgMonths.map((m, i) => ({ m, region, revenue: +(cgBase[region] * (1 + 0.04 * i + 0.05 * Math.sin(i + k))).toFixed(1) })));
+const cgRegions = { na: 'North America', eu: 'Europe', apac: 'Asia Pacific' };
+const cgMoney = (v) => `$${v.toFixed(1)}M`;
+const cgWide = cgMonths.map((m) => Object.fromEntries([['m', m], ...Object.keys(cgBase).map((r) => [r, cgRevenue.find((d) => d.m === m && d.region === r).revenue])]));
+function App() {
+  return (
+    <div className="cg">
+      <A.Card>
+        <A.CardContent>
+          <A.ChartGrid config={{ rate: { label: 'Error rate', format: cgPct } }} data={cgErrors} x="t" by="service" panelLabel={(v) => cgNames[v]}
+            columns={4} sort="desc" focus={['checkout']} locale="en-GB" yFormat={cgPct} height={96}
+            title="Error rate by service, last 48 hours" takeaway="Checkout is the only service whose errors climbed, from hour 30">
+            <A.LineChart />
+          </A.ChartGrid>
+        </A.CardContent>
+      </A.Card>
+      <div className="two">
+        <A.Card>
+          <A.CardContent>
+            <A.ChartGrid config={{ revenue: { label: 'Revenue', format: cgMoney } }} data={cgRevenue} x="m" by="region" panelLabel={(v) => cgRegions[v]}
+              columns={1} scales="free-y" locale="en-GB" height={112} title="Revenue by region, each on its own scale"
+              description="Asia Pacific is a twentieth of North America, so a shared scale would flatten it: here each panel reads its own ticks.">
+              <A.LineChart />
+            </A.ChartGrid>
+          </A.CardContent>
+        </A.Card>
+        <A.Card>
+          <A.CardHeader><A.CardTitle id="cg3">The same revenue, overlaid</A.CardTitle><A.CardDescription>For contrast: on one axis Asia Pacific's growth is a flat line on the floor.</A.CardDescription></A.CardHeader>
+          <A.CardContent>
+            <A.ChartContainer aria-labelledby="cg3" config={{ na: { label: 'North America', format: cgMoney }, eu: { label: 'Europe', format: cgMoney }, apac: { label: 'Asia Pacific', format: cgMoney } }} aspect={1.4} locale="en-GB" yFormat={cgMoney}>
+              <A.LineChart data={cgWide} x="m" />
+            </A.ChartContainer>
+          </A.CardContent>
+        </A.Card>
+      </div>
+    </div>
+  );
+}
+
 === HoldButton | <!-- @dsCard group="Actions" height=170 subtitle="Commit by pushing through the ground" -->
 --- jsx
 function App() {

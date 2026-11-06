@@ -17,7 +17,7 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
    - **status**: `positive`, `caution`, `critical`, only when the series *means* good or bad, and then with an icon and a word, as status always has.
 
    Colour follows the entity: hiding or filtering a series never repaints the others. **Focus** is the one exception, and it isn't a filter: `focus` is the author's statement of what the chart is about, fixed for the chart rather than toggled by the reader. The focused series or records keep their identity colours and everything else takes one shared neutral, `data-context`, with its words in `ink-muted`; it's said in words too ("Highlighted: EU."), and a change of focus cross-fades. A reader's version is `relevance`, which recedes misses to 35% and repaints nothing, so "the author's context" and "your filter" stay two readings (E105). Text wears `ink` and `ink-muted`, never a series colour. `accent` and the `presence-*` hues stay reserved for what they already mean. `data-1` shares the accent's hue so a chart's first series looks like the product, but it's a different colour from `accent` and isn't a control. The values and their gates are in **Theming** ("The data palette").
-6. **One axis.** No dual-axis charts: two scales on one plot invite a correlation the data never made. Two measures of different scale are two charts, small multiples, or indexed to a common base.
+6. **One axis.** No dual-axis charts: two scales on one plot invite a correlation the data never made. Two measures of different scale are two charts, small multiples (`ChartGrid`), or indexed to a common base. A grid shares one scale across its panels by default, and a panel with its own scale says so.
 7. **Spend changes carefully.** Data that changes glides to its new value at one level, as a re-sort does: it's one change. New data gets an afterglow within the attention budget. Nothing grows from the baseline on first render for decoration; the chart is simply there.
 8. **A chart never travels alone.** As height never travels alone: every chart has a written summary, a keyboard path through its data, a table view, and direct labels or patterns so no series is told apart by colour alone.
 9. **Say one thing first.** A chart that makes a point leads with it: a `takeaway` is the chart's heading ("Cedar deployed nearly three times as often as Delta"), and its title becomes the small label above. Readers fixate on and recall the words at the top, and take away what they say, even against the chart (E102). So the takeaway is authored, never generated: write it from the data shown, as a trend or a comparison rather than a restatement of the encoding ("Deploys by team" is a title, not a takeaway). The application owns its truth, as it owns persistence. A row of equal dashboard cards can do without one; a chart in a report rarely should.
@@ -39,6 +39,7 @@ Choose by the job the data does, not by what looks rich.
 | A value within a known range | `Meter` (a password's strength too, in `PasswordInput`) |
 | A value per cell over two dimensions | `Heatmap` |
 | How two measures relate | `ScatterChart` |
+| One measure across many groups, or measures of different scale | `ChartGrid`: small multiples, one panel per group on a shared scale |
 | Values where zero isn't meaningful, averages with their spread, or before and after per category | `DotPlot` |
 | Part of a whole | a stacked `BarChart`, or a segmented `Meter` |
 
@@ -59,6 +60,7 @@ Choose by the job the data does, not by what looks rich.
 | The readout | floating, level 3 | a `Tooltip`, rising from the side facing its mark |
 | The crosshair | ground | a 1px `line-control` rule, lighter than a reference line's `ink-muted` because it's a pointer, not something to read against; it doesn't move the marks |
 | The scope's shared crosshair | ground | the same rule, in every chart of a `ChartScope` with the same kind of x, at the x the pointer or keyboard is on elsewhere; no readout opens there |
+| A small multiple's panels | ground | flat plots in one figure, each named by a caption in `ink` above it like a `Table`'s column; one shared y read in the first column and one x in the last row; a panel on its own scale says "own scale" |
 | The scope's slice | ground | a flush caption at caption size in `ink-muted`, the selection in `ink` with a ghost Clear, polite and said once per change |
 | A legend you can toggle | sunk and raised | a choice, so it's built like the Switch: a trench with a raised mark when the series is on |
 | A legend that only labels | ground | a plate set flush, like a `Badge`; better still, label the series directly |

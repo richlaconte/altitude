@@ -2145,6 +2145,48 @@ export interface ChartScopeProps extends Omit<React.HTMLAttributes<HTMLElement>,
 export declare function ChartScope(props: ChartScopeProps): React.ReactElement;
 /** The scope's slice in words, with what a selection filters to and a Clear. Rendered by ChartScope unless `caption={false}`; place it yourself to put the slice elsewhere. Its children replace the scope's `slice`. */
 export declare function ChartScopeCaption(props: React.HTMLAttributes<HTMLParagraphElement>): React.ReactElement | null;
+export interface ChartGridProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title' | 'children'> {
+  /** The series each panel draws, as on ChartContainer. Every panel draws the same series over its own records. */
+  config: ChartConfig;
+  /** Every record, each carrying the `by` key that says which panel it belongs to. */
+  data: ChartDatum[];
+  /** The key of x in each record. */
+  x?: string;
+  /** The key whose values become panels: "service", "region". */
+  by: string;
+  /** A panel's name from its value. Default the value as written. */
+  panelLabel?: (value: string) => string;
+  /** At most this many columns. At 640px and below it's 2, at 480px and below 1. Default 4. */
+  columns?: number;
+  /** 'shared' (default): one y and one x across the panels, so lengths compare; a generated note says when panels differ by more than 10×. 'free-y': each panel has its own y, said in its caption ("own scale") and read inline. 'free': each panel has its own y and x. */
+  scales?: 'shared' | 'free-y' | 'free';
+  /** The panels' order: 'data' (default) as the records first name them, or by each panel's last value. */
+  sort?: 'data' | 'desc' | 'asc';
+  /** The panels this grid is about: they keep their colours and the rest take data-context, said in words. */
+  focus?: string[];
+  /** Each panel's plot height in px. Default 120. */
+  height?: number;
+  title?: React.ReactNode;
+  /** The one thing the grid says, as its heading (Charts rule 9). */
+  takeaway?: React.ReactNode;
+  description?: React.ReactNode;
+  /** Your own summary, instead of the generated one. */
+  summary?: React.ReactNode;
+  xScale?: 'band' | 'time' | 'linear';
+  yFormat?: (value: number) => string;
+  xFormat?: (value: unknown) => string;
+  locale?: string;
+  tooltip?: boolean;
+  /** The chart type every panel draws: <LineChart />, <BarChart />, <AreaChart />. */
+  children: React.ReactElement;
+}
+/**
+ * Small multiples (#530): one series per panel, when there are too many to overlay or their scales differ. One figure
+ * on the ground; the panels share a y scale by default so lengths compare, one y axis is read in the first column and
+ * one x axis in the last row, one pointer reads across every panel, and the panels make one Tab stop (←/→ between
+ * panels, Enter into a panel's series and points, Escape back out).
+ */
+export declare function ChartGrid(props: ChartGridProps): React.ReactElement;
 /** Changes what a chart's readout shows; the readout is on for every chart. Place it inside the chart type or the container. */
 export declare function ChartTooltip(props: { content?: React.ReactElement<ChartTooltipContentProps> }): null;
 export interface ChartReferenceProps {
