@@ -1,0 +1,64 @@
+<!-- @dsCard group="Charts" height=860 subtitle="Where people leave a process: steps on one left edge, each drop said in the gutter" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funnel — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.fn { display: grid; gap: 16px; }
+.fn .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .fn .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const fnOctober = [
+  { name: "Visited pricing", people: 3120 },
+  { name: "Started signup", people: 1984 },
+  { name: "Signed up", people: 1946 },
+  { name: "Activated", people: 1204 },
+  { name: "Paid", people: 418 }
+];
+const fnSeptember = [
+  { name: "Visited pricing", people: 2870 },
+  { name: "Started signup", people: 1790 },
+  { name: "Signed up", people: 1702 },
+  { name: "Activated", people: 1130 },
+  { name: "Paid", people: 377 }
+];
+const fnInbox = [
+  { name: "Opened", people: 860 },
+  { name: "Replied", people: 312 },
+  { name: "Booked a call", people: 141 }
+];
+const fnCount = new Intl.NumberFormat("en-GB");
+const fnConfig = { people: { label: "People", format: (v) => fnCount.format(v) } };
+function App() {
+  const [picked, setPicked] = React.useState(null);
+  return /* @__PURE__ */ React.createElement("div", { className: "fn" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { config: fnConfig, title: "Signup funnel, October", takeaway: "Two in three people who activate never pay: the last step loses 65%", height: 300, locale: "en-GB", views: true }, /* @__PURE__ */ React.createElement(A.Funnel, { data: fnOctober, step: "name", value: "people", dropoff: "both", bad: (s) => s.drop > 0.5 })))), /* @__PURE__ */ React.createElement("div", { className: "two" }, /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { config: fnConfig, title: "Against September", description: "The tick is September's count", height: 300, locale: "en-GB" }, /* @__PURE__ */ React.createElement(A.Funnel, { data: fnOctober, step: "name", value: "people", compare: { data: fnSeptember, label: "September" } })))), /* @__PURE__ */ React.createElement(A.Card, null, /* @__PURE__ */ React.createElement(A.CardContent, null, /* @__PURE__ */ React.createElement(A.ChartContainer, { config: fnConfig, title: "Outreach, this week", description: picked ? `Showing who left before ${picked}` : "Choose a step to see who left before it", height: 200, locale: "en-GB" }, /* @__PURE__ */ React.createElement(A.Funnel, { data: fnInbox, step: "name", value: "people", dropoff: "count", selected: picked, onSelect: (d) => setPicked(d ? d.name : null) }))))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>

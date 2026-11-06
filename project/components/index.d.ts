@@ -2566,6 +2566,35 @@ export interface HistogramProps {
  * share at or below. Place inside a ChartContainer whose config names the value.
  */
 export declare function Histogram(props: HistogramProps): React.ReactElement | null;
+/** A Funnel step with what it lost: its share of the first step, and its drop from the step before. */
+export interface FunnelStep { name: string; count: number; share: number; drop: number | null; left: number | null; record: Record<string, unknown> }
+export interface FunnelProps {
+  /** The steps, in the process's order: one record per step. Never sorted. */
+  data: ChartDatum[] | null | undefined | PromiseLike<ChartDatum[] | null>;
+  /** The key of each step's name. */
+  step: string;
+  /** The key of each step's count, and its entry in the container's config. */
+  value: string;
+  /** What the drop-off plate says: 'share' of the step before (default, "−38%"), 'count' ("742 left") or 'both'. */
+  dropoff?: 'share' | 'count' | 'both';
+  /** A drop the author calls bad: its plate wears critical, with the icon and the words "Steep drop". */
+  bad?: (step: FunnelStep) => boolean;
+  /** The same steps in an earlier period, matched by step name: a 2px ink tick at each earlier count. */
+  compare?: { data: ChartDatum[]; label: string };
+  /** Filter in place: steps that don't apply recede to 35%. */
+  relevance?: (d: ChartDatum) => 'match' | 'miss' | undefined;
+  /** Steps you can select: the selected step's name, and what to do when one is chosen (null clears). */
+  selected?: string | null;
+  onSelect?: (d: ChartDatum | null) => void;
+  empty?: ChartEmpty;
+  tooltip?: boolean;
+}
+/**
+ * Where people leave a process (#536): steps down the page in data order, each a flat bar from one left edge, with the
+ * drop-off between two steps said in a plate in the gutter ("−38% · 742 left"). Never a tapering shape. Place inside a
+ * ChartContainer whose config names the count.
+ */
+export declare function Funnel(props: FunnelProps): React.ReactElement | null;
 /** A sliding window over x: a span of time, or the last N records. */
 export interface ChartWindow {
   minutes?: number; hours?: number; days?: number; points?: number;

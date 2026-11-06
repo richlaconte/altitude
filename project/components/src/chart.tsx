@@ -434,6 +434,8 @@ export interface ChartInfo {
   /** The table view's columns, when a column per series isn't the shape of the data. */
   columns?: ChartColumn[];
   /** The generated summary, when the chart type can say it better than a trend per series. */
+  /** The gap between bands, as a share of each band's step, when the container doesn't set one. Default 0.2. */
+  bandPadding?: number;
   summary?: string;
 }
 /** A column of the table view. */
@@ -1149,7 +1151,7 @@ function useSeriesFade(targets: Record<string, number>, plotRef: React.RefObject
  * the data changes, its marks move by the shared transition engine (useChartMotion).
  */
 function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspect, height, title, takeaway, description, summary,
-  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding = 0.2, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
+  zero: zeroProp, yDomain, yFormat, xFormat, bandPadding: bandPaddingProp, axes = true, yLabels = 'gutter', locale, patterns: patternsProp = false, tooltip: tooltipProp = true, views, view: viewProp, onViewChange, xLabel, refreshing, empty,
   live = false, pausable = false, since, paused: _paused, onPausedChange: _onPausedChange, announce, countLabel, yMode: yModeProp, base, modes = false, onYModeChange, scope: scopeProp, source, directLabels: directLabelsProp = false, queued = false, onHold, pausedNow = false, setPaused, className, style, children, ...rest }: ChartContainerProps & ChartFrameLive) {
   const defaults = React.useContext(ChartDefaultsContext);
   const id = React.useId();
@@ -1202,6 +1204,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // directLabels="auto" (#539) reaches the chart type's layout as a prop, so it can keep room for the labels.
   const infoProps = directLabelsProp === 'auto' ? { ...childProps, __autoLabels: true } : childProps;
   const info: ChartInfo = chartChild ? (chartChild.type as ChartChild).chartInfo!(infoProps, shownConfig) : {};
+  // A chart type may ask for wider gaps between its bands (a Funnel's drop-off plates sit there); a prop on the container wins.
+  const bandPadding = bandPaddingProp ?? info.bandPadding ?? 0.2;
   // Inline y labels (#193) sit above their gridlines, so the top one needs room above the plot.
   const inlineY = yLabels === 'inline' && axes && !info.plot && info.layout !== 'horizontal';
   const TOP = TOP_GAP + (info.top ?? 0) + (inlineY ? 14 : 0);

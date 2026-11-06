@@ -140,6 +140,8 @@ export { ScatterChart } from './scatter-chart';
 export type { ScatterChartProps } from './scatter-chart';
 export { DotPlot } from './dot-plot';
 export { Histogram } from './histogram';
+export { Funnel } from './funnel';
+export type { FunnelProps, FunnelStep } from './funnel';
 export type { HistogramProps, HistogramBin } from './histogram';
 export type { DotPlotProps } from './dot-plot';
 export { ChartBrush } from './chart-brush';
