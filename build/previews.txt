@@ -7695,6 +7695,8 @@ const SIGNUPS = Array.from({ length: 31 }, (_, i) => ({ day: `2026-10-${String(i
 const total = SIGNUPS.reduce((n, d) => n + d.signups, 0);
 const before = SIGNUPS.slice(0, 13), after = SIGNUPS.slice(13);
 const mean = (rows) => Math.round(rows.reduce((n, d) => n + d.signups, 0) / rows.length);
+const peak = SIGNUPS.reduce((m, d) => (d.signups > m.signups ? d : m), SIGNUPS[0]);
+const onDay = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-IE', { day: 'numeric', month: 'long', timeZone: 'UTC' });
 function App() {
   return (
     <main className="lr-page">
@@ -7702,9 +7704,11 @@ function App() {
         actions={<A.Button variant="secondary">Export CSV</A.Button>}>
         <A.PageHeaderTitle>Signups, October 2026</A.PageHeaderTitle>
       </A.PageHeader>
-      <A.ChartContainer className="lr-lead" title="Daily signups" takeaway={`Signups doubled after the pricing change on 14 October, from ${mean(before)} a day to ${mean(after)}`}
+      {/* Each figure in the sentence cites the records it comes from: point at it, or focus it, to see them; Enter pins the reading. */}
+      <A.ChartContainer className="lr-lead" title="Daily signups" locale="en-IE"
+        takeaway={<>Signups doubled after the pricing change on 14 October, from <A.ChartCite x="2026-10-13" window={13}>{mean(before)} a day</A.ChartCite> to <A.ChartCite x="2026-10-31" window={18}>{mean(after)}</A.ChartCite></>}
         config={{ signups: { label: 'Signups' } }} aspect={2.6} zero
-        summary={`${total.toLocaleString('en-IE')} signups in October. From 1 to 13 October about ${mean(before)} a day; from 14 October, when the free plan gained a third project, about ${mean(after)} a day.`}>
+        summary={<>{total.toLocaleString('en-IE')} signups in October. From 1 to 13 October about {mean(before)} a day; from 14 October, when the free plan gained a third project, about {mean(after)} a day, with the most on {onDay(peak.day)}: <A.ChartCite x={peak.day}>{peak.signups}</A.ChartCite>.</>}>
         <A.LineChart data={SIGNUPS} x="day" />
       </A.ChartContainer>
       <section className="lr-more" aria-labelledby="lr-more-h">

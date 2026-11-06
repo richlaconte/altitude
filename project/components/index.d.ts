@@ -2146,6 +2146,29 @@ export interface ChartAnnotationProps {
 }
 /** An event on x: a Badge plate flush at the top of the plot with a 1px leader to its x, listed after the summary. */
 export declare function ChartAnnotation(props: ChartAnnotationProps): null;
+export interface ChartCiteProps {
+  /** The x of the record the figure comes from. With `window`, the last of the records it covers. */
+  x?: string | number | Date;
+  /** The series the figure reads. Default: the chart's first shown series. */
+  series?: string;
+  /** The figure is over the `window` records ending at `x` (an average, or a sum with `aggregate="sum"`). */
+  window?: number;
+  /** The figure is over the records this picks, instead of `x`. */
+  records?: (d: ChartDatum) => boolean;
+  /** How a figure over several records is made. Default 'mean'. */
+  aggregate?: 'mean' | 'sum';
+  /** The figure, as the sentence says it: "39 a day", "80", "3.2%". */
+  children: React.ReactNode;
+  className?: string;
+}
+/**
+ * A figure in a chart's takeaway, description or summary that cites the mark it comes from: an ink plate with the
+ * series' marker, a button in the frame's Tab order named "80, cites Signups, 31 Oct 2026: 80. Press Enter to pin."
+ * Pointing at it or focusing it rings the cited mark in 2px accent-ink and opens the readout there (a window lays a
+ * flat band under its stretch); Enter or a click pins the reading. With the provider's devChecks on, a figure that
+ * isn't the record's value at the format's precision, or an x that isn't in the data, warns.
+ */
+export declare function ChartCite(props: ChartCiteProps): React.ReactElement;
 /** The frame every chart shares: scales, axes, gridlines, the ground line, colour slots, a name and a summary. Flush, no level. */
 export declare function ChartContainer(props: ChartContainerProps): React.ReactElement;
 export interface BarChartProps {
