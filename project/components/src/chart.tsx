@@ -305,6 +305,33 @@ function Hatch({ id, kind, bg, fg }: { id: string; kind: NonNullable<(typeof ENC
 
 const ChartContext = React.createContext<ChartContextValue | null>(null);
 
+/**
+ * Internal (#530): how a ChartGrid tells each of its panels where it stands. Every panel computes its y (and its x)
+ * over the whole grid's extent, so the shared scale is the same in every panel; only the first column says the y
+ * labels and only the last row the x labels, though every panel keeps their room so the plots stay the same size.
+ * The panels make one Tab stop: only the current panel's node is in the tab order, and ←/→ on a panel's summary move
+ * to the next panel.
+ */
+export interface ChartPanel {
+  /** The panel's name and place, said before its summary: "Checkout, 2 of 8." */
+  name: string;
+  index: number;
+  count: number;
+  /** Whether this panel's axis labels show. */
+  yText: boolean;
+  xText: boolean;
+  /** The extents to draw over: the whole grid's, when its scales are shared. */
+  yExtent?: [number, number];
+  xExtent?: [number, number];
+  /** Whether this panel holds the grid's one Tab stop. */
+  current: boolean;
+  /** Move to another panel from this panel's summary: a key, or null when the key doesn't move between panels. */
+  move: (key: string) => boolean;
+  /** Became the current panel (focus arrived in it). */
+  enter: () => void;
+}
+export const ChartPanelContext = React.createContext<ChartPanel | null>(null);
+
 /** The scales, plot size and config of the nearest ChartContainer, for drawing your own marks. */
 export function useChart(): ChartContextValue {
   const c = React.useContext(ChartContext);
@@ -1138,6 +1165,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   const fullData = (brushEl ? (Array.isArray(ownProps.data) ? ownProps.data : Array.isArray(dataProp) ? dataProp : []) : []) as ChartDatum[];
   // A scope (#529) shares one window across every chart over time or numbers; a brush anywhere in it sets that window.
   const scope = useScope(scopeProp === false);
+  const panel = React.useContext(ChartPanelContext);
   const scopeView = scopeProp === false ? undefined : scopeProp;
   const rawRows = (Array.isArray(ownProps.data) ? ownProps.data : Array.isArray(dataProp) ? dataProp : []) as ChartDatum[];
   const rawX = (ownProps.x as string | undefined) ?? xProp;
@@ -1286,6 +1314,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
   // A reference's own values count too, so a target above every value is still on the plot.
   for (const r of refs) for (const v of Array.isArray(r.y) ? r.y : [r.y]) if (typeof v === 'number' && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
   if (!isFinite(lo)) { lo = 0; hi = 1; }
+  // A panel of a ChartGrid with shared scales (#530) draws over the whole grid's extent.
+  if (panel?.yExtent) { lo = Math.min(lo, panel.yExtent[0]); hi = Math.max(hi, panel.yExtent[1]); }
   if (zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
   // All zero is real data: give it 0–1, so the ground line is the floor, not the middle of an invented range.
   if (lo === 0 && hi === 0) hi = 1;
@@ -1308,6 +1338,7 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     extra: [...(bandInfo ? [bandInfo.low, bandInfo.high] : []), ...(info.compare ? [info.compare.key] : []), ...(info.glide ?? [])],
     xDomain: kind === 'band' ? null : info.xDomain ?? (() => {
       const vs = data.map((d) => (kind === 'time' ? toTime(d[xKey]) : Number(d[xKey]))).filter((v) => isFinite(v));
+      if (panel?.xExtent) vs.push(...panel.xExtent);
       return vs.length ? [Math.min(...vs), Math.max(...vs)] as [number, number] : null;
     })(),
   };
@@ -1322,7 +1353,9 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     const xs = data.map((d, i) => (kind === 'time' ? toTime(d[xKey]) : kind === 'linear' ? Number(d[xKey]) : i));
     return bankTo45(xs, series.map((s) => data.map((d) => (typeof d[s.key] === 'number' ? d[s.key] as number : null))), ny.domain);
   }, [xSig]); // eslint-disable-line react-hooks/exhaustive-deps
-  const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey, info.rescale ? `${lo}:${hi}` : '']); // eslint-disable-line react-hooks/exhaustive-deps
+  // In a ChartGrid (#530), a panel says the labels on its outer edges only: the first column's y, the last row's x.
+  const leftText = !panel || panel.yText, bottomText = !panel || panel.xText;
+  const changeKey = React.useMemo(() => ({}), [data, configKey, xKey, kind, zero, yDomain?.[0], yDomain?.[1], panel?.yExtent?.[0], panel?.yExtent?.[1], panel?.xExtent?.[0], panel?.xExtent?.[1], info.yExtent?.[0], info.yExtent?.[1], bandPadding, horizontal, hiddenKey, info.rescale ? `${lo}:${hi}` : '']); // eslint-disable-line react-hooks/exhaustive-deps
   const { layers, stage } = useChartMotion(target, changeKey, plotRef, live, info.motion);
 
   // Live (#66): which marks are new or changed since the data last landed. Four or fewer each get an afterglow; more is
@@ -2097,6 +2130,8 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (e.key === 'Escape' && scope?.selected.length) { e.preventDefault(); e.stopPropagation(); scope.clear(); return; }
     if ((e.key === 'p' || e.key === 'P') && plotPins && at.level === 'points' && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); const d = recordAt(at.p); if (d) pinAt(d); return; }
     if (at.level === 'summary') {
+      // ←/→ (and Home/End) on a panel's summary move between a ChartGrid's panels (#530).
+      if (panel && !e.metaKey && !e.ctrlKey && !e.altKey && panel.move(e.key)) { e.preventDefault(); e.stopPropagation(); return; }
       // Into the records at the chart type's first (Ctrl+Home): the leftmost dot, the grid's first cell.
       const first = single && childType?.chartMove ? childType.chartMove(childProps, top.ctx, 0, { key: 'Home', ctrlKey: true, metaKey: false } as React.KeyboardEvent) ?? 0 : 0;
       if (e.key === 'Enter' || e.key === ' ') next = single ? { level: 'points', s: 0, p: sharedP() ?? first } : { level: 'series', s: 0, p: 0 };
@@ -2129,13 +2164,15 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
     if (!W || !data.length || !series.length) return null;
     const pw = top.pw, ph = top.ph;
     const plotBox: React.CSSProperties = { left: top.left, top: TOP, width: pw, height: ph };
+    // In a ChartGrid (#530) the panels make one Tab stop: only the current panel's node is in the tab order.
     const common = (key: string, current: boolean) => ({
-      key, tabIndex: current ? 0 : -1, ref: (el: HTMLElement | null) => { if (el) navRefs.current.set(key, el); else navRefs.current.delete(key); },
+      key, tabIndex: current && (!panel || panel.current) ? 0 : -1, 'data-current': current ? '' : undefined, onFocus: panel ? panel.enter : undefined, ref: (el: HTMLElement | null) => { if (el) navRefs.current.set(key, el); else navRefs.current.delete(key); },
       onKeyDown: onNavKey, role: 'button' as const,
     });
     if (nav.level === 'summary') {
-      return <div {...common('sum', true)} className="alt-chart-node" data-level="summary" aria-roledescription="chart" style={plotBox} data-drill-focus=""
-        aria-label={`${summaryText} Press Enter to explore ${single ? 'the data' : 'the series'}.`} />;
+      return <div {...common('sum', true)} className="alt-chart-node" data-level="summary" style={plotBox} data-drill-focus=""
+        aria-roledescription={panel ? 'panel' : 'chart'}
+        aria-label={`${panel ? `${panel.name}, ${panel.index + 1} of ${panel.count}. ` : ''}${summaryText} Press Enter to explore ${single ? 'the data' : 'the series'}.${panel && panel.count > 1 ? ' Left and right arrows move between panels.' : ''}`} />;
     }
     if (nav.level === 'series') {
       return navOrder.map((si, i) => <div {...common(`s${i}`, i === navS)} className="alt-chart-node" data-level="series" aria-roledescription="series" style={plotBox}
@@ -2371,13 +2408,13 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                     {axes && horizontal && !grid && (
                       <>
                         <g className="alt-chart-axis" data-axis="y">
-                          {frame.ticks.map((t) => {
+                          {bottomText && frame.ticks.map((t) => {
                             const at = ctx.y(t.v);
                             return at >= -1 && at <= pw + 1 ? <text key={t.v} x={at} y={ph + 18} textAnchor="middle" opacity={t.a < 1 ? t.a : undefined}>{fmtY(t.v)}</text> : null;
                           })}
                         </g>
                         <g className="alt-chart-axis" data-axis="x">
-                          {xTicks.map((t, j) => <text key={j} x={-12} y={t.at} dy="0.32em" textAnchor="end" opacity={t.a < 1 ? t.a : undefined}>{t.label}</text>)}
+                          {leftText && xTicks.map((t, j) => <text key={j} x={-12} y={t.at} dy="0.32em" textAnchor="end" opacity={t.a < 1 ? t.a : undefined}>{t.label}</text>)}
                         </g>
                       </>
                     )}
@@ -2388,13 +2425,13 @@ function ChartFrame({ config, data: dataProp, x: xProp, xScale: xScaleProp, aspe
                             {yInline.map((t) => <text key={t.v} x={0} y={t.at - 4} opacity={t.a < 1 ? t.a : undefined}>{t.text}</text>)}
                           </g>
                           : <g className="alt-chart-axis" data-axis="y">
-                            {frame.ticks.map((t) => {
+                            {leftText && frame.ticks.map((t) => {
                               const at = ctx.y(t.v);
                               return at >= -1 && at <= ph + 1 ? <text key={t.v} x={-10} y={at} dy="0.32em" textAnchor="end" opacity={t.a < 1 ? t.a : undefined}>{fmtY(t.v)}</text> : null;
                             })}
                           </g>}
                         <g className="alt-chart-axis" data-axis="x">
-                          {xTicks.map((t, j) => (
+                          {bottomText && xTicks.map((t, j) => (
                             <text key={j} x={t.at} y={ph + 18} opacity={t.a < 1 ? t.a : undefined}
                               textAnchor={frame.kind === 'band' ? 'middle' : j === 0 && t.at < 24 ? 'start' : 'middle'}>{t.label}</text>
                           ))}

@@ -3357,6 +3357,25 @@ a.alt-notes-link:focus-visible { outline: 2px solid var(--accent-ink); outline-o
   .alt-chart-scope-caption p, .alt-chart-scope-filter { color: CanvasText; }
 }
 
+/* ── ChartGrid (#530): small multiples. One figure on the ground: a grid of plots, each flat, each named by a caption
+   in text-label ink above it, the way a Table names its columns. No panel is raised or framed: the panels are one
+   record cut by one key, so they share the ground, a y scale (lengths compare across them) and one pointer, whose
+   crosshair is ChartScope's 1px line-control rule. The y labels are read in the first column and the x labels in the
+   last row; the other panels keep the room, so every plot is the same size. A panel with its own scale says so in
+   its caption ("own scale", ink-muted) and reads its ticks inline. The keyboard's place is the 2px accent-ink ring,
+   as on any chart; the panel itself never lifts. ── */
+.alt-chart-multiples { display: grid; gap: var(--space-3); min-width: 0; margin: 0; }
+.alt-chart-multiples > .alt-chart-scope { gap: 0; }
+.alt-chart-multiples-panels { display: grid; grid-template-columns: repeat(var(--alt-grid-cols, 1), minmax(0, 1fr)); gap: var(--space-4) var(--space-3); min-width: 0; }
+.alt-chart-multiples-panel { min-width: 0; }
+.alt-chart-multiples-panel .alt-chart { gap: var(--space-1); }
+.alt-chart-multiples-panel .alt-chart-title { font: 500 13px/18px var(--font-sans); color: var(--ink); }
+.alt-chart-multiples-own { font-weight: 400; color: var(--ink-muted); }
+.alt-chart-multiples-note { margin: 0; font: 400 13px/19px var(--font-sans); color: var(--ink-muted); }
+@media (forced-colors: active) {
+  .alt-chart-multiples-panel .alt-chart-title, .alt-chart-multiples-own, .alt-chart-multiples-note { color: CanvasText; }
+}
+
 /* ── Live charts (#66): show the new state at once and leave a fading trace (phosphor). A new or changed mark carries
    a 2px ink outline (an outline, not height or a glow) that holds for the first second and decays over dur-settle on
    ease-decay, with its value beside it for that first second. A whole refresh is one change: the "Updated" caption
