@@ -26,6 +26,18 @@ Read **Elevation** and **Motion** first; this chapter applies their laws to data
 
 **Checked, not assumed.** `altitude check` reports what it can read of these rules from an app's source, in Altitude's charts and in Recharts'. These fail the run: pie and donut charts (`ALT-CHART-001`), two axes on one plot (`-002`, rule 6), bars off zero (`-003`, rule 2), gradients, filters and fully rounded bars (`-004`, rule 1), reserved hues on a series (`-005`, rule 5), an unnamed chart (`-006`, rule 8) and marks that animate in (`-007`, rule 7). These are listed for review: a chart that leads a page with no takeaway (`-008`, rule 9), and three or more series with nothing said to matter (`-009`, rule 5). `altitude explain <ID>` says why.
 
+## A page of charts
+
+The rules above make one chart say what it means. These make a page of charts behave as one record with several views, make what a chart says about itself checkable, and make the guide's recommendations what a chart does by default. Each names the build that keeps it; the evidence is in **Research** (E165–E173).
+
+1. **One record, many views.** Charts that share a page share a slice, a pointer, a window and a palette, and say the slice in words once. A selection anywhere is a filter everywhere, in the filter's own language (35%, positions held). Build: `ChartScope` (#529).
+2. **Two measures are two charts.** When series differ in scale or in number, juxtapose them: small multiples on one shared axis, or index them to a base named in words. Never a second axis (rule 6). Build: `ChartGrid` (#530); `yMode="indexed"` or `"change"` on `ChartContainer` (#531).
+3. **A claim points at its mark.** A figure in a takeaway or a summary is a citation: it lights the mark it came from and pins a reading there. A figure that isn't in the data is a defect, and `devChecks` says so. Build: `ChartCite` (#532).
+4. **The record says where it came from.** Source, the time it was read and the count are part of the chart, at caption weight, and stale is said in words; the marks don't change. Build: `source` on `ChartContainer`, `Stat` and `StatGroup` (#533).
+5. **The form fits the question.** Spread is a histogram or a quantile dot plot; a process is a funnel of aligned bars with each drop said in words; a frequency to feel is counted marks. Never area for a count. Build: `Histogram` (#535), `Funnel` (#536), `UnitChart` (#537).
+6. **A path by ear is a path.** A chart can be played: pitch for value, one series at a time, narrated at its extremes, from the same keyboard path, and only when asked. Build: `sonify` on `ChartContainer` (#538).
+7. **The default is the rule.** What the guide recommends is what a chart does unless told otherwise, set once for an app; what the guide forbids, `altitude check` reports. Build: `AltitudeProvider charts` (#539); the `ALT-CHART-*` rules (#540).
+
 ## Choosing a form
 
 Choose by the job the data does, not by what looks rich.
@@ -70,6 +82,7 @@ Choose by the job the data does, not by what looks rich.
 | An overview brush | sunk and raised | the range `Slider`: the series a flat line in a trench, the chosen window a raised lens (level 1, `accent` rim, clear face) whose grips are the thumbs; outside it the overview recedes to 35% |
 | Drilling in | ground, stacked | a `Drilldown`: the detail is laid on top, the staircase shows the way back |
 | A figure that cites its mark (`ChartCite`) | ground, lifts on hover and focus | `InlineCitation`'s plate in the sentence, in `ink` with the series' marker; it rings the cited mark in 2px `accent-ink` and opens the readout there; Enter pins it (E166) |
+| Play (`sonify`) | raised, level 1 | a secondary `Button` in the frame whose name says what a press does next (Play, then Stop); the playhead is the crosshair, moving at the playback rate |
 | Annotations and reference lines | ground | plates set into the ground, like a `Badge`; reference lines are solid 1px `ink-muted`, because dashes mean projected |
 | Where the data came from (`source`) | ground | one flush line under the plot at caption size in `ink-muted`: source (a `Link`), count, "Updated 2 minutes ago"; stale is the `caution` icon and the word, and the marks don't change (E167) |
 | Loading | sunk | an imprint (`Await`), at the chart's own size |
