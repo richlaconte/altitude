@@ -12,9 +12,26 @@ The steps an agent takes (searching, calling tools, reasoning, waiting for appro
 
 **Accessibility.** An ordered list (as `Stepper`), each step's state in words. Step changes are announced politely and throttled ("Done: Read 3 articles"), because an agent can finish several steps a second. Failures and approval requests are announced at once. Under forced colours a failed step is dashed thick.
 
-**Parts:** `Trace` (`aria-label`); `TraceStep` (`title`, `status` (`'planned' | 'running' | 'done' | 'failed' | 'awaiting-approval'`), `duration` (ms), `error`, `onRetry`); `TraceToolCall` (`name`, `input`, `output`, `defaultOpen`); `TraceReasoning` (`duration`).
+**Parts:** `Trace` (`aria-label`, `collapsible`, `defaultOpen`); `TraceStep` (`title`, `status` (`'planned' | 'running' | 'done' | 'failed' | 'awaiting-approval'`), `duration` (ms), `error`, `onRetry`, `tool`, `detail`, `changes`, `result`); `TraceToolCall` (`name`, `input`, `output`, `defaultOpen`); `TraceReasoning` (`duration`); `TraceMemory` (`items`, `onForget`, `onRestore`, `label`); `describeTally`.
 
 **Subagents.** A `Trace` inside a `TraceStep` is a nested run: a nested list behind a lid that says how it's going ("6 steps · 1 running"), open while something in it is running, waiting or failed, closed when it's all done. `TraceParallel label="Subagents"` groups steps that run at once, with a bracket and "3 in parallel · 2 of 3 done · 1 failed"; several can be raised at once, each because it's in play. `status="auto"` derives a parent from its children: running while any run, failed once the rest stop, done only when all are. Nested steps announce through the outer Trace with their run's name.
+
+**A turn, folded.** `Trace collapsible` puts a whole turn behind one lid that says what it did, worked out from its steps: "Edited 2 files · Saved 3 memories · Ran 4 tools", with how it's going beside it ("4 steps · all done", "1 running"). Files are the distinct titles of steps with `changes`, tools are steps with a `tool`, memories are the `TraceMemory` items inside steps (not the forgotten ones). With nothing to count, the lid is the `aria-label`. It's open while a step runs, waits or fails, or when `defaultOpen` says so. It never closes by itself when the turn finishes, because that would move the page under someone reading it. It opens by itself when a step fails or waits for approval, because those need the person. Use one fold per turn: don't nest a fold that repeats its parent's summary. `describeTally` gives the same words for a thread list or a notification.
+
+**Tool steps.** `tool="edit" title="web/turns.ts"` draws the tool in code type before what it acted on. `changes={{ added: 2, removed: 1 }}` adds "+2 −1": the signs carry the meaning and it's read as "2 lines added, 1 removed", and a zero isn't tinted. `detail` goes after the status ("Done · 2 edits · 140ms"). `result` is what came back, in a sentence under the step's detail ("2 edits applied to web/turns.ts"). Put the change itself in a `DiffView` inside the step: it already folds long unchanged runs, so it needs no lid of its own ("Hide change").
+
+**Memory.** What the assistant writes to memory outlives the conversation, so it's never only a count. `TraceMemory` lists each memory flush in the record behind a 1px rule, with what changed in words ("New", "Updated" with the old text struck through after "Was:", "Removed") and Forget beside it. Forget runs at once and leaves Undo, which is real recovery, so there's no dialog. A forgotten memory is struck through, reads "Forgotten", drops out of the lid's count, and is announced ("Forgotten: …. Undo is next to it"). You keep the state: set `forgotten` on the item in `onForget`, and clear it in `onRestore`.
+
+```tsx
+<Trace aria-label="Change the fold to count steps" collapsible>
+  <TraceStep tool="edit" title="web/turns.ts" detail="2 edits" changes={{ added: 2, removed: 1 }} status="done" result="2 edits applied to web/turns.ts">
+    <DiffView caption="web/turns.ts" before={before} after={after} />
+  </TraceStep>
+  <TraceStep tool="memory" title="3 memories" status="done">
+    <TraceMemory items={memories} onForget={(id) => forget(id)} onRestore={(id) => restore(id)} />
+  </TraceStep>
+</Trace>
+```
 
 **Reasoning as it streams.** `TraceReasoning status="streaming"` says "Thinking…" on its lid; opened, the text follows its end as it arrives, behind a dashed rule (not the record yet), until the person scrolls up. Complete, it's "Thought for 12s"; `status="redacted"` says "Reasoning hidden by the provider" with nothing to open. No shimmer, pulsing dots or ticking counter.
 

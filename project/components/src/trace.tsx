@@ -11,6 +11,17 @@ const TraceCtx = React.createContext<TraceCtxT | null>(null);
 
 export interface TraceProps extends React.OlHTMLAttributes<HTMLOListElement> {
   'aria-label': string;
+  /**
+   * A turn's steps behind one lid that says what they did, worked out from the steps: "Edited 2 files · Saved 3
+   * memories · Ran 4 tools", with how it's going beside it ("4 steps · all done"). Top-level Traces only.
+   */
+  collapsible?: boolean;
+  /**
+   * Open to begin with. Default: open while a step is running, waiting or failed. It never closes by itself when the
+   * turn finishes (that would move the page under the reader), and it opens by itself when a step fails or waits for
+   * approval, because those need the person.
+   */
+  defaultOpen?: boolean;
 }
 /**
  * The steps an agent takes, drawn as a vertical Stepper: done steps are flush in the record with a stamped check, the
@@ -59,6 +70,42 @@ const summary = (list: TraceStepStatus[]) => {
   return parts.join(' · ');
 };
 
+// What a turn's steps did, read from their props: files changed (distinct titles of steps with `changes`), memories
+// written (TraceMemory items inside steps) and tool calls (steps with `tool`).
+export interface TraceTally { files: number; memories: { added: number; updated: number; removed: number }; tools: number; steps: number }
+function tallyOf(children: React.ReactNode): TraceTally {
+  const files = new Set<string>(), memories = { added: 0, updated: 0, removed: 0 };
+  let tools = 0, steps = 0;
+  const memoryIn = (kids: React.ReactNode) => React.Children.forEach(kids, (k) => {
+    if (!React.isValidElement(k)) return;
+    const kp = k.props as { items?: TraceMemoryItem[]; children?: React.ReactNode };
+    if (k.type === TraceMemory) (kp.items ?? []).forEach((m) => { if (!m.forgotten) memories[m.change ?? 'added']++; });
+    else if (k.type === React.Fragment) memoryIn(kp.children);
+  });
+  const walk = (kids: React.ReactNode) => React.Children.forEach(kids, (child) => {
+    if (!React.isValidElement(child)) return;
+    const p = child.props as TraceStepProps & { children?: React.ReactNode };
+    if (child.type === TraceStep) {
+      steps++;
+      if (p.tool) tools++;
+      if (p.changes) files.add(p.title);
+      memoryIn(p.children);
+    } else if (child.type === TraceParallel || child.type === React.Fragment) walk(p.children);
+  });
+  walk(children);
+  return { files: files.size, memories, tools, steps };
+}
+const plural = (n: number, one: string, many = one + 's') => `${n} ${n === 1 ? one : many}`;
+/** The lid of a collapsible Trace in words: "Edited 2 files · Saved 3 memories · Ran 4 tools". Empty when the steps say nothing to count. */
+export function describeTally({ files, memories, tools }: TraceTally): string {
+  const parts: string[] = [];
+  if (files) parts.push(`Edited ${plural(files, 'file')}`);
+  const m = memories.added + memories.updated + memories.removed;
+  if (m) parts.push(`${memories.added === m ? 'Saved' : memories.removed === m ? 'Forgot' : 'Updated'} ${plural(m, 'memory', 'memories')}`);
+  if (tools) parts.push(`Ran ${plural(tools, 'tool')}`);
+  return parts.join(' · ');
+}
+
 // A Trace inside a TraceStep is a nested run (a subagent): a nested list behind a lid that says how it's going, closed
 // unless something in it is running, waiting or failed. Its steps announce through the outer Trace, with its name.
 function NestedTrace({ className, children, 'aria-label': label, parent, ...rest }: TraceProps & { parent: TraceCtxT }) {
@@ -68,7 +115,7 @@ function NestedTrace({ className, children, 'aria-label': label, parent, ...rest
   return (
     <TraceCtx.Provider value={{ announce, mounted: parent.mounted }}>
       <Accordion className="alt-trace-acc alt-trace-nested" defaultValue={live ? ['n'] : []} items={[{ value: 'n',
-        title: <span className="alt-trace-nested-title"><span>{label}</span><span className="alt-trace-nested-sum">{summary(list)}</span></span>,
+        title: <span className="alt-trace-nested-title"><span>{label}</span><span className="alt-sr">, </span><span className="alt-trace-nested-sum">{summary(list)}</span></span>,
         content: <ol className={cx('alt-stepper alt-trace', className)} data-orientation="vertical" aria-label={label} {...rest}>{children}</ol> }]} />
     </TraceCtx.Provider>
   );
@@ -97,7 +144,7 @@ export function TraceParallel({ label, children, className }: TraceParallelProps
   );
 }
 
-function RootTrace({ className, children, 'aria-label': label, ...rest }: TraceProps) {
+function RootTrace({ className, children, 'aria-label': label, collapsible, defaultOpen, ...rest }: TraceProps) {
   const [said, setSaid] = React.useState({ polite: '', urgent: '' });
   const mounted = React.useRef(false);
   React.useEffect(() => { mounted.current = true; }, []);
@@ -110,9 +157,20 @@ function RootTrace({ className, children, 'aria-label': label, ...rest }: TraceP
     queue.current.t = setTimeout(() => { queue.current.t = null; setSaid((s) => ({ ...s, polite: queue.current.last })); }, 700);
   }, []);
   React.useEffect(() => () => { if (queue.current.t) clearTimeout(queue.current.t); }, []);
+  const list = statusesOf(children);
+  const needs = list.some((x) => x === 'failed' || x === 'awaiting-approval');
+  const [open, setOpen] = React.useState(() => defaultOpen ?? list.some((x) => x === 'running' || x === 'failed' || x === 'awaiting-approval'));
+  // A step that fails or waits for approval needs the person: never leave it behind a closed lid.
+  React.useEffect(() => { if (needs) setOpen(true); }, [needs]);
+  const ol = <ol className={cx('alt-stepper alt-trace', className)} data-orientation="vertical" aria-label={label} {...rest}>{children}</ol>;
+  const did = collapsible ? describeTally(tallyOf(children)) : '';
   return (
     <TraceCtx.Provider value={{ announce, mounted }}>
-      <ol className={cx('alt-stepper alt-trace', className)} data-orientation="vertical" aria-label={label} {...rest}>{children}</ol>
+      {collapsible ? (
+        <Accordion className="alt-trace-acc alt-trace-fold" value={open ? ['f'] : []} onValueChange={(v) => setOpen(v.includes('f'))} items={[{ value: 'f',
+          title: <span className="alt-trace-nested-title"><span>{did || label}</span><span className="alt-sr">, </span><span className="alt-trace-nested-sum">{summary(list)}</span></span>,
+          content: ol }]} />
+      ) : ol}
       <span className="alt-sr" aria-live="polite">{said.polite}</span>
       <span className="alt-sr" aria-live="assertive">{said.urgent}</span>
     </TraceCtx.Provider>
@@ -128,7 +186,19 @@ export const formatDuration = (ms: number) => ms < 1000 ? `${Math.round(ms)}ms` 
 const words: Record<TraceStepStatus, string> = { planned: 'Planned', running: 'Running', done: 'Done', failed: 'Failed', 'awaiting-approval': 'Waiting for your approval' };
 
 export interface TraceStepProps {
+  /** What the step did, or with `tool`, what it acted on ("web/turns.ts"). */
   title: string;
+  /** The tool it called, shown before the title in code type: "edit", "write", "memory". Counted in a collapsible Trace's "Ran 4 tools". */
+  tool?: string;
+  /** A short tally after the status: "2 edits", "3 lines". */
+  detail?: string;
+  /**
+   * Lines it added and removed in the file named by `title`: "+2 −1", read as "2 lines added, 1 removed". Counted in a
+   * collapsible Trace's "Edited 2 files".
+   */
+  changes?: { added: number; removed: number };
+  /** What came back, in a sentence, under the step's detail: "2 edits applied to web/turns.ts". */
+  result?: React.ReactNode;
   /** 'auto': derived from the steps inside it (a nested Trace or TraceParallel): done only when they all are. */
   status: TraceStepStatus | 'auto';
   /** Milliseconds it took (done or failed) or has taken so far. */
@@ -140,7 +210,7 @@ export interface TraceStepProps {
   children?: React.ReactNode;
   className?: string;
 }
-export function TraceStep({ title, status: given, duration, error, onRetry, children, className }: TraceStepProps) {
+export function TraceStep({ title, tool, detail, changes, result, status: given, duration, error, onRetry, children, className }: TraceStepProps) {
   const c = React.useContext(TraceCtx);
   const status = given === 'auto' ? derive(children) : given;
   const arrived = React.useRef(c?.mounted.current ?? false);
@@ -161,14 +231,20 @@ export function TraceStep({ title, status: given, duration, error, onRetry, chil
       <div className="alt-step" data-state={plate} {...depth} style={style}>
         <span className="alt-step-mark">{status === 'done' ? <Tick /> : status === 'failed' ? <Icons.X size={13} aria-hidden="true" /> : status === 'running' ? <span className="alt-trace-live" aria-hidden="true" /> : null}</span>
         <span className="alt-step-text">
-          <span className="alt-step-title">{title}</span>
-          <span className="alt-step-desc">{words[status]}{duration !== undefined && status !== 'planned' ? ` · ${formatDuration(duration)}` : ''}</span>
+          <span className="alt-step-title">
+            {tool && <code className="alt-trace-verb">{tool}</code>}{tool && ' '}<span className="alt-trace-target">{title}</span>
+            {changes && <span className="alt-trace-changes">
+              <span aria-hidden="true"><span data-sign="add" data-zero={changes.added ? undefined : ''}>+</span>{changes.added} <span data-sign="del" data-zero={changes.removed ? undefined : ''}>−</span>{changes.removed}</span>
+              <span className="alt-sr">{`, ${plural(changes.added, 'line')} added, ${changes.removed} removed`}</span>
+            </span>}
+          </span>
+          <span className="alt-step-desc">{words[status]}{detail && status !== 'planned' ? ` · ${detail}` : ''}{duration !== undefined && status !== 'planned' ? ` · ${formatDuration(duration)}` : ''}</span>
           {status === 'failed' && (error || onRetry) && (
             <span className="alt-trace-error">{error}{onRetry && <Button size="sm" variant="secondary" onClick={onRetry}><Icons.Refresh size={13} />Retry</Button>}</span>
           )}
         </span>
       </div>
-      {children && status !== 'planned' && <div className="alt-trace-detail">{children}</div>}
+      {(children || result) && status !== 'planned' && <div className="alt-trace-detail">{children}{result && <p className="alt-trace-result">{result}</p>}</div>}
       <span className="alt-step-line" aria-hidden="true" data-done={status === 'done' ? '' : undefined} />
     </li>
   );
@@ -191,6 +267,62 @@ export function TraceToolCall({ name, input, output, defaultOpen = false }: Trac
       {output !== undefined ? <CodeBlock title="Output" language="json" code={show(output)} /> : <p className="alt-trace-wait">No output yet.</p>}
     </div>
   ) }]} />;
+}
+
+export interface TraceMemoryItem {
+  id: string;
+  /** What's remembered, as the assistant will read it later. */
+  text: string;
+  /** Default 'added'. */
+  change?: 'added' | 'updated' | 'removed';
+  /** For 'updated': what it said before. */
+  previous?: string;
+  /** The person forgot it from here: shown struck through with Undo, and not counted. */
+  forgotten?: boolean;
+}
+export interface TraceMemoryProps {
+  items: TraceMemoryItem[];
+  /** Shows Forget on each memory. Forgetting runs at once; leave the item with `forgotten` so it offers Undo. */
+  onForget?: (id: string) => void;
+  /** Undo for a forgotten memory, and Restore for one the assistant removed. */
+  onRestore?: (id: string) => void;
+  /** Names the group. Default "Memory". */
+  label?: string;
+  className?: string;
+}
+const memoryWord = { added: 'New', updated: 'Updated', removed: 'Removed' } as const;
+/**
+ * What the assistant wrote to memory, which outlives the conversation, so it's shown in words and can be taken back on
+ * the spot. Each memory lies flush in the record with what changed ("New", "Updated", "Removed") and the previous text
+ * for an update. Forget runs at once and leaves Undo (real recovery, so no dialog); a forgotten memory is struck
+ * through and read as "Forgotten".
+ */
+export function TraceMemory({ items, onForget, onRestore, label = 'Memory', className }: TraceMemoryProps) {
+  const [said, setSaid] = React.useState('');
+  const kept = items.filter((m) => !m.forgotten).length;
+  return (
+    <div className={cx('alt-trace-memory', className)} role="group" aria-label={`${label}: ${plural(kept, 'memory', 'memories')}`}>
+      <ul className="alt-trace-memory-list">
+        {items.map((m) => {
+          const change = m.change ?? 'added';
+          const gone = m.forgotten || change === 'removed';
+          return (
+            <li key={m.id} className="alt-trace-mem" data-change={change} data-forgotten={m.forgotten ? '' : undefined}>
+              <span className="alt-trace-mem-word">{m.forgotten ? 'Forgotten' : memoryWord[change]}</span>
+              <span className="alt-trace-mem-body">
+                {gone ? <s className="alt-trace-mem-text">{m.text}</s> : <span className="alt-trace-mem-text">{m.text}</span>}
+                {change === 'updated' && m.previous && !m.forgotten && <span className="alt-trace-mem-prev">Was: <s>{m.previous}</s></span>}
+              </span>
+              {m.forgotten || change === 'removed'
+                ? onRestore && <Button size="sm" variant="ghost" className="alt-trace-mem-act" onClick={() => { onRestore(m.id); setSaid(`${m.forgotten ? 'Kept' : 'Restored'}: ${m.text}`); }}>{m.forgotten ? 'Undo' : 'Restore'}</Button>
+                : onForget && <Button size="sm" variant="ghost" className="alt-trace-mem-act" aria-label={`Forget: ${m.text}`} onClick={() => { onForget(m.id); setSaid(`Forgotten: ${m.text.replace(/[.!?]$/, '')}. Undo is next to it.`); }}>Forget</Button>}
+            </li>
+          );
+        })}
+      </ul>
+      <span className="alt-sr" role="status">{said}</span>
+    </div>
+  );
 }
 
 export interface TraceReasoningProps {

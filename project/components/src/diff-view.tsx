@@ -93,13 +93,14 @@ export function DiffView({ mode = 'text', before, after, fields, context = 3, ca
   const onKey = (e: React.KeyboardEvent) => { if (e.target instanceof HTMLInputElement) return; if (e.key === 'n' || e.key === ']') { e.preventDefault(); go(1); } if (e.key === 'p' || e.key === '[') { e.preventDefault(); go(-1); } };
   const [said, setSaid] = React.useState('');
 
-  let summary = '', content: React.ReactNode, reviewTools: React.ReactNode = null;
+  let summary = '', content: React.ReactNode, reviewTools: React.ReactNode = null, count = 0;
   if (mode === 'properties') {
     const b = before as Record<string, unknown>, a = after as Record<string, unknown>;
     const keys = fields ?? [...new Set([...Object.keys(b), ...Object.keys(a)])].filter((k) => JSON.stringify(b[k]) !== JSON.stringify(a[k])).map((k) => ({ key: k, label: k }));
     const shown = keys.filter((f) => JSON.stringify(b[f.key]) !== JSON.stringify(a[f.key]));
     const fmt = (f: DiffField, v: unknown) => (v === undefined || v === null || v === '' ? '—' : f.format ? f.format(v) : String(v));
     summary = `${shown.length} ${shown.length === 1 ? 'property' : 'properties'} changed`;
+    count = shown.length;
     content = (
       <dl className="alt-diff-props">
         {shown.map((f) => (
@@ -119,6 +120,7 @@ export function DiffView({ mode = 'text', before, after, fields, context = 3, ca
     const adds = ops.filter((o) => o.kind === 'add').length, dels = ops.filter((o) => o.kind === 'del').length;
     summary = `${adds} ${adds === 1 ? 'addition' : 'additions'}, ${dels} ${dels === 1 ? 'removal' : 'removals'}`;
     const changes = review ? diffChanges(ops) : [];
+    count = review ? changes.length : diffChanges(ops).length;
     const decided = changes.filter((c) => decisions[c.id]).length;
     if (review) summary = `${decided} of ${changes.length} ${changes.length === 1 ? 'change' : 'changes'} reviewed`;
     const decide = (c: Change, d: DiffDecision) => {
@@ -140,8 +142,11 @@ export function DiffView({ mode = 'text', before, after, fields, context = 3, ca
         <span className="alt-diff-caption">{caption}</span>
         <span className="alt-diff-summary">{summary}</span>
         <span className="alt-diff-nav">
-          <Button size="sm" variant="ghost" onClick={() => go(-1)}>Previous change</Button>
-          <Button size="sm" variant="ghost" onClick={() => go(1)}>Next change</Button>
+          {/* One change has nowhere to move between: n and p still reach it. */}
+          {count > 1 && <>
+            <Button size="sm" variant="ghost" onClick={() => go(-1)}>Previous change</Button>
+            <Button size="sm" variant="ghost" onClick={() => go(1)}>Next change</Button>
+          </>}
           {reviewTools}
         </span>
       </figcaption>

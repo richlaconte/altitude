@@ -11,7 +11,7 @@ What changed between two versions: version history, audit-log detail ("Plan: Pro
 
 **Restoring a version is a consequential action**, not something the diff does: follow the consequential-action pattern (a confirmation, then a receipt).
 
-**Accessibility.** A `figure` named by its caption, with a summary first ("3 additions, 2 removals", "2 properties changed"). Previous change and Next change move focus from change to change, and so do the `n` and `p` keys while focus is inside. Signs are hidden; "Added" and "Removed" are read. Under forced colours the tints are dropped, and the signs and strike-through carry the meaning. Under `contrast="more"` each changed line gets a 2px edge in its tone.
+**Accessibility.** A `figure` named by its caption, with a summary first ("3 additions, 2 removals", "2 properties changed"). Previous change and Next change move focus from change to change, and so do the `n` and `p` keys while focus is inside. With a single change there's nowhere to move, so the two buttons are left out (`n` and `p` still reach it). Signs are hidden; "Added" and "Removed" are read. Under forced colours the tints are dropped, and the signs and strike-through carry the meaning. Under `contrast="more"` each changed line gets a 2px edge in its tone.
 
 **Props:** `mode` (`'text' | 'properties'`); `before`, `after` (texts, or records); `fields` (`{ key, label, format? }[]`, for properties); `context` (default 3); `caption`; `hunks` (precomputed line operations for large inputs; `diffLines(before, after)` makes them).
 
