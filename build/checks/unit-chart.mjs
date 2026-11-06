@@ -44,11 +44,11 @@ const active = (page) => page.evaluate(() => document.activeElement?.getAttribut
   const stops = await page.evaluate(() => document.querySelectorAll('.alt-unit')[2].querySelectorAll('[tabindex="0"]').length);
   expect(stops === 1, `one Tab stop (${stops})`);
   await page.locator('.alt-unit').nth(2).locator('[tabindex="0"]').focus();
-  expect(/^INV-1040, Acme\. 1 of 40\. Press Enter to open it\.$/.test(await active(page)), `the first record (${await active(page)})`);
+  expect(/^INV-1040, Harrow Freight\. 1 of 40\. Press Enter to open it\.$/.test(await active(page)), `the first record (${await active(page)})`);
   await page.keyboard.press('ArrowDown');
-  expect(/^INV-1050, Acme\. 11 of 40\./.test(await active(page)), `↓ by a row (${await active(page)})`);
+  expect(/^INV-1050, Harrow Freight\. 11 of 40\./.test(await active(page)), `↓ by a row (${await active(page)})`);
   await page.keyboard.press('ArrowUp'); for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight');
-  expect(/^INV-1046, Globex, Paid late\. 7 of 40\./.test(await active(page)), `a late invoice says so in words (${await active(page)})`);
+  expect(/^INV-1046, Tidewater Clinic, Paid late\. 7 of 40\./.test(await active(page)), `a late invoice says so in words (${await active(page)})`);
   await page.keyboard.press('Enter');
   const opened = await page.evaluate(() => document.querySelectorAll('.alt-unit')[2].nextElementSibling?.textContent);
   expect(opened === 'Opened INV-1046', `Enter chooses it (${opened})`);
