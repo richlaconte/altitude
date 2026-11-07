@@ -160,6 +160,21 @@ try {
   const out = JSON.parse(execFileSync(process.execPath, [cli, 'check', '--json', '--cwd', project], { encoding: 'utf8' }));
   assert.equal(out.ok, true, 'reviews alone pass');
   assert.ok(out.findings.every((f) => f.kind === 'contextual-review'));
+
+  // Checking a subtree verifies setup across the project: the entry's stylesheet and provider count (#583), and a
+  // project with neither still fails, while other rules report only inside the subtree.
+  writeFileSync(join(project, 'src/App.tsx'), "import 'altitude-design/altitude.css';\nimport { AltitudeProvider } from 'altitude-design';\nimport { Tile } from './components/Tile';\nexport const App = () => <AltitudeProvider><Tile /></AltitudeProvider>;\n");
+  mkdirSync(join(project, 'src/components'), { recursive: true });
+  writeFileSync(join(project, 'src/components/Tile.tsx'), "import { Card } from 'altitude-design';\nexport const Tile = () => <Card>Record</Card>;\n");
+  writeFileSync(join(project, 'src/Other.tsx'), "import { Button } from 'altitude-design';\nexport const Other = () => <Button variant=\"primary\">OK</Button>;\n");
+  const sub = JSON.parse(execFileSync(process.execPath, [cli, 'check', 'src/components', '--json', '--cwd', project], { encoding: 'utf8' }));
+  assert.equal(sub.ok, true, `a subtree whose app is set up at its entry passes: ${JSON.stringify(sub.findings)}`);
+  assert.equal(sub.target, join('src', 'components'));
+  assert.deepEqual(sub.findings, [], 'findings outside the subtree (ALT-COPY-001 in Other.tsx) are not reported');
+  writeFileSync(join(project, 'src/App.tsx'), "import { Tile } from './components/Tile';\nexport const App = () => <Tile />;\n");
+  rmSync(join(project, 'src/Other.tsx'));
+  try { execFileSync(process.execPath, [cli, 'check', 'src/components', '--json', '--cwd', project], { encoding: 'utf8' }); assert.fail('a subtree in a project with no setup fails'); }
+  catch (e) { const bad = JSON.parse(e.stdout); assert.deepEqual(bad.findings.map((f) => f.ruleId).sort(), ['ALT-SETUP-002', 'ALT-SETUP-003']); assert.match(bad.findings[0].observed, /in the project/); }
 } finally { rmSync(project, { recursive: true, force: true }); }
 
 console.log(`source check: ${Object.keys(RULES).length} rules each catch their example and pass their counter-example; CLI exit codes and rules.json entries pass`);
