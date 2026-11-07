@@ -17,6 +17,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 72px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body { margin: 0; background: var(--page-bg); color: var(--page-ink); }
 .page { min-height: 100vh; }
+.showcase:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 4px; border-radius: var(--radius-xl); }
 .nav-sentinel { position: absolute; top: 0; left: 0; width: 1px; height: 4px; pointer-events: none; }
 .page a:not(.alt-btn):not(.alt-sidebar-button) { color: var(--page-link); text-underline-offset: 3px; }
 .page a:not(.alt-btn):not(.alt-sidebar-button):hover { text-decoration-thickness: 2px; }

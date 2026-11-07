@@ -130,7 +130,7 @@ function PlanningScene({ onMessage }: { onMessage: (message: string) => void }) 
   </div>;
 }
 
-function WritingScene({ onMessage }: { onMessage: (message: string) => void }) {
+export function WritingScene({ onMessage }: { onMessage: (message: string) => void }) {
   const [title, setTitle] = React.useState('A better first day');
   const [failNext, setFailNext] = React.useState(false);
   const failure = React.useRef(false);

@@ -1,0 +1,56 @@
+/* Small-screen composition. Altitude owns controls, elevation, motion and states. */
+.ms-tabs { min-width: 0; gap: 0; }
+.ms-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-4); }
+.ms-toolbar > .alt-tabs-list { min-width: 0; flex: 1; }
+.ms-toolbar .alt-tabs-trigger { flex: 1; padding-inline: var(--space-3); }
+.ms-scheme { flex: none; }
+.ms-frame { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--surface-ground); }
+.ms-appbar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border-bottom: 1px solid var(--line); }
+.ms-appbar h2 { margin: 0; font: 600 14px/20px var(--font-sans); letter-spacing: -.01em; }
+.ms-scene { min-width: 0; padding: var(--space-4); }
+.ms-scene[data-state="inactive"] { display: none; }
+.ms-book, .ms-preferences { display: flex; flex-direction: column; gap: var(--space-4); }
+.ms-heading h3 { margin: 0; font: 500 23px/29px var(--font-sans); letter-spacing: -.025em; }
+.ms-heading p { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.ms-day { display: flex; align-items: center; gap: var(--space-3); font: 400 12px/18px var(--font-sans); color: var(--ink-muted); }
+.ms-day > span + span { border-left: 1px solid var(--line); padding-left: var(--space-3); }
+.ms-review-trigger { width: 100%; }
+.ms-receipt { padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.ms-receipt h4 { margin: 0 0 var(--space-2); font: 500 15px/22px var(--font-sans); }
+.ms-receipt h4 span { color: var(--positive); }
+.ms-receipt p { margin: var(--space-1) 0 0; font: 400 13px/20px var(--font-sans); color: var(--ink-muted); }
+.ms-receipt strong { color: var(--ink); font-weight: 500; }
+.ms-review-details { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; }
+.ms-review-details > div { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: var(--space-4); }
+.ms-review-details dt { font: 400 13px/22px var(--font-sans); color: var(--ink-muted); }
+.ms-review-details dd { margin: 0; font: 400 15px/22px var(--font-sans); }
+.ms-review-details dd strong { font-weight: 500; }
+.ms-sheet-actions { display: flex; flex-direction: column; align-items: stretch; }
+.ms-delivery { gap: var(--space-2); }
+.ms-delivery .alt-radio { min-height: 44px; align-items: center; }
+.ms-delivery .alt-check-text { display: flex; flex-direction: row; flex: 1; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.ms-delivery .alt-check-desc { margin: 0; }
+.ms-tabs .alt-switch-row { min-height: 44px; }
+.ms-brief { padding-block: var(--space-4); border-block: 1px solid var(--line); }
+.ms-brief-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
+.ms-brief-head h4 { margin: 0; font: 500 13px/20px var(--font-sans); }
+.ms-brief-head > span { font: 400 12px/20px var(--font-mono); color: var(--ink-muted); }
+.ms-brief > p { margin: var(--space-3) 0 var(--space-1); font: 500 16px/23px var(--font-sans); }
+.ms-brief > span { color: var(--ink-muted); font: 400 13px/20px var(--font-sans); }
+.ms-brief > .ms-tomorrow { font-size: 14px; font-weight: 400; }
+.ms-local-note { margin: 0; font: 400 12px/18px var(--font-sans); color: var(--ink-muted); }
+.ms-caption { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 12px/19px var(--font-sans); }
+.ms-caption p { margin: 0 0 var(--space-2); }
+.ms-caption > span { font-size: 11px; }
+.ms-scene .wb-note { margin: 0; }
+.ms-scene .wb-document-heading { padding-bottom: var(--space-3); }
+.ms-scene .wb-note-title { margin-top: var(--space-3); }
+.ms-scene .wb-note-title .alt-inline-edit-surface { padding: var(--space-2); }
+.ms-scene .wb-note-fixture { margin-top: var(--space-3); }
+@media (pointer: coarse) {
+  .ms-toolbar .alt-tabs-trigger, .ms-tabs .alt-btn, .ms-sheet .alt-btn { min-height: 44px; }
+  .ms-sheet .alt-btn[data-square] { min-width: 44px; }
+}
+@media (forced-colors: active) {
+  .ms-frame, .ms-appbar, .ms-caption, .ms-receipt, .ms-brief, .ms-day > span + span { border-color: CanvasText; }
+}

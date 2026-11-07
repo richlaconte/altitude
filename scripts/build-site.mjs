@@ -54,7 +54,7 @@ const agentJs = await bundle('site/agent.tsx');
 
 const components = readFileSync('project/components/bundle.css', 'utf8');
 const fontImport = (components.match(/^@import url\('([^']+)'\);/) || [])[1];
-const css = [tokensCss('project/tokens.json'), components.replace(/^@import[^\n]*\n/, ''), readFileSync('site/site.css', 'utf8'), readFileSync('site/workbench.css', 'utf8')].join('\n');
+const css = [tokensCss('project/tokens.json'), components.replace(/^@import[^\n]*\n/, ''), ...['site', 'workbench', 'mobile-showcase'].map(name => readFileSync(`site/${name}.css`, 'utf8'))].join('\n');
 
 const title = 'Altitude';
 const description = 'Give your app some depth. React components and guidance for your coding agent. Try Altitude in an interactive workspace, then explore the example apps.';

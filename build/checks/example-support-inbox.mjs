@@ -10,6 +10,7 @@
 //   a teammate reassigning the ticket you're on is a raised Alert that keeps your draft;
 //   at phone width the list and the ticket are separate screens, and Back returns focus to the row.
 import { chromium } from 'playwright-core';
+import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { buildExamples } from '../../scripts/build-examples.mjs';
 
@@ -42,6 +43,50 @@ const openTicket = async (page, title) => { await page.locator('[role="option"]'
 const composer = (page) => page.getByLabel(/^Reply to /);
 const thread = (page) => page.locator('section[aria-label^="Conversation with"]');
 const replies = (page, op = 'tickets.reply') => page.evaluate((op) => [...document.querySelectorAll('.ex-log-row')].filter((r) => r.querySelector('.ex-log-op')?.textContent === op && /ok|lost/.test(r.dataset.status)).length, op);
+
+// ---- Recognition plan (#617): matching content, meaningful cues in each presentation -----------------------------
+// Engineering observations only: these checks do not measure a person's recognition speed, comprehension or taste.
+const recognitionShots = fileURLToPath(new URL('../test/recognition-cues/', import.meta.url));
+mkdirSync(recognitionShots, { recursive: true });
+for (const [scheme, width, forced] of [
+  ['light', 1280, false], ['dark', 1280, false], ['light', 320, false], ['dark', 320, false],
+  ['light', 1280, true], ['dark', 320, true],
+]) {
+  const { ctx, page, errors } = await fresh({ colorScheme: scheme, viewport: { width, height: 900 }, deviceScaleFactor: 2,
+    ...(forced ? { forcedColors: 'active', reducedMotion: 'reduce' } : {}) });
+  const condition = `${scheme}-${width}${forced ? '-forced-reduced' : ''}`;
+  await page.getByRole('tab', { name: /^All/ }).click();
+  // Inspect settled cues after the existing arrival animation, not its temporary emphasis.
+  await page.evaluate(async () => {
+    await Promise.all(document.querySelector('.si-list').getAnimations({ subtree: true })
+      .filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {})));
+  });
+  const invoice = page.getByRole('option', { name: /Invoice for March from Oluwaseun Bello On hold/ });
+  expect(await invoice.count() === 1 && await page.getByRole('option').count() === 5,
+    `${condition}: the same five records expose invoice identity, requester and state together`);
+  expect(await invoice.locator('.alt-inbox-status').innerText() === 'On hold', `${condition}: status is visible words, independent of color`);
+  expect((await invoice.locator('.alt-inbox-from').innerText()).includes('Oluwaseun Bello'), `${condition}: requester identity has a readable name`);
+  const description = await invoice.evaluate((el) => (el.getAttribute('aria-describedby') ?? '').split(/\s+/).map((id) => document.getElementById(id)?.textContent ?? '').join(' '));
+  expect(description.includes('Our finance team needs the VAT number on the invoice before they can pay it.'), `${condition}: the full preview remains in the accessible description`);
+  expect(await page.getByRole('option', { name: /^Unread\. Refund for order 4471/ }).count() === 1,
+    `${condition}: the unread mark has a non-color named equivalent`);
+  expect(!(await look(page)).sideways, `${condition}: the recognition queue fits without horizontal page overflow`);
+  await page.locator('.si').screenshot({ path: `${recognitionShots}${condition}-queue.png` });
+  await invoice.focus(); await page.keyboard.press('Enter'); await wait(page, 300);
+  expect(await page.getByRole('heading', { name: 'Invoice for March', exact: true }).isVisible()
+    && await page.locator('[data-inbox-key="T-4455"]').getAttribute('aria-selected') === 'true', `${condition}: keyboard opening pairs the same identity with selected semantics`);
+  expect(await page.getByRole('heading', { name: 'Conversation with Oluwaseun Bello' }).isVisible()
+    && await page.getByRole('heading', { name: 'Internal notes · not sent to the customer' }).isVisible(),
+    `${condition}: public conversation and internal notes have distinct visible headings`);
+  expect(!(await look(page)).sideways, `${condition}: open content fits without horizontal page overflow`);
+  await page.locator('.si').screenshot({ path: `${recognitionShots}${condition}-detail.png` });
+  if (width === 320) {
+    await page.getByRole('button', { name: 'Back to tickets' }).click(); await wait(page, 250);
+    expect(await focusedTitle(page) === 'Invoice for March', `${condition}: returning restores focus to the recognized source`);
+  }
+  expect(!errors.length, `${condition}: no page or console errors (${errors.slice(0, 2).join('; ')})`);
+  await ctx.close();
+}
 
 // ---- Renders ------------------------------------------------------------------------------------------------------
 for (const [scheme, width] of [['light', 1280], ['dark', 1280], ['light', 375]]) {
@@ -97,6 +142,8 @@ for (const [scheme, width] of [['light', 1280], ['dark', 1280], ['light', 375]])
   expect(/Maya Chen is viewing/.test(await page.locator('.si-presence').textContent()), 'presence: a teammate on the ticket is named on it');
   await event(page, 'Maya Chen starts replying');
   expect(/Maya Chen is replying/.test(await page.locator('.si-presence').textContent()) && /Maya Chen/.test(await thread(page).locator('.alt-comments-typing').textContent()), 'presence: their replying shows on the ticket and in the thread');
+  expect(await page.getByRole('option', { name: /Refund for order 4471.*Maya Chen is replying/ }).count() === 1,
+    'recognition: the presence avatar has a named action in the row, not an ownership claim');
   await composer(page).fill('Hi Priya, sorry about the jug. I can refund it today.');
   await composer(page).focus(); await composer(page).evaluate((t) => t.setSelectionRange(9, 9));
   await event(page, 'Maya Chen replies first');
