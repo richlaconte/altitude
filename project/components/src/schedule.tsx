@@ -46,6 +46,13 @@ export interface ScheduleProps<T> {
   onRemove?: (event: T) => void;
   /** Someone else is moving this event: it can't be picked up. */
   heldBy?: (event: T) => { name: string; presence?: 1 | 2 | 3 } | null | undefined;
+  /**
+   * A settled event, part of the record (#561): it lies flush on the ground with a lock and `lockedLabel`, and can't be
+   * moved, resized, renamed or removed. Enter (and double-click, or a tap) still calls `onOpen`, so it can be read.
+   */
+  isLocked?: (event: T) => boolean;
+  /** The word shown after a locked event's title and spoken in its name. Default 'Locked'. */
+  lockedLabel?: (event: T) => string;
   /** Refuse a span (outside hours, a closed room). */
   isUnavailable?: (span: ScheduleSpan) => boolean;
   /** The now line's time. Default: the clock. */
@@ -75,7 +82,7 @@ type Draft = { day: string; start: number; end: number; title: string; error?: s
  * slot under a carried event deepens to a trench the length of the event. A carried event floats at level 3, tilted.
  */
 export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date, onDateChange, events, getKey, getStart, getEnd, getLabel, step = 15, dayStart = '08:00', dayEnd = '19:00',
-  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isUnavailable, now, locale,
+  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isLocked, lockedLabel, isUnavailable, now, locale,
   className, ...aria }: ScheduleProps<T>) {
   // Narrow (#257): measured on the schedule itself, at the narrow breakpoint.
   const [root, setRoot] = React.useState<HTMLDivElement | null>(null);
@@ -122,6 +129,26 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const say = (text: string) => { setAssertive(''); requestAnimationFrame(() => mounted.current && setAssertive(text)); };
 
   const byKey = new Map(events.map((e) => [getKey(e), e]));
+  const locked = (event: T | undefined) => !!event && !!isLocked?.(event);
+  const lockWord = (event: T) => lockedLabel?.(event) || 'Locked';
+  const refuseLocked = (event: T) => say(`${getLabel(event)} is ${lockWord(event).toLowerCase()} and can’t be changed.`);
+  // An event that becomes locked while on screen settles 1→0 once (#561); one already locked simply renders flush,
+  // including one that arrives locked (a new week, an approved entry added): it must have been rendered, unlocked, last time.
+  const lockedNow = new Set(isLocked ? events.filter((e) => isLocked(e)).map(getKey) : []);
+  const lastSeen = React.useRef<{ keys: Set<string>; locked: Set<string> } | null>(null);
+  const settleTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [lockSettle, setLockSettle] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    const before = lastSeen.current; lastSeen.current = { keys: new Set(byKey.keys()), locked: lockedNow };
+    if (!before) return;
+    const fresh = [...lockedNow].filter((k) => !before.locked.has(k) && before.keys.has(k));
+    if (!fresh.length) return;
+    setLockSettle(fresh);
+    // Not cleared by the next change to the locked set, so the settle always ends.
+    clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => mounted.current && setLockSettle([]), 400);
+  });
+  React.useEffect(() => () => clearTimeout(settleTimer.current), []);
   // The events as last rendered, for a write that finishes after the parent has already published its result.
   const eventsNow = React.useRef(events); eventsNow.current = events;
   // Events by day, with overlapping ones laid out side by side in lanes.
@@ -156,7 +183,8 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
 
   const spanText = (day: string, s: number, e: number) => `${longDay.format(utc(day))}, ${clockText(s)} to ${clockText(e)}`;
   const nameOf = (p: Placed<T>) => [`${getLabel(p.event)}, ${spanText(p.day, p.start, p.end)}`, p.overlaps.length && `overlaps with ${p.overlaps.join(', ')}`,
-    heldBy?.(p.event) && `${heldBy(p.event)!.name} is moving this event`].filter(Boolean).join('. ');
+    heldBy?.(p.event) && `${heldBy(p.event)!.name} is moving this event`].filter(Boolean).join('. ')
+    + (locked(p.event) ? `, ${lockWord(p.event).toLowerCase()}, can’t be changed` : '');
   const blocked = (day: string, s: number, e: number) => s < 0 || e > 24 * 60 || e <= s || !!isUnavailable?.({ start: at(day, s), end: at(day, e) });
 
   React.useLayoutEffect(() => {
@@ -259,6 +287,9 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
       if (next) { e.preventDefault(); next.blocked = blocked(next.day, next.start, next.end); setCarry(next); wantFocus.current = 'cell'; say(`${spanText(next.day, next.start, next.end)}${next.blocked ? '. Not available' : ''}`); }
       return;
     }
+    if (event && locked(event) && ((e.key === ' ' && onChange) || (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && onChange) || (e.key === 'F2' && onRename) || (e.key === 'Delete' && onRemove))) {
+      e.preventDefault(); refuseLocked(event); return;
+    }
     if (event && onChange && e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && !heldBy?.(event)) {
       e.preventDefault();
       const s = split(getStart(event)), en = split(getEnd(event)).min;
@@ -309,7 +340,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const startDrag = (e: React.PointerEvent, kind: 'draw' | 'move' | 'resize', key?: string) => {
     if (e.button !== 0 || busy || renaming) return;
     if (kind === 'draw' && (!onCreate || (e.target as HTMLElement).closest('[data-event], .alt-schedule-draft'))) return;
-    if (kind !== 'draw' && (!onChange || (key && heldBy?.(byKey.get(key)!)))) return;
+    if (kind !== 'draw' && (!onChange || (key && (heldBy?.(byKey.get(key)!) || locked(byKey.get(key)))))) return;
     const origin = { x: e.clientX, y: e.clientY };
     const event = key ? byKey.get(key)! : undefined;
     const s = event ? split(getStart(event)) : null, en = event ? split(getEnd(event)).min : 0;
@@ -389,18 +420,20 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
               tabIndex={isFocus && !here.length ? 0 : -1} onFocus={(e) => { if (e.target === e.currentTarget) setFocus({ day: d, min }); }}>
               {here.map((p) => {
                 const who = heldBy?.(p.event);
+                const isLockedEvent = locked(p.event);
                 const isRenaming = renaming?.key === p.key;
                 return eventBox(p, <>
                   <button type="button" className="alt-schedule-event" data-event={p.key} tabIndex={isFocus ? 0 : -1} aria-label={nameOf(p)} aria-busy={busy === p.key || undefined}
                     data-status={busy === p.key ? 'pending' : failure?.key === p.key ? 'failed' : undefined} data-settle={settled === p.key ? '' : undefined}
-                    data-held={who ? (who.presence ?? 1) : undefined} data-short={(p.end - p.start) * px < 36 ? '' : undefined} onFocus={() => setFocus({ day: d, min })}
+                    data-held={who ? (who.presence ?? 1) : undefined} data-locked={isLockedEvent ? '' : undefined} data-lock-settle={isLockedEvent && lockSettle.includes(p.key) ? '' : undefined} style={isLockedEvent ? { ['--lock-ch' as any]: lockWord(p.event).length } : undefined} data-short={(p.end - p.start) * px < 36 ? '' : undefined} onFocus={() => setFocus({ day: d, min })}
                     onPointerDown={(e) => { e.stopPropagation(); startDrag(e, 'move', p.key); }} onDoubleClick={() => onOpen?.(p.event)}
                     onClick={(e) => { if ((e.nativeEvent as PointerEvent).pointerType === 'touch') onOpen?.(p.event); }}>
                     {isRenaming ? null : renderEvent ? renderEvent(p.event) : <><strong>{getLabel(p.event)}</strong><small>{clockText(p.start)}–{clockText(p.end)}</small></>}
+                    {isLockedEvent && <span className="alt-schedule-lock" aria-hidden="true"><Icons.Lock size={11} />{lockWord(p.event)}</span>}
                     {who && <span className="alt-schedule-holder" aria-hidden="true">{who.name}</span>}
                   </button>
                   {isRenaming && field(renaming.title, `Rename ${getLabel(p.event)}`, renaming.error, (t) => setRenaming({ ...renaming, title: t, error: undefined }), () => void rename(), () => { setRenaming(null); wantFocus.current = 'cell'; })}
-                  {onChange && !who && <span className="alt-schedule-handle" aria-hidden="true" onPointerDown={(e) => { e.stopPropagation(); startDrag(e, 'resize', p.key); }} />}
+                  {onChange && !who && !isLockedEvent && <span className="alt-schedule-handle" aria-hidden="true" onPointerDown={(e) => { e.stopPropagation(); startDrag(e, 'resize', p.key); }} />}
                 </>, {});
               })}
               {carried && <>

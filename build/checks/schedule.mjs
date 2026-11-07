@@ -23,6 +23,35 @@ const said = async (page, text) => {
   return true;
 };
 
+// A schedule mounted directly in the fixture page, with locked events, onOpen and a way to change its events (#561).
+const mountLocked = page => page.evaluate(() => new Promise((done) => {
+  document.body.innerHTML = ''; const d = document.createElement('div'); document.body.append(d);
+  const A = window.Altitude, h = React.createElement; window.__opened = [];
+  const seed = [
+    { id: 'a', title: 'Standup', start: '2026-10-26T09:00', end: '2026-10-26T09:30', room: 'Room A', locked: true },
+    { id: 'b', title: 'Board report', start: '2026-10-26T14:00', end: '2026-10-26T15:00', room: 'Room B', locked: true },
+    { id: 'c', title: 'Review', start: '2026-10-27T10:00', end: '2026-10-27T11:00', room: 'Room B' },
+    { id: 'x', title: 'Sync', start: '2026-10-28T10:00', end: '2026-10-28T11:00', room: 'Room B' },
+  ];
+  function Host() {
+    const [events, setEvents] = React.useState(seed); window.__setEvents = setEvents;
+    return h(A.Schedule, { 'aria-label': 'Locked bookings', view: 'workweek', date: '2026-10-26', onDateChange: () => {}, now: '2026-10-27T08:30', dayStart: '08:00', dayEnd: '18:00',
+      events, getKey: e => e.id, getStart: e => e.start, getEnd: e => e.end, getLabel: e => e.title,
+      renderEvent: e => h(React.Fragment, null, h('strong', null, e.title), h('small', null, `${e.start.slice(11)}–${e.end.slice(11)} · ${e.room}`)),
+      isLocked: e => !!e.locked, lockedLabel: () => 'Approved', onOpen: e => window.__opened.push(e.id), onChange: async () => ({ ok: true }) });
+  }
+  const scene = h(A.AltitudeProvider, null, h('div', { style: { width: '860px' } }, h(Host)));
+  ReactDOM.createRoot(d).render(document.documentElement.dataset.fixtureStrict === 'true' ? h(React.StrictMode, null, scene) : scene);
+  setTimeout(done, 400);
+}));
+// How far a locked event's text beside its lock label runs past the label's left (≤ 0: clear of it), and how far the label sits off centre.
+const lockRoom = (page, id) => page.evaluate(id => {
+  const b = document.querySelector(`[data-event="${id}"]`), box = b.getBoundingClientRect(), lock = b.querySelector('.alt-schedule-lock').getBoundingClientRect();
+  const beside = [...b.children].filter(el => !el.classList.contains('alt-schedule-lock')).filter(el => { const r = el.getBoundingClientRect(); return r.top < lock.bottom && r.bottom > lock.top; });
+  const ends = beside.map(el => el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight));
+  return { over: Math.max(...ends) - lock.left, offCentre: Math.abs((lock.top + lock.bottom) / 2 - (box.top + box.bottom) / 2), short: b.hasAttribute('data-short') };
+}, id);
+
 try {
   { const page = await open();
     const grid = page.getByRole('grid', { name: 'Room bookings' });
@@ -76,6 +105,17 @@ try {
     // Held by a collaborator.
     await page.locator('[data-event="e6"]').focus(); await page.keyboard.press('Space');
     await said(page, 'Ana is moving Retro'); check((await page.locator('[data-event="e6"]').getAttribute('aria-label')).includes('Ana is moving this event'), 'SC-16 an event someone else holds can’t be picked up, and says who');
+    // Locked (#561): flush, says so, refuses every change.
+    const lockedEv = page.locator('[data-event="e7"]');
+    check((await lockedEv.getAttribute('aria-label')).endsWith(', approved, can’t be changed') && await lockedEv.getAttribute('aria-disabled') === null, 'SC-16b a locked event’s name says it can’t be changed, without aria-disabled');
+    check(await lockedEv.evaluate(el => getComputedStyle(el).boxShadow.split('inset').length === 2 && !/rgba?\([^)]*\) 0px [1-9]/.test(getComputedStyle(el).boxShadow) && getComputedStyle(el).cursor === 'default'), 'SC-16c a locked event lies flush: no shadow, an edge only, no grab cursor');
+    check(await lockedEv.locator('xpath=..').locator('.alt-schedule-handle').count() === 0 && (await lockedEv.textContent()).includes('Approved'), 'SC-16d a locked event shows its word and has no resize handle');
+    await lockedEv.focus(); await page.keyboard.press('Space');
+    await said(page, 'Board report is approved and can’t be changed');
+    check(await lockedEv.getAttribute('aria-pressed') === null, 'SC-16e Space doesn’t pick up a locked event');
+    for (const key of ['F2', 'Shift+ArrowDown', 'Delete']) { await page.locator('[data-event="e7"]').focus(); await page.keyboard.press(key); }
+    check(await page.locator('[data-event="e7"]').count() === 1 && await page.getByRole('textbox').count() === 0 && await where(page, 'e7') === '2026-10-26T840'
+      && (await page.locator('[data-event="e7"]').textContent()).includes('15:00'), 'SC-16f F2, Shift+↓ and Delete leave a locked event as it is');
     // Rename and remove.
     await page.locator('[data-event="e1"]').focus(); await page.keyboard.press('F2');
     const rename = page.getByRole('textbox', { name: 'Rename Standup' }); await rename.fill('Daily standup'); await rename.press('Enter');
@@ -124,7 +164,46 @@ try {
     await page.mouse.move(handle.x + handle.width / 2, handle.y + 2); await page.mouse.down(); await page.mouse.move(handle.x + handle.width / 2, handle.y + 2 + 44, { steps: 6 }); await page.mouse.up();
     await said(page, 'Changed Planning to Wednesday 28 October, 13:00 to 15:30');
     check(true, 'SC-24 the bottom edge changes the end time');
+    // Pointer: a locked event can't be carried.
+    const lk = await page.locator('[data-event="e7"]').boundingBox(), tue = await page.locator('[data-cell="2026-10-27T840"]').boundingBox();
+    await page.mouse.move(lk.x + 20, lk.y + 8); await page.mouse.down(); await page.mouse.move(lk.x + 30, lk.y + 20, { steps: 3 });
+    check(await page.locator('.alt-schedule[data-carrying]').count() === 0, 'SC-25 dragging a locked event doesn’t carry it');
+    await page.mouse.move(tue.x + 20, tue.y + 8, { steps: 6 }); await page.mouse.up();
+    check(await where(page, 'e7') === '2026-10-26T840', 'SC-25b a locked event stays where it is');
     await page.close(); }
+
+  { const page = await open(); await mountLocked(page);
+    // #561 review: the title is cut short before the lock label, and on a short event the time and room are too.
+    const tall = await lockRoom(page, 'b'), short = await lockRoom(page, 'a');
+    check(!tall.short && tall.over <= 0, `SC-26 a locked event’s title stops before its lock label (${tall.over.toFixed(1)}px over)`);
+    check(short.short && short.over <= 0, `SC-26b on a short locked event the title, time and room stop before the label (${short.over.toFixed(1)}px over)`);
+    check(short.offCentre <= 1, `SC-26c on a short locked event the label is centred in the row (${short.offCentre.toFixed(1)}px off)`);
+    // It still opens: Enter and double-click call onOpen.
+    await page.locator('[data-event="b"]').focus(); await page.keyboard.press('Enter');
+    await page.locator('[data-event="b"]').dblclick();
+    check((await page.evaluate(() => window.__opened)).join() === 'b,b', 'SC-27 Enter and double-click open a locked event');
+    // The settle: only an event that becomes locked while on screen, and it always ends.
+    check(await page.locator('[data-lock-settle]').count() === 0, 'SC-28 events already locked when it mounts render flush, without the settle');
+    await page.evaluate(() => window.__setEvents(l => l.map(e => e.id === 'c' ? { ...e, locked: true } : e)));
+    await page.locator('[data-event="c"][data-lock-settle]').waitFor();
+    await page.evaluate(() => window.__setEvents(l => [...l, { id: 'n', title: 'Audit', start: '2026-10-29T10:00', end: '2026-10-29T11:00', room: 'Room A', locked: true }]));
+    await page.locator('[data-event="n"]').waitFor();
+    check(await page.locator('[data-event="n"]').getAttribute('data-lock-settle') === null, 'SC-28b an event that arrives already locked renders flush, without the settle');
+    await page.waitForTimeout(600);
+    check(await page.locator('[data-lock-settle]').count() === 0, 'SC-28c the settle ends');
+    await page.evaluate(() => window.__setEvents(l => l.map(e => e.id === 'x' ? { ...e, locked: true } : e)));
+    await page.locator('[data-event="x"][data-lock-settle]').waitFor();
+    await page.evaluate(() => window.__setEvents(l => l.map(e => e.id === 'a' ? { ...e, locked: false } : e)));
+    await page.waitForTimeout(600);
+    check(await page.locator('[data-lock-settle]').count() === 0, 'SC-28d the settle ends even when the locked set changes again while it plays');
+    await page.close(); }
+
+  { const ctx = await browser.newContext({ viewport: { width: 1000, height: 1400 }, locale: 'en-GB', isMobile: true, hasTouch: true });
+    const page = await ctx.newPage(); page.on('pageerror', e => errors.push(e.message));
+    await page.goto(`file://${fixturePath('Schedule')}`); await mountLocked(page);
+    await page.locator('[data-event="b"]').tap(); await page.waitForTimeout(200);
+    check((await page.evaluate(() => window.__opened)).join() === 'b', 'SC-27b a tap opens a locked event on touch');
+    await ctx.close(); }
 
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });

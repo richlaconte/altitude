@@ -15,6 +15,7 @@ A day or week of time whose events you handle directly: drag across empty time t
   onChange={async ({ id, start, end }, previous) => { const r = await api.reschedule(id, start, end, previous.revision); if (r.ok) setBookings(r.all); return r; }}
   onRename={…} onOpen={(b) => setSheetFor(b)} onRemove={…}
   heldBy={(b) => presence[b.id]}
+  isLocked={(b) => b.approved} lockedLabel={() => 'Approved'}
   isUnavailable={({ start, end }) => outsideOpeningHours(start, end)}
 />
 ```
@@ -29,10 +30,11 @@ Times are local date-times, `'YYYY-MM-DDTHH:mm'` strings with no zone, matching 
 - **Drawing** a new event across empty time makes a well the length of the drag; releasing raises it into an event with a title field.
 - **Pending** writes hover at level 2 after `dur-grace`. A moved or resized event stays where it was dropped while its write runs, and until `events` has the new times; a **failed** one drops to a trench, the event goes back to its old place, and a bar offers Retry.
 - **Held by a collaborator** (`heldBy`): the event wears their `presence-*` outline and name and can't be picked up.
+- **Locked** (`isLocked`): a settled event, part of the record, lies flush on the ground (`surface-ground`, no shadow, a 1px `line-control` edge in place of the accent) with a lock and its word (`lockedLabel`, default "Locked"), as `TimeSlotPicker`'s booked time says "Booked". Space, Shift+↑/↓, F2, Delete, a drag and the resize handle do nothing, and the assertive region says why ("Board report is approved and can't be changed"); Enter, double-click and a tap still call `onOpen`. It doesn't block a drop: that's `isUnavailable`. An event that becomes locked on screen settles 1→0 once (`dur-travel-1`, `ease-settle`). Not `heldBy`: nobody is holding it, and `presence-*` is for people.
 - **The now line** is `accent-ink`, not `critical`: it isn't status.
 - **A new week** cross-fades; it isn't a change of level.
 
-Without height: every event is a button named with its title, day, start and end, its overlaps and who holds it; carrying is `aria-pressed`, and each step is announced in an assertive region (“Wednesday 28 October, 15:15 to 16:15”); writes and errors are announced politely. Forced colours: events 1px, carried 2px, slots and drawn spans thick dashed, pending dotted, failed thick dashed, the now line Highlight. `contrast="more"`: events get the level-1 slab, the carried event a 3px slab.
+Without height: every event is a button named with its title, day, start and end, its overlaps, who holds it, and whether it's locked ("…, approved, can't be changed"; not `aria-disabled`, since it still opens); carrying is `aria-pressed`, and each step is announced in an assertive region (“Wednesday 28 October, 15:15 to 16:15”); writes and errors are announced politely. Forced colours: events 1px (locked ones solid 1px: they aren't openings), carried 2px, slots and drawn spans thick dashed, pending dotted, failed thick dashed, the now line Highlight. `contrast="more"`: events get the level-1 slab, the carried event a 3px slab; a locked event gets none, since it isn't raised.
 
 ## Keyboard
 
@@ -58,6 +60,7 @@ The grid (`role="grid"`) is one Tab stop: rows are time slots, columns are days.
 | `step`, `dayStart`, `dayEnd`, `hourHeight`, `defaultDuration` | 15 minutes, '08:00', '19:00', 48px, 60 minutes |
 | `onCreate`, `onChange`, `onRename`, `onOpen`, `onRemove` | the writes and actions |
 | `heldBy`, `isUnavailable`, `now`, `locale`, `aria-label` | collaborators' holds, refused spans, the now line's time |
+| `isLocked`, `lockedLabel` | settled events that can't be changed, and the word they say (default "Locked") |
 
 ## You provide
 
@@ -71,7 +74,7 @@ The events and their writes (with concurrency guards), time zones, and the detai
 
 ## Demo and verification
 
-The `Schedule` section of `build/previews.txt` is a room-booking work week (26–30 Oct 2026): the service refuses Wednesday mornings, rooms close at 17:00 on Friday, and Ana holds the Retro. `node checks/schedule.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys and names, creating, carrying, resizing and cancelling without a pointer, a refused move with Retry, unavailable time, a collaborator's hold, rename, remove, the next week, pointer carry, drawing and the resize handle, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+The `Schedule` section of `build/previews.txt` is a room-booking work week (26–30 Oct 2026): the service refuses Wednesday mornings, rooms close at 17:00 on Friday, and Ana holds the Retro, and Monday's Board report is approved (locked). `node checks/schedule.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys and names, creating, carrying, resizing and cancelling without a pointer, a refused move with Retry, unavailable time, a collaborator's hold, a locked event refusing every change but still opening (Enter, double-click, a tap), keeping its text clear of the lock label (short ones too) and settling only when it becomes locked on screen, rename, remove, the next week, pointer carry, drawing and the resize handle, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **Narrow and on touch.** Under 480px of its own width the schedule shows one day at a time (`narrowView="day"`, the default; `false` keeps the week), paged by the header's previous and next. Under a coarse pointer an hour is 96px unless you set `hourHeight`, so a 15-minute slot is 24px tall, and a tap opens an event.
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
@@ -87,6 +90,8 @@ import { Schedule } from 'altitude-design';
   dayStart="08:00" dayEnd="18:00"
   renderEvent={e => <><strong>{e.title}</strong><small className="sch-room">{e.start.slice(11)}–{e.end.slice(11)} · {e.room}</small></>}
   heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
+  // Approved bookings are part of the record: they lie flush and can't be changed.
+  isLocked={e => !!e.approved} lockedLabel={() => 'Approved'}
   // Rooms close at 17:00 on Fridays.
   isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
   onChange={async ({ id, start, end }) => {
@@ -113,6 +118,7 @@ const SCH_SEED = [
   { id: 'e4', title: 'Planning', start: '2026-10-28T13:00', end: '2026-10-28T14:30', room: 'Room B' },
   { id: 'e5', title: 'Interview', start: '2026-10-29T15:00', end: '2026-10-29T16:00', room: 'Room A' },
   { id: 'e6', title: 'Retro', start: '2026-10-30T11:00', end: '2026-10-30T12:00', room: 'Room B' },
+  { id: 'e7', title: 'Board report', start: '2026-10-26T14:00', end: '2026-10-26T15:00', room: 'Room B', approved: true },
 ];
 const schWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 export default function App() {
@@ -125,6 +131,8 @@ export default function App() {
       dayStart="08:00" dayEnd="18:00"
       renderEvent={e => <><strong>{e.title}</strong><small className="sch-room">{e.start.slice(11)}–{e.end.slice(11)} · {e.room}</small></>}
       heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
+      // Approved bookings are part of the record: they lie flush and can't be changed.
+      isLocked={e => !!e.approved} lockedLabel={() => 'Approved'}
       // Rooms close at 17:00 on Fridays.
       isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
       onChange={async ({ id, start, end }) => {
