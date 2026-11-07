@@ -44,6 +44,22 @@ await page.click('.alt-savebar button:has-text("Discard")');
 await page.waitForTimeout(400);
 expect(await page.inputValue('input >> nth=1') === 'marlowchen.example' && await bar() === null, 'Discard resets the draft and the bar goes');
 
+// #576: an earlier save that resolves while a newer edit is in the draft saved the earlier change, not the newer one.
+await page.locator('.preview-fixtures .alt-switch').click();
+await page.fill('input >> nth=0', 'First & Co');
+await page.waitForTimeout(800);
+await page.click('.alt-savebar button:has-text("Save changes")');
+await page.waitForTimeout(200);
+await page.fill('input >> nth=2', '30');
+await page.waitForTimeout(1200);
+b = await bar();
+const s576 = await said();
+expect(!s576.includes('Saved.') && s576.includes('earlier changes were saved') && s576.includes('newer edits still need saving'), `a save accepted after a newer edit doesn't say Saved (${s576})`);
+expect(b?.text === 'Unsaved changes · 1 field' && await page.inputValue('input >> nth=2') === '30', `and the bar stays, counting the newer edit (${b?.text})`);
+await page.click('.alt-savebar button:has-text("Save changes")');
+await page.waitForTimeout(1300);
+expect(await bar() === null && (await said()).includes('Saved.'), 'saving the newer edit then says Saved');
+
 console.log(`SaveBar: ${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
 await browser.close();
