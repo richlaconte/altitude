@@ -60,6 +60,38 @@ await page.locator('#reset-controlled').click(); await page.locator('#reset').cl
 expect(await page.locator('#controlled-choice').textContent() === 'Alpha' && await page.locator('#form').evaluate(el => new FormData(el).get('controlled')) === 'a', 'Application reset handler can update controlled value and form data together');
 expect(!await page.locator('#unnamed-form').evaluate(el => el.checkValidity()), 'Required unnamed Select with explicit empty option validates');
 await page.locator('#disable-choice').click(); expect(await page.locator('#form').evaluate(el => el.checkValidity() && !new FormData(el).has('choice')), 'Disabled required Select excluded from validation and submission');
+// Combobox, DatePicker, DateRangePicker and TimeInput keep Select's required contract (#571): an empty required value fails
+// native validation, blocks submission, and the browser's feedback lands on the visible control.
+const composite = () => page.locator('#composite-form');
+const submits = async () => Number(await page.locator('#composite-submitted').textContent());
+const focused = sel => page.locator(sel).evaluate(el => document.activeElement === el);
+const requiredNote = (sel, text) => page.locator(sel).evaluate((el, text) => el.getAttribute('aria-invalid') === 'true' && !!el.getAttribute('aria-describedby')?.split(/\s+/).some(id => document.getElementById(id)?.textContent === text), text);
+const groupOf = sel => `.alt-input:has(${sel})`;
+expect(!await composite().evaluate(el => el.checkValidity()), 'AUDIT Empty required Combobox, DatePicker, DateRangePicker and TimeInput fail native form validation');
+expect(await composite().evaluate(el => [...el.querySelectorAll('input[hidden]')].map(i => i.name + ':' + i.validity.valueMissing).join()) === 'assignee:true,date:true,range-start:true,range-end:true,time:true', 'Each composite value, both range endpoints included, is missing natively');
+await page.locator('#composite-submit').click(); await page.waitForTimeout(30);
+expect(await submits() === 0 && await focused('#combo'), 'Invalid submission is blocked and focuses the visible Combobox input');
+expect(await requiredNote('#combo', 'Choose an option.'), 'Combobox announces a linked required error on its input');
+expect(await requiredNote(groupOf('#date'), 'Enter a date.') && await requiredNote(groupOf('#range'), 'Enter a start and end date.') && await requiredNote(groupOf('#time'), 'Enter a time.'), 'DatePicker, DateRangePicker and TimeInput announce a linked required error on their group');
+await page.locator('#combo').fill('Alp'); await page.getByRole('option', {name: 'Alpha', exact: true}).click();
+expect(await page.locator('#combo').getAttribute('aria-invalid') === null && await composite().getByText('Choose an option.', {exact: true}).count() === 0, 'Choosing an option clears the Combobox required error');
+await page.locator('#composite-submit').click(); await page.waitForTimeout(30);
+expect(await submits() === 0 && await focused('#date'), 'Next invalid submission focuses the DatePicker\'s first segment');
+await page.keyboard.type('11062026');
+expect(await page.locator(groupOf('#date')).getAttribute('aria-invalid') === null && await composite().getByText('Enter a date.', {exact: true}).count() === 0, 'A complete date clears the DatePicker required error');
+await page.locator('#composite-submit').click(); await page.waitForTimeout(30);
+expect(await submits() === 0 && await focused('#range'), 'Next invalid submission focuses the DateRangePicker start');
+await page.keyboard.type('11062026');
+await page.locator('#composite-submit').click(); await page.waitForTimeout(30);
+expect(await submits() === 0 && await page.locator(groupOf('#range')).evaluate(el => document.activeElement === el.querySelectorAll('[role="spinbutton"]')[3]), 'A missing range end blocks submission and focuses the end date');
+await page.keyboard.type('11072026');
+expect(await page.locator(groupOf('#range')).getAttribute('aria-invalid') === null, 'A complete range clears the DateRangePicker required error');
+await page.locator('#composite-submit').click(); await page.waitForTimeout(30);
+expect(await submits() === 0 && await focused('#time'), 'Next invalid submission focuses the TimeInput hour');
+await page.keyboard.type('1000');
+expect(await page.locator(groupOf('#time')).getAttribute('aria-invalid') === null && await composite().getByText('Enter a time.', {exact: true}).count() === 0, 'A whole time clears the TimeInput required error');
+await page.locator('#composite-submit').click(); await page.waitForTimeout(30);
+expect(await submits() === 1 && await composite().evaluate(el => { const d = new FormData(el); return d.get('assignee') === 'a' && !!d.get('date') && !!d.get('range-start') && !!d.get('range-end') && d.get('time') === '10:00'; }), 'Filled required composite fields submit their values');
 await page.locator('#open-dialog').click(); await page.waitForTimeout(40);
 expect(await page.locator('.alt-dialog').evaluate(el => document.activeElement === el), 'Sparse Dialog begins on panel');
 await page.keyboard.press('Shift+Tab'); expect(await page.locator('.alt-dialog-close').evaluate(el => document.activeElement === el), 'AUDIT Sparse Dialog Shift+Tab wraps to close');

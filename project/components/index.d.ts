@@ -297,6 +297,8 @@ export interface ComboboxProps extends SelectFieldProps {
   filter?: (option: SelectOption, query: string) => number | boolean;
   /** Shown when nothing matches. Default "No matches". */
   empty?: React.ReactNode;
+  /** Visible required feedback after native validation. Localize for the application. Default "Choose an option." */
+  requiredMessage?: string;
 }
 
 export type TagResult = { ok: true; value: string } | { ok: false; error: string };
@@ -371,6 +373,8 @@ interface DatePickerBase {
   required?: boolean;
   /** Drops the field to trench depth. Field sets it when it has an error. */
   invalid?: boolean;
+  /** Visible required feedback after native validation. Localize for the application. Default "Enter a date." (DateRangePicker: "Enter a start and end date.") */
+  requiredMessage?: string;
   /** sm 34px, md 40px, as Input. Default 'md'. */
   size?: 'sm' | 'md';
   className?: string;
@@ -3028,6 +3032,8 @@ export interface TimeInputProps {
   invalid?: boolean;
   disabled?: boolean;
   required?: boolean;
+  /** Visible required feedback after native validation. Localize for the application. Default "Enter a time." */
+  requiredMessage?: string;
   size?: 'sm' | 'md';
   /** Submits the value with a form, in a hidden input. */
   name?: string;

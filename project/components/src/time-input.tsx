@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cx, Icons, useApproach, useControllable, useKeyFocus } from './core';
+import { NativeValue, useNativeRequired } from './select';
 
 /* ───────────────────────── TimeInput ───────────────────────── */
 
@@ -35,6 +36,8 @@ export interface TimeInputProps {
   invalid?: boolean;
   disabled?: boolean;
   required?: boolean;
+  /** Visible required-field feedback after native validation. Localize this for the application. Default "Enter a time." */
+  requiredMessage?: string;
   size?: 'sm' | 'md';
   /** Submits the value with a form, in a hidden input. */
   name?: string;
@@ -49,7 +52,7 @@ export interface TimeInputProps {
  * value: a partial time ("09:__") is still a hole. Hours, minutes and AM/PM are spinbuttons in a labelled group.
  */
 export function TimeInput({ value, defaultValue = null, onValueChange, step = 1, hourCycle = 'auto', min, max, timeZone, locale, invalid, disabled, required,
-  size = 'md', name, id, className, 'aria-describedby': describedBy, ...aria }: TimeInputProps) {
+  requiredMessage = 'Enter a time.', size = 'md', name, id, className, 'aria-describedby': describedBy, ...aria }: TimeInputProps) {
   useApproach();
   useKeyFocus();
   const [v, setV] = useControllable<string | null>(value, defaultValue, onValueChange);
@@ -122,13 +125,16 @@ export function TimeInput({ value, defaultValue = null, onValueChange, step = 1,
 
   const t = complete(draft) ? draft.hour! * 60 + draft.minute! : NaN;
   const outside = !isNaN(t) && ((min !== undefined && t < toMin(min)) || (max !== undefined && t > toMin(max)));
-  const bad = invalid || outside;
+  const native = useNativeRequired({ empty: !v, required, disabled, invalid });
+  const bad = invalid || outside || native.error;
   const zone = timeZone ? new Intl.DateTimeFormat(locale, { timeZone, timeZoneName: 'short' }).formatToParts(new Date()).find((p) => p.type === 'timeZoneName')?.value : undefined;
   const zoneId = React.useId();
+  const requiredId = zoneId + '-required-error';
+  const described = [describedBy, native.error && requiredId].filter(Boolean).join(' ') || undefined;
 
-  return (
+  return (<>
     <div className={cx('alt-input', 'alt-time', className)} data-size={size} data-approach="56" data-filled={complete(draft) ? '' : undefined} data-invalid={bad ? '' : undefined}
-      data-disabled={disabled ? '' : undefined} role="group" {...aria} aria-describedby={describedBy} aria-invalid={bad || undefined}>
+      data-disabled={disabled ? '' : undefined} role="group" {...aria} aria-describedby={described} aria-invalid={bad || undefined}>
       <Icons.Clock className="alt-input-adorn alt-time-icon" size={16} />
       <span className="alt-date-segs">
         {segs.map((s, i) => {
@@ -143,13 +149,15 @@ export function TimeInput({ value, defaultValue = null, onValueChange, step = 1,
               className="alt-date-seg" data-placeholder={val === undefined ? '' : undefined} aria-label={label}
               aria-valuemin={lo} aria-valuemax={hi} aria-valuenow={val === undefined ? undefined : s === 'hour' ? shownHour(val) : val}
               aria-valuetext={val === undefined ? 'Empty' : s === 'period' ? shown : String(s === 'hour' ? shownHour(val) : val)}
-              aria-describedby={[describedBy, zone && zoneId].filter(Boolean).join(' ') || undefined} aria-disabled={disabled || undefined} aria-required={required || undefined}
+              aria-describedby={[described, zone && zoneId].filter(Boolean).join(' ') || undefined} aria-disabled={disabled || undefined} aria-required={required || undefined}
               inputMode={s === 'period' ? 'text' : 'numeric'} onKeyDown={onKey(s, i)} onBlur={() => { buffer.current = { text: '' }; }}>{shown}</span>
           </React.Fragment>;
         })}
       </span>
       {zone && <span id={zoneId} className="alt-input-adorn alt-time-zone">{zone}</span>}
-      {name && <input type="hidden" name={name} value={v ?? ''} required={required} />}
     </div>
-  );
+    {/* Outside the field, so its `:has(input…)` filled styles never see it. */}
+    {(name || required) && <NativeValue name={name} value={v ?? ''} required={required && !disabled} onInvalid={native.onInvalid(() => refs.current[segs[0]]?.focus())} />}
+    {native.error && <p className="alt-field-error" id={requiredId} role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
+  </>);
 }
