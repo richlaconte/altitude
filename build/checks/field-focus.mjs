@@ -52,6 +52,50 @@ const clear = 'rgba(0, 0, 0, 0)';
   s = await st(page, '.alt-combobox > .alt-input'); expect(s.outline !== clear, 'combobox tabbed: rim');
   await page.close(); }
 
+// Form reset (#573): an uncontrolled Combobox returns to defaultValue (text, value and form data); a cancelled reset and
+// a controlled value stay where they are.
+{ const page = await open('Combobox');
+  await page.evaluate(() => new Promise((done) => {
+    document.body.innerHTML = ''; const d = document.createElement('div'); document.body.append(d);
+    const A = window.Altitude, h = React.createElement, items = [{ value: 'alice', label: 'Alice' }, { value: 'bob', label: 'Bob' }];
+    const Controlled = () => { const [v, set] = React.useState('alice'); return h(A.Combobox, { name: 'owner', value: v, onValueChange: set, items, 'aria-label': 'Owner' }); };
+    ReactDOM.createRoot(d).render(h(A.AltitudeProvider, null, h('form', { id: 'f' },
+      h(A.Combobox, { name: 'assignee', defaultValue: '', items, 'aria-label': 'Assignee' }), h(Controlled),
+      h('button', { type: 'reset', id: 'reset' }, 'Reset form'))));
+    setTimeout(done, 300);
+  }));
+  const box = page.getByRole('combobox', { name: 'Assignee' }), owner = page.getByRole('combobox', { name: 'Owner' });
+  const data = (n) => page.locator('#f').evaluate((f, n) => new FormData(f).get(n), n);
+  await box.click(); await page.keyboard.type('Bob'); await page.keyboard.press('Tab'); await page.waitForTimeout(200);
+  await owner.fill('Bob'); await page.keyboard.press('Tab'); await page.waitForTimeout(200);
+  expect(await box.inputValue() === 'Bob' && await data('assignee') === 'bob' && await data('owner') === 'bob', 'combobox: typing an exact name and Tab commits it');
+  await page.locator('#f').evaluate((f) => f.addEventListener('reset', (e) => e.preventDefault(), { once: true }));
+  await page.locator('#reset').click(); await page.waitForTimeout(100);
+  expect(await box.inputValue() === 'Bob' && await data('assignee') === 'bob', 'combobox: a cancelled form reset keeps the value');
+  await page.locator('#reset').click(); await page.waitForTimeout(100);
+  expect(await box.inputValue() === '' && await data('assignee') === '', 'combobox: form reset returns an uncontrolled value and its text to defaultValue');
+  await box.fill('Al'); await page.waitForTimeout(200);
+  await page.locator('#f').evaluate((f) => HTMLFormElement.prototype.reset.call(f)); await page.waitForTimeout(100);
+  expect(await box.inputValue() === '' && await data('assignee') === '' && await box.getAttribute('aria-expanded') === 'false', 'combobox: form reset drops a pending query and closes the list');
+  expect(await owner.inputValue() === 'Bob' && await data('owner') === 'bob', 'combobox: form reset leaves a controlled value with its owner');
+  await page.close(); }
+
+// Form reset after a failed required submission (#571 with #573) withdraws the required message, as Select's does.
+{ const page = await open('Combobox');
+  await page.evaluate(() => new Promise((done) => {
+    document.body.innerHTML = ''; const d = document.createElement('div'); document.body.append(d);
+    const A = window.Altitude, h = React.createElement, items = [{ value: 'alice', label: 'Alice' }, { value: 'bob', label: 'Bob' }];
+    ReactDOM.createRoot(d).render(h(A.AltitudeProvider, null, h('form', { id: 'rf', onSubmit: (e) => e.preventDefault() },
+      h(A.Combobox, { name: 'who', required: true, items, 'aria-label': 'Who' }))));
+    setTimeout(done, 300);
+  }));
+  const box = page.getByRole('combobox', { name: 'Who' });
+  await page.locator('#rf').evaluate((f) => f.requestSubmit()); await page.waitForTimeout(150);
+  expect(await box.getAttribute('aria-invalid') === 'true' && await page.locator('#rf [role="alert"]').count() === 1, 'combobox: an empty required submission shows the required message');
+  await page.locator('#rf').evaluate((f) => f.reset()); await page.waitForTimeout(150);
+  expect(await box.getAttribute('aria-invalid') === null && await page.locator('#rf [role="alert"]').count() === 0, 'combobox: form reset withdraws the required message');
+  await page.close(); }
+
 { const page = await open('CommandPalette'); await page.waitForTimeout(300);
   const f = await page.evaluate(() => { const el = document.querySelector('.alt-cmd-field'); return el ? { focus: el.matches(':focus-within'), o: getComputedStyle(el).outlineColor, key: el.hasAttribute('data-key-focus') } : null; });
   expect(f && f.focus && f.o === clear, 'palette field never wears the rim, even with keyboard focus: ' + JSON.stringify(f));

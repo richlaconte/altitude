@@ -4269,6 +4269,17 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-cal-day[aria-disabled] { color: var(--ink-faint); cursor: default; }
 .alt-cal-day[data-chosen] { color: var(--on-accent); font-weight: 600; }
 .alt-cal-day[data-chosen][data-today]::after { background: var(--on-accent); }
+/* Markers (#563): settled information about a day, so flush dots under its number; they never raise the day. A marked
+   today drops its own dot for its number in accent-ink, so the two dots can't be confused. */
+.alt-cal-markers { position: absolute; bottom: 4px; left: 50%; display: flex; gap: 2px; translate: -50% 0; pointer-events: none; }
+.alt-cal-marker { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-muted); }
+.alt-cal-marker[data-tone="positive"] { background: var(--positive); }
+.alt-cal-marker[data-tone="caution"] { background: var(--caution); }
+.alt-cal-marker[data-tone="critical"] { background: var(--critical); }
+.alt-cal-day[data-chosen] .alt-cal-marker { background: var(--on-accent); }
+.alt-cal-day[data-today][data-marked]::after { display: none; }
+.alt-cal-day[data-today][data-marked]:not([data-chosen]) { color: var(--accent-ink); font-weight: 650; }
+@media (forced-colors: active) { .alt-cal-marker { forced-color-adjust: none; background: CanvasText; } .alt-cal-day[data-chosen] .alt-cal-marker { background: HighlightText; } }
 .alt-cal-mark {
   position: absolute; left: 0; top: 0; z-index: 0; border-radius: var(--radius-sm); pointer-events: none; opacity: 0;
   background: var(--accent); background-image: var(--alt-sheen); box-shadow: var(--elev-1), inset 0 -2px 0 0 color-mix(in oklab, var(--accent-ink) 55%, transparent);
@@ -4467,7 +4478,9 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
    in it: while an event is carried or a span drawn, the days sink into wells; the slot under a carried event deepens
    to a trench with an accent rim, as long as the event (critical rim where it can't go). A carried event floats at
    level 3, tilted. Drawing makes a well the length of the drag, which rises into an event to be named. Pending writes
-   hover after dur-grace; failures drop to a trench. The now line is accent-ink: it isn't status. ── */
+   hover after dur-grace; failures drop to a trench. The now line is accent-ink: it isn't status. A locked event (#561) is
+   part of the record: flush on the ground with a line-control edge, a lock and its word, and nothing to carry. A category (#562) only recolours the 3px edge, from data-1…6; the legend names each one.
+   A day's header (#560) stays ground: its total and Badges are words; only its action rises, as any Button. ── */
 .alt-schedule { --cols: var(--days); position: relative; min-width: 0; color: var(--ink); font: 400 12.5px/16px var(--font-sans); }
 .alt-schedule-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
 .alt-schedule-period { margin: 0; font: 600 15px/22px var(--font-sans); }
@@ -4477,6 +4490,11 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-schedule-row, .alt-schedule-body { display: contents; }
 .alt-schedule-corner, .alt-schedule-day { position: sticky; top: 0; z-index: 3; padding: 6px 4px; background: var(--surface-ground); border-bottom: 1px solid var(--line); color: var(--ink-muted); font-weight: 500; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .alt-schedule-day[data-today] { color: var(--accent-ink); font-weight: 650; }
+.alt-schedule-day[data-extra] { display: flex; flex-direction: column; align-items: center; gap: 4px; overflow: visible; white-space: normal; }
+.alt-schedule-day-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alt-schedule-day-extra { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; max-width: 100%; min-width: 0; color: var(--ink-muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.alt-schedule-day-info { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; min-width: 0; }
+.alt-schedule-footer { margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--line); color: var(--ink-muted); font: 500 12.5px/16px var(--font-sans); font-variant-numeric: tabular-nums; text-align: end; }
 .alt-schedule-row[aria-rowindex="2"] .alt-schedule-time { transform: none; }
 .alt-schedule-time { height: var(--slot); padding-right: 6px; color: var(--ink-muted); font-variant-numeric: tabular-nums; text-align: right; transform: translateY(-7px); }
 .alt-schedule-cell { position: relative; height: var(--slot); border-left: 1px solid var(--line); outline: none; transition: background-color var(--dur-travel-1) var(--ease-sink), box-shadow var(--dur-travel-1) var(--ease-sink); }
@@ -4486,7 +4504,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-schedule-event-box { position: absolute; z-index: 1; display: flex; }
 .alt-schedule-event {
   position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 1px; width: 100%; min-width: 0; margin: 0; padding: 3px 6px 3px 8px; overflow: hidden;
-  border: 0; border-radius: var(--radius-sm); background: var(--surface-raised); box-shadow: var(--elev-1), inset 3px 0 0 0 var(--accent); color: var(--ink); font: inherit; text-align: left; cursor: grab;
+  border: 0; border-radius: var(--radius-sm); background: var(--surface-raised); box-shadow: var(--elev-1), inset 3px 0 0 0 var(--sch-edge, var(--accent)); color: var(--ink); font: inherit; text-align: left; cursor: grab;
   transition: box-shadow var(--dur-travel-1) var(--ease-rise), transform var(--dur-travel-1) var(--ease-rise);
 }
 .alt-schedule-event > * { flex: none; }
@@ -4494,17 +4512,31 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-schedule-event[data-short] small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .alt-schedule-event strong { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .alt-schedule-event small { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
-@media (hover: hover) { .alt-schedule-event:hover { box-shadow: var(--elev-2), inset 3px 0 0 0 var(--accent); } }
+@media (hover: hover) { .alt-schedule-event:hover { box-shadow: var(--elev-2), inset 3px 0 0 0 var(--sch-edge, var(--accent)); } }
 .alt-schedule-event:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; z-index: 2; }
-.alt-schedule-event[data-carried] { z-index: 5; background: var(--surface-floating); box-shadow: var(--elev-3), inset 3px 0 0 0 var(--accent); rotate: calc(-1.2deg * var(--alt-travel)); cursor: grabbing; }
+.alt-schedule-event[data-carried] { z-index: 5; background: var(--surface-floating); box-shadow: var(--elev-3), inset 3px 0 0 0 var(--sch-edge, var(--accent)); rotate: calc(-1.2deg * var(--alt-travel)); cursor: grabbing; }
 .alt-schedule-event[data-status="pending"] { animation: alt-schedule-pending var(--dur-travel-1) var(--ease-rise) var(--dur-grace) both; }
-@keyframes alt-schedule-pending { to { background: var(--surface-lifted); box-shadow: var(--elev-2), inset 3px 0 0 0 var(--accent); transform: translateY(calc(-1px * var(--alt-travel))); } }
+@keyframes alt-schedule-pending { to { background: var(--surface-lifted); box-shadow: var(--elev-2), inset 3px 0 0 0 var(--sch-edge, var(--accent)); transform: translateY(calc(-1px * var(--alt-travel))); } }
 .alt-schedule-event[data-status="failed"] { background: var(--critical-soft); box-shadow: var(--trench), inset 0 0 0 1px var(--critical); }
 .alt-schedule-event[data-held] { cursor: not-allowed; box-shadow: var(--elev-3), 0 0 0 2px var(--presence-1); }
 .alt-schedule-event[data-held="2"] { box-shadow: var(--elev-3), 0 0 0 2px var(--presence-2); }
 .alt-schedule-event[data-held="3"] { box-shadow: var(--elev-3), 0 0 0 2px var(--presence-3); }
 .alt-schedule-event[data-held="2"] .alt-schedule-holder { background: var(--presence-2); }
 .alt-schedule-event[data-held="3"] .alt-schedule-holder { background: var(--presence-3); }
+.alt-schedule-event[data-locked] { background: var(--surface-ground); box-shadow: inset 0 0 0 1px var(--line-control); cursor: default; }
+@media (hover: hover) { .alt-schedule-event[data-locked]:hover { background: var(--surface-ground); box-shadow: inset 0 0 0 1px var(--line-control); } }
+.alt-schedule[data-carrying] .alt-schedule-event[data-locked] { background: var(--surface-raised); }
+.alt-schedule-event[data-lock-settle] { animation: alt-schedule-lock-settle var(--dur-travel-1) var(--ease-settle); }
+@keyframes alt-schedule-lock-settle { from { background: var(--surface-raised); box-shadow: var(--elev-1), inset 3px 0 0 0 var(--sch-edge, var(--accent)); } }
+.alt-schedule-lock { position: absolute; right: 2px; top: 3px; display: inline-flex; align-items: center; gap: 3px; padding: 0 4px; border-radius: var(--radius-sm); background: inherit; color: var(--ink-muted); font: 500 10.5px/14px var(--font-sans); white-space: nowrap; }
+.alt-schedule-lock > svg { flex: none; }
+.alt-schedule-event[data-locked] > :first-child { box-sizing: border-box; padding-inline-end: calc(var(--lock-ch, 6) * 0.5em + 24px); }
+/* A short event lays its title and time in one row: the label joins the row at its end, so it takes exactly its own room whatever the font; the row shrinks, the label centres. */
+.alt-schedule-event[data-locked][data-short] { padding-inline-end: 2px; }
+.alt-schedule-event[data-locked][data-short] > * { flex: 0 1 auto; min-width: 0; }
+.alt-schedule-event[data-locked][data-short] > :first-child { flex-shrink: 0; padding-inline-end: 0; }
+.alt-schedule-event[data-locked][data-short] .alt-schedule-lock { position: static; flex: none; margin-inline-start: auto; }
+@media (prefers-reduced-motion: reduce) { .alt-schedule-event[data-lock-settle] { animation: none; } }
 .alt-schedule-holder { position: absolute; right: 2px; bottom: 2px; padding: 0 4px; border-radius: var(--radius-sm); background: var(--presence-1); color: var(--on-presence); font: 600 10.5px/14px var(--font-sans); }
 .alt-schedule-handle { position: absolute; left: 25%; right: 25%; bottom: -3px; z-index: 2; height: 6px; border-radius: var(--radius-full); background: var(--surface-raised); box-shadow: var(--elev-1); cursor: ns-resize; opacity: 0; transition: opacity var(--dur-travel-1); }
 .alt-schedule-event-box:focus-within .alt-schedule-handle { opacity: 1; }
@@ -4512,7 +4544,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-schedule-slot { position: absolute; left: 2px; right: 2px; z-index: 0; border-radius: var(--radius-sm); background: var(--surface-trench); box-shadow: var(--trench), inset 0 0 0 2px var(--accent); }
 .alt-schedule-slot[data-blocked] { box-shadow: var(--trench), inset 0 0 0 2px var(--critical); }
 .alt-schedule-drawn { width: 100%; padding: 3px 6px; border-radius: var(--radius-sm); background: var(--surface-trench); box-shadow: var(--trench), inset 0 0 0 1px var(--accent); color: var(--ink-muted); }
-.alt-schedule-draft { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 3px; border-radius: var(--radius-sm); background: var(--surface-raised); box-shadow: var(--elev-1), inset 3px 0 0 0 var(--accent); animation: alt-emerge var(--dur-travel-2) var(--ease-rise); }
+.alt-schedule-draft { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 3px; border-radius: var(--radius-sm); background: var(--surface-raised); box-shadow: var(--elev-1), inset 3px 0 0 0 var(--sch-edge, var(--accent)); animation: alt-emerge var(--dur-travel-2) var(--ease-rise); }
 .alt-schedule-draft small { padding-left: 4px; color: var(--ink-muted); }
 .alt-schedule-field { display: flex; flex-direction: column; min-width: 0; }
 .alt-schedule-event-box > .alt-schedule-field { position: absolute; inset: 2px; z-index: 3; }
@@ -4522,15 +4554,118 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-schedule-error { display: inline-flex; align-items: center; gap: 3px; color: var(--critical); font: 400 11px/14px var(--font-sans); }
 .alt-schedule-now { position: absolute; left: -4px; right: 0; z-index: 4; height: 2px; background: var(--accent-ink); pointer-events: none; }
 .alt-schedule-now::before { content: ""; position: absolute; left: 0; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-ink); }
+.alt-schedule-legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); margin: var(--space-2) 0 0; padding: 0; list-style: none; color: var(--ink-muted); font: 500 12px/16px var(--font-sans); }
+.alt-schedule-legend > li { display: inline-flex; align-items: center; gap: 6px; }
+.alt-schedule-swatch { width: 3px; height: 14px; border-radius: 1px; background: var(--sch-edge, var(--accent)); }
+.alt-schedule-legend-note { font-weight: 400; }
+/* Month (#559): days are ground cells ruled by line; events are the week's raised slabs, laid out by day as chips.
+   While one is carried, days open into wells and the target day sinks with an accent rim (critical where it can't go). */
+.alt-schedule-month { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.alt-schedule-mday { position: relative; display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 104px; padding: 4px; border-top: 1px solid var(--line); border-left: 1px solid var(--line); outline: none; background: var(--surface-ground); transition: background-color var(--dur-travel-1) var(--ease-sink), box-shadow var(--dur-travel-1) var(--ease-sink); }
+.alt-schedule-mday:focus-visible { box-shadow: inset 0 0 0 2px var(--accent-ink); z-index: 2; }
+.alt-schedule-mdate { padding: 0 2px; color: var(--ink-muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.alt-schedule-mweekday { display: none; }
+.alt-schedule-mday[data-outside] .alt-schedule-mdate { color: var(--ink-faint); }
+.alt-schedule-mday[aria-current="date"] .alt-schedule-mdate { color: var(--accent-ink); font-weight: 650; }
+.alt-schedule-chips { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.alt-schedule-event[data-chip] { flex-direction: row; align-items: center; gap: 6px; min-height: 20px; padding: 1px 6px 1px 8px; animation: alt-emerge var(--dur-travel-1) var(--ease-rise); }
+.alt-schedule-event[data-chip] > * { min-width: 0; }
+.alt-schedule-event[data-chip] small { flex: none; }
+.alt-schedule-event[data-chip] > svg { flex: none; margin-right: -2px; color: var(--ink-muted); }
+.alt-schedule-event[data-chip][data-carried] { animation: none; }
+.alt-schedule-event[data-chip][data-locked] > :first-child { padding-inline-end: 0; }
+.alt-schedule[data-carrying] .alt-schedule-mday { background: var(--surface-well); }
+.alt-schedule-mday[data-target] { background: var(--surface-well); box-shadow: var(--well), inset 0 0 0 2px var(--accent); }
+.alt-schedule-mday[data-target][data-blocked] { box-shadow: var(--well), inset 0 0 0 2px var(--critical); }
+.alt-schedule-more { align-self: flex-start; margin: 0; padding: 0 4px; border: 0; border-radius: var(--radius-sm); background: none; color: var(--accent-ink); font: 500 11.5px/16px var(--font-sans); cursor: pointer; }
+span.alt-schedule-more { color: var(--ink-muted); cursor: default; }
+.alt-schedule-more:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
+.alt-schedule-chips .alt-schedule-draft { animation: alt-emerge var(--dur-travel-2) var(--ease-rise); }
+.alt-schedule-mcell { margin-top: auto; padding: 0 2px; color: var(--ink-muted); font: 500 11.5px/16px var(--font-sans); font-variant-numeric: tabular-nums; text-align: end; }
+.alt-schedule[data-narrow] .alt-schedule-month { grid-template-columns: minmax(0, 1fr); }
+.alt-schedule[data-narrow] .alt-schedule-month .alt-schedule-day { display: none; }
+.alt-schedule[data-narrow] .alt-schedule-mday { flex-direction: row; align-items: flex-start; flex-wrap: wrap; min-height: 40px; gap: 4px var(--space-2); border-left: 0; }
+.alt-schedule[data-narrow] .alt-schedule-mdate { flex: none; width: 6.5em; padding-top: 2px; white-space: nowrap; }
+.alt-schedule[data-narrow] .alt-schedule-mweekday { display: inline; }
+.alt-schedule[data-narrow] .alt-schedule-chips { flex: 1 1 10em; }
+.alt-schedule[data-narrow] .alt-schedule-mcell { margin: 0; padding-top: 2px; }
+@media (prefers-reduced-motion: reduce) { .alt-schedule-event[data-chip], .alt-schedule-chips .alt-schedule-draft { animation: none; } }
 .alt-schedule-failure { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-2); padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3); border-radius: var(--radius-md); background: var(--critical-soft); color: var(--ink); font: 400 13px/18px var(--font-sans); }
 .alt-schedule-failure > svg { color: var(--critical); }
 .alt-schedule-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-[data-contrast="more"] .alt-schedule-event { box-shadow: 0 2px 0 0 var(--ink), inset 3px 0 0 0 var(--accent); }
+[data-contrast="more"] .alt-schedule-event { box-shadow: 0 2px 0 0 var(--ink), inset 3px 0 0 0 var(--sch-edge, var(--accent)); }
 [data-contrast="more"] .alt-schedule-event[data-carried] { box-shadow: 0 3px 0 0 var(--ink); }
+[data-contrast="more"] .alt-schedule-event[data-locked] { box-shadow: inset 0 0 0 1px var(--line-control); }
 @media (forced-colors: active) {
   .alt-schedule-event { border: 1px solid CanvasText; } .alt-schedule-event[data-carried] { border-width: 2px; }
+  .alt-schedule-event[data-locked] { border: 1px solid CanvasText; box-shadow: none; }
+  .alt-schedule-swatch { forced-color-adjust: none; background: CanvasText; }
+  .alt-schedule-cell:focus-visible, .alt-schedule-mday:focus-visible { outline: 2px solid Highlight; outline-offset: -2px; }
+  .alt-schedule-mday[data-target] { outline: 3px dashed CanvasText; outline-offset: -3px; }
   .alt-schedule-slot, .alt-schedule-drawn { border: 2px dashed CanvasText; } .alt-schedule-now { background: Highlight; }
   .alt-schedule-event[data-status="pending"] { border-style: dotted; } .alt-schedule-event[data-status="failed"] { border: 2px dashed CanvasText; }
+}
+
+/* ── PrintSheet: a paper document previewed on screen and printed as it is. On screen each page is paper lying one level
+   above the ground (surface-raised, elev-1), as a card that only holds content: no wall, no lift, nothing to press. It
+   wears daylight's tokens in every scheme, since it previews a printed page: the one surface that doesn't follow the
+   scheme. Pages are separated by space-6 of ground. Content longer than a page continues on the same sheet, with a
+   line rule where the printer will break. In print there is no ground and no height: no shadow, no radius, no gap; the
+   @page rule sets the paper and margins, and everything outside the sheets is removed from layout. ── */
+.alt-print { position: relative; min-width: 0; overflow: hidden; }
+.alt-print-stack { --sheet-content-h: calc(var(--sheet-h) - var(--sheet-mt) - var(--sheet-mb)); display: flex; flex-direction: column; width: max-content; margin-inline: auto; transform-origin: 0 0; }
+.alt-print[data-scaled] .alt-print-stack { margin-inline: 0; }
+.alt-print-page {
+  position: relative; box-sizing: border-box; display: flex; flex-direction: column; width: var(--sheet-w); min-height: var(--sheet-h); padding: var(--sheet-margin);
+  border-radius: var(--radius-sm); background-color: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink); font: 400 14px/20px var(--font-sans);
+  animation: alt-emerge var(--dur-travel-2) var(--ease-rise) both;
+}
+/* Where the printer breaks a page whose content is longer than the paper: it fills the page's content box (the paper
+   less its top and bottom margins) and continues on the next, so a line every content height, from the top margin.
+   On a page that fits, the layer has no height and draws nothing. */
+.alt-print-page::before {
+  content: ''; position: absolute; inset: calc(var(--sheet-mt) + var(--sheet-content-h)) 0 var(--sheet-mb); pointer-events: none;
+  background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--sheet-content-h));
+}
+.alt-print-page[data-loading] { background: var(--surface-well); box-shadow: var(--well); animation: none; }
+.alt-print-body { flex: 1 0 auto; min-width: 0; }
+.alt-print-header, .alt-print-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); color: var(--ink-muted); font: 400 12px/16px var(--font-sans); }
+.alt-print-header { margin-bottom: var(--space-5); }
+.alt-print-footer { margin-top: var(--space-5); }
+.alt-print-header img, .alt-print-footer img { max-height: 28px; width: auto; }
+.alt-print-gap { flex: none; height: var(--space-6); margin: 0; border: 0; }
+.alt-print-break { margin: 0; border: 0; break-after: page; }
+.alt-print-body h1 { margin: 0 0 var(--space-3); font: 600 22px/28px var(--font-sans); }
+.alt-print-body h2 { margin: var(--space-5) 0 var(--space-2); font: 600 16px/22px var(--font-sans); }
+.alt-print-body p { margin: 0 0 var(--space-2); }
+.alt-print-body table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.alt-print-body th, .alt-print-body td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: start; }
+.alt-print-body th { color: var(--ink-muted); font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .alt-print-page { animation: none; } }
+[data-contrast="more"] .alt-print-page:not([data-loading]) { box-shadow: 0 2px 0 0 var(--ink); }
+@media (forced-colors: active) { .alt-print-page { border: 1px solid CanvasText; } }
+@media print {
+  /* Only the sheet takes part in layout: everything off the path to it is removed (not hidden, which would keep its
+     height and print blank pages after the sheet), and the elements on the path are plain blocks, so a positioned,
+     clipped or fixed-height ancestor neither offsets nor clips it. */
+  html:has(.alt-print), html:has(.alt-print) body { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+  html:has(.alt-print) body { margin: 0 !important; padding: 0 !important; }
+  html:has(.alt-print) body *:not(:has(.alt-print)):not(.alt-print):not(.alt-print *) { display: none !important; }
+  html:has(.alt-print) body *:has(.alt-print) {
+    display: block !important; position: static !important; float: none !important; overflow: visible !important; transform: none !important;
+    width: auto !important; max-width: none !important; height: auto !important; min-height: 0 !important; max-height: none !important;
+    margin: 0 !important; padding: 0 !important; border: 0 !important;
+  }
+  .alt-print { position: static; width: auto; height: auto !important; overflow: visible; }
+  .alt-print-stack { width: auto; margin: 0; transform: none !important; }
+  /* The page is the @page content box: at least its height, so the footer prints at the foot of the paper. */
+  .alt-print-page { width: auto; min-height: var(--sheet-content-h); padding: 0; border: 0; border-radius: 0; box-shadow: none; animation: none; break-after: page; }
+  .alt-print-page::before { display: none; }
+  .alt-print-page:last-child { break-after: auto; }
+  .alt-print-gap { display: none; }
+  .alt-print-body thead { display: table-header-group; }
+  .alt-print-body tr { break-inside: avoid; }
+  .alt-print-body h1, .alt-print-body h2, .alt-print-body h3 { break-after: avoid; }
 }
 
 /* ── DataGrid: a table edited cell by cell. Cells are the record, flush in Table's rows; the active cell is a focus

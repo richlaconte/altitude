@@ -63,7 +63,9 @@ export interface DataGridProps<T> {
 }
 
 type Pos = { r: number; c: number };
-type Editing = { r: number; c: number; draft: string | unknown; custom: boolean; error?: string; unsaved?: boolean };
+// An open edit is bound to the row's id and the column's key it began on, not their positions, so a reorder (a sort,
+// incoming data) can't retarget its draft to another record (#570). `name` is the cell's name when it began.
+type Editing = { rowId: string; key: string; name: string; draft: string | unknown; custom: boolean; error?: string; unsaved?: boolean };
 const SAVE_ERROR = 'That change couldn’t be saved.';
 const printable = (e: React.KeyboardEvent) => e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
 
@@ -103,6 +105,24 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
   const clamp = (p: Pos): Pos => ({ r: Math.max(0, Math.min(R - 1, p.r)), c: Math.max(0, Math.min(C - 1, p.c)) });
   const range = anchor ? { r0: Math.min(anchor.r, active.r), r1: Math.max(anchor.r, active.r), c0: Math.min(anchor.c, active.c), c1: Math.max(anchor.c, active.c) } : null;
   const inRange = (r: number, c: number) => !!range && r >= range.r0 && r <= range.r1 && c >= range.c0 && c <= range.c1;
+  // Where the open edit's cell is now, or null when its row (or column) has left `rows` (`columns`).
+  const editAt: Pos | null = (() => {
+    if (!editing) return null;
+    const r = rows.findIndex((row) => getRowId(row) === editing.rowId), c = columns.findIndex((col) => col.key === editing.key);
+    return r < 0 || c < 0 ? null : { r, c };
+  })();
+
+  // The active cell follows the edit when its row moves. If the edited record left the grid (deleted, filtered out), the
+  // draft has nowhere to be shown or saved, so it's discarded and that's said, never moved onto whichever record now
+  // sits in its place (#570).
+  React.useLayoutEffect(() => {
+    if (!editing) return;
+    if (editAt) { if (active.r !== editAt.r || active.c !== editAt.c) setActive(editAt); return; }
+    setActive((a) => clamp(a)); // rows may have shrunk past it; the grid keeps its one Tab stop
+    if (!editing.unsaved) wantFocus.current = 'cell'; // the field held focus; it's gone
+    setEditing(null);
+    setAnnouncement(`Edit discarded: ${editing.name} is no longer in the grid`);
+  });
 
   React.useLayoutEffect(() => {
     const want = wantFocus.current;
@@ -112,7 +132,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
       const el = field.current ?? grid.current?.querySelector<HTMLElement>('[data-editing] input, [data-editing] button, [data-editing] [tabindex="0"]');
       el?.focus();
       if (el instanceof HTMLInputElement) { const n = caretEnd.current ? el.value.length : 0; el.setSelectionRange(n, el.value.length > 0 && !caretEnd.current ? el.value.length : n); }
-    } else grid.current?.querySelector<HTMLElement>(`[data-cell="${active.r}:${active.c}"]`)?.focus();
+    } else { const p = clamp(active); grid.current?.querySelector<HTMLElement>(`[data-cell="${p.r}:${p.c}"]`)?.focus(); } // `active` may still be past a shrunk `rows` this commit
   });
   // Focus from anywhere (an ErrorSummary link to a cellId, the app's own code) makes that cell the active one, so the
   // roving tab stop and the next arrow key start from where you are, not from the cell that was active before (#469).
@@ -203,13 +223,14 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
     const prior = failed[cellKey(r, c)];
     const custom = !!col.editor;
     caretEnd.current = true;
-    setEditing({ r, c, custom, draft: custom ? (prior?.draft ?? valueOf(r, c)) : replace ?? (prior ? fmt(col, prior.draft) : fmt(col, valueOf(r, c))) });
+    setEditing({ rowId: getRowId(rows[r]), key: col.key, name: `${label(col)}, ${getRowLabel(rows[r])}`, custom, draft: custom ? (prior?.draft ?? valueOf(r, c)) : replace ?? (prior ? fmt(col, prior.draft) : fmt(col, valueOf(r, c))) });
     setAnchor(null); setActive({ r, c }); wantFocus.current = 'field';
   };
   /** Validates and saves the open cell; returns false (and stays open) when it's refused. */
-  const commit = (then?: Pos): boolean => {
+  const commit = (then?: Pos | null): boolean => {
     if (!editing) return true;
-    const { r, c } = editing;
+    if (!editAt) { setEditing(null); return true; } // its record has gone: discarded (above), never saved elsewhere
+    const { r, c } = editAt;
     const col = columns[c];
     const value = editing.custom ? editing.draft : (col.parse ? col.parse(String(editing.draft)) : editing.draft);
     const problem = col.validate?.(value, rows[r]);
@@ -229,8 +250,8 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
     if (editing) {
       if (e.target instanceof HTMLElement && e.target.getAttribute('aria-expanded') === 'true') return; // an open popup's own keys
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel(); setAnnouncement('Edit discarded'); }
-      else if (e.key === 'Enter' && !e.defaultPrevented && !editing.custom) { e.preventDefault(); commit({ r: editing.r + (e.shiftKey ? -1 : 1), c: editing.c }); }
-      else if (e.key === 'Tab') { e.preventDefault(); commit({ r: editing.r, c: editing.c + (e.shiftKey ? -1 : 1) }); }
+      else if (e.key === 'Enter' && !e.defaultPrevented && !editing.custom) { e.preventDefault(); commit(editAt && { r: editAt.r + (e.shiftKey ? -1 : 1), c: editAt.c }); }
+      else if (e.key === 'Tab') { e.preventDefault(); commit(editAt && { r: editAt.r, c: editAt.c + (e.shiftKey ? -1 : 1) }); }
       return;
     }
     const { r, c } = active;
@@ -309,7 +330,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
           {columns.map((col, c) => {
             const k = cellKey(r, c);
             const isActive = active.r === r && active.c === c;
-            const isEditing = editing?.r === r && editing.c === c;
+            const isEditing = editAt?.r === r && editAt.c === c;
             const fail = failed[k];
             const invalid = showInvalid && !isEditing && !fail && !pending.includes(k) ? col.validate?.(valueOf(r, c), row) : undefined;
             const name = `${label(col)}, ${getRowLabel(row)}`;

@@ -10,7 +10,7 @@ Unsaved changes on a settings page or a long record form, held above the page un
 
 **With useEditRecord.** `<SaveBar record={record} />` reads `dirty`, `phase`, `errors` and the changed field count from a `useEditRecord` result, and its buttons call `submit` and `reset`. Leaving while dirty uses `useEditRecord`'s own leave handling. Without a record, pass `dirty`, `saving`, `error`, `invalidCount`, `changedCount`, `onSave` and `onDiscard`.
 
-**Accessibility.** A region labelled "Unsaved changes". It doesn't take focus when it appears, and "Unsaved changes" is announced once when the draft first becomes dirty, not on every key. ⌘S or Ctrl+S saves while it's shown. Outcomes ("Saved", or the failure) are announced politely. Under forced colours it has a 2px border, dotted while saving and a thick dash when failed. Under `contrast="more"` it gets a hard slab. Under reduced motion it fades in and out without travelling.
+**Accessibility.** A region labelled "Unsaved changes". It doesn't take focus when it appears, and "Unsaved changes" is announced once when the draft first becomes dirty, not on every key. ⌘S or Ctrl+S saves while it's shown. Outcomes ("Saved", or the failure) are announced politely. If an earlier save resolves while you've kept editing, it says the earlier changes were saved and your newer edits still need saving (useEditRecord's `status`), not "Saved", and the bar stays. Under forced colours it has a 2px border, dotted while saving and a thick dash when failed. Under `contrast="more"` it gets a hard slab. Under reduced motion it fades in and out without travelling.
 
 **Props:** `record`, or `dirty`, `saving`, `error`, `invalidCount`, `changedCount`, `onSave`, `onDiscard`; `delay` (default 600); `saveLabel`, `discardLabel`.
 
