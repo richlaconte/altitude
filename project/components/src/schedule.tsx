@@ -12,8 +12,8 @@ export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
 export type ScheduleCategoryColor = 'data-1' | 'data-2' | 'data-3' | 'data-4' | 'data-5' | 'data-6';
 export interface ScheduleCategory { id: string; label: string; color?: ScheduleCategoryColor }
 export interface ScheduleProps<T> {
-  /** Default 'week'. */
-  view?: 'day' | 'week' | 'workweek';
+  /** Default 'week'. 'month' (#559): each day a cell in a 5- or 6-week grid, its events listed as chips in start order. */
+  view?: 'day' | 'week' | 'workweek' | 'month';
   /**
    * What it shows under 480px of its own width (#257). 'day' (default): one day at a time, paged with the header's
    * previous and next, so events and slots keep a readable width. false: the view, squeezed.
@@ -79,6 +79,12 @@ export interface ScheduleProps<T> {
   dayActions?: (day: string, events: T[]) => MenuEntry[];
   /** A flush line under the grid for the period (its total). It describes the grid. */
   footer?: (days: string[], events: T[]) => React.ReactNode;
+  /** Month view: what a day shows under its events (a total). Its text describes the day's cell. */
+  monthCell?: (day: string, events: T[]) => React.ReactNode;
+  /** Month view: events shown per day before "+N more". Default 3. */
+  maxPerDay?: number;
+  /** Month view: "+N more" opens that day. Showing it (say, in the day view) is your call. */
+  onOpenDay?: (day: string) => void;
   /** Refuse a span (outside hours, a closed room). */
   isUnavailable?: (span: ScheduleSpan) => boolean;
   /** The now line's time. Default: the clock. */
@@ -94,6 +100,14 @@ const split = (t: LocalDateTime) => ({ day: t.slice(0, 10), min: minutesOf(t.sli
 const at = (day: string, min: number): LocalDateTime => `${day}T${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
 const utc = (day: string) => { const [y, m, d] = day.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
 const addDays = (day: string, n: number) => { const t = utc(day); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+/** The same day of the month n months on, clamped to that month's last day. */
+const addMonths = (day: string, n: number) => {
+  const [y, m, d] = day.split('-').map(Number);
+  const first = new Date(Date.UTC(y, m - 1 + n, 1));
+  const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
+  first.setUTCDate(Math.min(d, last));
+  return first.toISOString().slice(0, 10);
+};
 const nowLocal = () => { const t = new Date(); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`; };
 const fmt = (locale: string | undefined, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { ...o, timeZone: 'UTC' });
 const clockText = (min: number) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
@@ -108,7 +122,7 @@ type Draft = { day: string; start: number; end: number; title: string; error?: s
  * slot under a carried event deepens to a trench the length of the event. A carried event floats at level 3, tilted.
  */
 export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date, onDateChange, events, getKey, getStart, getEnd, getLabel, step = 15, dayStart = '08:00', dayEnd = '19:00',
-  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isLocked, lockedLabel, getCategory, categories, legend, renderDayHeader, dayActions, footer, isUnavailable, now, locale,
+  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isLocked, lockedLabel, getCategory, categories, legend, renderDayHeader, dayActions, footer, monthCell, maxPerDay = 3, onOpenDay, isUnavailable, now, locale,
   className, ...aria }: ScheduleProps<T>) {
   // Narrow (#257): measured on the schedule itself, at the narrow breakpoint.
   const [root, setRoot] = React.useState<HTMLDivElement | null>(null);
@@ -119,7 +133,9 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     ro.observe(root);
     return () => ro.disconnect();
   }, [root, narrowView]);
-  const view = isNarrow && narrowView ? narrowView : viewProp;
+  // A narrow month stays a month, its weeks stacked as a list of days (#559).
+  const view = isNarrow && narrowView && viewProp !== 'month' ? narrowView : viewProp;
+  const isMonth = view === 'month';
   // Under a coarse pointer an hour is twice as tall (unless hourHeight is set), so a 15-minute slot or event is 24px:
   // big enough for a finger, and still in proportion to its time (#257).
   const [coarse, setCoarse] = React.useState(false);
@@ -130,12 +146,17 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const slots = Array.from({ length: Math.ceil((last - first) / step) }, (_, i) => first + i * step);
   const weekday = utc(date).getUTCDay();
   const startDay = view === 'day' ? date : addDays(date, -((weekday - weekStartsOn + 7) % 7));
-  const days = view === 'day' ? [date] : Array.from({ length: 7 }, (_, i) => addDays(startDay, i)).filter((d) => view === 'week' || ![0, 6].includes(utc(d).getUTCDay()));
+  const monthStart = `${date.slice(0, 8)}01`;
+  const monthGridStart = addDays(monthStart, -((utc(monthStart).getUTCDay() - weekStartsOn + 7) % 7));
+  const monthWeeks = Math.ceil(Math.round((utc(addMonths(monthStart, 1)).getTime() - utc(monthGridStart).getTime()) / 864e5) / 7);
+  const days = isMonth ? Array.from({ length: monthWeeks * 7 }, (_, i) => addDays(monthGridStart, i)) : view === 'day' ? [date] : Array.from({ length: 7 }, (_, i) => addDays(startDay, i)).filter((d) => view === 'week' || ![0, 6].includes(utc(d).getUTCDay()));
   const longDay = fmt(locale, { weekday: 'long', day: 'numeric', month: 'long' });
   const shortDay = fmt(locale, { weekday: 'short', day: 'numeric' });
 
   const [focus, setFocus] = React.useState<{ day: string; min: number }>({ day: days.includes(date) ? date : days[0], min: first + Math.floor((9 * 60 - first) / step) * step });
   const [carry, setCarry] = React.useState<Carry | null>(null);
+  // Month view: the focused chip in the focused day ('__more' for its "+N more"), or null for the day itself.
+  const [chip, setChip] = React.useState<string | null>(null);
   const [draft, setDraft] = React.useState<Draft | null>(null);
   const [busy, setBusy] = React.useState<string | null>(null);
   const [failure, setFailure] = React.useState<{ key: string; error: string; retry: () => void } | null>(null);
@@ -227,6 +248,13 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     if (!wantFocus.current) return;
     const what = wantFocus.current; wantFocus.current = null;
     if (what === 'title') { titleRef.current?.focus(); titleRef.current?.select(); return; }
+    if (isMonth) {
+      const key = carry?.key ?? (chip && chip !== '__more' ? chip : null);
+      const cell = grid.current?.querySelector<HTMLElement>(`[data-mday="${focus.day}"]`);
+      const target = (key && grid.current?.querySelector<HTMLElement>(`[data-event="${CSS.escape(key)}"]`)) || (chip === '__more' && cell?.querySelector<HTMLElement>('.alt-schedule-more')) || cell;
+      target?.focus({ preventScroll: false });
+      return;
+    }
     const key = carry?.key;
     const target = (key && grid.current?.querySelector<HTMLElement>(`[data-event="${CSS.escape(key)}"]`))
       || grid.current?.querySelector<HTMLElement>(`[data-cell="${focus.day}T${focus.min}"] [data-event]`)
@@ -250,7 +278,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const commitCarry = async (c: Carry) => {
     const event = byKey.get(c.key)!;
     const s0 = split(getStart(event)), e0 = split(getEnd(event));
-    setCarry(null);
+    setCarry(null); setChip(c.key);
     if (c.blocked || blocked(c.day, c.start, c.end)) { say(`That time isn’t available. ${getLabel(event)} is back in its place.`); moveFocus(s0.day, s0.min); return; }
     if (c.day === s0.day && c.start === s0.min && c.end === (e0.day === s0.day ? e0.min : 24 * 60)) { say(`${getLabel(event)} dropped. ${spanText(c.day, c.start, c.end)}`); moveFocus(c.day, c.start); return; }
     if (!onChange) return;
@@ -306,6 +334,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const onGridKey = (e: React.KeyboardEvent) => {
     // Keys from the day headers' actions (and their menus) aren't the grid's.
     if (!body.current?.contains(e.target as Node) || (e.target as HTMLElement).closest('input')) return;
+    if (isMonth) { onMonthKey(e); return; }
     const di = days.indexOf(focus.day);
     const rtl = getComputedStyle(e.currentTarget).direction === 'rtl';
     const left = rtl ? 'ArrowRight' : 'ArrowLeft', right = rtl ? 'ArrowLeft' : 'ArrowRight';
@@ -359,7 +388,98 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     };
     if (keys[e.key]) { e.preventDefault(); keys[e.key](); }
   };
+  // ── Month view (#559): days move by day and week, a day's chips by ↑ and ↓; a held chip moves by day and week. ──
+  const chipsOn = (day: string) => placed.filter((p) => p.day === day && carry?.key !== p.key).sort((a, b) => a.start - b.start || a.end - b.end);
+  const monthMove = (day: string, to: string | null = null) => { if (!days.includes(day)) return; setFocus({ day, min: focus.min }); setChip(to); wantFocus.current = 'cell'; };
+  const onMonthKey = (e: React.KeyboardEvent) => {
+    const rtl = getComputedStyle(e.currentTarget).direction === 'rtl';
+    const left = rtl ? 'ArrowRight' : 'ArrowLeft', right = rtl ? 'ArrowLeft' : 'ArrowRight';
+    const week = isNarrow ? 1 : 7;
+    const onEvent = (e.target as HTMLElement).dataset.event;
+    const event = onEvent ? byKey.get(onEvent) : undefined;
+    if (carry?.mode === 'keys') {
+      const c = carry;
+      const by = e.key === left ? -1 : e.key === right ? 1 : e.key === 'ArrowUp' ? -week : e.key === 'ArrowDown' ? week : 0;
+      if (by) {
+        e.preventDefault();
+        const day = addDays(c.day, by);
+        if (!days.includes(day)) return;
+        const next: Carry = { ...c, day, blocked: blocked(day, c.start, c.end) };
+        setCarry(next); setFocus({ day, min: focus.min }); wantFocus.current = 'cell';
+        say(`${spanText(day, c.start, c.end)}${next.blocked ? '. Not available' : ''}`);
+      } else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); void commitCarry(c); }
+      else if (e.key === 'Escape') { e.preventDefault(); const ev = byKey.get(c.key)!; setCarry(null); say(`Move cancelled. ${getLabel(ev)} is back in its place.`); monthMove(split(getStart(ev)).day, c.key); }
+      return;
+    }
+    if (event) {
+      if (locked(event) && ((e.key === ' ' && onChange) || (e.key === 'F2' && onRename) || (e.key === 'Delete' && onRemove))) { e.preventDefault(); refuseLocked(event); return; }
+      if (e.key === ' ' && onChange) {
+        e.preventDefault();
+        const who = heldBy?.(event);
+        if (who) { say(`${who.name} is moving ${getLabel(event)}.`); return; }
+        const s0 = split(getStart(event)), e0 = split(getEnd(event));
+        setCarry({ key: onEvent!, day: s0.day, start: s0.min, end: e0.day === s0.day ? e0.min : 24 * 60, mode: 'keys', kind: 'move' });
+        wantFocus.current = 'cell';
+        say(`Picked up ${getLabel(event)}. ← and → move it by a day, ↑ and ↓ by a week; its time stays. Space drops, Escape cancels.`);
+        return;
+      }
+      if (e.key === 'Enter') { e.preventDefault(); onOpen?.(event); return; }
+      if (e.key === 'F2' && onRename) { e.preventDefault(); setRenaming({ key: onEvent!, title: getLabel(event) }); wantFocus.current = 'title'; return; }
+      if (e.key === 'Delete' && onRemove) { e.preventDefault(); onRemove(event); setChip(null); wantFocus.current = 'cell'; return; }
+    }
+    const list = chipsOn(focus.day);
+    const stack = [...list.slice(0, maxPerDay).map((p) => p.key), ...(list.length > maxPerDay && onOpenDay ? ['__more'] : [])];
+    const at = chip ? stack.indexOf(chip) : -1;
+    const di = days.indexOf(focus.day);
+    const create = () => startDraft(focus.day, first, Math.min(24 * 60, first + defaultDuration));
+    const keys: Record<string, () => void> = chip ? {
+      // In a day's chips: ↑ and ↓ step through them; ← and → go to the next day; Escape back to the day.
+      ArrowUp: () => monthMove(focus.day, at > 0 ? stack[at - 1] : null),
+      ArrowDown: () => { if (at < stack.length - 1) monthMove(focus.day, stack[at + 1]); },
+      [left]: () => monthMove(days[Math.max(0, di - 1)]),
+      [right]: () => monthMove(days[Math.min(days.length - 1, di + 1)]),
+      Escape: () => monthMove(focus.day),
+      Enter: () => { if (chip === '__more') onOpenDay?.(focus.day); },
+    } : {
+      ArrowUp: () => monthMove(days[Math.max(0, di - week)] ?? focus.day),
+      ArrowDown: () => monthMove(days[Math.min(days.length - 1, di + week)] ?? focus.day),
+      [left]: () => monthMove(days[Math.max(0, di - 1)]),
+      [right]: () => monthMove(days[Math.min(days.length - 1, di + 1)]),
+      Home: () => monthMove(days[di - (di % 7)]),
+      End: () => monthMove(days[di - (di % 7) + 6]),
+      PageUp: () => shift(-1), PageDown: () => shift(1),
+      // Enter on an empty day makes an event; on a day with events it goes to them (Shift+Enter still makes one).
+      Enter: () => { if (stack.length && !e.shiftKey) monthMove(focus.day, stack[0]); else create(); },
+    };
+    if (keys[e.key]) { e.preventDefault(); keys[e.key](); }
+  };
+  const startMonthDrag = (e: React.PointerEvent, key: string) => {
+    if (e.button !== 0 || busy || renaming || !onChange) return;
+    const event = byKey.get(key)!;
+    if (heldBy?.(event) || locked(event)) return;
+    const s0 = split(getStart(event)), e0 = split(getEnd(event));
+    const end = e0.day === s0.day ? e0.min : 24 * 60;
+    const origin = { x: e.clientX, y: e.clientY };
+    let moved = false, latest: Carry | null = null;
+    const move = (ev: PointerEvent) => {
+      if (!moved && Math.hypot(ev.clientX - origin.x, ev.clientY - origin.y) < 5) return;
+      moved = true;
+      const cell = (document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null)?.closest<HTMLElement>('[data-mday]');
+      const day = cell?.dataset.mday;
+      if (!day || day === latest?.day) return;
+      latest = { key, day, start: s0.min, end, mode: 'pointer', kind: 'move', blocked: blocked(day, s0.min, end) };
+      setCarry(latest);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+      if (!moved || !latest) { setCarry(null); return; }
+      void latestCommit.current(latest);
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  };
+
   const shift = (n: number) => {
+    if (isMonth) { onDateChange?.(addMonths(date, n)); setFocus({ day: addMonths(focus.day, n), min: focus.min }); setChip(null); wantFocus.current = 'cell'; return; }
     const by = view === 'day' ? n : n * 7;
     const next = addDays(date, by);
     onDateChange?.(next); setFocus({ day: addDays(focus.day, by), min: focus.min }); wantFocus.current = 'cell';
@@ -419,7 +539,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const latestStart = React.useRef(startDraft); latestStart.current = startDraft;
 
   const nowAt = split(now ?? nowLocal());
-  const title = view === 'day' ? longDay.format(utc(date)) : `${fmt(locale, { day: 'numeric', month: 'short' }).format(utc(days[0]))} – ${fmt(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(utc(days[days.length - 1]))}`;
+  const title = isMonth ? fmt(locale, { month: 'long', year: 'numeric' }).format(utc(monthStart)) : view === 'day' ? longDay.format(utc(date)) : `${fmt(locale, { day: 'numeric', month: 'short' }).format(utc(days[0]))} – ${fmt(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(utc(days[days.length - 1]))}`;
   const eventsIn = (day: string, min: number) => placed.filter((p) => p.day === day && Math.max(first, Math.floor(p.start / step) * step) === min && (carry?.key !== p.key));
   const field = (value: string, label: string, error: string | undefined, onValue: (v: string) => void, onSave: () => void, onCancel: () => void, onLeave?: () => void) =>
     <span className="alt-schedule-field">
@@ -446,16 +566,79 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const eventBox = (p: { key: string; day: string; start: number; end: number; lane: number; lanes: number }, inner: React.ReactNode, extra: Record<string, unknown>) =>
     <div key={p.key} className="alt-schedule-event-box" style={{ ...edgeOf(byKey.get(p.key)), top: (p.start - Math.max(first, Math.floor(p.start / step) * step)) * px, height: Math.max(step * px, (p.end - p.start) * px) - 2, left: `calc(${(p.lane / p.lanes) * 100}% + 2px)`, width: `calc(${100 / p.lanes}% - 4px)` }} {...extra}>{inner}</div>;
 
+  const weekdayShort = fmt(locale, { weekday: 'short' }), weekdayLong = fmt(locale, { weekday: 'long' });
+  const dayNumber = fmt(locale, { day: 'numeric' }), dayMonth = fmt(locale, { day: 'numeric', month: 'short' });
+  const chipText = (p: { event: T; start: number; end: number }) => renderEvent ? renderEvent(p.event)
+    : <><small>{clockText(p.start)}</small><strong>{getLabel(p.event)}</strong></>;
+  const monthGrid = () => <div ref={grid} role="grid" className="alt-schedule-grid alt-schedule-month" aria-label={aria['aria-label'] ?? 'Schedule'} aria-describedby={footer ? `${uid}-footer` : undefined}
+    aria-rowcount={monthWeeks + 1} aria-colcount={7} onKeyDown={onGridKey} key={monthStart}>
+    <div role="row" className="alt-schedule-row alt-schedule-dayrow" aria-rowindex={1}>
+      {days.slice(0, 7).map((d, i) => <span key={d} role="columnheader" className="alt-schedule-day" aria-colindex={i + 1} aria-label={weekdayLong.format(utc(d))}>{weekdayShort.format(utc(d))}</span>)}
+    </div>
+    <div ref={body} className="alt-schedule-body">
+      {Array.from({ length: monthWeeks }, (_, r) => <div key={r} role="row" className="alt-schedule-row" aria-rowindex={r + 2}>
+        {days.slice(r * 7, r * 7 + 7).map((d, c) => {
+          const list = chipsOn(d);
+          const shown = list.slice(0, maxPerDay), more = list.length - shown.length;
+          const all = placed.filter((p) => p.day === d);
+          const isFocus = focus.day === d;
+          const inMonth = d.slice(0, 7) === monthStart.slice(0, 7);
+          const long = longDay.format(utc(d));
+          const carried = carry && carry.day === d ? carry : null;
+          const drafted = draft && draft.day === d ? draft : null;
+          const extra = monthCell?.(d, all.map((p) => p.event));
+          const hasExtra = extra != null && extra !== false;
+          return <div key={d} role="gridcell" className="alt-schedule-mday" data-mday={d} aria-colindex={c + 1} data-outside={inMonth ? undefined : ''}
+            aria-label={`${long}${all.length ? `, ${all.length} event${all.length > 1 ? 's' : ''}` : ''}`} aria-describedby={hasExtra ? `${uid}-m-${d}` : undefined}
+            aria-current={d === nowAt.day ? 'date' : undefined} data-target={carried ? '' : undefined} data-blocked={carried?.blocked ? '' : undefined}
+            tabIndex={isFocus && !chip ? 0 : -1} onFocus={(e) => { if (e.target === e.currentTarget) { setFocus({ day: d, min: focus.min }); setChip(null); } }}
+            onDoubleClick={(e) => { if (!(e.target as HTMLElement).closest('[data-event], .alt-schedule-more, .alt-schedule-draft')) startDraft(d, first, Math.min(24 * 60, first + defaultDuration)); }}>
+            <span className="alt-schedule-mdate" aria-hidden="true"><span className="alt-schedule-mweekday">{weekdayShort.format(utc(d))} </span>{inMonth ? dayNumber.format(utc(d)) : dayMonth.format(utc(d))}</span>
+            <span className="alt-schedule-chips">
+              {shown.map((p) => {
+                const who = heldBy?.(p.event);
+                const isLockedEvent = locked(p.event);
+                if (renaming?.key === p.key) return <span key={p.key} className="alt-schedule-chip-edit">{field(renaming.title, `Rename ${getLabel(p.event)}`, renaming.error, (t) => setRenaming({ ...renaming, title: t, error: undefined }), () => void rename(), () => { setRenaming(null); wantFocus.current = 'cell'; })}</span>;
+                return <button key={p.key} type="button" className="alt-schedule-event" data-chip="" data-event={p.key} tabIndex={isFocus && chip === p.key ? 0 : -1}
+                  aria-label={nameOf(p)} aria-busy={busy === p.key || undefined} style={edgeOf(p.event)}
+                  data-status={busy === p.key ? 'pending' : failure?.key === p.key ? 'failed' : undefined} data-settle={settled === p.key ? '' : undefined}
+                  data-held={who ? (who.presence ?? 1) : undefined} data-locked={isLockedEvent ? '' : undefined}
+                  onFocus={() => { setFocus({ day: d, min: focus.min }); setChip(p.key); }}
+                  onPointerDown={(e) => { e.stopPropagation(); startMonthDrag(e, p.key); }} onDoubleClick={() => onOpen?.(p.event)}
+                  onClick={(e) => { if ((e.nativeEvent as PointerEvent).pointerType === 'touch') onOpen?.(p.event); }}>
+                  {isLockedEvent && <Icons.Lock size={11} aria-hidden="true" />}
+                  {chipText(p)}
+                </button>;
+              })}
+              {carried && <button type="button" className="alt-schedule-event" data-chip="" data-event={carried.key} data-carried={carried.mode} tabIndex={0} aria-pressed style={edgeOf(byKey.get(carried.key))}
+                aria-label={`${getLabel(byKey.get(carried.key)!)}, ${spanText(carried.day, carried.start, carried.end)}`}>
+                {chipText({ event: byKey.get(carried.key)!, start: carried.start, end: carried.end })}</button>}
+              {drafted && !drafted.drawing && <span className="alt-schedule-draft" data-status={busy === '__draft' ? 'pending' : undefined}>
+                {field(drafted.title, 'Event title', drafted.error, (t) => setDraft({ ...drafted, title: t, error: undefined }), () => void create(), () => { setDraft(null); wantFocus.current = 'cell'; say('New event discarded.'); }, leaveDraft)}
+                <small>{clockText(drafted.start)}–{clockText(drafted.end)}</small>
+              </span>}
+              {more > 0 && (onOpenDay
+                ? <button type="button" className="alt-schedule-more" tabIndex={isFocus && chip === '__more' ? 0 : -1} aria-label={`${more} more event${more > 1 ? 's' : ''} on ${long}`}
+                  onFocus={() => { setFocus({ day: d, min: focus.min }); setChip('__more'); }} onClick={() => onOpenDay(d)}>+{more} more</button>
+                : <span className="alt-schedule-more" aria-hidden="true">+{more} more</span>)}
+            </span>
+            {hasExtra && <span className="alt-schedule-mcell" id={`${uid}-m-${d}`}>{extra}</span>}
+          </div>;
+        })}
+      </div>)}
+    </div>
+  </div>;
+
   return <div ref={setRoot} className={cx('alt-schedule', className)} data-narrow={isNarrow && narrowView ? '' : undefined} data-carrying={carry || draft?.drawing ? '' : undefined} style={{ ['--days' as any]: days.length, ['--slot' as any]: `${step * px}px` }}>
     <div className="alt-schedule-head">
       <h2 className="alt-schedule-period" aria-live="polite">{title}</h2>
       {onDateChange && <div className="alt-schedule-nav">
-        <Button size="sm" variant="ghost" aria-label={view === 'day' ? 'Previous day' : 'Previous week'} onClick={() => shift(-1)}>‹</Button>
+        <Button size="sm" variant="ghost" aria-label={isMonth ? 'Previous month' : view === 'day' ? 'Previous day' : 'Previous week'} onClick={() => shift(-1)}>‹</Button>
         <Button size="sm" variant="ghost" onClick={() => onDateChange((now ?? nowLocal()).slice(0, 10))}>Today</Button>
-        <Button size="sm" variant="ghost" aria-label={view === 'day' ? 'Next day' : 'Next week'} onClick={() => shift(1)}>›</Button>
+        <Button size="sm" variant="ghost" aria-label={isMonth ? 'Next month' : view === 'day' ? 'Next day' : 'Next week'} onClick={() => shift(1)}>›</Button>
       </div>}
     </div>
-    <div ref={grid} role="grid" className="alt-schedule-grid" aria-label={aria['aria-label'] ?? 'Schedule'} aria-describedby={footer ? `${uid}-footer` : undefined} aria-rowcount={slots.length + 1} aria-colcount={days.length + 1} onKeyDown={onGridKey} key={days[0]}>
+    {isMonth ? monthGrid() : <div ref={grid} role="grid" className="alt-schedule-grid" aria-label={aria['aria-label'] ?? 'Schedule'} aria-describedby={footer ? `${uid}-footer` : undefined} aria-rowcount={slots.length + 1} aria-colcount={days.length + 1} onKeyDown={onGridKey} key={days[0]}>
       <div role="row" className="alt-schedule-row alt-schedule-dayrow" aria-rowindex={1}>
         <span role="columnheader" className="alt-schedule-corner" aria-colindex={1}><span className="alt-schedule-sr">Time</span></span>
         {days.map((d, i) => {
@@ -518,8 +701,9 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
           })}
         </div>)}
       </div>
-    </div>
-    {footer && <div className="alt-schedule-footer" id={`${uid}-footer`}>{footer(days, events.filter((e) => days.includes(split(getStart(e)).day)))}</div>}
+    </div>}
+    {footer && <div className="alt-schedule-footer" id={`${uid}-footer`}>{(() => { const period = isMonth ? days.filter((d) => d.slice(0, 7) === monthStart.slice(0, 7)) : days;
+      return footer(period, events.filter((e) => period.includes(split(getStart(e)).day))); })()}</div>}
     {cats && cats.size > 0 && (legend ?? !!categories) && <ul className="alt-schedule-legend" aria-label="Categories">
       {[...cats.values()].map((c) => <li key={c.id} style={c.color ? { ['--sch-edge' as any]: `var(--${c.color})` } : undefined} data-shared={c.color ? undefined : ''}>
         <span className="alt-schedule-swatch" aria-hidden="true" />{c.label}</li>)}
