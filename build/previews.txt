@@ -7361,10 +7361,12 @@ function App() {
 --- jsx
 const answer = 'The billing migration is two days behind: the invoice backfill is still running. The EU data residency review needs a decision from legal by Friday.';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-/** @param {'offline' | 'rate-limited' | 'context-full' | 'none'} failure */
-function scripted(failure) {
+/** @typedef {'offline' | 'rate-limited' | 'context-full' | 'none'} Failure */
+/** The demo service reads its failure mode when a send starts, so a retry after recovering goes to the recovered service. @param {{ current: Failure }} mode */
+function scripted(mode) {
   /** @param {string} _input @param {AbortSignal} signal */
   return async function* (_input, signal) {
+    const failure = mode.current;
     await wait(350);
     if (failure === 'offline') throw new A.AssistantError('offline');
     if (failure === 'rate-limited') throw new A.AssistantError('rate-limited', undefined, Date.now() + 25 * 60000);
@@ -7374,12 +7376,16 @@ function scripted(failure) {
 }
 /** @param {{ restored?: { input: string, text: string, complete: boolean } }} props */
 function Thread({ restored }) {
-  const [failure, setFailure] = React.useState(/** @type {'offline' | 'rate-limited' | 'context-full' | 'none'} */ ('none'));
+  const [failure, setFailure] = React.useState(/** @type {Failure} */ ('none'));
+  const mode = React.useRef(failure); mode.current = failure;
   const [draft, setDraft] = React.useState('');
   const [used, setUsed] = React.useState(64);
-  const turn = A.useAssistantTurn({ stream: scripted(failure), restored });
+  const stream = React.useMemo(() => scripted(mode), []);
+  const turn = A.useAssistantTurn({ stream, restored });
   // A failed send keeps the message: it goes back in the composer.
   React.useEffect(() => { if (turn.state === 'failed' && turn.input) setDraft(turn.input); }, [turn.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Try again: the service is back, so send the kept input again once; the composer keeps it until the send starts.
+  const retry = () => { mode.current = 'none'; setFailure('none'); if (turn.retry()) setDraft(''); };
   React.useEffect(() => { if (turn.state === 'complete') setUsed((u) => Math.min(99, u + 9)); }, [turn.state]);
   return (
     <div className="col ac">
@@ -7396,7 +7402,7 @@ function Thread({ restored }) {
       </A.Conversation>
       {turn.state === 'failed' && (
         <A.Alert tone={turn.error?.kind === 'context-full' ? 'caution' : 'critical'} title={turn.errorText}
-          action={turn.error?.kind === 'context-full' ? <A.Button size="sm" variant="secondary">Start a new conversation</A.Button> : <A.Button size="sm" variant="secondary" onClick={() => { setFailure('none'); setDraft(''); }}>Try again</A.Button>} />
+          action={turn.error?.kind === 'context-full' ? <A.Button size="sm" variant="secondary">Start a new conversation</A.Button> : <A.Button size="sm" variant="secondary" onClick={retry}>Try again</A.Button>} />
       )}
       <A.PromptInput status={turn.promptStatus === 'error' ? 'ready' : turn.promptStatus} value={draft} onValueChange={setDraft} onStop={turn.stop}
         onSubmit={({ text }) => { turn.submit(text); }}>
