@@ -5,13 +5,15 @@ import { Button } from './controls';
 /* ───────────────────────── SaveBar ───────────────────────── */
 
 /** Whether a field's draft value matches its baseline, for any value a record holds (bigint, Date, nested, cyclic). */
-function same(a: unknown, b: unknown, seen = new Map<object, object>()): boolean {
+function same(a: unknown, b: unknown, seen = new Map<object, Set<object>>()): boolean {
   if (Object.is(a, b)) return true;
   if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false;
   if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;
   if (a instanceof Date) return Object.is(a.getTime(), (b as Date).getTime());
-  if (seen.get(a) === b) return true;
-  seen.set(a, b);
+  // Every pair already under comparison is assumed equal, so cycles of different lengths terminate too.
+  const pairs = seen.get(a) ?? new Set<object>();
+  if (pairs.has(b)) return true;
+  seen.set(a, pairs.add(b));
   if (a instanceof Map || a instanceof Set) {
     const x = [...a.entries()], y = [...(b as Map<unknown, unknown> | Set<unknown>).entries()];
     return x.length === y.length && x.every(([k, v], i) => same(k, y[i][0], seen) && same(v, y[i][1], seen));

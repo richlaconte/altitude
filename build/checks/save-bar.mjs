@@ -71,11 +71,14 @@ await big.evaluate(() => {
   const { React, ReactDOM, Altitude: A } = window, h = React.createElement;
   const host = document.createElement('div'); host.id = 'bigint'; document.body.append(host);
   function App() {
-    const record = A.useEditRecord({ initialValue: { id: 123n, name: 'Original', at: new Date(0), tags: { a: [1n] } },
+    const loop = {}, other = { self: loop }; loop.self = other;
+    const record = A.useEditRecord({ initialValue: { id: 123n, name: 'Original', at: new Date(0), tags: { a: [1n] }, loop },
       validate: () => ({}), validationMode: 'submit', save: (draft) => ({ ok: true, value: draft }) });
     return h(A.AltitudeProvider, { scheme: 'daylight' },
       h('input', { 'aria-label': 'Name', value: record.draft.name, onChange: (e) => record.setField('name', e.target.value) }),
       h('button', { id: 'retag', onClick: () => record.setField('tags', { a: [1n] }) }, 'Same tags'),
+      // A cyclic value whose replacement cycles with a different period: structurally equal, and the compare must end.
+      h('button', { id: 'reloop', onClick: () => { const b = {}; b.self = b; record.setField('loop', b); } }, 'Same loop'),
       h(A.SaveBar, { record, delay: 0 }));
   }
   ReactDOM.createRoot(host).render(h(App));
@@ -90,6 +93,12 @@ if (await big.locator('#retag').count()) {
   bigText = await big.evaluate(() => document.querySelector('.alt-savebar .alt-savebar-text')?.textContent);
 }
 expect(!bigErrors.length && bigText === 'Unsaved changes · 1 field', `and counts one changed field, not the equal nested bigint (${bigText}; ${bigErrors.join('; ')})`);
+if (await big.locator('#reloop').count()) {
+  await big.click('#reloop');
+  await big.waitForTimeout(300);
+  bigText = await big.evaluate(() => document.querySelector('.alt-savebar .alt-savebar-text')?.textContent);
+}
+expect(!bigErrors.length && bigText === 'Unsaved changes · 1 field', `a cyclic field replaced by an equal cycle of another length neither throws nor counts (${bigText}; ${bigErrors.join('; ')})`);
 await big.close();
 
 console.log(`SaveBar: ${pass} passed, ${fail} failed`);
