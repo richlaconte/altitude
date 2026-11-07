@@ -102,6 +102,70 @@ try {
     check((await cell(page, 4, 4).textContent()).includes('Active') && await at(page) === '4:4', 'DG-24 a Select column commits on choosing and returns to the cell');
     await page.close(); }
 
+  // #614: DataGrid participates in Table's existing carry choreography. Observe real animations, including a
+  // Table control, so a reorder must travel while initial rendering, unchanged rows and reduced motion do not.
+  for (const scheme of ['daylight', 'nightfall']) for (const motion of ['full', 'reduced']) {
+    const page = await open({ scheme });
+    await page.evaluate(({ scheme, motion }) => {
+      document.body.innerHTML = '<div id="carry-root"></div>';
+      const A = window.Altitude, h = React.createElement;
+      window.__carryCalls = [];
+      const animate = Element.prototype.animate;
+      Element.prototype.animate = function (frames, options) {
+        if (this.matches('tbody > tr')) window.__carryCalls.push({
+          kind: this.closest('[role="grid"]') ? 'grid' : 'table',
+          name: this.textContent, frames, options,
+        });
+        return animate.call(this, frames, options);
+      };
+      function App() {
+        const [rows, setRows] = React.useState([
+          { id: 'gateway', name: 'API gateway' }, { id: 'worker', name: 'Worker pool' }, { id: 'edge', name: 'Edge cache' },
+        ]);
+        const [revision, setRevision] = React.useState(0);
+        const update = reverse => { setRows(rs => reverse ? [...rs].reverse() : [...rs]); setRevision(r => r + 1); };
+        return h(A.AltitudeProvider, { scheme, motion },
+          h('button', { id: 'carry-same', onClick: () => update(false) }, 'Keep order'),
+          h('button', { id: 'carry-reverse', onClick: () => update(true) }, 'Reverse rows'),
+          h('output', { id: 'carry-revision' }, revision),
+          h(A.DataGrid, { 'aria-label': 'Releases', rows, getRowId: row => row.id, getRowLabel: row => row.name,
+            columns: [{ key: 'name', header: 'Release' }], onCellSave: () => ({ ok: true }) }),
+          h(A.Table, { 'aria-label': 'Carry control' }, h(A.TableBody, null,
+            rows.map(row => h(A.TableRow, { key: row.id, rowId: row.id }, h(A.TableCell, null, row.name))))));
+      }
+      const scene = h(App);
+      ReactDOM.createRoot(document.getElementById('carry-root')).render(document.documentElement.dataset.fixtureStrict === 'true' ? h(React.StrictMode, null, scene) : scene);
+    }, { scheme, motion });
+    await page.waitForFunction(() => document.querySelector('#carry-revision')?.textContent === '0');
+    const label = `${scheme}/${motion}`;
+    check((await page.evaluate(() => window.__carryCalls)).length === 0, `DG-29 ${label}: initial rows do not animate as moves`);
+    await page.click('#carry-same');
+    await page.waitForFunction(() => document.querySelector('#carry-revision').textContent === '1');
+    check((await page.evaluate(() => window.__carryCalls)).length === 0, `DG-30 ${label}: replacing rows without changing order does not travel`);
+    for (const revision of [2, 3]) {
+      await page.evaluate(() => { window.__carryCalls = []; });
+      await page.click('#carry-reverse');
+      await page.waitForFunction(revision => document.querySelector('#carry-revision').textContent === String(revision), revision);
+      const calls = await page.evaluate(() => window.__carryCalls);
+      const moves = kind => calls.filter(call => call.kind === kind).sort((a, b) => a.name.localeCompare(b.name));
+      const expected = motion === 'full' ? ['API gateway', 'Edge cache'] : [];
+      for (const kind of ['table', 'grid']) {
+        check(JSON.stringify(moves(kind).map(call => call.name)) === JSON.stringify(expected),
+          `DG-31 ${label}/${revision}/${kind}: only displaced rows travel (${JSON.stringify(calls)})`);
+      }
+      if (motion === 'full') {
+        check(moves('grid').every((call, i) => call.options.duration === 220 && call.options.easing.replaceAll(' ', '') === 'cubic-bezier(0.65,0,0.35,1)'
+          && call.frames[0].transform !== 'translate(0px, 0px)' && call.frames[1].transform === 'none'
+          && JSON.stringify(call.options) === JSON.stringify(moves('table')[i].options)),
+        `DG-32 ${label}/${revision}: grid rows travel with the same duration and easing as Table`);
+      }
+      await page.evaluate(() => Promise.all(document.getAnimations().map(animation => animation.finished)));
+      check(await page.getByRole('grid', { name: 'Releases' }).locator('tbody tr').first().textContent() === (revision === 2 ? 'Edge cache' : 'API gateway'),
+        `DG-33 ${label}/${revision}: the new order is retained after motion completes`);
+    }
+    await page.close();
+  }
+
   // #570: an open edit stays bound to the row id and column key it began on. A reorder doesn't retarget its draft; a
   // row that leaves `rows` takes its draft with it, said, and nothing is saved to the record now in its place.
   { const page = await open();
