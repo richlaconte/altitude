@@ -8,7 +8,7 @@ How should a person inspect or edit one record while retaining a meaningful rela
 
 The issue reports the maintainer's November 6–7 assessments: anchored detail received 5/5 for connection to the item; the later long-detail/comparison choice was still anchored but rated 2/5. The second result is negative evidence about that implementation and an unresolved boundary, not approval. Those assessment summaries are the evidence available here; the raw studies were not independently inspected. They are one person's contextual preference, not population evidence or an accessibility requirement. No new participant study is conducted in this change.
 
-The existing screen-layout contract chooses six frames. Its records row names Sheet; the skeleton illustrates three properties in a modal Sheet. The edit-record contract already prefers InlineEdit for a single value and a route for extended work. Sheet, Popover, DataTable expansion and ResizablePanelGroup already cover the relevant presentations. The gap is the decision and source contract at the composition entry point.
+The existing screen-layout contract chooses six frames. Its records row names Sheet; the skeleton illustrates three properties (two editable) in a modal Sheet. The edit-record contract already prefers InlineEdit for a single value and a route for extended work. Sheet, Popover, DataTable expansion and ResizablePanelGroup already cover the relevant presentations. The gap is the decision and source contract at the composition entry point.
 
 ## Primary sources and implications
 
@@ -38,7 +38,7 @@ Source correspondence is a separate invariant: bind the detail to a stable recor
 
 The records skeleton keeps a modal level-4 Sheet because the demonstrated task edits two short properties on one customer before resuming the queue; the surrounding records do not need to remain operable during that edit. Customer name and identifier identify the detail. Opening it does not reflow the table. For sustained reading, several-record comparison or durable links, an application should evaluate a reserved inspector or a route instead. A true blocking decision uses a level-5 Dialog; Sheet is not the summit.
 
-The example captures its stable source control before opening, keeps the component's normal focus return for surviving sources, and supplies an application-owned Customers-heading fallback after modal isolation releases if the source disappears. It does not add a Sheet API or hard-code animation timing. A newer meaningful focus destination must not be overwritten.
+The example captures its stable source ID and focuses the current source control before opening, keeps the component's normal focus return for surviving sources, and supplies an application-owned Customers-heading fallback after modal isolation releases if the source disappears. It does not add a Sheet API or hard-code animation timing. A newer meaningful focus destination must not be overwritten.
 
 ## Verification plan and limits
 

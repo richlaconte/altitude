@@ -31,7 +31,15 @@ assert.equal(require('altitude-design/guidance').version,pkg.version);
  assert.ok(existsSync(join(dir,guidance.design)),'installed design guide');
  assert.ok(guidance.components.length>=100,'installed component index');
  for(const c of guidance.components)assert.ok(existsSync(join(dir,c.document)),`installed guide for ${c.name}`);
- assert.match(readFileSync(join(dir,'components/Button/README.md'),'utf8'),/^# Button/,'Button guide readable from the install');}
+ assert.match(readFileSync(join(dir,'components/Button/README.md'),'utf8'),/^# Button/,'Button guide readable from the install');
+ const layout=guidance.patterns.find(p=>p.id==='screen-layout');
+ assert.ok(layout.rules.includes('ALT-LAYOUT-002'),'installed screen-layout discovers detail-surface rule');
+ assert.match(readFileSync(join(dir,layout.document),'utf8'),/## Choose the detail surface/,'installed chooser is readable');
+ const detail=JSON.parse(readFileSync(join(dir,'rules.json'),'utf8')).rules.find(r=>r.id==='ALT-LAYOUT-002');
+ assert.equal(detail.authority,'contextual-pattern'); assert.equal(detail.diagnosticClass,'contextual-review');
+ const sources=JSON.parse(readFileSync(join(dir,'evidence.json'),'utf8')).sources;
+ for(const id of detail.sources)assert.ok(sources.some(s=>s.id===id),'installed detail rule source '+id);
+ assert.match(readFileSync(join(dir,'app-skeleton.md'),'utf8'),/Customers heading/,'installed example names its missing-source fallback');}
 for(const fn of ['echartsTheme','chartjsDefaults','dataColors','readChartTokens','useChartTheme'])assert.equal(typeof require('altitude-design/chart-themes')[fn],'function','chart-themes CJS '+fn);
 writeFileSync(join(consumer,'themes.mjs'),`import assert from 'node:assert/strict';import {echartsTheme} from 'altitude-design/chart-themes';assert.equal(echartsTheme({'data-1':'#123456'}).color[0],'#123456');console.log('chart-themes ESM passed');`);
 execFileSync(process.execPath,['themes.mjs'],{cwd:consumer,stdio:'inherit'});

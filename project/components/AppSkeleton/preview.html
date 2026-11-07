@@ -56,6 +56,33 @@ function Customers() {
     /** @type {string | null} */
     null
   );
+  const sourceId = React.useRef(
+    /** @type {string | null} */
+    null
+  );
+  const openRecord = (row) => {
+    sourceId.current = row.id;
+    document.getElementById(`sk-customer-${row.id}`)?.closest("button")?.focus();
+    setOpen(row.id);
+  };
+  React.useEffect(() => {
+    if (open || !sourceId.current) return;
+    const heading = document.getElementById("sk-customers-title");
+    if (!heading) return;
+    const restore = () => {
+      if (heading.closest("[inert]")) return;
+      const trigger = document.getElementById(`sk-customer-${sourceId.current}`)?.closest("button");
+      const available = trigger?.isConnected && trigger.getClientRects().length && !trigger.matches(":disabled") && !trigger.closest("[inert]");
+      const active = document.activeElement;
+      if (active === document.body || active?.contains(heading)) (available ? trigger : heading)?.focus({ preventScroll: true });
+      sourceId.current = null;
+      observer.disconnect();
+    };
+    const observer = new MutationObserver(restore);
+    observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["inert"] });
+    restore();
+    return () => observer.disconnect();
+  }, [open]);
   const shown = rows.filter((r) => filters.every((f) => matches(r, f)));
   const pageCount = Math.max(1, Math.ceil(shown.length / 5));
   const record = rows.find((r) => r.id === open);
@@ -67,7 +94,7 @@ function Customers() {
       { ok: true, value }
     );
   };
-  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.PageHeader, { primary: /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Add customer"), actions: /* @__PURE__ */ React.createElement(A.Button, { variant: "secondary" }, "Export") }, /* @__PURE__ */ React.createElement(A.PageHeaderTitle, null, "Customers"), /* @__PURE__ */ React.createElement(A.PageHeaderDescription, null, rows.length, " customers on every plan.")), /* @__PURE__ */ React.createElement("div", { className: "sk-body" }, /* @__PURE__ */ React.createElement(A.FilterBar, { "aria-label": "Filter customers", fields: FIELDS, value: filters, onValueChange: (f) => {
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.PageHeader, { primary: /* @__PURE__ */ React.createElement(A.Button, { variant: "primary" }, "Add customer"), actions: /* @__PURE__ */ React.createElement(A.Button, { variant: "secondary" }, "Export") }, /* @__PURE__ */ React.createElement(A.PageHeaderTitle, { id: "sk-customers-title", tabIndex: -1 }, "Customers"), /* @__PURE__ */ React.createElement(A.PageHeaderDescription, null, rows.length, " customers on every plan.")), /* @__PURE__ */ React.createElement("div", { className: "sk-body" }, /* @__PURE__ */ React.createElement(A.FilterBar, { "aria-label": "Filter customers", fields: FIELDS, value: filters, onValueChange: (f) => {
     setFilters(f);
     setPage(1);
   }, resultCount: shown.length }), /* @__PURE__ */ React.createElement(
@@ -83,14 +110,14 @@ function Customers() {
       onSelectedChange: setSelected,
       matchingTotal: shown.length,
       actions: (ids) => /* @__PURE__ */ React.createElement(A.Button, { size: "sm", variant: "secondary", onClick: () => setSelected([]) }, "Email ", ids.length),
-      onRowClick: (r) => setOpen(r.id),
+      onRowClick: openRecord,
       empty: "No customers match these filters.",
-      columns: [{ key: "name", header: "Name" }, { key: "email", header: "Email" }, { key: "plan", header: "Plan", cell: (r) => /* @__PURE__ */ React.createElement(A.Badge, null, r.plan) }, { key: "seats", header: "Seats", align: "end" }],
+      columns: [{ key: "name", header: "Name", cell: (r) => /* @__PURE__ */ React.createElement("span", { id: `sk-customer-${r.id}` }, r.name) }, { key: "email", header: "Email" }, { key: "plan", header: "Plan", cell: (r) => /* @__PURE__ */ React.createElement(A.Badge, null, r.plan) }, { key: "seats", header: "Seats", align: "end" }],
       pagination: { page, pageCount, total: shown.length, onPageChange: setPage, noun: "customers" }
     }
   )), /* @__PURE__ */ React.createElement(A.Sheet, { open: !!record, onOpenChange: (o) => {
     if (!o) setOpen(null);
-  }, size: "md" }, record && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, record.name), /* @__PURE__ */ React.createElement(A.SheetDescription, null, record.email)), /* @__PURE__ */ React.createElement(A.PropertyList, { "aria-label": `${record.name}\u2019s details` }, /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Plan", value: record.plan, commit: "on-choose", onSave: save("plan"), editor: (c) => /* @__PURE__ */ React.createElement(A.Select, { ...c, items: PLANS }) }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Seats", value: String(record.seats), onSave: save("seats"), validate: (v) => /^\d+$/.test(v) ? void 0 : "Enter a whole number." }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Email", value: record.email })))));
+  }, size: "md" }, record && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(A.SheetHeader, null, /* @__PURE__ */ React.createElement(A.SheetTitle, null, record.name), /* @__PURE__ */ React.createElement(A.SheetDescription, null, "Customer ", record.id, " \xB7 ", record.email)), /* @__PURE__ */ React.createElement(A.PropertyList, { "aria-label": `${record.name}\u2019s details` }, /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Plan", value: record.plan, commit: "on-choose", onSave: save("plan"), editor: (c) => /* @__PURE__ */ React.createElement(A.Select, { ...c, items: PLANS }) }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Seats", value: String(record.seats), onSave: save("seats"), validate: (v) => /^\d+$/.test(v) ? void 0 : "Enter a whole number." }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Email", value: record.email })))));
 }
 function Settings() {
   const general = A.useEditRecord({
