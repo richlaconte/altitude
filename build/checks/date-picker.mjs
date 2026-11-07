@@ -7,8 +7,9 @@ const browser = await chromium.launch(process.env.CHROME ? { executablePath: pro
 const errors = [];
 let passed = 0;
 const check = (condition, message) => { assert.ok(condition, message); passed++; };
-const open = async ({ scheme = 'daylight', width = 960 } = {}) => {
+const open = async ({ scheme = 'daylight', width = 960, clock } = {}) => {
   const page = await browser.newPage({ viewport: { width, height: 760 }, locale: 'en-GB' });
+  if (clock) await page.clock.setFixedTime(new Date(clock));
   page.on('pageerror', e => errors.push(e.message));
   page.on('console', m => { if (['error', 'warning'].includes(m.type())) errors.push(m.text()); });
   await page.goto(`file://${fixturePath('DatePicker', scheme)}`);
@@ -107,7 +108,7 @@ try {
     check(segsText[0] === sd && segsText[1] === sm && segsText[3] === ed && segsText[4] === em, 'DP-31 two choices fill the start and end');
     await page.close(); }
 
-  { const page = await open();
+  { const page = await open({ clock: '2026-10-27T12:00:00' }); // today is a marked day
     // Markers (#563): flush dots under days, with their labels in the days' names.
     const logged = page.getByRole('grid', { name: 'Time logged, October 2026' });
     const day = d => logged.locator(`[data-date="${d}"]`);
@@ -118,11 +119,17 @@ try {
       const g = document.querySelector('[aria-label="Time logged, October 2026"]');
       const color = d => getComputedStyle(g.querySelector(`[data-date="${d}"] .alt-cal-marker`)).backgroundColor;
       const token = n => { const el = document.createElement('i'); el.style.color = `var(--${n})`; g.append(el); const c = getComputedStyle(el).color; el.remove(); return c; };
-      return { positive: color('2026-10-19') === token('positive'), caution: color('2026-10-22') === token('caution'), neutral: color('2026-10-26') === token('ink-muted'), chosen: color('2026-10-27') === token('on-accent'),
+      const today = g.querySelector('[data-date="2026-10-27"]'), num = getComputedStyle(today);
+      return { positive: color('2026-10-19') === token('positive'), caution: color('2026-10-22') === token('caution'), neutral: color('2026-10-26') === token('ink-muted'), critical: color('2026-10-27') === token('critical'),
+        markedToday: today.hasAttribute('data-today') && getComputedStyle(today, '::after').display === 'none' && num.color === token('accent-ink') && num.fontWeight === '650',
         flush: getComputedStyle(g.querySelector('.alt-cal-marker')).boxShadow === 'none' };
     });
-    check(tones.positive && tones.caution && tones.neutral, 'DP-43 a dot is ink-muted for neutral, or its status colour');
-    check(tones.chosen, 'DP-44 on the chosen day the dot turns on-accent');
+    check(tones.positive && tones.caution && tones.neutral && tones.critical, 'DP-43 a dot is ink-muted for neutral, or its status colour (critical included)');
+    check(tones.markedToday, 'DP-43b a marked today drops the today dot; its number is accent-ink at weight 650');
+    await day('2026-10-20').click();
+    const chosen = await page.evaluate(() => { const g = document.querySelector('[aria-label="Time logged, October 2026"]'); const el = document.createElement('i'); el.style.color = 'var(--on-accent)'; g.append(el); const c = getComputedStyle(el).color; el.remove();
+      return getComputedStyle(g.querySelector('[data-date="2026-10-20"] .alt-cal-marker')).backgroundColor === c; });
+    check(chosen, 'DP-44 on the chosen day the dot turns on-accent');
     check(tones.flush, 'DP-45 a marker is flush: no shadow');
     await page.close(); }
 

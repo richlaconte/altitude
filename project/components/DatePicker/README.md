@@ -68,7 +68,7 @@ The value and the rules (limits, unavailable days). Time of day isn't covered (t
 
 ## Demo and verification
 
-The `DatePicker` section of `build/previews.txt` shows a due date (from today, weekends unavailable, en-GB, open), a trip range, an en-US date, a reporting period with presets, and a `Calendar` of time logged in October 2026 with markers for approved, submitted and unsubmitted days. `node checks/date-picker.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG grid keys, RTL arrows, unavailable days, Escape, focus return, segment typing and stepping, impossible dates, Alt+↓, the range flow with its preview, markers (labels in names, counts, tones, on-accent when chosen, flush), and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+The `DatePicker` section of `build/previews.txt` shows a due date (from today, weekends unavailable, en-GB, open), a trip range, an en-US date, a reporting period with presets, and a `Calendar` of time logged in October 2026 with markers for approved, submitted, unsubmitted and missing days (27 October, the critical one, is left unchosen so its dot shows). `node checks/date-picker.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the APG grid keys, RTL arrows, unavailable days, Escape, focus return, segment typing and stepping, impossible dates, Alt+↓, the range flow with its preview, markers (labels in names, counts, every tone, a marked today, on-accent when chosen, flush), and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
 ## Example
@@ -103,7 +103,7 @@ export default function App() {
   const [dpToday, setDpToday] = React.useState('2026-10-27');
   const [period, setPeriod] = React.useState({ start: '2026-09-28', end: '2026-10-27' });
   const [preset, setPreset] = React.useState('last-30-days');
-  const [week, setWeek] = React.useState('2026-10-27');
+  const [week, setWeek] = React.useState('2026-10-28');
   const weekend = iso => { const [y, m, d] = iso.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w === 0 || w === 6; };
   return <div className="dp-demo">
     <Field label="Due date" hint="Weekends aren’t available.">
@@ -123,7 +123,7 @@ export default function App() {
       <div style={{ marginTop: 8 }}><Button size="sm" variant="ghost" onClick={() => setDpToday((t) => dpShift(t, 1))}>Next day</Button></div>
     </div>
     <div>
-      <p className="dp-cap">Time logged: dots mark approved, submitted and unsubmitted days</p>
+      <p className="dp-cap">Time logged: dots mark approved, submitted, unsubmitted and missing days</p>
       <Calendar aria-label="Time logged" value={week} onValueChange={setWeek} locale="en-GB" markers={DP_LOGGED} />
     </div>
   </div>;

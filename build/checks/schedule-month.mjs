@@ -108,6 +108,26 @@ try {
     check(true, 'SM-35 "+N more" calls onOpenDay');
     await page.close(); }
 
+  // Paging and the row edges keep focus, and one Tab stop, inside the grid.
+  { const page = await open();
+    const grid = page.getByRole('grid', { name: 'Room bookings' });
+    const period = t => page.waitForFunction(t => document.querySelector('.alt-schedule-period').textContent === t, t);
+    const inGrid = () => page.evaluate(() => !!document.activeElement?.closest('.alt-schedule-month'));
+    await page.locator('[data-mday="2026-09-28"]').focus(); await page.keyboard.press('PageUp'); await period('September 2026');
+    check(await grid.locator('[tabindex="0"]').count() === 1 && await inGrid(), 'SM-36 PageUp from a day of the previous month keeps focus and one Tab stop in the grid');
+    check((await focused(page)).startsWith('Tuesday 1 September'), 'SM-37 …on the new month’s first day');
+    await page.keyboard.press('PageDown'); await period('October 2026');
+    await page.locator('[data-mday="2026-10-28"]').focus(); await page.keyboard.press('ArrowDown'); await period('November 2026');
+    check((await focused(page)).startsWith('Wednesday 4 November') && await grid.locator('[tabindex="0"]').count() === 1, 'SM-38 ↓ on the last row goes on into the next month, on the same weekday');
+    await page.keyboard.press('ArrowUp'); check((await focused(page)).startsWith('Wednesday 28 October'), 'SM-39 ↑ moves a week within the grid');
+    await page.keyboard.press('ArrowUp'); await period('October 2026');
+    check((await focused(page)).startsWith('Wednesday 21 October') && await inGrid(), 'SM-40 ↑ on the first row goes back into the previous month, on the same weekday');
+    await page.getByRole('button', { name: 'Next month' }).click(); await period('November 2026');
+    await page.getByRole('button', { name: 'Next month' }).click(); await period('December 2026');
+    await page.getByRole('button', { name: 'Today' }).click(); await period('October 2026');
+    check(await grid.locator('[tabindex="0"]').count() === 1 && await grid.locator('[tabindex="0"]').getAttribute('data-mday') === '2026-10-27', 'SM-41 Today from another month leaves one Tab stop, on the date shown');
+    await page.close(); }
+
   // Narrow: a list of days; every scheme and mode without sideways scroll.
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
@@ -120,6 +140,10 @@ try {
       await page.emulateMedia({ reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });
       await page.locator('.alt-root').evaluate((root, more) => { root.dataset.contrast = more ? 'more' : 'system'; }, mode === 'increased-contrast');
       check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${scheme}/${width}/${mode}: the page doesn’t scroll sideways`);
+      if (mode === 'forced-colors') {
+        await page.locator('[data-mday="2026-10-26"]').focus(); await page.keyboard.press('ArrowRight');
+        check(await page.evaluate(() => getComputedStyle(document.activeElement).outlineStyle === 'solid'), `${scheme}/${width}: under forced colours the focused day has an outline, not just a shadow`);
+      }
     }
     await page.close();
   }
