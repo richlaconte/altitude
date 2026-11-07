@@ -39,7 +39,14 @@ assert.equal(require('altitude-design/guidance').version,pkg.version);
  assert.equal(detail.authority,'contextual-pattern'); assert.equal(detail.diagnosticClass,'contextual-review');
  const sources=JSON.parse(readFileSync(join(dir,'evidence.json'),'utf8')).sources;
  for(const id of detail.sources)assert.ok(sources.some(s=>s.id===id),'installed detail rule source '+id);
- assert.match(readFileSync(join(dir,'app-skeleton.md'),'utf8'),/Customers heading/,'installed example names its missing-source fallback');}
+ assert.match(readFileSync(join(dir,'app-skeleton.md'),'utf8'),/Customers heading/,'installed example names its missing-source fallback');
+ // Recognition guidance is available to an installed consumer and remains contextual, not aesthetic lint.
+ assert.ok(layout.rules.includes('ALT-LAYOUT-003'),'installed layout routes to recognition review');
+ assert.match(readFileSync(join(dir,layout.document),'utf8'),/### Recognition plan/,'installed recognition plan');
+ const recognition=JSON.parse(readFileSync(join(dir,'rules.json'),'utf8')).rules.find(r=>r.id==='ALT-LAYOUT-003');
+ assert.equal(recognition?.diagnosticClass,'contextual-review','recognition is contextual review');
+ assert.match(recognition.evidenceStatus,/unmeasured/,'no installed human-effectiveness claim');
+ assert.ok(existsSync(join(dir,guidance.references['examples/apps/support-inbox/app.tsx'])),'installed worked example reference');}
 for(const fn of ['echartsTheme','chartjsDefaults','dataColors','readChartTokens','useChartTheme'])assert.equal(typeof require('altitude-design/chart-themes')[fn],'function','chart-themes CJS '+fn);
 writeFileSync(join(consumer,'themes.mjs'),`import assert from 'node:assert/strict';import {echartsTheme} from 'altitude-design/chart-themes';assert.equal(echartsTheme({'data-1':'#123456'}).color[0],'#123456');console.log('chart-themes ESM passed');`);
 execFileSync(process.execPath,['themes.mjs'],{cwd:consumer,stdio:'inherit'});
