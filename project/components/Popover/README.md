@@ -2,6 +2,8 @@
 
 Shows rich, interactive content anchored to a trigger, floating at level 3.
 
+For record details, use the [detail-surface chooser](../../framework/patterns/screen-layout.md#choose-the-detail-surface) first: task scope, source identity, available space, comparison and navigation decide the presentation.
+
 It grows from the trigger's edge (`transform-origin` on that side), rising 6px from 96% scale while its shadow climbs to `elev-3`. Focus moves to the first control inside; Escape or a click outside closes it and returns focus to the trigger.
 
 **On a narrow screen.** It opens where its `side` and `align` put it, then shifts sideways to stay 8px inside the screen, and it's never wider than the screen less 16px.

@@ -1,6 +1,16 @@
-// App skeleton: a starting point for a SaaS app, with the parts composed the way Altitude intends. The shell is on the
-// ground; each view has one primary action in its PageHeader; a list page filters, pages and selects in a DataTable; a
-// record opens in a Sheet with a PropertyList; settings are rows saved with the SaveBar. Copy it and replace the data.
+// Records skeleton: bounded customer edits, not a starting frame for every SaaS app.
+//   Task: find a customer, edit Plan or Seats, then resume the same filtered/paged queue.
+//   Lead: the customer table. Primary action: Add customer. Next: continue scanning customers.
+//   Detail: modal Sheet for one short edit; the queue may pause. See the detail-surface chooser in
+//   project/framework/patterns/screen-layout.md#choose-the-detail-surface before changing that task.
+//   Source: stable customer ID, repeated name/identifier; bulk selection is separate from current detail.
+//   Layout: overlay, no opening-induced table reflow; not reserved comparison space.
+//   Boundary: long history, sustained work or several-record comparison needs reserved detail or a route;
+//   the injected long-content check proves scrolling/close reachability, not task suitability.
+//   Focus: enter from the named customer button; close returns there. If it disappeared, Customers heading
+//   is the named fallback after isolation releases, unless focus already moved to a meaningful destination.
+//   Evidence: engineering checks only; a reported 2/5 long anchored-detail choice is not design approval.
+// Sheet is level 4. Dialog and CommandPalette alone form the level-5 summit. Public APIs stay unchanged.
 // The lines between the preview markers are the "AppSkeleton" preview (scripts/pattern-previews.mjs copies them);
 // build/checks/pattern-types.mjs type-checks this file against the public declarations and fails if the two differ.
 // preview-name: AppSkeleton
@@ -21,26 +31,54 @@ function Customers() {
   const [page, setPage] = React.useState(1);
   const [selected, setSelected] = React.useState(/** @type {string[]} */ ([]));
   const [open, setOpen] = React.useState(/** @type {string | null} */ (null));
+  const sourceId = React.useRef(/** @type {string | null} */ (null));
+  const openRecord = (row) => {
+    // A click on a non-button cell still enters from the row's named control, so return is predictable.
+    sourceId.current = row.id;
+    document.getElementById(`sk-customer-${row.id}`)?.closest('button')?.focus();
+    setOpen(row.id);
+  };
+  React.useEffect(() => {
+    if (open || !sourceId.current) return;
+    const heading = document.getElementById('sk-customers-title');
+    if (!heading) return;
+    // Sheet retains isolation through its exit. Observe that contract rather than guessing its duration.
+    // The normal surviving-source return remains Sheet's responsibility.
+    const restore = () => {
+      if (heading.closest('[inert]')) return;
+      // A re-render can replace the control without removing the record. Resolve its current node by ID.
+      const trigger = document.getElementById(`sk-customer-${sourceId.current}`)?.closest('button');
+      const available = trigger?.isConnected && trigger.getClientRects().length && !trigger.matches(':disabled') && !trigger.closest('[inert]');
+      const active = document.activeElement;
+      if (active === document.body || active?.contains(heading)) (available ? trigger : heading)?.focus({ preventScroll: true });
+      sourceId.current = null;
+      observer.disconnect();
+    };
+    const observer = new MutationObserver(restore);
+    observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['inert'] });
+    restore();
+    return () => observer.disconnect();
+  }, [open]);
   const shown = rows.filter((r) => filters.every((f) => matches(r, f)));
   const pageCount = Math.max(1, Math.ceil(shown.length / 5));
   const record = rows.find((r) => r.id === open);
   const save = (key) => async (value) => { await new Promise((r) => setTimeout(r, 400)); setRows((l) => l.map((r) => (r.id === open ? { ...r, [key]: value } : r))); return /** @type {const} */ ({ ok: true, value }); };
   return <>
     <A.PageHeader primary={<A.Button variant="primary">Add customer</A.Button>} actions={<A.Button variant="secondary">Export</A.Button>}>
-      <A.PageHeaderTitle>Customers</A.PageHeaderTitle><A.PageHeaderDescription>{rows.length} customers on every plan.</A.PageHeaderDescription>
+      <A.PageHeaderTitle id="sk-customers-title" tabIndex={-1}>Customers</A.PageHeaderTitle><A.PageHeaderDescription>{rows.length} customers on every plan.</A.PageHeaderDescription>
     </A.PageHeader>
     <div className="sk-body">
       <A.FilterBar aria-label="Filter customers" fields={FIELDS} value={filters} onValueChange={(f) => { setFilters(f); setPage(1); }} resultCount={shown.length} />
       <A.DataTable aria-label="Customers" noun="customers" rows={shown.slice((page - 1) * 5, page * 5)} getRowId={(r) => r.id} getRowLabel={(r) => r.name}
         selectable selected={selected} onSelectedChange={setSelected} matchingTotal={shown.length}
         actions={(ids) => <A.Button size="sm" variant="secondary" onClick={() => setSelected([])}>Email {ids.length}</A.Button>}
-        onRowClick={(r) => setOpen(r.id)} empty="No customers match these filters."
-        columns={[{ key: 'name', header: 'Name' }, { key: 'email', header: 'Email' }, { key: 'plan', header: 'Plan', cell: (r) => <A.Badge>{r.plan}</A.Badge> }, { key: 'seats', header: 'Seats', align: 'end' }]}
+        onRowClick={openRecord} empty="No customers match these filters."
+        columns={[{ key: 'name', header: 'Name', cell: (r) => <span id={`sk-customer-${r.id}`}>{r.name}</span> }, { key: 'email', header: 'Email' }, { key: 'plan', header: 'Plan', cell: (r) => <A.Badge>{r.plan}</A.Badge> }, { key: 'seats', header: 'Seats', align: 'end' }]}
         pagination={{ page, pageCount, total: shown.length, onPageChange: setPage, noun: 'customers' }} />
     </div>
     <A.Sheet open={!!record} onOpenChange={(o) => { if (!o) setOpen(null); }} size="md">
       {record && <>
-        <A.SheetHeader><A.SheetTitle>{record.name}</A.SheetTitle><A.SheetDescription>{record.email}</A.SheetDescription></A.SheetHeader>
+        <A.SheetHeader><A.SheetTitle>{record.name}</A.SheetTitle><A.SheetDescription>Customer {record.id} · {record.email}</A.SheetDescription></A.SheetHeader>
         <A.PropertyList aria-label={`${record.name}’s details`}>
           <A.PropertyListItem label="Plan" value={record.plan} commit="on-choose" onSave={save('plan')} editor={(c) => <A.Select {...c} items={PLANS} />} />
           <A.PropertyListItem label="Seats" value={String(record.seats)} onSave={save('seats')} validate={(v) => (/^\d+$/.test(v) ? undefined : 'Enter a whole number.')} />

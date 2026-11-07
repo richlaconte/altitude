@@ -8075,26 +8075,54 @@ function Customers() {
   const [page, setPage] = React.useState(1);
   const [selected, setSelected] = React.useState(/** @type {string[]} */ ([]));
   const [open, setOpen] = React.useState(/** @type {string | null} */ (null));
+  const sourceId = React.useRef(/** @type {string | null} */ (null));
+  const openRecord = (row) => {
+    // A click on a non-button cell still enters from the row's named control, so return is predictable.
+    sourceId.current = row.id;
+    document.getElementById(`sk-customer-${row.id}`)?.closest('button')?.focus();
+    setOpen(row.id);
+  };
+  React.useEffect(() => {
+    if (open || !sourceId.current) return;
+    const heading = document.getElementById('sk-customers-title');
+    if (!heading) return;
+    // Sheet retains isolation through its exit. Observe that contract rather than guessing its duration.
+    // The normal surviving-source return remains Sheet's responsibility.
+    const restore = () => {
+      if (heading.closest('[inert]')) return;
+      // A re-render can replace the control without removing the record. Resolve its current node by ID.
+      const trigger = document.getElementById(`sk-customer-${sourceId.current}`)?.closest('button');
+      const available = trigger?.isConnected && trigger.getClientRects().length && !trigger.matches(':disabled') && !trigger.closest('[inert]');
+      const active = document.activeElement;
+      if (active === document.body || active?.contains(heading)) (available ? trigger : heading)?.focus({ preventScroll: true });
+      sourceId.current = null;
+      observer.disconnect();
+    };
+    const observer = new MutationObserver(restore);
+    observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['inert'] });
+    restore();
+    return () => observer.disconnect();
+  }, [open]);
   const shown = rows.filter((r) => filters.every((f) => matches(r, f)));
   const pageCount = Math.max(1, Math.ceil(shown.length / 5));
   const record = rows.find((r) => r.id === open);
   const save = (key) => async (value) => { await new Promise((r) => setTimeout(r, 400)); setRows((l) => l.map((r) => (r.id === open ? { ...r, [key]: value } : r))); return /** @type {const} */ ({ ok: true, value }); };
   return <>
     <A.PageHeader primary={<A.Button variant="primary">Add customer</A.Button>} actions={<A.Button variant="secondary">Export</A.Button>}>
-      <A.PageHeaderTitle>Customers</A.PageHeaderTitle><A.PageHeaderDescription>{rows.length} customers on every plan.</A.PageHeaderDescription>
+      <A.PageHeaderTitle id="sk-customers-title" tabIndex={-1}>Customers</A.PageHeaderTitle><A.PageHeaderDescription>{rows.length} customers on every plan.</A.PageHeaderDescription>
     </A.PageHeader>
     <div className="sk-body">
       <A.FilterBar aria-label="Filter customers" fields={FIELDS} value={filters} onValueChange={(f) => { setFilters(f); setPage(1); }} resultCount={shown.length} />
       <A.DataTable aria-label="Customers" noun="customers" rows={shown.slice((page - 1) * 5, page * 5)} getRowId={(r) => r.id} getRowLabel={(r) => r.name}
         selectable selected={selected} onSelectedChange={setSelected} matchingTotal={shown.length}
         actions={(ids) => <A.Button size="sm" variant="secondary" onClick={() => setSelected([])}>Email {ids.length}</A.Button>}
-        onRowClick={(r) => setOpen(r.id)} empty="No customers match these filters."
-        columns={[{ key: 'name', header: 'Name' }, { key: 'email', header: 'Email' }, { key: 'plan', header: 'Plan', cell: (r) => <A.Badge>{r.plan}</A.Badge> }, { key: 'seats', header: 'Seats', align: 'end' }]}
+        onRowClick={openRecord} empty="No customers match these filters."
+        columns={[{ key: 'name', header: 'Name', cell: (r) => <span id={`sk-customer-${r.id}`}>{r.name}</span> }, { key: 'email', header: 'Email' }, { key: 'plan', header: 'Plan', cell: (r) => <A.Badge>{r.plan}</A.Badge> }, { key: 'seats', header: 'Seats', align: 'end' }]}
         pagination={{ page, pageCount, total: shown.length, onPageChange: setPage, noun: 'customers' }} />
     </div>
     <A.Sheet open={!!record} onOpenChange={(o) => { if (!o) setOpen(null); }} size="md">
       {record && <>
-        <A.SheetHeader><A.SheetTitle>{record.name}</A.SheetTitle><A.SheetDescription>{record.email}</A.SheetDescription></A.SheetHeader>
+        <A.SheetHeader><A.SheetTitle>{record.name}</A.SheetTitle><A.SheetDescription>Customer {record.id} · {record.email}</A.SheetDescription></A.SheetHeader>
         <A.PropertyList aria-label={`${record.name}’s details`}>
           <A.PropertyListItem label="Plan" value={record.plan} commit="on-choose" onSave={save('plan')} editor={(c) => <A.Select {...c} items={PLANS} />} />
           <A.PropertyListItem label="Seats" value={String(record.seats)} onSave={save('seats')} validate={(v) => (/^\d+$/.test(v) ? undefined : 'Enter a whole number.')} />

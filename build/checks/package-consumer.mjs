@@ -32,8 +32,15 @@ assert.equal(require('altitude-design/guidance').version,pkg.version);
  assert.ok(guidance.components.length>=100,'installed component index');
  for(const c of guidance.components)assert.ok(existsSync(join(dir,c.document)),`installed guide for ${c.name}`);
  assert.match(readFileSync(join(dir,'components/Button/README.md'),'utf8'),/^# Button/,'Button guide readable from the install');
+ const layout=guidance.patterns.find(p=>p.id==='screen-layout');
+ assert.ok(layout.rules.includes('ALT-LAYOUT-002'),'installed screen-layout discovers detail-surface rule');
+ assert.match(readFileSync(join(dir,layout.document),'utf8'),/## Choose the detail surface/,'installed chooser is readable');
+ const detail=JSON.parse(readFileSync(join(dir,'rules.json'),'utf8')).rules.find(r=>r.id==='ALT-LAYOUT-002');
+ assert.equal(detail.authority,'contextual-pattern'); assert.equal(detail.diagnosticClass,'contextual-review');
+ const sources=JSON.parse(readFileSync(join(dir,'evidence.json'),'utf8')).sources;
+ for(const id of detail.sources)assert.ok(sources.some(s=>s.id===id),'installed detail rule source '+id);
+ assert.match(readFileSync(join(dir,'app-skeleton.md'),'utf8'),/Customers heading/,'installed example names its missing-source fallback');
  // Recognition guidance is available to an installed consumer and remains contextual, not aesthetic lint.
- const layout=JSON.parse(readFileSync(join(dir,'patterns/screen-layout.json'),'utf8'));
  assert.ok(layout.rules.includes('ALT-LAYOUT-003'),'installed layout routes to recognition review');
  assert.match(readFileSync(join(dir,layout.document),'utf8'),/### Recognition plan/,'installed recognition plan');
  const recognition=JSON.parse(readFileSync(join(dir,'rules.json'),'utf8')).rules.find(r=>r.id==='ALT-LAYOUT-003');

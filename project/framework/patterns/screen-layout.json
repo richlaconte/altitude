@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "screen-layout",
-  "version": 2,
+  "version": 3,
   "title": "Screen layout",
   "intents": [
     "screen layout",
@@ -17,6 +17,10 @@
     "triage",
     "inbox",
     "setup flow",
+    "record details",
+    "detail surface",
+    "inspector",
+    "list and detail",
     "recognition cues",
     "visual cues",
     "quiet content"
@@ -36,6 +40,8 @@
     "the one thing that leads the screen",
     "the one primary action, or none",
     "what the person does next once the task is done",
+    "when opening detail: task scope, duration, information size, comparison and history needs, viewport and background interaction",
+    "when opening detail: stable source identity, layout policy, keyboard entry/return and named missing-source fallback",
     "recognition question and chosen cues with visible words and programmatic equivalents",
     "scoped evidence: source/version, task, alternatives and order if known, absolute and comparative judgments, reasons, rejected options and uncertainty"
   ],
@@ -54,14 +60,19 @@
   ],
   "rules": [
     "ALT-LAYOUT-001",
-    "ALT-LAYOUT-003",
     "ALT-VISUAL-002",
-    "ALT-VISUAL-003"
+    "ALT-VISUAL-003",
+    "ALT-LAYOUT-002",
+    "ALT-LAYOUT-003"
   ],
   "sources": [
     "altitude-elevation",
     "task-review",
+    "apg-dialog",
+    "apg-disclosure",
     "wcag22",
+    "android-list-detail",
+    "govuk-details",
     "guided-search-6",
     "icon-characteristics",
     "recognition-assessment-summary"
@@ -86,6 +97,7 @@
     "build/checks/screen-layout-pattern.mjs",
     "build/checks/render-tells.mjs",
     "build/checks/pattern-types.mjs",
+    "build/checks/app-skeleton.mjs",
     "build/checks/example-support-inbox.mjs"
   ]
 }

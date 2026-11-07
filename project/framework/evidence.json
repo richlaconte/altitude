@@ -110,6 +110,33 @@
       "reviewed": "2026-11-02"
     },
     {
+      "id": "apg-disclosure",
+      "authority": "contextual-pattern",
+      "title": "WAI-ARIA APG disclosure",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/",
+      "status": "informative-guidance",
+      "applicability": "Button-operated show/hide content; expanded state and optional controls relationship, not an overlay-choice mandate.",
+      "reviewed": "2026-11-07"
+    },
+    {
+      "id": "android-list-detail",
+      "authority": "contextual-pattern",
+      "title": "Android canonical list-detail layouts",
+      "url": "https://developer.android.com/develop/ui/views/layout/canonical-layouts",
+      "status": "platform-practice-guidance",
+      "applicability": "List/detail state and selection across available sizes; application to web composition is contextual, not a required breakpoint or evidence of Altitude effectiveness.",
+      "reviewed": "2026-11-07"
+    },
+    {
+      "id": "govuk-details",
+      "authority": "contextual-pattern",
+      "title": "GOV.UK Details",
+      "url": "https://design-system.service.gov.uk/components/details/",
+      "status": "practice-guidance",
+      "applicability": "Optional information disclosure in service pages; essential information remains visible. Does not validate record popovers.",
+      "reviewed": "2026-11-07"
+    },
+    {
       "id": "guided-search-6",
       "authority": "heuristic",
       "title": "Wolfe: Guided Search 6.0 (2021)",

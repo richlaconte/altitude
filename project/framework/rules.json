@@ -1014,6 +1014,36 @@
       "criteria": [],
       "reviewedAt": "2026-11-02",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-LAYOUT-002",
+      "title": "Choose record detail from the task and preserve source correspondence",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "contextual-review",
+      "applicability": "A record opens in anchored, expanded, reserved, inspector, sheet or route detail.",
+      "exceptions": [
+        "Not every detail needs an overlay, a current-item marker on an unavailable modal background, or a durable URL.",
+        "Existing navigation frames can remain; the detail task still determines its presentation and return policy."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+      "sources": [
+        "altitude-elevation",
+        "task-review",
+        "apg-dialog",
+        "apg-disclosure",
+        "wcag22",
+        "android-list-detail",
+        "govuk-details"
+      ],
+      "repair": "Record the detail task, duration, information size, comparison, viewport, background interaction and history needs; use the screen-layout chooser. Bind to a stable ID, identify the source visibly, distinguish reserved space from opening-induced layout shifts, and define keyboard entry/close and a named fallback if the source disappears. Preserve negative preference evidence and test long/narrow boundaries.",
+      "verification": [
+        "build/checks/app-skeleton.mjs",
+        "manual: review the actual detail task, source changes/removal, long content, narrow/zoom and assistive-technology behaviour"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-07",
+      "owner": "Altitude maintainers"
     }
   ]
 }
