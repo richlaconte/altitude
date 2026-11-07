@@ -1,7 +1,7 @@
 // Assistant conversation pattern (#285): in its preview, a send shows the person's message and streams the answer on
 // a dashed rule; a double Enter sends once; Stop keeps the partial answer as "Stopped" with Retry; offline and rate
 // limited failures keep the message in the composer and say what happened in words; context full offers a new
-// conversation; reloading mid-answer shows it "Interrupted" with Retry, never complete; the context Meter speaks in
+// conversation; Try again after a failure sends the kept message again; reloading mid-answer shows it "Interrupted" with Retry, never complete; the context Meter speaks in
 // words. Run after a render of every preview (it opens test/p-AssistantConversationPattern-daylight.html); exits
 // non-zero on a failure.
 import { chromium } from 'playwright-core';
@@ -32,6 +32,13 @@ await page.click('[role="radio"]:has-text("Offline"), button:has-text("Offline")
 await box.fill('Summarise it'); await box.press('Enter'); await page.waitForTimeout(700);
 let r = await read();
 expect(/We can't reach the assistant/.test(r.alert ?? '') && r.draft === 'Summarise it', `offline keeps the message and says so (${JSON.stringify({ alert: r.alert, draft: r.draft })})`);
+// Try again sends the kept input again, once, to the recovered service (#581): a new stream starts and the error clears.
+await page.click('.alt-alert button:has-text("Try again")'); await page.waitForTimeout(600);
+r = await read(); a = await answer();
+expect(a?.stream === 'streaming' && r.alert === null && r.user.length === 1 && r.user[0].endsWith('Summarise it'), `Try again streams the kept message again and clears the error (${JSON.stringify({ stream: a?.stream, alert: r.alert, user: r.user })})`);
+if (a?.stream === 'streaming') { await page.click('.alt-prompt button[aria-label*="Stop" i]'); await page.waitForTimeout(150); }
+await page.click('button:has-text("Offline")'); await page.waitForTimeout(100);
+await box.fill('Summarise it'); await box.press('Enter'); await page.waitForTimeout(700);
 await page.click('button:has-text("Rate limited")'); await page.waitForTimeout(100);
 await box.press('Enter'); await page.waitForTimeout(700);
 r = await read();

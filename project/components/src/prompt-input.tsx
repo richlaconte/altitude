@@ -38,7 +38,8 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
   onSubmit: (message: PromptMessage) => void;
   /** 'submitted' and 'streaming' turn Send into Stop, in the same slot. Default 'ready'. */
   status?: PromptStatus;
-  onStop?: () => void;
+  /** Stops generating. Return `false` when nothing stopped, and "Generating stopped" isn't announced. */
+  onStop?: () => void | boolean;
   /**
    * Lets a person queue a message while the agent works (#276): Enter while 'submitted' or 'streaming' calls this
    * instead of doing nothing; the button stays Stop, the composer empties and keeps focus. Show the queue with
@@ -191,7 +192,7 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, menti
     clear();
     area.current?.focus();
   };
-  const stop = () => { if (!busy) return; onStop?.(); setSaid('Generating stopped.'); area.current?.focus(); };
+  const stop = () => { if (!busy) return; if (onStop?.() !== false) setSaid('Generating stopped.'); area.current?.focus(); };
   const pick = () => { if (accept !== undefined) picker.current?.click(); };
   const hasFiles = (e: React.DragEvent) => accept !== undefined && [...e.dataTransfer.types].includes('Files');
 
