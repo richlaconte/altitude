@@ -6,7 +6,7 @@ import { validateRecord, interpretRecord, renderRecord } from './report.mjs';
 const record = () => ({
   protocolVersion: '1.0.0', id: 'synthetic-case', evidenceType: 'synthetic-test',
   recordedAt: '2026-11-07T12:00:00.000Z', sessionId: 'synthetic-session', observedVariant: 'b', priorRecordRefs: ['synthetic-a.json'],
-  source: { commit: 'a'.repeat(40), packageVersion: '0.31.0', artifactSha256: 'b'.repeat(64), dirty: false },
+  source: { commit: 'a'.repeat(40), packageVersion: '0.31.0', artifactSha256: 'c'.repeat(64), dirty: false },
   environment: { browser: 'test', os: 'test', viewport: [1280, 900], zoom: 1, scheme: 'daylight', input: 'keyboard', motion: 'normal', assistiveTechnology: null },
   journey: 'field-edit', task: 'Rename the same record, recover and finish.',
   order: ['a', 'b'], variants: [{ id: 'a', description: 'Baseline', artifactSha256: 'b'.repeat(64) }, { id: 'b', description: 'One changed presentation', artifactSha256: 'c'.repeat(64) }],
@@ -46,7 +46,7 @@ test('successful task with low satisfaction keeps both observations', () => {
 });
 test('missing responses stay missing and source/order/mode survive rendering', () => {
   const r = record(); r.ratings[0].score = null; r.comprehension = { result: 'not-assessed', response: null, reason: 'Declined.' };
-  r.order = ['b', 'a']; r.observedVariant = 'a'; r.environment.motion = 'reduced';
+  r.order = ['b', 'a']; r.observedVariant = 'a'; r.source.artifactSha256 = 'b'.repeat(64); r.environment.motion = 'reduced';
   const text = renderRecord(r); assert.match(text, /"score": null/); assert.match(text, /"reduced"/);
   assert.deepEqual(JSON.parse(text.split('```json\n')[1].split('\n```')[0]), r);
 });
@@ -66,7 +66,7 @@ test('invalid references, ratings and provenance fail explicitly', () => {
   }
 });
 test('relative selection requires at least two exposed alternatives', () => {
-  const r = record(); r.variants = r.variants.slice(0, 1); r.order = ['a']; r.observedVariant = 'a'; r.ratings = r.ratings.slice(0, 1);
+  const r = record(); r.variants = r.variants.slice(0, 1); r.order = ['a']; r.observedVariant = 'a'; r.source.artifactSha256 = 'b'.repeat(64); r.ratings = r.ratings.slice(0, 1);
   assert.throws(() => validateRecord(r), /two exposed/);
 });
 test('unknown fields are retained, never silently discarded', () => {
@@ -84,4 +84,8 @@ test('participant ratings require every exposed variant, allowing explicit null'
   assert.throws(() => validateRecord(r), /absolute rating/);
   r.ratings = [{ variant: 'a', score: null }, { variant: 'b', score: null }];
   assert.doesNotThrow(() => validateRecord(r));
+});
+test('current exposure artifact cannot contradict its source artifact', () => {
+  const r = record(); r.source.artifactSha256 = 'b'.repeat(64);
+  assert.throws(() => validateRecord(r), /artifact.*current exposure/);
 });

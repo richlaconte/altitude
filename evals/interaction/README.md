@@ -7,7 +7,7 @@ The [versioned protocol](PROTOCOL.md) joins two complete planning-board journeys
 From the repository root after `npm ci && npm ci --prefix build`:
 
 ```sh
-node --test evals/interaction/report.test.mjs
+node --test evals/interaction/*.test.mjs
 node evals/interaction/smoke.mjs build/test/interaction-my-run
 ```
 

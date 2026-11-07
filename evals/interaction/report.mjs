@@ -27,6 +27,7 @@ export function validateRecord(r) {
   for (const v of r.variants) requireThat(text(v.description) && hash(v.artifactSha256, 64), 'Exact variant description and artifact digest required');
   requireThat(Array.isArray(r.order) && r.order.length > 0 && r.order.every(id => ids.includes(id)), 'Displayed order must reference known variants');
   requireThat(r.observedVariant === r.order.at(-1), 'Outcome and comprehension must name the current exposure');
+  requireThat(r.source.artifactSha256 === r.variants.find(v => v.id === r.observedVariant)?.artifactSha256, 'Source artifact must match the current exposure artifact');
   requireThat(strings(r.priorRecordRefs) && r.priorRecordRefs.length >= r.order.length - 1, 'Preserve a record reference for each prior exposure');
   oneOf(r.stimulus?.status, ['valid', 'invalid', 'unverified'], 'stimulus status');
   requireThat(text(r.stimulus.reason) && (r.stimulus.healthRef === null || text(r.stimulus.healthRef)), 'Stimulus reason and health reference/null required');

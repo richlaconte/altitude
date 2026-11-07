@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import os from 'node:os';
 import { buildExamples } from '../../scripts/build-examples.mjs';
 import { PROTOCOL_VERSION, renderRecord, validateRecord } from './report.mjs';
+import { movementHealth } from './health.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const requireBuild = createRequire(new URL('../../build/package.json', import.meta.url));
@@ -60,7 +61,7 @@ try {
     const checks = [];
     const record = {
       protocolVersion: PROTOCOL_VERSION, id, evidenceType: 'engineering', recordedAt: new Date().toISOString(), sessionId: 'engineering-smoke', observedVariant: 'baseline', priorRecordRefs: [],
-      source, environment: { browser: `Chromium ${browser.version()}`, os: `${os.platform()} ${os.release()}`, viewport: [1280, 900], zoom: 1, scheme: 'daylight', input: 'keyboard with pointer fixture setup', motion, assistiveTechnology: null, fonts: 'Network fonts blocked; system fallback' },
+      source, environment: { browser: `Chromium ${browser.version()}`, os: `${os.platform()} ${os.release()}`, viewport: [1280, 900], zoom: 1, scheme: 'daylight', input: 'mixed keyboard/pointer automation; board movement by keyboard', motion, assistiveTechnology: null, fonts: 'Network fonts blocked; system fallback' },
       journey, task: journey === 'field-edit' ? 'Rename Invoice PDF redesign to Invoice PDF layout; recover from the rejected write.' : 'Move Annual billing toggle from Sprint 24 to In progress, then edit the same card title.',
       variants: [{ id: 'baseline', description: 'Unmodified complete planning-board app at the recorded source and artifact digest.', artifactSha256: source.artifactSha256 }], order: ['baseline'],
       stimulus: { status: 'unverified', reason: 'Smoke not completed.', healthRef: `${id}.json` },
@@ -84,6 +85,7 @@ try {
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.screenshot({ path: resolve(out, `${id}-before.png`) });
       if (journey === 'field-edit') {
+        const storeBefore = await savedState(page);
         const property = await editTitle(page, 'Invoice PDF redesign');
         const input = property.locator('input');
         await input.fill('Invoice PDF layout');
@@ -103,7 +105,12 @@ try {
         check(checks, 'Rejection retains named record, draft, full local error and recovery',
           await input.inputValue() === 'Invoice PDF layout' && /couldn.t|failed|try again/i.test(errorText) && await property.getByRole('button', { name: 'Save changes', exact: true }).isEnabled(),
           { errorText, draft: await input.inputValue() });
-        check(checks, 'Rejected write leaves confirmed record unchanged', (await savedState(page))?.cards?.c3?.title !== 'Invoice PDF layout', await requests(page, 'cards.update'));
+        const storeAfter = await savedState(page);
+        const rejectedWrites = await requests(page, 'cards.update');
+        const originalStillShown = await page.getByRole('dialog', { name: 'Invoice PDF redesign', exact: true }).count() === 1
+          && /Invoice PDF redesign/.test(await page.locator('[data-board-card="c3"]').innerText());
+        check(checks, 'Rejected write leaves visible confirmed identity and persisted snapshot unchanged', originalStillShown && JSON.stringify(storeAfter) === JSON.stringify(storeBefore) && rejectedWrites.length === 1 && rejectedWrites[0].status === 'rejected',
+          { record: 'c3', originalStillShown, persistedBefore: storeBefore, persistedAfter: storeAfter, storageNote: storeAfter === null ? 'No persisted snapshot yet; original identity is verified in the app, not inferred from absent storage.' : 'Compared with pre-attempt persisted snapshot.', requests: rejectedWrites });
         await settle(page);
         await page.screenshot({ path: resolve(out, `${id}-failed.png`) });
         await property.getByRole('button', { name: 'Save changes', exact: true }).click();
@@ -128,7 +135,8 @@ try {
           const tick = () => {
             const el = document.querySelector('[data-board-card="c1"]');
             const rect = el?.getBoundingClientRect();
-            window.__interactionFrames.push({ ms: Math.round(performance.now() - start), x: rect?.x, y: rect?.y, transform: el ? getComputedStyle(el).transform : null, column: el?.closest('[data-board-col]')?.dataset.boardCol });
+            const transform = el ? getComputedStyle(el).transform : null;
+            window.__interactionFrames.push({ ms: Math.round(performance.now() - start), x: rect?.x, y: rect?.y, transform, transformed: transform === 'none' ? false : transform ? !new DOMMatrixReadOnly(transform).isIdentity : null, column: el?.closest('[data-board-col]')?.dataset.boardCol });
             if (performance.now() - start < 750) requestAnimationFrame(tick);
             else window.__interactionFramesDone = true;
           }; tick();
@@ -139,9 +147,8 @@ try {
         await page.waitForFunction(() => window.__interactionFramesDone === true);
         const frames = await page.evaluate(() => window.__interactionFrames);
         record.frames = frames;
-        const end = frames.at(-1);
-        const intermediate = frames.filter(f => f.column === 'doing' && Math.abs(f.x - end.x) > 1);
-        check(checks, motion === 'normal' ? 'Normal-motion stimulus has observable intermediate travel' : 'Reduced-motion stimulus has no intermediate travel', motion === 'normal' ? intermediate.length >= 2 : intermediate.length === 0, { intermediateFrames: intermediate.length, totalFrames: frames.length });
+        const health = movementHealth(frames, motion);
+        check(checks, motion === 'normal' ? 'Normal-motion stimulus has observable intermediate travel' : 'Reduced-motion stimulus has no intermediate x/y travel or transform', health.valid, health);
         await page.waitForFunction(() => JSON.parse(localStorage.getItem('altitude-example:planning-board') ?? 'null')?.columns?.doing?.includes('c1'));
         const writes = await requests(page, 'cards.move');
         check(checks, 'One acknowledged move of the same record to In progress', writes.length === 1 && writes[0].status === 'ok' && await card.evaluate(el => el.closest('[data-board-col]')?.dataset.boardCol) === 'doing', writes);
