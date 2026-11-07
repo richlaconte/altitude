@@ -109,9 +109,14 @@ for (const scheme of ['daylight', 'nightfall']) for (const coarse of [false, tru
       await page.locator('#density-table').getByRole('button', { name: 'Columns', exact: true }).click();
       await page.getByRole('radio', { name: 'Compact', exact: true }).click();
       await page.waitForFunction(() => document.querySelector('#density-table .alt-data-table > [aria-live]')?.textContent.trim() === 'Compact rows.');
+      // Changed header padding carries the rows to their new positions. Fractional transforms can introduce tiny
+      // getBoundingClientRect rounding differences; measure the control faces after that finite travel finishes.
+      await page.evaluate(() => Promise.all([...document.querySelectorAll('#density-table tbody tr')]
+        .flatMap(row => row.getAnimations()).filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+        .map(animation => animation.finished.catch(() => {}))));
       const changed = await read();
       expect(changed.padding === '4px' && changed.headerPadding === '6px', `${label}: density menu changes row padding and announces Compact rows`);
-      expect(JSON.stringify(changed.inside) === JSON.stringify(measured.outside), `${label}: changing row density preserves provider sizes`);
+      expect(JSON.stringify(changed.inside) === JSON.stringify(measured.outside), `${label}: changing row density preserves provider sizes (${JSON.stringify({ before: measured.outside, after: changed.inside })})`);
       await page.keyboard.press('Escape');
     }
   }
