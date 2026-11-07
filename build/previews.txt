@@ -5191,7 +5191,7 @@ function App() {
   const [dpToday, setDpToday] = React.useState('2026-10-27');
   const [period, setPeriod] = React.useState({ start: '2026-09-28', end: '2026-10-27' });
   const [preset, setPreset] = React.useState('last-30-days');
-  const [week, setWeek] = React.useState('2026-10-27');
+  const [week, setWeek] = React.useState('2026-10-28');
   const weekend = iso => { const [y, m, d] = iso.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w === 0 || w === 6; };
   return <div className="dp-demo">
     <A.Field label="Due date" hint="Weekends aren’t available.">
@@ -5211,7 +5211,7 @@ function App() {
       <div style={{ marginTop: 8 }}><A.Button size="sm" variant="ghost" onClick={() => setDpToday((t) => dpShift(t, 1))}>Next day</A.Button></div>
     </div>
     <div>
-      <p className="dp-cap">Time logged: dots mark approved, submitted and unsubmitted days</p>
+      <p className="dp-cap">Time logged: dots mark approved, submitted, unsubmitted and missing days</p>
       <A.Calendar aria-label="Time logged" value={week} onValueChange={setWeek} locale="en-GB" markers={DP_LOGGED} />
     </div>
   </div>;
