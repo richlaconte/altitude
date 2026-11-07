@@ -67,6 +67,15 @@ export function Confirmation({ state, title, consequence, details, approveLabel 
   const scoped = resolvedScope && resolvedScope !== 'once' ? (resolvedScope === 'session' ? 'allowed for this session' : resolvedScope === 'always' ? 'always allowed' : `allowed: ${scopes?.find((x) => x.value === resolvedScope)?.label ?? resolvedScope}`) : null;
   const id = React.useId();
   const [asking, setAsking] = React.useState(false);
+  // The dialog asks about a request that's still waiting (#575): once the state leaves `requested` (it expired, or was
+  // approved or rejected elsewhere) it closes in the same render, focus goes to the card's line saying what happened, and
+  // a late Approve never reaches `onApprove`.
+  const current = React.useRef(state);
+  current.current = state;
+  const lineRef = React.useRef<HTMLParagraphElement>(null);
+  const wasAsking = React.useRef(false);
+  wasAsking.current = asking;
+  React.useEffect(() => { if (state !== 'requested') setAsking(false); }, [state]);
   const [editing, setEditing] = React.useState(false);
   const fields = React.useRef<HTMLDivElement>(null);
   const editBtn = React.useRef<HTMLButtonElement>(null);
@@ -80,7 +89,8 @@ export function Confirmation({ state, title, consequence, details, approveLabel 
   React.useEffect(() => {
     if (last.current !== state) {
       const name = typeof title === 'string' ? title : 'Action';
-      setSaid(state === 'done' ? `${name}: ${doneLabel}.` : state === 'failed' ? `${name}: ${failedLabel}.` : state === 'rejected' ? `${name}: rejected.` : state === 'running' || state === 'approved' ? `${name}: ${scoped ?? 'approved'}. ${runningLabel}` : '');
+      setSaid(state === 'done' ? `${name}: ${doneLabel}.` : state === 'failed' ? `${name}: ${failedLabel}.` : state === 'rejected' ? `${name}: rejected.` : state === 'running' || state === 'approved' ? `${name}: ${scoped ?? 'approved'}. ${runningLabel}`
+        : state === 'expired' && wasAsking.current ? `${name}: no longer needed. Nothing was approved.` : '');
     }
     last.current = state;
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -100,7 +110,7 @@ export function Confirmation({ state, title, consequence, details, approveLabel 
       : <Button size="sm" variant="primary" onClick={() => (escalate === 'dialog' ? setAsking(true) : onApprove?.())}>{approveLabel}</Button>;
   return (
     <section className={cx('alt-confirm', className)} data-state={state} aria-labelledby={`${id}-t`} aria-describedby={`${id}-c`} {...depth} style={style}>
-      <p className="alt-confirm-line" data-tone={state === 'failed' ? 'critical' : state === 'requested' ? 'accent' : undefined}>{line}</p>
+      <p ref={lineRef} className="alt-confirm-line" tabIndex={state === 'requested' ? undefined : -1} data-tone={state === 'failed' ? 'critical' : state === 'requested' ? 'accent' : undefined}>{line}</p>
       <h3 className="alt-confirm-title" id={`${id}-t`}>{title}{edited && state === 'requested' && <span className="alt-confirm-edited">Edited</span>}</h3>
       <p className="alt-confirm-consequence" id={`${id}-c`}>{consequence}</p>
       {details && state === 'requested' && !editing && <div className="alt-confirm-details">{details}</div>}
@@ -124,8 +134,8 @@ export function Confirmation({ state, title, consequence, details, approveLabel 
       )}
       {state === 'failed' && onRetry && <div className="alt-confirm-actions"><Button size="sm" variant="secondary" onClick={onRetry}>Retry</Button></div>}
       {escalate === 'dialog' && (
-        <Dialog open={asking} onOpenChange={setAsking} title={title} description={consequence} background="stationary" size="sm" initialFocus="title"
-          footer={<><Button variant="secondary" onClick={() => setAsking(false)}>Cancel</Button><Button variant="danger" onClick={() => { setAsking(false); onApprove?.(); }}>{approveLabel}</Button></>}>
+        <Dialog open={asking && state === 'requested'} onOpenChange={setAsking} returnFocus={() => lineRef.current} title={title} description={consequence} background="stationary" size="sm" initialFocus="title"
+          footer={<><Button variant="secondary" onClick={() => setAsking(false)}>Cancel</Button><Button variant="danger" onClick={() => { setAsking(false); if (current.current === 'requested') onApprove?.(); }}>{approveLabel}</Button></>}>
           {details}
         </Dialog>
       )}

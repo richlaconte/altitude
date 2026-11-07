@@ -87,7 +87,7 @@ Follow "Working on it" in the [README](README.md): change the sources, then run 
 
 ### Versions
 
-Merging to `main` publishes to npm whenever `package.json` has a version npm doesn't have yet (see "What happens on push" in the [README](README.md)). So a pull request that changes what `altitude-design` ships also raises the version. That covers anything under `project/`, the package and guidance build scripts, `docs/framework/AGENT-SETUP.md`, or the fields of `package.json` that reach consumers, such as `exports`, `dependencies` and `peerDependencies`. A change to docs, research, examples, the site, Storybook or the checks doesn't need a bump.
+Merging to `main` publishes to npm whenever `package.json` has a version npm doesn't have yet (see "What happens on push" in the [README](README.md)). So a pull request that changes what `altitude-design` ships also raises the version. That covers anything under `project/`; the package and guidance build scripts and every local module they or the CLI import (`scripts/source-check.mjs`, `build/examples.mjs` and the rest); `build/previews.txt`; `docs/framework/AGENT-SETUP.md`; any check, fixture or script a pattern or rule in `project/framework` cites, since the guidance ships a copy of it; and the fields of `package.json` that reach consumers, such as `exports`, `dependencies` and `peerDependencies`. `scripts/check-version-bump.mjs` works the list out from those sources, so it names the files when it fails. A change to docs, research, examples, the site, Storybook or any other check doesn't need a bump.
 
 ```sh
 npm version patch --no-git-tag-version   # a fix, or a change nobody should notice
