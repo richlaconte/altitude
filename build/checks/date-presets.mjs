@@ -86,6 +86,35 @@ const active = (page) => page.evaluate(() => { const l = document.activeElement;
   expect(r.above, 'at 360px the presets sit above the calendar');
   await page.close();
 }
+{
+  // Every preset disabled by `min` (#580): Home, End, ↑/↓, Enter and Space find nothing to move to or choose, and the
+  // picker stays open and usable, with no page error.
+  const page = await open();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.evaluate(() => {
+    const A = window.Altitude, h = React.createElement, el = document.createElement('div'); el.id = 'all-off'; document.body.append(el);
+    window.ReactDOM.createRoot(el).render(h(A.AltitudeProvider, null, h(A.Field, { label: 'All presets off' },
+      h(A.DateRangePicker, { today: '2026-10-27', min: '2026-10-28', presets: [A.datePresets.today(), A.datePresets.lastDays(7), A.datePresets.thisMonth()] }))));
+  });
+  await page.waitForTimeout(300);
+  const box = page.locator('#all-off');
+  await box.getByRole('button', { name: 'Choose dates' }).click();
+  await page.waitForTimeout(300);
+  const list = page.locator('#all-off .alt-date-presets');
+  expect(await list.locator('[role="option"][aria-disabled="true"]').count() === 3, 'with min after every preset, every preset row is disabled');
+  await list.focus();
+  for (const key of ['Home', 'Enter', 'End', ' ', 'ArrowDown', 'Enter', 'ArrowUp', ' ']) await page.keyboard.press(key);
+  await page.waitForTimeout(250);
+  expect(errors.length === 0, `Home, End, ↑/↓, Enter and Space throw nothing (${errors.join('; ')})`);
+  expect(await page.locator('#all-off').getByRole('dialog', { name: 'Choose dates' }).count() === 1 && await box.locator('.alt-date-preset').count() === 0, 'the panel stays open and nothing is chosen');
+  // The calendar opens on the real month, so pick its first two days that are on or after min.
+  const days = page.locator('#all-off .alt-cal-day[data-date]:not([aria-disabled])');
+  await days.nth(0).click(); await days.nth(1).click();
+  await page.waitForTimeout(250);
+  expect(errors.length === 0 && await box.locator('.alt-date-seg').count() === 6 && await page.locator('#all-off').getByRole('dialog').count() === 0, 'and the calendar still picks a range');
+  await page.close();
+}
 
 await browser.close();
 console.log(`date-presets: ${pass} passed, ${fail} failed`);
