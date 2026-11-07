@@ -297,6 +297,8 @@ export interface ComboboxProps extends SelectFieldProps {
   filter?: (option: SelectOption, query: string) => number | boolean;
   /** Shown when nothing matches. Default "No matches". */
   empty?: React.ReactNode;
+  /** Visible required feedback after native validation. Localize for the application. Default "Choose an option." */
+  requiredMessage?: string;
 }
 
 export type TagResult = { ok: true; value: string } | { ok: false; error: string };
@@ -355,6 +357,8 @@ export declare function Tag(props: TagProps): React.ReactElement;
 export type ISODate = string;
 export interface DateRange { start: ISODate | null; end: ISODate | null }
 interface DatePickerBase {
+  /** Passed to the calendar: flush dots under days, each with its label in the day's name. */
+  markers?: CalendarMarkers;
   /** Earliest and latest days that can be chosen or typed. */
   min?: ISODate;
   max?: ISODate;
@@ -371,6 +375,8 @@ interface DatePickerBase {
   required?: boolean;
   /** Drops the field to trench depth. Field sets it when it has an error. */
   invalid?: boolean;
+  /** Visible required feedback after native validation. Localize for the application. Default "Enter a date." (DateRangePicker: "Enter a start and end date.") */
+  requiredMessage?: string;
   /** sm 34px, md 40px, as Input. Default 'md'. */
   size?: 'sm' | 'md';
   className?: string;
@@ -407,6 +413,12 @@ export interface DateRangePickerProps extends DatePickerBase {
   /** Today (ISO): relative presets resolve against it and re-resolve when it changes. Default: the local date. */
   today?: ISODate;
 }
+/** Settled information about a day: up to three flush dots under its number. A status tone needs a label, which joins the day's name. */
+export type CalendarMarker =
+  | { tone?: 'neutral'; label?: string; count?: 1 | 2 | 3 }
+  | { tone: 'positive' | 'caution' | 'critical'; label: string; count?: 1 | 2 | 3 };
+/** A marker per day: a function of the date, or a map from 'YYYY-MM-DD'. */
+export type CalendarMarkers = ((date: ISODate) => CalendarMarker | null | undefined) | Partial<Record<ISODate, CalendarMarker>>;
 export interface CalendarProps {
   value?: ISODate | null;
   defaultValue?: ISODate | null;
@@ -416,6 +428,8 @@ export interface CalendarProps {
   isUnavailable?: (date: ISODate) => boolean;
   locale?: string;
   weekStartsOn?: number;
+  /** Flush dots under days for settled information about them (entries logged, status), each with its label in the day's name. */
+  markers?: CalendarMarkers;
   'aria-label'?: string;
   className?: string;
 }
@@ -1517,9 +1531,12 @@ export type LocalDateTime = string;
 export type ScheduleResult = { ok: true } | { ok: false; error: string };
 export type ScheduleCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
 export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
+/** A colour that tells categories apart: one of the data palette's six series colours. */
+export type ScheduleCategoryColor = 'data-1' | 'data-2' | 'data-3' | 'data-4' | 'data-5' | 'data-6';
+export interface ScheduleCategory { id: string; label: string; color?: ScheduleCategoryColor }
 export interface ScheduleProps<T> {
-  /** Default 'week'. */
-  view?: 'day' | 'week' | 'workweek';
+  /** Default 'week'. 'month': each day a cell in a 5- or 6-week grid, its events listed as chips in start order. */
+  view?: 'day' | 'week' | 'workweek' | 'month';
   /** Under 480px of its own width: 'day' (default) shows one day at a time; false keeps the view. */
   narrowView?: 'day' | false;
   /** Any day in the period shown, 'YYYY-MM-DD'. */
@@ -1553,6 +1570,28 @@ export interface ScheduleProps<T> {
   onRemove?: (event: T) => void;
   /** Someone else is moving this event: it can't be picked up. */
   heldBy?: (event: T) => { name: string; presence?: 1 | 2 | 3 } | null | undefined;
+  /** A settled event: flush on the ground with a lock and `lockedLabel`; it can't be moved, resized, renamed or removed, but Enter still opens it. */
+  isLocked?: (event: T) => boolean;
+  /** The word shown after a locked event's title and spoken in its name. Default 'Locked'. */
+  lockedLabel?: (event: T) => string;
+  /** Under a day's name, inside its column header: a total, a Badge. Its text describes the column without lengthening its name. */
+  renderDayHeader?: (day: string, events: T[]) => React.ReactNode;
+  /** A day's actions: one is an icon button named with the action and the day; several, a More button opening a DropdownMenu; none, nothing. Outside the grid's roving focus. */
+  dayActions?: (day: string, events: T[]) => MenuEntry[];
+  /** A flush line under the grid for the period (its total). It describes the grid. */
+  footer?: (days: string[], events: T[]) => React.ReactNode;
+  /** Month view: what a day shows under its events (a total). Its text describes the day's cell. */
+  monthCell?: (day: string, events: T[]) => React.ReactNode;
+  /** Month view: events shown per day before "+N more". Default 3. Only applies with `onOpenDay`: without it every event shows, so each stays reachable. */
+  maxPerDay?: number;
+  /** Month view: "+N more" opens that day. Showing it (say, in the day view) is your call. Without it a day lists all its events. */
+  onOpenDay?: (day: string) => void;
+  /** Groups events: the category's colour replaces the accent in each event's inset edge; its label joins the event's name. */
+  getCategory?: (event: T) => string | null | undefined;
+  /** Names and fixed colours. Categories without one take data-1…data-6 in first-seen order; past six, the accent. */
+  categories?: ScheduleCategory[];
+  /** A flush line of category names and their edge colour under the grid. Default: on when `categories` is given. */
+  legend?: boolean;
   /** Refuse a span (outside hours, a closed room). */
   isUnavailable?: (span: ScheduleSpan) => boolean;
   /** The now line's time. Default: the clock. */
@@ -3028,6 +3067,8 @@ export interface TimeInputProps {
   invalid?: boolean;
   disabled?: boolean;
   required?: boolean;
+  /** Visible required feedback after native validation. Localize for the application. Default "Enter a time." */
+  requiredMessage?: string;
   size?: 'sm' | 'md';
   /** Submits the value with a form, in a hidden input. */
   name?: string;
@@ -3657,7 +3698,8 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
   onSubmit: (message: PromptMessage) => void;
   /** 'submitted' and 'streaming' turn Send into Stop, in the same slot. Default 'ready'. */
   status?: PromptStatus;
-  onStop?: () => void;
+  /** Stops generating. Return `false` when nothing stopped, and "Generating stopped" isn't announced. */
+  onStop?: () => void | boolean;
   /** Enter while 'submitted' or 'streaming' queues the message instead of doing nothing; the button stays Stop. Show the queue with ConversationQueue. */
   /** @ opens a list of matches; a chosen one is "@label" in the text and a plate above it. A promise shows "Searching…". */
   mentionable?: (query: string) => PromptMention[] | Promise<PromptMention[]>;
@@ -4081,6 +4123,38 @@ export declare function SpanWaterfall(props: SpanWaterfallProps): React.ReactEle
 export declare function criticalPathOf(spans: Span[]): string[];
 /** "84 ms" under a second, "2.41 s" from a second up. */
 export declare function formatMs(ms: number): string;
+/** A paper size: 'a4' (210 × 297 mm), 'letter' (8.5 × 11 in), 'legal' (8.5 × 14 in), or any CSS lengths. */
+export type PrintSheetSize = 'a4' | 'letter' | 'legal' | { width: string; height: string };
+export interface PrintSheetProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  /** Names the document ("Invoice 1042"). */
+  title: string;
+  /** Default 'a4'. */
+  size?: PrintSheetSize;
+  /** The page's margins as CSS lengths, one or four (as `margin`). Default '20mm'. */
+  margins?: string;
+  /** Default 'portrait'. */
+  orientation?: 'portrait' | 'landscape';
+  /** On screen only: 'fit' (default) scales the pages down to the container's width, never up; a number is a fixed scale. Print is always actual size. */
+  scale?: 'fit' | number;
+  /** Repeated at the top of every page: a `PrintSheetHeader`. */
+  header?: React.ReactNode;
+  /** Repeated at the foot of every page: a `PrintSheetFooter`, perhaps with `PrintSheetPageNumber` and `PrintSheetPageCount`. */
+  footer?: React.ReactNode;
+  /** The data is on its way: each page is an imprint at its paper size, and the document says it's loading. */
+  loading?: boolean;
+}
+/** A paper document previewed on screen and printed as it is: light paper raised one level on screen; flat, white and the page itself in print. */
+export declare function PrintSheet(props: PrintSheetProps): React.ReactElement;
+/** The top of every page of a PrintSheet. */
+export declare function PrintSheetHeader(props: React.HTMLAttributes<HTMLElement>): React.ReactElement;
+/** The foot of every page of a PrintSheet. */
+export declare function PrintSheetFooter(props: React.HTMLAttributes<HTMLElement>): React.ReactElement;
+/** A page break placed by hand: directly inside a PrintSheet it starts a new page, on screen and in print. */
+export declare function PrintSheetBreak(props: { className?: string }): React.ReactElement;
+/** This page's number, inside a PrintSheet's header or footer. */
+export declare function PrintSheetPageNumber(): React.ReactElement;
+/** The number of pages, inside a PrintSheet's header or footer. */
+export declare function PrintSheetPageCount(): React.ReactElement;
 
 export type AgentState = 'queued' | 'working' | 'needs-input' | 'blocked' | 'stalled' | 'failed' | 'done' | 'stopped';
 export type AgentNeeds = 'approval' | 'question' | 'review';
@@ -4355,7 +4429,7 @@ declare global {
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
       Artifact: typeof Artifact; ArtifactHeader: typeof ArtifactHeader; ArtifactVersions: typeof ArtifactVersions; ArtifactContent: typeof ArtifactContent; ArtifactReference: typeof ArtifactReference;
-      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem; SpanWaterfall: typeof SpanWaterfall; criticalPathOf: typeof criticalPathOf; formatMs: typeof formatMs;
+      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem; SpanWaterfall: typeof SpanWaterfall; criticalPathOf: typeof criticalPathOf; formatMs: typeof formatMs; PrintSheet: typeof PrintSheet; PrintSheetHeader: typeof PrintSheetHeader; PrintSheetFooter: typeof PrintSheetFooter; PrintSheetBreak: typeof PrintSheetBreak; PrintSheetPageNumber: typeof PrintSheetPageNumber; PrintSheetPageCount: typeof PrintSheetPageCount;
       AgentFleet: typeof AgentFleet; AgentFleetGroup: typeof AgentFleetGroup; AgentFleetItem: typeof AgentFleetItem; AgentRequests: typeof AgentRequests; AgentRequest: typeof AgentRequest; AgentLanes: typeof AgentLanes; summarizeFleet: typeof summarizeFleet; groupAgents: typeof groupAgents; needsYou: typeof needsYou; formatSpan: typeof formatSpan;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;

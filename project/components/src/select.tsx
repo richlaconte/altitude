@@ -60,6 +60,35 @@ export function useSide(open: boolean, anchor: React.RefObject<HTMLElement | nul
   return side;
 }
 
+/**
+ * Native required validation for a composite field, as Select does it (#571): a hidden text input carries the value,
+ * so an empty required value fails the form's constraint validation (a type="hidden" input never would). Its invalid
+ * event is cancelled, focus goes to the visible control, and `error` says when to show the visible required message.
+ * It clears once the field holds a value, stops being required or is disabled, or when `clear` is called (form reset).
+ */
+export function useNativeRequired({ empty, required, disabled, invalid }: { empty: boolean; required?: boolean; disabled?: boolean; invalid?: boolean }) {
+  const [missing, setMissing] = React.useState(false);
+  useIsoLayoutEffect(() => { if (!required || disabled || !empty) setMissing(false); }, [empty, required, disabled]);
+  const onInvalid = (focus: () => void) => (event: React.FormEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const element = event.currentTarget;
+    setMissing(element.validity.valueMissing);
+    // Every invalid control hears the event; only the form's first one takes focus, as the browser's own feedback would.
+    const first = element.form && Array.from(element.form.elements).find((e) => (e as HTMLInputElement).willValidate && !(e as HTMLInputElement).validity.valid);
+    if (!first || first === element) focus();
+  };
+  /** A form reset withdraws the visible required message, as Select's reset does. */
+  const clear = () => setMissing(false);
+  return { error: missing && !!required && !disabled && !invalid, onInvalid, clear };
+}
+
+/**
+ * The hidden native input behind a composite field: it submits the value under `name` and takes part in validation.
+ * Disabled, it's left out of both, as a disabled Select is (#572).
+ */
+export const NativeValue = ({ name, value, required, disabled, onInvalid }: { name?: string; value: string; required?: boolean; disabled?: boolean; onInvalid: React.FormEventHandler<HTMLInputElement> }) =>
+  <input hidden aria-hidden="true" tabIndex={-1} autoComplete="off" name={name} value={value} required={required} disabled={disabled} onChange={() => {}} onInvalid={onInvalid} />;
+
 /** A brief afterglow on a newly chosen value: it settles into the field. */
 function useGlow(value: string) {
   const [glow, setGlow] = React.useState<'a' | 'b' | undefined>(undefined);
@@ -305,6 +334,8 @@ export interface ComboboxProps extends FieldLike {
   filter?: (option: SelectOption, query: string) => number | boolean;
   /** Shown when nothing matches. Default "No matches". */
   empty?: React.ReactNode;
+  /** Visible required-field feedback after native validation. Localize this for the application. Default "Choose an option." */
+  requiredMessage?: string;
 }
 
 /**
@@ -312,7 +343,7 @@ export interface ComboboxProps extends FieldLike {
  * opening (its back wall showing) until an option is chosen; then its floor rises flush.
  */
 export function Combobox({ items, value, defaultValue = '', onValueChange, filter, empty = 'No matches', id, name, required, disabled, invalid,
-  size = 'md', placeholder = 'Type to search…', defaultOpen = false, className, presentation, ...aria }: ComboboxProps) {
+  size = 'md', placeholder = 'Type to search…', requiredMessage = 'Choose an option.', defaultOpen = false, className, presentation, ...aria }: ComboboxProps) {
   const sheet = useSheetPresentation(presentation === 'sheet' ? 'sheet' : 'anchored');
   const [v, set] = useControllable(value, defaultValue, onValueChange);
   const chosen = items.find((o) => o.value === v);
@@ -331,10 +362,30 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
   const side = useSide(mounted, field, list);
   const glow = useGlow(v);
   const labelId = useLabelId(inputId, auto + '-label');
+  const native = useNativeRequired({ empty: !v, required, disabled, invalid });
+  const describedBy = [aria['aria-describedby'], native.error ? auto + '-required-error' : undefined].filter(Boolean).join(' ') || undefined;
   useApproach();
   useKeyFocus();
   // A controlled value that changes from outside resets the text.
   React.useEffect(() => { if (!typing) setText(chosen ? textOf(chosen) : ''); }, [v]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Its form's reset returns an uncontrolled value, the text and the typing state to the default, as Select's does. Reset
+  // runs after the browser's default action; cancelled resets and controlled values stay with their owner.
+  React.useEffect(() => {
+    const element = input.current, form = element?.form;
+    if (!element || !form) return;
+    let resetTimer: ReturnType<typeof setTimeout>;
+    const reset = (event: Event) => { clearTimeout(resetTimer); resetTimer = setTimeout(() => {
+      if (event.defaultPrevented || !element.isConnected) return;
+      if (value === undefined) set(defaultValue);
+      const back = items.find((o) => o.value === (value ?? defaultValue));
+      setText(back ? textOf(back) : '');
+      setTyping(false);
+      setOpen(false);
+      native.clear();
+    }, 0); };
+    form.addEventListener('reset', reset);
+    return () => { clearTimeout(resetTimer); form.removeEventListener('reset', reset); };
+  }, [value, defaultValue, set, items]);
 
   const q = typing ? text.trim() : '';
   const score = (o: SelectOption) => { const s = filter ? filter(o, q) : commandScore(textOf(o), q); return typeof s === 'boolean' ? (s ? 1 : 0) : s; };
@@ -376,11 +427,11 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
   return (
     <div ref={root} className={cx('alt-select alt-combobox', className)} data-open={open ? '' : undefined}>
       <div ref={field} className="alt-input" data-size={size} data-approach="56" data-filled={filled ? '' : undefined}
-        data-invalid={invalid ? '' : undefined} data-disabled={disabled ? '' : undefined}>
+        data-invalid={invalid || native.error ? '' : undefined} data-disabled={disabled ? '' : undefined}>
         <input ref={input} id={inputId} type="text" role="combobox" autoComplete="off" spellCheck={false} disabled={disabled}
           aria-autocomplete="list" aria-expanded={open} aria-controls={mounted ? listId : undefined} aria-activedescendant={open && active >= 0 ? `${listId}-${active}` : undefined}
-          aria-invalid={invalid || undefined} aria-required={required || undefined} placeholder={placeholder} value={text} data-glow={glow}
-          {...aria} onKeyDown={onKey} onBlur={onBlur}
+          aria-invalid={invalid || native.error || undefined} aria-required={required || undefined} placeholder={placeholder} value={text} data-glow={glow}
+          {...aria} aria-describedby={describedBy} onKeyDown={onKey} onBlur={onBlur}
           onChange={(e) => { setText(e.target.value); setTyping(true); setOpen(true); setActive(0); }} />
         <button type="button" tabIndex={-1} className="alt-select-toggle" aria-label="Show options" disabled={disabled}
           onMouseDown={(e) => e.preventDefault()}
@@ -388,7 +439,8 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
           <Chevron />
         </button>
       </div>
-      {name && <input type="hidden" name={name} value={v} />}
+      {(name || required) && <NativeValue name={name} value={v} required={required} disabled={disabled} onInvalid={native.onInvalid(() => input.current?.focus())} />}
+      {native.error && <p className="alt-field-error" id={auto + '-required-error'} role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
       {mounted && (
         <OptionList id={listId} options={shown} active={Math.min(active, shown.length - 1)} value={v} state={state} side={side} listRef={list} labelledBy={labelId}
           label={aria['aria-label']} focusable={false} query={q} empty={empty} onActive={setActive} onChoose={choose} sheet={sheet} onDismiss={commit} />

@@ -40,7 +40,7 @@
   ],
   "transitions": [
     "ready → submitted → streaming → complete",
-    "streaming → stopped on Stop, keeping the partial answer",
+    "submitted, streaming or awaiting-input → stopped on Stop, keeping the partial answer",
     "submitted or streaming → failed, keeping the message, with Retry",
     "streaming → awaiting-input while a Confirmation or Question is open, then back",
     "a reload during streaming → interrupted, with Retry",

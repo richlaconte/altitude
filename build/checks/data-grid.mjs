@@ -102,6 +102,47 @@ try {
     check((await cell(page, 4, 4).textContent()).includes('Active') && await at(page) === '4:4', 'DG-24 a Select column commits on choosing and returns to the cell');
     await page.close(); }
 
+  // #570: an open edit stays bound to the row id and column key it began on. A reorder doesn't retarget its draft; a
+  // row that leaves `rows` takes its draft with it, said, and nothing is saved to the record now in its place.
+  { const page = await open();
+    await page.evaluate(() => new Promise((done) => {
+      document.body.innerHTML = '<button id="rev">Reverse rows</button><button id="drop">Remove Bob</button><div id="r"></div>';
+      const A = window.Altitude, h = React.createElement;
+      window.__saved = [];
+      function App() {
+        const [rows, setRows] = React.useState([{ id: 'a', name: 'Alice', amount: '10' }, { id: 'b', name: 'Bob', amount: '20' }]);
+        React.useEffect(() => {
+          document.getElementById('rev').onclick = () => setRows((rs) => [...rs].reverse());
+          document.getElementById('drop').onclick = () => setRows((rs) => rs.filter((x) => x.id !== 'b'));
+        }, []);
+        return h(A.DataGrid, { 'aria-label': 'Accounts', rows, getRowId: (x) => x.id, getRowLabel: (x) => x.name,
+          columns: [{ key: 'name', header: 'Name' }, { key: 'amount', header: 'Amount', editable: true }],
+          onCellSave: (change) => { window.__saved.push({ rowId: change.rowId, key: change.key, draft: change.draft, previousValue: change.previousValue });
+            setRows((rs) => rs.map((x) => x.id === change.rowId ? { ...x, amount: String(change.draft) } : x)); return { ok: true }; } });
+      }
+      const scene = h(A.AltitudeProvider, null, h(App));
+      ReactDOM.createRoot(document.getElementById('r')).render(document.documentElement.dataset.fixtureStrict === 'true' ? h(React.StrictMode, null, scene) : scene);
+      setTimeout(done, 200);
+    }));
+    const amount = name => page.locator('tbody tr').filter({ hasText: name }).locator('[role="gridcell"]').nth(1);
+    await amount('Alice').dblclick(); await page.keyboard.press('ControlOrMeta+a'); await page.keyboard.type('99');
+    await page.click('#rev');
+    const editor = page.getByRole('textbox', { name: 'Amount, Alice' });
+    check(await editor.inputValue() === '99' && await page.getByRole('textbox', { name: 'Amount, Bob' }).count() === 0, 'DG-25 after the rows reorder, the open draft is still Alice’s');
+    await editor.focus(); await page.keyboard.press('Enter'); await idle(page);
+    const saved = await page.evaluate(() => window.__saved);
+    check(saved.length === 1 && saved[0].rowId === 'a' && saved[0].draft === '99' && saved[0].previousValue === '10' && await amount('Alice').textContent() === '99' && await amount('Bob').textContent() === '20',
+      `DG-26 committing it saves Alice, not the record now in its place (${JSON.stringify(saved)})`);
+    await page.click('#rev'); // Bob last, so removing him leaves the active position past the end of `rows`
+    await amount('Bob').dblclick(); await page.keyboard.press('ControlOrMeta+a'); await page.keyboard.type('77');
+    await page.evaluate(() => document.getElementById('drop').click()); // the field keeps focus until Bob goes
+    await said(page, 'Edit discarded: Amount, Bob is no longer in the grid');
+    check(await page.locator('.alt-grid-input').count() === 0 && (await page.evaluate(() => window.__saved)).length === 1 && await amount('Alice').textContent() === '99',
+      'DG-27 when the edited row leaves the grid, its draft is discarded and said, and saved to no other record');
+    check(await at(page) === '0:1' && await page.locator('[role="grid"] [tabindex="0"]').count() === 1,
+      `DG-28 focus returns to the clamped active cell, the grid's one Tab stop (focus on ${await at(page)})`);
+    await page.close(); }
+
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
