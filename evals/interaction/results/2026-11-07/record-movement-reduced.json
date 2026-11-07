@@ -1,0 +1,513 @@
+{
+  "protocolVersion": "1.0.0",
+  "id": "record-movement-reduced",
+  "evidenceType": "engineering",
+  "recordedAt": "2026-11-07T15:35:08.276Z",
+  "sessionId": "engineering-smoke",
+  "observedVariant": "baseline",
+  "priorRecordRefs": [],
+  "source": {
+    "commit": "4fd91df21fbe6ec3df66ce7e0ac6407929170140",
+    "dirty": false,
+    "packageVersion": "0.31.20",
+    "artifactSha256": "77219a26af9ceeaba5d45e2dc2d07b0791fd9b65826fdae6064dcb093c878d15",
+    "runnerSha256": "c1ef180cef1c7e0ae394d746067b444886181c8e95b1d73ea8bb722d7c2f6d20",
+    "lockSha256": "b0ebb96a2b552e8f867b6734a928f23847af391f2ca3d31c6c84e4962c857ae4",
+    "reactVersion": "19.3.0"
+  },
+  "environment": {
+    "browser": "Chromium 157.0.8103.38",
+    "os": "darwin 25.1.0",
+    "viewport": [
+      1280,
+      900
+    ],
+    "zoom": 1,
+    "scheme": "daylight",
+    "input": "mixed keyboard/pointer automation; board movement by keyboard",
+    "motion": "reduced",
+    "assistiveTechnology": null,
+    "fonts": "Network fonts blocked; system fallback"
+  },
+  "journey": "record-movement",
+  "task": "Move Annual billing toggle from Sprint 24 to In progress, then edit the same card title.",
+  "variants": [
+    {
+      "id": "baseline",
+      "description": "Unmodified complete planning-board app at the recorded source and artifact digest.",
+      "artifactSha256": "77219a26af9ceeaba5d45e2dc2d07b0791fd9b65826fdae6064dcb093c878d15"
+    }
+  ],
+  "order": [
+    "baseline"
+  ],
+  "stimulus": {
+    "status": "valid",
+    "reason": "All named engineering checks passed in this recorded mode; human visual/AT review remains separate.",
+    "healthRef": "record-movement-reduced.json"
+  },
+  "outcome": {
+    "result": "completed",
+    "observations": [
+      "Correct source identity and status before movement",
+      "Reduced-motion stimulus has no intermediate x/y travel or transform",
+      "One acknowledged move of the same record to In progress",
+      "Keyboard focus remains on the moved record",
+      "Persistent name and semantic destination cues survive the transition",
+      "Continued editing opens the same card title",
+      "No page or JavaScript console errors"
+    ],
+    "assistance": "Automated engineering driver; not a participant."
+  },
+  "comprehension": {
+    "result": "not-assessed",
+    "response": null,
+    "reason": "Participant evaluation unrun."
+  },
+  "ratings": [],
+  "comparison": {
+    "status": "not-assessed",
+    "selected": null,
+    "reason": "One implementation; no participant comparison."
+  },
+  "negativeEvidence": [],
+  "uncertainty": [
+    "No participant or model judgments collected.",
+    "No AT, pointer/touch, narrow viewport, zoom or forced-color evaluation in this smoke run.",
+    "Simulated service and localStorage read-back do not prove production persistence."
+  ],
+  "checks": [
+    {
+      "name": "Correct source identity and status before movement",
+      "passed": true,
+      "evidence": "Annual billing toggle\nBilling · Ada Okoro · 5 pts\nDetails"
+    },
+    {
+      "name": "Reduced-motion stimulus has no intermediate x/y travel or transform",
+      "passed": true,
+      "evidence": {
+        "valid": true,
+        "intermediateFrames": 0,
+        "transformedFrames": 0,
+        "totalFrames": 47
+      }
+    },
+    {
+      "name": "One acknowledged move of the same record to In progress",
+      "passed": true,
+      "evidence": [
+        {
+          "status": "ok",
+          "text": "cards.moveSucceededSaved · 302 ms"
+        }
+      ]
+    },
+    {
+      "name": "Keyboard focus remains on the moved record",
+      "passed": true,
+      "evidence": {
+        "focused": "c1"
+      }
+    },
+    {
+      "name": "Persistent name and semantic destination cues survive the transition",
+      "passed": true,
+      "evidence": [
+        "",
+        "Dropped Annual billing toggle in In progress (3 of 3), position 1 of 3.",
+        "",
+        "Annual billing toggle moved to In progress."
+      ]
+    },
+    {
+      "name": "Continued editing opens the same card title",
+      "passed": true,
+      "evidence": {
+        "savedId": "c1"
+      }
+    },
+    {
+      "name": "No page or JavaScript console errors",
+      "passed": true,
+      "evidence": []
+    }
+  ],
+  "frames": [
+    {
+      "ms": 0,
+      "x": 352,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "sprint"
+    },
+    {
+      "ms": 3,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 18,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 34,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 50,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 68,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 85,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 101,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 118,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 134,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 151,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 168,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 185,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 201,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 218,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 234,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 251,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 267,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 284,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 301,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 318,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 334,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 350,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 368,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 384,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 401,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 418,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 434,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 451,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 468,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 483,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 501,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 518,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 534,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 551,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 568,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 584,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 601,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 618,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 634,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 650,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 668,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 684,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 701,
+      "x": 628,
+      "y": 264,
+      "transform": "none",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 718,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 735,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    },
+    {
+      "ms": 751,
+      "x": 628,
+      "y": 264,
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transformed": false,
+      "column": "doing"
+    }
+  ]
+}

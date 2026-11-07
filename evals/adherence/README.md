@@ -64,3 +64,7 @@ Generations cost money and time: about 45 USD for three samples of eight briefs 
 
 - [2026-11-02, baseline](results/2026-11-02/REPORT.md): the 30 builds of the 31 Oct distinctiveness run, scored without generating anything new.
 - [2026-11-03, 0.2.1 against 0.6.15](results/2026-11-03/REPORT.md): 36 builds each from the registry. No invented API in either; 0.6.15 builds use the newer components where 0.2.1 builds re-implemented them, at about 1.3× the cost and turns. Compare conditions with `compare.mjs`.
+
+## Interaction evidence
+
+The [recognition and change-comprehension protocol](../interaction/PROTOCOL.md) evaluates complete example journeys separately from this benchmark. It preserves stimulus health, observed outcomes, absolute ratings and comparative judgments; its [engineering smoke pilot](../interaction/results/2026-11-07/PILOT.md) is not participant evidence.

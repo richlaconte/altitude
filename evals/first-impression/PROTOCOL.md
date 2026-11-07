@@ -115,3 +115,7 @@ The output lists every screen (condition, brief, task, domain, content fill, pat
 
 - Tuch, A. N., Presslaber, E. E., Stöcklin, M., Opwis, K., & Bargas-Avila, J. A. (2012). The role of visual complexity and prototypicality regarding first impression of websites. *International Journal of Human-Computer Studies*, 70(11), 794–811.
 - Lindgaard, G., Fernandes, G., Dudek, C., & Brown, J. (2006). Attention web designers: You have 50 milliseconds to make a good first impression! *Behaviour & Information Technology*, 25(2), 115–126.
+
+## Separate interaction protocol
+
+Motion, state and task comprehension are covered by the [interaction-validation protocol](../interaction/PROTOCOL.md), which leaves this first-impression protocol and its measures unchanged. Its engineering pilot does not establish human effectiveness.

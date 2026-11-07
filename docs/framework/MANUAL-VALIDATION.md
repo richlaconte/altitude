@@ -28,4 +28,6 @@ Recommended manual environments: Safari + VoiceOver on macOS, Firefox + NVDA and
 
 ## Evidence format
 
+For a repeatable observation of recognition and change comprehension, use the [interaction protocol](../../evals/interaction/PROTOCOL.md) and its [evidence format](../../evals/interaction/README.md). It reuses complete example journeys, checks stimulus health before preference collection, and preserves absolute ratings, comparative choices and negative evidence separately. Its engineering pilot is not participant validation.
+
 Every finding should include rule ID, classification (`deterministic`, `integration`, `contextual`), observed evidence, expected behavior and concrete repair. Contextual heuristics and experimental elevation hypotheses do not automatically fail CI. Suppressions need a reason, scope, owner and review date. Successful axe scans mean only that the executed rules found no violations in the tested states.
