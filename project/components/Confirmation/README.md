@@ -9,7 +9,7 @@ Approve or reject an action an agent proposes, before anything happens: "Send 21
 - **Failed:** drops to a trench ("Couldn't send"), with Retry.
 - **Rejected / expired:** flush and muted, kept in the record ("Rejected by Maya · 2 minutes ago", "No longer needed").
 
-**Escalation.** Consequential proposals use the `consequential-action` contract: `escalate="hold"` makes Approve a `HoldButton`; `escalate="dialog"` asks again in a stationary `Dialog` for irreversible actions.
+**Escalation.** Consequential proposals use the `consequential-action` contract: `escalate="hold"` makes Approve a `HoldButton`; `escalate="dialog"` asks again in a stationary `Dialog` for irreversible actions. The dialog asks only while the request is waiting: if `state` leaves `requested` while it's open (it expired, or was approved or rejected elsewhere), it closes at once, focus goes to the card's line saying what happened ("No longer needed"), an expiry is announced ("Archive workspace: no longer needed. Nothing was approved."), and `onApprove` is never called for it.
 
 **Accessibility.** A labelled `section` (its title) described by the consequence. Not a dialog unless escalated. **There's no default action**: nothing is approved by an accidental Enter, and nothing is focused automatically. Outcomes are announced ("Send campaign email: Sent."). Under forced colours the card has a 1px border, pending is dotted and failed dashed thick. Under `contrast="more"` the requested card gets a hard slab.
 
