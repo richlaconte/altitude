@@ -177,19 +177,23 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const locked = (event: T | undefined) => !!event && !!isLocked?.(event);
   const lockWord = (event: T) => lockedLabel?.(event) || 'Locked';
   const refuseLocked = (event: T) => say(`${getLabel(event)} is ${lockWord(event).toLowerCase()} and can’t be changed.`);
-  // An event that becomes locked while on screen settles 1→0 once (#561); one already locked simply renders flush.
+  // An event that becomes locked while on screen settles 1→0 once (#561); one already locked simply renders flush,
+  // including one that arrives locked (a new week, an approved entry added): it must have been rendered, unlocked, last time.
   const lockedNow = new Set(isLocked ? events.filter((e) => isLocked(e)).map(getKey) : []);
-  const lockedBefore = React.useRef<Set<string> | null>(null);
+  const lastSeen = React.useRef<{ keys: Set<string>; locked: Set<string> } | null>(null);
+  const settleTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [lockSettle, setLockSettle] = React.useState<string[]>([]);
   React.useEffect(() => {
-    const before = lockedBefore.current; lockedBefore.current = lockedNow;
+    const before = lastSeen.current; lastSeen.current = { keys: new Set(byKey.keys()), locked: lockedNow };
     if (!before) return;
-    const fresh = [...lockedNow].filter((k) => !before.has(k) && byKey.has(k));
+    const fresh = [...lockedNow].filter((k) => !before.locked.has(k) && before.keys.has(k));
     if (!fresh.length) return;
     setLockSettle(fresh);
-    const t = setTimeout(() => mounted.current && setLockSettle([]), 400);
-    return () => clearTimeout(t);
-  }, [[...lockedNow].join('\u0000')]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Not cleared by the next change to the locked set, so the settle always ends.
+    clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => mounted.current && setLockSettle([]), 400);
+  });
+  React.useEffect(() => () => clearTimeout(settleTimer.current), []);
   // The events as last rendered, for a write that finishes after the parent has already published its result.
   const eventsNow = React.useRef(events); eventsNow.current = events;
   // Events by day, with overlapping ones laid out side by side in lanes.
