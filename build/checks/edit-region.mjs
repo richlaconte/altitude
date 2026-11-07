@@ -134,19 +134,20 @@ try {
   { const page = await open();
     await page.evaluate(() => {
       const R = window.React, A = window.Altitude, h = R.createElement;
-      window.erRequests = { declines: [], accepts: [] };
-      function Fixture({ id, accept }) {
-        const [isOpen, setOpen] = R.useState(false);
+      window.erRequests = { declines: [], accepts: [], holds: [] }; window.erHeldSaves = 0;
+      function Fixture({ id, accept, held }) {
+        const [isOpen, setOpen] = R.useState(!!held);
         const [value, setValue] = R.useState({ name: 'Ada' });
-        return h('div', { id }, h(A.AltitudeProvider, null, h(A.EditRegion, { label: id, value, open: isOpen, onValueChange: setValue,
+        return h('div', { id }, h('button', { type: 'button', onClick: () => setOpen(false) }, `Parent closes ${id}`),
+          h(A.AltitudeProvider, null, h(A.EditRegion, { label: id, value, open: isOpen, onValueChange: setValue,
           onOpenChange: next => { window.erRequests[id].push(next); if (accept) setOpen(next); },
-          onSave: draft => ({ ok: true, value: draft }) },
+          onSave: draft => { if (held) window.erHeldSaves++; return { ok: true, value: draft }; } },
           h(A.EditRegionView, null, value.name),
           h(A.EditRegionForm, null, field => h(A.Field, { label: `${id} name` }, h(A.Input, field('name')))))));
       }
-      for (const [id, accept] of [['declines', false], ['accepts', true]]) {
+      for (const [id, accept, held] of [['declines', false], ['accepts', true], ['holds', false, true]]) {
         const host = document.createElement('div'); document.body.prepend(host);
-        window.ReactDOM.createRoot(host).render(h(R.StrictMode, null, h(Fixture, { id, accept })));
+        window.ReactDOM.createRoot(host).render(h(R.StrictMode, null, h(Fixture, { id, accept, held })));
       }
     });
     await page.getByRole('button', { name: 'Edit declines', exact: true }).click();
@@ -162,6 +163,32 @@ try {
     await accepted.fill('Ada Lovelace'); await accepted.press('Enter');
     await page.getByRole('button', { name: 'Edit accepts', exact: true }).waitFor();
     check(JSON.stringify(await page.evaluate(() => window.erRequests.accepts)) === '[true,false]' && await page.locator('#accepts').getByText('Ada Lovelace', { exact: true }).isVisible(), 'ER-25d the accepted region saves and asks to close');
+    await page.getByRole('button', { name: 'Edit accepts', exact: true }).click(); await accepted.waitFor();
+    await page.locator('#accepts').getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.getByRole('button', { name: 'Edit accepts', exact: true }).waitFor();
+    check(JSON.stringify(await page.evaluate(() => window.erRequests.accepts)) === '[true,false,true,false]' && await focused(page.getByRole('button', { name: 'Edit accepts', exact: true })),
+      'ER-25e Cancel asks to close; the parent setting open={false} closes it, returns focus to Edit, and is told one false, not an echo');
+    await page.getByRole('button', { name: 'Edit accepts', exact: true }).click(); await accepted.waitFor();
+    await page.getByRole('button', { name: 'Parent closes accepts', exact: true }).click();
+    await page.getByRole('button', { name: 'Edit accepts', exact: true }).waitFor();
+    check(JSON.stringify(await page.evaluate(() => window.erRequests.accepts)) === '[true,false,true,false,true]', 'ER-25f a parent closing the region itself is not told onOpenChange(false)');
+    // A parent that holds open={true}: Cancel and Save only ask to close; the region keeps working.
+    const held = page.getByRole('textbox', { name: 'holds name' });
+    const heldState = () => page.locator('#holds .alt-edit-region').getAttribute('data-state');
+    await page.locator('#holds').getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.waitForTimeout(300);
+    check(JSON.stringify(await page.evaluate(() => window.erRequests.holds)) === '[false]' && await heldState() === 'editing' && await held.isEditable(),
+      'ER-25g with the parent holding open={true}, Cancel asks onOpenChange(false) and the region stays editing and usable');
+    await held.fill('Ada Byron'); await held.press('Enter');
+    await page.locator('#holds [role="status"]').filter({ hasText: 'Saved' }).waitFor();
+    check(await heldState() === 'editing' && await held.inputValue() === 'Ada Byron' && await held.isEditable()
+      && JSON.stringify(await page.evaluate(() => [window.erRequests.holds, window.erHeldSaves])) === '[[false,false],1]', 'ER-25h a held-open save keeps editing on the saved value and asks to close');
+    await held.press('Enter'); await page.waitForTimeout(300);
+    check(await page.evaluate(() => window.erHeldSaves) === 1 && JSON.stringify(await page.evaluate(() => window.erRequests.holds)) === '[false,false,false]',
+      'ER-25i the saved value is the new baseline: Save again writes nothing and only asks to close');
+    await page.getByRole('button', { name: 'Parent closes holds', exact: true }).click();
+    await page.locator('#holds').getByText('Ada Byron', { exact: true }).waitFor();
+    check(await heldState() === 'read' && JSON.stringify(await page.evaluate(() => window.erRequests.holds)) === '[false,false,false]', 'ER-25j the held region closes when the parent sets open={false}, without an echo');
     await page.close(); }
 
   // In place (E52): the shell never moves the record, the fields never slide while the editor grows, and a reserved sheet moves nothing.
