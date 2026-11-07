@@ -217,6 +217,23 @@ try {
  await page.evaluate(() => harness.turn.awaitInput(true)); await phase('awaiting-input');
  await page.evaluate(() => harness.turn.submit('Interrupting')); await page.waitForTimeout(30);
  check(await page.evaluate(() => harness.streams.length) === 4, 'CONVO-DUPLICATE: nothing is sent over a turn waiting for the person');
+ // #577: the composer shows Stop while awaiting input, so Stop there aborts the stream and keeps the partial answer.
+ check(await page.evaluate(() => harness.turn.promptStatus) === 'streaming', 'CONVO-KEEP: a turn awaiting input shows the composer as Stop');
+ check(await page.evaluate(() => harness.turn.stop()) === true, 'CONVO-KEEP: Stop while awaiting input reports that it stopped'); await phase('stopped');
+ check(await page.evaluate(() => harness.streams[3].signal.aborted && harness.turn.text === 'Hi' && harness.turn.messageStatus === 'stopped'), 'CONVO-KEEP: Stop while awaiting input aborts the stream and keeps the partial answer');
+ check(await page.evaluate(() => harness.turn.stop()) === false, 'CONVO-KEEP: Stop with nothing in flight reports that nothing stopped');
+ // Composed with PromptInput: Stop announces only when something stopped.
+ await page.evaluate(() => {
+  fixtureRoot.unmount(); const h = React.createElement, A = Altitude; const api = { calls: 0, result: true }; window.harness = api;
+  function Fixture() { return h(A.AltitudeProvider, null, h(A.PromptInput, { status: 'streaming', onSubmit: () => {}, onStop: () => { api.calls++; return api.result; } }, h(A.PromptInputTextarea), h(A.PromptInputSubmit))); }
+  fixtureRoot = createRoot(document.getElementById('root')); fixtureRoot.render(h(Fixture));
+ });
+ await page.waitForSelector('.alt-prompt-send[data-stop]');
+ const said = () => page.evaluate(() => document.querySelector('.alt-prompt .alt-sr').textContent);
+ await page.evaluate(() => { harness.result = false; }); await page.click('.alt-prompt-send[data-stop]'); await page.waitForTimeout(30);
+ check(await page.evaluate(() => harness.calls) === 1 && await said() === '', 'CONVO-KEEP: PromptInput says nothing when onStop reports nothing stopped');
+ await page.evaluate(() => { harness.result = true; }); await page.click('.alt-prompt-send[data-stop]'); await page.waitForTimeout(30);
+ check(await said() === 'Generating stopped.', 'CONVO-KEEP: PromptInput announces a stop that happened');
  await mountTurn({ input: 'What changed?', text: 'The billing', complete: false }); await phase('interrupted');
  check(await page.evaluate(() => harness.turn.text === 'The billing' && harness.turn.messageStatus === 'error'), 'CONVO-RELOAD: an unfinished answer after a reload is interrupted, never complete');
  await mountTurn({ input: 'What changed?', text: 'Done.', complete: true }); await phase('complete');
