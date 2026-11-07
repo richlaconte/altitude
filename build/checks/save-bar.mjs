@@ -1,6 +1,7 @@
 // SaveBar: hidden while clean; appears (a labelled region at level 3, docked bottom) only after a change settles, says
 // how many fields changed, and is announced once; ⌘/Ctrl+S saves; saving hovers as pending; saved lowers it away and is
-// announced; a failed save drops it to a trench that keeps the draft and offers Retry; Discard resets. Run after a
+// announced; a failed save drops it to a trench that keeps the draft and offers Retry; Discard resets; a save accepted
+// after a newer edit says the newer edits still need saving (#576); a bigint field renders and is counted (#587). Run after a
 // render of every preview (it opens test/p-SaveBar-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
 import { openFixtures } from './preview-fixtures.mjs';
@@ -59,6 +60,37 @@ expect(b?.text === 'Unsaved changes · 1 field' && await page.inputValue('input 
 await page.click('.alt-savebar button:has-text("Save changes")');
 await page.waitForTimeout(1300);
 expect(await bar() === null && (await said()).includes('Saved.'), 'saving the newer edit then says Saved');
+
+// #587: a record holding values JSON can't serialize (a bigint id) renders, and SaveBar still counts what changed.
+const big = await browser.newPage({ viewport: { width: 960, height: 600 } });
+const bigErrors = [];
+big.on('pageerror', (e) => bigErrors.push(e.message));
+await big.goto(`file://${T}p-SaveBar-daylight.html`);
+await big.waitForTimeout(300);
+await big.evaluate(() => {
+  const { React, ReactDOM, Altitude: A } = window, h = React.createElement;
+  const host = document.createElement('div'); host.id = 'bigint'; document.body.append(host);
+  function App() {
+    const record = A.useEditRecord({ initialValue: { id: 123n, name: 'Original', at: new Date(0), tags: { a: [1n] } },
+      validate: () => ({}), validationMode: 'submit', save: (draft) => ({ ok: true, value: draft }) });
+    return h(A.AltitudeProvider, { scheme: 'daylight' },
+      h('input', { 'aria-label': 'Name', value: record.draft.name, onChange: (e) => record.setField('name', e.target.value) }),
+      h('button', { id: 'retag', onClick: () => record.setField('tags', { a: [1n] }) }, 'Same tags'),
+      h(A.SaveBar, { record, delay: 0 }));
+  }
+  ReactDOM.createRoot(host).render(h(App));
+});
+await big.waitForTimeout(300);
+expect(!bigErrors.length && await big.locator('#bigint input').count() === 1, `a record with a bigint field renders (${bigErrors.join('; ')})`);
+let bigText = null;
+if (await big.locator('#retag').count()) {
+  await big.click('#retag');
+  await big.fill('#bigint input', 'Changed');
+  await big.waitForTimeout(400);
+  bigText = await big.evaluate(() => document.querySelector('.alt-savebar .alt-savebar-text')?.textContent);
+}
+expect(!bigErrors.length && bigText === 'Unsaved changes · 1 field', `and counts one changed field, not the equal nested bigint (${bigText}; ${bigErrors.join('; ')})`);
+await big.close();
 
 console.log(`SaveBar: ${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
