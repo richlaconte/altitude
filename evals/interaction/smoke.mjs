@@ -36,6 +36,9 @@ const drawer = async page => {
 };
 const requests = (page, op) => page.locator('.ex-log-row').evaluateAll((rows, op) => rows.filter(r => r.querySelector('.ex-log-op')?.textContent === op).map(r => ({ status: r.dataset.status, text: r.textContent })), op);
 const savedState = page => page.evaluate(() => JSON.parse(localStorage.getItem('altitude-example:planning-board') ?? 'null'));
+const settle = page => page.evaluate(async () => {
+  await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {})));
+});
 const editTitle = async (page, title) => {
   await page.getByRole('button', { name: `Open ${title}`, exact: true }).click();
   const property = page.locator('[role="dialog"] .alt-property').filter({ hasText: /^Title/ }).first();
@@ -101,6 +104,7 @@ try {
           await input.inputValue() === 'Invoice PDF layout' && /couldn.t|failed|try again/i.test(errorText) && await property.getByRole('button', { name: 'Save changes', exact: true }).isEnabled(),
           { errorText, draft: await input.inputValue() });
         check(checks, 'Rejected write leaves confirmed record unchanged', (await savedState(page))?.cards?.c3?.title !== 'Invoice PDF layout', await requests(page, 'cards.update'));
+        await settle(page);
         await page.screenshot({ path: resolve(out, `${id}-failed.png`) });
         await property.getByRole('button', { name: 'Save changes', exact: true }).click();
         await page.waitForFunction(() => JSON.parse(localStorage.getItem('altitude-example:planning-board') ?? 'null')?.cards?.c3?.title === 'Invoice PDF layout');
