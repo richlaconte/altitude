@@ -326,7 +326,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
         </th>)}
       </tr></thead>
       <tbody>
-        {rows.map((row, r) => <tr key={getRowId(row)} className="alt-tr" aria-rowindex={r + 2}>
+        {rows.map((row, r) => <tr key={getRowId(row)} data-row={getRowId(row)} className="alt-tr" aria-rowindex={r + 2}>
           {columns.map((col, c) => {
             const k = cellKey(r, c);
             const isActive = active.r === r && active.c === c;
