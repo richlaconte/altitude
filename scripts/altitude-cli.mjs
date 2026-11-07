@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
 import { resolve, dirname, relative, basename } from 'node:path';
 import { scan } from './source-check.mjs';
+import { inside } from './cli-paths.mjs';
 const sha = value => createHash('sha256').update(value).digest('hex');
 const args=process.argv.slice(2);
 const command=args.shift() || 'help';
@@ -95,7 +96,7 @@ function doctor(context) {
   if(manifest.version!==context.pkg.version) findings.push(finding('ALT-SETUP-001','deterministic','fail',`Manifest ${manifest.version}`,'Manifest matches installed package','Reinstall the package.','altitude doctor --json'));
   for(const [file,digest] of Object.entries(manifest.files)) {
     const path=resolve(context.guidance,file);
-    if(!path.startsWith(context.guidance+'/') || !existsSync(path) || sha(readFileSync(path))!==digest) findings.push(finding('ALT-SETUP-001','deterministic','fail',`Missing or modified guidance: ${file}`,'Unmodified version-matched guidance','Reinstall the package.','altitude doctor --json'));
+    if(!inside(context.guidance,path) || !existsSync(path) || sha(readFileSync(path))!==digest) findings.push(finding('ALT-SETUP-001','deterministic','fail',`Missing or modified guidance: ${file}`,'Unmodified version-matched guidance','Reinstall the package.','altitude doctor --json'));
   }
   for(const client of ['codex','claude']) {
     const path=instructionPath(client),file=basename(path);
