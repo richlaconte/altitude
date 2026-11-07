@@ -10,9 +10,9 @@ Where a person writes to an assistant or agent: a textarea that grows, attachmen
 
 **Keyboard.** Enter sends. Shift+Enter adds a line. **Enter during IME composition never sends**, because it confirms the composition (Japanese, Chinese, Korean input). Escape stops generating. ⌘U or Ctrl+U attaches. Pasting a file attaches it. After sending, focus stays in the composer.
 
-**Accessibility.** Plain HTML: a `<form>` with a labelled `<textarea>` ("Message" unless you name it) and buttons named "Send message", "Stop generating" and "Attach files". Sending isn't announced, because the conversation announces the response. Stopping is ("Generating stopped"), and so are attachments added and removed. Under forced colours the empty well is dashed and a drop target dashed thick. Under reduced motion the composer grows without gliding.
+**Accessibility.** Plain HTML: a `<form>` with a labelled `<textarea>` ("Message" unless you name it) and buttons named "Send message", "Stop generating" and "Attach files". Sending isn't announced, because the conversation announces the response. Stopping is ("Generating stopped", unless `onStop` returns `false` to say nothing stopped), and so are attachments added and removed. Under forced colours the empty well is dashed and a drop target dashed thick. Under reduced motion the composer grows without gliding.
 
-**Parts:** `PromptInput` (`onSubmit({ text, files })`, `status` (`'ready' | 'submitted' | 'streaming' | 'error'`), `onStop`, `value`, `onValueChange`, `onAttach`, `accept`); `PromptInputAttachments`; `PromptInputTextarea` (`placeholder`, `maxHeight`); `PromptInputToolbar`; `PromptInputAttach`; `PromptInputSubmit`.
+**Parts:** `PromptInput` (`onSubmit({ text, files })`, `status` (`'ready' | 'submitted' | 'streaming' | 'error'`), `onStop` (return `false` when nothing stopped), `value`, `onValueChange`, `onAttach`, `accept`); `PromptInputAttachments`; `PromptInputTextarea` (`placeholder`, `maxHeight`); `PromptInputToolbar`; `PromptInputAttach`; `PromptInputSubmit`.
 
 **Queueing.** With `onQueue`, Enter while the agent works queues the message instead of doing nothing: the button stays Stop, the composer empties and keeps focus, and "Message queued. It will be sent when the assistant finishes." is announced. Show the queue with `ConversationQueue`, and send the first one when the turn ends.
 
