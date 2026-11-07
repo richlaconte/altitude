@@ -4112,6 +4112,10 @@ export interface SpanWaterfallProps extends Omit<React.HTMLAttributes<HTMLDivEle
  * child or parent, Enter opens the detail flush beneath, Space selects. Selected rows rise like Table's; bars never lift.
  */
 export declare function SpanWaterfall(props: SpanWaterfallProps): React.ReactElement;
+/** The critical path: from the root's end, walk back through the child that ends last before that point (recursively), then on from its start, as trace viewers such as Jaeger do. */
+export declare function criticalPathOf(spans: Span[]): string[];
+/** "84 ms" under a second, "2.41 s" from a second up. */
+export declare function formatMs(ms: number): string;
 /** A paper size: 'a4' (210 × 297 mm), 'letter' (8.5 × 11 in), 'legal' (8.5 × 14 in), or any CSS lengths. */
 export type PrintSheetSize = 'a4' | 'letter' | 'legal' | { width: string; height: string };
 export interface PrintSheetProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
@@ -4144,10 +4148,6 @@ export declare function PrintSheetBreak(props: { className?: string }): React.Re
 export declare function PrintSheetPageNumber(): React.ReactElement;
 /** The number of pages, inside a PrintSheet's header or footer. */
 export declare function PrintSheetPageCount(): React.ReactElement;
-/** The critical path: from the root's end, walk back through the child that ends last before that point (recursively), then on from its start, as trace viewers such as Jaeger do. */
-export declare function criticalPathOf(spans: Span[]): string[];
-/** "84 ms" under a second, "2.41 s" from a second up. */
-export declare function formatMs(ms: number): string;
 
 export type AgentState = 'queued' | 'working' | 'needs-input' | 'blocked' | 'stalled' | 'failed' | 'done' | 'stopped';
 export type AgentNeeds = 'approval' | 'question' | 'review';
@@ -4422,7 +4422,7 @@ declare global {
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
       Artifact: typeof Artifact; ArtifactHeader: typeof ArtifactHeader; ArtifactVersions: typeof ArtifactVersions; ArtifactContent: typeof ArtifactContent; ArtifactReference: typeof ArtifactReference;
-      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem; SpanWaterfall: typeof SpanWaterfall; PrintSheet: typeof PrintSheet; PrintSheetHeader: typeof PrintSheetHeader; PrintSheetFooter: typeof PrintSheetFooter; PrintSheetBreak: typeof PrintSheetBreak; PrintSheetPageNumber: typeof PrintSheetPageNumber; PrintSheetPageCount: typeof PrintSheetPageCount; criticalPathOf: typeof criticalPathOf; formatMs: typeof formatMs;
+      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem; SpanWaterfall: typeof SpanWaterfall; criticalPathOf: typeof criticalPathOf; formatMs: typeof formatMs; PrintSheet: typeof PrintSheet; PrintSheetHeader: typeof PrintSheetHeader; PrintSheetFooter: typeof PrintSheetFooter; PrintSheetBreak: typeof PrintSheetBreak; PrintSheetPageNumber: typeof PrintSheetPageNumber; PrintSheetPageCount: typeof PrintSheetPageCount;
       AgentFleet: typeof AgentFleet; AgentFleetGroup: typeof AgentFleetGroup; AgentFleetItem: typeof AgentFleetItem; AgentRequests: typeof AgentRequests; AgentRequest: typeof AgentRequest; AgentLanes: typeof AgentLanes; summarizeFleet: typeof summarizeFleet; groupAgents: typeof groupAgents; needsYou: typeof needsYou; formatSpan: typeof formatSpan;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
