@@ -86,6 +86,15 @@ expect(after.approved.length === 0, 'onApprove never fired for the expired reque
 // Coming back to requested doesn't reopen the dialog on its own.
 await page.evaluate(() => window.__set('requested')); await page.waitForTimeout(300);
 expect(await page.locator('[role="dialog"]').count() === 0, 'a request that\'s requested again doesn\'t reopen the dialog');
+// The expiry alone closes the dialog (no click inside it), and so does an approval made elsewhere.
+for (const [to, line] of [['expired', 'No longer needed'], ['approved', null]]) {
+  await page.evaluate(() => window.__set('requested')); await page.waitForTimeout(300);
+  await page.click('.alt-confirm button:has-text("Delete archive")'); await page.waitForTimeout(400);
+  await page.evaluate((s) => window.__set(s), to); await page.waitForTimeout(600);
+  r = await card(0);
+  const left = await page.evaluate(() => ({ dialogs: document.querySelectorAll('[role="dialog"]').length, focus: document.activeElement?.className }));
+  expect(left.dialogs === 0 && left.focus === 'alt-confirm-line' && (!line || r.line === line), `${to} with the dialog open and untouched closes it and focuses the line (${JSON.stringify(left)})`);
+}
 
 console.log(`Confirmation: ${pass} passed, ${fail} failed`);
 if (fail) process.exitCode = 1;
