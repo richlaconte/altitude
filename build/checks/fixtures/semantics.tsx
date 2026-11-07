@@ -14,6 +14,7 @@ function Fixture() {
   const [resetControlled, setResetControlled] = React.useState(false);
   const [controlled, setControlled] = React.useState('a');
   const [submitted, setSubmitted] = React.useState(0);
+  const [compositeOff, setCompositeOff] = React.useState(true);
   const items = [{value: 'a', label: 'Alpha'}, {value: 'b', label: 'Beta'}, {value: 'c', label: 'Unavailable', disabled: true}];
   return <AltitudeProvider>
     <output id="count">{count}</output><output id="nested-count">{nested}</output>
@@ -44,6 +45,17 @@ function Fixture() {
       <Field label="Start time" required><TimeInput id="time" name="time" hourCycle="h23" /></Field>
       <button type="submit" id="composite-submit">Save record</button>
     </form>
+    <form id="disabled-composite-form">
+      <Field label="Owner"><Combobox name="owner" defaultValue="a" items={items} disabled={compositeOff} /></Field>
+      <Field label="Review date"><DatePicker name="review" defaultValue="2026-11-06" disabled={compositeOff} /></Field>
+      <Field label="Window"><DateRangePicker name="window" defaultValue={{start: '2026-11-06', end: '2026-11-07'}} disabled={compositeOff} /></Field>
+      <Field label="Review time"><TimeInput name="at" defaultValue="10:00" hourCycle="h23" disabled={compositeOff} /></Field>
+      <Field label="Backup owner" required><Combobox name="backup" items={items} disabled={compositeOff} /></Field>
+      <Field label="Follow-up" required><DatePicker name="follow" disabled={compositeOff} /></Field>
+      <Field label="Freeze" required><DateRangePicker name="freeze" disabled={compositeOff} /></Field>
+      <Field label="Follow-up time" required><TimeInput name="follow-at" hourCycle="h23" disabled={compositeOff} /></Field>
+    </form>
+    <button id="toggle-composite-disabled" onClick={() => setCompositeOff(d => !d)}>Toggle composite disabled</button>
     <Dialog trigger={<button id="open-dialog">Open dialog</button>} title="Sparse dialog" />
     <Dialog trigger={<button id="open-empty">Open empty dialog</button>} title="Empty dialog" initialFocus={false} dismissible={false} />
   </AltitudeProvider>;

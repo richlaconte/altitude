@@ -48,7 +48,7 @@ The APG date picker dialog, with React Aria's segmented field:
 | `preset`, `defaultPreset`, `onPresetChange` | the chosen preset's key (`null` when custom), controlled or not. Without a `defaultValue`, `defaultPreset` sets the starting range |
 | `today` | an `ISODate`; relative presets resolve against it, and a chosen one re-resolves when it changes (“Last 7 days” moves with the date). Default: the local date |
 | `id`, `name`, `disabled`, `required`, `invalid`, `size`, `defaultOpen` | as `Select`; `name` submits through a hidden input (`name-start` and `name-end` for a range) |
-| `required`, `requiredMessage` | as `Select`: an empty value (either end of a range) fails native form validation, with or without a `name`. Invalid submission focuses the first empty segment, marks the field invalid and links a visible alert, “Enter a date.” (“Enter a start and end date.” for a range) unless `requiredMessage` says otherwise. A typed-date problem or a `Field` error takes precedence; a complete value clears it |
+| `required`, `requiredMessage` | as `Select`: an empty value (either end of a range) fails native form validation, with or without a `name`. Invalid submission focuses the first empty segment, marks the field invalid and links a visible alert, “Enter a date.” (“Enter a start and end date.” for a range) unless `requiredMessage` says otherwise. A typed-date problem or a `Field` error takes precedence; a complete value clears it. A disabled field is excluded from validation and form data |
 
 `Calendar`: `value`, `defaultValue`, `onValueChange`, `min`, `max`, `isUnavailable`, `locale`, `weekStartsOn`, `aria-label`.
 

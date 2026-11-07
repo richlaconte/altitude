@@ -80,9 +80,12 @@ export function useNativeRequired({ empty, required, disabled, invalid }: { empt
   return { error: missing && !!required && !disabled && !invalid, onInvalid };
 }
 
-/** The hidden native input behind a composite field: it submits the value under `name` and takes part in validation. */
-export const NativeValue = ({ name, value, required, onInvalid }: { name?: string; value: string; required?: boolean; onInvalid: React.FormEventHandler<HTMLInputElement> }) =>
-  <input hidden aria-hidden="true" tabIndex={-1} autoComplete="off" name={name} value={value} required={required} onChange={() => {}} onInvalid={onInvalid} />;
+/**
+ * The hidden native input behind a composite field: it submits the value under `name` and takes part in validation.
+ * Disabled, it's left out of both, as a disabled Select is (#572).
+ */
+export const NativeValue = ({ name, value, required, disabled, onInvalid }: { name?: string; value: string; required?: boolean; disabled?: boolean; onInvalid: React.FormEventHandler<HTMLInputElement> }) =>
+  <input hidden aria-hidden="true" tabIndex={-1} autoComplete="off" name={name} value={value} required={required} disabled={disabled} onChange={() => {}} onInvalid={onInvalid} />;
 
 /** A brief afterglow on a newly chosen value: it settles into the field. */
 function useGlow(value: string) {
@@ -416,7 +419,7 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
           <Chevron />
         </button>
       </div>
-      {(name || required) && <NativeValue name={name} value={v} required={required && !disabled} onInvalid={native.onInvalid(() => input.current?.focus())} />}
+      {(name || required) && <NativeValue name={name} value={v} required={required} disabled={disabled} onInvalid={native.onInvalid(() => input.current?.focus())} />}
       {native.error && <p className="alt-field-error" id={auto + '-required-error'} role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
       {mounted && (
         <OptionList id={listId} options={shown} active={Math.min(active, shown.length - 1)} value={v} state={state} side={side} listRef={list} labelledBy={labelId}

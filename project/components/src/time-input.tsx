@@ -157,7 +157,7 @@ export function TimeInput({ value, defaultValue = null, onValueChange, step = 1,
       {zone && <span id={zoneId} className="alt-input-adorn alt-time-zone">{zone}</span>}
     </div>
     {/* Outside the field, so its `:has(input…)` filled styles never see it. */}
-    {(name || required) && <NativeValue name={name} value={v ?? ''} required={required && !disabled} onInvalid={native.onInvalid(() => refs.current[segs[0]]?.focus())} />}
+    {(name || required) && <NativeValue name={name} value={v ?? ''} required={required} disabled={disabled} onInvalid={native.onInvalid(() => refs.current[segs[0]]?.focus())} />}
     {native.error && <p className="alt-field-error" id={requiredId} role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
   </>);
 }

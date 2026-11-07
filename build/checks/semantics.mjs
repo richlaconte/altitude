@@ -92,6 +92,12 @@ await page.keyboard.type('1000');
 expect(await page.locator(groupOf('#time')).getAttribute('aria-invalid') === null && await composite().getByText('Enter a time.', {exact: true}).count() === 0, 'A whole time clears the TimeInput required error');
 await page.locator('#composite-submit').click(); await page.waitForTimeout(30);
 expect(await submits() === 1 && await composite().evaluate(el => { const d = new FormData(el); return d.get('assignee') === 'a' && !!d.get('date') && !!d.get('range-start') && !!d.get('range-end') && d.get('time') === '10:00'; }), 'Filled required composite fields submit their values');
+// Disabled, they contribute nothing to FormData and are excluded from validation, as a disabled Select is (#572).
+const disabledForm = () => page.locator('#disabled-composite-form');
+const entries = () => disabledForm().evaluate(el => [...new FormData(el).keys()].join());
+expect(await entries() === '' && await disabledForm().evaluate(el => el.checkValidity()), 'Disabled Combobox, DatePicker, DateRangePicker and TimeInput are excluded from FormData and validation');
+await page.locator('#toggle-composite-disabled').click();
+expect(await entries() === 'owner,review,window-start,window-end,at,backup,follow,freeze-start,freeze-end,follow-at' && await disabledForm().evaluate(el => { const d = new FormData(el); return d.get('owner') === 'a' && d.get('review') === '2026-11-06' && d.get('window-end') === '2026-11-07' && d.get('at') === '10:00' && !el.checkValidity(); }), 'Enabled again, they submit their values and required ones validate');
 await page.locator('#open-dialog').click(); await page.waitForTimeout(40);
 expect(await page.locator('.alt-dialog').evaluate(el => document.activeElement === el), 'Sparse Dialog begins on panel');
 await page.keyboard.press('Shift+Tab'); expect(await page.locator('.alt-dialog-close').evaluate(el => document.activeElement === el), 'AUDIT Sparse Dialog Shift+Tab wraps to close');
