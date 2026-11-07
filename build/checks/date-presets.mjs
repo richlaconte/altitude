@@ -104,8 +104,10 @@ const active = (page) => page.evaluate(() => { const l = document.activeElement;
   const list = page.locator('#all-off .alt-date-presets');
   expect(await list.locator('[role="option"][aria-disabled="true"]').count() === 3, 'with min after every preset, every preset row is disabled');
   await list.focus();
+  expect(await list.getAttribute('aria-activedescendant') === null && await list.locator('[data-active]').count() === 0, 'no disabled row is highlighted or named as the active option');
   for (const key of ['Home', 'Enter', 'End', ' ', 'ArrowDown', 'Enter', 'ArrowUp', ' ']) await page.keyboard.press(key);
   await page.waitForTimeout(250);
+  expect(await list.getAttribute('aria-activedescendant') === null, 'and after the keys, still no active option');
   expect(errors.length === 0, `Home, End, ↑/↓, Enter and Space throw nothing (${errors.join('; ')})`);
   expect(await page.locator('#all-off').getByRole('dialog', { name: 'Choose dates' }).count() === 1 && await box.locator('.alt-date-preset').count() === 0, 'the panel stays open and nothing is chosen');
   // The calendar opens on the real month, so pick its first two days that are on or after min.
