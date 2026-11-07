@@ -55,7 +55,7 @@ The 320 CSS pixel checks use touch emulation (`tap` for controls, simulated text
 | MOD-07 | Palette shortcut suppression, explicit handoff, rejected controlled request/reset, document-scoped ownership and iframe shortcut. |
 | MOD-08 | Nonmodal Sheet interaction/scrolling, absence of scrim/trap, close focus with later modal. |
 | MOD-09 | Canonical D2 exact-target deletion, Cancel/heading focus, failure/unmount fixture, identical presentation comparison; native 200% screenshots. |
-| IE-01 | `inline-edit.mjs`: both independent D1 consumers, explicit Edit/Save/Cancel, no-change and outside interaction; no blur write. With `leave="cancel"` (LV-*): an outside press, Tab out and focus moved away cancel without a write or focus return; moving within the group, another window, checking, saving, errors and conflicts don't. |
+| IE-01 | `inline-edit.mjs`: both independent D1 consumers, explicit Edit/Save/Cancel, no-change and outside interaction; no blur write by default. With opt-in `leave="save"` (LS-*): complete-editor departure submits once, preserves outside activation and focus, retains errors for explicit retry, and excludes composition/window/lifecycle changes. With `leave="cancel"` (LV-*): an outside press, Tab out and focus moved away cancel without a write or focus return; moving within the group, another window, checking, saving, errors and conflicts don't. |
 | IE-02 | Empty/space drafts, sync/async validation, preserved invalid/rejected text and zero invalid dispatch. |
 | IE-03 | Cancelled validation, synchronous duplicate guard, repeated submissions and one write. |
 | IE-04 | Canonical publication once, errors/malformed results, idempotent uncertain rename; D4 adapter reconciliation. |

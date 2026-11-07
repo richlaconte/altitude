@@ -29,7 +29,7 @@ const mount = async (page, options = {}) => {
     document.getElementById('root').style.display = 'none';
     const host = document.createElement('div'); host.id = 'inline-contract'; document.body.append(host);
     const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
-    const api = { calls: [], publications: [], validations: [], saves: [], checks: [], submits: 0 };
+    const api = { calls: [], publications: [], validations: [], saves: [], checks: [], submits: 0, outsideClicks: 0, wrongClicks: 0 };
     window.inlineHarness = api;
     function Fixture() {
       const [value, setValue] = R.useState(options.value ?? 'Original name');
@@ -54,6 +54,13 @@ const mount = async (page, options = {}) => {
         commit: 'on-choose', renderValue: v => ({ a: 'Alpha', b: 'Bravo' })[v] ?? 'Not set',
         editor: control => h(A.Select, { ...control, items: [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }] }),
       });
+      if (options.editor === 'portal') props.editor = control => h(R.Fragment, null,
+        h(A.Input, { value: control.value, id: control.id, readOnly: control.readOnly, disabled: control.disabled, invalid: control.invalid, autoFocus: true, 'aria-describedby': control['aria-describedby'], 'aria-controls': 'inline-owned-popup', onChange: e => control.onValueChange(e.target.value) }),
+        h('button', { id: 'inline-toolbar', type: 'button' }, 'Editor toolbar'),
+        window.ReactDOM.createPortal(h('div', { id: 'inline-owned-popup' },
+          h('input', { id: 'inline-popup-input', 'aria-label': 'Picker value', value: control.value, readOnly: control.readOnly, onChange: e => control.onValueChange(e.target.value) }),
+          h('button', { id: 'inline-popup-toolbar', type: 'button', 'aria-owns': 'inline-nested-popup' }, 'Picker toolbar')), document.body),
+        window.ReactDOM.createPortal(h('div', { id: 'inline-nested-popup' }, h('button', { id: 'inline-nested-action', type: 'button' }, 'Nested choice')), document.body));
       if (options.validate) props.validate = draft => {
         api.validations.push(draft);
         if (options.validate === 'sync') return draft === 'Duplicate' ? 'Choose a different name.' : undefined;
@@ -62,8 +69,9 @@ const mount = async (page, options = {}) => {
       };
       return h(A.AltitudeProvider, null, h('form', { onSubmit: e => { e.preventDefault(); api.submits++; } },
         show ? h(A.InlineEdit, props) : h('p', null, 'Record removed'),
-        h('button', { id: 'elsewhere', type: 'button' }, 'Other action'),
-        h('button', { id: 'fallback', type: 'button' }, 'Fallback')));
+        h('button', { id: 'elsewhere', type: 'button', onClick: () => { api.outsideClicks++; if (options.removeOnOutside) setShow(false); } }, 'Other action'),
+        h('button', { id: 'fallback', type: 'button', onClick: () => api.wrongClicks++ }, 'Fallback'),
+        h('input', { id: 'next-field', 'aria-label': 'Next field' })));
     }
     window.inlineRoot = window.ReactDOM.createRoot(host);
     window.inlineRoot.render(h(R.StrictMode, null, h(Fixture)));
@@ -76,7 +84,7 @@ const save = page => page.getByRole('button', { name: 'Save changes', exact: tru
 const api = (page, key) => page.evaluate(key => window.inlineHarness[key], key);
 const resolveSave = (page, result, index = 0) => page.evaluate(({ result, index }) => window.inlineHarness.saves[index].resolve(result), { result, index });
 const resolveCheck = (page, result, index = 0) => page.evaluate(({ result, index }) => window.inlineHarness.checks[index].resolve(result), { result, index });
-const read = page => page.getByRole('button', { name: 'Edit Record name', exact: true }).waitFor();
+const read = page => page.locator('#inline-contract .alt-inline-edit[data-state="read"]').waitFor();
 const waitState = (page, state) => page.locator(`#inline-contract .alt-inline-edit[data-state="${state}"]`).waitFor();
 
 try {
@@ -208,7 +216,7 @@ try {
     check((await api(page, 'calls')).length === 0 && await input(page).inputValue() === '😀😀', 'maxLength checks UTF-16 length even for programmatically supplied text'); await page.close(); }
 
   { const page = await open(); await mount(page, { validate: 'deferred' }); await edit(page); await input(page).fill('Wait'); await save(page);
-    await page.evaluate(() => window.inlineHarness.setDisabled(true)); await resolveCheck(page, undefined); await waitState(page, 'editing');
+    await page.evaluate(() => window.inlineHarness.setDisabled(true)); await page.waitForFunction(() => document.querySelector('#inline-contract input').disabled); await resolveCheck(page, undefined); await waitState(page, 'editing');
     check((await api(page, 'calls')).length === 0, 'disabling during validation prevents dispatch'); await page.getByRole('button', { name: 'Cancel', exact: true }).click(); await read(page); await page.close(); }
 
   { const page = await open(); await mount(page, { invalidFallback: true }); await edit(page); await input(page).fill('Invalid fallback'); await save(page);
@@ -260,6 +268,146 @@ try {
     await page.locator('#elsewhere').click(); await input(page).focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
     check(await input(page).inputValue() === 'Kept by default', 'LV-13 by default, an outside press and Tab out keep the session'); await page.close(); }
 
+  // leave="save" (#615): complete-editor ownership, truthful persistence and activation before layout change.
+  { const page = await open(); await mount(page, { leave: 'save' }); await edit(page); await input(page).fill('Tab save');
+    await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
+    check((await api(page, 'calls')).length === 0, 'LS-01 actions remain inside the editor');
+    await page.keyboard.press('Tab'); await waitState(page, 'saving');
+    check((await api(page, 'calls')).length === 1 && (await api(page, 'publications')).length === 0, 'LS-02 Tab out dispatches once without publishing a draft');
+    await page.locator('#next-field').fill('Continue here');
+    await resolveSave(page, { ok: true, value: 'Canonical tab save' }); await read(page);
+    check(await page.locator('#next-field').evaluate(el => document.activeElement === el) && JSON.stringify(await api(page, 'publications')) === '["Canonical tab save"]', 'LS-03 canonical success does not steal next-field focus');
+    await page.close(); }
+
+  for (const options of [{ save: 'sync' }, { validate: 'sync', save: 'sync' }, { required: true, value: '' }, { pending: 'value' }]) {
+    const page = await open({ reducedMotion: 'reduce' }); await mount(page, { leave: 'save', ...options }); await edit(page);
+    await input(page).fill(options.value === '' ? '' : 'Outside save');
+    // Put the destination below the editor so immediate collapse or an inserted error could retarget the click.
+    await page.addStyleTag({ content: '#inline-contract form > button { display:block; margin:0 }' });
+    const target = await page.locator('#elsewhere').boundingBox();
+    await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2); await page.mouse.down();
+    check((await api(page, 'calls')).length === 0, 'LS-04 pointerdown leaves the destination geometry intact');
+    await page.waitForTimeout(30); await page.mouse.up();
+    if (options.value === '') await read(page); else await page.waitForFunction(() => window.inlineHarness.calls.length === 1);
+    check((await api(page, 'outsideClicks')) === 1 && (await api(page, 'wrongClicks')) === 0, 'LS-05 outside activation reaches its original destination');
+    check(await page.locator('#elsewhere').evaluate(el => document.activeElement === el), 'LS-06 synchronous completion/validation/folding never returns focus');
+    if (options.pending) { await resolveSave(page, { ok: false, error: 'Rejected beside the field.' }); await waitState(page, 'error');
+      check(await page.locator('#elsewhere').evaluate(el => document.activeElement === el), 'LS-07 failed folded save reopens without focus theft'); }
+    await page.close();
+  }
+
+  { const page = await open(); await mount(page, { leave: 'save', validate: 'deferred' }); await edit(page); await input(page).fill('Checked once');
+    await page.locator('#elsewhere').click(); await waitState(page, 'validating');
+    await input(page).focus(); await page.locator('#elsewhere').click(); await page.keyboard.press('Tab');
+    check((await api(page, 'validations')).length === 1 && (await api(page, 'calls')).length === 0, 'LS-08 repeated leave does not duplicate validation or imply persistence');
+    await resolveCheck(page, undefined); await waitState(page, 'saving'); await input(page).focus(); await page.locator('#elsewhere').click();
+    check((await api(page, 'calls')).length === 1, 'LS-09 overlapping focus and pointer events cannot duplicate the write');
+    await resolveSave(page, { ok: false, error: 'Use a different release label.' }); await waitState(page, 'error');
+    await input(page).focus(); await page.locator('#elsewhere').click();
+    check((await api(page, 'calls')).length === 1 && await input(page).inputValue() === 'Checked once', 'LS-10 rejected draft is retained and leaving does not retry');
+    await page.getByRole('button', { name: 'Try again', exact: true }).click(); await resolveCheck(page, undefined, 1); await waitState(page, 'saving');
+    check((await api(page, 'calls'))[1].context.previousValue === 'Original name', 'LS-11 explicit Retry retains the original baseline');
+    await page.locator('#next-field').focus(); await resolveSave(page, { ok: true, value: 'Checked once' }, 1); await read(page);
+    check(await page.locator('#next-field').evaluate(el => document.activeElement === el), 'LS-12 retry completion respects the current focus'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save', required: true }); await edit(page); await input(page).fill('');
+    await page.locator('#elsewhere').click(); await waitState(page, 'error');
+    check((await api(page, 'calls')).length === 0 && await page.getByRole('alert').isVisible() && (await api(page, 'outsideClicks')) === 1, 'LS-13 synchronous validation keeps the draft and outside activation');
+    await input(page).fill('Eligible changed draft'); await page.locator('#elsewhere').click(); await waitState(page, 'saving');
+    check((await api(page, 'calls')).length === 1, 'LS-14 changed draft can save on a later leave'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save', editor: 'portal' }); await edit(page); await input(page).fill('Portal draft');
+    await page.locator('#inline-toolbar').click(); await page.locator('#inline-popup-input').focus(); await page.locator('#inline-popup-toolbar').click(); await page.locator('#inline-nested-action').click();
+    check((await api(page, 'calls')).length === 0, 'LS-15 toolbar, portalled popup and nested owned popup belong to the complete editor');
+    await page.locator('#elsewhere').focus(); await waitState(page, 'saving');
+    check((await api(page, 'calls')).length === 1, 'LS-16 keyboard focus leaving a portalled editor saves once'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save', value: 'a', editor: 'select', save: 'sync' }); await edit(page);
+    await page.locator('#inline-contract .alt-select-trigger').press('Enter'); await page.getByRole('option', { name: 'Bravo' }).click(); await read(page);
+    await page.locator('#elsewhere').click(); check((await api(page, 'calls')).length === 1, 'LS-17 on-choose and a subsequent departure publish only once'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save' }); await edit(page); await page.locator('#elsewhere').click(); await read(page);
+    check((await api(page, 'calls')).length === 0, 'LS-18 unchanged draft closes without a write');
+    await edit(page); await input(page).fill('Cancel draft'); await page.getByRole('button', { name: 'Cancel', exact: true }).click(); await read(page);
+    await edit(page); await input(page).fill('Escape draft'); await input(page).press('Escape'); await read(page);
+    check((await api(page, 'calls')).length === 0, 'LS-19 Cancel and Escape still discard undispatched drafts'); await page.close(); }
+
+  for (const action of ['window', 'disabled', 'removed', 'unmount']) {
+    const page = await open(); await mount(page, { leave: 'save' }); await edit(page); await input(page).fill('Do not dispatch');
+    await page.evaluate(action => {
+      const el = document.querySelector('#inline-contract input');
+      if (action === 'window') { el.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: null })); window.dispatchEvent(new Event('blur')); }
+      else if (action === 'disabled') window.inlineHarness.setDisabled(true);
+      else if (action === 'removed') el.remove();
+      else window.inlineHarness.setShow(false);
+    }, action); await page.waitForTimeout(40);
+    check((await api(page, 'calls')).length === 0, `LS-20 ${action} is not permission to save`); await page.close();
+  }
+
+  { const page = await open(); await mount(page, { leave: 'save', removeOnOutside: true }); await edit(page); await input(page).fill('Unmount on activation');
+    await page.locator('#elsewhere').click(); await page.getByText('Record removed').waitFor(); await page.waitForTimeout(30);
+    check((await api(page, 'calls')).length === 0 && (await api(page, 'outsideClicks')) === 1, 'LS-21 an outside action that unmounts cancels queued submission'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save' }); await edit(page); await input(page).fill('Composing');
+    await input(page).evaluate(el => el.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true })));
+    await page.locator('#elsewhere').click(); check((await api(page, 'calls')).length === 0, 'LS-22 departure during IME does not write an intermediate composition');
+    await input(page).evaluate(el => el.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: 'Composing' }))); await page.waitForTimeout(30);
+    check((await api(page, 'calls')).length === 0, 'LS-23 compositionend alone does not trigger a deferred save');
+    await input(page).focus(); await page.locator('#elsewhere').click(); await waitState(page, 'saving');
+    check((await api(page, 'calls')).length === 1, 'LS-24 a new intentional departure after composition saves'); await page.close(); }
+
+  { const page = await open({ hasTouch: true, isMobile: true, viewport: { width: 320, height: 720 } }); await mount(page, { leave: 'save' }); await edit(page); await input(page).fill('Touch draft');
+    await page.locator('#elsewhere').tap(); await waitState(page, 'saving');
+    check((await api(page, 'calls')).length === 1 && (await api(page, 'outsideClicks')) === 1, 'LS-25 touch departure saves once and activates its destination'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save', pending: 'value' }); await edit(page); await input(page).fill('Conflict draft');
+    await page.locator('#elsewhere').click(); await waitState(page, 'saving'); await page.locator('#next-field').fill('Next task');
+    await page.evaluate(() => window.inlineHarness.setValue('External update')); await resolveSave(page, { ok: true, value: 'Conflict draft' }); await waitState(page, 'conflict');
+    check((await api(page, 'publications')).length === 0 && await input(page).inputValue() === 'Conflict draft' && await page.locator('#next-field').evaluate(el => document.activeElement === el), 'LS-26 conflict retains draft and outside focus without unconfirmed publication'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save' }); await edit(page); await input(page).fill('Canceled touch');
+    await page.locator('#elsewhere').evaluate(el => {
+      el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 7, pointerType: 'touch', button: 0 }));
+      el.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: 7, pointerType: 'touch' }));
+    }); await page.waitForTimeout(30);
+    check((await api(page, 'calls')).length === 0, 'LS-27 canceled touch scroll does not dispatch'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save', editor: 'portal' }); await edit(page); await input(page).fill('Rejected value');
+    await page.locator('#elsewhere').click(); await waitState(page, 'saving'); await resolveSave(page, { ok: false, error: 'Rejected once.' }); await waitState(page, 'error');
+    await input(page).fill('A different value'); await input(page).fill('Rejected value'); await page.locator('#elsewhere').click(); await page.waitForTimeout(30);
+    check((await api(page, 'calls')).length === 1, 'LS-28 the same rejected value is not automatically retried after repeated custom-editor notifications');
+    await input(page).fill('A corrected value'); await page.locator('#elsewhere').click(); await waitState(page, 'saving');
+    check((await api(page, 'calls')).length === 2, 'LS-29 a corrected value can be submitted on departure'); await page.close(); }
+
+  for (const scheme of ['daylight', 'nightfall']) for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
+    const page = await open({ viewport: { width: 320, height: 720 }, reducedMotion: mode === 'reduced-motion' ? 'reduce' : 'no-preference', forcedColors: mode === 'forced-colors' ? 'active' : 'none' });
+    await mount(page, { leave: 'save' });
+    await page.evaluate(({ scheme, mode }) => { document.documentElement.dataset.theme = scheme; document.querySelector('#inline-contract .alt-root').dataset.contrast = mode === 'increased-contrast' ? 'more' : 'system'; }, { scheme, mode });
+    await edit(page); await input(page).fill('A release label that remains readable');
+    check(await input(page).evaluate(el => document.getElementById(el.getAttribute('aria-describedby'))?.textContent.includes('Saves when you leave')), `LS-30 ${scheme}/${mode}: visible instruction is associated with the field`);
+    await page.locator('#elsewhere').click(); await waitState(page, 'saving');
+    check(await page.locator('#inline-contract [role="status"]').textContent() === 'Saving changes' && await page.locator('#inline-contract [data-status="pending"]').getAttribute('aria-busy') === 'true', `LS-31 ${scheme}/${mode}: pending has status and busy semantics`);
+    await resolveSave(page, { ok: false, error: 'The label was not saved. Try again beside this field.' }); await waitState(page, 'error');
+    check(await page.getByRole('alert').isVisible() && await page.getByRole('button', { name: 'Try again', exact: true }).isVisible() && await page.locator('#elsewhere').evaluate(el => document.activeElement === el), `LS-32 ${scheme}/${mode}: error and retry stay local without moving focus`);
+    check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `LS-33 ${scheme}/${mode}: error and recovery fit 320px`);
+    await page.locator('#inline-contract .alt-inline-edit').evaluate(el => Promise.all(el.getAnimations({ subtree: true }).filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {}))));
+    check(await page.getByRole('alert').evaluate(el => el.getBoundingClientRect().bottom <= el.closest('.alt-inline-edit-surface').getBoundingClientRect().bottom + 1 && getComputedStyle(el).opacity === '1'), `LS-36 ${scheme}/${mode}: the complete error is readable after existing motion settles`);
+    await page.screenshot({ path: `${evidence}leave-save-${scheme}-${mode}-320.png`, fullPage: true }); await page.close();
+  }
+
+  { const page = await open(); await mount(page, { leave: 'save' }); await edit(page); await input(page).fill('Rejected then canceled');
+    await page.locator('#elsewhere').click(); await waitState(page, 'saving'); await resolveSave(page, { ok: false, error: 'Try another label.' }); await waitState(page, 'error');
+    await input(page).focus(); await input(page).press('Escape'); await read(page);
+    check(await page.getByRole('button', { name: 'Edit Record name', exact: true }).evaluate(el => document.activeElement === el), 'LS-34 explicit Escape after an automatic failure restores focus normally'); await page.close(); }
+
+  { const page = await open(); await mount(page, { leave: 'save' }); await edit(page); await input(page).fill('After a drag');
+    await page.locator('#elsewhere').evaluate(el => {
+      el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 8, button: 0 }));
+      el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 8, button: 0 }));
+    });
+    await input(page).focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await waitState(page, 'saving');
+    check((await api(page, 'calls')).length === 1, 'LS-35 a gesture without click does not suppress later keyboard departure'); await page.close(); }
+
   // actions="inline" (#486): Save and Cancel as icon buttons inside the field's trailing end.
   { const page = await open(); await mount(page, { actions: 'inline' }); await edit(page);
     const group = page.locator('#inline-contract .alt-inline-edit');
@@ -293,7 +441,7 @@ try {
   { const page = await open(); await mount(page, { pending: 'value' }); await edit(page);
     await input(page).fill('Folded draft'); await save(page); await waitState(page, 'saving');
     const group = page.locator('#inline-contract .alt-inline-edit');
-    check(await group.getAttribute('data-folded') === '' && await page.locator('#inline-contract input').count() === 0 &&
+    check(await group.getAttribute('data-folded') === '' && await group.locator('input').count() === 0 &&
       (await group.locator('.alt-inline-edit-value').textContent()) === 'Folded draft' && await group.locator('.alt-inline-edit-surface').getAttribute('data-status') === 'pending',
       'PV-01 while the write runs, the editor has folded back to the value being written, which hovers as pending');
     check(await page.evaluate(() => !!document.activeElement?.closest('#inline-contract')), 'PV-02 focus stays in the field (on its Edit button), not lost to the page');

@@ -873,9 +873,10 @@ export interface InlineEditProps<V = string> {
   /**
    * What leaving the field does: focus moving out of the group, or a pointer pressed outside it. 'keep' (default) leaves
    * the session open. 'cancel' cancels it as Cancel does, without moving focus, except while checking or saving, or while
-   * an error or conflict is shown. Nothing is ever saved on leaving.
+   * an error or conflict is shown. 'save' submits a changed draft once after leaving the complete editor. Outside
+   * activation finishes first; errors retain the draft for explicit retry. Completion never takes focus back.
    */
-  leave?: 'keep' | 'cancel';
+  leave?: 'keep' | 'cancel' | 'save';
   /**
    * Where Save and Cancel go while editing. 'buttons' (default): a Save button and a Cancel button take Edit's place on
    * the line. 'inline': a check (Save) and a cross (Cancel) inside the field's trailing end, for tight places such as a

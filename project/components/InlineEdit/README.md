@@ -32,13 +32,13 @@ A transport timeout does not prove a write failed. Before throwing or returning 
 
 Typing changes local text without trimming. Cancel and Escape discard that text; by default, blur, outside clicks and Tab do nothing to the session (see `leave` below). Enter saves (Ctrl/Cmd+Enter with `multiline`), except while IME composition is active (including legacy key code 229). Composition Escape also remains with the IME. Input Enter prevents a surrounding form from submitting.
 
-Saving an exact unchanged value closes without validation, persistence, publication or afterglow. `required` defaults to false; when true it rejects the empty string using HTML required semantics. Spaces stay legal unless application validation rejects them. `maxLength` uses JavaScript/HTML UTF-16 string length and the native input limit. Optional `validate(draft)` runs only on Save and returns a user-facing error string or `undefined`, synchronously or as a promise. Use validation to reject whitespace-only or duplicate names when your application requires it.
+Saving an exact unchanged value closes without validation, persistence, publication or afterglow. `required` defaults to false; when true it rejects the empty string using HTML required semantics. Spaces stay legal unless application validation rejects them. `maxLength` uses JavaScript/HTML UTF-16 string length and the native input limit. Optional `validate(draft)` runs on a submission (Save, Enter, choosing, or opt-in save-on-leave) and returns a user-facing error string or `undefined`, synchronously or as a promise. Use validation to reject whitespace-only or duplicate names when your application requires it.
 
 While validation runs, the input is read-only and Save is unavailable; Cancel and Escape remain usable. Late validation results cannot affect a cancelled or replaced session. During persistence the input stays read-only, Save shows loading and Cancel is unavailable. With `pending="value"` the editor instead folds back at once to the value being written, which hovers as pending (Elevation, Editing in place: "the write hovers while pending"), named “<label>: <value>. Saving” and holding focus; a rejection or a conflict opens the editor again with the draft, the message and the caret at its end. Use it where an open editor waiting on the server reads as stuck (a property list, a dense form). `commit="on-choose"` always folds, once its list has closed. Escape announces “Saving changes. Wait for the result.” It does not cancel a dispatched write. Duplicate and reentrant submissions dispatch at most once. A failed save preserves editable input and the original baseline for retry; typing clears ordinary errors.
 
 ### Leaving the field: `leave`
 
-By default (`leave="keep"`), a session stays open until Save, Cancel or Escape, so a misplaced click never throws typed text away. With `leave="cancel"`, leaving ends it the way Cancel does: the draft is discarded, the value goes back to read mode, and nothing is saved. There is no autosave either way.
+By default (`leave="keep"`), a session stays open until Save, Cancel or Escape, so a misplaced click never throws typed text away. With `leave="cancel"`, leaving ends it the way Cancel does: the draft is discarded, the value goes back to read mode, and nothing is saved. Neither policy autosaves. Opt in with `leave="save"` when a short value should save as the person continues to the next field.
 
 ```tsx
 <InlineEdit label="File name" value={name} onValueChange={setName} onSave={save} leave="cancel" />
@@ -49,7 +49,23 @@ By default (`leave="keep"`), a session stays open until Save, Cancel or Escape, 
 - **When it waits.** While checking or saving, leaving does nothing: a check that's running or a write that's been sent can't be abandoned, just as Escape can't cancel a write. While an error or a conflict is shown, the session also stays open, so the person's text and the recovery message aren't lost before they've seen them. Cancel or Escape still closes it.
 - **Focus.** Cancelling because the person left never moves focus back to Edit; it stays where they went (“Completion never steals focus”). A press on a part of the page that can't take focus leaves focus on the page, as it would anyway.
 
-Use it where several editors share a screen (a table, a property list) and a half-open one left behind would be a problem. Keep the default where the text takes effort to type.
+Use cancellation where several editors share a screen (a table, a property list) and a half-open one left behind would be a problem. Keep the default where the text takes effort to type.
+
+With `leave="save"`, the same complete-editor boundary submits a changed eligible draft through normal validation and persistence, once. The field visibly says “Saves when you leave this editor. Cancel to discard.” An unchanged draft closes without a write. Explicit Save and Enter remain available; Cancel and Escape discard undispatched changes. `commit="on-choose"` still saves on choosing, with no extra write when leaving afterward.
+
+```tsx
+<InlineEdit label="Release label" value={label} onValueChange={setLabel}
+  onSave={saveLabelOnServer} leave="save" />
+// Edit, then Tab past the editor's actions or tap the next field: validate and save once.
+```
+
+- **Outside activation completes first.** A pointer/touch press identifies departure, but submission waits until its click has been dispatched. This keeps synchronous validation, folding or canonical success from moving the intended target mid-gesture. Nothing consumes the click. A canceled touch gesture does not save. Keyboard departure similarly lets focus reach its destination first.
+- **The whole editor is internal.** Its toolbar, actions and associated portalled controls are included; nested `aria-controls`/`aria-owns` relationships are followed with cycle protection. Focusing an owned popup and returning to the input never submits.
+- **Failure stays beside the field.** Checking is not pending persistence. A dispatched save shows local progress; rejection keeps the draft, original baseline and full error with a “Try again” action. Leaving again does not retry that rejected value, even if a custom editor repeats the same value notification. Change the draft or explicitly retry. Conflicts still require the existing explicit resolution.
+- **No completion focus return.** Success, rejection and conflict after an automatic leave submission leave the next field alone, including `pending="value"`. The existing status and alert semantics announce outcomes without focusing them. Screen-reader behavior still needs review with the intended browser/assistive-technology pairing.
+- **No lifecycle or composition save.** Window/tab blur, disabled/removed controls and unmounting do not submit. During IME composition, boundary events are ignored; composition ending alone does not submit. Finish composition and leave again or use Save. An outside action that unmounts the editor before dispatch cancels the queued submission. Do not use leave-to-save as a navigation guard; the application owns navigation and reconciliation of already dispatched writes.
+
+This is an opt-in workflow choice, not a universal autosave recommendation. The [research and validation record](../../../docs/research/inline-edit-leave-save.md) separates the maintainer's preference, platform constraints and engineering observations.
 
 ### Save and Cancel in the field: `actions`
 
@@ -323,6 +339,7 @@ function InlineExample({ fixture, slowValidation, epoch }) {
         {outsideCount > 0 && <p className="inline-demo-meta">Three fictional files · Details opened {outsideCount} time{outsideCount === 1 ? '' : 's'}.</p>}
       </section>
       <InlineWaysToOpen />
+      <InlineLeaveSave />
     </div>
     <details className="inline-demo-harness">
       <summary>Comparison and fixture controls</summary>
@@ -373,6 +390,33 @@ function InlineDialogBaseline({ open, onOpenChange, value, validate, onSave, onV
     }} /></Field>
     <p role="status">{busy}</p>
   </Dialog>;
+}
+
+// Opt-in save-on-leave: an in-memory service confirms canonical content only after its operation succeeds.
+function InlineLeaveSave() {
+  const [value, setValue] = React.useState('November release'), [note, setNote] = React.useState('');
+  const [mode, setMode] = React.useState('slow'), [writes, setWrites] = React.useState(0);
+  const server = React.useRef('November release');
+  const save = async (draft, { previousValue }) => {
+    const outcome = mode;
+    await inlineWait(1200);
+    if (outcome === 'failure') return { ok: false, error: 'This label could not be saved. Your draft is still here. Choose “Save succeeds” and try again.' };
+    if (server.current !== previousValue) return { ok: false, error: 'The release changed. Reload its current label before saving.' };
+    server.current = draft.trim(); setWrites(count => count + 1);
+    return { ok: true, value: server.current };
+  };
+  return <section aria-labelledby="inline-leave-title" data-leave-save="">
+    <h2 id="inline-leave-title">Save and continue</h2>
+    <p className="inline-demo-meta">Edit the release label, then move to the note. A rejected label stays beside the field for explicit retry.</p>
+    <InlineEdit label="Release label" value={value} onValueChange={setValue} onSave={save} leave="save" required />
+    <Field label="Next note"><Input value={note} onChange={event => setNote(event.target.value)} /></Field>
+    <details className="inline-demo-harness"><summary>Save-on-leave service fixture</summary>
+      <label>Write outcome<select value={mode} onChange={event => setMode(event.target.value)}>
+        <option value="slow">Save succeeds after 1,200 ms</option><option value="failure">Save rejected after 1,200 ms</option>
+      </select></label>
+      <p>Confirmed writes: <output data-leave-writes="">{writes}</output>. Confirmed label: <span data-leave-canonical="">{value}</span>.</p>
+    </details>
+  </section>;
 }
 
 // The value as its own button: a pencil on hover, or the field itself on hover. The seam says so at rest.

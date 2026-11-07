@@ -60,9 +60,10 @@ export interface InlineEditProps<V = string> {
   /**
    * What leaving the field does: focus moving out of the group, or a pointer pressed outside it. 'keep' (default) leaves
    * the session open. 'cancel' cancels it as Cancel does, without moving focus, except while checking or saving, or while
-   * an error or conflict is shown. Nothing is ever saved on leaving.
+   * an error or conflict is shown. 'save' submits a changed draft once after leaving the complete editor. Outside
+   * activation finishes first; errors retain the draft for explicit retry. Completion never takes focus back.
    */
-  leave?: 'keep' | 'cancel';
+  leave?: 'keep' | 'cancel' | 'save';
   /**
    * Where Save and Cancel go while editing. 'buttons' (default): a Save button and a Cancel button take Edit's place on
    * the line. 'inline': a check (Save) and a cross (Cancel) inside the field's trailing end, for tight places such as a
@@ -87,6 +88,10 @@ type Session<V> = {
   conflicted?: boolean;
   /** The editor has folded back to the value, which hovers while the write runs: commit="on-choose" once its list has closed, or pending="value". */
   folded?: boolean;
+  /** Automatic leave saves never restore or transfer focus. */
+  restoreFocus?: boolean;
+  /** Crossing the boundary again must not retry the same rejected value. */
+  rejectedDraft?: { value: V };
 };
 const SAVE_ERROR = 'We couldn’t save this change. Try again.';
 const CHANGED = 'The saved value changed. Review the current value before saving.';
@@ -249,7 +254,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   }, [session, focusFallback]);
 
   const close = () => {
-    returnFocus.current = !!root.current?.contains(document.activeElement);
+    returnFocus.current = current.current?.restoreFocus !== false && !!root.current?.contains(document.activeElement);
     generation.current++;
     capture(); publishSession(null);
   };
@@ -265,13 +270,14 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const cancel = () => {
     const active = current.current;
     if (!active || active.phase === 'saving') return;
+    active.restoreFocus = true;
     setAnnouncement(''); close();
   };
   // A folded on-choose session opens its editor again (to show an error or a conflict), with focus back in it.
   const unfold = (active: Session<V>) => {
     if (!active.folded) return;
     active.folded = false;
-    if (root.current?.contains(document.activeElement)) {
+    if (active.restoreFocus !== false && root.current?.contains(document.activeElement)) {
       selectInput.current = true;
       // Back to typing where they left off, not with the whole draft selected to be replaced.
       if (!editor && typeof active.draft === 'string') caretAt.current = active.draft.length;
@@ -280,12 +286,13 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const fail = (active: Session<V>, error: string, failed = false) => {
     if (!valid(active)) return;
     unfold(active);
-    active.phase = 'error'; active.error = error; active.failed = failed;
+    active.phase = 'error'; active.error = error; active.failed = failed; active.rejectedDraft = { value: active.draft };
     setAnnouncement(''); capture(); setSession({ ...active });
   };
-  const submit = async () => {
+  const submit = async (restoreFocus = true) => {
     const active = current.current;
     if (!active || disabledNow.current || active.conflicted || active.phase === 'saving' || active.phase === 'validating') return;
+    active.restoreFocus = restoreFocus;
     const draft = active.draft;
     if (isEqual(draft, active.baseline)) { setAnnouncement(''); close(); return; }
     if (required && isEmpty(draft)) { fail(active, editor ? 'Choose a value.' : 'Enter a value.'); return; }
@@ -305,13 +312,13 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
     // This phase is a synchronous in-flight lock, including for synchronous onSave implementations.
     active.phase = 'saving';
     // pending="value": the editor folds back to the value being written at once; it hovers while the write runs.
-    if (!onChoose && pendingAt === 'value') { plateFocus.current = !!root.current?.contains(document.activeElement); active.folded = true; capture(); }
+    if (!onChoose && pendingAt === 'value') { plateFocus.current = active.restoreFocus !== false && !!root.current?.contains(document.activeElement); active.folded = true; capture(); }
     setSession({ ...active }); setAnnouncement('Saving changes');
     // On-choose: once the list has closed, the editor folds back to the chosen value, which hovers while the write runs
     // (Elevation, Editing in place). It doesn't wait for the write: only an error or a conflict opens the editor again.
     const listClosed = onChoose ? afterPopup(root.current).then(() => {
       if (!valid(active) || active.phase !== 'saving') return;
-      plateFocus.current = !!root.current?.contains(document.activeElement);
+      plateFocus.current = active.restoreFocus !== false && !!root.current?.contains(document.activeElement);
       active.folded = true; capture(); setSession({ ...active });
     }) : undefined;
     let result: InlineEditSaveResult<V>;
@@ -377,15 +384,33 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
     const box = root.current;
     if (!box || !node) return false;
     if (box.contains(node)) return true;
-    return [...box.querySelectorAll('[aria-controls], [aria-owns]')].some(el =>
-      `${el.getAttribute('aria-controls') ?? ''} ${el.getAttribute('aria-owns') ?? ''}`.split(/\s+/).some(id => !!id && !!document.getElementById(id)?.contains(node)));
+    const pending: Element[] = [box], visited = new Set<Element>();
+    // Follow nested ownership too, without looping on reciprocal aria-controls/aria-owns relationships.
+    for (const owner of pending) {
+      if (visited.has(owner)) continue;
+      visited.add(owner);
+      for (const el of [owner, ...owner.querySelectorAll('[aria-controls], [aria-owns]')]) {
+        for (const id of `${el.getAttribute('aria-controls') ?? ''} ${el.getAttribute('aria-owns') ?? ''}`.split(/\s+/)) {
+          const popup = id && document.getElementById(id);
+          if (!popup) continue;
+          if (popup.contains(node)) return true;
+          if (!visited.has(popup)) pending.push(popup);
+        }
+      }
+    }
+    return false;
   };
   // leave="cancel": the same path as Cancel, but focus stays wherever the person went. A dispatched write or a running check
   // can't be abandoned, and an error or conflict stays until the person has seen it and their text isn't lost.
   const leaveNow = React.useRef(() => {});
   leaveNow.current = () => {
     const active = current.current;
-    if (leave !== 'cancel' || !active || active.phase === 'saving' || active.phase === 'validating' || active.error) return;
+    if (!active || active.phase !== 'editing' || active.error) return;
+    if (leave === 'save') {
+      if (active.rejectedDraft && isEqual(active.draft, active.rejectedDraft.value)) return;
+      void submit(false); return;
+    }
+    if (leave !== 'cancel') return;
     setAnnouncement(''); returnFocus.current = false; generation.current++;
     capture(); publishSession(null);
   };
@@ -400,6 +425,69 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const onLeaveFocus = (event: React.FocusEvent) => {
     if (event.relatedTarget && !owns(event.relatedTarget as Node)) leaveNow.current();
   };
+  React.useEffect(() => {
+    if (leave !== 'save' || !session) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let pointer: number | null = null;
+    let pressed = false;
+    let composing = false;
+    const clear = () => { clearTimeout(timer); timer = undefined; };
+    const schedule = (source?: HTMLElement) => {
+      clear();
+      const active = current.current, token = active?.generation;
+      if (composing || !active) return;
+      // Native activation/focus transfer runs first. A synchronous validator, canonical save or folded pending
+      // view can then change layout without removing or moving the destination underneath an unfinished click.
+      timer = setTimeout(() => {
+        timer = undefined;
+        if (!mounted.current || current.current !== active || active.generation !== token || composing ||
+          disabledNow.current || !document.hasFocus() ||
+          (source && (!canFocus(source) || owns(document.activeElement)))) return;
+        leaveNow.current();
+      }, 0);
+    };
+    const down = (event: PointerEvent) => {
+      clear();
+      pointer = event.button === 0 && !owns(event.target as Node) ? event.pointerId : null;
+      pressed = pointer !== null;
+    };
+    const up = () => { pressed = false; };
+    const key = () => { pointer = null; pressed = false; };
+    const click = (event: MouseEvent) => {
+      const outside = pointer !== null && (!(event instanceof PointerEvent) || event.pointerId === pointer) && !owns(event.target as Node);
+      pointer = null; pressed = false;
+      if (outside) schedule();
+    };
+    const focusout = (event: FocusEvent) => {
+      if (!pressed && event.relatedTarget && owns(event.target as Node) && !owns(event.relatedTarget as Node)) {
+        schedule(event.target instanceof HTMLElement ? event.target : undefined);
+      }
+    };
+    const cancelPointer = () => { pointer = null; pressed = false; clear(); };
+    const startComposition = (event: CompositionEvent) => { if (owns(event.target as Node)) { composing = true; clear(); } };
+    const endComposition = () => { composing = false; };
+    document.addEventListener('pointerdown', down, true);
+    document.addEventListener('pointerup', up, true);
+    document.addEventListener('keydown', key, true);
+    document.addEventListener('click', click, true);
+    document.addEventListener('pointercancel', cancelPointer, true);
+    document.addEventListener('focusout', focusout, true);
+    document.addEventListener('compositionstart', startComposition, true);
+    document.addEventListener('compositionend', endComposition, true);
+    window.addEventListener('blur', cancelPointer);
+    return () => {
+      clear();
+      document.removeEventListener('pointerdown', down, true);
+      document.removeEventListener('pointerup', up, true);
+      document.removeEventListener('keydown', key, true);
+      document.removeEventListener('click', click, true);
+      document.removeEventListener('pointercancel', cancelPointer, true);
+      document.removeEventListener('focusout', focusout, true);
+      document.removeEventListener('compositionstart', startComposition, true);
+      document.removeEventListener('compositionend', endComposition, true);
+      window.removeEventListener('blur', cancelPointer);
+    };
+  }, [leave, session !== null]);
   const useCurrent = () => {
     const active = current.current;
     if (!active || active.phase === 'saving') return;
@@ -415,13 +503,13 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   useIsoLayoutEffect(() => { if (ownButton && (!session || session.folded)) setValueText(valueRef.current?.textContent?.trim() ?? ''); });
   const controlId = fieldId + '-control';
   const errorId = fieldId + '-error', hintId = fieldId + '-hint';
-  const describedBy = session?.error ? errorId : (onChoose || textarea) ? hintId : undefined;
+  const describedBy = session?.error ? errorId : (onChoose || textarea || leave === 'save') ? hintId : undefined;
   const glowProps = glowing ? { ...glow, style: { ...glow.style, '--dur-settle': `${settleDuration}ms` } as React.CSSProperties } : {};
   const locked = saving || validating || !!session?.conflicted;
   // actions="inline": Save and Cancel as icon buttons at the field's trailing end, the same submit and cancel as the row.
   const inlineActions = placement === 'inline' && !editor && !textarea && !long;
   const icons = session && inlineActions ? <span className="alt-inline-edit-icons">
-    <Button type="button" variant="ghost" size="sm" square aria-label={saveLabel} loading={saving} disabled={disabled || validating || session.conflicted}
+    <Button type="button" variant="ghost" size="sm" square aria-label={leave === 'save' && session.failed ? 'Try again' : saveLabel} loading={saving} disabled={disabled || validating || session.conflicted}
       onClick={() => { void submit(); }}><Icons.Check size={16} /></Button>
     <Button type="button" variant="ghost" size="sm" square aria-label={cancelLabel} disabled={saving} onClick={cancel}><Icons.X size={16} /></Button>
   </span> : undefined;
@@ -463,7 +551,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   </div> : <div className="alt-inline-edit-actions">
     {session.conflicted && !saving && <Button type="button" onClick={useCurrent}>Use current value</Button>}
     {(!onChoose || session.failed) && <Button type="button" variant="primary" loading={saving} disabled={disabled || validating || session.conflicted}
-      onClick={() => { void submit(); }}>{onChoose ? 'Try again' : saveLabel}</Button>}
+      onClick={() => { void submit(); }}>{onChoose || (leave === 'save' && session.failed) ? 'Try again' : saveLabel}</Button>}
     <Button type="button" variant="ghost" disabled={saving} onClick={cancel}>{cancelLabel}</Button>
   </div> : !ownButton && <div className="alt-inline-edit-actions">
     <Button ref={trigger} type="button" variant="ghost" disabled={disabled} onClick={() => begin()}>{editLabel}</Button>
@@ -475,8 +563,9 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
     <Surface className="alt-inline-edit-surface" level={0} status={saving ? 'pending' : session?.failed ? 'failed' : undefined}>
       <div className="alt-inline-edit-line">{session && !folded ? editSlot : readSlot}{actions}</div>
       {session?.error && <p className="alt-field-error alt-inline-edit-note" id={errorId} role="alert" data-arrive=""><Icons.AlertCircle size={14} />{session.error}</p>}
-      {session && !session.error && textarea && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">
+      {session && !session.error && textarea && leave !== 'save' && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">
         {keyboard ? <span className="alt-inline-edit-keys">{apple ? <Kbd aria-label="Command">⌘</Kbd> : <Kbd>Ctrl</Kbd>}+<Kbd>Enter</Kbd> to save</span> : 'Save to keep it'}</p>}
+      {session && !folded && !session.error && !onChoose && leave === 'save' && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">{saving ? 'Saving changes' : validating ? 'Checking value' : 'Saves when you leave this editor. Cancel to discard.'}</p>}
       {session && !folded && !session.error && onChoose && <p className="alt-field-hint alt-inline-edit-note" id={hintId} data-arrive="">Choose to save</p>}
       {session?.conflicted && <p className="alt-inline-edit-current alt-inline-edit-note" data-arrive="">Current value: <span>{display(value)}</span></p>}
     </Surface>
