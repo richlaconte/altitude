@@ -12,6 +12,8 @@ An editable Select: type to narrow a long list, then choose. What you type is a 
 
 **You provide:** `items` (`{ value, label, textValue?, description?, disabled? }`), `value`/`onValueChange` or `defaultValue`, a `placeholder` that invites typing ("Search people"), optionally `filter` (return 0 or false to hide, higher to rank first), `empty` (default "No matches") and `name` for forms. Wrap it in `Field`.
 
+**In a form.** With `name`, the chosen value is submitted. Form reset returns an uncontrolled Combobox to `defaultValue`: the value, the text in the field and any half-typed query, with the list closed, and calls `onValueChange` with that value. A controlled Combobox keeps its application-owned value; reset that state in the form's reset handler if you want it. A cancelled form reset leaves it untouched.
+
 - Do use it when the list is long enough that scrolling is slower than typing (people, countries, repositories).
 - Don't use it for free text that may not be in the list; it only accepts listed values.
 
