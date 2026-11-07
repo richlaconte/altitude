@@ -97,6 +97,11 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
   const mounted = React.useRef(false);
   const observed = React.useRef(value);
   const disabledNow = React.useRef(disabled);
+  // The latest `open`, for a save that resolves after the parent has changed it.
+  const openNow = React.useRef(openProp);
+  openNow.current = openProp;
+  // A controlled save the parent hasn't closed yet: its afterglow plays when the parent does, unless editing resumes.
+  const savedOpen = React.useRef(false);
   const root = React.useRef<HTMLDivElement>(null);
   const surface = React.useRef<HTMLDivElement>(null);
   const trigger = React.useRef<HTMLButtonElement>(null);
@@ -111,11 +116,11 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
     return true;
   };
   const changedKeys = (draft: T, baseline: T) => Object.keys({ ...baseline, ...draft }).filter(key => !isEqual(draft[key], baseline[key])) as (keyof T)[];
-  const publishSession = (next: Session<T> | null) => {
+  const publishSession = (next: Session<T> | null, notify = true) => {
     const wasOpen = !!current.current;
-    current.current = next;
+    current.current = next; savedOpen.current = false;
     setSession(next ? { ...next } : null);
-    if (wasOpen !== !!next) onOpenChange?.(!!next);
+    if (notify && wasOpen !== !!next) onOpenChange?.(!!next);
   };
   const refresh = (active: Session<T>) => setSession({ ...active });
   const valid = (candidate: Session<T>) => mounted.current && current.current === candidate && candidate.generation === generation.current;
@@ -144,28 +149,44 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
     capture(); refresh(active);
   }, [value, disabled]);
 
+  const start = (notify: boolean) => {
+    setAnnouncement(''); focusField.current = initialFocus ?? true; capture();
+    publishSession({ generation: ++generation.current, phase: 'editing', baseline: value, draft: value }, notify);
+  };
+  // Edit asks to open. A controlled region only asks: it opens when its parent sets `open`, so a parent can decline.
   const begin = () => {
     if (disabled || current.current) return;
-    setAnnouncement(''); focusField.current = initialFocus ?? true; capture();
-    publishSession({ generation: ++generation.current, phase: 'editing', baseline: value, draft: value });
+    if (openProp !== undefined) onOpenChange?.(true);
+    else start(true);
   };
-  const close = () => {
+  const close = (notify = true) => {
     returnFocus.current = !!root.current?.contains(document.activeElement);
     generation.current++; capture();
-    publishSession(null);
+    publishSession(null, notify);
+  };
+  // Cancel, Escape and Save end the session. A controlled region still held open only asks: it closes when its parent
+  // sets `open={false}`. One the parent has already closed (a save dispatched before it did) closes without an echo.
+  const requestClose = () => {
+    if (openNow.current === undefined) close();
+    else if (openNow.current) onOpenChange?.(false);
+    else close(false);
   };
   const cancel = () => {
     const active = current.current;
     if (!active || active.phase === 'saving') return;
-    setAnnouncement(''); close();
+    setAnnouncement(''); requestClose();
   };
 
-  // Controlled open: follow it, except that a dispatched save can't be cancelled.
+  // Controlled open: follow it, without echoing the parent's own change back, except that a dispatched save can't be
+  // cancelled. `disabled` is a dependency so an `open` set while disabled takes effect once it's enabled.
   useIsoLayoutEffect(() => {
     if (openProp === undefined) return;
-    if (openProp && !current.current) begin();
-    else if (!openProp && current.current) cancel();
-  }, [openProp]);
+    if (openProp && !current.current && !disabled) start(false);
+    else if (!openProp && current.current && current.current.phase !== 'saving') {
+      if (savedOpen.current) setSettled(count => count + 1); else setAnnouncement('');
+      close(false);
+    }
+  }, [openProp, disabled]);
 
   useIsoLayoutEffect(() => {
     const want = focusField.current;
@@ -201,7 +222,7 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
     if (!active || disabledNow.current || active.conflicted || active.phase === 'saving' || active.phase === 'validating') return;
     const draft = active.draft;
     const changed = changedKeys(draft, active.baseline);
-    if (!changed.length) { setAnnouncement(''); close(); return; }
+    if (!changed.length) { setAnnouncement(''); requestClose(); return; }
     if (active.error || active.fieldErrors) capture();
     active.error = undefined; active.fieldErrors = undefined; active.failed = false;
     if (validate) {
@@ -228,14 +249,19 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
       : result.ok !== false || typeof result.error !== 'string' || !result.error)) { fail(active, SAVE_ERROR, undefined, true); return; }
     if (!result.ok) { fail(active, result.error, cleanErrors(result.fieldErrors), true); setAnnouncement(result.error); return; }
     observed.current = result.value;
-    close(); setSettled(count => count + 1); setAnnouncement('Saved');
+    if (openNow.current) {
+      // Controlled and still held open: keep editing on the saved record, clean, and ask to close.
+      active.generation = ++generation.current;
+      active.phase = 'editing'; active.baseline = result.value; active.draft = result.value;
+      savedOpen.current = true; refresh(active); setAnnouncement('Saved'); onOpenChange?.(false);
+    } else { close(openNow.current === undefined); setSettled(count => count + 1); setAnnouncement('Saved'); }
     onValueChange(result.value);
   };
   const set = (key: keyof T, next: unknown) => {
     const active = current.current;
     if (!active || active.phase === 'saving' || active.phase === 'validating' || active.conflicted) return;
     if (active.error || active.fieldErrors?.[key]) capture();
-    active.draft = { ...active.draft, [key]: next };
+    active.draft = { ...active.draft, [key]: next }; savedOpen.current = false;
     active.phase = 'editing'; active.failed = false; active.error = undefined;
     if (active.fieldErrors?.[key]) { const { [key]: _gone, ...rest } = active.fieldErrors; active.fieldErrors = Object.keys(rest).length ? rest as Fields<T> : undefined; }
     refresh(active);
