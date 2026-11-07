@@ -68,6 +68,19 @@ expect(r.text === '09 30 AM' && r.hint === 'Stored as 09:30', `Down on a cleared
 await page.keyboard.press('ArrowUp');
 r = await read(0);
 expect(r.text === '09 30 PM' && r.hint === 'Stored as 21:30', `Up flips it to 9:30 PM, stored as 21:30 (${r.text}; ${r.hint})`);
+// An empty hour stepped by the arrows starts inside the period already chosen.
+await seg(0, 0).focus();
+await page.keyboard.press('Delete');
+await page.keyboard.press('ArrowUp');
+r = await read(0);
+expect(r.text === '12 30 PM' && r.hint === 'Stored as 12:30', `Up on an empty hour with PM chosen is 12:30 PM, stored as 12:30 (${r.text}; ${r.hint})`);
+await page.keyboard.press('Delete');
+await seg(0, 2).focus();
+await page.keyboard.press('a');
+await seg(0, 0).focus();
+await page.keyboard.press('ArrowDown');
+r = await read(0);
+expect(r.text === '11 30 AM' && r.hint === 'Stored as 11:30', `Down on an empty hour with AM chosen is 11:30 AM, stored as 11:30 (${r.text}; ${r.hint})`);
 
 const empty = await read(1);
 expect(!empty.filled && empty.hint === '24-hour clock' && empty.text === '–– ––', 'an empty field is open');
