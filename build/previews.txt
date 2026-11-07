@@ -5741,6 +5741,7 @@ function App() {
 === Schedule | <!-- @dsCard group="Display" height=760 subtitle="A week you handle directly: draw to book, carry to move, pull the edge to resize" -->
 --- css
 .sch-demo { max-width: 860px; }
+.sch-demo .sch-views { margin-bottom: var(--space-2); }
 .sch-demo .alt-schedule-event small.sch-room { color: var(--ink-muted); }
 --- jsx
 const SCH_SEED = [
@@ -5751,17 +5752,26 @@ const SCH_SEED = [
   { id: 'e5', title: 'Interview', start: '2026-10-29T15:00', end: '2026-10-29T16:00', room: 'Room A' },
   { id: 'e6', title: 'Retro', start: '2026-10-30T11:00', end: '2026-10-30T12:00', room: 'Room B' },
   { id: 'e7', title: 'Board report', start: '2026-10-26T14:00', end: '2026-10-26T15:00', room: 'Room B', approved: true },
+  { id: 'e8', title: 'Onboarding', start: '2026-10-14T09:00', end: '2026-10-14T10:30', room: 'Room A' },
+  { id: 'e9', title: 'Vendor demo', start: '2026-10-14T11:00', end: '2026-10-14T12:00', room: 'Room B' },
+  { id: 'e10', title: 'Budget review', start: '2026-10-14T13:00', end: '2026-10-14T14:00', room: 'Room A' },
+  { id: 'e11', title: 'Team lunch', start: '2026-10-14T12:00', end: '2026-10-14T13:00', room: 'Room B' },
+  { id: 'e12', title: 'Quarterly plan', start: '2026-10-07T10:00', end: '2026-10-07T12:00', room: 'Room B', approved: true },
 ];
 const schWait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const schMinutes = t => Number(t.slice(11, 13)) * 60 + Number(t.slice(14, 16));
 const schHours = list => { const m = list.reduce((sum, e) => sum + schMinutes(e.end) - schMinutes(e.start), 0); return `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`; };
 function App() {
   const [date, setDate] = React.useState('2026-10-26');
+  const [view, setView] = React.useState('workweek');
   const [events, setEvents] = React.useState(SCH_SEED);
   const seq = React.useRef(0);
   const [confirmed, setConfirmed] = React.useState({});
   return <div className="sch-demo">
-    <A.Schedule aria-label="Room bookings" view="workweek" date={date} onDateChange={setDate} now="2026-10-27T10:20"
+    <A.ToggleGroup type="single" variant="secondary" size="sm" value={view} onValueChange={v => v && setView(v)} aria-label="View" className="sch-views">
+      <A.ToggleGroupItem value="day">Day</A.ToggleGroupItem><A.ToggleGroupItem value="workweek">Week</A.ToggleGroupItem><A.ToggleGroupItem value="month">Month</A.ToggleGroupItem>
+    </A.ToggleGroup>
+    <A.Schedule aria-label="Room bookings" view={view} date={date} onDateChange={setDate} now="2026-10-27T10:20"
       events={events} getKey={e => e.id} getStart={e => e.start} getEnd={e => e.end} getLabel={e => e.title}
       dayStart="08:00" dayEnd="18:00"
       renderEvent={e => <><strong>{e.title}</strong><small className="sch-room">{e.start.slice(11)}–{e.end.slice(11)} · {e.room}</small></>}
@@ -5775,7 +5785,10 @@ function App() {
       // One action is an icon button; several (a day with overlaps) open a menu.
       dayActions={(day, list) => !list.length ? [] : [{ label: 'Confirm rooms', icon: <A.Icons.Check size={14} />, onSelect: () => setConfirmed(c => ({ ...c, [day]: true })) },
         ...(list.length > 1 ? [{ label: 'Clear confirmation', onSelect: () => setConfirmed(c => ({ ...c, [day]: false })) }] : [])]}
-      footer={(days, list) => <>Booked this week: {schHours(list)}</>}
+      footer={(days, list) => <>Booked this {view === 'month' ? 'month' : view === 'day' ? 'day' : 'week'}: {schHours(list)}</>}
+      // The month: each day's hours under its bookings; "+1 more" opens that day.
+      monthCell={(day, list) => list.length ? schHours(list) : null}
+      onOpenDay={day => { setDate(day); setView('day'); }}
       // Rooms close at 17:00 on Fridays.
       isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
       onChange={async ({ id, start, end }) => {

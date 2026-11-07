@@ -25,6 +25,7 @@ summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: 
 .preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
 .preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
 .sch-demo { max-width: 860px; }
+.sch-demo .sch-views { margin-bottom: var(--space-2); }
 .sch-demo .alt-schedule-event small.sch-room { color: var(--ink-muted); }
 </style>
 </head>
@@ -39,7 +40,12 @@ const SCH_SEED = [
   { id: "e4", title: "Planning", start: "2026-10-28T13:00", end: "2026-10-28T14:30", room: "Room B" },
   { id: "e5", title: "Interview", start: "2026-10-29T15:00", end: "2026-10-29T16:00", room: "Room A" },
   { id: "e6", title: "Retro", start: "2026-10-30T11:00", end: "2026-10-30T12:00", room: "Room B" },
-  { id: "e7", title: "Board report", start: "2026-10-26T14:00", end: "2026-10-26T15:00", room: "Room B", approved: true }
+  { id: "e7", title: "Board report", start: "2026-10-26T14:00", end: "2026-10-26T15:00", room: "Room B", approved: true },
+  { id: "e8", title: "Onboarding", start: "2026-10-14T09:00", end: "2026-10-14T10:30", room: "Room A" },
+  { id: "e9", title: "Vendor demo", start: "2026-10-14T11:00", end: "2026-10-14T12:00", room: "Room B" },
+  { id: "e10", title: "Budget review", start: "2026-10-14T13:00", end: "2026-10-14T14:00", room: "Room A" },
+  { id: "e11", title: "Team lunch", start: "2026-10-14T12:00", end: "2026-10-14T13:00", room: "Room B" },
+  { id: "e12", title: "Quarterly plan", start: "2026-10-07T10:00", end: "2026-10-07T12:00", room: "Room B", approved: true }
 ];
 const schWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const schMinutes = (t) => Number(t.slice(11, 13)) * 60 + Number(t.slice(14, 16));
@@ -49,14 +55,15 @@ const schHours = (list) => {
 };
 function App() {
   const [date, setDate] = React.useState("2026-10-26");
+  const [view, setView] = React.useState("workweek");
   const [events, setEvents] = React.useState(SCH_SEED);
   const seq = React.useRef(0);
   const [confirmed, setConfirmed] = React.useState({});
-  return /* @__PURE__ */ React.createElement("div", { className: "sch-demo" }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement("div", { className: "sch-demo" }, /* @__PURE__ */ React.createElement(A.ToggleGroup, { type: "single", variant: "secondary", size: "sm", value: view, onValueChange: (v) => v && setView(v), "aria-label": "View", className: "sch-views" }, /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "day" }, "Day"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "workweek" }, "Week"), /* @__PURE__ */ React.createElement(A.ToggleGroupItem, { value: "month" }, "Month")), /* @__PURE__ */ React.createElement(
     A.Schedule,
     {
       "aria-label": "Room bookings",
-      view: "workweek",
+      view,
       date,
       onDateChange: setDate,
       now: "2026-10-27T10:20",
@@ -78,7 +85,12 @@ function App() {
         { label: "Confirm rooms", icon: /* @__PURE__ */ React.createElement(A.Icons.Check, { size: 14 }), onSelect: () => setConfirmed((c) => ({ ...c, [day]: true })) },
         ...list.length > 1 ? [{ label: "Clear confirmation", onSelect: () => setConfirmed((c) => ({ ...c, [day]: false })) }] : []
       ],
-      footer: (days, list) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Booked this week: ", schHours(list)),
+      footer: (days, list) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Booked this ", view === "month" ? "month" : view === "day" ? "day" : "week", ": ", schHours(list)),
+      monthCell: (day, list) => list.length ? schHours(list) : null,
+      onOpenDay: (day) => {
+        setDate(day);
+        setView("day");
+      },
       isUnavailable: ({ start, end }) => start.slice(0, 10) === "2026-10-30" && end.slice(11) > "17:00",
       onChange: async ({ id, start, end }) => {
         await schWait(300);

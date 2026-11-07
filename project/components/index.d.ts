@@ -1521,8 +1521,8 @@ export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
 export type ScheduleCategoryColor = 'data-1' | 'data-2' | 'data-3' | 'data-4' | 'data-5' | 'data-6';
 export interface ScheduleCategory { id: string; label: string; color?: ScheduleCategoryColor }
 export interface ScheduleProps<T> {
-  /** Default 'week'. */
-  view?: 'day' | 'week' | 'workweek';
+  /** Default 'week'. 'month': each day a cell in a 5- or 6-week grid, its events listed as chips in start order. */
+  view?: 'day' | 'week' | 'workweek' | 'month';
   /** Under 480px of its own width: 'day' (default) shows one day at a time; false keeps the view. */
   narrowView?: 'day' | false;
   /** Any day in the period shown, 'YYYY-MM-DD'. */
@@ -1566,6 +1566,12 @@ export interface ScheduleProps<T> {
   dayActions?: (day: string, events: T[]) => MenuEntry[];
   /** A flush line under the grid for the period (its total). It describes the grid. */
   footer?: (days: string[], events: T[]) => React.ReactNode;
+  /** Month view: what a day shows under its events (a total). Its text describes the day's cell. */
+  monthCell?: (day: string, events: T[]) => React.ReactNode;
+  /** Month view: events shown per day before "+N more". Default 3. Only applies with `onOpenDay`: without it every event shows, so each stays reachable. */
+  maxPerDay?: number;
+  /** Month view: "+N more" opens that day. Showing it (say, in the day view) is your call. Without it a day lists all its events. */
+  onOpenDay?: (day: string) => void;
   /** Groups events: the category's colour replaces the accent in each event's inset edge; its label joins the event's name. */
   getCategory?: (event: T) => string | null | undefined;
   /** Names and fixed colours. Categories without one take data-1…data-6 in first-seen order; past six, the accent. */
