@@ -25,6 +25,10 @@ const cases = [
   ['ALT-TOKEN-001',
     { 'App.tsx': app('<p className="text-sm text-zinc-500">Hi</p>') },
     { 'App.tsx': app('<p className="text-sm text-muted-foreground border-b">Hi</p>') }],
+  // An arbitrary literal is a palette class too, though the line also holds a colour literal (#588).
+  ['ALT-TOKEN-001',
+    { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { AltitudeProvider } from 'altitude-design';\nexport const App = () => (\n  <AltitudeProvider><p className=\"text-[#ff0000]\">Problem</p></AltitudeProvider>\n);" },
+    { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { AltitudeProvider } from 'altitude-design';\nexport const App = () => (\n  <AltitudeProvider><p className=\"text-[var(--critical)]\">Problem</p></AltitudeProvider>\n);" }],
   ['ALT-TOKEN-001',
     { 'index.html': '<style>\n  .card { background: #fafafa; }\n</style>\n<p style="color: #333">Hi</p>' },
     { 'index.html': '<style>\n  :root { --brand: #0f8a6b; }\n  .card { background: var(--surface-raised); }\n</style>\n<a href="#main">Skip to content</a>' }],
@@ -32,9 +36,20 @@ const cases = [
   ['ALT-SETUP-002',
     { 'App.tsx': "import { Button } from 'altitude-design';\nexport const A = () => <AltitudeProvider><Button>Save changes</Button></AltitudeProvider>;" },
     { 'App.tsx': app('<Button>Save changes</Button>'), 'other.ts': 'export const x = 1;' }],
+  // A type-only import is erased at compile time: it needs no stylesheet or provider (#584).
+  ['ALT-SETUP-002',
+    { 'options.ts': "import { type SelectOption, Select } from 'altitude-design';\nexport const choices: SelectOption[] = [{ value: 'a', label: 'A' }];" },
+    { 'options.ts': "import type { SelectOption } from 'altitude-design';\nexport const choices: SelectOption[] = [{ value: 'a', label: 'A' }];", 'more.ts': "import { type SelectOption, type ButtonProps } from 'altitude-design';\nexport type { MenuItem } from 'altitude-design';" }],
+  ['ALT-SETUP-003',
+    { 'options.ts': "import 'altitude-design/altitude.css';\nimport { Select, type SelectOption } from 'altitude-design';\nexport const choices: SelectOption[] = [{ value: 'a', label: 'A' }];" },
+    { 'options.ts': "import type { SelectOption } from 'altitude-design';\nexport const choices: SelectOption[] = [{ value: 'a', label: 'A' }];" }],
   ['ALT-SETUP-003',
     { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { Button } from 'altitude-design';\nexport const A = () => <Button>Save changes</Button>;" },
     { 'App.tsx': app('<Button>Save changes</Button>') }],
+  // An aliased provider is the same provider (#582).
+  ['ALT-SETUP-003',
+    { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { AltitudeProvider as Provider, Button } from 'altitude-design';\n\nexport function App() {\n  return <Button>Save changes</Button>;\n}" },
+    { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { AltitudeProvider as Provider, Button } from 'altitude-design';\n\nexport function App() {\n  return <Provider><Button>Save changes</Button></Provider>;\n}" }],
   ['ALT-CHART-001',
     { 'Chart.tsx': "import { PieChart, Pie } from 'recharts';" },
     { 'Chart.tsx': "import { BarChart } from 'altitude-design';" }],
@@ -145,6 +160,21 @@ try {
   const out = JSON.parse(execFileSync(process.execPath, [cli, 'check', '--json', '--cwd', project], { encoding: 'utf8' }));
   assert.equal(out.ok, true, 'reviews alone pass');
   assert.ok(out.findings.every((f) => f.kind === 'contextual-review'));
+
+  // Checking a subtree verifies setup across the project: the entry's stylesheet and provider count (#583), and a
+  // project with neither still fails, while other rules report only inside the subtree.
+  writeFileSync(join(project, 'src/App.tsx'), "import 'altitude-design/altitude.css';\nimport { AltitudeProvider } from 'altitude-design';\nimport { Tile } from './components/Tile';\nexport const App = () => <AltitudeProvider><Tile /></AltitudeProvider>;\n");
+  mkdirSync(join(project, 'src/components'), { recursive: true });
+  writeFileSync(join(project, 'src/components/Tile.tsx'), "import { Card } from 'altitude-design';\nexport const Tile = () => <Card>Record</Card>;\n");
+  writeFileSync(join(project, 'src/Other.tsx'), "import { Button } from 'altitude-design';\nexport const Other = () => <Button variant=\"primary\">OK</Button>;\n");
+  const sub = JSON.parse(execFileSync(process.execPath, [cli, 'check', 'src/components', '--json', '--cwd', project], { encoding: 'utf8' }));
+  assert.equal(sub.ok, true, `a subtree whose app is set up at its entry passes: ${JSON.stringify(sub.findings)}`);
+  assert.equal(sub.target, join('src', 'components'));
+  assert.deepEqual(sub.findings, [], 'findings outside the subtree (ALT-COPY-001 in Other.tsx) are not reported');
+  writeFileSync(join(project, 'src/App.tsx'), "import { Tile } from './components/Tile';\nexport const App = () => <Tile />;\n");
+  rmSync(join(project, 'src/Other.tsx'));
+  try { execFileSync(process.execPath, [cli, 'check', 'src/components', '--json', '--cwd', project], { encoding: 'utf8' }); assert.fail('a subtree in a project with no setup fails'); }
+  catch (e) { const bad = JSON.parse(e.stdout); assert.deepEqual(bad.findings.map((f) => f.ruleId).sort(), ['ALT-SETUP-002', 'ALT-SETUP-003']); assert.match(bad.findings[0].observed, /in the project/); }
 } finally { rmSync(project, { recursive: true, force: true }); }
 
 console.log(`source check: ${Object.keys(RULES).length} rules each catch their example and pass their counter-example; CLI exit codes and rules.json entries pass`);

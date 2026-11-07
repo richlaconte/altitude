@@ -68,6 +68,23 @@ function importsFrom(text, mod) {
 }
 
 /**
+ * Whether a file imports (or re-exports) anything from altitude-design that survives compilation. Type-only imports
+ * (`import type { … }`, or braces holding only `type X` specifiers) are erased, so they need no stylesheet or provider.
+ */
+function importsRuntime(text) {
+  if (/require\(\s*['"]altitude-design['"]\s*\)/.test(text)) return true;
+  for (const m of text.matchAll(/\b(?:import|export)\s+((?:(?!\b(?:import|export)\b)[^;])*?)\s*from\s*['"]altitude-design['"]/g)) {
+    const clause = m[1].trim();
+    if (/^type\s*[{*]|^type\s+\w+\s*$/.test(clause)) continue;
+    const braces = clause.match(/^\{([^}]*)\}$/);
+    const parts = braces ? braces[1].split(',').map((p) => p.trim()).filter(Boolean) : [];
+    if (parts.length && parts.every((p) => /^type\s+\w/.test(p))) continue;
+    return true;
+  }
+  return false;
+}
+
+/**
  * Every JSX element in `text` whose tag (bare or namespaced) a module names one of `names`: its opening tag, its
  * children up to the matching close (empty when self-closing) and its line. Braces and quotes are tracked, so an arrow
  * or a comparison inside a prop doesn't end the tag. No parser: good enough for the shapes generated apps write.
@@ -172,33 +189,51 @@ function chartRules(text, rawLines, add) {
 
 // tokenNames: custom property names from the installed tokens.css, so `ink: '#…'` inside a custom scheme (which
 // defines tokens rather than bypassing them) isn't reported.
-export function scan(root, { tokenNames = new Set() } = {}) {
+// project: the directory setup is verified in (ALT-SETUP-002, -003), when `root` is only part of it. The stylesheet
+// import and the provider are app-wide, usually at the entry, so checking a subtree looks for them across the project
+// while every other rule reports only inside the subtree.
+export function scan(root, { tokenNames = new Set(), project = root } = {}) {
   const findings = [];
   const add = (id, file, line, observed, repair) => findings.push({ ruleId: id, kind: RULES[id].kind, status: RULES[id].kind === 'deterministic' ? 'fail' : 'review', file: file && relative(root, file), line, observed, expected: RULES[id].title, repair, verification: `altitude explain ${id}` });
   const sources = files(root);
   let usesAltitude = false, stylesheet = false, providers = [];
+  // The setup facts in one file: the stylesheet import, and every AltitudeProvider it renders.
+  const setupIn = (file, text, css) => {
+    if (/['"]altitude-design\/altitude(\.no-fonts)?\.css['"]/.test(text)) stylesheet = true;
+    if (css) return;
+    // The provider by any name it's imported under (`AltitudeProvider as Provider`, `A.AltitudeProvider`), as well as
+    // the literal tag (a project may re-export it from its own module).
+    const alt = importsFrom(text, 'altitude-design');
+    const n = [...text.matchAll(/<((?:\w+\.)?[A-Z]\w*)(?=[\s/>])/g)].filter((m) => /(?:^|\.)AltitudeProvider$/.test(m[1]) || alt.of(m[1]) === 'AltitudeProvider').length;
+    if (n) providers.push(...Array(n).fill(relative(project, file)));
+  };
+  const isCss = (file) => /\.(s?css|html)$/.test(file);
 
   for (const file of sources) {
     const raw = readFileSync(file, 'utf8');
     const text = uncomment(raw);
     const lines = text.split('\n'), rawLines = raw.split('\n');
     // HTML is read like CSS: its <style> blocks and style="" attributes hold declarations.
-    const css = /\.(s?css|html)$/.test(file);
-    if (/from\s+['"]altitude-design['"]|require\(\s*['"]altitude-design['"]\s*\)/.test(text)) usesAltitude = true;
-    if (/['"]altitude-design\/altitude(\.no-fonts)?\.css['"]/.test(text)) stylesheet = true;
+    const css = isCss(file);
+    if (importsRuntime(text)) usesAltitude = true;
+    if (project === root) setupIn(file, text, css);
     lines.forEach((line, i) => {
       const at = i + 1;
       const skip = (id) => ignored(rawLines, i, id);
       // ALT-TOKEN-001: a colour literal in a declaration or inline style. Custom properties (--brand: #…) define tokens,
       // and a scheme's token entries (ink: '#…') do too; AltitudeProvider's accent takes a literal by design.
+      // The literal and the Tailwind class are tested independently: `text-[#ff0000]` holds a literal but no declaration,
+      // so it's the Tailwind detector that catches it. One finding per line.
+      let token = false;
       if (COLOUR.test(line) && !skip('ALT-TOKEN-001')) {
         const definesToken = /^\s*--[\w-]+\s*:/.test(line) || [...line.matchAll(/['"]?([a-z][\w-]*)['"]?\s*:\s*['"`]?(?:#|rgb|hsl|oklch)/g)].some((m) => tokenNames.has(m[1]));
         const accent = /\baccent\s*=\s*\{?\s*['"`]#/.test(line);
         // In CSS (and HTML's style="" attributes), any declaration other than a custom property's whose value holds a colour.
         const inStyle = css ? [...line.matchAll(/(?:^|[{;"'])\s*([a-z-]+)\s*:\s*([^;{}"']+)/g)].some((m) => !m[1].startsWith('--') && COLOUR.test(m[2]))
           : /\bstyle=\{\{|(?:color|background|backgroundColor|borderColor|fill|stroke|boxShadow|outlineColor)\s*[:=]/.test(line);
-        if (!definesToken && !accent && inStyle) add('ALT-TOKEN-001', file, at, line.trim().slice(0, 160), 'Use a token instead: var(--ink-muted), var(--accent), var(--surface-raised) and the rest of tokens.css. A brand colour goes to AltitudeProvider accent, and a full palette to a custom scheme.');
-      } else if (!css && TAILWIND_COLOUR.test(line) && /\bclass(Name)?=/.test(line) && !skip('ALT-TOKEN-001')) {
+        if (!definesToken && !accent && inStyle) { token = true; add('ALT-TOKEN-001', file, at, line.trim().slice(0, 160), 'Use a token instead: var(--ink-muted), var(--accent), var(--surface-raised) and the rest of tokens.css. A brand colour goes to AltitudeProvider accent, and a full palette to a custom scheme.'); }
+      }
+      if (!token && !css && TAILWIND_COLOUR.test(line) && /\bclass(Name)?=/.test(line) && !skip('ALT-TOKEN-001')) {
         // A Tailwind palette class (text-zinc-500, bg-white, bg-[#fafafa]) bypasses the tokens just as a literal does.
         add('ALT-TOKEN-001', file, at, line.trim().slice(0, 160), 'Use a token instead of a palette class: style={{ color: "var(--ink-muted)" }} or a class whose CSS uses the tokens.');
       }
@@ -223,16 +258,15 @@ export function scan(root, { tokenNames = new Set() } = {}) {
       }
     });
     if (!css) {
-      const n = (text.match(/<(?:\w+\.)?AltitudeProvider\b/g) || []).length;
-      if (n) providers.push(...Array(n).fill(relative(root, file)));
       // ALT-PRIMARY-001: more than one primary button in one file (often one view).
       const primaries = [...text.matchAll(/<(?:\w+\.)?Button\b[^>]*\bvariant=["']primary["']/g)];
       if (primaries.length > 1 && !ignored(rawLines, text.slice(0, primaries[1].index).split('\n').length - 1, 'ALT-PRIMARY-001'))
         add('ALT-PRIMARY-001', file, text.slice(0, primaries[1].index).split('\n').length, `${primaries.length} primary buttons in this file`, 'If they can be on screen together, keep one primary (the one action the task leads to) and make the others secondary or ghost.');
     }
   }
-  if (usesAltitude && !stylesheet) add('ALT-SETUP-002', null, null, 'No file imports altitude-design/altitude.css or altitude-design/altitude.no-fonts.css', "Import one of them once, at the app's entry: import 'altitude-design/altitude.css';");
-  if (usesAltitude && !providers.length) add('ALT-SETUP-003', null, null, 'Components from altitude-design are used, but nothing renders <AltitudeProvider>', 'Render one AltitudeProvider around the whole app. It sets the scheme and hosts dialogs and toasts.');
+  if (project !== root && usesAltitude) for (const file of files(project)) setupIn(file, uncomment(readFileSync(file, 'utf8')), isCss(file));
+  if (usesAltitude && !stylesheet) add('ALT-SETUP-002', null, null, `No file${project === root ? '' : ' in the project'} imports altitude-design/altitude.css or altitude-design/altitude.no-fonts.css`, "Import one of them once, at the app's entry: import 'altitude-design/altitude.css';");
+  if (usesAltitude && !providers.length) add('ALT-SETUP-003', null, null, `Components from altitude-design are used, but nothing${project === root ? '' : ' in the project'} renders <AltitudeProvider>`, 'Render one AltitudeProvider around the whole app. It sets the scheme and hosts dialogs and toasts.');
   if (providers.length > 1) findings.push({ ruleId: 'ALT-SETUP-003', kind: 'contextual-review', status: 'review', file: null, line: null, observed: `<AltitudeProvider> is rendered in ${providers.length} places (${[...new Set(providers)].join(', ')})`, expected: 'One AltitudeProvider around the app', repair: 'Keep one around the app unless the others are deliberate (separate roots, previews).', verification: 'altitude explain ALT-SETUP-003' });
   return { files: sources.length, findings };
 }
