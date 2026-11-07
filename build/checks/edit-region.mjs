@@ -130,6 +130,40 @@ try {
     check(await page.locator('#er-strict-name').textContent() === 'Ada Lovelace' && JSON.stringify(await page.evaluate(() => window.erSaves)) === '["Ada Lovelace"]', 'ER-25 a defaultOpen region saves once under StrictMode');
     await page.close(); }
 
+  // Controlled open (#578): Edit only asks. A parent that keeps open={false} declines; one that sets it on the callback opens.
+  { const page = await open();
+    await page.evaluate(() => {
+      const R = window.React, A = window.Altitude, h = R.createElement;
+      window.erRequests = { declines: [], accepts: [] };
+      function Fixture({ id, accept }) {
+        const [isOpen, setOpen] = R.useState(false);
+        const [value, setValue] = R.useState({ name: 'Ada' });
+        return h('div', { id }, h(A.AltitudeProvider, null, h(A.EditRegion, { label: id, value, open: isOpen, onValueChange: setValue,
+          onOpenChange: next => { window.erRequests[id].push(next); if (accept) setOpen(next); },
+          onSave: draft => ({ ok: true, value: draft }) },
+          h(A.EditRegionView, null, value.name),
+          h(A.EditRegionForm, null, field => h(A.Field, { label: `${id} name` }, h(A.Input, field('name')))))));
+      }
+      for (const [id, accept] of [['declines', false], ['accepts', true]]) {
+        const host = document.createElement('div'); document.body.prepend(host);
+        window.ReactDOM.createRoot(host).render(h(R.StrictMode, null, h(Fixture, { id, accept })));
+      }
+    });
+    await page.getByRole('button', { name: 'Edit declines', exact: true }).click();
+    await page.waitForTimeout(300);
+    const declined = page.locator('#declines .alt-edit-region');
+    check(JSON.stringify(await page.evaluate(() => window.erRequests.declines)) === '[true]' && await declined.getAttribute('data-state') !== 'editing'
+      && await page.getByRole('textbox', { name: 'declines name' }).count() === 0, 'ER-25b a controlled region whose parent keeps open={false} asks to open and stays closed');
+    await page.getByRole('button', { name: 'Edit accepts', exact: true }).click();
+    const accepted = page.getByRole('textbox', { name: 'accepts name' });
+    await accepted.waitFor();
+    check(await page.locator('#accepts .alt-edit-region').getAttribute('data-state') === 'editing' && await focused(accepted)
+      && JSON.stringify(await page.evaluate(() => window.erRequests.accepts)) === '[true]', 'ER-25c a parent that sets open on the callback opens the editor, focused, with one request');
+    await accepted.fill('Ada Lovelace'); await accepted.press('Enter');
+    await page.getByRole('button', { name: 'Edit accepts', exact: true }).waitFor();
+    check(JSON.stringify(await page.evaluate(() => window.erRequests.accepts)) === '[true,false]' && await page.locator('#accepts').getByText('Ada Lovelace', { exact: true }).isVisible(), 'ER-25d the accepted region saves and asks to close');
+    await page.close(); }
+
   // In place (E52): the shell never moves the record, the fields never slide while the editor grows, and a reserved sheet moves nothing.
   { const page = await open();
     const textAt = (scope, selector) => scope.locator(selector).first().evaluate(el => {
