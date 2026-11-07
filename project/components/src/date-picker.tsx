@@ -68,7 +68,7 @@ function PresetList({ presets, today, chosen, onChoose, min, max, listRef }: {
   const id = React.useId();
   const off = (p: DatePreset) => { const r = resolve(p, today); return (!!min && !!r.start && r.start < min) || (!!max && !!r.end && r.end > max); };
   const first = presets.findIndex((p) => presetKey(p) === chosen);
-  const [active, setActive] = React.useState(first >= 0 ? first : Math.max(0, presets.findIndex((p) => !off(p))));
+  const [active, setActive] = React.useState(first >= 0 ? first : presets.findIndex((p) => !off(p)));
   const rows = React.useRef<(HTMLDivElement | null)[]>([]);
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   useIsoLayoutEffect(() => { const el = rows.current[active]; setHl(el ? { y: el.offsetTop, h: el.offsetHeight } : null); }, [active, presets.length]);
@@ -76,13 +76,13 @@ function PresetList({ presets, today, chosen, onChoose, min, max, listRef }: {
     for (let i = active + d; i >= 0 && i < presets.length; i += d) if (!off(presets[i])) { setActive(i); return; }
   };
   return (
-    <div ref={listRef as React.Ref<HTMLDivElement>} role="listbox" tabIndex={0} aria-label="Presets" aria-activedescendant={`${id}-${active}`} className="alt-menu alt-date-presets" data-state="open"
+    <div ref={listRef as React.Ref<HTMLDivElement>} role="listbox" tabIndex={0} aria-label="Presets" aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined} className="alt-menu alt-date-presets" data-state="open"
       onKeyDown={(e) => {
         if (e.key === 'ArrowDown') { e.preventDefault(); step(1); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); step(-1); }
-        else if (e.key === 'Home') { e.preventDefault(); setActive(presets.findIndex((p) => !off(p))); }
+        else if (e.key === 'Home') { e.preventDefault(); const i = presets.findIndex((p) => !off(p)); if (i >= 0) setActive(i); }
         else if (e.key === 'End') { e.preventDefault(); for (let i = presets.length - 1; i >= 0; i--) if (!off(presets[i])) { setActive(i); break; } }
-        else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!off(presets[active])) onChoose(presets[active]); }
+        else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const p = presets[active]; if (p && !off(p)) onChoose(p); }
       }}>
       <span className="alt-menu-hl" aria-hidden="true" style={hl ? { transform: `translateY(${hl.y}px)`, height: hl.h, opacity: 1 } : { opacity: 0 }} />
       {presets.map((p, i) => {
