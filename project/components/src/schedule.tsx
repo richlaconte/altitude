@@ -61,7 +61,7 @@ export interface ScheduleProps<T> {
    * is never alone: the category's label joins the event's name, and the legend names every colour.
    */
   getCategory?: (event: T) => string | null | undefined;
-  /** Names and fixed colours. Categories without a colour take data-1…data-6 in first-seen order; past six, the accent. */
+  /** Names and fixed colours. Categories without a colour take data-1…data-6 in first-seen order; past six, data-other. */
   categories?: ScheduleCategory[];
   /** A flush line of category names with their edge colour under the grid. Default: on when `categories` is given. */
   legend?: boolean;
@@ -142,15 +142,16 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
 
   const byKey = new Map(events.map((e) => [getKey(e), e]));
   // Categories (#562): listed ones first (their fixed colours kept), then any seen in events. Colours not fixed are
-  // given out from data-1…data-6 in order, skipping fixed ones; past six distinct colours a category keeps the accent.
+  // given out from data-1…data-6 in order, skipping fixed ones; past six distinct colours a category takes data-other, the
+  // palette's neutral for the seventh and later series (Theming, "The data palette"). Only uncategorised events keep the accent.
   const cats = React.useMemo(() => {
     if (!getCategory) return null;
-    const list: { id: string; label: string; color?: ScheduleCategoryColor }[] = (categories ?? []).map((c) => ({ ...c }));
+    const list: { id: string; label: string; color?: ScheduleCategoryColor | 'data-other' }[] = (categories ?? []).map((c) => ({ ...c }));
     const known = new Set(list.map((c) => c.id));
     for (const e of events) { const id = getCategory(e); if (id != null && !known.has(id)) { known.add(id); list.push({ id, label: id }); } }
     const taken = new Set(list.map((c) => c.color).filter(Boolean));
     const free = (['data-1', 'data-2', 'data-3', 'data-4', 'data-5', 'data-6'] as const).filter((c) => !taken.has(c));
-    for (const c of list) if (!c.color) c.color = free.shift();
+    for (const c of list) if (!c.color) c.color = free.shift() ?? 'data-other';
     return new Map(list.map((c) => [c.id, c]));
   }, [events, categories, getCategory]); // eslint-disable-line react-hooks/exhaustive-deps
   const categoryOf = (event: T) => { const id = getCategory?.(event); return id != null ? cats?.get(id) : undefined; };
@@ -478,9 +479,9 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
       </div>
     </div>
     {cats && cats.size > 0 && (legend ?? !!categories) && <ul className="alt-schedule-legend" aria-label="Categories">
-      {[...cats.values()].map((c) => <li key={c.id} style={c.color ? { ['--sch-edge' as any]: `var(--${c.color})` } : undefined} data-shared={c.color ? undefined : ''}>
+      {[...cats.values()].map((c) => <li key={c.id} style={c.color ? { ['--sch-edge' as any]: `var(--${c.color})` } : undefined}>
         <span className="alt-schedule-swatch" aria-hidden="true" />{c.label}</li>)}
-      {[...cats.values()].some((c) => !c.color) && <li className="alt-schedule-legend-note">Past six categories, events share the accent edge.</li>}
+      {[...cats.values()].some((c) => c.color === 'data-other') && <li className="alt-schedule-legend-note">Past six categories, events share a neutral edge.</li>}
     </ul>}
     {failure && <div className="alt-schedule-failure" role="alert"><Icons.AlertCircle size={14} /><span>{failure.error}</span>
       <Button size="sm" variant="ghost" onClick={() => { const f = failure; setFailure(null); f.retry(); }}>Retry</Button>
