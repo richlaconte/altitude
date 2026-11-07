@@ -1,0 +1,40 @@
+{
+  "protocolVersion": "1.0.0",
+  "source": {
+    "commit": "4fd91df21fbe6ec3df66ce7e0ac6407929170140",
+    "dirty": false,
+    "packageVersion": "0.31.20",
+    "artifactSha256": "77219a26af9ceeaba5d45e2dc2d07b0791fd9b65826fdae6064dcb093c878d15",
+    "runnerSha256": "c1ef180cef1c7e0ae394d746067b444886181c8e95b1d73ea8bb722d7c2f6d20",
+    "lockSha256": "b0ebb96a2b552e8f867b6734a928f23847af391f2ca3d31c6c84e4962c857ae4",
+    "reactVersion": "19.3.0"
+  },
+  "evidenceType": "engineering",
+  "participantEvaluation": "unrun",
+  "results": [
+    {
+      "id": "field-edit-normal",
+      "status": "valid",
+      "checks": 7,
+      "reason": "All named engineering checks passed in this recorded mode; human visual/AT review remains separate."
+    },
+    {
+      "id": "record-movement-normal",
+      "status": "valid",
+      "checks": 7,
+      "reason": "All named engineering checks passed in this recorded mode; human visual/AT review remains separate."
+    },
+    {
+      "id": "field-edit-reduced",
+      "status": "valid",
+      "checks": 7,
+      "reason": "All named engineering checks passed in this recorded mode; human visual/AT review remains separate."
+    },
+    {
+      "id": "record-movement-reduced",
+      "status": "valid",
+      "checks": 7,
+      "reason": "All named engineering checks passed in this recorded mode; human visual/AT review remains separate."
+    }
+  ]
+}

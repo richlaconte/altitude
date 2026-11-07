@@ -1,0 +1,180 @@
+{
+  "protocolVersion": "1.0.0",
+  "id": "field-edit-normal",
+  "evidenceType": "engineering",
+  "recordedAt": "2026-11-07T15:34:55.960Z",
+  "sessionId": "engineering-smoke",
+  "observedVariant": "baseline",
+  "priorRecordRefs": [],
+  "source": {
+    "commit": "4fd91df21fbe6ec3df66ce7e0ac6407929170140",
+    "dirty": false,
+    "packageVersion": "0.31.20",
+    "artifactSha256": "77219a26af9ceeaba5d45e2dc2d07b0791fd9b65826fdae6064dcb093c878d15",
+    "runnerSha256": "c1ef180cef1c7e0ae394d746067b444886181c8e95b1d73ea8bb722d7c2f6d20",
+    "lockSha256": "b0ebb96a2b552e8f867b6734a928f23847af391f2ca3d31c6c84e4962c857ae4",
+    "reactVersion": "19.3.0"
+  },
+  "environment": {
+    "browser": "Chromium 157.0.8103.38",
+    "os": "darwin 25.1.0",
+    "viewport": [
+      1280,
+      900
+    ],
+    "zoom": 1,
+    "scheme": "daylight",
+    "input": "mixed keyboard/pointer automation; board movement by keyboard",
+    "motion": "normal",
+    "assistiveTechnology": null,
+    "fonts": "Network fonts blocked; system fallback"
+  },
+  "journey": "field-edit",
+  "task": "Rename Invoice PDF redesign to Invoice PDF layout; recover from the rejected write.",
+  "variants": [
+    {
+      "id": "baseline",
+      "description": "Unmodified complete planning-board app at the recorded source and artifact digest.",
+      "artifactSha256": "77219a26af9ceeaba5d45e2dc2d07b0791fd9b65826fdae6064dcb093c878d15"
+    }
+  ],
+  "order": [
+    "baseline"
+  ],
+  "stimulus": {
+    "status": "valid",
+    "reason": "All named engineering checks passed in this recorded mode; human visual/AT review remains separate.",
+    "healthRef": "field-edit-normal.json"
+  },
+  "outcome": {
+    "result": "completed",
+    "observations": [
+      "A real pending write precedes the rejection",
+      "Rejection retains named record, draft, full local error and recovery",
+      "Rejected write leaves visible confirmed identity and persisted snapshot unchanged",
+      "Exactly one rejected write followed by one accepted retry",
+      "Canonical title identifies the same record",
+      "Accepted title survives reload in simulated storage",
+      "No page or JavaScript console errors"
+    ],
+    "assistance": "Automated engineering driver; not a participant."
+  },
+  "comprehension": {
+    "result": "not-assessed",
+    "response": null,
+    "reason": "Participant evaluation unrun."
+  },
+  "ratings": [],
+  "comparison": {
+    "status": "not-assessed",
+    "selected": null,
+    "reason": "One implementation; no participant comparison."
+  },
+  "negativeEvidence": [],
+  "uncertainty": [
+    "No participant or model judgments collected.",
+    "No AT, pointer/touch, narrow viewport, zoom or forced-color evaluation in this smoke run.",
+    "Simulated service and localStorage read-back do not prove production persistence."
+  ],
+  "checks": [
+    {
+      "name": "A real pending write precedes the rejection",
+      "passed": true,
+      "evidence": [
+        {
+          "state": "editing",
+          "busy": false,
+          "text": "TitleTitleSave changesCancel"
+        },
+        {
+          "state": "validating",
+          "busy": false,
+          "text": "TitleTitleSave changesCancelChecking value"
+        },
+        {
+          "state": "saving",
+          "busy": true,
+          "text": "TitleTitleSave changesCancelSaving changes"
+        },
+        {
+          "state": "saving",
+          "busy": true,
+          "text": "TitleTitleSave changesCancelSaving changes"
+        },
+        {
+          "state": "error",
+          "busy": false,
+          "text": "TitleTitleSave changesCancelWe couldn't save that. Nothing was changed."
+        }
+      ]
+    },
+    {
+      "name": "Rejection retains named record, draft, full local error and recovery",
+      "passed": true,
+      "evidence": {
+        "errorText": "Title\nTitle\nSave changes\nCancel\n\nWe couldn't save that. Nothing was changed.",
+        "draft": "Invoice PDF layout"
+      }
+    },
+    {
+      "name": "Rejected write leaves visible confirmed identity and persisted snapshot unchanged",
+      "passed": true,
+      "evidence": {
+        "record": "c3",
+        "originalStillShown": true,
+        "persistedBefore": null,
+        "persistedAfter": null,
+        "storageNote": "No persisted snapshot yet; original identity is verified in the app, not inferred from absent storage.",
+        "requests": [
+          {
+            "status": "rejected",
+            "text": "cards.updateRejectedFailWe couldn't save that. Nothing was changed. · 302 ms"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Exactly one rejected write followed by one accepted retry",
+      "passed": true,
+      "evidence": [
+        {
+          "status": "ok",
+          "text": "cards.updateSucceededSaved · 380 ms"
+        },
+        {
+          "status": "rejected",
+          "text": "cards.updateRejectedFailWe couldn't save that. Nothing was changed. · 302 ms"
+        }
+      ]
+    },
+    {
+      "name": "Canonical title identifies the same record",
+      "passed": true,
+      "evidence": {
+        "id": "c3",
+        "title": "Invoice PDF layout",
+        "epic": "Billing",
+        "assignee": null,
+        "points": null,
+        "tags": [
+          "design"
+        ],
+        "due": null,
+        "rev": 2
+      }
+    },
+    {
+      "name": "Accepted title survives reload in simulated storage",
+      "passed": true,
+      "evidence": {
+        "record": "c3",
+        "title": "Invoice PDF layout"
+      }
+    },
+    {
+      "name": "No page or JavaScript console errors",
+      "passed": true,
+      "evidence": []
+    }
+  ]
+}

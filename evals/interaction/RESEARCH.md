@@ -41,10 +41,10 @@ Use two journeys in the same complete app: rename `c3` (Invoice PDF redesign), f
 
 ## Implementation plan
 
-- [ ] Add `PROTOCOL.md` with frozen tasks, controls, validity rules, observation/questions, accessibility accommodations and interpretation boundaries.
-- [ ] Write failing report-format tests for broken stimuli, a low-rated winner, indistinguishable alternatives and low satisfaction after success; add malformed/provenance cases.
-- [ ] Implement `report.mjs` to validate and render the evidence contract without converting relative choices or engineering outcomes into approval.
-- [ ] Implement `smoke.mjs` against the existing planning-board app, preserving its fixtures; capture normal/reduced motion, service outcomes, record identity, local feedback and focus.
-- [ ] Run the engineering pilot, preserve its versioned result and document its limits. Participant testing and AT review remain unrun.
-- [ ] Link from manual validation and relevant eval/example READMEs; run format tests in the deterministic framework suite. No package/runtime changes or version bump are required.
-- [ ] Review scope, evidence claims and generated report integrity; open the PR for review after checks pass.
+- [x] Add `PROTOCOL.md` with frozen tasks, controls, validity rules, observation/questions, accessibility accommodations and interpretation boundaries.
+- [x] Write failing report-format tests for broken stimuli, a low-rated winner, indistinguishable alternatives and low satisfaction after success; add malformed/provenance cases.
+- [x] Implement `report.mjs` to validate and render the evidence contract without converting relative choices or engineering outcomes into approval.
+- [x] Implement `smoke.mjs` against the existing planning-board app, preserving its fixtures; capture normal/reduced motion, service outcomes, record identity, local feedback and focus.
+- [x] Run the engineering pilot, preserve its versioned result and document its limits. Participant testing and AT review remain unrun.
+- [x] Link from manual validation and relevant eval/example READMEs; run format tests in the deterministic framework suite. No package/runtime changes or version bump are required.
+- [x] Review scope, evidence claims and generated report integrity; open the PR for review after checks pass. Cross-review findings were fixed; PR CI governs readiness.
