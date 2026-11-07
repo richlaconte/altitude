@@ -46,7 +46,7 @@ Wide record tables need a way to choose what shows. `columnsMenu` adds a **Colum
 
 - `columnVisibility`, `onColumnVisibilityChange`: `{ [key]: false }` hides a column.
 - `columnOrder`, `onColumnOrderChange`: keys in order; keys left out keep their place after the ones given.
-- `density`, `onDensityChange`: `'comfortable'` (default) or `'compact'`. Compact rows keep every target at least 24px tall ([WCAG 2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum)).
+- `density`, `onDensityChange`: `'comfortable'` (default) or `'compact'`. This chooses row padding; controls in cells inherit their sizes from `AltitudeProvider` unless an explicit nested provider changes them. Compact rows keep every target at least 24px tall ([WCAG 2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum)).
 
 Each has an uncontrolled `default…` form. Showing, hiding or reordering a column doesn't animate the table: it's a change of layout, not of the record. Each change is announced ("Owner column hidden", "Compact rows").
 
