@@ -20,15 +20,20 @@ Where a person writes to an assistant or agent: a textarea that grows, attachmen
 
 **Dictation.** `PromptInputDictate` (in the toolbar) is a microphone toggle; your app supplies the speech recognition (the Web Speech API or a server transcriber) and passes `status`, `interim` and `final`. Listening is latched like a Toggle that's on (a shallow well with accent-soft poured in) with "Listening" and a steady lamp: no pulse, no waveform. Interim words are a ghost under the text in `ink-faint`, like a suggestion, never in the value; `final` words go in at the caret. ⌘D / Ctrl+D toggles from the text; Escape stops listening before it stops generating. "Listening" and "Stopped listening" are announced; interim words aren't. Blocked or unavailable stays focusable and says why.
 
+**Provider and model.** Pass `modelPicker={{ providers, value, onValueChange }}` and place `PromptInputModelSelector` in the toolbar. It shows a visible Provider field and a searchable Model field. A provider change clears the model until explicitly chosen; duplicate model IDs across providers remain distinct. `onSubmit` and `onQueue` receive a copied `message.model` pair (`providerId`, `modelId`). Loading, failed catalogs, missing choices and unavailable choices block both Enter and Send without clearing the draft or attachments. The reason is visible and associated with the fields and Send. Stop still works. `disabled` on the picker locks its controls but does not invalidate an available selection. Omit `modelPicker` to keep the existing composer behavior. See [ModelSelector](../ModelSelector/README.md) for the catalog and ownership contract.
+
+`onSubmit` and `onQueue` may return **false synchronously** when the application refuses dispatch; the composer then retains its draft, files, mentions and command. All other return values retain the existing behavior. Promises are not awaited: an asynchronous failure belongs to the application's recovery flow. `useAssistantTurn` returns the synchronous boolean the composer expects.
+
 **You provide:** sending, stopping, uploading, and the `status` of the response. Leave out `accept` and there are no attachments.
 
 ```tsx
-<PromptInput onSubmit={(msg) => send(msg)} status={status} onStop={stop} accept="image/*,.pdf">
+<PromptInput onSubmit={(msg) => send(msg)} status={status} onStop={stop} accept="image/*,.pdf"
+  modelPicker={{ providers, value: model, onValueChange: setModel }}>
   <PromptInputAttachments />
   <PromptInputTextarea placeholder="Ask about this workspace" />
   <PromptInputToolbar>
     <PromptInputAttach />
-    <Select size="sm" aria-label="Model" items={models} />
+    <PromptInputModelSelector />
     <PromptInputSubmit />
   </PromptInputToolbar>
 </PromptInput>
@@ -59,7 +64,7 @@ The full preview, as rendered in Storybook and checked in CI (`col`, `cap`, `pi`
 
 ```tsx
 import * as React from 'react';
-import { PromptInput, PromptInputAttach, PromptInputAttachments, PromptInputDictate, PromptInputSubmit, PromptInputTextarea, PromptInputToolbar, Select } from 'altitude-design';
+import { PromptInput, PromptInputAttach, PromptInputAttachments, PromptInputDictate, PromptInputModelSelector, PromptInputSubmit, PromptInputTextarea, PromptInputToolbar } from 'altitude-design';
 
 const context = [
   { id: 'f1', label: 'pricing.ts', kind: 'file', description: 'src/pricing.ts' },
@@ -110,21 +115,24 @@ function Dictated() {
 export default function App() {
   const [status, setStatus] = React.useState('ready');
   const [last, setLast] = React.useState('');
+  const [model, setModel] = React.useState({ providerId: 'studio', modelId: 'beam' });
+  const providers = [{ id: 'studio', label: 'Studio connection', models: [{ id: 'beam', label: 'Beam' }, { id: 'arc', label: 'Arc' }] },
+    { id: 'gateway', label: 'Team gateway', models: [{ id: 'beam', label: 'Beam' }] }];
   const timer = React.useRef();
-  const send = ({ text, files }) => {
-    setLast(`Sent “${text}”${files.length ? ` with ${files.length} file${files.length > 1 ? 's' : ''}` : ''}.`);
+  const send = ({ text, files, model }) => {
+    setLast(`Sent “${text}”${files.length ? ` with ${files.length} file${files.length > 1 ? 's' : ''}` : ''}. Provider: ${model.providerId}; model: ${model.modelId}.`);
     setStatus('submitted');
     timer.current = setTimeout(() => { setStatus('streaming'); timer.current = setTimeout(() => setStatus('ready'), 2500); }, 600);
   };
   return (
     <div className="col pi">
-      <PromptInput onSubmit={send} status={status} onStop={() => { clearTimeout(timer.current); setStatus('ready'); }} accept="image/*,.pdf,.csv"
+      <PromptInput onSubmit={send} modelPicker={{ providers, value: model, onValueChange: setModel }} status={status} onStop={() => { clearTimeout(timer.current); setStatus('ready'); }} accept="image/*,.pdf,.csv"
         onAttach={() => new Promise((r) => setTimeout(r, 900))}>
         <PromptInputAttachments />
         <PromptInputTextarea placeholder="Ask about this workspace" />
         <PromptInputToolbar>
           <PromptInputAttach />
-          <Select size="sm" aria-label="Model" defaultValue="opus" items={[{ value: 'opus', label: 'Opus 5.5' }, { value: 'sonnet', label: 'Sonnet 5.5' }, { value: 'haiku', label: 'Haiku 5.5' }]} />
+          <PromptInputModelSelector />
           <PromptInputSubmit />
         </PromptInputToolbar>
       </PromptInput>

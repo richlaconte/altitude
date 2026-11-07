@@ -2,6 +2,7 @@ import * as React from 'react';
 import { cx, Icons, useApproach, useDepth, useKeyFocus } from './core';
 import { Button } from './controls';
 import { Tag } from './tag-input';
+import { getModelSelectionError, ModelSelectorControl, type ModelSelection, type ModelSelectorProps } from './model-selector';
 
 /* ───────────────────────── PromptInput ───────────────────────── */
 
@@ -11,6 +12,8 @@ export interface PromptMention { id: string; label: string; kind?: 'file' | 'rec
 export interface PromptCommand { name: string; description?: string }
 export interface PromptMessage {
   text: string; files: File[];
+  /** Provider/model identity copied when this message was sent or queued. */
+  model?: ModelSelection;
   /** What was pointed at with @ and is still in the text. */
   mentions?: PromptMention[];
   /** The command chosen with / at the start, without its slash; it's taken out of `text`. */
@@ -26,6 +29,7 @@ interface Ctx {
   text: string; setText: (t: string) => void; files: PromptAttachment[]; attach: (files: File[]) => void; remove: (id: string) => void;
   status: PromptStatus; submit: () => void; stop: () => void; busy: boolean; pick: () => void; area: React.MutableRefObject<HTMLTextAreaElement | null>;
   suggest: Suggest;
+  modelPicker?: ModelSelectorProps; modelError: string | null; modelFeedbackId: string;
   // Dictation (#284): the mic registers how to stop and what's heard so far; the text shows the interim words.
   dictation: React.MutableRefObject<{ listening: boolean; toggle?: () => void; stop?: () => void }>;
   interim: string; setInterim: (t: string) => void; say: (t: string) => void;
@@ -34,8 +38,10 @@ const PromptCtx = React.createContext<Ctx | null>(null);
 const usePrompt = (part: string) => { const c = React.useContext(PromptCtx); if (!c) throw new Error(`${part} must be inside <PromptInput>.`); return c; };
 
 export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
-  /** Called with the text and attached files when sent. */
-  onSubmit: (message: PromptMessage) => void;
+  /** Called when sent. Return false synchronously to retain the draft; promises are not awaited. */
+  onSubmit: (message: PromptMessage) => unknown;
+  /** Opt into validated provider/model selection and a route snapshot in each submitted or queued message. */
+  modelPicker?: ModelSelectorProps;
   /** 'submitted' and 'streaming' turn Send into Stop, in the same slot. Default 'ready'. */
   status?: PromptStatus;
   /** Stops generating. Return `false` when nothing stopped, and "Generating stopped" isn't announced. */
@@ -43,9 +49,10 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
   /**
    * Lets a person queue a message while the agent works (#276): Enter while 'submitted' or 'streaming' calls this
    * instead of doing nothing; the button stays Stop, the composer empties and keeps focus. Show the queue with
-   * ConversationQueue and send the first one when the turn ends.
+   * ConversationQueue and send the first one when the turn ends. Return false synchronously to retain the draft;
+   * promises are not awaited.
    */
-  onQueue?: (message: PromptMessage) => void;
+  onQueue?: (message: PromptMessage) => unknown;
   /**
    * Things to point the agent at (#283): typing @ opens a list of what matches, filtered as you type. A chosen one is
    * "@label" in the text and a plate above it; Backspace after it removes it whole. A promise shows "Searching…".
@@ -68,7 +75,7 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
  * response is generating it becomes Stop in the same slot and size, so nothing moves. Enter sends, Shift+Enter adds a
  * line, and Enter during IME composition never sends.
  */
-export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, mentionable, commands, value, onValueChange, onAttach, accept, className, children, ...rest }: PromptInputProps) {
+export function PromptInput({ onSubmit, modelPicker, status = 'ready', onStop, onQueue, mentionable, commands, value, onValueChange, onAttach, accept, className, children, ...rest }: PromptInputProps) {
   useApproach(); useKeyFocus();
   const [own, setOwn] = React.useState('');
   const text = value ?? own;
@@ -76,6 +83,8 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, menti
   const [files, setFiles] = React.useState<PromptAttachment[]>([]);
   const [over, setOver] = React.useState(false);
   const [said, setSaid] = React.useState('');
+  const modelFeedbackId = `${React.useId()}-model-feedback`;
+  const modelError = modelPicker ? getModelSelectionError(modelPicker) : null;
   const area = React.useRef<HTMLTextAreaElement | null>(null);
   const picker = React.useRef<HTMLInputElement>(null);
   const busy = status === 'submitted' || status === 'streaming';
@@ -176,19 +185,19 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, menti
   const message = (): PromptMessage => {
     const body = command ? text.replace(new RegExp(`^/${command}\\s*`), '') : text;
     const mentions = chosen.filter((x) => body.includes(`@${x.label}`));
-    return { text: body.trim(), files: files.map((f) => f.file), ...(mentions.length ? { mentions } : {}), ...(command ? { command } : {}) };
+    return { text: body.trim(), files: files.map((f) => f.file), ...(modelPicker?.value ? { model: { providerId: modelPicker.value.providerId, modelId: modelPicker.value.modelId } } : {}), ...(mentions.length ? { mentions } : {}), ...(command ? { command } : {}) };
   };
   const clear = () => { setText(''); setFiles([]); setChosen([]); setCommand(null); setQuery(null); };
   const submit = () => {
-    if (!ready || (busy && !onQueue)) return;
+    if (!ready || modelError || (busy && !onQueue)) return;
     if (busy) {
-      onQueue!(message());
+      if (onQueue!(message()) === false) return;
       clear();
       setSaid('Message queued. It will be sent when the assistant finishes.');
       area.current?.focus();
       return;
     }
-    onSubmit(message());
+    if (onSubmit(message()) === false) return;
     clear();
     area.current?.focus();
   };
@@ -197,7 +206,7 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, menti
   const hasFiles = (e: React.DragEvent) => accept !== undefined && [...e.dataTransfer.types].includes('Files');
 
   return (
-    <PromptCtx.Provider value={{ text, setText, files, attach, remove, status, submit, stop, busy, pick, area, suggest, dictation, interim, setInterim, say: setSaid }}>
+    <PromptCtx.Provider value={{ text, setText, files, attach, remove, status, submit, stop, busy, pick, area, suggest, modelPicker, modelError, modelFeedbackId, dictation, interim, setInterim, say: setSaid }}>
       <form {...rest} className={cx('alt-prompt', className)} data-status={status} onSubmit={(e) => { e.preventDefault(); submit(); }}
         onDragEnter={(e) => { if (hasFiles(e)) { e.preventDefault(); setOver(true); } }}
         onDragOver={(e) => { if (hasFiles(e)) e.preventDefault(); }}
@@ -235,6 +244,7 @@ export function PromptInput({ onSubmit, status = 'ready', onStop, onQueue, menti
           {children}
           {over && <span className="alt-prompt-drop" aria-hidden="true">Drop to attach</span>}
         </div>
+        {modelPicker && <p id={modelFeedbackId} className="alt-prompt-model-feedback" role="status">{modelError}</p>}
         {accept !== undefined && <input ref={picker} type="file" accept={accept || undefined} multiple hidden tabIndex={-1} onChange={(e) => { attach([...(e.target.files ?? [])]); e.target.value = ''; }} />}
         <span className="alt-sr" role="status" aria-live="polite">{said}</span>
       </form>
@@ -262,6 +272,7 @@ export function PromptInputTextarea({ placeholder = 'Ask anything', maxHeight = 
       aria-keyshortcuts="Enter"
       {...(c.suggest.enabled ? { role: 'combobox', 'aria-autocomplete': 'list' as const, 'aria-expanded': c.suggest.open, 'aria-controls': c.suggest.open ? c.suggest.listId : undefined, 'aria-activedescendant': c.suggest.activeId } : {})}
       {...rest}
+      aria-describedby={[rest['aria-describedby'], c.modelError ? c.modelFeedbackId : undefined].filter(Boolean).join(' ') || undefined}
       onChange={(e) => { c.setText(e.target.value); c.suggest.read(e.target.value, e.target.selectionStart); }}
       onBlur={(e) => { rest.onBlur?.(e); setTimeout(c.suggest.close, 150); }}
       onPaste={(e) => { const fs = [...e.clipboardData.files]; if (fs.length) { e.preventDefault(); c.attach(fs); } }}
@@ -297,6 +308,13 @@ export function PromptInputAttachments({ className }: { className?: string }) {
 /** The row under the text: tools and pickers on the left, Send on the right. */
 export function PromptInputToolbar({ className, children }: { className?: string; children?: React.ReactNode }) {
   return <div className={cx('alt-prompt-bar', className)}>{children}</div>;
+}
+
+/** The provider/model fields configured by modelPicker on the enclosing PromptInput. */
+export function PromptInputModelSelector({ className }: { className?: string }) {
+  const c = usePrompt('PromptInputModelSelector');
+  if (!c.modelPicker) throw new Error('PromptInputModelSelector requires modelPicker on <PromptInput>.');
+  return <ModelSelectorControl {...c.modelPicker} className={cx(c.modelPicker.className, className)} feedbackId={c.modelFeedbackId} hideFeedback />;
 }
 
 /** Attach files (the picker); ⌘/Ctrl+U does the same from the text. Needs `accept` on PromptInput. */
@@ -358,9 +376,9 @@ export function PromptInputDictate({ status = 'idle', onStart, onStop, interim, 
 /** Send, which becomes Stop in the same slot and size while a response is generating. */
 export function PromptInputSubmit({ className }: { className?: string }) {
   const c = usePrompt('PromptInputSubmit');
-  const empty = !c.text.trim() || c.files.some((f) => f.status === 'pending');
+  const empty = !c.text.trim() || c.files.some((f) => f.status === 'pending') || !!c.modelError;
   return c.busy
     ? <Button size="sm" variant="primary" square className={cx('alt-prompt-send', className)} data-stop="" aria-label="Stop generating" aria-keyshortcuts="Escape" onClick={c.stop}><Icons.Stop size={18} /></Button>
-    : <Button type="submit" size="sm" variant="primary" square className={cx('alt-prompt-send', className)} aria-label="Send message" aria-disabled={empty || undefined}
+    : <Button type="submit" size="sm" variant="primary" square className={cx('alt-prompt-send', className)} aria-label="Send message" aria-disabled={empty || undefined} aria-describedby={c.modelError ? c.modelFeedbackId : undefined}
         onClick={(e) => { if (empty) e.preventDefault(); }}><Icons.ArrowUp size={16} /></Button>;
 }

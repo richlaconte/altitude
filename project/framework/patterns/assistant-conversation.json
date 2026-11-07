@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "assistant-conversation",
-  "version": 1,
+  "version": 2,
   "title": "Assistant conversation",
   "intents": [
     "chat",
@@ -9,9 +9,11 @@
     "copilot",
     "chatbot",
     "agent conversation",
-    "ai chat"
+    "ai chat",
+    "provider selection",
+    "model selection"
   ],
-  "purpose": "Send, stream, stop, retry and recover in a conversation with an assistant, without losing the person's words or claiming an answer is complete before it is.",
+  "purpose": "Choose a provider and model, send, stream, stop, retry and recover in a conversation with an assistant, preserving the submitted route and the person's words without claiming an answer is complete before it is.",
   "useWhen": [
     "A person writes to an assistant and reads its answers as they stream."
   ],
@@ -25,7 +27,9 @@
     "a stream that yields text and resolves only when complete",
     "errors classified as offline, rate limited, context full, refused or outage",
     "the restored answer and whether it completed, after a reload",
-    "the context window used, when known"
+    "the context window used, when known",
+    "when model choice is offered: an authorized provider/model catalog, a controlled pair and selection callback, with loading/error and unavailable reasons",
+    "the captured provider/model pair on submitted, queued and restored inputs, and actual response metadata when server routing can differ"
   ],
   "states": [
     "ready",
@@ -36,15 +40,23 @@
     "failed",
     "interrupted",
     "awaiting-input",
-    "queued"
+    "queued",
+    "choosing-model",
+    "catalog-loading",
+    "catalog-error",
+    "model-unavailable"
   ],
   "transitions": [
-    "ready → submitted → streaming → complete",
-    "submitted, streaming or awaiting-input → stopped on Stop, keeping the partial answer",
-    "submitted or streaming → failed, keeping the message, with Retry",
-    "streaming → awaiting-input while a Confirmation or Question is open, then back",
-    "a reload during streaming → interrupted, with Retry",
-    "a message written while streaming → queued, sent when the turn ends"
+    "ready \u2192 submitted \u2192 streaming \u2192 complete",
+    "submitted, streaming or awaiting-input \u2192 stopped on Stop, keeping the partial answer",
+    "submitted or streaming \u2192 failed, keeping the message, with Retry",
+    "streaming \u2192 awaiting-input while a Confirmation or Question is open, then back",
+    "a reload during streaming \u2192 interrupted, with Retry",
+    "a message written while streaming \u2192 queued with its captured provider/model, sent when the turn ends",
+    "provider change \u2192 choosing-model; a valid model choice enables the next send",
+    "catalog loading, error or unavailable selection \u2192 block new sends and queues, preserve input and keep Stop available",
+    "picker change during a turn \u2192 next-message selection changes, recorded and queued routes remain unchanged",
+    "retry or restore \u2192 retain the submitted provider/model pair and revalidate before dispatch"
   ],
   "rules": [
     "ALT-CONVO-001",
@@ -60,7 +72,9 @@
   "authority": "contextual-pattern",
   "applicability": "Conversations with an assistant, in products and harnesses.",
   "exceptions": [
-    "Persistence, retention and the transport are the application's; the contract covers what the person sees."
+    "Persistence, retention and the transport are the application's; the contract covers what the person sees.",
+    "The application owns provider credentials, authorized catalogs, server authorization, capability validation, billing policy and saved preferences; the selector performs no inference or connection setup.",
+    "Provider/model selection is opt-in; existing single-route composers do not need a picker."
   ],
   "maturity": "provisional",
   "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
@@ -72,6 +86,8 @@
   "verification": [
     "build/checks/assistant-conversation-pattern.mjs",
     "build/checks/pattern-types.mjs",
-    "build/checks/pattern-workflows.mjs"
+    "build/checks/pattern-workflows.mjs",
+    "build/checks/model-selector.mjs",
+    "build/checks/agent-model-selection.mjs"
   ]
 }

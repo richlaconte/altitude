@@ -136,8 +136,60 @@ const THREADS = [
   { id: "t3", title: "Summarise last week's incidents", status: "idle", unread: true }
 ];
 const MOCKUP = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='64'%3E%3Crect width='96' height='64' fill='%23e8edf5'/%3E%3Crect x='10' y='14' width='22' height='36' rx='3' fill='%23c9d3e6'/%3E%3Crect x='37' y='10' width='22' height='44' rx='3' fill='%233b6fd8'/%3E%3Crect x='64' y='14' width='22' height='36' rx='3' fill='%23c9d3e6'/%3E%3C/svg%3E";
+const HARNESS_PROVIDERS = [
+  { id: "direct", label: "Direct", models: [
+    { id: "beam", label: "Beam" },
+    { id: "arc", label: "Arc" },
+    { id: "archive", label: "Archive", disabled: true, disabledReason: "Does not support tools for this task." }
+  ] },
+  { id: "gateway", label: "Gateway", models: [{ id: "beam", label: "Beam" }] },
+  { id: "local", label: "Local", disabled: true, disabledReason: "Connect a local runtime in settings.", models: [] }
+];
+const HARNESS_MODEL = { providerId: "direct", modelId: "beam" };
+function routeLabel(model) {
+  const provider = HARNESS_PROVIDERS.find((p) => p.id === model?.providerId);
+  return `${provider?.label ?? model?.providerId ?? "Unknown provider"} \xB7 ${provider?.models.find((m) => m.id === model?.modelId)?.label ?? model?.modelId ?? "Unknown model"}`;
+}
+const promptText = (message) => [message.command ? `/${message.command}` : "", message.text].filter(Boolean).join(" ");
+function useDemoModels(complete) {
+  const [value, onValueChange] = React.useState(HARNESS_MODEL);
+  const [sent, setSent] = React.useState(
+    /** @type {import('altitude-design').PromptMessage[]} */
+    []
+  );
+  const [queued, setQueued] = React.useState(
+    /** @type {{id:string,message:import('altitude-design').PromptMessage}[]} */
+    []
+  );
+  const serial = React.useRef(0);
+  const send = (message) => setSent((xs) => [...xs, message]);
+  const enqueue = (message) => setQueued((xs) => [...xs, { id: `demo-${++serial.current}`, message }]);
+  React.useEffect(() => {
+    if (complete && queued.length) {
+      setSent((xs) => [...xs, ...queued.map((q) => q.message)]);
+      setQueued([]);
+    }
+  }, [complete, queued]);
+  return {
+    picker: { providers: HARNESS_PROVIDERS, value, onValueChange },
+    sent,
+    send,
+    enqueue,
+    queue: /* @__PURE__ */ React.createElement(
+      A.ConversationQueue,
+      {
+        items: queued.map((q) => ({ id: q.id, text: `${promptText(q.message)} \xB7 ${routeLabel(q.message.model)}` })),
+        onRemove: (id) => setQueued((xs) => xs.filter((q) => q.id !== id))
+      }
+    )
+  };
+}
+function ModelRecords({ messages }) {
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, messages.map((message, i) => /* @__PURE__ */ React.createElement(A.Message, { key: i, from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, promptText(message)), message.files.length > 0 && /* @__PURE__ */ React.createElement(A.MessageAttachments, { items: message.files.map((file) => ({ name: file.name, type: file.type })) }), /* @__PURE__ */ React.createElement("p", { className: "ah-model-record" }, "Recorded with ", routeLabel(message.model)))));
+}
 function Harness({ k }) {
   const s = stateAt(k);
+  const models = useDemoModels(s.finished);
   const main = React.useRef(
     /** @type {HTMLDivElement | null} */
     null
@@ -145,7 +197,7 @@ function Harness({ k }) {
   React.useEffect(() => {
     const el = main.current?.querySelector(".alt-convo-scroll");
     if (el) el.scrollTop = el.scrollHeight;
-  }, [k]);
+  }, [k, models.sent.length]);
   const working = !s.finished;
   const sub = (id) => s.subagents[id]?.status ?? "planned";
   const testStatus = !s.command ? "planned" : s.command.exitCode === 0 ? "done" : "failed";
@@ -166,7 +218,7 @@ function Harness({ k }) {
     }
   )))))) }, /* @__PURE__ */ React.createElement("div", { className: "ah-main", ref: main }, /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Annual pricing for the pricing page" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, s.user && /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageAttachments, { items: [{ name: "pricing-mockup.png", type: "image/svg+xml", url: MOCKUP }] }), /* @__PURE__ */ React.createElement(A.MessageContent, null, s.user.text)), s.rewound && /* @__PURE__ */ React.createElement(A.ConversationCheckpoint, { label: s.rewound.label, at: Date.now() - 2 * 6e4, consequence: "The messages after this will be set aside. You can return to them.", onRestore: () => {
   }, onReturn: () => {
-  } }), k >= 1 && /* @__PURE__ */ React.createElement(A.Message, { from: "assistant", status: s.finished ? "complete" : "streaming" }, /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Agent run" }, /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Think it through", status: s.reasoningDone ? "done" : "running", duration: s.reasoningMs }, /* @__PURE__ */ React.createElement(A.TraceReasoning, { status: s.reasoningDone ? "complete" : "streaming", duration: s.reasoningMs }, s.reasoning)), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Read the pricing code", status: k < 2 ? "planned" : "auto" }, s.tool && /* @__PURE__ */ React.createElement(A.TraceToolCall, { name: s.tool.name, input: s.tool.input, output: s.tool.output }), /* @__PURE__ */ React.createElement(A.TraceParallel, { label: "Subagents" }, /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Read plans.ts", status: (
+  } }), k >= 1 && /* @__PURE__ */ React.createElement(A.Message, { from: "assistant", status: s.finished ? "complete" : "streaming" }, /* @__PURE__ */ React.createElement("p", { className: "ah-model-record" }, "Run with ", routeLabel(HARNESS_MODEL)), /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Agent run" }, /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Think it through", status: s.reasoningDone ? "done" : "running", duration: s.reasoningMs }, /* @__PURE__ */ React.createElement(A.TraceReasoning, { status: s.reasoningDone ? "complete" : "streaming", duration: s.reasoningMs }, s.reasoning)), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Read the pricing code", status: k < 2 ? "planned" : "auto" }, s.tool && /* @__PURE__ */ React.createElement(A.TraceToolCall, { name: s.tool.name, input: s.tool.input, output: s.tool.output }), /* @__PURE__ */ React.createElement(A.TraceParallel, { label: "Subagents" }, /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Read plans.ts", status: (
     /** @type {any} */
     sub("plans")
   ) }), /* @__PURE__ */ React.createElement(A.TraceStep, { title: "Read Pricing.tsx", status: (
@@ -219,13 +271,10 @@ function Harness({ k }) {
   )), s.question && /* @__PURE__ */ React.createElement(A.Question, { title: s.question.title, state: s.question.state, answer: s.question.answer, answerLabel: "Use this" }, /* @__PURE__ */ React.createElement(A.QuestionOption, { value: "annual", label: "Annual", description: "Shows the saving first." }), /* @__PURE__ */ React.createElement(A.QuestionOption, { value: "monthly", label: "Monthly", description: "Keeps today's default." })), s.text && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, { streaming: !s.finished }, s.text)), s.review && /* @__PURE__ */ React.createElement(A.DiffView, { caption: "src/plans.ts \xB7 proposed", before: s.review.before, after: s.review.after, review: true, decisions: k >= 10 ? { "change-1": "accept" } : {}, onDecide: () => {
   }, onDecideAll: () => {
   } }), s.finished && /* @__PURE__ */ React.createElement(A.Suggestions, { "aria-label": "Suggested follow-ups", mode: "send", onChoose: () => {
-  } }, /* @__PURE__ */ React.createElement(A.Suggestion, null, "Add a yearly badge"), /* @__PURE__ */ React.createElement(A.Suggestion, null, "Open a pull request"))))), /* @__PURE__ */ React.createElement(A.ConversationQueue, { items: s.queued, onSendNow: () => {
+  } }, /* @__PURE__ */ React.createElement(A.Suggestion, null, "Add a yearly badge"), /* @__PURE__ */ React.createElement(A.Suggestion, null, "Open a pull request"))), /* @__PURE__ */ React.createElement(ModelRecords, { messages: models.sent }))), /* @__PURE__ */ React.createElement(A.ConversationQueue, { items: s.queued, onSendNow: () => {
   }, onEdit: () => {
   }, onRemove: () => {
-  } }), /* @__PURE__ */ React.createElement(A.PromptInput, { status: working && k >= 1 ? "streaming" : "ready", onSubmit: () => {
-  }, onStop: () => {
-  }, onQueue: () => {
-  } }, /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask the agent" }), /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null)))));
+  } }), models.queue, /* @__PURE__ */ React.createElement(A.PromptInput, { status: working && k >= 1 ? "streaming" : "ready", onSubmit: models.send, onStop: () => false, onQueue: models.enqueue, modelPicker: models.picker }, /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask the agent" }), /* @__PURE__ */ React.createElement(A.PromptInputModelSelector, null), /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))), /* @__PURE__ */ React.createElement("p", { className: "ah-model-note" }, "For the next message. Demo providers and models; messages are recorded locally, with no AI request.")));
 }
 const STYLES = `.ah-views{display:grid;gap:12px;max-width:1100px}.ah-views>.alt-tabs{justify-self:start}
 .ah-phone{width:min(100%,440px);height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;display:flex;background:var(--surface-ground)}
@@ -236,7 +285,9 @@ const STYLES = `.ah-views{display:grid;gap:12px;max-width:1100px}.ah-views>.alt-
 .cs-status>span:last-child{min-width:0}.cs-status .alt-badge{flex:none}
 .cs-status>svg{flex:none;color:var(--positive)}
 .cs .alt-convo{flex:1;min-height:0}
-.cs-grow{flex:1}.cs-model{width:auto;min-width:0}
+.cs-grow{flex:1}
+.ah-model-record,.ah-model-note{margin:0;font:400 12px/1.4 var(--font-sans);color:var(--ink-muted);overflow-wrap:anywhere}
+.ah-model-record{padding:4px 0}.ah-model-note{flex:none}
 .cs-context{display:flex;align-items:center;gap:2px;min-width:0;margin:0 0 -4px}
 .cs-context>.alt-pop-anchor{display:flex;min-width:0}.cs-context .alt-btn{min-width:0;gap:6px;color:var(--ink-muted);font:400 12.5px/17px var(--font-mono)}
 .cs-context .alt-btn>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cs-context .alt-btn>svg{flex:none}
@@ -293,7 +344,6 @@ const TURN_EDIT = { before: "export function indexOf() {\n  const entered = new 
 const TURN_WRITE = "export function turnStepsOf() {\n  return [];\n}";
 const NEW_FILE = A.diffLines("", TURN_WRITE).filter((o) => o.kind !== "del");
 const FILES = [{ id: "f1", label: "web/turns.ts", kind: "file" }, { id: "f2", label: "web/turn-count.ts", kind: "file" }];
-const MODELS = [{ value: "beam-low", label: "Beam \xB7 low" }, { value: "beam-high", label: "Beam \xB7 high" }, { value: "arc", label: "Arc" }];
 const Glyph = ({ d }) => /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d }));
 const FOLDERS = ["lab-demo", "pricing-site", "altitude"];
 const BRANCHES = ["ape/aaac99cb", "main", "fix/turn-fold-a11y"];
@@ -319,6 +369,7 @@ function CodingSession() {
     /** @type {'requested' | 'running' | 'done' | 'rejected'} */
     "requested"
   );
+  const models = useDemoModels(approval === "done" || approval === "rejected");
   const approve = () => {
     setApproval("running");
     setTimeout(() => setApproval("done"), 900);
@@ -330,7 +381,7 @@ function CodingSession() {
   React.useEffect(() => {
     const el = main.current?.querySelector(".alt-convo-scroll");
     if (el) el.scrollTop = el.scrollHeight;
-  }, [approval]);
+  }, [approval, models.sent.length]);
   const state = SESSION[approval];
   const [folder, setFolder] = React.useState(FOLDERS[0]);
   const [branch, setBranch] = React.useState(BRANCHES[0]);
@@ -349,10 +400,10 @@ function CodingSession() {
     /** @type {any} */
     state.plate.tone
   ), variant: "soft", lamp: true }, state.plate.word) : /* @__PURE__ */ React.createElement(A.Icons.CircleCheck, { size: 16, "aria-label": "Done" }), /* @__PURE__ */ React.createElement("span", null, state.words))), /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", square: true, "aria-label": "More" }, /* @__PURE__ */ React.createElement(A.Icons.More, null))), /* @__PURE__ */ React.createElement(A.Conversation, { "aria-label": "Count steps in the turn fold" }, /* @__PURE__ */ React.createElement(A.ConversationContent, null, /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, "Change the fold to count steps, and remember what a turn fold is."), /* @__PURE__ */ React.createElement(A.MessageActions, { onCopy: true, onEdit: () => {
-  } })), /* @__PURE__ */ React.createElement(A.Message, { from: "assistant" }, /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Change the fold to count steps", collapsible: true }, /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "edit", title: "web/turns.ts", detail: "2 edits", changes: { added: 2, removed: 1 }, status: "done" }, /* @__PURE__ */ React.createElement(A.DiffView, { caption: "web/turns.ts", before: TURN_EDIT.before, after: TURN_EDIT.after })), /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "write", title: "web/turn-count.ts", detail: "new file", changes: { added: 3, removed: 0 }, status: "done" }, /* @__PURE__ */ React.createElement(A.DiffView, { caption: "web/turn-count.ts \xB7 new file", before: "", after: TURN_WRITE, hunks: NEW_FILE })), /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "memory", title: `${memories.length} memories`, status: "done" }, /* @__PURE__ */ React.createElement(A.TraceMemory, { items: memories, onForget: (id) => setForgotten(id, true), onRestore: (id) => setForgotten(id, false) })), /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "run", title: "npm test", detail: "12 passed", status: "done" })), /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "Done: the fold counts steps now, and `turnStepsOf` leaves reasoning out of the count. I saved what a turn fold is to memory; forget any of it that's wrong.")), /* @__PURE__ */ React.createElement(A.MessageActions, { onCopy: true, onRegenerate: () => {
+  } })), /* @__PURE__ */ React.createElement(A.Message, { from: "assistant" }, /* @__PURE__ */ React.createElement("p", { className: "ah-model-record" }, "Run with ", routeLabel(HARNESS_MODEL)), /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Change the fold to count steps", collapsible: true }, /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "edit", title: "web/turns.ts", detail: "2 edits", changes: { added: 2, removed: 1 }, status: "done" }, /* @__PURE__ */ React.createElement(A.DiffView, { caption: "web/turns.ts", before: TURN_EDIT.before, after: TURN_EDIT.after })), /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "write", title: "web/turn-count.ts", detail: "new file", changes: { added: 3, removed: 0 }, status: "done" }, /* @__PURE__ */ React.createElement(A.DiffView, { caption: "web/turn-count.ts \xB7 new file", before: "", after: TURN_WRITE, hunks: NEW_FILE })), /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "memory", title: `${memories.length} memories`, status: "done" }, /* @__PURE__ */ React.createElement(A.TraceMemory, { items: memories, onForget: (id) => setForgotten(id, true), onRestore: (id) => setForgotten(id, false) })), /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "run", title: "npm test", detail: "12 passed", status: "done" })), /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "Done: the fold counts steps now, and `turnStepsOf` leaves reasoning out of the count. I saved what a turn fold is to memory; forget any of it that's wrong.")), /* @__PURE__ */ React.createElement(A.MessageActions, { onCopy: true, onRegenerate: () => {
   }, onFeedback: () => {
   } })), /* @__PURE__ */ React.createElement(A.Message, { from: "user" }, /* @__PURE__ */ React.createElement(A.MessageContent, null, "Run the whole suite, then open a pull request."), /* @__PURE__ */ React.createElement(A.MessageActions, { onCopy: true, onEdit: () => {
-  } })), /* @__PURE__ */ React.createElement(A.Message, { from: "assistant" }, /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Run the suite and open a pull request", collapsible: true }, /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "run", title: "npm test -- --coverage", detail: "48 passed", status: "done" }), (approval === "running" || approval === "done") && /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "gh", title: "pr create --base main", detail: approval === "done" ? "#112" : void 0, status: approval === "running" ? "running" : "done" })), approval !== "rejected" && /* @__PURE__ */ React.createElement(
+  } })), /* @__PURE__ */ React.createElement(A.Message, { from: "assistant" }, /* @__PURE__ */ React.createElement("p", { className: "ah-model-record" }, "Run with ", routeLabel(HARNESS_MODEL)), /* @__PURE__ */ React.createElement(A.Trace, { "aria-label": "Run the suite and open a pull request", collapsible: true }, /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "run", title: "npm test -- --coverage", detail: "48 passed", status: "done" }), (approval === "running" || approval === "done") && /* @__PURE__ */ React.createElement(A.TraceStep, { tool: "gh", title: "pr create --base main", detail: approval === "done" ? "#112" : void 0, status: approval === "running" ? "running" : "done" })), approval !== "rejected" && /* @__PURE__ */ React.createElement(
     A.Confirmation,
     {
       state: approval,
@@ -367,14 +418,14 @@ function CodingSession() {
       onApprove: approve,
       onReject: () => setApproval("rejected")
     }
-  ), approval === "rejected" && /* @__PURE__ */ React.createElement(A.Confirmation, { state: "rejected", title: "Open a pull request", consequence, resolvedBy: "you" }), approval === "done" && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "Opened [pull request #112](#pr-112): 2 files changed, 48 tests passing.")), approval === "rejected" && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "The suite passes. Say when you want the pull request.")))), /* @__PURE__ */ React.createElement(A.ConversationScrollButton, null)), /* @__PURE__ */ React.createElement("div", { className: "cs-context", role: "group", "aria-label": "Workspace" }, picker("Folder", FOLDER, folder, FOLDERS, setFolder, "Open another folder\u2026"), picker("Branch", BRANCH, branch, BRANCHES, setBranch, "New branch\u2026")), /* @__PURE__ */ React.createElement(
+  ), approval === "rejected" && /* @__PURE__ */ React.createElement(A.Confirmation, { state: "rejected", title: "Open a pull request", consequence, resolvedBy: "you" }), approval === "done" && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "Opened [pull request #112](#pr-112): 2 files changed, 48 tests passing.")), approval === "rejected" && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "The suite passes. Say when you want the pull request."))), /* @__PURE__ */ React.createElement(ModelRecords, { messages: models.sent })), /* @__PURE__ */ React.createElement(A.ConversationScrollButton, null)), /* @__PURE__ */ React.createElement("div", { className: "cs-context", role: "group", "aria-label": "Workspace" }, picker("Folder", FOLDER, folder, FOLDERS, setFolder, "Open another folder\u2026"), picker("Branch", BRANCH, branch, BRANCHES, setBranch, "New branch\u2026")), models.queue, /* @__PURE__ */ React.createElement(
     A.PromptInput,
     {
       status: approval === "running" ? "streaming" : "ready",
-      onSubmit: () => {
-      },
-      onStop: () => {
-      },
+      onSubmit: models.send,
+      onQueue: models.enqueue,
+      modelPicker: models.picker,
+      onStop: () => false,
       onAttach: () => {
       },
       accept: "image/*,text/*",
@@ -382,9 +433,10 @@ function CodingSession() {
       commands: [{ name: "review", description: "Review the changes" }, { name: "compact", description: "Summarise the session so far" }]
     },
     /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Message\u2026 @ files, / commands", "aria-label": "Message", rows: 2 }),
+    /* @__PURE__ */ React.createElement(A.PromptInputModelSelector, null),
     /* @__PURE__ */ React.createElement(A.Separator, { decorative: true, className: "cs-sep" }),
-    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputAttach, { label: "Add files" }), /* @__PURE__ */ React.createElement(A.Select, { size: "sm", "aria-label": "Model", items: MODELS, defaultValue: "beam-low", className: "cs-model" }), /* @__PURE__ */ React.createElement("span", { className: "cs-grow" }), /* @__PURE__ */ React.createElement(A.PromptInputDictate, null), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
-  ));
+    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputAttach, { label: "Add files" }), /* @__PURE__ */ React.createElement("span", { className: "cs-grow" }), /* @__PURE__ */ React.createElement(A.PromptInputDictate, null), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
+  ), /* @__PURE__ */ React.createElement("p", { className: "ah-model-note" }, "For the next message. Demo providers and models; messages are recorded locally, with no AI request."));
 }
 function Run({ start = 3 }) {
   const [k, setK] = React.useState(start);

@@ -77,9 +77,14 @@ function Dictated() {
 function App() {
   const [status, setStatus] = React.useState("ready");
   const [last, setLast] = React.useState("");
+  const [model, setModel] = React.useState({ providerId: "studio", modelId: "beam" });
+  const providers = [
+    { id: "studio", label: "Studio connection", models: [{ id: "beam", label: "Beam" }, { id: "arc", label: "Arc" }] },
+    { id: "gateway", label: "Team gateway", models: [{ id: "beam", label: "Beam" }] }
+  ];
   const timer = React.useRef();
-  const send = ({ text, files }) => {
-    setLast(`Sent \u201C${text}\u201D${files.length ? ` with ${files.length} file${files.length > 1 ? "s" : ""}` : ""}.`);
+  const send = ({ text, files, model: model2 }) => {
+    setLast(`Sent \u201C${text}\u201D${files.length ? ` with ${files.length} file${files.length > 1 ? "s" : ""}` : ""}. Provider: ${model2.providerId}; model: ${model2.modelId}.`);
     setStatus("submitted");
     timer.current = setTimeout(() => {
       setStatus("streaming");
@@ -90,6 +95,7 @@ function App() {
     A.PromptInput,
     {
       onSubmit: send,
+      modelPicker: { providers, value: model, onValueChange: setModel },
       status,
       onStop: () => {
         clearTimeout(timer.current);
@@ -100,7 +106,7 @@ function App() {
     },
     /* @__PURE__ */ React.createElement(A.PromptInputAttachments, null),
     /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Ask about this workspace" }),
-    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputAttach, null), /* @__PURE__ */ React.createElement(A.Select, { size: "sm", "aria-label": "Model", defaultValue: "opus", items: [{ value: "opus", label: "Opus 5.5" }, { value: "sonnet", label: "Sonnet 5.5" }, { value: "haiku", label: "Haiku 5.5" }] }), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
+    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputAttach, null), /* @__PURE__ */ React.createElement(A.PromptInputModelSelector, null), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
   ), /* @__PURE__ */ React.createElement("p", { className: "cap" }, status === "ready" ? last || "Enter sends, Shift+Enter adds a line. Paste or drop a file to attach it." : status === "submitted" ? "Sending\u2026" : "Generating\u2026 Escape or Stop ends it."), /* @__PURE__ */ React.createElement(Pointed, null), /* @__PURE__ */ React.createElement(Dictated, null));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));

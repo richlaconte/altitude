@@ -187,8 +187,9 @@ body { margin: 0; background: var(--surface-ground); color: var(--ink); font-fam
 }
 .alt-input[data-size="sm"] { --w: 3px; height: var(--size-field-sm); border-radius: var(--radius-sm); }
 @media (hover: hover) { .alt-input:hover { border-color: var(--ink-muted); } }
-/* Filled: the floor rises flush with the page. Nothing left to receive, so approach no longer deepens it. */
-.alt-input:has(input:not(:placeholder-shown)), .alt-input:has(textarea:not(:placeholder-shown)) { --w: 0px; --n: 0; background: var(--surface-raised); }
+/* Filled: the floor rises flush with the page. Nothing left to receive, so approach no longer deepens it.
+   A composer can contain other fields (such as model search); only its textarea fills the message well. */
+.alt-input:not(.alt-prompt-well):has(input:not(:placeholder-shown)), .alt-input:has(textarea:not(:placeholder-shown)) { --w: 0px; --n: 0; background: var(--surface-raised); }
 /* Focused: the floor lights up, and an empty field stays open (at the depth approach previewed) until something is put
    in it. Keyboard focus adds the 2px neutral rim, so you can find the field you tabbed to; the command palette's field
    never needs it, since focus never leaves it. */
@@ -4013,7 +4014,7 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
   .alt-switch-thumb, .alt-slider-thumb, .alt-kbd, .alt-avatar-face, .alt-sort-item, .alt-pile-top, .alt-pile-sheet, .alt-scroll { border: 1px solid CanvasText; }
   .alt-surface[data-level="3"], .alt-surface[data-level="4"], .alt-pop, .alt-tip, .alt-toast, .alt-sort-item[data-held], [data-held] { border: 2px solid CanvasText; }
   .alt-surface[data-level="5"], .alt-dialog { border: 4px double CanvasText; }
-  .alt-input:has(input:not(:placeholder-shown)), .alt-input:has(textarea:not(:placeholder-shown)) { border-style: solid !important; }
+  .alt-input:not(.alt-prompt-well):has(input:not(:placeholder-shown)), .alt-input:has(textarea:not(:placeholder-shown)) { border-style: solid !important; }
   .alt-input[data-invalid] { border: 2px dashed CanvasText !important; }
   .alt-surface[data-level="-1"], .alt-input, .alt-tabs-list, .alt-sort-slot, .alt-drop[data-drop="armed"], .alt-empty { border: 1px dashed CanvasText; }
   .alt-surface[data-level="-2"], .alt-switch, .alt-slider-track, .alt-progress, [data-status="failed"], .alt-drop[data-drop="over"] { border: 2px dashed CanvasText; }
@@ -4992,3 +4993,17 @@ span.alt-schedule-more { color: var(--ink-muted); cursor: default; }
   margin: 0 calc(-1 * var(--space-1)); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); background: var(--surface-floating); }
 .alt-menu-sheet-title { min-width: 0; font: 600 15px/22px var(--font-sans); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (forced-colors: active) { .alt-pop[data-presentation="sheet"] { border: 2px solid CanvasText; box-shadow: none; } }
+
+/* Provider and model are two labelled choices; the existing field/list tiers carry their states. */
+.alt-model-selector { min-width: 0; width: 100%; }
+.alt-model-selector-fields { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.alt-model-selector-fields > .alt-field { flex: 1 1 140px; min-width: 0; }
+.alt-model-selector-fields .alt-select { width: 100%; }
+.alt-model-selector-feedback, .alt-prompt-model-feedback { margin: var(--space-2) 0 0; color: var(--ink-muted); font: 400 12.5px/17px var(--font-sans); overflow-wrap: anywhere; }
+.alt-model-selector-feedback:empty, .alt-prompt-model-feedback:empty { display: none; }
+.alt-prompt-bar:has(.alt-model-selector) { flex-wrap: wrap; align-items: end; }
+.alt-prompt-bar > .alt-model-selector { flex: 1 1 260px; }
+@media (pointer: coarse) {
+  .alt-model-selector .alt-select > .alt-input { min-height: calc(var(--size-target-min) + 4px); }
+  .alt-model-selector .alt-select-toggle { min-width: var(--size-target-min); }
+}
