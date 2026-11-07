@@ -81,8 +81,13 @@ export function TimeInput({ value, defaultValue = null, onValueChange, step = 1,
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
       e.preventDefault(); buffer.current = { text: '' };
       const d = e.key === 'ArrowUp' ? 1 : -1;
-      if (s === 'period') publish({ ...draft, pm: !(draft.pm ?? d < 0), hour: draft.hour === undefined ? undefined : (draft.hour + 12) % 24 });
-      else if (s === 'hour') { const h = draft.hour ?? (d > 0 ? -1 : 24); const n = (h + d + 24) % 24; publish({ ...draft, hour: n, pm: clock.h12 ? (draft.pm ?? n >= 12) : n >= 12 }); }
+      // The period always follows the hour, so what's shown and the "HH:mm" value name the same time.
+      if (s === 'period') { const pm = !(draft.pm ?? d < 0); publish({ ...draft, pm, hour: draft.hour === undefined ? undefined : (draft.hour % 12) + (pm ? 12 : 0) }); }
+      else if (s === 'hour') {
+        // From empty, start inside a period that's already chosen: Up from "–– PM" is 12 PM, Down from "–– AM" is 11 AM.
+        const h = draft.hour ?? (d > 0 ? (clock.h12 && draft.pm ? 11 : -1) : (clock.h12 && draft.pm === false ? 12 : 24));
+        const n = (h + d + 24) % 24; publish({ ...draft, hour: n, pm: n >= 12 });
+      }
       else { const m = draft.minute ?? (d > 0 ? -step : 60); const snapped = d > 0 ? Math.floor(m / step) * step + step : Math.ceil(m / step) * step - step; publish({ ...draft, minute: ((snapped % 60) + 60) % 60 }); }
       return;
     }
