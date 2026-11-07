@@ -183,8 +183,10 @@ const STYLES = `.ah-views{display:grid;gap:12px;max-width:1100px}.ah-views>.alt-
 .cs-status>svg{flex:none;color:var(--positive)}
 .cs .alt-convo{flex:1;min-height:0}
 .cs-grow{flex:1}.cs-model{width:auto;min-width:0}
-.cs-context{display:flex;align-items:center;gap:14px;padding:2px 4px 0;font:400 12.5px/17px var(--font-mono);color:var(--ink-muted)}
-.cs-context>span{display:inline-flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-context{display:flex;align-items:center;gap:2px;min-width:0;margin:0 0 -4px}
+.cs-context>.alt-pop-anchor{display:flex;min-width:0}.cs-context .alt-btn{min-width:0;gap:6px;color:var(--ink-muted);font:400 12.5px/17px var(--font-mono)}
+.cs-context .alt-btn>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cs-context .alt-btn>svg{flex:none}
+.cs .alt-prompt-well>.cs-sep{width:auto;margin:0 calc(-1 * var(--space-3))}
 .ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
 .ah-frame .alt-shell-page{display:flex;flex-direction:column;overflow:hidden}.ah-frame .alt-inset{flex:1;min-height:0;display:flex;flex-direction:column}
 .ah-main{display:flex;flex-direction:column;gap:12px;flex:1;padding:12px 0;min-height:0}.ah-main .alt-convo{flex:1;min-height:0;margin:0 -12px 0 0}
@@ -237,6 +239,8 @@ const NEW_FILE = A.diffLines('', TURN_WRITE).filter((o) => o.kind !== 'del');
 const FILES = [{ id: 'f1', label: 'web/turns.ts', kind: 'file' }, { id: 'f2', label: 'web/turn-count.ts', kind: 'file' }];
 const MODELS = [{ value: 'beam-low', label: 'Beam · low' }, { value: 'beam-high', label: 'Beam · high' }, { value: 'arc', label: 'Arc' }];
 const Glyph = ({ d }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
+const FOLDERS = ['lab-demo', 'pricing-site', 'altitude'];
+const BRANCHES = ['ape/aaac99cb', 'main', 'fix/turn-fold-a11y'];
 const FOLDER = 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', BRANCH = 'M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9';
 
 /** What "remember what a turn fold is" wrote: two new memories and one it corrected. */
@@ -262,6 +266,15 @@ function CodingSession() {
   // Open at the end of the thread, where the live turn is, as the person would find it.
   React.useEffect(() => { const el = main.current?.querySelector('.alt-convo-scroll'); if (el) el.scrollTop = el.scrollHeight; }, [approval]);
   const state = SESSION[approval];
+  // Where the agent works: picked above the composer, and named in what the proposal will do.
+  const [folder, setFolder] = React.useState(FOLDERS[0]);
+  const [branch, setBranch] = React.useState(BRANCHES[0]);
+  const consequence = `Pushes ${branch} and opens a pull request against main in ${folder}.`;
+  const picker = (/** @type {string} */ label, /** @type {string} */ d, /** @type {string} */ current, /** @type {string[]} */ options, /** @type {(v: string) => void} */ choose, /** @type {string} */ more) => (
+    <A.DropdownMenu side="top" title={label}
+      trigger={<A.Button variant="ghost" size="sm" aria-label={`${label}: ${current}`}><Glyph d={d} /><span>{current}</span><A.Icons.ChevronDown size={14} /></A.Button>}
+      items={[{ type: 'label', label }, ...options.map((o) => ({ label: o, checked: o === current, onSelect: () => choose(o) })), { type: 'separator' }, { label: more, onSelect: () => {} }]} />
+  );
   return (
     <div className="cs" ref={main}>
       <header className="cs-head">
@@ -310,20 +323,25 @@ function CodingSession() {
               <A.TraceStep tool="run" title="npm test -- --coverage" detail="48 passed" status="done" />
               {(approval === 'running' || approval === 'done') && <A.TraceStep tool="gh" title="pr create --base main" detail={approval === 'done' ? '#112' : undefined} status={approval === 'running' ? 'running' : 'done'} />}
             </A.Trace>
-            {approval !== 'rejected' && <A.Confirmation state={approval} title="Open a pull request" consequence="Pushes ape/aaac99cb and opens a pull request against main in lab-demo."
+            {approval !== 'rejected' && <A.Confirmation state={approval} title="Open a pull request" consequence={consequence}
               approveLabel="Open pull request" rejectLabel="Not now" runningLabel="Opening…" doneLabel="Opened" resolvedBy="you"
               scopes={[{ value: 'session', label: 'Allow pushes for this session' }]} onApprove={approve} onReject={() => setApproval('rejected')} />}
-            {approval === 'rejected' && <A.Confirmation state="rejected" title="Open a pull request" consequence="Pushes ape/aaac99cb and opens a pull request against main in lab-demo." resolvedBy="you" />}
+            {approval === 'rejected' && <A.Confirmation state="rejected" title="Open a pull request" consequence={consequence} resolvedBy="you" />}
             {approval === 'done' && <A.MessageContent><A.Markdown>{'Opened [pull request #112](#pr-112): 2 files changed, 48 tests passing.'}</A.Markdown></A.MessageContent>}
             {approval === 'rejected' && <A.MessageContent><A.Markdown>{'The suite passes. Say when you want the pull request.'}</A.Markdown></A.MessageContent>}
           </A.Message>
         </A.ConversationContent>
         <A.ConversationScrollButton />
       </A.Conversation>
+      <div className="cs-context" role="group" aria-label="Workspace">
+        {picker('Folder', FOLDER, folder, FOLDERS, setFolder, 'Open another folder…')}
+        {picker('Branch', BRANCH, branch, BRANCHES, setBranch, 'New branch…')}
+      </div>
       <A.PromptInput status={approval === 'running' ? 'streaming' : 'ready'} onSubmit={() => {}} onStop={() => {}} onAttach={() => {}} accept="image/*,text/*"
         mentionable={(q) => FILES.filter((f) => f.label.includes(q))}
         commands={[{ name: 'review', description: 'Review the changes' }, { name: 'compact', description: 'Summarise the session so far' }]}>
-        <A.PromptInputTextarea placeholder="Message… @ files, / commands" aria-label="Message" />
+        <A.PromptInputTextarea placeholder="Message… @ files, / commands" aria-label="Message" rows={2} />
+        <A.Separator decorative className="cs-sep" />
         <A.PromptInputToolbar>
           <A.PromptInputAttach label="Add files" />
           <A.Select size="sm" aria-label="Model" items={MODELS} defaultValue="beam-low" className="cs-model" />
@@ -331,10 +349,6 @@ function CodingSession() {
           <A.PromptInputDictate />
           <A.PromptInputSubmit />
         </A.PromptInputToolbar>
-        <div className="cs-context">
-          <span><Glyph d={FOLDER} />lab-demo</span>
-          <span><Glyph d={BRANCH} />ape/aaac99cb</span>
-        </div>
       </A.PromptInput>
     </div>
   );

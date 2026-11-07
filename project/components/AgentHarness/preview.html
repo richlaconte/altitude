@@ -237,8 +237,10 @@ const STYLES = `.ah-views{display:grid;gap:12px;max-width:1100px}.ah-views>.alt-
 .cs-status>svg{flex:none;color:var(--positive)}
 .cs .alt-convo{flex:1;min-height:0}
 .cs-grow{flex:1}.cs-model{width:auto;min-width:0}
-.cs-context{display:flex;align-items:center;gap:14px;padding:2px 4px 0;font:400 12.5px/17px var(--font-mono);color:var(--ink-muted)}
-.cs-context>span{display:inline-flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-context{display:flex;align-items:center;gap:2px;min-width:0;margin:0 0 -4px}
+.cs-context>.alt-pop-anchor{display:flex;min-width:0}.cs-context .alt-btn{min-width:0;gap:6px;color:var(--ink-muted);font:400 12.5px/17px var(--font-mono)}
+.cs-context .alt-btn>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cs-context .alt-btn>svg{flex:none}
+.cs .alt-prompt-well>.cs-sep{width:auto;margin:0 calc(-1 * var(--space-3))}
 .ah{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:1100px}.ah-frame{height:640px;border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
 .ah-frame .alt-shell-page{display:flex;flex-direction:column;overflow:hidden}.ah-frame .alt-inset{flex:1;min-height:0;display:flex;flex-direction:column}
 .ah-main{display:flex;flex-direction:column;gap:12px;flex:1;padding:12px 0;min-height:0}.ah-main .alt-convo{flex:1;min-height:0;margin:0 -12px 0 0}
@@ -293,6 +295,8 @@ const NEW_FILE = A.diffLines("", TURN_WRITE).filter((o) => o.kind !== "del");
 const FILES = [{ id: "f1", label: "web/turns.ts", kind: "file" }, { id: "f2", label: "web/turn-count.ts", kind: "file" }];
 const MODELS = [{ value: "beam-low", label: "Beam \xB7 low" }, { value: "beam-high", label: "Beam \xB7 high" }, { value: "arc", label: "Arc" }];
 const Glyph = ({ d }) => /* @__PURE__ */ React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d }));
+const FOLDERS = ["lab-demo", "pricing-site", "altitude"];
+const BRANCHES = ["ape/aaac99cb", "main", "fix/turn-fold-a11y"];
 const FOLDER = "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z", BRANCH = "M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9";
 const MEMORIES = [
   { id: "m1", text: "A turn fold groups one turn's tool steps under a single summary line." },
@@ -328,6 +332,19 @@ function CodingSession() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [approval]);
   const state = SESSION[approval];
+  const [folder, setFolder] = React.useState(FOLDERS[0]);
+  const [branch, setBranch] = React.useState(BRANCHES[0]);
+  const consequence = `Pushes ${branch} and opens a pull request against main in ${folder}.`;
+  const picker = (label, d, current, options, choose, more) => /* @__PURE__ */ React.createElement(
+    A.DropdownMenu,
+    {
+      side: "top",
+      title: label,
+      trigger: /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", "aria-label": `${label}: ${current}` }, /* @__PURE__ */ React.createElement(Glyph, { d }), /* @__PURE__ */ React.createElement("span", null, current), /* @__PURE__ */ React.createElement(A.Icons.ChevronDown, { size: 14 })),
+      items: [{ type: "label", label }, ...options.map((o) => ({ label: o, checked: o === current, onSelect: () => choose(o) })), { type: "separator" }, { label: more, onSelect: () => {
+      } }]
+    }
+  );
   return /* @__PURE__ */ React.createElement("div", { className: "cs", ref: main }, /* @__PURE__ */ React.createElement("header", { className: "cs-head" }, /* @__PURE__ */ React.createElement(A.Button, { variant: "ghost", size: "sm", square: true, "aria-label": "Show sessions" }, /* @__PURE__ */ React.createElement(A.Icons.PanelLeft, null)), /* @__PURE__ */ React.createElement("div", { className: "cs-title" }, /* @__PURE__ */ React.createElement("h2", null, "Count steps in the turn fold"), /* @__PURE__ */ React.createElement("p", { className: "cs-status", role: "status" }, state.plate ? /* @__PURE__ */ React.createElement(A.Badge, { tone: (
     /** @type {any} */
     state.plate.tone
@@ -340,7 +357,7 @@ function CodingSession() {
     {
       state: approval,
       title: "Open a pull request",
-      consequence: "Pushes ape/aaac99cb and opens a pull request against main in lab-demo.",
+      consequence,
       approveLabel: "Open pull request",
       rejectLabel: "Not now",
       runningLabel: "Opening\u2026",
@@ -350,7 +367,7 @@ function CodingSession() {
       onApprove: approve,
       onReject: () => setApproval("rejected")
     }
-  ), approval === "rejected" && /* @__PURE__ */ React.createElement(A.Confirmation, { state: "rejected", title: "Open a pull request", consequence: "Pushes ape/aaac99cb and opens a pull request against main in lab-demo.", resolvedBy: "you" }), approval === "done" && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "Opened [pull request #112](#pr-112): 2 files changed, 48 tests passing.")), approval === "rejected" && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "The suite passes. Say when you want the pull request.")))), /* @__PURE__ */ React.createElement(A.ConversationScrollButton, null)), /* @__PURE__ */ React.createElement(
+  ), approval === "rejected" && /* @__PURE__ */ React.createElement(A.Confirmation, { state: "rejected", title: "Open a pull request", consequence, resolvedBy: "you" }), approval === "done" && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "Opened [pull request #112](#pr-112): 2 files changed, 48 tests passing.")), approval === "rejected" && /* @__PURE__ */ React.createElement(A.MessageContent, null, /* @__PURE__ */ React.createElement(A.Markdown, null, "The suite passes. Say when you want the pull request.")))), /* @__PURE__ */ React.createElement(A.ConversationScrollButton, null)), /* @__PURE__ */ React.createElement("div", { className: "cs-context", role: "group", "aria-label": "Workspace" }, picker("Folder", FOLDER, folder, FOLDERS, setFolder, "Open another folder\u2026"), picker("Branch", BRANCH, branch, BRANCHES, setBranch, "New branch\u2026")), /* @__PURE__ */ React.createElement(
     A.PromptInput,
     {
       status: approval === "running" ? "streaming" : "ready",
@@ -364,9 +381,9 @@ function CodingSession() {
       mentionable: (q) => FILES.filter((f) => f.label.includes(q)),
       commands: [{ name: "review", description: "Review the changes" }, { name: "compact", description: "Summarise the session so far" }]
     },
-    /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Message\u2026 @ files, / commands", "aria-label": "Message" }),
-    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputAttach, { label: "Add files" }), /* @__PURE__ */ React.createElement(A.Select, { size: "sm", "aria-label": "Model", items: MODELS, defaultValue: "beam-low", className: "cs-model" }), /* @__PURE__ */ React.createElement("span", { className: "cs-grow" }), /* @__PURE__ */ React.createElement(A.PromptInputDictate, null), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null)),
-    /* @__PURE__ */ React.createElement("div", { className: "cs-context" }, /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(Glyph, { d: FOLDER }), "lab-demo"), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement(Glyph, { d: BRANCH }), "ape/aaac99cb"))
+    /* @__PURE__ */ React.createElement(A.PromptInputTextarea, { placeholder: "Message\u2026 @ files, / commands", "aria-label": "Message", rows: 2 }),
+    /* @__PURE__ */ React.createElement(A.Separator, { decorative: true, className: "cs-sep" }),
+    /* @__PURE__ */ React.createElement(A.PromptInputToolbar, null, /* @__PURE__ */ React.createElement(A.PromptInputAttach, { label: "Add files" }), /* @__PURE__ */ React.createElement(A.Select, { size: "sm", "aria-label": "Model", items: MODELS, defaultValue: "beam-low", className: "cs-model" }), /* @__PURE__ */ React.createElement("span", { className: "cs-grow" }), /* @__PURE__ */ React.createElement(A.PromptInputDictate, null), /* @__PURE__ */ React.createElement(A.PromptInputSubmit, null))
   ));
 }
 function Run({ start = 3 }) {
