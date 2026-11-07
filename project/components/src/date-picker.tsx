@@ -68,7 +68,7 @@ function PresetList({ presets, today, chosen, onChoose, min, max, listRef }: {
   const id = React.useId();
   const off = (p: DatePreset) => { const r = resolve(p, today); return (!!min && !!r.start && r.start < min) || (!!max && !!r.end && r.end > max); };
   const first = presets.findIndex((p) => presetKey(p) === chosen);
-  const [active, setActive] = React.useState(first >= 0 ? first : Math.max(0, presets.findIndex((p) => !off(p))));
+  const [active, setActive] = React.useState(first >= 0 ? first : presets.findIndex((p) => !off(p)));
   const rows = React.useRef<(HTMLDivElement | null)[]>([]);
   const [hl, setHl] = React.useState<{ y: number; h: number } | null>(null);
   useIsoLayoutEffect(() => { const el = rows.current[active]; setHl(el ? { y: el.offsetTop, h: el.offsetHeight } : null); }, [active, presets.length]);
@@ -76,13 +76,13 @@ function PresetList({ presets, today, chosen, onChoose, min, max, listRef }: {
     for (let i = active + d; i >= 0 && i < presets.length; i += d) if (!off(presets[i])) { setActive(i); return; }
   };
   return (
-    <div ref={listRef as React.Ref<HTMLDivElement>} role="listbox" tabIndex={0} aria-label="Presets" aria-activedescendant={`${id}-${active}`} className="alt-menu alt-date-presets" data-state="open"
+    <div ref={listRef as React.Ref<HTMLDivElement>} role="listbox" tabIndex={0} aria-label="Presets" aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined} className="alt-menu alt-date-presets" data-state="open"
       onKeyDown={(e) => {
         if (e.key === 'ArrowDown') { e.preventDefault(); step(1); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); step(-1); }
-        else if (e.key === 'Home') { e.preventDefault(); setActive(presets.findIndex((p) => !off(p))); }
+        else if (e.key === 'Home') { e.preventDefault(); const i = presets.findIndex((p) => !off(p)); if (i >= 0) setActive(i); }
         else if (e.key === 'End') { e.preventDefault(); for (let i = presets.length - 1; i >= 0; i--) if (!off(presets[i])) { setActive(i); break; } }
-        else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!off(presets[active])) onChoose(presets[active]); }
+        else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const p = presets[active]; if (p && !off(p)) onChoose(p); }
       }}>
       <span className="alt-menu-hl" aria-hidden="true" style={hl ? { transform: `translateY(${hl.y}px)`, height: hl.h, opacity: 1 } : { opacity: 0 }} />
       {presets.map((p, i) => {
@@ -102,6 +102,17 @@ function PresetList({ presets, today, chosen, onChoose, min, max, listRef }: {
 
 /* ───────────────────────── Calendar ───────────────────────── */
 
+/**
+ * Settled information about a day (#563), drawn as up to three flush dots under its number. A status tone needs a
+ * label, so status is never colour alone; the label joins the day's name.
+ */
+export type CalendarMarker =
+  | { tone?: 'neutral'; label?: string; count?: 1 | 2 | 3 }
+  | { tone: 'positive' | 'caution' | 'critical'; label: string; count?: 1 | 2 | 3 };
+/** A marker per day: a function of the date, or a map from 'YYYY-MM-DD'. */
+export type CalendarMarkers = ((date: ISODate) => CalendarMarker | null | undefined) | Partial<Record<ISODate, CalendarMarker>>;
+const markerOf = (markers: CalendarMarkers | undefined, d: ISODate) => !markers ? null : typeof markers === 'function' ? markers(d) ?? null : markers[d] ?? null;
+
 interface GridProps {
   /** The chosen day (single), or the range's ends. */
   value: ISODate | null;
@@ -113,10 +124,11 @@ interface GridProps {
   /** Focus the active day when this changes to true. */
   autoFocus?: boolean;
   label?: string;
+  markers?: CalendarMarkers;
 }
 
 /** The month grid. Days are flush; the chosen day carries the one raised mark, which travels when another is chosen. */
-function MonthGrid({ value, range, onChoose, min, max, isUnavailable, locale, weekStartsOn, autoFocus, label }: GridProps) {
+function MonthGrid({ value, range, onChoose, min, max, isUnavailable, locale, weekStartsOn, autoFocus, label, markers }: GridProps) {
   const today = React.useMemo(todayISO, []);
   const start = weekStartsOn ?? firstDay(locale);
   const [focus, setFocus] = React.useState<ISODate>(() => clamp(value ?? range?.start ?? today, min, max));
@@ -189,13 +201,15 @@ function MonthGrid({ value, range, onChoose, min, max, isUnavailable, locale, we
           if (!d) return <td key={i} role="gridcell" />;
           const off = unavailable(d);
           const chosen = range ? d === range.start || d === range.end : d === value;
-          const name = [long.format(utc(d)), d === today && 'today', range && d === range.start && 'start date', range && d === range.end && 'end date', off && 'unavailable'].filter(Boolean).join(', ');
+          const mk = markerOf(markers, d);
+          const name = [long.format(utc(d)), mk?.label, d === today && 'today', range && d === range.start && 'start date', range && d === range.end && 'end date', off && 'unavailable'].filter(Boolean).join(', ');
           return <td key={i} role="gridcell" aria-selected={chosen || (range && inSpan(d)) ? true : undefined}>
             <button type="button" className="alt-cal-day" data-date={d} tabIndex={d === focus ? 0 : -1} aria-label={name} aria-disabled={off || undefined}
-              data-today={d === today ? '' : undefined} data-chosen={chosen ? '' : undefined} data-span={range && inSpan(d) ? '' : undefined}
+              data-today={d === today ? '' : undefined} data-marked={mk ? '' : undefined} data-chosen={chosen ? '' : undefined} data-span={range && inSpan(d) ? '' : undefined}
               data-span-start={range && d === lo ? '' : undefined} data-span-end={range && d === hi ? '' : undefined}
               onClick={() => { setFocus(d); if (!off) onChoose(d); }} onFocus={() => { if (range) setHover(d); }} onPointerEnter={() => { if (range && !off) setHover(d); }}>
               {Number(d.slice(8))}
+              {mk && <span className="alt-cal-markers" aria-hidden="true">{Array.from({ length: Math.max(1, Math.min(3, mk.count ?? 1)) }, (_, k) => <span key={k} className="alt-cal-marker" data-tone={mk.tone ?? 'neutral'} />)}</span>}
             </button>
           </td>;
         })}</tr>)}</tbody>
@@ -217,15 +231,17 @@ export interface CalendarProps {
   locale?: string;
   /** 0 Sunday … 6 Saturday. Default: the locale's. */
   weekStartsOn?: number;
+  /** Flush dots under days for settled information about them (entries logged, status), each with its label in the day's name. */
+  markers?: CalendarMarkers;
   'aria-label'?: string;
   className?: string;
 }
 /** A month calendar laid on the page (level 0): no field, no panel. */
-export function Calendar({ value, defaultValue = null, onValueChange, min, max, isUnavailable, locale, weekStartsOn, className, ...aria }: CalendarProps) {
+export function Calendar({ value, defaultValue = null, onValueChange, min, max, isUnavailable, locale, weekStartsOn, markers, className, ...aria }: CalendarProps) {
   const [inner, setInner] = React.useState<ISODate | null>(defaultValue);
   const current = value !== undefined ? value : inner;
   return <div className={cx('alt-calendar', className)}>
-    <MonthGrid value={isISO(current) ? current : null} label={aria['aria-label']} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn}
+    <MonthGrid value={isISO(current) ? current : null} label={aria['aria-label']} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} markers={markers}
       onChoose={(d) => { if (value === undefined) setInner(d); onValueChange?.(d); }} />
   </div>;
 }
@@ -325,6 +341,8 @@ function Segments({ value, onCommit, locale, disabled, id, name, describedBy, on
 /* ───────────────────────── DatePicker and DateRangePicker ───────────────────────── */
 
 interface PickerBase {
+  /** Passed to the calendar: flush dots under days, each with its label in the day's name. */
+  markers?: CalendarMarkers;
   min?: ISODate;
   max?: ISODate;
   isUnavailable?: (date: ISODate) => boolean;
@@ -396,7 +414,7 @@ function problem(v: ISODate | null, draft: Draft, { min, max, isUnavailable, loc
  * A date in a field, typed or picked. The field is an opening built like Select; its floor rises flush once it holds a
  * date. The calendar floats at level 3; days are flush and the chosen one carries the raised accent mark.
  */
-export function DatePicker({ value, defaultValue = null, onValueChange, min, max, isUnavailable, locale, weekStartsOn, id, name, disabled,
+export function DatePicker({ value, defaultValue = null, onValueChange, min, max, isUnavailable, locale, weekStartsOn, markers, id, name, disabled,
   required, invalid, requiredMessage = 'Enter a date.', size = 'md', className, defaultOpen = false, ...aria }: DatePickerProps) {
   const [inner, setInner] = React.useState<ISODate | null>(defaultValue);
   const current = value !== undefined ? value : inner;
@@ -431,13 +449,13 @@ export function DatePicker({ value, defaultValue = null, onValueChange, min, max
     {requiredError && <p id={auto + '-required-error'} className="alt-field-error alt-date-error" role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
     {mounted && <div id={panelId} role="dialog" aria-label="Choose date" className="alt-pop alt-date-panel" data-state={state} data-side="bottom" data-align="start"
       onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }}>
-      <MonthGrid value={current} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} autoFocus={state === 'open'} />
+      <MonthGrid value={current} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} markers={markers} autoFocus={state === 'open'} />
     </div>}
   </div>;
 }
 
 /** Two dates as one span. In the calendar the span is a sunk track between two raised ends, the Slider's build. */
-export function DateRangePicker({ value, defaultValue, onValueChange, min, max, isUnavailable, locale, weekStartsOn, id, name,
+export function DateRangePicker({ value, defaultValue, onValueChange, min, max, isUnavailable, locale, weekStartsOn, markers, id, name,
   disabled, required, invalid, requiredMessage = 'Enter a start and end date.', size = 'md', className, defaultOpen = false, presets, preset: presetProp, defaultPreset = null, onPresetChange, today: todayProp, ...aria }: DateRangePickerProps) {
   const today = todayProp ?? todayISO();
   const startPreset = presets?.find((p) => presetKey(p) === defaultPreset);
@@ -542,12 +560,12 @@ export function DateRangePicker({ value, defaultValue, onValueChange, min, max, 
           <PresetList presets={presets} today={today} chosen={showPreset ? presetKeyNow : null} onChoose={choosePreset} min={min} max={max} listRef={presetsRef} />
           <div className="alt-date-custom">
             <p className="alt-date-step" aria-live="polite">{picking?.start && !picking.end ? 'Choose the end date' : 'Or choose the start date'}</p>
-            <MonthGrid value={null} range={shown} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} />
+            <MonthGrid value={null} range={shown} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} markers={markers} />
           </div>
         </div>
         : <>
           <p className="alt-date-step" aria-live="polite">{picking?.start && !picking.end ? 'Choose the end date' : 'Choose the start date'}</p>
-          <MonthGrid value={null} range={shown} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} autoFocus={state === 'open'} />
+          <MonthGrid value={null} range={shown} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} markers={markers} autoFocus={state === 'open'} />
         </>}
     </div>}
   </div>;
