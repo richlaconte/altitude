@@ -5177,6 +5177,13 @@ function App() {
 --- jsx
 const DP_TODAY = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })();
 const dpShift = (iso, days) => { const [y, m, d] = iso.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1, d + days)); return t.toISOString().slice(0, 10); };
+// Time logged in October 2026: approved, submitted, logged but not submitted, and one day still missing hours.
+const DP_LOGGED = {
+  '2026-10-19': { tone: 'positive', label: '8 hours, approved' }, '2026-10-20': { tone: 'positive', label: '7 hours 30 minutes, approved' },
+  '2026-10-21': { tone: 'positive', label: '8 hours, approved' }, '2026-10-22': { tone: 'caution', label: '6 hours, submitted' },
+  '2026-10-23': { tone: 'caution', label: '8 hours, submitted' }, '2026-10-26': { label: '4 hours, not submitted', count: 2 },
+  '2026-10-27': { tone: 'critical', label: 'no time logged' },
+};
 function App() {
   const [due, setDue] = React.useState(dpShift(DP_TODAY, 3));
   const [trip, setTrip] = React.useState({ start: dpShift(DP_TODAY, 9), end: dpShift(DP_TODAY, 13) });
@@ -5184,6 +5191,7 @@ function App() {
   const [dpToday, setDpToday] = React.useState('2026-10-27');
   const [period, setPeriod] = React.useState({ start: '2026-09-28', end: '2026-10-27' });
   const [preset, setPreset] = React.useState('last-30-days');
+  const [week, setWeek] = React.useState('2026-10-27');
   const weekend = iso => { const [y, m, d] = iso.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w === 0 || w === 6; };
   return <div className="dp-demo">
     <A.Field label="Due date" hint="Weekends aren’t available.">
@@ -5201,6 +5209,10 @@ function App() {
             { key: 'launch', label: 'Since launch', range: { start: '2026-03-04', end: dpToday } }]} />
       </A.Field>
       <div style={{ marginTop: 8 }}><A.Button size="sm" variant="ghost" onClick={() => setDpToday((t) => dpShift(t, 1))}>Next day</A.Button></div>
+    </div>
+    <div>
+      <p className="dp-cap">Time logged: dots mark approved, submitted and unsubmitted days</p>
+      <A.Calendar aria-label="Time logged" value={week} onValueChange={setWeek} locale="en-GB" markers={DP_LOGGED} />
     </div>
   </div>;
 }

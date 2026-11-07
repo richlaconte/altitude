@@ -30,14 +30,14 @@ try {
     const due = shift(today, 3);
     // The preview opens the Due date calendar: focus is on the chosen day, which wears the mark.
     check(await page.getByRole('dialog', { name: 'Choose date' }).isVisible() && await focusedDate(page) === due, 'DP-01 the open calendar focuses the chosen day');
-    const grid = page.getByRole('grid');
+    const grid = page.getByRole('dialog', { name: 'Choose date' }).getByRole('grid');
     check(await grid.locator('button[tabindex="0"]').count() === 1, 'DP-02 only one day is in the Tab sequence');
-    const mark = await page.evaluate(() => { const m = document.querySelector('.alt-cal-mark'), d = document.querySelector('.alt-cal-day[data-chosen]'); const a = m.getBoundingClientRect(), b = d.getBoundingClientRect(); return Math.abs(a.left - b.left) < 2 && Math.abs(a.top - b.top) < 2 && getComputedStyle(m).opacity === '1'; });
+    const mark = await page.evaluate(() => { const dlg = document.querySelector('[role="dialog"]'), m = dlg.querySelector('.alt-cal-mark'), d = dlg.querySelector('.alt-cal-day[data-chosen]'); const a = m.getBoundingClientRect(), b = d.getBoundingClientRect(); return Math.abs(a.left - b.left) < 2 && Math.abs(a.top - b.top) < 2 && getComputedStyle(m).opacity === '1'; });
     check(mark, 'DP-03 the raised mark sits on the chosen day');
     // Near a month's end the chosen day (today + 3) opens the next month, so read today's name from a second page turned back one month.
     let name;
-    if (await page.locator(`[data-date="${today}"]`).count()) name = await page.locator(`[data-date="${today}"]`).getAttribute('aria-label');
-    else { const back = await open(); await back.keyboard.press('PageUp'); name = await back.locator(`[data-date="${today}"]`).getAttribute('aria-label'); await back.close(); }
+    if (await page.locator(`[role="dialog"] [data-date="${today}"]`).count()) name = await page.locator(`[role="dialog"] [data-date="${today}"]`).getAttribute('aria-label');
+    else { const back = await open(); await back.keyboard.press('PageUp'); name = await back.locator(`[role="dialog"] [data-date="${today}"]`).getAttribute('aria-label'); await back.close(); }
     check(/, today/.test(name) && /\d{4}/.test(name), `DP-04 a day's name is the full date and says today (${name})`);
     await page.keyboard.press('ArrowRight'); check(await focusedDate(page) === shift(due, 1), 'DP-05 → moves one day');
     await page.keyboard.press('ArrowDown'); check(await focusedDate(page) === shift(due, 8), 'DP-06 ↓ moves one week');
@@ -49,8 +49,8 @@ try {
     await page.keyboard.press('End'); check(new Date((await focusedDate(page)) + 'T00:00:00Z').getUTCDay() === 0, 'DP-09 End goes to the week end');
     await page.keyboard.press('PageDown'); const next = await focusedDate(page);
     check(next.slice(5, 7) !== home.slice(5, 7) || next.slice(0, 4) !== home.slice(0, 4), 'DP-10 PageDown moves a month');
-    const heading = await page.locator('.alt-cal-title').textContent();
-    await page.keyboard.press('Shift+PageDown'); check(Number((await focusedDate(page)).slice(0, 4)) === Number(next.slice(0, 4)) + 1 && await page.locator('.alt-cal-title').getAttribute('aria-live') === 'polite' && heading !== await page.locator('.alt-cal-title').textContent(), 'DP-11 Shift+PageDown moves a year and the heading (a live region) follows');
+    const heading = await page.locator('[role="dialog"] .alt-cal-title').textContent();
+    await page.keyboard.press('Shift+PageDown'); check(Number((await focusedDate(page)).slice(0, 4)) === Number(next.slice(0, 4)) + 1 && await page.locator('[role="dialog"] .alt-cal-title').getAttribute('aria-live') === 'polite' && heading !== await page.locator('[role="dialog"] .alt-cal-title').textContent(), 'DP-11 Shift+PageDown moves a year and the heading (a live region) follows');
     // Find a weekday next year and a weekend day: weekends are unavailable here.
     let target = await focusedDate(page);
     while ([0, 6].includes(new Date(target + 'T00:00:00Z').getUTCDay())) { await page.keyboard.press('ArrowRight'); target = await focusedDate(page); }
@@ -63,7 +63,7 @@ try {
     await page.keyboard.press('Enter'); await page.getByRole('dialog', { name: 'Choose date' }).waitFor(); await inGrid(page);
     check(await focusedDate(page) === target, 'DP-15 reopening focuses the chosen day');
     let weekend = target; for (let i = 0; i < 7 && ![0, 6].includes(new Date(weekend + 'T00:00:00Z').getUTCDay()); i++) { await page.keyboard.press('ArrowRight'); weekend = await focusedDate(page); }
-    check(await page.locator(`[data-date="${weekend}"]`).getAttribute('aria-disabled') === 'true' && /unavailable/.test(await page.locator(`[data-date="${weekend}"]`).getAttribute('aria-label')), 'DP-16 unavailable days say so');
+    check(await page.locator(`[role="dialog"] [data-date="${weekend}"]`).getAttribute('aria-disabled') === 'true' && /unavailable/.test(await page.locator(`[role="dialog"] [data-date="${weekend}"]`).getAttribute('aria-label')), 'DP-16 unavailable days say so');
     await page.keyboard.press('Enter'); check(await page.getByRole('dialog', { name: 'Choose date' }).isVisible(), 'DP-17 an unavailable day can’t be chosen');
     await page.keyboard.press('Escape'); await page.getByRole('dialog', { name: 'Choose date' }).waitFor({ state: 'detached' });
     check(await text(page, 'Due date') === `${d}/${m}/${y}` && await page.getByRole('button', { name: 'Choose date' }).first().evaluate(el => el === document.activeElement), 'DP-18 Escape closes without a change and returns focus');
@@ -105,6 +105,25 @@ try {
     const [, sm, sd] = start.split('-'); const end = shift(start, 2); const [, em, ed] = end.split('-');
     const segsText = (await segs(page, 'Trip').allTextContents());
     check(segsText[0] === sd && segsText[1] === sm && segsText[3] === ed && segsText[4] === em, 'DP-31 two choices fill the start and end');
+    await page.close(); }
+
+  { const page = await open();
+    // Markers (#563): flush dots under days, with their labels in the days' names.
+    const logged = page.getByRole('grid', { name: 'Time logged, October 2026' });
+    const day = d => logged.locator(`[data-date="${d}"]`);
+    check(await day('2026-10-20').getAttribute('aria-label') === 'Tuesday 20 October 2026, 7 hours 30 minutes, approved', 'DP-40 a marker’s label joins the day’s name');
+    check(await day('2026-10-28').getAttribute('aria-label') === 'Wednesday 28 October 2026', 'DP-41 a day without a marker says nothing extra');
+    check(await day('2026-10-26').locator('.alt-cal-marker').count() === 2 && await day('2026-10-19').locator('.alt-cal-marker').count() === 1, 'DP-42 count draws that many dots');
+    const tones = await page.evaluate(() => {
+      const g = document.querySelector('[aria-label="Time logged, October 2026"]');
+      const color = d => getComputedStyle(g.querySelector(`[data-date="${d}"] .alt-cal-marker`)).backgroundColor;
+      const token = n => { const el = document.createElement('i'); el.style.color = `var(--${n})`; g.append(el); const c = getComputedStyle(el).color; el.remove(); return c; };
+      return { positive: color('2026-10-19') === token('positive'), caution: color('2026-10-22') === token('caution'), neutral: color('2026-10-26') === token('ink-muted'), chosen: color('2026-10-27') === token('on-accent'),
+        flush: getComputedStyle(g.querySelector('.alt-cal-marker')).boxShadow === 'none' };
+    });
+    check(tones.positive && tones.caution && tones.neutral, 'DP-43 a dot is ink-muted for neutral, or its status colour');
+    check(tones.chosen, 'DP-44 on the chosen day the dot turns on-accent');
+    check(tones.flush, 'DP-45 a marker is flush: no shadow');
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {

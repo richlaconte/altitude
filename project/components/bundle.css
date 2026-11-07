@@ -4269,6 +4269,17 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 .alt-cal-day[aria-disabled] { color: var(--ink-faint); cursor: default; }
 .alt-cal-day[data-chosen] { color: var(--on-accent); font-weight: 600; }
 .alt-cal-day[data-chosen][data-today]::after { background: var(--on-accent); }
+/* Markers (#563): settled information about a day, so flush dots under its number; they never raise the day. A marked
+   today drops its own dot for its number in accent-ink, so the two dots can't be confused. */
+.alt-cal-markers { position: absolute; bottom: 4px; left: 50%; display: flex; gap: 2px; translate: -50% 0; pointer-events: none; }
+.alt-cal-marker { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-muted); }
+.alt-cal-marker[data-tone="positive"] { background: var(--positive); }
+.alt-cal-marker[data-tone="caution"] { background: var(--caution); }
+.alt-cal-marker[data-tone="critical"] { background: var(--critical); }
+.alt-cal-day[data-chosen] .alt-cal-marker { background: var(--on-accent); }
+.alt-cal-day[data-today][data-marked]::after { display: none; }
+.alt-cal-day[data-today][data-marked]:not([data-chosen]) { color: var(--accent-ink); font-weight: 650; }
+@media (forced-colors: active) { .alt-cal-marker { forced-color-adjust: none; background: CanvasText; } .alt-cal-day[data-chosen] .alt-cal-marker { background: HighlightText; } }
 .alt-cal-mark {
   position: absolute; left: 0; top: 0; z-index: 0; border-radius: var(--radius-sm); pointer-events: none; opacity: 0;
   background: var(--accent); background-image: var(--alt-sheen); box-shadow: var(--elev-1), inset 0 -2px 0 0 color-mix(in oklab, var(--accent-ink) 55%, transparent);

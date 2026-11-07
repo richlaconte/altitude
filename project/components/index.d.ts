@@ -355,6 +355,8 @@ export declare function Tag(props: TagProps): React.ReactElement;
 export type ISODate = string;
 export interface DateRange { start: ISODate | null; end: ISODate | null }
 interface DatePickerBase {
+  /** Passed to the calendar: flush dots under days, each with its label in the day's name. */
+  markers?: CalendarMarkers;
   /** Earliest and latest days that can be chosen or typed. */
   min?: ISODate;
   max?: ISODate;
@@ -407,6 +409,12 @@ export interface DateRangePickerProps extends DatePickerBase {
   /** Today (ISO): relative presets resolve against it and re-resolve when it changes. Default: the local date. */
   today?: ISODate;
 }
+/** Settled information about a day: up to three flush dots under its number. A status tone needs a label, which joins the day's name. */
+export type CalendarMarker =
+  | { tone?: 'neutral'; label?: string; count?: 1 | 2 | 3 }
+  | { tone: 'positive' | 'caution' | 'critical'; label: string; count?: 1 | 2 | 3 };
+/** A marker per day: a function of the date, or a map from 'YYYY-MM-DD'. */
+export type CalendarMarkers = ((date: ISODate) => CalendarMarker | null | undefined) | Partial<Record<ISODate, CalendarMarker>>;
 export interface CalendarProps {
   value?: ISODate | null;
   defaultValue?: ISODate | null;
@@ -416,6 +424,8 @@ export interface CalendarProps {
   isUnavailable?: (date: ISODate) => boolean;
   locale?: string;
   weekStartsOn?: number;
+  /** Flush dots under days for settled information about them (entries logged, status), each with its label in the day's name. */
+  markers?: CalendarMarkers;
   'aria-label'?: string;
   className?: string;
 }
