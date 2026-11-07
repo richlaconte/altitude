@@ -58,7 +58,12 @@ try {
     check(await grid.locator('[tabindex="0"]').count() === 1, 'SC-01 the grid is one Tab stop');
     await grid.locator('[tabindex="0"]').focus();
     check((await focused(page)).startsWith('Monday 26 October, 09:00') || (await focused(page)).startsWith('Standup'), 'SC-02 focus starts at 09:00 on the first day (an event there takes it)');
-    check(/^Standup, Monday 26 October, 09:00 to 09:30/.test(await focused(page)), 'SC-03 an event’s name carries its title, day, start and end');
+    check(/^Standup, Room A, Monday 26 October, 09:00 to 09:30/.test(await focused(page)), 'SC-03 an event’s name carries its title, category, day, start and end');
+    // Categories (#562): the edge takes the category's colour, and the legend names each one.
+    const edges = await page.evaluate(() => ['e1', 'e2'].map(id => getComputedStyle(document.querySelector(`[data-event="${id}"]`)).boxShadow));
+    const dataColor = await page.evaluate(n => { const el = document.createElement('i'); el.style.color = `var(--data-${n})`; document.querySelector('.alt-root').append(el); const c = getComputedStyle(el).color; el.remove(); return c; }, 1);
+    check(edges[0].includes(dataColor) && edges[0] !== edges[1], `SC-03b a category's colour replaces the accent edge (${edges[0]} / ${edges[1]})`);
+    check((await page.getByRole('list', { name: 'Categories' }).locator('li').allTextContents()).join('|') === 'Room A|Room B', 'SC-03c the legend names every category');
     await page.keyboard.press('ArrowDown'); check((await focused(page)).startsWith('Monday 26 October, 09:15'), 'SC-04 ↓ moves one slot');
     await page.keyboard.press('ArrowRight'); check((await focused(page)).startsWith('Tuesday 27 October, 09:15'), 'SC-05 → moves one day');
     const review = await page.locator('[data-event="e2"]').getAttribute('aria-label');
@@ -170,6 +175,22 @@ try {
     check(await page.locator('.alt-schedule[data-carrying]').count() === 0, 'SC-25 dragging a locked event doesn’t carry it');
     await page.mouse.move(tue.x + 20, tue.y + 8, { steps: 6 }); await page.mouse.up();
     check(await where(page, 'e7') === '2026-10-26T840', 'SC-25b a locked event stays where it is');
+    await page.close(); }
+
+  // Past six categories (#562 review): the seventh takes data-other, the palette's neutral, not the accent.
+  { const page = await open();
+    const r = await page.evaluate(async () => {
+      const A = window.Altitude, h = React.createElement, el = document.createElement('div'); document.querySelector('.alt-root').append(el);
+      const events = [1, 2, 3, 4, 5, 6, 7].map(n => ({ id: `c${n}`, title: `Seventh ${n}`, cat: `Cat ${n}`, start: `2026-10-${25 + Math.min(n, 5)}T${n < 6 ? '10' : '14'}:00`, end: `2026-10-${25 + Math.min(n, 5)}T${n < 6 ? '11' : n === 6 ? '15' : '16'}:00` }));
+      events[6].start = '2026-10-29T16:00'; events[6].end = '2026-10-29T17:00';
+      window.ReactDOM.createRoot(el).render(h(A.Schedule, { date: '2026-10-26', events, getKey: e => e.id, getStart: e => e.start, getEnd: e => e.end, getLabel: e => e.title, getCategory: e => e.cat, legend: true, 'aria-label': 'Seven categories' }));
+      await new Promise(res => setTimeout(res, 400));
+      const tone = v => { const i = document.createElement('i'); i.style.color = v; el.append(i); const c = getComputedStyle(i).color; i.remove(); return c; };
+      const edge = id => getComputedStyle(el.querySelector(`[data-event="${id}"]`)).boxShadow;
+      return { seventh: edge('c7'), sixth: edge('c6'), other: tone('var(--data-other)'), accent: tone('var(--accent)'), note: el.querySelector('.alt-schedule-legend-note')?.textContent ?? '' };
+    });
+    check(r.seventh.includes(r.other) && !r.seventh.includes(r.accent) && r.seventh !== r.sixth, `SC-03d a seventh category takes data-other, not the accent (${r.seventh})`);
+    check(r.note === 'Past six categories, events share a neutral edge.', `SC-03e the legend says the seventh and later share a neutral edge (${r.note})`);
     await page.close(); }
 
   { const page = await open(); await mountLocked(page);

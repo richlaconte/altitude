@@ -1517,6 +1517,9 @@ export type LocalDateTime = string;
 export type ScheduleResult = { ok: true } | { ok: false; error: string };
 export type ScheduleCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
 export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
+/** A colour that tells categories apart: one of the data palette's six series colours. */
+export type ScheduleCategoryColor = 'data-1' | 'data-2' | 'data-3' | 'data-4' | 'data-5' | 'data-6';
+export interface ScheduleCategory { id: string; label: string; color?: ScheduleCategoryColor }
 export interface ScheduleProps<T> {
   /** Default 'week'. */
   view?: 'day' | 'week' | 'workweek';
@@ -1557,6 +1560,12 @@ export interface ScheduleProps<T> {
   isLocked?: (event: T) => boolean;
   /** The word shown after a locked event's title and spoken in its name. Default 'Locked'. */
   lockedLabel?: (event: T) => string;
+  /** Groups events: the category's colour replaces the accent in each event's inset edge; its label joins the event's name. */
+  getCategory?: (event: T) => string | null | undefined;
+  /** Names and fixed colours. Categories without one take data-1…data-6 in first-seen order; past six, the accent. */
+  categories?: ScheduleCategory[];
+  /** A flush line of category names and their edge colour under the grid. Default: on when `categories` is given. */
+  legend?: boolean;
   /** Refuse a span (outside hours, a closed room). */
   isUnavailable?: (span: ScheduleSpan) => boolean;
   /** The now line's time. Default: the clock. */

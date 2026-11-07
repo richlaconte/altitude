@@ -7,6 +7,9 @@ export type LocalDateTime = string;
 export type ScheduleResult = { ok: true } | { ok: false; error: string };
 export type ScheduleCreateResult<T> = { ok: true; value: T } | { ok: false; error: string };
 export interface ScheduleSpan { start: LocalDateTime; end: LocalDateTime }
+/** A colour that tells categories apart: one of the data palette's six series colours. */
+export type ScheduleCategoryColor = 'data-1' | 'data-2' | 'data-3' | 'data-4' | 'data-5' | 'data-6';
+export interface ScheduleCategory { id: string; label: string; color?: ScheduleCategoryColor }
 export interface ScheduleProps<T> {
   /** Default 'week'. */
   view?: 'day' | 'week' | 'workweek';
@@ -53,6 +56,15 @@ export interface ScheduleProps<T> {
   isLocked?: (event: T) => boolean;
   /** The word shown after a locked event's title and spoken in its name. Default 'Locked'. */
   lockedLabel?: (event: T) => string;
+  /**
+   * Groups events (#562): each category's colour replaces the accent in the event's inset edge, in every state. Colour
+   * is never alone: the category's label joins the event's name, and the legend names every colour.
+   */
+  getCategory?: (event: T) => string | null | undefined;
+  /** Names and fixed colours. Categories without a colour take data-1…data-6 in first-seen order; past six, data-other. */
+  categories?: ScheduleCategory[];
+  /** A flush line of category names with their edge colour under the grid. Default: on when `categories` is given. */
+  legend?: boolean;
   /** Refuse a span (outside hours, a closed room). */
   isUnavailable?: (span: ScheduleSpan) => boolean;
   /** The now line's time. Default: the clock. */
@@ -82,7 +94,7 @@ type Draft = { day: string; start: number; end: number; title: string; error?: s
  * slot under a carried event deepens to a trench the length of the event. A carried event floats at level 3, tilted.
  */
 export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date, onDateChange, events, getKey, getStart, getEnd, getLabel, step = 15, dayStart = '08:00', dayEnd = '19:00',
-  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isLocked, lockedLabel, isUnavailable, now, locale,
+  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isLocked, lockedLabel, getCategory, categories, legend, isUnavailable, now, locale,
   className, ...aria }: ScheduleProps<T>) {
   // Narrow (#257): measured on the schedule itself, at the narrow breakpoint.
   const [root, setRoot] = React.useState<HTMLDivElement | null>(null);
@@ -129,6 +141,21 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const say = (text: string) => { setAssertive(''); requestAnimationFrame(() => mounted.current && setAssertive(text)); };
 
   const byKey = new Map(events.map((e) => [getKey(e), e]));
+  // Categories (#562): listed ones first (their fixed colours kept), then any seen in events. Colours not fixed are
+  // given out from data-1…data-6 in order, skipping fixed ones; past six distinct colours a category takes data-other, the
+  // palette's neutral for the seventh and later series (Theming, "The data palette"). Only uncategorised events keep the accent.
+  const cats = React.useMemo(() => {
+    if (!getCategory) return null;
+    const list: { id: string; label: string; color?: ScheduleCategoryColor | 'data-other' }[] = (categories ?? []).map((c) => ({ ...c }));
+    const known = new Set(list.map((c) => c.id));
+    for (const e of events) { const id = getCategory(e); if (id != null && !known.has(id)) { known.add(id); list.push({ id, label: id }); } }
+    const taken = new Set(list.map((c) => c.color).filter(Boolean));
+    const free = (['data-1', 'data-2', 'data-3', 'data-4', 'data-5', 'data-6'] as const).filter((c) => !taken.has(c));
+    for (const c of list) if (!c.color) c.color = free.shift() ?? 'data-other';
+    return new Map(list.map((c) => [c.id, c]));
+  }, [events, categories, getCategory]); // eslint-disable-line react-hooks/exhaustive-deps
+  const categoryOf = (event: T) => { const id = getCategory?.(event); return id != null ? cats?.get(id) : undefined; };
+  const edgeOf = (event: T | undefined) => { const c = event && categoryOf(event); return c?.color ? { ['--sch-edge' as any]: `var(--${c.color})` } : undefined; };
   const locked = (event: T | undefined) => !!event && !!isLocked?.(event);
   const lockWord = (event: T) => lockedLabel?.(event) || 'Locked';
   const refuseLocked = (event: T) => say(`${getLabel(event)} is ${lockWord(event).toLowerCase()} and can’t be changed.`);
@@ -182,7 +209,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   }, [events, landing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const spanText = (day: string, s: number, e: number) => `${longDay.format(utc(day))}, ${clockText(s)} to ${clockText(e)}`;
-  const nameOf = (p: Placed<T>) => [`${getLabel(p.event)}, ${spanText(p.day, p.start, p.end)}`, p.overlaps.length && `overlaps with ${p.overlaps.join(', ')}`,
+  const nameOf = (p: Placed<T>) => [`${getLabel(p.event)}${categoryOf(p.event) ? `, ${categoryOf(p.event)!.label}` : ''}, ${spanText(p.day, p.start, p.end)}`, p.overlaps.length && `overlaps with ${p.overlaps.join(', ')}`,
     heldBy?.(p.event) && `${heldBy(p.event)!.name} is moving this event`].filter(Boolean).join('. ')
     + (locked(p.event) ? `, ${lockWord(p.event).toLowerCase()}, can’t be changed` : '');
   const blocked = (day: string, s: number, e: number) => s < 0 || e > 24 * 60 || e <= s || !!isUnavailable?.({ start: at(day, s), end: at(day, e) });
@@ -392,7 +419,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
       {error && <span className="alt-schedule-error" role="alert"><Icons.AlertCircle size={12} />{error}</span>}
     </span>;
   const eventBox = (p: { key: string; day: string; start: number; end: number; lane: number; lanes: number }, inner: React.ReactNode, extra: Record<string, unknown>) =>
-    <div key={p.key} className="alt-schedule-event-box" style={{ top: (p.start - Math.max(first, Math.floor(p.start / step) * step)) * px, height: Math.max(step * px, (p.end - p.start) * px) - 2, left: `calc(${(p.lane / p.lanes) * 100}% + 2px)`, width: `calc(${100 / p.lanes}% - 4px)` }} {...extra}>{inner}</div>;
+    <div key={p.key} className="alt-schedule-event-box" style={{ ...edgeOf(byKey.get(p.key)), top: (p.start - Math.max(first, Math.floor(p.start / step) * step)) * px, height: Math.max(step * px, (p.end - p.start) * px) - 2, left: `calc(${(p.lane / p.lanes) * 100}% + 2px)`, width: `calc(${100 / p.lanes}% - 4px)` }} {...extra}>{inner}</div>;
 
   return <div ref={setRoot} className={cx('alt-schedule', className)} data-narrow={isNarrow && narrowView ? '' : undefined} data-carrying={carry || draft?.drawing ? '' : undefined} style={{ ['--days' as any]: days.length, ['--slot' as any]: `${step * px}px` }}>
     <div className="alt-schedule-head">
@@ -455,6 +482,11 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
         </div>)}
       </div>
     </div>
+    {cats && cats.size > 0 && (legend ?? !!categories) && <ul className="alt-schedule-legend" aria-label="Categories">
+      {[...cats.values()].map((c) => <li key={c.id} style={c.color ? { ['--sch-edge' as any]: `var(--${c.color})` } : undefined}>
+        <span className="alt-schedule-swatch" aria-hidden="true" />{c.label}</li>)}
+      {[...cats.values()].some((c) => c.color === 'data-other') && <li className="alt-schedule-legend-note">Past six categories, events share a neutral edge.</li>}
+    </ul>}
     {failure && <div className="alt-schedule-failure" role="alert"><Icons.AlertCircle size={14} /><span>{failure.error}</span>
       <Button size="sm" variant="ghost" onClick={() => { const f = failure; setFailure(null); f.retry(); }}>Retry</Button>
       <Button size="sm" variant="ghost" aria-label="Dismiss" onClick={() => setFailure(null)}><Icons.X size={14} /></Button></div>}

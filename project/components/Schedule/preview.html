@@ -65,6 +65,8 @@ function App() {
       heldBy: (e) => e.id === "e6" ? { name: "Ana", presence: 2 } : null,
       isLocked: (e) => !!e.approved,
       lockedLabel: () => "Approved",
+      getCategory: (e) => e.room,
+      categories: [{ id: "Room A", label: "Room A", color: "data-1" }, { id: "Room B", label: "Room B", color: "data-2" }],
       isUnavailable: ({ start, end }) => start.slice(0, 10) === "2026-10-30" && end.slice(11) > "17:00",
       onChange: async ({ id, start, end }) => {
         await schWait(300);
