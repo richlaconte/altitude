@@ -4,8 +4,26 @@ import { Button } from './controls';
 
 /* ───────────────────────── SaveBar ───────────────────────── */
 
+/** Whether a field's draft value matches its baseline, for any value a record holds (bigint, Date, nested, cyclic). */
+function same(a: unknown, b: unknown, seen = new Map<object, Set<object>>()): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false;
+  if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;
+  if (a instanceof Date) return Object.is(a.getTime(), (b as Date).getTime());
+  // Every pair already under comparison is assumed equal, so cycles of different lengths terminate too.
+  const pairs = seen.get(a) ?? new Set<object>();
+  if (pairs.has(b)) return true;
+  seen.set(a, pairs.add(b));
+  if (a instanceof Map || a instanceof Set) {
+    const x = [...a.entries()], y = [...(b as Map<unknown, unknown> | Set<unknown>).entries()];
+    return x.length === y.length && x.every(([k, v], i) => same(k, y[i][0], seen) && same(v, y[i][1], seen));
+  }
+  const ka = Object.keys(a), kb = Object.keys(b);
+  return ka.length === kb.length && ka.every((k) => Object.prototype.hasOwnProperty.call(b, k) && same((a as any)[k], (b as any)[k], seen));
+}
+
 /** What SaveBar reads from useEditRecord. */
-interface RecordLike { dirty: boolean; phase: 'editing' | 'invalid' | 'submitting' | 'saved' | 'failed'; errors: object; error?: string; draft?: object; baseline?: object; submit: () => unknown; reset: () => unknown }
+interface RecordLike { dirty: boolean; phase: 'editing' | 'invalid' | 'submitting' | 'saved' | 'failed'; errors: object; error?: string; status?: string; draft?: object; baseline?: object; submit: () => unknown; reset: () => unknown }
 
 export interface SaveBarProps {
   /** A useEditRecord result: SaveBar reads dirty, phase and errors from it, and Save and Discard call submit and reset. */
@@ -39,7 +57,7 @@ export function SaveBar({ record, dirty: dirtyProp, saving: savingProp, error: e
   const error = record ? (record.phase === 'failed' ? record.error || "We couldn't save." : '') : errorProp ?? '';
   const invalid = record ? Object.keys(record.errors).length : invalidProp ?? 0;
   const changed = changedCount ?? (record?.draft && record.baseline
-    ? Object.keys({ ...record.baseline, ...record.draft }).filter((k) => JSON.stringify((record.draft as any)[k]) !== JSON.stringify((record.baseline as any)[k])).length : undefined);
+    ? Object.keys({ ...record.baseline, ...record.draft }).filter((k) => !same((record.draft as any)[k], (record.baseline as any)[k])).length : undefined);
   const save = () => (record ? record.submit() : onSave?.());
   const discard = () => (record ? record.reset() : onDiscard?.());
 
@@ -51,7 +69,7 @@ export function SaveBar({ record, dirty: dirtyProp, saving: savingProp, error: e
     if (settled) return;
     const t = window.setTimeout(() => setSettled(true), delay);
     return () => window.clearTimeout(t);
-  }, [wanted, dirty && JSON.stringify(record?.draft ?? null)]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [wanted, dirty && record?.draft]); // eslint-disable-line react-hooks/exhaustive-deps
   const shown = wanted && (settled || saving || !!error);
   const { mounted, state } = usePresence(shown, 240);
   const { style, ...depth } = useDepth({ status: saving ? 'pending' : error ? 'failed' : undefined });
@@ -60,9 +78,11 @@ export function SaveBar({ record, dirty: dirtyProp, saving: savingProp, error: e
   const wasSaving = React.useRef(false);
   React.useEffect(() => { if (shown && !saving && !error) setSaid('Unsaved changes.'); }, [shown]); // eslint-disable-line react-hooks/exhaustive-deps
   React.useEffect(() => {
-    if (wasSaving.current && !saving) setSaid(error ? `${error} Your changes are kept.` : 'Saved.');
+    // An earlier save that resolves while newer edits are still in the draft saved those earlier changes, not these.
+    if (wasSaving.current && !saving) setSaid(error ? `${error} Your changes are kept.`
+      : dirty ? (record?.phase === 'editing' && record.status) || 'The earlier changes were saved. Your newer edits still need saving.' : 'Saved.');
     wasSaving.current = saving;
-  }, [saving, error]);
+  }, [saving, error]); // eslint-disable-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     if (!shown) return;
     const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (!saving) save(); } };

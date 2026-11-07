@@ -10,7 +10,9 @@ A time of day: when a scheduled report is sent, quiet hours, business hours, a m
 
 **Accessibility.** Segmented [spinbuttons](https://www.w3.org/WAI/ARIA/apg/patterns/spinbutton/) ("Hour", "Minute", "AM/PM", each with its value or "Empty") in a `role="group"`, as in `DatePicker`. The time zone describes each segment. Under forced colours it's dashed while empty or partial and solid when complete. Under `contrast="more"` it gets the well's hard inner edge.
 
-**Props:** `value`, `defaultValue`, `onValueChange` (`"HH:mm" | null`); `step` (minutes, default 1); `hourCycle` (`'auto' | 'h12' | 'h23'`); `min`, `max` ("HH:mm"); `timeZone`; `locale`; `invalid`; `disabled`; `required`; `size`; `name` (submits the value with a form).
+**Props:** `value`, `defaultValue`, `onValueChange` (`"HH:mm" | null`); `step` (minutes, default 1); `hourCycle` (`'auto' | 'h12' | 'h23'`); `min`, `max` ("HH:mm"); `timeZone`; `locale`; `invalid`; `disabled`; `required`; `requiredMessage`; `size`; `name` (submits the value with a form).
+
+`required` works as `Select`'s: an empty or partial time fails native form validation, with or without a `name`. Invalid submission focuses the hour, marks the field invalid and links a visible alert, “Enter a time.” unless `requiredMessage` says otherwise. A `Field` error takes precedence; a whole time clears it. A disabled TimeInput is excluded from validation and form data.
 
 **You provide:** a label (with `Field`), the allowed range, and the time zone when people in several zones see it.
 

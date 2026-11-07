@@ -33,7 +33,8 @@ export interface AssistantTurn<I> {
   messageStatus: 'streaming' | 'complete' | 'stopped' | 'error' | undefined;
   /** Sends unless a turn is already in flight (a double Enter sends once). Returns whether it started. */
   submit: (input: I) => boolean;
-  stop: () => void;
+  /** Stops a turn that's submitted, streaming or awaiting input: aborts the stream and keeps the partial answer as 'stopped'. Returns whether anything stopped (pass it to PromptInput's `onStop`). */
+  stop: () => boolean;
   /** Sends the last input again (after a failure, a stop or an interruption). */
   retry: () => boolean;
   /** A Confirmation or Question is open (true) or answered (false): the turn waits for the person. */
@@ -101,8 +102,10 @@ export function useAssistantTurn<I>({ stream, restored, locale }: AssistantTurnO
     return true;
   };
   const stop = () => {
-    if (live.current !== 'submitted' && live.current !== 'streaming') return;
+    // Every state the composer shows as Stop can be stopped, including a turn waiting on the person.
+    if (live.current !== 'submitted' && live.current !== 'streaming' && live.current !== 'awaiting-input') return false;
     turn.current++; abort.current?.abort(); set('stopped');
+    return true;
   };
   const awaitInput = (waiting: boolean) => {
     if (waiting && (live.current === 'streaming' || live.current === 'submitted')) set('awaiting-input');
