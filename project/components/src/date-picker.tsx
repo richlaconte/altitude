@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { cx, Icons, useApproach, useIsoLayoutEffect, useKeyFocus, useOutside, usePresence } from './core';
-import { Tick } from './select';
+import { NativeValue, Tick, useNativeRequired } from './select';
 
 /* Dates are ISO calendar dates, 'YYYY-MM-DD': no time, no time zone, serialisable, and comparable as strings. */
 export type ISODate = string;
@@ -355,6 +355,8 @@ interface PickerBase {
   required?: boolean;
   /** Field sets it for you when it has an error. */
   invalid?: boolean;
+  /** Visible required-field feedback after native validation. Localize this for the application. Default "Enter a date." (DateRangePicker: "Enter a start and end date.") */
+  requiredMessage?: string;
   size?: 'sm' | 'md';
   className?: string;
   'aria-label'?: string;
@@ -413,7 +415,7 @@ function problem(v: ISODate | null, draft: Draft, { min, max, isUnavailable, loc
  * date. The calendar floats at level 3; days are flush and the chosen one carries the raised accent mark.
  */
 export function DatePicker({ value, defaultValue = null, onValueChange, min, max, isUnavailable, locale, weekStartsOn, markers, id, name, disabled,
-  required, invalid, size = 'md', className, defaultOpen = false, ...aria }: DatePickerProps) {
+  required, invalid, requiredMessage = 'Enter a date.', size = 'md', className, defaultOpen = false, ...aria }: DatePickerProps) {
   const [inner, setInner] = React.useState<ISODate | null>(defaultValue);
   const current = value !== undefined ? value : inner;
   const [error, setError] = React.useState<string | null>(null);
@@ -429,18 +431,22 @@ export function DatePicker({ value, defaultValue = null, onValueChange, min, max
     set(issue ? null : v);
   };
   const choose = (d: ISODate) => { setError(null); setPartial(false); set(d); close(); };
-  const describedBy = [aria['aria-describedby'], formatId, error ? errorId : undefined].filter(Boolean).join(' ');
+  const native = useNativeRequired({ empty: !current, required, disabled, invalid });
+  const requiredError = native.error && !error;
+  const firstSeg = React.useRef<HTMLSpanElement>(null);
+  const describedBy = [aria['aria-describedby'], formatId, error ? errorId : undefined, requiredError ? auto + '-required-error' : undefined].filter(Boolean).join(' ');
   return <div ref={root} className={cx('alt-date-picker', className)} data-open={open ? '' : undefined}>
-    <div className="alt-input" data-size={size} data-approach="56" data-filled={current && !partial ? '' : undefined} data-invalid={invalid || error ? '' : undefined}
+    <div className="alt-input" data-size={size} data-approach="56" data-filled={current && !partial ? '' : undefined} data-invalid={invalid || error || requiredError ? '' : undefined}
       data-disabled={disabled ? '' : undefined} role="group" aria-label={aria['aria-label']} aria-labelledby={aria['aria-labelledby']} aria-describedby={describedBy}
-      aria-invalid={invalid || error ? true : undefined}>
-      <Segments value={current} onCommit={commit} locale={locale} disabled={disabled} id={id} name="" describedBy={describedBy} onOpen={() => setOpen(true)} />
+      aria-invalid={invalid || error || requiredError ? true : undefined}>
+      <Segments value={current} onCommit={commit} locale={locale} disabled={disabled} id={id} name="" describedBy={describedBy} onOpen={() => setOpen(true)} firstRef={firstSeg} />
       <button ref={button} type="button" className="alt-date-button" aria-label="Choose date" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? panelId : undefined}
         disabled={disabled} onClick={() => setOpen(!open)}><CalendarIcon /></button>
     </div>
-    {name && <input type="hidden" name={name} value={current ?? ''} required={required} />}
+    {(name || required) && <NativeValue name={name} value={current ?? ''} required={required && !disabled} onInvalid={native.onInvalid(() => firstSeg.current?.focus())} />}
     <span id={formatId} hidden>Format: {segs.map((s) => SEG_HOLD[s]).join(sep.trim() || '/')}</span>
     {error && <p id={errorId} className="alt-field-error alt-date-error"><Icons.AlertCircle size={14} />{error}</p>}
+    {requiredError && <p id={auto + '-required-error'} className="alt-field-error alt-date-error" role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
     {mounted && <div id={panelId} role="dialog" aria-label="Choose date" className="alt-pop alt-date-panel" data-state={state} data-side="bottom" data-align="start"
       onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }}>
       <MonthGrid value={current} onChoose={choose} min={min} max={max} isUnavailable={isUnavailable} locale={locale} weekStartsOn={weekStartsOn} markers={markers} autoFocus={state === 'open'} />
@@ -450,7 +456,7 @@ export function DatePicker({ value, defaultValue = null, onValueChange, min, max
 
 /** Two dates as one span. In the calendar the span is a sunk track between two raised ends, the Slider's build. */
 export function DateRangePicker({ value, defaultValue, onValueChange, min, max, isUnavailable, locale, weekStartsOn, markers, id, name,
-  disabled, required, invalid, size = 'md', className, defaultOpen = false, presets, preset: presetProp, defaultPreset = null, onPresetChange, today: todayProp, ...aria }: DateRangePickerProps) {
+  disabled, required, invalid, requiredMessage = 'Enter a start and end date.', size = 'md', className, defaultOpen = false, presets, preset: presetProp, defaultPreset = null, onPresetChange, today: todayProp, ...aria }: DateRangePickerProps) {
   const today = todayProp ?? todayISO();
   const startPreset = presets?.find((p) => presetKey(p) === defaultPreset);
   const [inner, setInner] = React.useState<DateRange>(() => defaultValue ?? (startPreset ? resolve(startPreset, today) : { start: null, end: null }));
@@ -505,16 +511,20 @@ export function DateRangePicker({ value, defaultValue, onValueChange, min, max, 
     for (let x = s; x <= e; x = addDays(x, 1)) if (isUnavailable?.(x)) { setError('Choose a span without unavailable days.'); setPicking({ start: d, end: null }); return; }
     setError(null); set({ start: s, end: e }); setPreset(null); close();
   };
-  const describedBy = [aria['aria-describedby'], formatId, error ? errorId : undefined].filter(Boolean).join(' ');
+  const native = useNativeRequired({ empty: !current.start || !current.end, required, disabled, invalid });
+  const requiredError = native.error && !error;
+  // Focus goes to the endpoint that's still empty; the preset face never shows an empty range.
+  const onInvalid = native.onInvalid(() => (current.start ? endFirst : firstSeg).current?.focus());
+  const describedBy = [aria['aria-describedby'], formatId, error ? errorId : undefined, requiredError ? auto + '-required-error' : undefined].filter(Boolean).join(' ');
   const shown = picking ?? current;
   const short = fmt(locale, { day: 'numeric', month: 'short' }), full = fmt(locale, { day: 'numeric', month: 'long', year: 'numeric' });
   const sameYear = current.start?.slice(0, 4) === current.end?.slice(0, 4) && current.start?.slice(0, 4) === today.slice(0, 4);
   const shortOf = (d: ISODate) => (sameYear ? short : fmt(locale, { day: 'numeric', month: 'short', year: 'numeric' })).format(utc(d));
   const presetFace = showPreset && !editing && current.start && current.end;
   return <div ref={root} className={cx('alt-date-picker alt-date-range', className)} data-open={open ? '' : undefined} data-presets={presets?.length ? '' : undefined}>
-    <div className="alt-input" data-size={size} data-approach="56" data-filled={current.start && current.end ? '' : undefined} data-invalid={invalid || error ? '' : undefined}
+    <div className="alt-input" data-size={size} data-approach="56" data-filled={current.start && current.end ? '' : undefined} data-invalid={invalid || error || requiredError ? '' : undefined}
       data-disabled={disabled ? '' : undefined} role="group" aria-label={aria['aria-label']} aria-labelledby={aria['aria-labelledby']} aria-describedby={describedBy}
-      aria-invalid={invalid || error ? true : undefined}>
+      aria-invalid={invalid || error || requiredError ? true : undefined}>
       {presetFace
         ? <button type="button" id={id} className="alt-date-preset" data-glow={glow} disabled={disabled} aria-describedby={describedBy}
           aria-label={`${activePreset!.label}, ${full.format(utc(current.start!))} to ${full.format(utc(current.end!))}. Type to enter dates.`}
@@ -536,9 +546,13 @@ export function DateRangePicker({ value, defaultValue, onValueChange, min, max, 
       <button ref={button} type="button" className="alt-date-button" aria-label="Choose dates" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? panelId : undefined}
         disabled={disabled} onClick={() => setOpen(!open)}><CalendarIcon /></button>
     </div>
-    {name && <><input type="hidden" name={`${name}-start`} value={current.start ?? ''} required={required} /><input type="hidden" name={`${name}-end`} value={current.end ?? ''} required={required} /></>}
+    {(name || required) && <>
+      <NativeValue name={name && `${name}-start`} value={current.start ?? ''} required={required && !disabled} onInvalid={onInvalid} />
+      <NativeValue name={name && `${name}-end`} value={current.end ?? ''} required={required && !disabled} onInvalid={onInvalid} />
+    </>}
     <span id={formatId} hidden>Format: {segs.map((s) => SEG_HOLD[s]).join(sep.trim() || '/')}</span>
     {error && <p id={errorId} className="alt-field-error alt-date-error"><Icons.AlertCircle size={14} />{error}</p>}
+    {requiredError && <p id={auto + '-required-error'} className="alt-field-error alt-date-error" role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
     {mounted && <div id={panelId} role="dialog" aria-label="Choose dates" className="alt-pop alt-date-panel" data-state={state} data-side="bottom" data-align="start"
       onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }}>
       {presets?.length

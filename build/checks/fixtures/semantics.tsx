@@ -2,7 +2,9 @@ import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { AltitudeProvider, Surface } from '../../../project/components/src/core';
 import { Field, Input } from '../../../project/components/src/controls';
-import { Select } from '../../../project/components/src/select';
+import { Combobox, Select } from '../../../project/components/src/select';
+import { DatePicker, DateRangePicker } from '../../../project/components/src/date-picker';
+import { TimeInput } from '../../../project/components/src/time-input';
 import { Dialog } from '../../../project/components/src/overlays';
 function Fixture() {
   const [count, setCount] = React.useState(0);
@@ -11,6 +13,7 @@ function Fixture() {
   const [disabled, setDisabled] = React.useState(false);
   const [resetControlled, setResetControlled] = React.useState(false);
   const [controlled, setControlled] = React.useState('a');
+  const [submitted, setSubmitted] = React.useState(0);
   const items = [{value: 'a', label: 'Alpha'}, {value: 'b', label: 'Beta'}, {value: 'c', label: 'Unavailable', disabled: true}];
   return <AltitudeProvider>
     <output id="count">{count}</output><output id="nested-count">{nested}</output>
@@ -33,6 +36,14 @@ function Fixture() {
       <button type="reset" id="reset">Reset choices</button><button type="submit" id="submit">Save choices</button>
     </form>
     <button id="disable-choice" onClick={() => setDisabled(d => !d)}>Toggle disabled</button>
+    <output id="composite-submitted">{submitted}</output>
+    <form id="composite-form" onSubmit={e => { e.preventDefault(); setSubmitted(n => n + 1); }}>
+      <Field label="Assignee" required><Combobox id="combo" name="assignee" items={items} /></Field>
+      <Field label="Due date" required><DatePicker id="date" name="date" /></Field>
+      <Field label="Stay" required><DateRangePicker id="range" name="range" /></Field>
+      <Field label="Start time" required><TimeInput id="time" name="time" hourCycle="h23" /></Field>
+      <button type="submit" id="composite-submit">Save record</button>
+    </form>
     <Dialog trigger={<button id="open-dialog">Open dialog</button>} title="Sparse dialog" />
     <Dialog trigger={<button id="open-empty">Open empty dialog</button>} title="Empty dialog" initialFocus={false} dismissible={false} />
   </AltitudeProvider>;

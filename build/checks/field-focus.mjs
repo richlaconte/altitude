@@ -80,6 +80,22 @@ const clear = 'rgba(0, 0, 0, 0)';
   expect(await owner.inputValue() === 'Bob' && await data('owner') === 'bob', 'combobox: form reset leaves a controlled value with its owner');
   await page.close(); }
 
+// Form reset after a failed required submission (#571 with #573) withdraws the required message, as Select's does.
+{ const page = await open('Combobox');
+  await page.evaluate(() => new Promise((done) => {
+    document.body.innerHTML = ''; const d = document.createElement('div'); document.body.append(d);
+    const A = window.Altitude, h = React.createElement, items = [{ value: 'alice', label: 'Alice' }, { value: 'bob', label: 'Bob' }];
+    ReactDOM.createRoot(d).render(h(A.AltitudeProvider, null, h('form', { id: 'rf', onSubmit: (e) => e.preventDefault() },
+      h(A.Combobox, { name: 'who', required: true, items, 'aria-label': 'Who' }))));
+    setTimeout(done, 300);
+  }));
+  const box = page.getByRole('combobox', { name: 'Who' });
+  await page.locator('#rf').evaluate((f) => f.requestSubmit()); await page.waitForTimeout(150);
+  expect(await box.getAttribute('aria-invalid') === 'true' && await page.locator('#rf [role="alert"]').count() === 1, 'combobox: an empty required submission shows the required message');
+  await page.locator('#rf').evaluate((f) => f.reset()); await page.waitForTimeout(150);
+  expect(await box.getAttribute('aria-invalid') === null && await page.locator('#rf [role="alert"]').count() === 0, 'combobox: form reset withdraws the required message');
+  await page.close(); }
+
 { const page = await open('CommandPalette'); await page.waitForTimeout(300);
   const f = await page.evaluate(() => { const el = document.querySelector('.alt-cmd-field'); return el ? { focus: el.matches(':focus-within'), o: getComputedStyle(el).outlineColor, key: el.hasAttribute('data-key-focus') } : null; });
   expect(f && f.focus && f.o === clear, 'palette field never wears the rim, even with keyboard focus: ' + JSON.stringify(f));
