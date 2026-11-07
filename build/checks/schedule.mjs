@@ -166,6 +166,22 @@ try {
     check(await where(page, 'e7') === '2026-10-26T840', 'SC-25b a locked event stays where it is');
     await page.close(); }
 
+  // Past six categories (#562 review): the seventh takes data-other, the palette's neutral, not the accent.
+  { const page = await open();
+    const r = await page.evaluate(async () => {
+      const A = window.Altitude, h = React.createElement, el = document.createElement('div'); document.querySelector('.alt-root').append(el);
+      const events = [1, 2, 3, 4, 5, 6, 7].map(n => ({ id: `c${n}`, title: `Seventh ${n}`, cat: `Cat ${n}`, start: `2026-10-${25 + Math.min(n, 5)}T${n < 6 ? '10' : '14'}:00`, end: `2026-10-${25 + Math.min(n, 5)}T${n < 6 ? '11' : n === 6 ? '15' : '16'}:00` }));
+      events[6].start = '2026-10-29T16:00'; events[6].end = '2026-10-29T17:00';
+      window.ReactDOM.createRoot(el).render(h(A.Schedule, { date: '2026-10-26', events, getKey: e => e.id, getStart: e => e.start, getEnd: e => e.end, getLabel: e => e.title, getCategory: e => e.cat, legend: true, 'aria-label': 'Seven categories' }));
+      await new Promise(res => setTimeout(res, 400));
+      const tone = v => { const i = document.createElement('i'); i.style.color = v; el.append(i); const c = getComputedStyle(i).color; i.remove(); return c; };
+      const edge = id => getComputedStyle(el.querySelector(`[data-event="${id}"]`)).boxShadow;
+      return { seventh: edge('c7'), sixth: edge('c6'), other: tone('var(--data-other)'), accent: tone('var(--accent)'), note: el.querySelector('.alt-schedule-legend-note')?.textContent ?? '' };
+    });
+    check(r.seventh.includes(r.other) && !r.seventh.includes(r.accent) && r.seventh !== r.sixth, `SC-03d a seventh category takes data-other, not the accent (${r.seventh})`);
+    check(r.note === 'Past six categories, events share a neutral edge.', `SC-03e the legend says the seventh and later share a neutral edge (${r.note})`);
+    await page.close(); }
+
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
     for (const mode of ['standard', 'reduced-motion', 'forced-colors', 'increased-contrast']) {
