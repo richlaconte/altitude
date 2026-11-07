@@ -35,6 +35,10 @@ const cases = [
   ['ALT-SETUP-003',
     { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { Button } from 'altitude-design';\nexport const A = () => <Button>Save changes</Button>;" },
     { 'App.tsx': app('<Button>Save changes</Button>') }],
+  // An aliased provider is the same provider (#582).
+  ['ALT-SETUP-003',
+    { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { AltitudeProvider as Provider, Button } from 'altitude-design';\n\nexport function App() {\n  return <Button>Save changes</Button>;\n}" },
+    { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { AltitudeProvider as Provider, Button } from 'altitude-design';\n\nexport function App() {\n  return <Provider><Button>Save changes</Button></Provider>;\n}" }],
   ['ALT-CHART-001',
     { 'Chart.tsx': "import { PieChart, Pie } from 'recharts';" },
     { 'Chart.tsx': "import { BarChart } from 'altitude-design';" }],

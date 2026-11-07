@@ -223,7 +223,10 @@ export function scan(root, { tokenNames = new Set() } = {}) {
       }
     });
     if (!css) {
-      const n = (text.match(/<(?:\w+\.)?AltitudeProvider\b/g) || []).length;
+      // The provider by any name it's imported under (`AltitudeProvider as Provider`, `A.AltitudeProvider`), as well as
+      // the literal tag (a project may re-export it from its own module).
+      const alt = importsFrom(text, 'altitude-design');
+      const n = [...text.matchAll(/<((?:\w+\.)?[A-Z]\w*)(?=[\s/>])/g)].filter((m) => /(?:^|\.)AltitudeProvider$/.test(m[1]) || alt.of(m[1]) === 'AltitudeProvider').length;
       if (n) providers.push(...Array(n).fill(relative(root, file)));
       // ALT-PRIMARY-001: more than one primary button in one file (often one view).
       const primaries = [...text.matchAll(/<(?:\w+\.)?Button\b[^>]*\bvariant=["']primary["']/g)];
