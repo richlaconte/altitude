@@ -25,6 +25,10 @@ const cases = [
   ['ALT-TOKEN-001',
     { 'App.tsx': app('<p className="text-sm text-zinc-500">Hi</p>') },
     { 'App.tsx': app('<p className="text-sm text-muted-foreground border-b">Hi</p>') }],
+  // An arbitrary literal is a palette class too, though the line also holds a colour literal (#588).
+  ['ALT-TOKEN-001',
+    { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { AltitudeProvider } from 'altitude-design';\nexport const App = () => (\n  <AltitudeProvider><p className=\"text-[#ff0000]\">Problem</p></AltitudeProvider>\n);" },
+    { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { AltitudeProvider } from 'altitude-design';\nexport const App = () => (\n  <AltitudeProvider><p className=\"text-[var(--critical)]\">Problem</p></AltitudeProvider>\n);" }],
   ['ALT-TOKEN-001',
     { 'index.html': '<style>\n  .card { background: #fafafa; }\n</style>\n<p style="color: #333">Hi</p>' },
     { 'index.html': '<style>\n  :root { --brand: #0f8a6b; }\n  .card { background: var(--surface-raised); }\n</style>\n<a href="#main">Skip to content</a>' }],

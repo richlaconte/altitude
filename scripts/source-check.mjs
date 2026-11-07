@@ -208,14 +208,18 @@ export function scan(root, { tokenNames = new Set() } = {}) {
       const skip = (id) => ignored(rawLines, i, id);
       // ALT-TOKEN-001: a colour literal in a declaration or inline style. Custom properties (--brand: #…) define tokens,
       // and a scheme's token entries (ink: '#…') do too; AltitudeProvider's accent takes a literal by design.
+      // The literal and the Tailwind class are tested independently: `text-[#ff0000]` holds a literal but no declaration,
+      // so it's the Tailwind detector that catches it. One finding per line.
+      let token = false;
       if (COLOUR.test(line) && !skip('ALT-TOKEN-001')) {
         const definesToken = /^\s*--[\w-]+\s*:/.test(line) || [...line.matchAll(/['"]?([a-z][\w-]*)['"]?\s*:\s*['"`]?(?:#|rgb|hsl|oklch)/g)].some((m) => tokenNames.has(m[1]));
         const accent = /\baccent\s*=\s*\{?\s*['"`]#/.test(line);
         // In CSS (and HTML's style="" attributes), any declaration other than a custom property's whose value holds a colour.
         const inStyle = css ? [...line.matchAll(/(?:^|[{;"'])\s*([a-z-]+)\s*:\s*([^;{}"']+)/g)].some((m) => !m[1].startsWith('--') && COLOUR.test(m[2]))
           : /\bstyle=\{\{|(?:color|background|backgroundColor|borderColor|fill|stroke|boxShadow|outlineColor)\s*[:=]/.test(line);
-        if (!definesToken && !accent && inStyle) add('ALT-TOKEN-001', file, at, line.trim().slice(0, 160), 'Use a token instead: var(--ink-muted), var(--accent), var(--surface-raised) and the rest of tokens.css. A brand colour goes to AltitudeProvider accent, and a full palette to a custom scheme.');
-      } else if (!css && TAILWIND_COLOUR.test(line) && /\bclass(Name)?=/.test(line) && !skip('ALT-TOKEN-001')) {
+        if (!definesToken && !accent && inStyle) { token = true; add('ALT-TOKEN-001', file, at, line.trim().slice(0, 160), 'Use a token instead: var(--ink-muted), var(--accent), var(--surface-raised) and the rest of tokens.css. A brand colour goes to AltitudeProvider accent, and a full palette to a custom scheme.'); }
+      }
+      if (!token && !css && TAILWIND_COLOUR.test(line) && /\bclass(Name)?=/.test(line) && !skip('ALT-TOKEN-001')) {
         // A Tailwind palette class (text-zinc-500, bg-white, bg-[#fafafa]) bypasses the tokens just as a literal does.
         add('ALT-TOKEN-001', file, at, line.trim().slice(0, 160), 'Use a token instead of a palette class: style={{ color: "var(--ink-muted)" }} or a class whose CSS uses the tokens.');
       }
