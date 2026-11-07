@@ -4112,6 +4112,38 @@ export interface SpanWaterfallProps extends Omit<React.HTMLAttributes<HTMLDivEle
  * child or parent, Enter opens the detail flush beneath, Space selects. Selected rows rise like Table's; bars never lift.
  */
 export declare function SpanWaterfall(props: SpanWaterfallProps): React.ReactElement;
+/** A paper size: 'a4' (210 × 297 mm), 'letter' (8.5 × 11 in), 'legal' (8.5 × 14 in), or any CSS lengths. */
+export type PrintSheetSize = 'a4' | 'letter' | 'legal' | { width: string; height: string };
+export interface PrintSheetProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
+  /** Names the document ("Invoice 1042"). */
+  title: string;
+  /** Default 'a4'. */
+  size?: PrintSheetSize;
+  /** The page's margins as CSS lengths, one or four (as `margin`). Default '20mm'. */
+  margins?: string;
+  /** Default 'portrait'. */
+  orientation?: 'portrait' | 'landscape';
+  /** On screen only: 'fit' (default) scales the pages down to the container's width, never up; a number is a fixed scale. Print is always actual size. */
+  scale?: 'fit' | number;
+  /** Repeated at the top of every page: a `PrintSheetHeader`. */
+  header?: React.ReactNode;
+  /** Repeated at the foot of every page: a `PrintSheetFooter`, perhaps with `PrintSheetPageNumber` and `PrintSheetPageCount`. */
+  footer?: React.ReactNode;
+  /** The data is on its way: each page is an imprint at its paper size, and the document says it's loading. */
+  loading?: boolean;
+}
+/** A paper document previewed on screen and printed as it is: light paper raised one level on screen; flat, white and the page itself in print. */
+export declare function PrintSheet(props: PrintSheetProps): React.ReactElement;
+/** The top of every page of a PrintSheet. */
+export declare function PrintSheetHeader(props: React.HTMLAttributes<HTMLElement>): React.ReactElement;
+/** The foot of every page of a PrintSheet. */
+export declare function PrintSheetFooter(props: React.HTMLAttributes<HTMLElement>): React.ReactElement;
+/** A page break placed by hand: directly inside a PrintSheet it starts a new page, on screen and in print. */
+export declare function PrintSheetBreak(props: { className?: string }): React.ReactElement;
+/** This page's number, inside a PrintSheet's header or footer. */
+export declare function PrintSheetPageNumber(): React.ReactElement;
+/** The number of pages, inside a PrintSheet's header or footer. */
+export declare function PrintSheetPageCount(): React.ReactElement;
 /** The critical path: from the root's end, walk back through the child that ends last before that point (recursively), then on from its start, as trace viewers such as Jaeger do. */
 export declare function criticalPathOf(spans: Span[]): string[];
 /** "84 ms" under a second, "2.41 s" from a second up. */
@@ -4390,7 +4422,7 @@ declare global {
       SettingsSection: typeof SettingsSection; SettingsRow: typeof SettingsRow;
       InlineCitation: typeof InlineCitation; Sources: typeof Sources;
       Artifact: typeof Artifact; ArtifactHeader: typeof ArtifactHeader; ArtifactVersions: typeof ArtifactVersions; ArtifactContent: typeof ArtifactContent; ArtifactReference: typeof ArtifactReference;
-      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem; SpanWaterfall: typeof SpanWaterfall; criticalPathOf: typeof criticalPathOf; formatMs: typeof formatMs;
+      ThreadList: typeof ThreadList; ThreadListGroup: typeof ThreadListGroup; ThreadListItem: typeof ThreadListItem; ThreadListNew: typeof ThreadListNew; groupByDate: typeof groupByDate; InboxList: typeof InboxList; InboxItem: typeof InboxItem; SpanWaterfall: typeof SpanWaterfall; PrintSheet: typeof PrintSheet; PrintSheetHeader: typeof PrintSheetHeader; PrintSheetFooter: typeof PrintSheetFooter; PrintSheetBreak: typeof PrintSheetBreak; PrintSheetPageNumber: typeof PrintSheetPageNumber; PrintSheetPageCount: typeof PrintSheetPageCount; criticalPathOf: typeof criticalPathOf; formatMs: typeof formatMs;
       AgentFleet: typeof AgentFleet; AgentFleetGroup: typeof AgentFleetGroup; AgentFleetItem: typeof AgentFleetItem; AgentRequests: typeof AgentRequests; AgentRequest: typeof AgentRequest; AgentLanes: typeof AgentLanes; summarizeFleet: typeof summarizeFleet; groupAgents: typeof groupAgents; needsYou: typeof needsYou; formatSpan: typeof formatSpan;
       Question: typeof Question; QuestionOption: typeof QuestionOption; QuestionSet: typeof QuestionSet; Terminal: typeof Terminal; Suggestions: typeof Suggestions; Suggestion: typeof Suggestion;
       Markdown: typeof Markdown; parseMarkdown: typeof parseMarkdown; safeUrl: typeof safeUrl;
