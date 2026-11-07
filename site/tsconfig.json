@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react",
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": ["es2021", "dom", "dom.iterable"],
+    "types": [],
+    "noEmit": true
+  },
+  "include": ["./*.tsx", "./*.ts"]
+}

@@ -32,11 +32,16 @@ const site = {
   patterns: readdirSync('project/framework/patterns').filter((f) => f.endsWith('.md')).length,
 };
 
+// Real example screenshots are embedded so both the site and artifact.html stay portable.
+const previews = Object.fromEntries(['support-inbox', 'booking', 'docs-editor'].map((slug) => [
+  slug, `data:image/jpeg;base64,${readFileSync(`site/assets/${slug}.jpg`).toString('base64')}`,
+]));
+
 async function bundle(entry) {
   const result = await build({
     entryPoints: [entry], bundle: true, write: false, format: 'iife', minify: true, target: 'es2020', legalComments: 'none',
     jsx: 'transform', jsxFactory: 'React.createElement', jsxFragment: 'React.Fragment',
-    define: { 'process.env.NODE_ENV': '"production"', __SITE__: JSON.stringify(site) },
+    define: { 'process.env.NODE_ENV': '"production"', __SITE__: JSON.stringify({ ...site, previews }) },
     // The agent page uses a pattern fixture, which imports the package by name.
     // One React for both: the fixture would otherwise resolve build/'s copy.
     alias: { 'altitude-design': './project/components/src/index.tsx', react: './node_modules/react', 'react-dom': './node_modules/react-dom' },
@@ -49,10 +54,10 @@ const agentJs = await bundle('site/agent.tsx');
 
 const components = readFileSync('project/components/bundle.css', 'utf8');
 const fontImport = (components.match(/^@import url\('([^']+)'\);/) || [])[1];
-const css = [tokensCss('project/tokens.json'), components.replace(/^@import[^\n]*\n/, ''), readFileSync('site/site.css', 'utf8')].join('\n');
+const css = [tokensCss('project/tokens.json'), components.replace(/^@import[^\n]*\n/, ''), readFileSync('site/site.css', 'utf8'), readFileSync('site/workbench.css', 'utf8')].join('\n');
 
 const title = 'Altitude';
-const description = 'React components where height shows state: settled content on the ground, anything live above it, anything to fill below it. With guidance and checks for the coding agents that build with them.';
+const description = 'Give your app some depth. React components and guidance for your coding agent. Try Altitude in an interactive workspace, then explore the example apps.';
 const fonts = fontImport
   ? `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${fontImport}">`
   : '';
