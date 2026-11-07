@@ -25,9 +25,9 @@
 .wb-document-heading > span { color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
 .wb-note-title { margin: var(--space-5) 0 var(--space-2); font: 500 25px/32px var(--font-sans); letter-spacing: -.025em; }
 .wb-note-lead { margin: 0 0 var(--space-4); font: 400 15px/24px var(--font-sans); color: var(--ink-muted); }
-.wb-note-detail { display: flex; gap: var(--space-4); align-items: baseline; padding-block: var(--space-2); }
-.wb-note-detail span { font: 400 11px/18px var(--font-mono); color: var(--ink-muted); }
-.wb-note-detail p { margin: 0; font: 400 14px/21px var(--font-sans); }
+.wb-note-details { margin: 0; padding-left: var(--space-5); font: 400 14px/21px var(--font-sans); }
+.wb-note-details li { padding-block: var(--space-2); }
+.wb-note-details li::marker { color: var(--ink-muted); }
 .wb-note-fixture { display: flex; justify-content: flex-end; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--line); }
 .wb-review { max-width: 700px; margin: var(--space-2) auto; }
 .wb-review:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 6px; }

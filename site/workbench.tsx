@@ -147,8 +147,10 @@ function WritingScene({ onMessage }: { onMessage: (message: string) => void }) {
         }} />
     </div>
     <p className="wb-note-lead">Start with a small task. Leave room for questions.</p>
-    <div className="wb-note-detail"><span>01</span><p>Find your way around the workspace.</p></div>
-    <div className="wb-note-detail"><span>02</span><p>Pick something you can finish today.</p></div>
+    <ul className="wb-note-details">
+      <li>Find your way around the workspace.</li>
+      <li>Pick something you can finish today.</li>
+    </ul>
     <div className="wb-note-fixture">
       <Switch label="Fail next save" checked={failNext} onCheckedChange={checked => { failure.current = checked; setFailNext(checked); }} />
     </div>

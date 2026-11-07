@@ -24,6 +24,7 @@
 
 - `npm run build-site`: passed; homepage, agent demo, eight examples and guidance generated.
 - `npm run typecheck`: passed, including the new site TypeScript project.
+- `npm run check:tells-lint`: passed after replacing the note demo's decorative zero-padded labels with a semantic bulleted list. This resolves the initial CI run's two LA8 findings.
 - `node --test site/workbench-state.test.mjs`: 3/3 passed (invariants, latest-location moves/cancellation, invalid requests).
 - `node scripts/build-guidance.mjs` then `node scripts/altitude-cli.mjs check site --json`: no deterministic findings. The contextual two-provider finding is intentional: main.tsx and agent.tsx are independent pages with separate roots.
 - `git diff --check`: passed.
