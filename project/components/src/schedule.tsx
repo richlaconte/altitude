@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cx, Icons } from './core';
 import { Button } from './controls';
-import { DropdownMenu, type MenuEntry, type MenuItem } from './overlays';
+import { DropdownMenu, Tooltip, type MenuEntry, type MenuItem } from './overlays';
 
 /** A local date-time, 'YYYY-MM-DDTHH:mm': no time zone. Convert at your edges. */
 export type LocalDateTime = string;
@@ -62,7 +62,7 @@ export interface ScheduleProps<T> {
    * is never alone: the category's label joins the event's name, and the legend names every colour.
    */
   getCategory?: (event: T) => string | null | undefined;
-  /** Names and fixed colours. Categories without a colour take data-1…data-6 in first-seen order; past six, the accent. */
+  /** Names and fixed colours. Categories without a colour take data-1…data-6 in first-seen order; past six, data-other. */
   categories?: ScheduleCategory[];
   /** A flush line of category names with their edge colour under the grid. Default: on when `categories` is given. */
   legend?: boolean;
@@ -73,7 +73,8 @@ export interface ScheduleProps<T> {
   renderDayHeader?: (day: string, events: T[]) => React.ReactNode;
   /**
    * Actions that belong to a day. One renders as an icon button in the header, named with the action and the day ("Approve
-   * time, Tuesday 4 November"); several as a More button opening a DropdownMenu; none renders nothing. They're outside
+   * time, Tuesday 4 November"), keeping a critical tone, with a Tooltip when it shows only its icon; a checkable one, or
+   * several, as a More button opening a DropdownMenu; none renders nothing. They're outside
    * the grid's roving focus: Tab reaches them before the grid, in day order.
    */
   dayActions?: (day: string, events: T[]) => MenuEntry[];
@@ -110,6 +111,9 @@ const addMonths = (day: string, n: number) => {
 };
 const nowLocal = () => { const t = new Date(); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`; };
 const fmt = (locale: string | undefined, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { ...o, timeZone: 'UTC' });
+// The words a React node reads as: a non-string menu label's accessible name.
+const textOf = (n: React.ReactNode): string => n == null || typeof n === 'boolean' ? '' : typeof n === 'string' || typeof n === 'number' ? String(n)
+  : Array.isArray(n) ? n.map(textOf).join('') : React.isValidElement(n) ? textOf((n.props as { children?: React.ReactNode }).children) : '';
 const clockText = (min: number) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
 
 type Placed<T> = { event: T; key: string; day: string; start: number; end: number; lane: number; lanes: number; overlaps: string[] };
@@ -179,15 +183,16 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
 
   const byKey = new Map(events.map((e) => [getKey(e), e]));
   // Categories (#562): listed ones first (their fixed colours kept), then any seen in events. Colours not fixed are
-  // given out from data-1…data-6 in order, skipping fixed ones; past six distinct colours a category keeps the accent.
+  // given out from data-1…data-6 in order, skipping fixed ones; past six distinct colours a category takes data-other, the
+  // palette's neutral for the seventh and later series (Theming, "The data palette"). Only uncategorised events keep the accent.
   const cats = React.useMemo(() => {
     if (!getCategory) return null;
-    const list: { id: string; label: string; color?: ScheduleCategoryColor }[] = (categories ?? []).map((c) => ({ ...c }));
+    const list: { id: string; label: string; color?: ScheduleCategoryColor | 'data-other' }[] = (categories ?? []).map((c) => ({ ...c }));
     const known = new Set(list.map((c) => c.id));
     for (const e of events) { const id = getCategory(e); if (id != null && !known.has(id)) { known.add(id); list.push({ id, label: id }); } }
     const taken = new Set(list.map((c) => c.color).filter(Boolean));
     const free = (['data-1', 'data-2', 'data-3', 'data-4', 'data-5', 'data-6'] as const).filter((c) => !taken.has(c));
-    for (const c of list) if (!c.color) c.color = free.shift();
+    for (const c of list) if (!c.color) c.color = free.shift() ?? 'data-other';
     return new Map(list.map((c) => [c.id, c]));
   }, [events, categories, getCategory]); // eslint-disable-line react-hooks/exhaustive-deps
   const categoryOf = (event: T) => { const id = getCategory?.(event); return id != null ? cats?.get(id) : undefined; };
@@ -195,19 +200,23 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const locked = (event: T | undefined) => !!event && !!isLocked?.(event);
   const lockWord = (event: T) => lockedLabel?.(event) || 'Locked';
   const refuseLocked = (event: T) => say(`${getLabel(event)} is ${lockWord(event).toLowerCase()} and can’t be changed.`);
-  // An event that becomes locked while on screen settles 1→0 once (#561); one already locked simply renders flush.
+  // An event that becomes locked while on screen settles 1→0 once (#561); one already locked simply renders flush,
+  // including one that arrives locked (a new week, an approved entry added): it must have been rendered, unlocked, last time.
   const lockedNow = new Set(isLocked ? events.filter((e) => isLocked(e)).map(getKey) : []);
-  const lockedBefore = React.useRef<Set<string> | null>(null);
+  const lastSeen = React.useRef<{ keys: Set<string>; locked: Set<string> } | null>(null);
+  const settleTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [lockSettle, setLockSettle] = React.useState<string[]>([]);
   React.useEffect(() => {
-    const before = lockedBefore.current; lockedBefore.current = lockedNow;
+    const before = lastSeen.current; lastSeen.current = { keys: new Set(byKey.keys()), locked: lockedNow };
     if (!before) return;
-    const fresh = [...lockedNow].filter((k) => !before.has(k) && byKey.has(k));
+    const fresh = [...lockedNow].filter((k) => !before.locked.has(k) && before.keys.has(k));
     if (!fresh.length) return;
     setLockSettle(fresh);
-    const t = setTimeout(() => mounted.current && setLockSettle([]), 400);
-    return () => clearTimeout(t);
-  }, [[...lockedNow].join('\u0000')]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Not cleared by the next change to the locked set, so the settle always ends.
+    clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => mounted.current && setLockSettle([]), 400);
+  });
+  React.useEffect(() => () => clearTimeout(settleTimer.current), []);
   // The events as last rendered, for a write that finishes after the parent has already published its result.
   const eventsNow = React.useRef(events); eventsNow.current = events;
   // Events by day, with overlapping ones laid out side by side in lanes.
@@ -567,11 +576,14 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     const real = items.filter((i): i is MenuItem => !i.type || i.type === 'item');
     if (!real.length) return null;
     const long = longDay.format(utc(day));
-    if (real.length === 1 && items.length === 1) {
-      const a = real[0];
-      const label = typeof a.label === 'string' ? a.label : 'Action';
-      return <Button size="sm" variant="secondary" square={!!a.icon} className="alt-schedule-day-action" aria-label={`${label}, ${long}`} disabled={a.disabled} onClick={() => a.onSelect?.()}>
-        {a.icon ?? label}</Button>;
+    // One plain action is a button: it keeps its tone, is named with the item's words, and when it shows only its icon a
+    // Tooltip names it for the eye. A checkable item stays in the menu, where menuitemcheckbox carries its state; so does
+    // one whose label has no words to name the button by.
+    const a = real[0], label = textOf(a.label).trim();
+    if (real.length === 1 && items.length === 1 && a.checked === undefined && label) {
+      const button = <Button size="sm" variant={a.tone === 'critical' ? 'danger' : 'secondary'} square={!!a.icon} className="alt-schedule-day-action" aria-label={`${label}, ${long}`} disabled={a.disabled} onClick={() => a.onSelect?.()}>
+        {a.icon ?? a.label}</Button>;
+      return a.icon ? <Tooltip content={label}>{button}</Tooltip> : button;
     }
     return <DropdownMenu align="end" items={items} trigger={<Button size="sm" variant="secondary" square className="alt-schedule-day-action" aria-label={`More actions, ${long}`}><Icons.More size={14} /></Button>} />;
   };
@@ -715,9 +727,9 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     {footer && <div className="alt-schedule-footer" id={`${uid}-footer`}>{(() => { const period = isMonth ? days.filter((d) => d.slice(0, 7) === monthStart.slice(0, 7)) : days;
       return footer(period, events.filter((e) => period.includes(split(getStart(e)).day))); })()}</div>}
     {cats && cats.size > 0 && (legend ?? !!categories) && <ul className="alt-schedule-legend" aria-label="Categories">
-      {[...cats.values()].map((c) => <li key={c.id} style={c.color ? { ['--sch-edge' as any]: `var(--${c.color})` } : undefined} data-shared={c.color ? undefined : ''}>
+      {[...cats.values()].map((c) => <li key={c.id} style={c.color ? { ['--sch-edge' as any]: `var(--${c.color})` } : undefined}>
         <span className="alt-schedule-swatch" aria-hidden="true" />{c.label}</li>)}
-      {[...cats.values()].some((c) => !c.color) && <li className="alt-schedule-legend-note">Past six categories, events share the accent edge.</li>}
+      {[...cats.values()].some((c) => c.color === 'data-other') && <li className="alt-schedule-legend-note">Past six categories, events share a neutral edge.</li>}
     </ul>}
     {failure && <div className="alt-schedule-failure" role="alert"><Icons.AlertCircle size={14} /><span>{failure.error}</span>
       <Button size="sm" variant="ghost" onClick={() => { const f = failure; setFailure(null); f.retry(); }}>Retry</Button>
