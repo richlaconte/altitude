@@ -1568,9 +1568,9 @@ export interface ScheduleProps<T> {
   footer?: (days: string[], events: T[]) => React.ReactNode;
   /** Month view: what a day shows under its events (a total). Its text describes the day's cell. */
   monthCell?: (day: string, events: T[]) => React.ReactNode;
-  /** Month view: events shown per day before "+N more". Default 3. */
+  /** Month view: events shown per day before "+N more". Default 3. Only applies with `onOpenDay`: without it every event shows, so each stays reachable. */
   maxPerDay?: number;
-  /** Month view: "+N more" opens that day. Showing it (say, in the day view) is your call. */
+  /** Month view: "+N more" opens that day. Showing it (say, in the day view) is your call. Without it a day lists all its events. */
   onOpenDay?: (day: string) => void;
   /** Groups events: the category's colour replaces the accent in each event's inset edge; its label joins the event's name. */
   getCategory?: (event: T) => string | null | undefined;

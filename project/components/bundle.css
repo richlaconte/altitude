@@ -4584,6 +4584,7 @@ span.alt-schedule-more { color: var(--ink-muted); cursor: default; }
   .alt-schedule-event { border: 1px solid CanvasText; } .alt-schedule-event[data-carried] { border-width: 2px; }
   .alt-schedule-event[data-locked] { border: 1px solid CanvasText; box-shadow: none; }
   .alt-schedule-swatch { forced-color-adjust: none; background: CanvasText; }
+  .alt-schedule-cell:focus-visible, .alt-schedule-mday:focus-visible { outline: 2px solid Highlight; outline-offset: -2px; }
   .alt-schedule-mday[data-target] { outline: 3px dashed CanvasText; outline-offset: -3px; }
   .alt-schedule-slot, .alt-schedule-drawn { border: 2px dashed CanvasText; } .alt-schedule-now { background: Highlight; }
   .alt-schedule-event[data-status="pending"] { border-style: dotted; } .alt-schedule-event[data-status="failed"] { border: 2px dashed CanvasText; }

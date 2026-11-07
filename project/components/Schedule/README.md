@@ -38,11 +38,11 @@ Times are local date-times, `'YYYY-MM-DDTHH:mm'` strings with no zone, matching 
 - **Categories** (`getCategory`, `categories`): the category's colour replaces the accent in the 3px inset edge, in every state (rest, hover, carried, pending, `contrast="more"`). The face stays `surface-raised`: it's an edge, never a fill, so pending and failed still read. Colours come from `data-1`–`data-6` (a schedule coloured by project is a chart of a week, one job per colour: telling categories apart). Fixed ones are kept; the rest are given out in first-seen order; past six distinct colours a category keeps the accent and the legend says so. Colour never travels alone: each event's name carries its category's label, and a flush legend under the grid (`legend`, on by default when `categories` is given) names every colour.
 - **Day headers** (`renderDayHeader`, `dayActions`): whatever you render sits under the day's name inside its `columnheader`, so it follows the column in every view and width (in the narrow one-day view it's that day's header). It stays ground: a total is words, status is a `Badge` with its word and lamp. Don't tint the column for status; that would read as an opening. Only a day's action rises, as any `Button`: one action is an icon button named "Approve time, Tuesday 4 November"; several are a More button opening a `DropdownMenu`; an empty array renders nothing. When a header grows, every day's header grows alike, so the hours still line up.
 - **The footer** (`footer`) is a flush `ink-muted` line under the grid for the period, such as its total.
-- **Month** (`view="month"`): each day is a ground cell in a 5- or 6-week grid, ruled by `line`; days outside the month say their month in `ink-faint`, and today's date is `accent-ink` (`aria-current="date"`). Events are the week's raised slabs laid out by day as chips in start order (time, then label, or `renderEvent`), `maxPerDay` (3) of them, then a ghost "+2 more" that calls `onOpenDay` (switching to the day view is your call). `monthCell(day, events)` renders under a day's chips, such as its total, and describes the cell. Carrying a chip (Space, or a drag) floats it at level 3; the days open into wells, and the day under it sinks with an accent rim (critical where `isUnavailable` refuses it). A move keeps the time of day; resize isn't offered in a month. Enter on an empty day (or a double-click) makes an event from `dayStart`, `defaultDuration` long. An event that crosses midnight shows on its start day with its end time. Under 480px the month is a list of its days, each with its chips and total (`narrowView={false}` keeps the grid squeezed instead). A new month cross-fades.
+- **Month** (`view="month"`): each day is a ground cell in a 5- or 6-week grid, ruled by `line`; days outside the month say their month in `ink-faint`, and today's date is `accent-ink` (`aria-current="date"`). Events are the week's raised slabs laid out by day as chips in start order (time, then label, or `renderEvent`), `maxPerDay` (3) of them, then a ghost "+2 more" that calls `onOpenDay` (switching to the day view is your call). Without `onOpenDay` there's nowhere for "+N more" to go, so a day lists every event and `maxPerDay` doesn't apply. `monthCell(day, events)` renders under a day's chips, such as its total, and describes the cell. Carrying a chip (Space, or a drag) floats it at level 3; the days open into wells, and the day under it sinks with an accent rim (critical where `isUnavailable` refuses it). A move keeps the time of day; resize isn't offered in a month. Enter on an empty day (or a double-click) makes an event from `dayStart`, `defaultDuration` long. An event that crosses midnight shows on its start day with its end time. Under 480px the month is a list of its days, each with its chips and total (`narrowView={false}` keeps the grid squeezed instead). A new month cross-fades.
 - **The now line** is `accent-ink`, not `critical`: it isn't status.
 - **A new week** cross-fades; it isn't a change of level.
 
-Without height: every event is a button named with its title, category, day, start and end, its overlaps, who holds it, and whether it's locked ("…, approved, can't be changed"; not `aria-disabled`, since it still opens); carrying is `aria-pressed`, and each step is announced in an assertive region (“Wednesday 28 October, 15:15 to 16:15”); writes and errors are announced politely. Forced colours: events 1px (locked ones solid 1px: they aren't openings), carried 2px, slots and drawn spans thick dashed, pending dotted, failed thick dashed, the now line Highlight. `contrast="more"`: events get the level-1 slab, the carried event a 3px slab; a locked event gets none, since it isn't raised.
+Without height: every event is a button named with its title, category, day, start and end, its overlaps, who holds it, and whether it's locked ("…, approved, can't be changed"; not `aria-disabled`, since it still opens); carrying is `aria-pressed`, and each step is announced in an assertive region (“Wednesday 28 October, 15:15 to 16:15”); writes and errors are announced politely. Forced colours: events 1px (locked ones solid 1px: they aren't openings), carried 2px, slots and drawn spans thick dashed, pending dotted, failed thick dashed, the now line Highlight, the focused slot or day a 2px Highlight outline. `contrast="more"`: events get the level-1 slab, the carried event a 3px slab; a locked event gets none, since it isn't raised.
 
 ## Keyboard
 
@@ -63,14 +63,14 @@ The grid (`role="grid"`) is one Tab stop: rows are time slots, columns are days.
 
 | Where | Key | |
 |---|---|---|
-| Day | ← / →, ↑ / ↓ | a day, a week (in the narrow list ↑ / ↓ move a day) |
-| | Home / End, PageUp / PageDown | the row's first and last day; the previous and next month, on the same date |
+| Day | ← / →, ↑ / ↓ | a day, a week (in the narrow list ↑ / ↓ move a day); ↑ on the first row and ↓ on the last go on into the previous or next month, on the same weekday (with `onDateChange`; without it focus stays) |
+| | Home / End, PageUp / PageDown | the row's first and last day; the previous and next month, on the same date (from a day shown from a neighbouring month, the month's first or last day) |
 | | Enter | on an empty day, a new event; on a day with events, its first chip (Shift+Enter still makes one) |
 | Chip | ↑ / ↓ | the day's other chips and its "+N more"; ← / → the next day; Escape back to the day |
 | | Enter, F2, Delete | `onOpen`, rename, `onRemove`, as in the week |
 | | Space | pick up: ← / → move it by a day, ↑ / ↓ by a week, its time kept; Space or Enter drop; Escape cancel |
 
-The grid stays one Tab stop. A day is named "Wednesday 14 October, 4 events", and its `monthCell` text describes it.
+The grid stays one Tab stop. When the month changes without focus (Today, or your own `date`), the Tab stop is `date`, or the month's 1st if `date` isn't shown. A day is named "Wednesday 14 October, 4 events", and its `monthCell` text describes it.
 
 ## Props
 
@@ -82,7 +82,7 @@ The grid stays one Tab stop. A day is named "Wednesday 14 October, 4 events", an
 | `onCreate`, `onChange`, `onRename`, `onOpen`, `onRemove` | the writes and actions |
 | `heldBy`, `isUnavailable`, `now`, `locale`, `aria-label` | collaborators' holds, refused spans, the now line's time |
 | `renderDayHeader`, `dayActions`, `footer` | a day's total and status under its name, its actions (`MenuEntry[]`), and the period's line under the grid |
-| `monthCell`, `maxPerDay`, `onOpenDay` | the month: a day's total, chips per day before "+N more" (3), and what "+N more" opens |
+| `monthCell`, `maxPerDay`, `onOpenDay` | the month: a day's total, chips per day before "+N more" (3; only with `onOpenDay`), and what "+N more" opens (without it a day lists every event) |
 | `getCategory`, `categories`, `legend` | an edge colour per category, from `data-1`–`data-6`, and the legend that names them |
 | `isLocked`, `lockedLabel` | settled events that can't be changed, and the word they say (default "Locked") |
 
