@@ -32,6 +32,13 @@ const cases = [
   ['ALT-SETUP-002',
     { 'App.tsx': "import { Button } from 'altitude-design';\nexport const A = () => <AltitudeProvider><Button>Save changes</Button></AltitudeProvider>;" },
     { 'App.tsx': app('<Button>Save changes</Button>'), 'other.ts': 'export const x = 1;' }],
+  // A type-only import is erased at compile time: it needs no stylesheet or provider (#584).
+  ['ALT-SETUP-002',
+    { 'options.ts': "import { type SelectOption, Select } from 'altitude-design';\nexport const choices: SelectOption[] = [{ value: 'a', label: 'A' }];" },
+    { 'options.ts': "import type { SelectOption } from 'altitude-design';\nexport const choices: SelectOption[] = [{ value: 'a', label: 'A' }];", 'more.ts': "import { type SelectOption, type ButtonProps } from 'altitude-design';\nexport type { MenuItem } from 'altitude-design';" }],
+  ['ALT-SETUP-003',
+    { 'options.ts': "import 'altitude-design/altitude.css';\nimport { Select, type SelectOption } from 'altitude-design';\nexport const choices: SelectOption[] = [{ value: 'a', label: 'A' }];" },
+    { 'options.ts': "import type { SelectOption } from 'altitude-design';\nexport const choices: SelectOption[] = [{ value: 'a', label: 'A' }];" }],
   ['ALT-SETUP-003',
     { 'App.tsx': "import 'altitude-design/altitude.css';\nimport { Button } from 'altitude-design';\nexport const A = () => <Button>Save changes</Button>;" },
     { 'App.tsx': app('<Button>Save changes</Button>') }],

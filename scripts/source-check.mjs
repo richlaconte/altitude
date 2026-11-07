@@ -68,6 +68,23 @@ function importsFrom(text, mod) {
 }
 
 /**
+ * Whether a file imports (or re-exports) anything from altitude-design that survives compilation. Type-only imports
+ * (`import type { … }`, or braces holding only `type X` specifiers) are erased, so they need no stylesheet or provider.
+ */
+function importsRuntime(text) {
+  if (/require\(\s*['"]altitude-design['"]\s*\)/.test(text)) return true;
+  for (const m of text.matchAll(/\b(?:import|export)\s+((?:(?!\b(?:import|export)\b)[^;])*?)\s*from\s*['"]altitude-design['"]/g)) {
+    const clause = m[1].trim();
+    if (/^type\s*[{*]|^type\s+\w+\s*$/.test(clause)) continue;
+    const braces = clause.match(/^\{([^}]*)\}$/);
+    const parts = braces ? braces[1].split(',').map((p) => p.trim()).filter(Boolean) : [];
+    if (parts.length && parts.every((p) => /^type\s+\w/.test(p))) continue;
+    return true;
+  }
+  return false;
+}
+
+/**
  * Every JSX element in `text` whose tag (bare or namespaced) a module names one of `names`: its opening tag, its
  * children up to the matching close (empty when self-closing) and its line. Braces and quotes are tracked, so an arrow
  * or a comparison inside a prop doesn't end the tag. No parser: good enough for the shapes generated apps write.
@@ -184,7 +201,7 @@ export function scan(root, { tokenNames = new Set() } = {}) {
     const lines = text.split('\n'), rawLines = raw.split('\n');
     // HTML is read like CSS: its <style> blocks and style="" attributes hold declarations.
     const css = /\.(s?css|html)$/.test(file);
-    if (/from\s+['"]altitude-design['"]|require\(\s*['"]altitude-design['"]\s*\)/.test(text)) usesAltitude = true;
+    if (importsRuntime(text)) usesAltitude = true;
     if (/['"]altitude-design\/altitude(\.no-fonts)?\.css['"]/.test(text)) stylesheet = true;
     lines.forEach((line, i) => {
       const at = i + 1;
