@@ -11,10 +11,15 @@
 .wb-scene { min-height: 304px; padding: var(--space-5); min-width: 0; }
 .wb-scene[data-state="inactive"] { display: none; }
 .wb-plan { min-width: 0; }
-.wb-board { gap: var(--space-6); }
-.wb-board .wb-column { flex: 1 0 240px; width: auto; min-width: 0; }
+.wb-board { align-items: stretch; gap: var(--space-4); }
+.wb-board .wb-column { flex: 1 0 240px; width: auto; min-width: 0; min-height: 264px; padding: var(--space-3); border: 1px solid var(--line); }
+.wb-column > .alt-board-head { padding: 0 0 var(--space-3); margin-bottom: var(--space-3); border-bottom: 1px solid var(--line); }
+.wb-column > .alt-board-list { flex: 1; }
+.wb-column .alt-board-empty { flex: 1; min-height: 150px; border: 1px dashed var(--line-control); }
 .wb-task-content { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-2); min-height: 130px; }
+.wb-task-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); align-self: stretch; }
 .wb-task-code { color: var(--ink-muted); font: 400 11px/16px var(--font-mono); }
+.wb-task-grip { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--ink-muted); font: 400 11px/16px var(--font-sans); }
 .wb-task-title { margin: 0; font: 500 16px/23px var(--font-sans); letter-spacing: -.015em; overflow-wrap: anywhere; }
 .wb-person { display: flex; align-items: center; gap: var(--space-2); color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
 .wb-task-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: auto; padding-bottom: var(--space-1); }
@@ -24,6 +29,10 @@
 .wb-document-heading h3 { margin: 0; font: 500 13px/20px var(--font-sans); }
 .wb-document-heading > span { color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
 .wb-note-title { margin: var(--space-5) 0 var(--space-2); font: 500 25px/32px var(--font-sans); letter-spacing: -.025em; }
+/* Reserve the failed surface's inset in every state, so the title stays put.
+   This roomy demo is separate from compact InlineEdit uses in tables and lists. */
+.wb-note-title .alt-inline-edit-surface { padding: var(--space-3); }
+.wb-note-title :is(.alt-inline-edit-actions, .alt-inline-edit-note) { letter-spacing: normal; }
 .wb-note-lead { margin: 0 0 var(--space-4); font: 400 15px/24px var(--font-sans); color: var(--ink-muted); }
 .wb-note-details { margin: 0; padding-left: var(--space-5); font: 400 14px/21px var(--font-sans); }
 .wb-note-details li { padding-block: var(--space-2); }
@@ -55,4 +64,7 @@
   .wb-note-title { font-size: 22px; line-height: 29px; }
   .wb-review { margin-inline: var(--space-1); }
 }
-@media (forced-colors: active) { .wb-frame, .wb-appbar, .wb-caption, .wb-document-heading, .wb-note-fixture, .wb-review-result { border-color: CanvasText; } }
+@media (forced-colors: active) {
+  .wb-frame, .wb-appbar, .wb-caption, .wb-document-heading, .wb-note-fixture, .wb-review-result,
+  .wb-board .wb-column, .wb-column > .alt-board-head, .wb-column .alt-board-empty { border-color: CanvasText; }
+}

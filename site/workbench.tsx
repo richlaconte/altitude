@@ -8,7 +8,7 @@ import { COLUMN_TITLES, placeTask, type ColumnId, type Columns } from './workben
 
 type Scene = 'plan' | 'write' | 'review';
 const SCENES: { id: Scene; label: string; context: string; hint: string }[] = [
-  { id: 'plan', label: 'Plan a project', context: 'This week / Website', hint: 'Move a task, or pick one up and use the arrow keys.' },
+  { id: 'plan', label: 'Plan a project', context: 'This week / Website', hint: 'Drag cards between lanes, or use the move buttons.' },
   { id: 'write', label: 'Edit a note', context: 'Workspace / Notes', hint: 'Edit the title. Try a failed save, too.' },
   { id: 'review', label: 'Review a change', context: 'Workspace / Agent', hint: 'You decide which wording to keep.' },
 ];
@@ -100,7 +100,17 @@ function PlanningScene({ onMessage }: { onMessage: (message: string) => void }) 
           {columns[column].map(task => (
             <BoardCard key={task.id} id={task.id} label={task.title} status={writes[task.id]} className="wb-task">
               <div className="wb-task-content">
-                <span className="wb-task-code">{task.code}</span>
+                <div className="wb-task-heading">
+                  <span className="wb-task-code">{task.code}</span>
+                  <span className="wb-task-grip" aria-hidden="true">
+                    <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor" focusable="false">
+                      <circle cx="3" cy="3" r="1.25" /><circle cx="9" cy="3" r="1.25" />
+                      <circle cx="3" cy="8" r="1.25" /><circle cx="9" cy="8" r="1.25" />
+                      <circle cx="3" cy="13" r="1.25" /><circle cx="9" cy="13" r="1.25" />
+                    </svg>
+                    Drag
+                  </span>
+                </div>
                 <p className="wb-task-title">{task.title}</p>
                 <div className="wb-person"><Avatar name={task.owner} size={24} status="offline" /><span>{task.owner}</span></div>
                 <div className="wb-task-actions">
