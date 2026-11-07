@@ -5,7 +5,7 @@ import { Button } from './controls';
 /* ───────────────────────── SaveBar ───────────────────────── */
 
 /** What SaveBar reads from useEditRecord. */
-interface RecordLike { dirty: boolean; phase: 'editing' | 'invalid' | 'submitting' | 'saved' | 'failed'; errors: object; error?: string; draft?: object; baseline?: object; submit: () => unknown; reset: () => unknown }
+interface RecordLike { dirty: boolean; phase: 'editing' | 'invalid' | 'submitting' | 'saved' | 'failed'; errors: object; error?: string; status?: string; draft?: object; baseline?: object; submit: () => unknown; reset: () => unknown }
 
 export interface SaveBarProps {
   /** A useEditRecord result: SaveBar reads dirty, phase and errors from it, and Save and Discard call submit and reset. */
@@ -60,9 +60,11 @@ export function SaveBar({ record, dirty: dirtyProp, saving: savingProp, error: e
   const wasSaving = React.useRef(false);
   React.useEffect(() => { if (shown && !saving && !error) setSaid('Unsaved changes.'); }, [shown]); // eslint-disable-line react-hooks/exhaustive-deps
   React.useEffect(() => {
-    if (wasSaving.current && !saving) setSaid(error ? `${error} Your changes are kept.` : 'Saved.');
+    // An earlier save that resolves while newer edits are still in the draft saved those earlier changes, not these.
+    if (wasSaving.current && !saving) setSaid(error ? `${error} Your changes are kept.`
+      : dirty ? (record?.phase === 'editing' && record.status) || 'The earlier changes were saved. Your newer edits still need saving.' : 'Saved.');
     wasSaving.current = saving;
-  }, [saving, error]);
+  }, [saving, error]); // eslint-disable-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     if (!shown) return;
     const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (!saving) save(); } };
