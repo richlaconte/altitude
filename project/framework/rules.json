@@ -568,6 +568,35 @@
       "owner": "Altitude maintainers"
     },
     {
+      "id": "ALT-LAYOUT-003",
+      "title": "Choose recognition cues from the task and preserve the limits of the evidence",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "contextual-review",
+      "applicability": "Composing a screen where identity, type, state, grouping, selection, previews or data labels help answer a specific recognition question.",
+      "exceptions": [
+        "A cue is unnecessary when the same distinction is already clear for the task; no minimum icon, color or image count is required.",
+        "Personal aesthetic preferences remain scoped to their task and audience; they do not become accessibility requirements."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "engineering-reviewed; human-recognition-effectiveness-unmeasured",
+      "sources": [
+        "altitude-elevation",
+        "task-review",
+        "wcag22",
+        "guided-search-6",
+        "icon-characteristics",
+        "recognition-assessment-summary"
+      ],
+      "repair": "Record the recognition question, cues, equivalent words/semantics, quiet content and scoped evidence. Preserve source versions, comparison order when known, absolute ratings, relative choices, reasons, rejected alternatives and uncertainty. Review matching content at desktop and narrow widths, with forced colors and reduced motion; do not infer approval from a low-rated relative winner or effectiveness from an engineering check.",
+      "verification": [
+        "build/checks/example-support-inbox.mjs",
+        "manual: inspect hierarchy, labels and task recognition with the intended audience; retain negative and uncertain findings"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-07",
+      "owner": "Altitude maintainers"
+    },
+    {
       "id": "ALT-CONVO-001",
       "title": "A conversation never loses the person's words, completes only when the stream does, and says each failure in words",
       "authority": "altitude-policy",

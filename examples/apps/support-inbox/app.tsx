@@ -3,6 +3,16 @@
 //   Lead: the open ticket. Primary action: Send reply. Next: the next ticket in the view.
 //   Frame: list and detail (screen-layout.md): ResizablePanelGroup with an InboxList and the open ticket. When it's
 //   narrow, the list and the ticket are separate screens with Back, and focus returns to the ticket's row.
+//   Recognition task (#617): in All, find Invoice for March, identify its requester and On hold state, open that same
+//   ticket, and distinguish the public conversation from internal notes. Later, recognize Maya viewing/replying on
+//   the refund ticket; presence does not imply ownership. Use the unchanged seed records and service outcomes.
+//   Cues: named view tabs; stable subject/requester/status slots; Badge words; unread dot and weight; selection paired
+//   with the detail heading; preview description; named presence. Words/ARIA carry the same meaning without color.
+//   Quiet content: preview, identity and settled status stay on ground; existing controls keep their action tiers.
+//   Evidence: contextual preference for compact rows and useful visual references in issue #617's assessment summary;
+//   no participant recognition result. A 1/5 relative dashboard winner was still disliked. Raw order is unknown here.
+//   Uncertainty: status vocabulary and which cues aid actual agents; no icon quota. Review at desktop and 320px,
+//   in both schemes and forced colors/reduced motion. Research/observations: docs/research/recognition-cues.md.
 //
 // What it shows: tickets arriving lifted and settling without moving the row you're on (InboxList); a teammate present
 // on a ticket, and replying (CommentThread's typing); a reply that hovers while it's sent, drops into a trench with Retry
