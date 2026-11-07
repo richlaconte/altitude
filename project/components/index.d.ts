@@ -1560,6 +1560,12 @@ export interface ScheduleProps<T> {
   isLocked?: (event: T) => boolean;
   /** The word shown after a locked event's title and spoken in its name. Default 'Locked'. */
   lockedLabel?: (event: T) => string;
+  /** Under a day's name, inside its column header: a total, a Badge. Its text describes the column without lengthening its name. */
+  renderDayHeader?: (day: string, events: T[]) => React.ReactNode;
+  /** A day's actions: one is an icon button named with the action and the day; several, a More button opening a DropdownMenu; none, nothing. Outside the grid's roving focus. */
+  dayActions?: (day: string, events: T[]) => MenuEntry[];
+  /** A flush line under the grid for the period (its total). It describes the grid. */
+  footer?: (days: string[], events: T[]) => React.ReactNode;
   /** Groups events: the category's colour replaces the accent in each event's inset edge; its label joins the event's name. */
   getCategory?: (event: T) => string | null | undefined;
   /** Names and fixed colours. Categories without one take data-1…data-6 in first-seen order; past six, the accent. */

@@ -42,10 +42,16 @@ const SCH_SEED = [
   { id: "e7", title: "Board report", start: "2026-10-26T14:00", end: "2026-10-26T15:00", room: "Room B", approved: true }
 ];
 const schWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const schMinutes = (t) => Number(t.slice(11, 13)) * 60 + Number(t.slice(14, 16));
+const schHours = (list) => {
+  const m = list.reduce((sum, e) => sum + schMinutes(e.end) - schMinutes(e.start), 0);
+  return `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}`;
+};
 function App() {
   const [date, setDate] = React.useState("2026-10-26");
   const [events, setEvents] = React.useState(SCH_SEED);
   const seq = React.useRef(0);
+  const [confirmed, setConfirmed] = React.useState({});
   return /* @__PURE__ */ React.createElement("div", { className: "sch-demo" }, /* @__PURE__ */ React.createElement(
     A.Schedule,
     {
@@ -67,6 +73,12 @@ function App() {
       lockedLabel: () => "Approved",
       getCategory: (e) => e.room,
       categories: [{ id: "Room A", label: "Room A", color: "data-1" }, { id: "Room B", label: "Room B", color: "data-2" }],
+      renderDayHeader: (day, list) => list.length ? /* @__PURE__ */ React.createElement(React.Fragment, null, schHours(list), confirmed[day] && /* @__PURE__ */ React.createElement(A.Badge, { tone: "positive" }, "Confirmed")) : null,
+      dayActions: (day, list) => !list.length ? [] : [
+        { label: "Confirm rooms", icon: /* @__PURE__ */ React.createElement(A.Icons.Check, { size: 14 }), onSelect: () => setConfirmed((c) => ({ ...c, [day]: true })) },
+        ...list.length > 1 ? [{ label: "Clear confirmation", onSelect: () => setConfirmed((c) => ({ ...c, [day]: false })) }] : []
+      ],
+      footer: (days, list) => /* @__PURE__ */ React.createElement(React.Fragment, null, "Booked this week: ", schHours(list)),
       isUnavailable: ({ start, end }) => start.slice(0, 10) === "2026-10-30" && end.slice(11) > "17:00",
       onChange: async ({ id, start, end }) => {
         await schWait(300);

@@ -140,6 +140,24 @@ try {
     await page.mouse.move(handle.x + handle.width / 2, handle.y + 2); await page.mouse.down(); await page.mouse.move(handle.x + handle.width / 2, handle.y + 2 + 44, { steps: 6 }); await page.mouse.up();
     await said(page, 'Changed Planning to Wednesday 28 October, 13:00 to 15:30');
     check(true, 'SC-24 the bottom edge changes the end time');
+    // Day headers (#560): a slot under the day's name that describes the column, a day action, and a footer.
+    const desc = (sel) => page.evaluate(sel => { const el = document.querySelector(sel); return (el.getAttribute('aria-describedby') || '').split(' ').map(id => document.getElementById(id)?.textContent ?? '').join(' '); }, sel);
+    const tueHead = page.getByRole('columnheader', { name: 'Tuesday 27 October' });
+    check(await tueHead.count() === 1 && (await desc('[role="columnheader"][aria-colindex="3"]')) === '1 h 45 min', 'SC-26 a day header’s slot describes its column without changing its name');
+    const confirm = page.getByRole('button', { name: 'Confirm rooms, Wednesday 28 October' });
+    await confirm.focus(); await page.keyboard.press('ArrowRight');
+    check(await confirm.evaluate(el => el === document.activeElement), 'SC-26b keys on a day action aren’t the grid’s');
+    // Several actions: a More button opening a menu, whose keys aren't the grid's either.
+    const more = page.getByRole('button', { name: 'More actions, Tuesday 27 October' });
+    await more.focus(); await page.keyboard.press('ArrowDown');
+    const item = page.getByRole('menuitem', { name: 'Confirm rooms' });
+    await item.waitFor();
+    check(await item.evaluate(el => { const r = el.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest('[role="menuitem"]') === el; }), 'SC-26e several day actions open a menu that isn’t clipped by the grid');
+    await page.waitForFunction(() => document.activeElement?.closest('[role="menu"]'));
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.querySelector('[role="columnheader"][aria-colindex="3"]').textContent.includes('Confirmed'));
+    check((await desc('[role="columnheader"][aria-colindex="3"]')).includes('Confirmed'), 'SC-26c a day action runs, and the header’s new words join the description');
+    check((await desc('[role="grid"]')).startsWith('Booked this week:'), 'SC-26d the footer describes the grid');
     // Pointer: a locked event can't be carried.
     const lk = await page.locator('[data-event="e7"]').boundingBox(), tue = await page.locator('[data-cell="2026-10-27T840"]').boundingBox();
     await page.mouse.move(lk.x + 20, lk.y + 8); await page.mouse.down(); await page.mouse.move(lk.x + 30, lk.y + 20, { steps: 3 });
