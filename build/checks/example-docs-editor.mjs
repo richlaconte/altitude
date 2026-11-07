@@ -116,9 +116,20 @@ for (const [scheme, width] of [['light', 1280], ['dark', 1280], ['light', 375]])
 // ---- Conflict: Jane saved Expenses first ----------------------------------------------------------------------------
 {
   const { ctx, page } = await fresh();
+  // Ordered by construction, not by timing (#589): the drawer opens before typing, so opening it can't blur and save
+  // Expenses; then Jane's edit is applied with a script click, which doesn't move focus, in the same task that checks no
+  // save has gone yet. Whichever save goes next (the debounce or the blur) is against the older revision.
+  await drawer(page);
   await typeAt(page, 'expenses', '\nTips are covered up to 10%.');
-  await event(page, 'Jane Park edits “Expenses”');
-  await blur(page, 'scope'); // blur: the save goes against the older revision
+  const before = await page.evaluate(() => {
+    const sent = [...document.querySelectorAll('.ex-log-row')].filter((r) => r.querySelector('.ex-log-op')?.textContent === 'section.save').length;
+    const jane = [...document.querySelectorAll('.ex-drawer button')].find((b) => b.textContent === 'Jane Park edits “Expenses”');
+    jane.click();
+    return { sent, focused: document.activeElement?.closest('section')?.getAttribute('aria-labelledby') };
+  });
+  expect(!before.sent && before.focused === 'de-h-expenses', `conflict: Jane's edit lands before any save, Expenses still focused (${JSON.stringify(before)})`);
+  await wait(page, 900);
+  await blur(page, 'scope'); // by now the debounce has sent the save against the older revision; the blur adds nothing
   await page.waitForSelector('#de-conflict-expenses', { timeout: 5000 });
   const both = await page.locator('section[aria-labelledby="de-h-expenses"] .de-versions').textContent();
   expect(/Tips are covered/.test(both) && /€50/.test(both) && /Jane Park/.test(both), 'conflict: both versions show, theirs named');
