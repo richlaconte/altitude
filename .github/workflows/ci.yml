@@ -93,9 +93,11 @@ jobs:
         run: node ../scripts/record-check.mjs storybook-examples node checks/storybook-examples.mjs
 
       # The landing page is served at the Pages root and Storybook under /storybook/.
-      - name: Build the landing page
+      - name: Build and check the landing page
         run: |
+          node --test site/workbench-state.test.mjs
           npm run build-site
+          node scripts/record-check.mjs site-showcase node scripts/check-site.mjs
           cp -r storybook-static site-dist/storybook
 
       - name: Hand this job's evidence to the ci job
@@ -112,7 +114,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: preview-screenshots-build
-          path: build/test/shot-*.png
+          path: |
+            build/test/shot-*.png
+            build/test/site/*.png
           if-no-files-found: ignore
 
       # Deployed by the pages job, which waits for the ci job: nothing is deployed unless every check passed.

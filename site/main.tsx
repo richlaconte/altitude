@@ -5,7 +5,7 @@ import * as React from 'react';
 import { createRoot } from 'react-dom/client';
 import { AltitudeProvider, CodeBlock } from '../project/components/src/index';
 import type { BuiltInScheme } from '../project/components/src/index';
-import { Workbench } from './workbench';
+import { Showcase } from './showcase';
 import { installTabs } from './snippets';
 
 declare const __SITE__: {
@@ -74,7 +74,7 @@ function Page() {
         </section>
 
         <section className="wrap workbench-section" aria-label="Try Altitude">
-          <Workbench scheme={scheme} onSchemeChange={setScheme} />
+          <Showcase scheme={scheme} onSchemeChange={setScheme} />
         </section>
         <div className="wrap workbench-tail">
           <p>These are the components you install.</p>
