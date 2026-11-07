@@ -180,6 +180,62 @@ function App() {
   );
 }
 
+=== PrintSheet | <!-- @dsCard group="Display" height=900 subtitle="A document as the page it will become: light paper on screen, the page itself in print" -->
+--- css
+.ps-demo { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; align-items: start; max-width: 960px; }
+@media (max-width: 640px) { .ps-demo { grid-template-columns: minmax(0, 1fr); } }
+.ps-settings { display: grid; gap: 12px; }
+.ps-total td { font-weight: 600; }
+.ps-num { text-align: end !important; }
+--- jsx
+const PS_ITEMS = [
+  { what: 'Site survey, Harbour bridge', hours: 12, rate: 95 },
+  { what: 'Structural drawings, revision B', hours: 18.5, rate: 110 },
+  { what: 'Client meeting and notes', hours: 2, rate: 95 },
+];
+const PS_ENTRIES = [
+  { day: 'Mon 2 Nov', who: 'Ana Ruiz', what: 'Site survey', hours: 6 },
+  { day: 'Tue 3 Nov', who: 'Ana Ruiz', what: 'Site survey', hours: 6 },
+  { day: 'Wed 4 Nov', who: 'Sam Okoro', what: 'Structural drawings', hours: 7.5 },
+  { day: 'Thu 5 Nov', who: 'Sam Okoro', what: 'Structural drawings', hours: 8 },
+  { day: 'Fri 6 Nov', who: 'Sam Okoro', what: 'Structural drawings', hours: 3 },
+  { day: 'Fri 6 Nov', who: 'Ana Ruiz', what: 'Client meeting', hours: 2 },
+];
+const psMoney = n => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(n);
+function App() {
+  const [size, setSize] = React.useState('a4');
+  const [entries, setEntries] = React.useState(true);
+  const total = PS_ITEMS.reduce((sum, i) => sum + i.hours * i.rate, 0);
+  return <div className="ps-demo">
+    <div className="ps-settings">
+      <A.Field label="Paper">
+        <A.Select value={size} onValueChange={setSize} items={[{ value: 'a4', label: 'A4' }, { value: 'letter', label: 'US Letter' }]} />
+      </A.Field>
+      <A.Switch checked={entries} onCheckedChange={setEntries} label="Time entries page" />
+      <A.Button onClick={() => window.print()}>Print</A.Button>
+    </div>
+    <A.PrintSheet title="Invoice 1042" size={size} margins="18mm"
+      header={<A.PrintSheetHeader><strong>Larkspur Studio</strong><span>Invoice 1042 · 6 November 2026</span></A.PrintSheetHeader>}
+      footer={<A.PrintSheetFooter><span>Larkspur Studio · 14 Quay Street</span><span>Page <A.PrintSheetPageNumber /> of <A.PrintSheetPageCount /></span></A.PrintSheetFooter>}>
+      <h1>Invoice 1042</h1>
+      <p>For Harbour Authority, work from 2 to 6 November 2026. Payment due in 30 days.</p>
+      <table>
+        <thead><tr><th>Work</th><th className="ps-num">Hours</th><th className="ps-num">Rate</th><th className="ps-num">Amount</th></tr></thead>
+        <tbody>
+          {PS_ITEMS.map(i => <tr key={i.what}><td>{i.what}</td><td className="ps-num">{i.hours}</td><td className="ps-num">{psMoney(i.rate)}</td><td className="ps-num">{psMoney(i.hours * i.rate)}</td></tr>)}
+          <tr className="ps-total"><td colSpan={3}>Total</td><td className="ps-num">{psMoney(total)}</td></tr>
+        </tbody>
+      </table>
+      {entries && <A.PrintSheetBreak />}
+      {entries && <h2>Time entries</h2>}
+      {entries && <table>
+        <thead><tr><th>Day</th><th>Who</th><th>Work</th><th className="ps-num">Hours</th></tr></thead>
+        <tbody>{PS_ENTRIES.map((e, k) => <tr key={k}><td>{e.day}</td><td>{e.who}</td><td>{e.what}</td><td className="ps-num">{e.hours}</td></tr>)}</tbody>
+      </table>}
+    </A.PrintSheet>
+  </div>;
+}
+
 === Card | <!-- @dsCard group="Display" height=250 subtitle="Only actionable cards move" -->
 --- css
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -5177,6 +5233,13 @@ function App() {
 --- jsx
 const DP_TODAY = (() => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; })();
 const dpShift = (iso, days) => { const [y, m, d] = iso.split('-').map(Number); const t = new Date(Date.UTC(y, m - 1, d + days)); return t.toISOString().slice(0, 10); };
+// Time logged in October 2026: approved, submitted, logged but not submitted, and one day still missing hours.
+const DP_LOGGED = {
+  '2026-10-19': { tone: 'positive', label: '8 hours, approved' }, '2026-10-20': { tone: 'positive', label: '7 hours 30 minutes, approved' },
+  '2026-10-21': { tone: 'positive', label: '8 hours, approved' }, '2026-10-22': { tone: 'caution', label: '6 hours, submitted' },
+  '2026-10-23': { tone: 'caution', label: '8 hours, submitted' }, '2026-10-26': { label: '4 hours, not submitted', count: 2 },
+  '2026-10-27': { tone: 'critical', label: 'no time logged' },
+};
 function App() {
   const [due, setDue] = React.useState(dpShift(DP_TODAY, 3));
   const [trip, setTrip] = React.useState({ start: dpShift(DP_TODAY, 9), end: dpShift(DP_TODAY, 13) });
@@ -5184,6 +5247,7 @@ function App() {
   const [dpToday, setDpToday] = React.useState('2026-10-27');
   const [period, setPeriod] = React.useState({ start: '2026-09-28', end: '2026-10-27' });
   const [preset, setPreset] = React.useState('last-30-days');
+  const [week, setWeek] = React.useState('2026-10-28');
   const weekend = iso => { const [y, m, d] = iso.split('-').map(Number); const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return w === 0 || w === 6; };
   return <div className="dp-demo">
     <A.Field label="Due date" hint="Weekends aren’t available.">
@@ -5201,6 +5265,10 @@ function App() {
             { key: 'launch', label: 'Since launch', range: { start: '2026-03-04', end: dpToday } }]} />
       </A.Field>
       <div style={{ marginTop: 8 }}><A.Button size="sm" variant="ghost" onClick={() => setDpToday((t) => dpShift(t, 1))}>Next day</A.Button></div>
+    </div>
+    <div>
+      <p className="dp-cap">Time logged: dots mark approved, submitted, unsubmitted and missing days</p>
+      <A.Calendar aria-label="Time logged" value={week} onValueChange={setWeek} locale="en-GB" markers={DP_LOGGED} />
     </div>
   </div>;
 }
@@ -5741,6 +5809,7 @@ function App() {
 === Schedule | <!-- @dsCard group="Display" height=760 subtitle="A week you handle directly: draw to book, carry to move, pull the edge to resize" -->
 --- css
 .sch-demo { max-width: 860px; }
+.sch-demo .sch-views { margin-bottom: var(--space-2); }
 .sch-demo .alt-schedule-event small.sch-room { color: var(--ink-muted); }
 --- jsx
 const SCH_SEED = [
@@ -5750,18 +5819,44 @@ const SCH_SEED = [
   { id: 'e4', title: 'Planning', start: '2026-10-28T13:00', end: '2026-10-28T14:30', room: 'Room B' },
   { id: 'e5', title: 'Interview', start: '2026-10-29T15:00', end: '2026-10-29T16:00', room: 'Room A' },
   { id: 'e6', title: 'Retro', start: '2026-10-30T11:00', end: '2026-10-30T12:00', room: 'Room B' },
+  { id: 'e7', title: 'Board report', start: '2026-10-26T14:00', end: '2026-10-26T15:00', room: 'Room B', approved: true },
+  { id: 'e8', title: 'Onboarding', start: '2026-10-14T09:00', end: '2026-10-14T10:30', room: 'Room A' },
+  { id: 'e9', title: 'Vendor demo', start: '2026-10-14T11:00', end: '2026-10-14T12:00', room: 'Room B' },
+  { id: 'e10', title: 'Budget review', start: '2026-10-14T13:00', end: '2026-10-14T14:00', room: 'Room A' },
+  { id: 'e11', title: 'Team lunch', start: '2026-10-14T12:00', end: '2026-10-14T13:00', room: 'Room B' },
+  { id: 'e12', title: 'Quarterly plan', start: '2026-10-07T10:00', end: '2026-10-07T12:00', room: 'Room B', approved: true },
 ];
 const schWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const schMinutes = t => Number(t.slice(11, 13)) * 60 + Number(t.slice(14, 16));
+const schHours = list => { const m = list.reduce((sum, e) => sum + schMinutes(e.end) - schMinutes(e.start), 0); return `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`; };
 function App() {
   const [date, setDate] = React.useState('2026-10-26');
+  const [view, setView] = React.useState('workweek');
   const [events, setEvents] = React.useState(SCH_SEED);
   const seq = React.useRef(0);
+  const [confirmed, setConfirmed] = React.useState({});
   return <div className="sch-demo">
-    <A.Schedule aria-label="Room bookings" view="workweek" date={date} onDateChange={setDate} now="2026-10-27T10:20"
+    <A.ToggleGroup type="single" variant="secondary" size="sm" value={view} onValueChange={v => v && setView(v)} aria-label="View" className="sch-views">
+      <A.ToggleGroupItem value="day">Day</A.ToggleGroupItem><A.ToggleGroupItem value="workweek">Week</A.ToggleGroupItem><A.ToggleGroupItem value="month">Month</A.ToggleGroupItem>
+    </A.ToggleGroup>
+    <A.Schedule aria-label="Room bookings" view={view} date={date} onDateChange={setDate} now="2026-10-27T10:20"
       events={events} getKey={e => e.id} getStart={e => e.start} getEnd={e => e.end} getLabel={e => e.title}
       dayStart="08:00" dayEnd="18:00"
       renderEvent={e => <><strong>{e.title}</strong><small className="sch-room">{e.start.slice(11)}–{e.end.slice(11)} · {e.room}</small></>}
       heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
+      // Approved bookings are part of the record: they lie flush and can't be changed.
+      isLocked={e => !!e.approved} lockedLabel={() => 'Approved'}
+      // Each room's edge colour; the legend under the grid names them.
+      getCategory={e => e.room} categories={[{ id: 'Room A', label: 'Room A', color: 'data-1' }, { id: 'Room B', label: 'Room B', color: 'data-2' }]}
+      // Each day's booked hours under its name, and the week's total under the grid.
+      renderDayHeader={(day, list) => list.length ? <>{schHours(list)}{confirmed[day] && <A.Badge tone="positive">Confirmed</A.Badge>}</> : null}
+      // One action is an icon button; several (a day with overlaps) open a menu.
+      dayActions={(day, list) => !list.length ? [] : [{ label: 'Confirm rooms', icon: <A.Icons.Check size={14} />, onSelect: () => setConfirmed(c => ({ ...c, [day]: true })) },
+        ...(list.length > 1 ? [{ label: 'Clear confirmation', onSelect: () => setConfirmed(c => ({ ...c, [day]: false })) }] : [])]}
+      footer={(days, list) => <>Booked this {view === 'month' ? 'month' : view === 'day' ? 'day' : 'week'}: {schHours(list)}</>}
+      // The month: each day's hours under its bookings; "+1 more" opens that day.
+      monthCell={(day, list) => list.length ? schHours(list) : null}
+      onOpenDay={day => { setDate(day); setView('day'); }}
       // Rooms close at 17:00 on Fridays.
       isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
       onChange={async ({ id, start, end }) => {
