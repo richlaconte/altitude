@@ -29,6 +29,8 @@ Worked examples: [complete example apps](https://richlaconte.github.io/altitude/
 
 Before implementation, capture a short design record in the application's normal documentation: user goal, audience, primary action, consequence, data shape, selected patterns, applicable states, and unresolved product decisions. Infer routine details from the existing product. Do not invent permissions, persistence, cancellation, rollback or undo. Ask only when an unknown changes consequences or the task itself.
 
+Include the [recognition plan](patterns/screen-layout.md#recognition-plan): what someone needs to recognize, the visible cues and equivalent words/semantics, and the evidence and uncertainty behind the choice. Quiet content still has identity and structure. Keep rejected preferences and low absolute ratings alongside relative winners; a personal preference does not establish universal effectiveness.
+
 Use `altitude patterns "edit settings" --json` to discover contracts and `altitude explain ALT-EDIT-001` for a rule's scope and evidence. Read [principles](principles.md) for ownership and [evidence.json](evidence.json) for source authority. The generated `index.json` and `llms.txt` route to these same sources; they are not separately authored manuals.
 
 Compose existing primitives and small workflow hooks from the main `altitude-design` export inside one `AltitudeProvider`. Import a package stylesheet. The application supplies routes, business validation and services. Verify delayed operations, rejection, retry, cancellation and stale responses where applicable; include keyboard and manual assistive-technology review. Automated checks cannot establish complete accessibility or task suitability.

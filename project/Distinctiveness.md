@@ -17,12 +17,32 @@ A model writing an interface picks the likeliest choice, and the likeliest choic
 
 1. **Familiar controls, specific structure.** Buttons, fields, menus and dialogs work the way people expect. The arrangement of a screen comes from its content and task, not from a template.
 2. **Name the task before the layout.** Before composing a screen, write down who's there, what they came to do, the one thing that leads, and the one primary action. A sidebar with a card grid is a choice to justify, not a starting point. A list with detail, a focused editor, a guided flow or a single decision view usually fits better.
-3. **Height is the signature.** Altitude's distinctiveness is the elevation language: raised slabs, sunk wells, a page that recedes. Repeat it, and don't add decoration to look designed: no gradients, glows, frosted panels or coloured edge stripes. Every shadow is a tier with a meaning and a non-height cue, which is what separates Altitude's depth from the rounded, soft-shadowed default (CM1).
+3. **Height is the signature.** Altitude's distinctiveness is the elevation language: raised slabs, sunk wells, a page that recedes. Repeat it, and don't add decoration to look designed: no gradients, glows, frosted panels or coloured edge stripes. Every shadow is a tier with a meaning and a non-height cue, which is what separates Altitude's depth from the rounded, soft-shadowed default (CM1). Quiet content still needs recognizable identity, state and structure; choose those cues from the task, as below.
 4. **One thing leads.** Every screen has a focal point. A grid of equal cards is right only when the items really are equal. Spacing groups: tight within a group, wider between groups.
 5. **States are the design.** Empty, loading, failed, partial and stale states get as much care as the full one. The framework patterns' contracts say which apply.
 6. **Copy names things.** The content rules hold, and on top of them: no marketese ("unlock", "seamless", "supercharge", "empower"), no "Welcome back!", no arrows on calls to action. Name the object and the outcome.
 7. **Check claims against the build.** If the reasoning behind a screen says something ("the primary action stands out", "errors are recoverable"), the screen must show it. Look before saying it's done.
 8. **Judge, and fix, in clusters.** One gradient proves nothing; a cluster of tells does. Swapping a colour doesn't fix a generic layout, and a fix that only bans this year's default lands on next year's.
+
+## Recognition alongside quiet content
+
+Ask what someone must recognize before reading all the text. A cue earns its place by answering that question: which person, what kind of object, which state, what belongs together, or which item is open. Quiet settled surfaces can carry these distinctions. Adding a cue does not grant the content more height.
+
+| Recognition question | Useful cue with existing primitives | Redundant or decorative use |
+| --- | --- | --- |
+| Whose item is this? | `Avatar` beside a visible name; requester/owner in a stable row position | Repeated anonymous silhouettes, or initials without an available name |
+| What kind of object is this? | Familiar type icon plus “PDF”, “Invoice” or another readable label in a mixed collection | The same document icon on every item when type never varies or matters |
+| Which item needs attention? | `Badge` with a named status; `InboxList` unread dot plus title weight and “Unread” semantics | A colored dot with no state name, or a raised plate for every settled status |
+| What belongs together? | Named groups, aligned rows and space between groups | A separate card or ornamental border around every line |
+| Which item am I working on? | The component's selected state and matching detail heading | Extra accent marks that imply a second selection |
+| Is this the content I need? | A relevant thumbnail or short preview, with full content reachable | Unrelated stock imagery, or the same placeholder on every item |
+| What does this value mean? | Direct series labels and units using the [chart guidance](Charts.md) | A decorative icon that carries neither identity nor data meaning |
+
+Redundancy across channels can be useful: a status word beside its lamp remains understandable without color. Redundancy that repeats the same unfamiliar symbol or competes with the lead does not help the stated task. Keep readable labels for ambiguous icons; a screen-reader-only name does not explain them to sighted people. When a nearby name already conveys an image's information, avoid announcing it twice. Use the existing iconography, text, contrast and forced-color treatments; preserve meaning with motion reduced.
+
+Write the recognition question, chosen cues, quiet content and evidence/uncertainty in the [screen-layout design record](framework/patterns/screen-layout.md#recognition-plan). Inspect the result at desktop and narrow widths, including its words and semantics. This is contextual review, not a minimum icon count or a deterministic aesthetic lint rule.
+
+Evidence must retain its scope. The maintainer's November 6–7 assessments motivate compact rows, selective tactility and useful visual references; they do not isolate a universally better icon set, palette or frame. Keep rejected options, reasons and absolute ratings alongside relative choices: a 1/5 winner when both alternatives were disliked is not approval. Unknown order or ratings stay unknown. The [research and worked inbox review](../docs/research/recognition-cues.md) distinguish primary research, accessibility requirements and local preference; improvement in human recognition remains unmeasured.
 
 ## The tells
 
@@ -106,7 +126,7 @@ Before composing a screen:
 
 1. Write the task, the one thing that leads, and the primary action (rule 2).
 2. Choose the frame from the task, not from the app skeleton by default.
-3. Use the scheme's elevation for emphasis; add no decoration.
+3. Use the scheme's elevation for live emphasis. Choose task-relevant recognition cues with words and semantics; remove decoration that answers no recognition question.
 4. Build every state the pattern lists.
 5. Write copy that names the object and the outcome.
 6. Compare the result with what you said you'd build, and with the tells in `tells.json`, before saying it's done.
