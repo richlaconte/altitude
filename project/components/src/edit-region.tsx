@@ -111,11 +111,11 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
     return true;
   };
   const changedKeys = (draft: T, baseline: T) => Object.keys({ ...baseline, ...draft }).filter(key => !isEqual(draft[key], baseline[key])) as (keyof T)[];
-  const publishSession = (next: Session<T> | null) => {
+  const publishSession = (next: Session<T> | null, notify = true) => {
     const wasOpen = !!current.current;
     current.current = next;
     setSession(next ? { ...next } : null);
-    if (wasOpen !== !!next) onOpenChange?.(!!next);
+    if (notify && wasOpen !== !!next) onOpenChange?.(!!next);
   };
   const refresh = (active: Session<T>) => setSession({ ...active });
   const valid = (candidate: Session<T>) => mounted.current && current.current === candidate && candidate.generation === generation.current;
@@ -144,10 +144,15 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
     capture(); refresh(active);
   }, [value, disabled]);
 
+  const start = (notify: boolean) => {
+    setAnnouncement(''); focusField.current = initialFocus ?? true; capture();
+    publishSession({ generation: ++generation.current, phase: 'editing', baseline: value, draft: value }, notify);
+  };
+  // Edit asks to open. A controlled region only asks: it opens when its parent sets `open`, so a parent can decline.
   const begin = () => {
     if (disabled || current.current) return;
-    setAnnouncement(''); focusField.current = initialFocus ?? true; capture();
-    publishSession({ generation: ++generation.current, phase: 'editing', baseline: value, draft: value });
+    if (openProp !== undefined) onOpenChange?.(true);
+    else start(true);
   };
   const close = () => {
     returnFocus.current = !!root.current?.contains(document.activeElement);
@@ -163,7 +168,7 @@ export function EditRegion<T extends Record<string, unknown>>({ label, value, on
   // Controlled open: follow it, except that a dispatched save can't be cancelled.
   useIsoLayoutEffect(() => {
     if (openProp === undefined) return;
-    if (openProp && !current.current) begin();
+    if (openProp && !current.current && !disabled) start(false);
     else if (!openProp && current.current) cancel();
   }, [openProp]);
 
