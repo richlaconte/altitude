@@ -1,0 +1,58 @@
+/* Workbench layout only. Altitude owns the controls, depth, state and motion. */
+.wb-tabs { min-width: 0; }
+.wb-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-5); }
+.wb-toolbar > .alt-tabs-list { min-width: 0; max-width: 100%; }
+.wb-scheme { flex: none; }
+.wb-frame { border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--surface-ground); min-width: 0; }
+.wb-appbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--line); }
+.wb-workspace { display: flex; align-items: center; gap: var(--space-5); min-width: 0; }
+.wb-workspace h2 { margin: 0; font: 600 14px/20px var(--font-sans); letter-spacing: -.01em; }
+.wb-workspace > span { color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
+.wb-scene { min-height: 304px; padding: var(--space-5); min-width: 0; }
+.wb-scene[data-state="inactive"] { display: none; }
+.wb-plan { min-width: 0; }
+.wb-board { gap: var(--space-6); }
+.wb-board .wb-column { flex: 1 0 240px; width: auto; min-width: 0; }
+.wb-task-content { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-2); min-height: 130px; }
+.wb-task-code { color: var(--ink-muted); font: 400 11px/16px var(--font-mono); }
+.wb-task-title { margin: 0; font: 500 16px/23px var(--font-sans); letter-spacing: -.015em; overflow-wrap: anywhere; }
+.wb-person { display: flex; align-items: center; gap: var(--space-2); color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
+.wb-task-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: auto; padding-bottom: var(--space-1); }
+.wb-saving { font: 400 11px/17px var(--font-sans); color: var(--ink-muted); }
+.wb-note { max-width: 620px; margin: var(--space-2) auto; }
+.wb-document-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-bottom: var(--space-5); border-bottom: 1px solid var(--line); }
+.wb-document-heading h3 { margin: 0; font: 500 13px/20px var(--font-sans); }
+.wb-document-heading > span { color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
+.wb-note-title { margin: var(--space-5) 0 var(--space-2); font: 500 25px/32px var(--font-sans); letter-spacing: -.025em; }
+.wb-note-lead { margin: 0 0 var(--space-4); font: 400 15px/24px var(--font-sans); color: var(--ink-muted); }
+.wb-note-details { margin: 0; padding-left: var(--space-5); font: 400 14px/21px var(--font-sans); }
+.wb-note-details li { padding-block: var(--space-2); }
+.wb-note-details li::marker { color: var(--ink-muted); }
+.wb-note-fixture { display: flex; justify-content: flex-end; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.wb-review { max-width: 700px; margin: var(--space-2) auto; }
+.wb-review:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 6px; }
+.wb-review > .alt-confirm { max-width: none; }
+.wb-review-result { margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.wb-review-result:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 6px; }
+.wb-result-label { color: var(--ink-muted); font: 400 12px/18px var(--font-sans); }
+.wb-review-result p { margin: var(--space-2) 0 var(--space-3); font: 400 17px/26px var(--font-sans); }
+.wb-caption { display: flex; justify-content: space-between; gap: var(--space-5); padding: var(--space-4) var(--space-6); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 12px/19px var(--font-sans); }
+.wb-caption p { margin: 0; max-width: 65ch; }
+.wb-caption > span { flex: none; }
+@media (max-width: 880px) {
+  .wb-workspace { flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+  .wb-caption { flex-direction: column; gap: var(--space-1); }
+  .wb-board { gap: var(--space-3); }
+}
+@media (max-width: 640px) {
+  .wb-toolbar { gap: var(--space-2); }
+  .wb-toolbar > .alt-tabs-list { flex: 1 1 100%; }
+  .wb-scheme { margin-left: auto; }
+  .wb-appbar, .wb-caption { padding: var(--space-3) var(--space-4); }
+  .wb-scene { padding: var(--space-3); min-height: 340px; }
+  .wb-board .wb-column { flex-basis: min(248px, 80vw); }
+  .wb-note { margin: var(--space-2) var(--space-1); }
+  .wb-note-title { font-size: 22px; line-height: 29px; }
+  .wb-review { margin-inline: var(--space-1); }
+}
+@media (forced-colors: active) { .wb-frame, .wb-appbar, .wb-caption, .wb-document-heading, .wb-note-fixture, .wb-review-result { border-color: CanvasText; } }
