@@ -18,6 +18,9 @@ A day or week of time whose events you handle directly: drag across empty time t
   isLocked={(b) => b.approved} lockedLabel={() => 'Approved'}
   getCategory={(b) => b.roomId} categories={[{ id: 'a', label: 'Room A', color: 'data-1' }, { id: 'b', label: 'Room B', color: 'data-2' }]}
   isUnavailable={({ start, end }) => outsideOpeningHours(start, end)}
+  renderDayHeader={(day, events) => <>{hoursOf(events)}{approved[day] && <Badge tone="positive">Approved</Badge>}</>}
+  dayActions={(day) => submitted[day] ? [{ label: 'Approve time', icon: <Icons.Check />, onSelect: () => approve(day) }] : []}
+  footer={(days, events) => <>Week total: {hoursOf(events)}</>}
 />
 ```
 
@@ -33,6 +36,8 @@ Times are local date-times, `'YYYY-MM-DDTHH:mm'` strings with no zone, matching 
 - **Held by a collaborator** (`heldBy`): the event wears their `presence-*` outline and name and can't be picked up.
 - **Locked** (`isLocked`): a settled event, part of the record, lies flush on the ground (`surface-ground`, no shadow, a 1px `line-control` edge in place of the accent) with a lock and its word (`lockedLabel`, default "Locked"), as `TimeSlotPicker`'s booked time says "Booked". Space, Shift+↑/↓, F2, Delete, a drag and the resize handle do nothing, and the assertive region says why ("Board report is approved and can't be changed"); Enter, double-click and a tap still call `onOpen`. It doesn't block a drop: that's `isUnavailable`. An event that becomes locked on screen settles 1→0 once (`dur-travel-1`, `ease-settle`). Not `heldBy`: nobody is holding it, and `presence-*` is for people.
 - **Categories** (`getCategory`, `categories`): the category's colour replaces the accent in the 3px inset edge, in every state (rest, hover, carried, pending, `contrast="more"`). The face stays `surface-raised`: it's an edge, never a fill, so pending and failed still read. Colours come from `data-1`–`data-6` (a schedule coloured by project is a chart of a week, one job per colour: telling categories apart). Fixed ones are kept; the rest are given out in first-seen order; past six distinct colours a category takes `data-other`, the palette's neutral for the seventh and later series, and the legend says so (an event with no category keeps the accent). Colour never travels alone: each event's name carries its category's label, and a flush legend under the grid (`legend`, on by default when `categories` is given) names every colour. On the event itself the category is carried by the legend and the accessible name, not by visible text: an app that needs it visible on the event prints it in `renderEvent`'s secondary line, as the preview does with the room. With `getCategory` and no `categories`, colours are still given out but the legend is off unless you pass `legend`: without `categories` there are no labels to show, only the raw ids `getCategory` returns, so turn it on only when those ids read as names.
+- **Day headers** (`renderDayHeader`, `dayActions`): whatever you render sits under the day's name inside its `columnheader`, so it follows the column in every view and width (in the narrow one-day view it's that day's header). It stays ground: a total is words, status is a `Badge` with its word and lamp. Don't tint the column for status; that would read as an opening. Only a day's action rises, as any `Button`: one action is an icon button named "Approve time, Tuesday 4 November" (from the item's words, even when its `label` is a node), keeping a `tone: 'critical'` as a danger button, with a `Tooltip` naming it for the eye when it shows only its icon; a checkable item (`checked`) stays in the menu, where its state is said; several are a More button opening a `DropdownMenu`; an empty array renders nothing. When a header grows, every day's header grows alike, so the hours still line up.
+- **The footer** (`footer`) is a flush `ink-muted` line under the grid for the period, such as its total.
 - **The now line** is `accent-ink`, not `critical`: it isn't status.
 - **A new week** cross-fades; it isn't a change of level.
 
@@ -40,7 +45,7 @@ Without height: every event is a button named with its title, category, day, sta
 
 ## Keyboard
 
-The grid (`role="grid"`) is one Tab stop: rows are time slots, columns are days.
+The grid (`role="grid"`) is one Tab stop: rows are time slots, columns are days. Day actions (`dayActions`) are buttons outside its roving focus: Tab reaches them before the grid, in day order, and the grid's keys don't act on them. A day header's text describes its column (`aria-describedby`), so moving between cells stays short; the footer describes the grid.
 
 | Where | Key | |
 |---|---|---|
@@ -62,6 +67,7 @@ The grid (`role="grid"`) is one Tab stop: rows are time slots, columns are days.
 | `step`, `dayStart`, `dayEnd`, `hourHeight`, `defaultDuration` | 15 minutes, '08:00', '19:00', 48px, 60 minutes |
 | `onCreate`, `onChange`, `onRename`, `onOpen`, `onRemove` | the writes and actions |
 | `heldBy`, `isUnavailable`, `now`, `locale`, `aria-label` | collaborators' holds, refused spans, the now line's time |
+| `renderDayHeader`, `dayActions`, `footer` | a day's total and status under its name, its actions (`MenuEntry[]`), and the period's line under the grid |
 | `getCategory`, `categories`, `legend` | an edge colour per category, from `data-1`–`data-6`, and the legend that names them |
 | `isLocked`, `lockedLabel` | settled events that can't be changed, and the word they say (default "Locked") |
 
@@ -77,7 +83,7 @@ The events and their writes (with concurrency guards), time zones, and the detai
 
 ## Demo and verification
 
-The `Schedule` section of `build/previews.txt` is a room-booking work week (26–30 Oct 2026): the service refuses Wednesday mornings, rooms close at 17:00 on Friday, and Ana holds the Retro, Monday's Board report is approved (locked), and each room has its own edge colour, named in the legend. `node checks/schedule.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys and names, creating, carrying, resizing and cancelling without a pointer, a refused move with Retry, unavailable time, a collaborator's hold, a locked event refusing every change but still opening (Enter, double-click, a tap), keeping its text clear of the lock label (short ones too) and settling only when it becomes locked on screen, rename, remove, the next week, pointer carry, drawing and the resize handle, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+The `Schedule` section of `build/previews.txt` is a room-booking work week (26–30 Oct 2026): the service refuses Wednesday mornings, rooms close at 17:00 on Friday, and Ana holds the Retro, Monday's Board report is approved (locked), each room has its own edge colour, named in the legend, and each day's header shows its booked hours with Confirm rooms (a More menu on a day with overlaps), over the week's total. `node checks/schedule.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys and names, creating, carrying, resizing and cancelling without a pointer, a refused move with Retry, unavailable time, a collaborator's hold, a locked event refusing every change but still opening (Enter, double-click, a tap), keeping its text clear of the lock label (short ones too) and settling only when it becomes locked on screen, day headers' descriptions, a day action and a More menu kept out of the grid's keys, the footer, rename, remove, the next week, pointer carry, drawing and the resize handle, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **Narrow and on touch.** Under 480px of its own width the schedule shows one day at a time (`narrowView="day"`, the default; `false` keeps the week), paged by the header's previous and next. Under a coarse pointer an hour is 96px unless you set `hourHeight`, so a 15-minute slot is 24px tall, and a tap opens an event.
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
@@ -86,7 +92,7 @@ The `Schedule` section of `build/previews.txt` is a room-booking work week (26�
 `Schedule` as first used in its preview:
 
 ```tsx
-import { Schedule } from 'altitude-design';
+import { Badge, Icons, Schedule } from 'altitude-design';
 
 <Schedule aria-label="Room bookings" view="workweek" date={date} onDateChange={setDate} now="2026-10-27T10:20"
   events={events} getKey={e => e.id} getStart={e => e.start} getEnd={e => e.end} getLabel={e => e.title}
@@ -97,6 +103,12 @@ import { Schedule } from 'altitude-design';
   isLocked={e => !!e.approved} lockedLabel={() => 'Approved'}
   // Each room's edge colour; the legend under the grid names them.
   getCategory={e => e.room} categories={[{ id: 'Room A', label: 'Room A', color: 'data-1' }, { id: 'Room B', label: 'Room B', color: 'data-2' }]}
+  // Each day's booked hours under its name, and the week's total under the grid.
+  renderDayHeader={(day, list) => list.length ? <>{schHours(list)}{confirmed[day] && <Badge tone="positive">Confirmed</Badge>}</> : null}
+  // One action is an icon button; several (a day with overlaps) open a menu.
+  dayActions={(day, list) => !list.length ? [] : [{ label: 'Confirm rooms', icon: <Icons.Check size={14} />, onSelect: () => setConfirmed(c => ({ ...c, [day]: true })) },
+    ...(list.length > 1 ? [{ label: 'Clear confirmation', onSelect: () => setConfirmed(c => ({ ...c, [day]: false })) }] : [])]}
+  footer={(days, list) => <>Booked this week: {schHours(list)}</>}
   // Rooms close at 17:00 on Fridays.
   isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
   onChange={async ({ id, start, end }) => {
@@ -114,7 +126,7 @@ The full preview, as rendered in Storybook and checked in CI (`sch-demo`, `sch-r
 
 ```tsx
 import * as React from 'react';
-import { Schedule } from 'altitude-design';
+import { Badge, Icons, Schedule } from 'altitude-design';
 
 const SCH_SEED = [
   { id: 'e1', title: 'Standup', start: '2026-10-26T09:00', end: '2026-10-26T09:30', room: 'Room A' },
@@ -126,10 +138,13 @@ const SCH_SEED = [
   { id: 'e7', title: 'Board report', start: '2026-10-26T14:00', end: '2026-10-26T15:00', room: 'Room B', approved: true },
 ];
 const schWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const schMinutes = t => Number(t.slice(11, 13)) * 60 + Number(t.slice(14, 16));
+const schHours = list => { const m = list.reduce((sum, e) => sum + schMinutes(e.end) - schMinutes(e.start), 0); return `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`; };
 export default function App() {
   const [date, setDate] = React.useState('2026-10-26');
   const [events, setEvents] = React.useState(SCH_SEED);
   const seq = React.useRef(0);
+  const [confirmed, setConfirmed] = React.useState({});
   return <div className="sch-demo">
     <Schedule aria-label="Room bookings" view="workweek" date={date} onDateChange={setDate} now="2026-10-27T10:20"
       events={events} getKey={e => e.id} getStart={e => e.start} getEnd={e => e.end} getLabel={e => e.title}
@@ -140,6 +155,12 @@ export default function App() {
       isLocked={e => !!e.approved} lockedLabel={() => 'Approved'}
       // Each room's edge colour; the legend under the grid names them.
       getCategory={e => e.room} categories={[{ id: 'Room A', label: 'Room A', color: 'data-1' }, { id: 'Room B', label: 'Room B', color: 'data-2' }]}
+      // Each day's booked hours under its name, and the week's total under the grid.
+      renderDayHeader={(day, list) => list.length ? <>{schHours(list)}{confirmed[day] && <Badge tone="positive">Confirmed</Badge>}</> : null}
+      // One action is an icon button; several (a day with overlaps) open a menu.
+      dayActions={(day, list) => !list.length ? [] : [{ label: 'Confirm rooms', icon: <Icons.Check size={14} />, onSelect: () => setConfirmed(c => ({ ...c, [day]: true })) },
+        ...(list.length > 1 ? [{ label: 'Clear confirmation', onSelect: () => setConfirmed(c => ({ ...c, [day]: false })) }] : [])]}
+      footer={(days, list) => <>Booked this week: {schHours(list)}</>}
       // Rooms close at 17:00 on Fridays.
       isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
       onChange={async ({ id, start, end }) => {

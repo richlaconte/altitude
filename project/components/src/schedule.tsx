@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cx, Icons } from './core';
 import { Button } from './controls';
+import { DropdownMenu, Tooltip, type MenuEntry, type MenuItem } from './overlays';
 
 /** A local date-time, 'YYYY-MM-DDTHH:mm': no time zone. Convert at your edges. */
 export type LocalDateTime = string;
@@ -65,6 +66,20 @@ export interface ScheduleProps<T> {
   categories?: ScheduleCategory[];
   /** A flush line of category names with their edge colour under the grid. Default: on when `categories` is given. */
   legend?: boolean;
+  /**
+   * Under a day's name, inside its column header (#560): a total, a Badge. It follows the column in every view and width,
+   * and its text describes the column (aria-describedby) without lengthening its name.
+   */
+  renderDayHeader?: (day: string, events: T[]) => React.ReactNode;
+  /**
+   * Actions that belong to a day. One renders as an icon button in the header, named with the action and the day ("Approve
+   * time, Tuesday 4 November"), keeping a critical tone, with a Tooltip when it shows only its icon; a checkable one, or
+   * several, as a More button opening a DropdownMenu; none renders nothing. They're outside
+   * the grid's roving focus: Tab reaches them before the grid, in day order.
+   */
+  dayActions?: (day: string, events: T[]) => MenuEntry[];
+  /** A flush line under the grid for the period (its total). It describes the grid. */
+  footer?: (days: string[], events: T[]) => React.ReactNode;
   /** Refuse a span (outside hours, a closed room). */
   isUnavailable?: (span: ScheduleSpan) => boolean;
   /** The now line's time. Default: the clock. */
@@ -82,6 +97,9 @@ const utc = (day: string) => { const [y, m, d] = day.split('-').map(Number); ret
 const addDays = (day: string, n: number) => { const t = utc(day); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 const nowLocal = () => { const t = new Date(); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`; };
 const fmt = (locale: string | undefined, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { ...o, timeZone: 'UTC' });
+// The words a React node reads as: a non-string menu label's accessible name.
+const textOf = (n: React.ReactNode): string => n == null || typeof n === 'boolean' ? '' : typeof n === 'string' || typeof n === 'number' ? String(n)
+  : Array.isArray(n) ? n.map(textOf).join('') : React.isValidElement(n) ? textOf((n.props as { children?: React.ReactNode }).children) : '';
 const clockText = (min: number) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
 
 type Placed<T> = { event: T; key: string; day: string; start: number; end: number; lane: number; lanes: number; overlaps: string[] };
@@ -94,7 +112,7 @@ type Draft = { day: string; start: number; end: number; title: string; error?: s
  * slot under a carried event deepens to a trench the length of the event. A carried event floats at level 3, tilted.
  */
 export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date, onDateChange, events, getKey, getStart, getEnd, getLabel, step = 15, dayStart = '08:00', dayEnd = '19:00',
-  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isLocked, lockedLabel, getCategory, categories, legend, isUnavailable, now, locale,
+  hourHeight: hourHeightProp, weekStartsOn = 1, defaultDuration = 60, renderEvent, onCreate, onChange, onRename, onOpen, onRemove, heldBy, isLocked, lockedLabel, getCategory, categories, legend, renderDayHeader, dayActions, footer, isUnavailable, now, locale,
   className, ...aria }: ScheduleProps<T>) {
   // Narrow (#257): measured on the schedule itself, at the narrow breakpoint.
   const [root, setRoot] = React.useState<HTMLDivElement | null>(null);
@@ -295,7 +313,8 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
 
   // ── Keyboard: the grid moves by slot and day; a held event moves by step and day. ──
   const onGridKey = (e: React.KeyboardEvent) => {
-    if ((e.target as HTMLElement).closest('input')) return;
+    // Keys from the day headers' actions (and their menus) aren't the grid's.
+    if (!body.current?.contains(e.target as Node) || (e.target as HTMLElement).closest('input')) return;
     const di = days.indexOf(focus.day);
     const rtl = getComputedStyle(e.currentTarget).direction === 'rtl';
     const left = rtl ? 'ArrowRight' : 'ArrowLeft', right = rtl ? 'ArrowLeft' : 'ArrowRight';
@@ -418,6 +437,24 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
         onKeyDown={(e) => { e.stopPropagation(); if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return; if (e.key === 'Enter') { e.preventDefault(); onSave(); } else if (e.key === 'Escape') { e.preventDefault(); onCancel(); } }} />
       {error && <span className="alt-schedule-error" role="alert"><Icons.AlertCircle size={12} />{error}</span>}
     </span>;
+  const uid = React.useId();
+  const onDay = (day: string) => events.filter((e) => split(getStart(e)).day === day);
+  const dayAction = (day: string, list: T[]) => {
+    const items = dayActions?.(day, list) ?? [];
+    const real = items.filter((i): i is MenuItem => !i.type || i.type === 'item');
+    if (!real.length) return null;
+    const long = longDay.format(utc(day));
+    // One plain action is a button: it keeps its tone, is named with the item's words, and when it shows only its icon a
+    // Tooltip names it for the eye. A checkable item stays in the menu, where menuitemcheckbox carries its state; so does
+    // one whose label has no words to name the button by.
+    const a = real[0], label = textOf(a.label).trim();
+    if (real.length === 1 && items.length === 1 && a.checked === undefined && label) {
+      const button = <Button size="sm" variant={a.tone === 'critical' ? 'danger' : 'secondary'} square={!!a.icon} className="alt-schedule-day-action" aria-label={`${label}, ${long}`} disabled={a.disabled} onClick={() => a.onSelect?.()}>
+        {a.icon ?? a.label}</Button>;
+      return a.icon ? <Tooltip content={label}>{button}</Tooltip> : button;
+    }
+    return <DropdownMenu align="end" items={items} trigger={<Button size="sm" variant="secondary" square className="alt-schedule-day-action" aria-label={`More actions, ${long}`}><Icons.More size={14} /></Button>} />;
+  };
   const eventBox = (p: { key: string; day: string; start: number; end: number; lane: number; lanes: number }, inner: React.ReactNode, extra: Record<string, unknown>) =>
     <div key={p.key} className="alt-schedule-event-box" style={{ ...edgeOf(byKey.get(p.key)), top: (p.start - Math.max(first, Math.floor(p.start / step) * step)) * px, height: Math.max(step * px, (p.end - p.start) * px) - 2, left: `calc(${(p.lane / p.lanes) * 100}% + 2px)`, width: `calc(${100 / p.lanes}% - 4px)` }} {...extra}>{inner}</div>;
 
@@ -430,10 +467,22 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
         <Button size="sm" variant="ghost" aria-label={view === 'day' ? 'Next day' : 'Next week'} onClick={() => shift(1)}>›</Button>
       </div>}
     </div>
-    <div ref={grid} role="grid" className="alt-schedule-grid" aria-label={aria['aria-label'] ?? 'Schedule'} aria-rowcount={slots.length + 1} aria-colcount={days.length + 1} onKeyDown={onGridKey} key={days[0]}>
+    <div ref={grid} role="grid" className="alt-schedule-grid" aria-label={aria['aria-label'] ?? 'Schedule'} aria-describedby={footer ? `${uid}-footer` : undefined} aria-rowcount={slots.length + 1} aria-colcount={days.length + 1} onKeyDown={onGridKey} key={days[0]}>
       <div role="row" className="alt-schedule-row alt-schedule-dayrow" aria-rowindex={1}>
         <span role="columnheader" className="alt-schedule-corner" aria-colindex={1}><span className="alt-schedule-sr">Time</span></span>
-        {days.map((d, i) => <span key={d} role="columnheader" className="alt-schedule-day" aria-colindex={i + 2} aria-label={longDay.format(utc(d))} data-today={d === nowAt.day ? '' : undefined}>{shortDay.format(utc(d))}</span>)}
+        {days.map((d, i) => {
+          const list = renderDayHeader || dayActions ? onDay(d) : [];
+          const extra = renderDayHeader?.(d, list);
+          const action = dayActions ? dayAction(d, list) : null;
+          return <span key={d} role="columnheader" className="alt-schedule-day" aria-colindex={i + 2} aria-label={longDay.format(utc(d))} data-today={d === nowAt.day ? '' : undefined}
+            data-extra={renderDayHeader || dayActions ? '' : undefined} aria-describedby={extra != null && extra !== false ? `${uid}-day-${d}` : undefined}>
+            <span className="alt-schedule-day-name">{shortDay.format(utc(d))}</span>
+            {(renderDayHeader || dayActions) && <span className="alt-schedule-day-extra">
+              {extra != null && extra !== false && <span className="alt-schedule-day-info" id={`${uid}-day-${d}`}>{extra}</span>}
+              {action}
+            </span>}
+          </span>;
+        })}
       </div>
       <div ref={body} className="alt-schedule-body" onPointerDown={(e) => startDrag(e, 'draw')}>
         {slots.map((min, r) => <div key={min} role="row" className="alt-schedule-row" aria-rowindex={r + 2} data-hour={min % 60 === 0 ? '' : undefined}>
@@ -482,6 +531,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
         </div>)}
       </div>
     </div>
+    {footer && <div className="alt-schedule-footer" id={`${uid}-footer`}>{footer(days, events.filter((e) => days.includes(split(getStart(e)).day)))}</div>}
     {cats && cats.size > 0 && (legend ?? !!categories) && <ul className="alt-schedule-legend" aria-label="Categories">
       {[...cats.values()].map((c) => <li key={c.id} style={c.color ? { ['--sch-edge' as any]: `var(--${c.color})` } : undefined}>
         <span className="alt-schedule-swatch" aria-hidden="true" />{c.label}</li>)}
