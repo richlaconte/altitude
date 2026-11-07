@@ -16,6 +16,7 @@ A day or week of time whose events you handle directly: drag across empty time t
   onRename={…} onOpen={(b) => setSheetFor(b)} onRemove={…}
   heldBy={(b) => presence[b.id]}
   isLocked={(b) => b.approved} lockedLabel={() => 'Approved'}
+  getCategory={(b) => b.roomId} categories={[{ id: 'a', label: 'Room A', color: 'data-1' }, { id: 'b', label: 'Room B', color: 'data-2' }]}
   isUnavailable={({ start, end }) => outsideOpeningHours(start, end)}
 />
 ```
@@ -31,10 +32,11 @@ Times are local date-times, `'YYYY-MM-DDTHH:mm'` strings with no zone, matching 
 - **Pending** writes hover at level 2 after `dur-grace`. A moved or resized event stays where it was dropped while its write runs, and until `events` has the new times; a **failed** one drops to a trench, the event goes back to its old place, and a bar offers Retry.
 - **Held by a collaborator** (`heldBy`): the event wears their `presence-*` outline and name and can't be picked up.
 - **Locked** (`isLocked`): a settled event, part of the record, lies flush on the ground (`surface-ground`, no shadow, a 1px `line-control` edge in place of the accent) with a lock and its word (`lockedLabel`, default "Locked"), as `TimeSlotPicker`'s booked time says "Booked". Space, Shift+↑/↓, F2, Delete, a drag and the resize handle do nothing, and the assertive region says why ("Board report is approved and can't be changed"); Enter, double-click and a tap still call `onOpen`. It doesn't block a drop: that's `isUnavailable`. An event that becomes locked on screen settles 1→0 once (`dur-travel-1`, `ease-settle`). Not `heldBy`: nobody is holding it, and `presence-*` is for people.
+- **Categories** (`getCategory`, `categories`): the category's colour replaces the accent in the 3px inset edge, in every state (rest, hover, carried, pending, `contrast="more"`). The face stays `surface-raised`: it's an edge, never a fill, so pending and failed still read. Colours come from `data-1`–`data-6` (a schedule coloured by project is a chart of a week, one job per colour: telling categories apart). Fixed ones are kept; the rest are given out in first-seen order; past six distinct colours a category keeps the accent and the legend says so. Colour never travels alone: each event's name carries its category's label, and a flush legend under the grid (`legend`, on by default when `categories` is given) names every colour.
 - **The now line** is `accent-ink`, not `critical`: it isn't status.
 - **A new week** cross-fades; it isn't a change of level.
 
-Without height: every event is a button named with its title, day, start and end, its overlaps, who holds it, and whether it's locked ("…, approved, can't be changed"; not `aria-disabled`, since it still opens); carrying is `aria-pressed`, and each step is announced in an assertive region (“Wednesday 28 October, 15:15 to 16:15”); writes and errors are announced politely. Forced colours: events 1px (locked ones solid 1px: they aren't openings), carried 2px, slots and drawn spans thick dashed, pending dotted, failed thick dashed, the now line Highlight. `contrast="more"`: events get the level-1 slab, the carried event a 3px slab; a locked event gets none, since it isn't raised.
+Without height: every event is a button named with its title, category, day, start and end, its overlaps, who holds it, and whether it's locked ("…, approved, can't be changed"; not `aria-disabled`, since it still opens); carrying is `aria-pressed`, and each step is announced in an assertive region (“Wednesday 28 October, 15:15 to 16:15”); writes and errors are announced politely. Forced colours: events 1px (locked ones solid 1px: they aren't openings), carried 2px, slots and drawn spans thick dashed, pending dotted, failed thick dashed, the now line Highlight. `contrast="more"`: events get the level-1 slab, the carried event a 3px slab; a locked event gets none, since it isn't raised.
 
 ## Keyboard
 
@@ -60,6 +62,7 @@ The grid (`role="grid"`) is one Tab stop: rows are time slots, columns are days.
 | `step`, `dayStart`, `dayEnd`, `hourHeight`, `defaultDuration` | 15 minutes, '08:00', '19:00', 48px, 60 minutes |
 | `onCreate`, `onChange`, `onRename`, `onOpen`, `onRemove` | the writes and actions |
 | `heldBy`, `isUnavailable`, `now`, `locale`, `aria-label` | collaborators' holds, refused spans, the now line's time |
+| `getCategory`, `categories`, `legend` | an edge colour per category, from `data-1`–`data-6`, and the legend that names them |
 | `isLocked`, `lockedLabel` | settled events that can't be changed, and the word they say (default "Locked") |
 
 ## You provide
@@ -74,7 +77,7 @@ The events and their writes (with concurrency guards), time zones, and the detai
 
 ## Demo and verification
 
-The `Schedule` section of `build/previews.txt` is a room-booking work week (26–30 Oct 2026): the service refuses Wednesday mornings, rooms close at 17:00 on Friday, and Ana holds the Retro, and Monday's Board report is approved (locked). `node checks/schedule.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys and names, creating, carrying, resizing and cancelling without a pointer, a refused move with Retry, unavailable time, a collaborator's hold, a locked event refusing every change but still opening, rename, remove, the next week, pointer carry, drawing and the resize handle, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
+The `Schedule` section of `build/previews.txt` is a room-booking work week (26–30 Oct 2026): the service refuses Wednesday mornings, rooms close at 17:00 on Friday, and Ana holds the Retro, Monday's Board report is approved (locked), and each room has its own edge colour, named in the legend. `node checks/schedule.mjs` (from `build/`; `ALT_FIXTURE_ROOT` selects React 19 fixtures) covers the grid keys and names, creating, carrying, resizing and cancelling without a pointer, a refused move with Retry, unavailable time, a collaborator's hold, a locked event refusing every change but still opening, rename, remove, the next week, pointer carry, drawing and the resize handle, and 320/960px layouts in both schemes under reduced motion, forced colours and `contrast="more"`.
 **Narrow and on touch.** Under 480px of its own width the schedule shows one day at a time (`narrowView="day"`, the default; `false` keeps the week), paged by the header's previous and next. Under a coarse pointer an hour is 96px unless you set `hourHeight`, so a 15-minute slot is 24px tall, and a tap opens an event.
 
 <!-- example: generated from build/previews.txt by build/previews.mjs. Edit the preview, not this section. -->
@@ -92,6 +95,8 @@ import { Schedule } from 'altitude-design';
   heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
   // Approved bookings are part of the record: they lie flush and can't be changed.
   isLocked={e => !!e.approved} lockedLabel={() => 'Approved'}
+  // Each room's edge colour; the legend under the grid names them.
+  getCategory={e => e.room} categories={[{ id: 'Room A', label: 'Room A', color: 'data-1' }, { id: 'Room B', label: 'Room B', color: 'data-2' }]}
   // Rooms close at 17:00 on Fridays.
   isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
   onChange={async ({ id, start, end }) => {
@@ -133,6 +138,8 @@ export default function App() {
       heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
       // Approved bookings are part of the record: they lie flush and can't be changed.
       isLocked={e => !!e.approved} lockedLabel={() => 'Approved'}
+      // Each room's edge colour; the legend under the grid names them.
+      getCategory={e => e.room} categories={[{ id: 'Room A', label: 'Room A', color: 'data-1' }, { id: 'Room B', label: 'Room B', color: 'data-2' }]}
       // Rooms close at 17:00 on Fridays.
       isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
       onChange={async ({ id, start, end }) => {

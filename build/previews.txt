@@ -5765,6 +5765,8 @@ function App() {
       heldBy={e => e.id === 'e6' ? { name: 'Ana', presence: 2 } : null}
       // Approved bookings are part of the record: they lie flush and can't be changed.
       isLocked={e => !!e.approved} lockedLabel={() => 'Approved'}
+      // Each room's edge colour; the legend under the grid names them.
+      getCategory={e => e.room} categories={[{ id: 'Room A', label: 'Room A', color: 'data-1' }, { id: 'Room B', label: 'Room B', color: 'data-2' }]}
       // Rooms close at 17:00 on Fridays.
       isUnavailable={({ start, end }) => start.slice(0, 10) === '2026-10-30' && end.slice(11) > '17:00'}
       onChange={async ({ id, start, end }) => {

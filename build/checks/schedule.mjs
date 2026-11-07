@@ -29,7 +29,12 @@ try {
     check(await grid.locator('[tabindex="0"]').count() === 1, 'SC-01 the grid is one Tab stop');
     await grid.locator('[tabindex="0"]').focus();
     check((await focused(page)).startsWith('Monday 26 October, 09:00') || (await focused(page)).startsWith('Standup'), 'SC-02 focus starts at 09:00 on the first day (an event there takes it)');
-    check(/^Standup, Monday 26 October, 09:00 to 09:30/.test(await focused(page)), 'SC-03 an event’s name carries its title, day, start and end');
+    check(/^Standup, Room A, Monday 26 October, 09:00 to 09:30/.test(await focused(page)), 'SC-03 an event’s name carries its title, category, day, start and end');
+    // Categories (#562): the edge takes the category's colour, and the legend names each one.
+    const edges = await page.evaluate(() => ['e1', 'e2'].map(id => getComputedStyle(document.querySelector(`[data-event="${id}"]`)).boxShadow));
+    const dataColor = await page.evaluate(n => { const el = document.createElement('i'); el.style.color = `var(--data-${n})`; document.querySelector('.alt-root').append(el); const c = getComputedStyle(el).color; el.remove(); return c; }, 1);
+    check(edges[0].includes(dataColor) && edges[0] !== edges[1], `SC-03b a category's colour replaces the accent edge (${edges[0]} / ${edges[1]})`);
+    check((await page.getByRole('list', { name: 'Categories' }).locator('li').allTextContents()).join('|') === 'Room A|Room B', 'SC-03c the legend names every category');
     await page.keyboard.press('ArrowDown'); check((await focused(page)).startsWith('Monday 26 October, 09:15'), 'SC-04 ↓ moves one slot');
     await page.keyboard.press('ArrowRight'); check((await focused(page)).startsWith('Tuesday 27 October, 09:15'), 'SC-05 → moves one day');
     const review = await page.locator('[data-event="e2"]').getAttribute('aria-label');

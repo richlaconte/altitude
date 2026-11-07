@@ -119,7 +119,7 @@ export { SavedViews, useSavedViews } from './saved-views';
 export type { SavedView, ViewState, SavedViewsApi, SavedViewsOptions } from './saved-views';
 export type { FilterBarProps, FilterField, FilterOption, Filter, FilterValue } from './filter-bar';
 export { Schedule } from './schedule';
-export type { ScheduleProps, ScheduleSpan, ScheduleResult, ScheduleCreateResult, LocalDateTime } from './schedule';
+export type { ScheduleProps, ScheduleSpan, ScheduleResult, ScheduleCreateResult, ScheduleCategory, ScheduleCategoryColor, LocalDateTime } from './schedule';
 export { DataGrid } from './data-grid';
 export type { DataGridProps, DataGridColumn, DataGridChange, DataGridResult, DataGridEditorControl } from './data-grid';
 export { RemovalReceipt } from './removal-receipt';
