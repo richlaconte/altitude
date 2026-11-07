@@ -26,6 +26,11 @@ export interface PrintSheetProps extends Omit<React.HTMLAttributes<HTMLElement>,
 }
 
 const SIZES: Record<'a4' | 'letter' | 'legal', [string, string]> = { a4: ['210mm', '297mm'], letter: ['8.5in', '11in'], legal: ['8.5in', '14in'] };
+/** The top and bottom of a 1-to-4-value margin, as `margin` reads it. */
+function verticalMargins(margins: string): [string, string] {
+  const v = margins.trim().split(/\s+(?![^(]*\))/);
+  return [v[0], v.length > 2 ? v[2] : v[0]];
+}
 const PageContext = React.createContext<{ page: number; count: number }>({ page: 1, count: 1 });
 
 /** The top of every page: flush caption text, as PageHeader's. */
@@ -56,6 +61,7 @@ export function PrintSheetBreak({ className }: { className?: string }) {
 export function PrintSheet({ title, size = 'a4', margins = '20mm', orientation = 'portrait', scale = 'fit', header, footer, loading, className, style, children, ...rest }: PrintSheetProps) {
   const [pw, ph] = typeof size === 'string' ? SIZES[size] : [size.width, size.height];
   const [w, h] = orientation === 'landscape' ? [ph, pw] : [pw, ph];
+  const [mt, mb] = verticalMargins(margins);
   // Top-level breaks split the content into pages.
   const pages: React.ReactNode[][] = [[]];
   React.Children.toArray(children).forEach((child) => {
@@ -85,7 +91,7 @@ export function PrintSheet({ title, size = 'a4', margins = '20mm', orientation =
   return <div ref={outer} className={cx('alt-print', className)} style={{ height: fit.k !== 1 ? fit.height : undefined, ...style }} data-scaled={fit.k !== 1 ? '' : undefined}>
     <style>{`@page { size: ${w} ${h}; margin: ${margins}; }`}</style>
     <article ref={stack} role="document" aria-label={loading ? `Loading ${title}` : title} aria-busy={loading || undefined} className="alt-print-stack" {...rest}
-      style={{ ['--sheet-w' as any]: w, ['--sheet-h' as any]: h, ['--sheet-margin' as any]: margins, transform: fit.k !== 1 ? `scale(${fit.k})` : undefined }}>
+      style={{ ['--sheet-w' as any]: w, ['--sheet-h' as any]: h, ['--sheet-margin' as any]: margins, ['--sheet-mt' as any]: mt, ['--sheet-mb' as any]: mb, transform: fit.k !== 1 ? `scale(${fit.k})` : undefined }}>
       {pages.map((content, i) => <React.Fragment key={i}>
         {i > 0 && <hr role="separator" className="alt-print-gap" aria-label={`Page ${i + 1} of ${count}`} />}
         <div className="alt-print-page" data-theme="daylight" data-loading={loading ? '' : undefined}>

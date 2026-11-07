@@ -4605,15 +4605,21 @@ span.alt-schedule-more { color: var(--ink-muted); cursor: default; }
    wears daylight's tokens in every scheme, since it previews a printed page: the one surface that doesn't follow the
    scheme. Pages are separated by space-6 of ground. Content longer than a page continues on the same sheet, with a
    line rule where the printer will break. In print there is no ground and no height: no shadow, no radius, no gap; the
-   @page rule sets the paper and margins, and everything outside the sheets is hidden. ── */
+   @page rule sets the paper and margins, and everything outside the sheets is removed from layout. ── */
 .alt-print { position: relative; min-width: 0; overflow: hidden; }
-.alt-print-stack { display: flex; flex-direction: column; width: max-content; margin-inline: auto; transform-origin: 0 0; }
+.alt-print-stack { --sheet-content-h: calc(var(--sheet-h) - var(--sheet-mt) - var(--sheet-mb)); display: flex; flex-direction: column; width: max-content; margin-inline: auto; transform-origin: 0 0; }
 .alt-print[data-scaled] .alt-print-stack { margin-inline: 0; }
 .alt-print-page {
-  box-sizing: border-box; display: flex; flex-direction: column; width: var(--sheet-w); min-height: var(--sheet-h); padding: var(--sheet-margin);
+  position: relative; box-sizing: border-box; display: flex; flex-direction: column; width: var(--sheet-w); min-height: var(--sheet-h); padding: var(--sheet-margin);
   border-radius: var(--radius-sm); background-color: var(--surface-raised); box-shadow: var(--elev-1); color: var(--ink); font: 400 14px/20px var(--font-sans);
-  background-image: repeating-linear-gradient(to bottom, transparent 0 calc(var(--sheet-h) - 1px), var(--line) calc(var(--sheet-h) - 1px) var(--sheet-h));
   animation: alt-emerge var(--dur-travel-2) var(--ease-rise) both;
+}
+/* Where the printer breaks a page whose content is longer than the paper: it fills the page's content box (the paper
+   less its top and bottom margins) and continues on the next, so a line every content height, from the top margin.
+   On a page that fits, the layer has no height and draws nothing. */
+.alt-print-page::before {
+  content: ''; position: absolute; inset: calc(var(--sheet-mt) + var(--sheet-content-h)) 0 var(--sheet-mb); pointer-events: none;
+  background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--sheet-content-h));
 }
 .alt-print-page[data-loading] { background: var(--surface-well); box-shadow: var(--well); animation: none; }
 .alt-print-body { flex: 1 0 auto; min-width: 0; }
@@ -4633,11 +4639,22 @@ span.alt-schedule-more { color: var(--ink-muted); cursor: default; }
 [data-contrast="more"] .alt-print-page:not([data-loading]) { box-shadow: 0 2px 0 0 var(--ink); }
 @media (forced-colors: active) { .alt-print-page { border: 1px solid CanvasText; } }
 @media print {
-  html:has(.alt-print) body * { visibility: hidden; }
-  html:has(.alt-print) .alt-print, html:has(.alt-print) .alt-print * { visibility: visible; }
-  .alt-print { position: absolute; inset: 0 auto auto 0; width: 100%; height: auto !important; overflow: visible; }
+  /* Only the sheet takes part in layout: everything off the path to it is removed (not hidden, which would keep its
+     height and print blank pages after the sheet), and the elements on the path are plain blocks, so a positioned,
+     clipped or fixed-height ancestor neither offsets nor clips it. */
+  html:has(.alt-print), html:has(.alt-print) body { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+  html:has(.alt-print) body { margin: 0 !important; padding: 0 !important; }
+  html:has(.alt-print) body *:not(:has(.alt-print)):not(.alt-print):not(.alt-print *) { display: none !important; }
+  html:has(.alt-print) body *:has(.alt-print) {
+    display: block !important; position: static !important; float: none !important; overflow: visible !important; transform: none !important;
+    width: auto !important; max-width: none !important; height: auto !important; min-height: 0 !important; max-height: none !important;
+    margin: 0 !important; padding: 0 !important; border: 0 !important;
+  }
+  .alt-print { position: static; width: auto; height: auto !important; overflow: visible; }
   .alt-print-stack { width: auto; margin: 0; transform: none !important; }
-  .alt-print-page { width: auto; min-height: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; background-image: none; animation: none; break-after: page; }
+  /* The page is the @page content box: at least its height, so the footer prints at the foot of the paper. */
+  .alt-print-page { width: auto; min-height: var(--sheet-content-h); padding: 0; border: 0; border-radius: 0; box-shadow: none; animation: none; break-after: page; }
+  .alt-print-page::before { display: none; }
   .alt-print-page:last-child { break-after: auto; }
   .alt-print-gap { display: none; }
   .alt-print-body thead { display: table-header-group; }
