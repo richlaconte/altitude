@@ -81,9 +81,9 @@ export interface ScheduleProps<T> {
   footer?: (days: string[], events: T[]) => React.ReactNode;
   /** Month view: what a day shows under its events (a total). Its text describes the day's cell. */
   monthCell?: (day: string, events: T[]) => React.ReactNode;
-  /** Month view: events shown per day before "+N more". Default 3. */
+  /** Month view: events shown per day before "+N more". Default 3. Only applies with `onOpenDay`: without it every event shows, so each stays reachable. */
   maxPerDay?: number;
-  /** Month view: "+N more" opens that day. Showing it (say, in the day view) is your call. */
+  /** Month view: "+N more" opens that day. Showing it (say, in the day view) is your call. Without it a day lists all its events. */
   onOpenDay?: (day: string) => void;
   /** Refuse a span (outside hours, a closed room). */
   isUnavailable?: (span: ScheduleSpan) => boolean;
@@ -154,6 +154,8 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const shortDay = fmt(locale, { weekday: 'short', day: 'numeric' });
 
   const [focus, setFocus] = React.useState<{ day: string; min: number }>({ day: days.includes(date) ? date : days[0], min: first + Math.floor((9 * 60 - first) / step) * step });
+  // The grid's one Tab stop: the focus day, or, when the period moved without it (Today, a parent's date), `date` or the period's first day.
+  const tabDay = days.includes(focus.day) ? focus.day : days.includes(date) ? date : isMonth ? monthStart : days[0];
   const [carry, setCarry] = React.useState<Carry | null>(null);
   // Month view: the focused chip in the focused day ('__more' for its "+N more"), or null for the day itself.
   const [chip, setChip] = React.useState<string | null>(null);
@@ -389,6 +391,8 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     if (keys[e.key]) { e.preventDefault(); keys[e.key](); }
   };
   // ── Month view (#559): days move by day and week, a day's chips by ↑ and ↓; a held chip moves by day and week. ──
+  // Without onOpenDay "+N more" would lead nowhere, so a day lists every event.
+  const cap = onOpenDay ? maxPerDay : Infinity;
   const chipsOn = (day: string) => placed.filter((p) => p.day === day && carry?.key !== p.key).sort((a, b) => a.start - b.start || a.end - b.end);
   const monthMove = (day: string, to: string | null = null) => { if (!days.includes(day)) return; setFocus({ day, min: focus.min }); setChip(to); wantFocus.current = 'cell'; };
   const onMonthKey = (e: React.KeyboardEvent) => {
@@ -428,7 +432,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
       if (e.key === 'Delete' && onRemove) { e.preventDefault(); onRemove(event); setChip(null); wantFocus.current = 'cell'; return; }
     }
     const list = chipsOn(focus.day);
-    const stack = [...list.slice(0, maxPerDay).map((p) => p.key), ...(list.length > maxPerDay && onOpenDay ? ['__more'] : [])];
+    const stack = [...list.slice(0, cap).map((p) => p.key), ...(list.length > cap ? ['__more'] : [])];
     const at = chip ? stack.indexOf(chip) : -1;
     const di = days.indexOf(focus.day);
     const create = () => startDraft(focus.day, first, Math.min(24 * 60, first + defaultDuration));
@@ -441,8 +445,9 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
       Escape: () => monthMove(focus.day),
       Enter: () => { if (chip === '__more') onOpenDay?.(focus.day); },
     } : {
-      ArrowUp: () => monthMove(days[Math.max(0, di - week)] ?? focus.day),
-      ArrowDown: () => monthMove(days[Math.min(days.length - 1, di + week)] ?? focus.day),
+      // Past the first or last row, ↑ / ↓ keep the weekday and carry on into the adjacent month.
+      ArrowUp: () => di - week >= 0 ? monthMove(days[di - week]) : toMonth(-1, addDays(focus.day, -week)),
+      ArrowDown: () => di + week < days.length ? monthMove(days[di + week]) : toMonth(1, addDays(focus.day, week)),
       [left]: () => monthMove(days[Math.max(0, di - 1)]),
       [right]: () => monthMove(days[Math.min(days.length - 1, di + 1)]),
       Home: () => monthMove(days[di - (di % 7)]),
@@ -478,8 +483,15 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
   };
 
+  // A month on (n = ±1), focus on `day`, which lies in that month. Without onDateChange the period can't move, so focus stays.
+  const toMonth = (n: number, day: string) => { if (!onDateChange) return; onDateChange(addMonths(date, n)); setFocus({ day, min: focus.min }); setChip(null); wantFocus.current = 'cell'; };
   const shift = (n: number) => {
-    if (isMonth) { onDateChange?.(addMonths(date, n)); setFocus({ day: addMonths(focus.day, n), min: focus.min }); setChip(null); wantFocus.current = 'cell'; return; }
+    if (isMonth) {
+      // The same date a month on, from a day inside this month (a day shown from a neighbouring month counts as the 1st or the last), so it's in the new grid.
+      const monthEnd = addDays(addMonths(monthStart, 1), -1);
+      const from = focus.day < monthStart ? monthStart : focus.day > monthEnd ? monthEnd : focus.day;
+      onDateChange?.(addMonths(date, n)); setFocus({ day: addMonths(from, n), min: focus.min }); setChip(null); wantFocus.current = 'cell'; return;
+    }
     const by = view === 'day' ? n : n * 7;
     const next = addDays(date, by);
     onDateChange?.(next); setFocus({ day: addDays(focus.day, by), min: focus.min }); wantFocus.current = 'cell';
@@ -579,9 +591,9 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
       {Array.from({ length: monthWeeks }, (_, r) => <div key={r} role="row" className="alt-schedule-row" aria-rowindex={r + 2}>
         {days.slice(r * 7, r * 7 + 7).map((d, c) => {
           const list = chipsOn(d);
-          const shown = list.slice(0, maxPerDay), more = list.length - shown.length;
+          const shown = list.slice(0, cap), more = list.length - shown.length;
           const all = placed.filter((p) => p.day === d);
-          const isFocus = focus.day === d;
+          const isFocus = tabDay === d;
           const inMonth = d.slice(0, 7) === monthStart.slice(0, 7);
           const long = longDay.format(utc(d));
           const carried = carry && carry.day === d ? carry : null;
@@ -591,7 +603,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
           return <div key={d} role="gridcell" className="alt-schedule-mday" data-mday={d} aria-colindex={c + 1} data-outside={inMonth ? undefined : ''}
             aria-label={`${long}${all.length ? `, ${all.length} event${all.length > 1 ? 's' : ''}` : ''}`} aria-describedby={hasExtra ? `${uid}-m-${d}` : undefined}
             aria-current={d === nowAt.day ? 'date' : undefined} data-target={carried ? '' : undefined} data-blocked={carried?.blocked ? '' : undefined}
-            tabIndex={isFocus && !chip ? 0 : -1} onFocus={(e) => { if (e.target === e.currentTarget) { setFocus({ day: d, min: focus.min }); setChip(null); } }}
+            tabIndex={isFocus && (!chip || tabDay !== focus.day) ? 0 : -1} onFocus={(e) => { if (e.target === e.currentTarget) { setFocus({ day: d, min: focus.min }); setChip(null); } }}
             onDoubleClick={(e) => { if (!(e.target as HTMLElement).closest('[data-event], .alt-schedule-more, .alt-schedule-draft')) startDraft(d, first, Math.min(24 * 60, first + defaultDuration)); }}>
             <span className="alt-schedule-mdate" aria-hidden="true"><span className="alt-schedule-mweekday">{weekdayShort.format(utc(d))} </span>{inMonth ? dayNumber.format(utc(d)) : dayMonth.format(utc(d))}</span>
             <span className="alt-schedule-chips">
@@ -617,10 +629,8 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
                 {field(drafted.title, 'Event title', drafted.error, (t) => setDraft({ ...drafted, title: t, error: undefined }), () => void create(), () => { setDraft(null); wantFocus.current = 'cell'; say('New event discarded.'); }, leaveDraft)}
                 <small>{clockText(drafted.start)}–{clockText(drafted.end)}</small>
               </span>}
-              {more > 0 && (onOpenDay
-                ? <button type="button" className="alt-schedule-more" tabIndex={isFocus && chip === '__more' ? 0 : -1} aria-label={`${more} more event${more > 1 ? 's' : ''} on ${long}`}
-                  onFocus={() => { setFocus({ day: d, min: focus.min }); setChip('__more'); }} onClick={() => onOpenDay(d)}>+{more} more</button>
-                : <span className="alt-schedule-more" aria-hidden="true">+{more} more</span>)}
+              {more > 0 && onOpenDay && <button type="button" className="alt-schedule-more" tabIndex={isFocus && chip === '__more' ? 0 : -1} aria-label={`${more} more event${more > 1 ? 's' : ''} on ${long}`}
+                onFocus={() => { setFocus({ day: d, min: focus.min }); setChip('__more'); }} onClick={() => onOpenDay(d)}>+{more} more</button>}
             </span>
             {hasExtra && <span className="alt-schedule-mcell" id={`${uid}-m-${d}`}>{extra}</span>}
           </div>;
@@ -660,7 +670,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
           <span role="rowheader" className="alt-schedule-time" aria-colindex={1}>{min % 60 === 0 ? clockText(min) : <span className="alt-schedule-sr">{clockText(min)}</span>}</span>
           {days.map((d, c) => {
             const here = eventsIn(d, min);
-            const isFocus = focus.day === d && focus.min === min;
+            const isFocus = tabDay === d && focus.min === min;
             const carried = carry && carry.day === d && Math.max(first, Math.floor(carry.start / step) * step) === min ? carry : null;
             const drafted = draft && draft.day === d && draft.start === min ? draft : null;
             return <div key={d} role="gridcell" className="alt-schedule-cell" data-cell={`${d}T${min}`} aria-colindex={c + 2} aria-label={`${longDay.format(utc(d))}, ${clockText(min)}${here.length ? `, ${here.length} event${here.length > 1 ? 's' : ''}` : ''}`}
