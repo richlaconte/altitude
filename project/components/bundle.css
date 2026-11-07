@@ -4530,7 +4530,12 @@ button.alt-legend-key[aria-disabled] { cursor: default; }
 @keyframes alt-schedule-lock-settle { from { background: var(--surface-raised); box-shadow: var(--elev-1), inset 3px 0 0 0 var(--sch-edge, var(--accent)); } }
 .alt-schedule-lock { position: absolute; right: 2px; top: 3px; display: inline-flex; align-items: center; gap: 3px; padding: 0 4px; border-radius: var(--radius-sm); background: inherit; color: var(--ink-muted); font: 500 10.5px/14px var(--font-sans); white-space: nowrap; }
 .alt-schedule-lock > svg { flex: none; }
-.alt-schedule-event[data-locked] > :first-child { box-sizing: border-box; padding-inline-end: calc(var(--lock-ch, 6) * 0.55em + 16px); }
+.alt-schedule-event[data-locked] > :first-child { box-sizing: border-box; padding-inline-end: calc(var(--lock-ch, 6) * 0.5em + 24px); }
+/* A short event lays its title and time in one row: the button keeps the label's room, the row shrinks, the label centres. */
+.alt-schedule-event[data-locked][data-short] { padding-inline-end: calc(var(--lock-ch, 6) * 0.5em + 24px); }
+.alt-schedule-event[data-locked][data-short] > * { flex: 0 1 auto; min-width: 0; }
+.alt-schedule-event[data-locked][data-short] > :first-child { flex-shrink: 0; padding-inline-end: 0; }
+.alt-schedule-event[data-locked][data-short] .alt-schedule-lock { top: 50%; translate: 0 -50%; }
 @media (prefers-reduced-motion: reduce) { .alt-schedule-event[data-lock-settle] { animation: none; } }
 .alt-schedule-holder { position: absolute; right: 2px; bottom: 2px; padding: 0 4px; border-radius: var(--radius-sm); background: var(--presence-1); color: var(--on-presence); font: 600 10.5px/14px var(--font-sans); }
 .alt-schedule-handle { position: absolute; left: 25%; right: 25%; bottom: -3px; z-index: 2; height: 6px; border-radius: var(--radius-full); background: var(--surface-raised); box-shadow: var(--elev-1); cursor: ns-resize; opacity: 0; transition: opacity var(--dur-travel-1); }

@@ -23,6 +23,35 @@ const said = async (page, text) => {
   return true;
 };
 
+// A schedule mounted directly in the fixture page, with locked events, onOpen and a way to change its events (#561).
+const mountLocked = page => page.evaluate(() => new Promise((done) => {
+  document.body.innerHTML = ''; const d = document.createElement('div'); document.body.append(d);
+  const A = window.Altitude, h = React.createElement; window.__opened = [];
+  const seed = [
+    { id: 'a', title: 'Standup', start: '2026-10-26T09:00', end: '2026-10-26T09:30', room: 'Room A', locked: true },
+    { id: 'b', title: 'Board report', start: '2026-10-26T14:00', end: '2026-10-26T15:00', room: 'Room B', locked: true },
+    { id: 'c', title: 'Review', start: '2026-10-27T10:00', end: '2026-10-27T11:00', room: 'Room B' },
+    { id: 'x', title: 'Sync', start: '2026-10-28T10:00', end: '2026-10-28T11:00', room: 'Room B' },
+  ];
+  function Host() {
+    const [events, setEvents] = React.useState(seed); window.__setEvents = setEvents;
+    return h(A.Schedule, { 'aria-label': 'Locked bookings', view: 'workweek', date: '2026-10-26', onDateChange: () => {}, now: '2026-10-27T08:30', dayStart: '08:00', dayEnd: '18:00',
+      events, getKey: e => e.id, getStart: e => e.start, getEnd: e => e.end, getLabel: e => e.title,
+      renderEvent: e => h(React.Fragment, null, h('strong', null, e.title), h('small', null, `${e.start.slice(11)}–${e.end.slice(11)} · ${e.room}`)),
+      isLocked: e => !!e.locked, lockedLabel: () => 'Approved', onOpen: e => window.__opened.push(e.id), onChange: async () => ({ ok: true }) });
+  }
+  const scene = h(A.AltitudeProvider, null, h('div', { style: { width: '860px' } }, h(Host)));
+  ReactDOM.createRoot(d).render(document.documentElement.dataset.fixtureStrict === 'true' ? h(React.StrictMode, null, scene) : scene);
+  setTimeout(done, 400);
+}));
+// How far a locked event's text beside its lock label runs past the label's left (≤ 0: clear of it), and how far the label sits off centre.
+const lockRoom = (page, id) => page.evaluate(id => {
+  const b = document.querySelector(`[data-event="${id}"]`), box = b.getBoundingClientRect(), lock = b.querySelector('.alt-schedule-lock').getBoundingClientRect();
+  const beside = [...b.children].filter(el => !el.classList.contains('alt-schedule-lock')).filter(el => { const r = el.getBoundingClientRect(); return r.top < lock.bottom && r.bottom > lock.top; });
+  const ends = beside.map(el => el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight));
+  return { over: Math.max(...ends) - lock.left, offCentre: Math.abs((lock.top + lock.bottom) / 2 - (box.top + box.bottom) / 2), short: b.hasAttribute('data-short') };
+}, id);
+
 try {
   { const page = await open();
     const grid = page.getByRole('grid', { name: 'Room bookings' });
@@ -147,6 +176,8 @@ try {
     const confirm = page.getByRole('button', { name: 'Confirm rooms, Wednesday 28 October' });
     await confirm.focus(); await page.keyboard.press('ArrowRight');
     check(await confirm.evaluate(el => el === document.activeElement), 'SC-26b keys on a day action aren’t the grid’s');
+    await page.getByRole('tooltip', { name: 'Confirm rooms' }).waitFor();
+    check(await confirm.evaluate(el => document.getElementById(el.getAttribute('aria-describedby'))?.textContent === 'Confirm rooms'), 'SC-26f an icon-only day action is named for the eye by a Tooltip');
     // Several actions: a More button opening a menu, whose keys aren't the grid's either.
     const more = page.getByRole('button', { name: 'More actions, Tuesday 27 October' });
     await more.focus(); await page.keyboard.press('ArrowDown');
@@ -165,6 +196,72 @@ try {
     await page.mouse.move(tue.x + 20, tue.y + 8, { steps: 6 }); await page.mouse.up();
     check(await where(page, 'e7') === '2026-10-26T840', 'SC-25b a locked event stays where it is');
     await page.close(); }
+
+  // Past six categories (#562 review): the seventh takes data-other, the palette's neutral, not the accent.
+  { const page = await open();
+    const r = await page.evaluate(async () => {
+      const A = window.Altitude, h = React.createElement, el = document.createElement('div'); document.querySelector('.alt-root').append(el);
+      const events = [1, 2, 3, 4, 5, 6, 7].map(n => ({ id: `c${n}`, title: `Seventh ${n}`, cat: `Cat ${n}`, start: `2026-10-${25 + Math.min(n, 5)}T${n < 6 ? '10' : '14'}:00`, end: `2026-10-${25 + Math.min(n, 5)}T${n < 6 ? '11' : n === 6 ? '15' : '16'}:00` }));
+      events[6].start = '2026-10-29T16:00'; events[6].end = '2026-10-29T17:00';
+      window.ReactDOM.createRoot(el).render(h(A.Schedule, { date: '2026-10-26', events, getKey: e => e.id, getStart: e => e.start, getEnd: e => e.end, getLabel: e => e.title, getCategory: e => e.cat, legend: true, 'aria-label': 'Seven categories' }));
+      await new Promise(res => setTimeout(res, 400));
+      const tone = v => { const i = document.createElement('i'); i.style.color = v; el.append(i); const c = getComputedStyle(i).color; i.remove(); return c; };
+      const edge = id => getComputedStyle(el.querySelector(`[data-event="${id}"]`)).boxShadow;
+      return { seventh: edge('c7'), sixth: edge('c6'), other: tone('var(--data-other)'), accent: tone('var(--accent)'), note: el.querySelector('.alt-schedule-legend-note')?.textContent ?? '' };
+    });
+    check(r.seventh.includes(r.other) && !r.seventh.includes(r.accent) && r.seventh !== r.sixth, `SC-03d a seventh category takes data-other, not the accent (${r.seventh})`);
+    check(r.note === 'Past six categories, events share a neutral edge.', `SC-03e the legend says the seventh and later share a neutral edge (${r.note})`);
+    await page.close(); }
+
+  // A lone day action (#568 review): it keeps its tone, a checkable one stays in a menu, and a non-string label names it.
+  { const page = await open();
+    await page.evaluate(async () => {
+      const A = window.Altitude, h = React.createElement, el = document.createElement('div'); el.id = 'lone'; document.querySelector('.alt-root').append(el);
+      const acts = { '2026-10-26': [{ label: 'Clear day', tone: 'critical', onSelect: () => {} }], '2026-10-27': [{ label: 'Hold rooms', checked: true, onSelect: () => {} }], '2026-10-28': [{ label: h('span', null, h('strong', null, 'Approve'), ' time'), onSelect: () => {} }] };
+      window.ReactDOM.createRoot(el).render(h(A.Schedule, { date: '2026-10-26', events: [], getKey: e => e.id, getStart: e => e.start, getEnd: e => e.end, getLabel: e => e.title, dayActions: day => acts[day] ?? [], 'aria-label': 'Lone actions' }));
+      await new Promise(res => setTimeout(res, 400));
+    });
+    const lone = page.locator('#lone');
+    check(await lone.getByRole('button', { name: 'Clear day, Monday 26 October' }).getAttribute('data-variant') === 'danger', 'SC-26g a lone critical day action keeps its tone');
+    check(await lone.getByRole('button', { name: /^Hold rooms/ }).count() === 0, 'SC-26h a lone checkable day action isn’t flattened to a stateless button');
+    await lone.getByRole('button', { name: 'More actions, Tuesday 27 October' }).click();
+    check(await page.getByRole('menuitemcheckbox', { name: 'Hold rooms' }).getAttribute('aria-checked') === 'true', 'SC-26i it stays in a menu, where its checked state is said');
+    await page.keyboard.press('Escape');
+    check(await lone.getByRole('button', { name: 'Approve time, Wednesday 28 October' }).count() === 1, 'SC-26j a lone action with a non-string label is named by its words, not “Action”');
+    await page.close(); }
+
+  { const page = await open(); await mountLocked(page);
+    // #561 review: the title is cut short before the lock label, and on a short event the time and room are too.
+    const tall = await lockRoom(page, 'b'), short = await lockRoom(page, 'a');
+    check(!tall.short && tall.over <= 0, `SC-26 a locked event’s title stops before its lock label (${tall.over.toFixed(1)}px over)`);
+    check(short.short && short.over <= 0, `SC-26b on a short locked event the title, time and room stop before the label (${short.over.toFixed(1)}px over)`);
+    check(short.offCentre <= 1, `SC-26c on a short locked event the label is centred in the row (${short.offCentre.toFixed(1)}px off)`);
+    // It still opens: Enter and double-click call onOpen.
+    await page.locator('[data-event="b"]').focus(); await page.keyboard.press('Enter');
+    await page.locator('[data-event="b"]').dblclick();
+    check((await page.evaluate(() => window.__opened)).join() === 'b,b', 'SC-27 Enter and double-click open a locked event');
+    // The settle: only an event that becomes locked while on screen, and it always ends.
+    check(await page.locator('[data-lock-settle]').count() === 0, 'SC-28 events already locked when it mounts render flush, without the settle');
+    await page.evaluate(() => window.__setEvents(l => l.map(e => e.id === 'c' ? { ...e, locked: true } : e)));
+    await page.locator('[data-event="c"][data-lock-settle]').waitFor();
+    await page.evaluate(() => window.__setEvents(l => [...l, { id: 'n', title: 'Audit', start: '2026-10-29T10:00', end: '2026-10-29T11:00', room: 'Room A', locked: true }]));
+    await page.locator('[data-event="n"]').waitFor();
+    check(await page.locator('[data-event="n"]').getAttribute('data-lock-settle') === null, 'SC-28b an event that arrives already locked renders flush, without the settle');
+    await page.waitForTimeout(600);
+    check(await page.locator('[data-lock-settle]').count() === 0, 'SC-28c the settle ends');
+    await page.evaluate(() => window.__setEvents(l => l.map(e => e.id === 'x' ? { ...e, locked: true } : e)));
+    await page.locator('[data-event="x"][data-lock-settle]').waitFor();
+    await page.evaluate(() => window.__setEvents(l => l.map(e => e.id === 'a' ? { ...e, locked: false } : e)));
+    await page.waitForTimeout(600);
+    check(await page.locator('[data-lock-settle]').count() === 0, 'SC-28d the settle ends even when the locked set changes again while it plays');
+    await page.close(); }
+
+  { const ctx = await browser.newContext({ viewport: { width: 1000, height: 1400 }, locale: 'en-GB', isMobile: true, hasTouch: true });
+    const page = await ctx.newPage(); page.on('pageerror', e => errors.push(e.message));
+    await page.goto(`file://${fixturePath('Schedule')}`); await mountLocked(page);
+    await page.locator('[data-event="b"]').tap(); await page.waitForTimeout(200);
+    check((await page.evaluate(() => window.__opened)).join() === 'b', 'SC-27b a tap opens a locked event on touch');
+    await ctx.close(); }
 
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
     const page = await open({ scheme, width });
