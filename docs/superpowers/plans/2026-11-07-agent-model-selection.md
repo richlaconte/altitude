@@ -16,9 +16,9 @@ The selector follows existing field elevation: empty well at -1; chosen value fl
 
 ## Tasks
 
-- [ ] Research primary docs/source for OpenCode, Cline, Continue, Roo (historical), LibreChat, Open WebUI, assistant-ui and Vercel; distinguish observations from Altitude recommendations and record sources/date.
-- [ ] Add ModelSelector and PromptInputModelSelector with matching public declarations, export registration, source styles and canonical preview. Add failing behavior checks before implementation, then verify duplicate IDs, provider changes, stale/disabled/empty/loading/error states, keyboard and preserved drafts.
-- [ ] Integrate selector into both harness views and assistant-conversation example. Render route snapshots on submitted records and preserve queued/retried identity when selection changes. Add harness and workflow regression checks.
-- [ ] Update component and framework guidance/metadata with host responsibilities and research links. Preserve one canonical fixture for site and Storybook.
-- [ ] Regenerate bundle/previews, bump minor version, check type/API/package/framework/site/Storybook builds and relevant browser checks including mobile and forced colors.
-- [ ] Independent spec/code review, fix findings, commit/push and create PR with research decisions and exact validation. Do not merge.
+- [x] Research primary docs/source for OpenCode, Cline, Continue, Roo (historical), LibreChat, Open WebUI, assistant-ui and Vercel; distinguish observations from Altitude recommendations and record sources/date.
+- [x] Add ModelSelector and PromptInputModelSelector with matching public declarations, export registration, source styles and canonical preview. Add failing behavior checks before implementation, then verify duplicate IDs, provider changes, stale/disabled/empty/loading/error states, keyboard and preserved drafts.
+- [x] Integrate selector into both harness views and assistant-conversation example. Render route snapshots on submitted records and preserve queued/retried identity when selection changes. Add harness and workflow regression checks.
+- [x] Update component and framework guidance/metadata with host responsibilities and research links. Preserve one canonical fixture for site and Storybook.
+- [x] Regenerate bundle/previews, bump minor version, check type/API/package/framework/site/Storybook builds and relevant browser checks including mobile and forced colors.
+- [x] Independent spec/code review, fix findings, commit/push and create PR with research decisions and exact validation. Do not merge.
