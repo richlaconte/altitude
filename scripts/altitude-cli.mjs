@@ -3,7 +3,7 @@
 import { existsSync, lstatSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { createHash } from 'node:crypto';
-import { resolve, dirname, relative, basename } from 'node:path';
+import { resolve, dirname, relative, basename, sep } from 'node:path';
 import { scan } from './source-check.mjs';
 const sha = value => createHash('sha256').update(value).digest('hex');
 const args=process.argv.slice(2);
@@ -117,7 +117,9 @@ function check(context) {
   if(!existsSync(target)) throw new Error(`No such directory: ${target}`);
   const tokensCss=resolve(context.guidance,'..','tokens.css');
   const tokenNames=new Set(existsSync(tokensCss)?[...readFileSync(tokensCss,'utf8').matchAll(/--([\w-]+)\s*:/g)].map(m=>m[1]):[]);
-  const {files,findings}=scan(target,{tokenNames});
+  // Setup (ALT-SETUP-002, -003) is app-wide, so a subtree's setup is verified across the project it's in (AGENT-SETUP.md).
+  const project=target===cwd||target.startsWith(cwd+sep)?cwd:target;
+  const {files,findings}=scan(target,{tokenNames,project});
   const ok=!findings.some(f=>f.kind==='deterministic');
   const scope='Altitude rules certain from source text only. Not checked: anything that needs the page rendered (contrast, overflow, focus) or a person (accessibility, usability).';
   if(json) emit({command:'check',version:context.pkg.version,target:relative(cwd,target)||'.',files,ok,scope,findings});
