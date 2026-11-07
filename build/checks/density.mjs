@@ -4,8 +4,8 @@
 // 640. Run after a render of every preview (it opens test/p-Button-daylight.html); exits non-zero on a failure.
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'fs';
+import { fixturePath } from './fixture-path.mjs';
 const browser = await chromium.launch(process.env.CHROME ? { executablePath: process.env.CHROME } : {});
-const T = new URL('../test/', import.meta.url).pathname;
 const root = new URL('../../', import.meta.url).pathname;
 let pass = 0, fail = 0;
 const expect = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
@@ -26,7 +26,7 @@ const sizes = (page) => page.evaluate(() => new Promise((done) => {
 
 {
   const page = await browser.newPage({ viewport: { width: 960, height: 900 } });
-  await page.goto(`file://${T}p-Button-daylight.html`);
+  await page.goto(`file://${fixturePath('Button')}`);
   await page.waitForTimeout(500);
   const s = await sizes(page);
   expect(JSON.stringify(s.auto) === JSON.stringify({ btn: 36, sm: 30, input: 40, tab: 38, target: '24px' }), `with a mouse, today's sizes and a 24px hit area (${JSON.stringify(s.auto)})`);
@@ -37,11 +37,90 @@ const sizes = (page) => page.evaluate(() => new Promise((done) => {
 {
   const ctx = await browser.newContext({ viewport: { width: 375, height: 900 }, isMobile: true, hasTouch: true });
   const page = await ctx.newPage();
-  await page.goto(`file://${T}p-Button-daylight.html`);
+  page.setDefaultTimeout(5000);
+  await page.goto(`file://${fixturePath('Button')}`);
   await page.waitForTimeout(500);
   const s = await sizes(page);
   expect(JSON.stringify(s.auto) === JSON.stringify({ btn: 44, sm: 40, input: 48, tab: 46, target: '44px' }), `under a coarse pointer, controls step up and the hit area is 44px (${JSON.stringify(s.auto)})`);
   expect(s.compact.btn === 36 && s.compact.input === 40 && s.compact.target === '44px', `density="compact" pins the faces on touch, but the hit area still follows the finger (${JSON.stringify(s.compact)})`);
+  await ctx.close();
+}
+
+// DataTable row spacing must not establish provider control-size tokens (#613). Exercise real public components,
+// including the unset/default row density and an explicit nested provider inside a cell.
+for (const scheme of ['daylight', 'nightfall']) for (const coarse of [false, true]) {
+  const ctx = await browser.newContext({ viewport: { width: 1200, height: 900 }, hasTouch: coarse });
+  const page = await ctx.newPage();
+  page.setDefaultTimeout(5000);
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto(`file://${fixturePath('Button', scheme)}`);
+  await page.waitForFunction(() => !!window.Altitude);
+  expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches) === coarse, `${scheme}: expected pointer mode`);
+  for (const density of ['auto', 'compact', 'comfortable']) for (const rowDensity of ['default', 'comfortable', 'compact']) {
+    const label = `${scheme}/${coarse ? 'coarse' : 'fine'}/${density}/${rowDensity}`;
+    await page.evaluate(({ density, rowDensity, scheme, label }) => {
+      const A = window.Altitude, h = React.createElement;
+      if (!window.densityRoot) {
+        const host = document.createElement('div'); host.id = 'density-table';
+        host.style.cssText = 'position:relative;padding:24px;background:var(--surface-ground)';
+        document.body.prepend(host); window.densityRoot = ReactDOM.createRoot(host);
+      }
+      const controls = name => h('div', { 'data-controls': name, style: { display: 'flex', gap: 16, alignItems: 'center' } },
+        h(A.Button, { size: 'sm' }, 'Edit release'), h(A.Input, { 'aria-label': `${name} release`, placeholder: 'Release name' }));
+      const nestedDensity = density === 'comfortable' ? 'compact' : 'comfortable';
+      const table = h(A.DataTable, {
+        'aria-label': 'Releases', rows: [{ id: 'gateway', name: 'API gateway' }],
+        getRowId: row => row.id, getRowLabel: row => row.name,
+        ...(rowDensity === 'default' ? { columnsMenu: true } : { density: rowDensity }),
+        columns: [
+          { key: 'name', header: 'Release' },
+          { key: 'actions', header: 'Actions', cell: () => controls('inside') },
+          { key: 'nested', header: 'Nested provider', cell: () => h(A.AltitudeProvider, { density: nestedDensity }, controls('nested')) },
+        ],
+      });
+      const scene = h(A.AltitudeProvider, { key: label, density, scheme, 'data-case': label }, controls('outside'), table);
+      window.densityRoot.render(document.documentElement.dataset.fixtureStrict === 'true' ? h(React.StrictMode, null, scene) : scene);
+    }, { density, rowDensity, scheme, label });
+    await page.waitForFunction(label => document.querySelector('#density-table [data-case]')?.dataset.case === label
+      && document.querySelector('#density-table tbody td'), label);
+    const read = () => page.evaluate(() => {
+      const host = document.getElementById('density-table');
+      const controlSizes = name => {
+        const box = host.querySelector(`[data-controls="${name}"]`), button = box.querySelector('button'), input = box.querySelector('.alt-input');
+        const style = getComputedStyle(button);
+        return { button: button.getBoundingClientRect().height, input: input.getBoundingClientRect().height,
+          controlToken: style.getPropertyValue('--size-control-sm').trim(), fieldToken: getComputedStyle(input).getPropertyValue('--size-field-md').trim(),
+          target: style.getPropertyValue('--size-target-min').trim() };
+      };
+      return { outside: controlSizes('outside'), inside: controlSizes('inside'), nested: controlSizes('nested'),
+        padding: getComputedStyle(host.querySelector('tbody td')).paddingTop,
+        headerPadding: getComputedStyle(host.querySelector('thead th')).paddingTop };
+    });
+    const measured = await read();
+    const large = density === 'comfortable' || (density === 'auto' && coarse);
+    expect(measured.outside.button === (large ? 40 : 30) && measured.outside.input === (large ? 48 : 40), `${label}: provider sizes (${JSON.stringify(measured.outside)})`);
+    expect(JSON.stringify(measured.inside) === JSON.stringify(measured.outside), `${label}: table inherits provider sizes (${JSON.stringify(measured)})`);
+    const nestedLarge = density !== 'comfortable';
+    expect(measured.nested.button === (nestedLarge ? 40 : 30) && measured.nested.input === (nestedLarge ? 48 : 40), `${label}: explicit nested provider controls its own sizes`);
+    expect(measured.padding === (rowDensity === 'compact' ? '4px' : '10px') && measured.headerPadding === (rowDensity === 'compact' ? '6px' : '9px'), `${label}: row padding stays independent`);
+    if (coarse) expect([measured.outside, measured.inside, measured.nested].every(s => s.target === '44px'), `${label}: coarse target-min token stays 44px`);
+    if (rowDensity === 'default') {
+      await page.locator('#density-table').getByRole('button', { name: 'Columns', exact: true }).click();
+      await page.getByRole('radio', { name: 'Compact', exact: true }).click();
+      await page.waitForFunction(() => document.querySelector('#density-table .alt-data-table > [aria-live]')?.textContent.trim() === 'Compact rows.');
+      // Changed header padding carries the rows to their new positions. Fractional transforms can introduce tiny
+      // getBoundingClientRect rounding differences; measure the control faces after that finite travel finishes.
+      await page.evaluate(() => Promise.all([...document.querySelectorAll('#density-table tbody tr')]
+        .flatMap(row => row.getAnimations()).filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+        .map(animation => animation.finished.catch(() => {}))));
+      const changed = await read();
+      expect(changed.padding === '4px' && changed.headerPadding === '6px', `${label}: density menu changes row padding and announces Compact rows`);
+      expect(JSON.stringify(changed.inside) === JSON.stringify(measured.outside), `${label}: changing row density preserves provider sizes (${JSON.stringify({ before: measured.outside, after: changed.inside })})`);
+      await page.keyboard.press('Escape');
+    }
+  }
+  expect(errors.length === 0, `${scheme}/${coarse ? 'coarse' : 'fine'}: no page errors (${errors.join('; ')})`);
   await ctx.close();
 }
 
