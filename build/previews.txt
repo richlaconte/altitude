@@ -6468,6 +6468,7 @@ function InlineExample({ fixture, slowValidation, epoch }) {
         {outsideCount > 0 && <p className="inline-demo-meta">Three fictional files · Details opened {outsideCount} time{outsideCount === 1 ? '' : 's'}.</p>}
       </section>
       <InlineWaysToOpen />
+      <InlineLeaveSave />
     </div>
     <details className="inline-demo-harness">
       <summary>Comparison and fixture controls</summary>
@@ -6518,6 +6519,33 @@ function InlineDialogBaseline({ open, onOpenChange, value, validate, onSave, onV
     }} /></A.Field>
     <p role="status">{busy}</p>
   </A.Dialog>;
+}
+
+// Opt-in save-on-leave: an in-memory service confirms canonical content only after its operation succeeds.
+function InlineLeaveSave() {
+  const [value, setValue] = React.useState('November release'), [note, setNote] = React.useState('');
+  const [mode, setMode] = React.useState('slow'), [writes, setWrites] = React.useState(0);
+  const server = React.useRef('November release');
+  const save = async (draft, { previousValue }) => {
+    const outcome = mode;
+    await inlineWait(1200);
+    if (outcome === 'failure') return { ok: false, error: 'This label could not be saved. Your draft is still here. Choose “Save succeeds” and try again.' };
+    if (server.current !== previousValue) return { ok: false, error: 'The release changed. Reload its current label before saving.' };
+    server.current = draft.trim(); setWrites(count => count + 1);
+    return { ok: true, value: server.current };
+  };
+  return <section aria-labelledby="inline-leave-title" data-leave-save="">
+    <h2 id="inline-leave-title">Save and continue</h2>
+    <p className="inline-demo-meta">Edit the release label, then move to the note. A rejected label stays beside the field for explicit retry.</p>
+    <A.InlineEdit label="Release label" value={value} onValueChange={setValue} onSave={save} leave="save" required />
+    <A.Field label="Next note"><A.Input value={note} onChange={event => setNote(event.target.value)} /></A.Field>
+    <details className="inline-demo-harness"><summary>Save-on-leave service fixture</summary>
+      <label>Write outcome<select value={mode} onChange={event => setMode(event.target.value)}>
+        <option value="slow">Save succeeds after 1,200 ms</option><option value="failure">Save rejected after 1,200 ms</option>
+      </select></label>
+      <p>Confirmed writes: <output data-leave-writes="">{writes}</output>. Confirmed label: <span data-leave-canonical="">{value}</span>.</p>
+    </details>
+  </section>;
 }
 
 // The value as its own button: a pencil on hover, or the field itself on hover. The seam says so at rest.
