@@ -3,10 +3,21 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { resolve } from 'node:path';
+import { resolve, win32, posix } from 'node:path';
 import { root } from '../../scripts/build-guidance.mjs';
+import { inside } from '../../scripts/cli-paths.mjs';
 // npm 11 and earlier print an array from `pack --json`; npm 12 keys the result by package name.
 const firstPacked=result=>Array.isArray(result)?result[0]:Object.values(result)[0];
+// doctor's guidance containment uses the platform's own path rules, so Windows paths pass too (#585).
+{const g=win32.resolve('C:/app/node_modules/altitude-design/dist/guidance');
+ assert.ok(inside(g,win32.resolve(g,'README.md'),win32),'win32 file inside guidance is accepted');
+ assert.ok(inside(g,win32.resolve(g,'components/Button/README.md'),win32),'win32 nested file is accepted');
+ assert.ok(!inside(g,win32.resolve(g,'..','index.json'),win32),'win32 sibling outside guidance is rejected');
+ assert.ok(!inside(g,win32.resolve(g+'-evil','README.md'),win32),'win32 prefix-sharing directory is rejected');
+ assert.ok(!inside(g,'D:\\app\\README.md',win32),'win32 other drive is rejected');
+ assert.ok(!inside(g,g,win32),'win32 guidance directory itself is not a file inside it');
+ const p='/app/node_modules/altitude-design/dist/guidance';
+ assert.ok(inside(p,posix.resolve(p,'README.md'),posix));assert.ok(!inside(p,posix.resolve(p,'../x'),posix));assert.ok(!inside(p,p+'-evil/README.md',posix));}
 const dir=mkdtempSync(resolve(tmpdir(),'altitude-agent-setup-'));
 try {
   const pack=firstPacked(JSON.parse(execFileSync('npm',['pack','--json','--pack-destination',dir],{cwd:root,encoding:'utf8'})));
