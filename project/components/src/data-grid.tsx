@@ -118,7 +118,8 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
   React.useLayoutEffect(() => {
     if (!editing) return;
     if (editAt) { if (active.r !== editAt.r || active.c !== editAt.c) setActive(editAt); return; }
-    if (!editing.unsaved) { setActive((a) => clamp(a)); wantFocus.current = 'cell'; } // the field held focus; it's gone
+    setActive((a) => clamp(a)); // rows may have shrunk past it; the grid keeps its one Tab stop
+    if (!editing.unsaved) wantFocus.current = 'cell'; // the field held focus; it's gone
     setEditing(null);
     setAnnouncement(`Edit discarded: ${editing.name} is no longer in the grid`);
   });
@@ -131,7 +132,7 @@ export function DataGrid<T>({ rows, columns, getRowId, getRowLabel, onCellSave, 
       const el = field.current ?? grid.current?.querySelector<HTMLElement>('[data-editing] input, [data-editing] button, [data-editing] [tabindex="0"]');
       el?.focus();
       if (el instanceof HTMLInputElement) { const n = caretEnd.current ? el.value.length : 0; el.setSelectionRange(n, el.value.length > 0 && !caretEnd.current ? el.value.length : n); }
-    } else grid.current?.querySelector<HTMLElement>(`[data-cell="${active.r}:${active.c}"]`)?.focus();
+    } else { const p = clamp(active); grid.current?.querySelector<HTMLElement>(`[data-cell="${p.r}:${p.c}"]`)?.focus(); } // `active` may still be past a shrunk `rows` this commit
   });
   // Focus from anywhere (an ErrorSummary link to a cellId, the app's own code) makes that cell the active one, so the
   // roving tab stop and the next arrow key start from where you are, not from the cell that was active before (#469).

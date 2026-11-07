@@ -133,11 +133,14 @@ try {
     const saved = await page.evaluate(() => window.__saved);
     check(saved.length === 1 && saved[0].rowId === 'a' && saved[0].draft === '99' && saved[0].previousValue === '10' && await amount('Alice').textContent() === '99' && await amount('Bob').textContent() === '20',
       `DG-26 committing it saves Alice, not the record now in its place (${JSON.stringify(saved)})`);
+    await page.click('#rev'); // Bob last, so removing him leaves the active position past the end of `rows`
     await amount('Bob').dblclick(); await page.keyboard.press('ControlOrMeta+a'); await page.keyboard.type('77');
-    await page.click('#drop');
+    await page.evaluate(() => document.getElementById('drop').click()); // the field keeps focus until Bob goes
     await said(page, 'Edit discarded: Amount, Bob is no longer in the grid');
     check(await page.locator('.alt-grid-input').count() === 0 && (await page.evaluate(() => window.__saved)).length === 1 && await amount('Alice').textContent() === '99',
       'DG-27 when the edited row leaves the grid, its draft is discarded and said, and saved to no other record');
+    check(await at(page) === '0:1' && await page.locator('[role="grid"] [tabindex="0"]').count() === 1,
+      `DG-28 focus returns to the clamped active cell, the grid's one Tab stop (focus on ${await at(page)})`);
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {
