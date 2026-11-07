@@ -79,3 +79,7 @@ Add a `baselines/<date>/<tool>/tool.json` with the tool's name, plan, model or v
 ## Cadence
 
 Rebuild the baselines quarterly, after a major model release, and before each minor Altitude release. Compare a new report with the last one, and look at distance from the centre most closely: a fall there means Altitude is drifting back toward the default.
+
+## Interaction evidence
+
+The [recognition and change-comprehension protocol](../interaction/PROTOCOL.md) evaluates complete example journeys separately from this benchmark. It preserves stimulus health, observed outcomes, absolute ratings and comparative judgments; its [engineering smoke pilot](../interaction/results/2026-11-07/PILOT.md) is not participant evidence.

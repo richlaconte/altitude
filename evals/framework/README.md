@@ -40,3 +40,7 @@ Reported cost includes initial and follow-up elapsed time, token counts when ter
 Automated product checks, independent review and human studies are distinct. Preserve raw evidence for each. A 12-build pilot may expose protocol problems and omitted states; repeated balanced runs and independent evaluation are required before comparing condition effectiveness.
 
 The first host run produced protocol refinements, documented in [the feasibility record](results/PROTOCOL-REFINEMENTS.md). These excluded runs must not be mixed into the corrected twelve-build comparison.
+
+## Interaction evidence
+
+The [recognition and change-comprehension protocol](../interaction/PROTOCOL.md) evaluates complete example journeys separately from this benchmark. It preserves stimulus health, observed outcomes, absolute ratings and comparative judgments; its [engineering smoke pilot](../interaction/results/2026-11-07/PILOT.md) is not participant evidence.

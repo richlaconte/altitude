@@ -99,3 +99,7 @@ Jitter is seeded and a clock can be injected (`createManualClock`), so a check g
 `ExampleFrame` renders the one `AltitudeProvider`, the app, and then `FixturesDrawer` below it, outside the app's `main`: the server's mode (and which operations it applies to), events from elsewhere, the page's scheme, accent, reduced motion and contrast, the request log and Reset. It's collapsed by default and says the service is simulated.
 
 An app's own fixtures that are state rather than events, like whose view it is or whether live data is on, go in `controls`, a "This example" section above "Elsewhere": `<ExampleFrame service={service} controls={<Switch label="Live updates" checked={live} onCheckedChange={setLive} />}>`. Like the rest of the drawer, they stay outside the app's `main`, so the app never depends on them being there.
+
+## Recognition and change comprehension
+
+The [interaction protocol](../../evals/interaction/PROTOCOL.md) reuses the planning board for a failed field edit followed by recovery, and a status change that moves a record. Its [stimulus-health runner](../../evals/interaction/README.md) checks actual simulated outcomes, visible transitions, identity and reduced-motion alternatives. Participant observations and judgments remain separate from engineering evidence.
