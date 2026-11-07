@@ -2,6 +2,8 @@
 
 A large panel laid over the page at level 4, anchored to an edge, for a task that needs more room than a popover and less commitment than a page.
 
+For record details, use the [detail-surface chooser](../../framework/patterns/screen-layout.md#choose-the-detail-surface) first: task scope, source identity, available space, comparison and navigation decide the presentation.
+
 **Why level 4.** A sheet is a whole working surface above the page: higher than menus and popovers (level 3), because it holds a task rather than one choice, and below the summit (level 5), because it doesn't demand an answer. It's drawn with `surface-overlay` and `elev-4`, the toasts' tier.
 
 **Risen at its edge, not slid in.** Nothing in Altitude slides in from the side. A sheet appears where it's anchored: it travels 16px out of its edge as it fades in, while its shadow grows from `elev-1` to `elev-4` (`dur-travel-4`, `ease-rise`). It stands 8px clear of the edge with `radius-xl` corners, so its own edges, and the shadow it casts below them, read as height. A modal sheet recedes the page behind it, as a dialog does. Closing lifts it off: it rises 8px and grows 1% as its shadow spreads and it fades, in 70% of the time it took to arrive.
