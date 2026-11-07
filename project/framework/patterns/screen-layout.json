@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "screen-layout",
-  "version": 1,
+  "version": 2,
   "title": "Screen layout",
   "intents": [
     "screen layout",
@@ -16,7 +16,11 @@
     "report",
     "triage",
     "inbox",
-    "setup flow"
+    "setup flow",
+    "record details",
+    "detail surface",
+    "inspector",
+    "list and detail"
   ],
   "purpose": "Choose a screen's frame from the person's task, the one thing that leads and the one primary action, instead of inheriting a sidebar, a top bar and a grid of cards.",
   "useWhen": [
@@ -32,7 +36,9 @@
     "the task in one sentence: who is here and what they came to do",
     "the one thing that leads the screen",
     "the one primary action, or none",
-    "what the person does next once the task is done"
+    "what the person does next once the task is done",
+    "when opening detail: task scope, duration, information size, comparison and history needs, viewport and background interaction",
+    "when opening detail: stable source identity, layout policy, keyboard entry/return and named missing-source fallback"
   ],
   "states": [
     "task-named",
@@ -50,11 +56,17 @@
   "rules": [
     "ALT-LAYOUT-001",
     "ALT-VISUAL-002",
-    "ALT-VISUAL-003"
+    "ALT-VISUAL-003",
+    "ALT-LAYOUT-002"
   ],
   "sources": [
     "altitude-elevation",
-    "task-review"
+    "task-review",
+    "apg-dialog",
+    "apg-disclosure",
+    "wcag22",
+    "android-list-detail",
+    "govuk-details"
   ],
   "authority": "contextual-pattern",
   "applicability": "Any new screen: its frame, what leads it and where its one primary action sits.",
@@ -74,6 +86,7 @@
   "verification": [
     "build/checks/screen-layout-pattern.mjs",
     "build/checks/render-tells.mjs",
-    "build/checks/pattern-types.mjs"
+    "build/checks/pattern-types.mjs",
+    "build/checks/app-skeleton.mjs"
   ]
 }
