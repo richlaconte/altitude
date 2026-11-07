@@ -58,7 +58,7 @@ type BackgroundParity = Assert<Equal<React.ComponentProps<typeof Dialog>['backgr
 type ReturnParity = Assert<Equal<React.ComponentProps<typeof Dialog>['returnFocus'], HandDialog['returnFocus']>>;
 const props: InlineEditProps = { label: 'Name', value: 'Brand.pdf', onValueChange: value => void value,
   onSave: async (draft, {previousValue}) => ({ok: true, value: draft || previousValue}),
-  validate: async value => value.trim() ? undefined : 'Enter a name', focusFallback: () => null };
+  validate: async value => value.trim() ? undefined : 'Enter a name', focusFallback: () => null, leave: 'save' };
 const result: InlineEditSaveResult = {ok: false, error: 'Try again'};
 const dialog: React.ComponentProps<typeof Dialog> = {title: 'Delete file?', background: 'stationary', returnFocus: () => null};
 const globalInline: typeof InlineEdit = window.Altitude.InlineEdit;

@@ -1,6 +1,6 @@
 # Actions in place
 
-Finish a small task where it starts. Use [InlineEdit](components/InlineEdit/README.md) for one editable value, act immediately when the application provides real recovery, and ask for a focused decision when the consequence cannot reliably be undone. The ground remains the committed record. Deciding or typing is not a pending write; dispatched persistence is.
+Finish a small task where it starts. Use [InlineEdit](components/InlineEdit/README.md) for one editable value, act immediately when the application provides real recovery, and ask for a focused decision when the consequence cannot reliably be undone. For a short value that should save as the person continues, opt into `InlineEdit leave="save"`: departure is from the whole editor, outside activation runs first, and rejection keeps full feedback and explicit retry beside the field. Explicit saving remains the default. The ground remains the committed record. Deciding or typing is not a pending write; dispatched persistence is.
 
 The application chooses that policy from its domain. A danger button does not imply irreversibility, and the word “Archive” does not establish a recovery guarantee. Sending a message, publishing externally, and permanent deletion do not belong in the recovery recipe unless the application can actually reverse their effects.
 
