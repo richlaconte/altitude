@@ -38,7 +38,8 @@ const SCH_SEED = [
   { id: "e3", title: "Customer call", start: "2026-10-27T10:30", end: "2026-10-27T11:15", room: "Room A" },
   { id: "e4", title: "Planning", start: "2026-10-28T13:00", end: "2026-10-28T14:30", room: "Room B" },
   { id: "e5", title: "Interview", start: "2026-10-29T15:00", end: "2026-10-29T16:00", room: "Room A" },
-  { id: "e6", title: "Retro", start: "2026-10-30T11:00", end: "2026-10-30T12:00", room: "Room B" }
+  { id: "e6", title: "Retro", start: "2026-10-30T11:00", end: "2026-10-30T12:00", room: "Room B" },
+  { id: "e7", title: "Board report", start: "2026-10-26T14:00", end: "2026-10-26T15:00", room: "Room B", approved: true }
 ];
 const schWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function App() {
@@ -62,6 +63,8 @@ function App() {
       dayEnd: "18:00",
       renderEvent: (e) => /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("strong", null, e.title), /* @__PURE__ */ React.createElement("small", { className: "sch-room" }, e.start.slice(11), "\u2013", e.end.slice(11), " \xB7 ", e.room)),
       heldBy: (e) => e.id === "e6" ? { name: "Ana", presence: 2 } : null,
+      isLocked: (e) => !!e.approved,
+      lockedLabel: () => "Approved",
       isUnavailable: ({ start, end }) => start.slice(0, 10) === "2026-10-30" && end.slice(11) > "17:00",
       onChange: async ({ id, start, end }) => {
         await schWait(300);

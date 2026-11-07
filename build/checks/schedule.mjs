@@ -76,6 +76,17 @@ try {
     // Held by a collaborator.
     await page.locator('[data-event="e6"]').focus(); await page.keyboard.press('Space');
     await said(page, 'Ana is moving Retro'); check((await page.locator('[data-event="e6"]').getAttribute('aria-label')).includes('Ana is moving this event'), 'SC-16 an event someone else holds can’t be picked up, and says who');
+    // Locked (#561): flush, says so, refuses every change.
+    const lockedEv = page.locator('[data-event="e7"]');
+    check((await lockedEv.getAttribute('aria-label')).endsWith(', approved, can’t be changed') && await lockedEv.getAttribute('aria-disabled') === null, 'SC-16b a locked event’s name says it can’t be changed, without aria-disabled');
+    check(await lockedEv.evaluate(el => getComputedStyle(el).boxShadow.split('inset').length === 2 && !/rgba?\([^)]*\) 0px [1-9]/.test(getComputedStyle(el).boxShadow) && getComputedStyle(el).cursor === 'default'), 'SC-16c a locked event lies flush: no shadow, an edge only, no grab cursor');
+    check(await lockedEv.locator('xpath=..').locator('.alt-schedule-handle').count() === 0 && (await lockedEv.textContent()).includes('Approved'), 'SC-16d a locked event shows its word and has no resize handle');
+    await lockedEv.focus(); await page.keyboard.press('Space');
+    await said(page, 'Board report is approved and can’t be changed');
+    check(await lockedEv.getAttribute('aria-pressed') === null, 'SC-16e Space doesn’t pick up a locked event');
+    for (const key of ['F2', 'Shift+ArrowDown', 'Delete']) { await page.locator('[data-event="e7"]').focus(); await page.keyboard.press(key); }
+    check(await page.locator('[data-event="e7"]').count() === 1 && await page.getByRole('textbox').count() === 0 && await where(page, 'e7') === '2026-10-26T840'
+      && (await page.locator('[data-event="e7"]').textContent()).includes('15:00'), 'SC-16f F2, Shift+↓ and Delete leave a locked event as it is');
     // Rename and remove.
     await page.locator('[data-event="e1"]').focus(); await page.keyboard.press('F2');
     const rename = page.getByRole('textbox', { name: 'Rename Standup' }); await rename.fill('Daily standup'); await rename.press('Enter');
@@ -124,6 +135,12 @@ try {
     await page.mouse.move(handle.x + handle.width / 2, handle.y + 2); await page.mouse.down(); await page.mouse.move(handle.x + handle.width / 2, handle.y + 2 + 44, { steps: 6 }); await page.mouse.up();
     await said(page, 'Changed Planning to Wednesday 28 October, 13:00 to 15:30');
     check(true, 'SC-24 the bottom edge changes the end time');
+    // Pointer: a locked event can't be carried.
+    const lk = await page.locator('[data-event="e7"]').boundingBox(), tue = await page.locator('[data-cell="2026-10-27T840"]').boundingBox();
+    await page.mouse.move(lk.x + 20, lk.y + 8); await page.mouse.down(); await page.mouse.move(lk.x + 30, lk.y + 20, { steps: 3 });
+    check(await page.locator('.alt-schedule[data-carrying]').count() === 0, 'SC-25 dragging a locked event doesn’t carry it');
+    await page.mouse.move(tue.x + 20, tue.y + 8, { steps: 6 }); await page.mouse.up();
+    check(await where(page, 'e7') === '2026-10-26T840', 'SC-25b a locked event stays where it is');
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {

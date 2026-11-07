@@ -1553,6 +1553,10 @@ export interface ScheduleProps<T> {
   onRemove?: (event: T) => void;
   /** Someone else is moving this event: it can't be picked up. */
   heldBy?: (event: T) => { name: string; presence?: 1 | 2 | 3 } | null | undefined;
+  /** A settled event: flush on the ground with a lock and `lockedLabel`; it can't be moved, resized, renamed or removed, but Enter still opens it. */
+  isLocked?: (event: T) => boolean;
+  /** The word shown after a locked event's title and spoken in its name. Default 'Locked'. */
+  lockedLabel?: (event: T) => string;
   /** Refuse a span (outside hours, a closed room). */
   isUnavailable?: (span: ScheduleSpan) => boolean;
   /** The now line's time. Default: the clock. */
