@@ -199,15 +199,16 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     if (ok) { setLanding((l) => (l && l.key === land.key && l.start === land.start && l.day === land.day ? { ...l, done: true, seen: eventsNow.current } : l)); say(`${c.kind === 'resize' ? 'Changed' : 'Moved'} ${getLabel(event)} to ${spanText(c.day, c.start, c.end)}`); }
     else { setLanding((l) => (l?.key === land.key ? null : l)); say(`${getLabel(event)} is back in its place.`); moveFocus(s0.day, s0.min); }
   };
-  const create = async () => {
+  // Leaving by clicking or tabbing away doesn't take focus back: the person has moved on to whatever they chose.
+  const create = async (stay = false) => {
     if (!draft || !onCreate) return;
     const title = draft.title.trim();
     if (!title) { setDraft({ ...draft, error: 'Enter a title.' }); return; }
     if (blocked(draft.day, draft.start, draft.end)) { setDraft({ ...draft, error: 'That time isn’t available.' }); return; }
     const d = draft;
     const result = await write('__draft', 'Adding event', () => onCreate({ start: at(d.day, d.start), end: at(d.day, d.end), title }), () => void create());
-    if (!result) { wantFocus.current = 'title'; return; }
-    setDraft(null); setSettled(getKey((result as { value: T }).value)); setFocus({ day: d.day, min: d.start }); wantFocus.current = 'cell';
+    if (!result) { if (!stay) wantFocus.current = 'title'; return; }
+    setDraft(null); setSettled(getKey((result as { value: T }).value)); setFocus({ day: d.day, min: d.start }); if (!stay) wantFocus.current = 'cell';
     say(`Added ${title}, ${spanText(d.day, d.start, d.end)}`);
   };
   const rename = async () => {
@@ -220,6 +221,15 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     const ok = await write(r.key, 'Saving changes', () => onRename(event, title), () => void rename());
     if (!ok) { wantFocus.current = 'title'; return; }
     setRenaming(null); wantFocus.current = 'cell'; setPolite('Changes saved');
+  };
+  // Leaving a new event's title: a title adds it, as Enter does; an empty one discards it, as Escape does. Read through a
+  // ref so a blur fired as the field unmounts (after Enter added it) finds no draft. Switching windows isn't leaving.
+  const draftNow = React.useRef(draft); draftNow.current = draft;
+  const leaveDraft = () => {
+    const d = draftNow.current;
+    if (!d || d.drawing || busy === '__draft' || !document.hasFocus()) return;
+    if (!d.title.trim()) { setDraft(null); say('New event discarded.'); return; }
+    void create(true);
   };
   const startDraft = (day: string, start: number, end: number) => {
     if (!onCreate) return;
@@ -343,10 +353,10 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
   const nowAt = split(now ?? nowLocal());
   const title = view === 'day' ? longDay.format(utc(date)) : `${fmt(locale, { day: 'numeric', month: 'short' }).format(utc(days[0]))} – ${fmt(locale, { day: 'numeric', month: 'short', year: 'numeric' }).format(utc(days[days.length - 1]))}`;
   const eventsIn = (day: string, min: number) => placed.filter((p) => p.day === day && Math.max(first, Math.floor(p.start / step) * step) === min && (carry?.key !== p.key));
-  const field = (value: string, label: string, error: string | undefined, onValue: (v: string) => void, onSave: () => void, onCancel: () => void) =>
+  const field = (value: string, label: string, error: string | undefined, onValue: (v: string) => void, onSave: () => void, onCancel: () => void, onLeave?: () => void) =>
     <span className="alt-schedule-field">
       <input ref={titleRef} className="alt-schedule-title-input" aria-label={label} value={value} aria-invalid={error ? true : undefined}
-        onChange={(e) => onValue(e.target.value)} onPointerDown={(e) => e.stopPropagation()}
+        onChange={(e) => onValue(e.target.value)} onBlur={onLeave} onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => { e.stopPropagation(); if (e.nativeEvent.isComposing || e.nativeEvent.keyCode === 229) return; if (e.key === 'Enter') { e.preventDefault(); onSave(); } else if (e.key === 'Escape') { e.preventDefault(); onCancel(); } }} />
       {error && <span className="alt-schedule-error" role="alert"><Icons.AlertCircle size={12} />{error}</span>}
     </span>;
@@ -403,7 +413,7 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
               {drafted && eventBox({ ...drafted, key: '__draft', lane: 0, lanes: 1 }, drafted.drawing
                 ? <div className="alt-schedule-drawn" aria-hidden="true"><small>{clockText(drafted.start)}–{clockText(drafted.end)}</small></div>
                 : <div className="alt-schedule-draft" data-status={busy === '__draft' ? 'pending' : undefined}>
-                  {field(drafted.title, 'Event title', drafted.error, (t) => setDraft({ ...drafted, title: t, error: undefined }), () => void create(), () => { setDraft(null); wantFocus.current = 'cell'; say('New event discarded.'); })}
+                  {field(drafted.title, 'Event title', drafted.error, (t) => setDraft({ ...drafted, title: t, error: undefined }), () => void create(), () => { setDraft(null); wantFocus.current = 'cell'; say('New event discarded.'); }, leaveDraft)}
                   <small>{clockText(drafted.start)}–{clockText(drafted.end)}</small>
                 </div>, {})}
               {d === nowAt.day && nowAt.min >= min && nowAt.min < min + step && <span className="alt-schedule-now" style={{ top: (nowAt.min - min) * px }}><span className="alt-schedule-sr">Now, {clockText(nowAt.min)}</span></span>}

@@ -42,6 +42,13 @@ try {
     await page.keyboard.press('ArrowRight'); await page.keyboard.press('Enter'); await title.fill('Budget sync'); await title.press('Enter');
     await said(page, 'Added Budget sync, Wednesday 28 October, 09:15 to 10:15');
     check(true, 'SC-09 Enter adds it with the default duration and announces it');
+    // Leaving the title by clicking away: empty discards it, a title adds it, and focus stays where the click put it.
+    await page.keyboard.press('ArrowRight'); await page.keyboard.press('Enter'); await page.mouse.click(2, 2);
+    await said(page, 'New event discarded');
+    check(await title.count() === 0, 'SC-09b clicking away from an empty title discards the new event');
+    await grid.locator('[tabindex="0"]').focus(); await page.keyboard.press('Enter'); await title.fill('Hiring sync'); await page.mouse.click(2, 2);
+    await said(page, 'Added Hiring sync, Thursday 29 October, 09:15 to 10:15');
+    check(await title.count() === 0 && !(await grid.evaluate(el => el.contains(document.activeElement))), 'SC-09c clicking away from a title adds the event and leaves focus where the click went');
     // Move without a pointer.
     await page.locator('[data-event="e5"]').focus(); await page.keyboard.press('Space');
     check(await page.locator('[data-event="e5"]').getAttribute('aria-pressed') === 'true', 'SC-10 Space picks an event up');

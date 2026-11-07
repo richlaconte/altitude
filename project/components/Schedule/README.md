@@ -42,7 +42,7 @@ The grid (`role="grid"`) is one Tab stop: rows are time slots, columns are days.
 |---|---|---|
 | Grid | ↑ / ↓, ← / → | a slot, a day (mirrored in RTL); an event starting there takes focus |
 | | Home / End, PageUp / PageDown | the day's first and last slot; the previous and next week (or day) |
-| | Enter | a new event here, `defaultDuration` long: type a title, Enter adds it, Escape discards it |
+| | Enter | a new event here, `defaultDuration` long: type a title, Enter adds it, Escape discards it; leaving the field adds it too, or discards it if the title is empty |
 | Event | Enter | `onOpen` |
 | | F2 | rename in place |
 | | Space | pick up: ↑/↓ move by `step`, ←/→ by a day, Shift+↑/↓ change the end; Space or Enter drop; Escape cancel |
