@@ -129,7 +129,7 @@ for (const [scheme, width] of [['light', 1280], ['dark', 1280], ['light', 375]])
   });
   expect(!before.sent && before.focused === 'de-h-expenses', `conflict: Jane's edit lands before any save, Expenses still focused (${JSON.stringify(before)})`);
   await wait(page, 900);
-  await blur(page, 'scope'); // blur: the save goes against the older revision
+  await blur(page, 'scope'); // by now the debounce has sent the save against the older revision; the blur adds nothing
   await page.waitForSelector('#de-conflict-expenses', { timeout: 5000 });
   const both = await page.locator('section[aria-labelledby="de-h-expenses"] .de-versions').textContent();
   expect(/Tips are covered/.test(both) && /€50/.test(both) && /Jane Park/.test(both), 'conflict: both versions show, theirs named');
