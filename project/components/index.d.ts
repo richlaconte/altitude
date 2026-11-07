@@ -3692,7 +3692,8 @@ export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLForm
   onSubmit: (message: PromptMessage) => void;
   /** 'submitted' and 'streaming' turn Send into Stop, in the same slot. Default 'ready'. */
   status?: PromptStatus;
-  onStop?: () => void;
+  /** Stops generating. Return `false` when nothing stopped, and "Generating stopped" isn't announced. */
+  onStop?: () => void | boolean;
   /** Enter while 'submitted' or 'streaming' queues the message instead of doing nothing; the button stays Stop. Show the queue with ConversationQueue. */
   /** @ opens a list of matches; a chosen one is "@label" in the text and a plate above it. A promise shows "Searching…". */
   mentionable?: (query: string) => PromptMention[] | Promise<PromptMention[]>;
