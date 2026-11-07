@@ -147,6 +147,8 @@ try {
     const confirm = page.getByRole('button', { name: 'Confirm rooms, Wednesday 28 October' });
     await confirm.focus(); await page.keyboard.press('ArrowRight');
     check(await confirm.evaluate(el => el === document.activeElement), 'SC-26b keys on a day action aren’t the grid’s');
+    await page.getByRole('tooltip', { name: 'Confirm rooms' }).waitFor();
+    check(await confirm.evaluate(el => document.getElementById(el.getAttribute('aria-describedby'))?.textContent === 'Confirm rooms'), 'SC-26f an icon-only day action is named for the eye by a Tooltip');
     // Several actions: a More button opening a menu, whose keys aren't the grid's either.
     const more = page.getByRole('button', { name: 'More actions, Tuesday 27 October' });
     await more.focus(); await page.keyboard.press('ArrowDown');
@@ -180,6 +182,23 @@ try {
     });
     check(r.seventh.includes(r.other) && !r.seventh.includes(r.accent) && r.seventh !== r.sixth, `SC-03d a seventh category takes data-other, not the accent (${r.seventh})`);
     check(r.note === 'Past six categories, events share a neutral edge.', `SC-03e the legend says the seventh and later share a neutral edge (${r.note})`);
+    await page.close(); }
+
+  // A lone day action (#568 review): it keeps its tone, a checkable one stays in a menu, and a non-string label names it.
+  { const page = await open();
+    await page.evaluate(async () => {
+      const A = window.Altitude, h = React.createElement, el = document.createElement('div'); el.id = 'lone'; document.querySelector('.alt-root').append(el);
+      const acts = { '2026-10-26': [{ label: 'Clear day', tone: 'critical', onSelect: () => {} }], '2026-10-27': [{ label: 'Hold rooms', checked: true, onSelect: () => {} }], '2026-10-28': [{ label: h('span', null, h('strong', null, 'Approve'), ' time'), onSelect: () => {} }] };
+      window.ReactDOM.createRoot(el).render(h(A.Schedule, { date: '2026-10-26', events: [], getKey: e => e.id, getStart: e => e.start, getEnd: e => e.end, getLabel: e => e.title, dayActions: day => acts[day] ?? [], 'aria-label': 'Lone actions' }));
+      await new Promise(res => setTimeout(res, 400));
+    });
+    const lone = page.locator('#lone');
+    check(await lone.getByRole('button', { name: 'Clear day, Monday 26 October' }).getAttribute('data-variant') === 'danger', 'SC-26g a lone critical day action keeps its tone');
+    check(await lone.getByRole('button', { name: /^Hold rooms/ }).count() === 0, 'SC-26h a lone checkable day action isn’t flattened to a stateless button');
+    await lone.getByRole('button', { name: 'More actions, Tuesday 27 October' }).click();
+    check(await page.getByRole('menuitemcheckbox', { name: 'Hold rooms' }).getAttribute('aria-checked') === 'true', 'SC-26i it stays in a menu, where its checked state is said');
+    await page.keyboard.press('Escape');
+    check(await lone.getByRole('button', { name: 'Approve time, Wednesday 28 October' }).count() === 1, 'SC-26j a lone action with a non-string label is named by its words, not “Action”');
     await page.close(); }
 
   for (const scheme of ['daylight', 'nightfall']) for (const width of [320, 960]) {

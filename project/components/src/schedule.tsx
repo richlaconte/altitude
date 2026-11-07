@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { cx, Icons } from './core';
 import { Button } from './controls';
-import { DropdownMenu, type MenuEntry, type MenuItem } from './overlays';
+import { DropdownMenu, Tooltip, type MenuEntry, type MenuItem } from './overlays';
 
 /** A local date-time, 'YYYY-MM-DDTHH:mm': no time zone. Convert at your edges. */
 export type LocalDateTime = string;
@@ -73,7 +73,8 @@ export interface ScheduleProps<T> {
   renderDayHeader?: (day: string, events: T[]) => React.ReactNode;
   /**
    * Actions that belong to a day. One renders as an icon button in the header, named with the action and the day ("Approve
-   * time, Tuesday 4 November"); several as a More button opening a DropdownMenu; none renders nothing. They're outside
+   * time, Tuesday 4 November"), keeping a critical tone, with a Tooltip when it shows only its icon; a checkable one, or
+   * several, as a More button opening a DropdownMenu; none renders nothing. They're outside
    * the grid's roving focus: Tab reaches them before the grid, in day order.
    */
   dayActions?: (day: string, events: T[]) => MenuEntry[];
@@ -96,6 +97,9 @@ const utc = (day: string) => { const [y, m, d] = day.split('-').map(Number); ret
 const addDays = (day: string, n: number) => { const t = utc(day); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 const nowLocal = () => { const t = new Date(); return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`; };
 const fmt = (locale: string | undefined, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { ...o, timeZone: 'UTC' });
+// The words a React node reads as: a non-string menu label's accessible name.
+const textOf = (n: React.ReactNode): string => n == null || typeof n === 'boolean' ? '' : typeof n === 'string' || typeof n === 'number' ? String(n)
+  : Array.isArray(n) ? n.map(textOf).join('') : React.isValidElement(n) ? textOf((n.props as { children?: React.ReactNode }).children) : '';
 const clockText = (min: number) => `${pad(Math.floor(min / 60))}:${pad(min % 60)}`;
 
 type Placed<T> = { event: T; key: string; day: string; start: number; end: number; lane: number; lanes: number; overlaps: string[] };
@@ -436,11 +440,14 @@ export function Schedule<T>({ view: viewProp = 'week', narrowView = 'day', date,
     const real = items.filter((i): i is MenuItem => !i.type || i.type === 'item');
     if (!real.length) return null;
     const long = longDay.format(utc(day));
-    if (real.length === 1 && items.length === 1) {
-      const a = real[0];
-      const label = typeof a.label === 'string' ? a.label : 'Action';
-      return <Button size="sm" variant="secondary" square={!!a.icon} className="alt-schedule-day-action" aria-label={`${label}, ${long}`} disabled={a.disabled} onClick={() => a.onSelect?.()}>
-        {a.icon ?? label}</Button>;
+    // One plain action is a button: it keeps its tone, is named with the item's words, and when it shows only its icon a
+    // Tooltip names it for the eye. A checkable item stays in the menu, where menuitemcheckbox carries its state; so does
+    // one whose label has no words to name the button by.
+    const a = real[0], label = textOf(a.label).trim();
+    if (real.length === 1 && items.length === 1 && a.checked === undefined && label) {
+      const button = <Button size="sm" variant={a.tone === 'critical' ? 'danger' : 'secondary'} square={!!a.icon} className="alt-schedule-day-action" aria-label={`${label}, ${long}`} disabled={a.disabled} onClick={() => a.onSelect?.()}>
+        {a.icon ?? a.label}</Button>;
+      return a.icon ? <Tooltip content={label}>{button}</Tooltip> : button;
     }
     return <DropdownMenu align="end" items={items} trigger={<Button size="sm" variant="secondary" square className="alt-schedule-day-action" aria-label={`More actions, ${long}`}><Icons.More size={14} /></Button>} />;
   };
