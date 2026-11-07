@@ -11,4 +11,4 @@
 - [x] Document the Support inbox recognition task in its design record and add focused semantic/layout checks to its existing browser suite. Keep seed content and application behavior unchanged.
 - [x] Inspect desktop, 320px and forced-color/reduced-motion screenshots; record observations and limits in the research record.
 - [x] Bump patch version, regenerate package guidance and design-system artifacts, run typecheck, schema/reference/freshness, complete-example and framework/installed-consumer checks.
-- [ ] Review the diff against every #617 acceptance item, commit and push the PR, and request independent review before marking it ready.
+- [x] Review the diff against every #617 acceptance item, commit and push the PR, and request independent review before marking it ready. Root review found no remaining blockers; the PR stays draft while final stacked CI and integration checks run.

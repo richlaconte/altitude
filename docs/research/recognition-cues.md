@@ -84,3 +84,11 @@ An initial new test incorrectly expected screen-reader-only “from” text in v
 Representative inspected captures:
 
 [320px queue](recognition-cues/queue-320.png) · [Nightfall desktop detail](recognition-cues/detail-desktop.png) · [320px forced-color/reduced-motion detail](recognition-cues/detail-320-forced-reduced.png)
+
+### Integration with detail-surface guidance
+
+The final #617 branch includes #616 at `83aa5af0409c695e90526ff95ab0b33fe096868a`, so its release is `0.31.22` after #616's `0.31.21`. The screen-layout metadata advances to version 3 and preserves both contextual rules, their sources, required inputs and example checks. The PR is stacked on #622; merge that prerequisite first and retarget #617's PR to `main` before merging it.
+
+Independent review found no remaining blockers in the recognition guidance or worked example. On the combined branch, package build, typecheck, schema/reference/version/freshness validation (16 patterns, 44 rules and 220 distributed files), tells lint (165 files, 25 rules) and generated component/preview builds passed. The existing AppSkeleton check also completed successfully before the Support inbox run. The three committed recognition captures still match the regenerated captures. These remain engineering observations, with participant recognition and manual assistive-technology evaluation unrun.
+
+The full frozen-build framework rerun also passed through its final measurement step, including both rules in installed-consumer discovery and all 18 independent-assessor regression cases. Its local log is `build/test/recognition-stacked-framework.log`. The original #617 commit `3eeebb8` passed every required GitHub CI job before stacking; the final stacked commit is checked separately in CI.
