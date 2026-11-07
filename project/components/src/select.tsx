@@ -335,6 +335,23 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
   useKeyFocus();
   // A controlled value that changes from outside resets the text.
   React.useEffect(() => { if (!typing) setText(chosen ? textOf(chosen) : ''); }, [v]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Its form's reset returns an uncontrolled value, the text and the typing state to the default, as Select's does. Reset
+  // runs after the browser's default action; cancelled resets and controlled values stay with their owner.
+  React.useEffect(() => {
+    const element = input.current, form = element?.form;
+    if (!element || !form) return;
+    let resetTimer: ReturnType<typeof setTimeout>;
+    const reset = (event: Event) => { clearTimeout(resetTimer); resetTimer = setTimeout(() => {
+      if (event.defaultPrevented || !element.isConnected) return;
+      if (value === undefined) set(defaultValue);
+      const back = items.find((o) => o.value === (value ?? defaultValue));
+      setText(back ? textOf(back) : '');
+      setTyping(false);
+      setOpen(false);
+    }, 0); };
+    form.addEventListener('reset', reset);
+    return () => { clearTimeout(resetTimer); form.removeEventListener('reset', reset); };
+  }, [value, defaultValue, set, items]);
 
   const q = typing ? text.trim() : '';
   const score = (o: SelectOption) => { const s = filter ? filter(o, q) : commandScore(textOf(o), q); return typeof s === 'boolean' ? (s ? 1 : 0) : s; };

@@ -1,0 +1,76 @@
+<!-- @dsCard group="Display" height=900 subtitle="A document as the page it will become: light paper on screen, the page itself in print" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PrintSheet — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.ps-demo { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 24px; align-items: start; max-width: 960px; }
+@media (max-width: 640px) { .ps-demo { grid-template-columns: minmax(0, 1fr); } }
+.ps-settings { display: grid; gap: 12px; }
+.ps-total td { font-weight: 600; }
+.ps-num { text-align: end !important; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const PS_ITEMS = [
+  { what: "Site survey, Harbour bridge", hours: 12, rate: 95 },
+  { what: "Structural drawings, revision B", hours: 18.5, rate: 110 },
+  { what: "Client meeting and notes", hours: 2, rate: 95 }
+];
+const PS_ENTRIES = [
+  { day: "Mon 2 Nov", who: "Ana Ruiz", what: "Site survey", hours: 6 },
+  { day: "Tue 3 Nov", who: "Ana Ruiz", what: "Site survey", hours: 6 },
+  { day: "Wed 4 Nov", who: "Sam Okoro", what: "Structural drawings", hours: 7.5 },
+  { day: "Thu 5 Nov", who: "Sam Okoro", what: "Structural drawings", hours: 8 },
+  { day: "Fri 6 Nov", who: "Sam Okoro", what: "Structural drawings", hours: 3 },
+  { day: "Fri 6 Nov", who: "Ana Ruiz", what: "Client meeting", hours: 2 }
+];
+const psMoney = (n) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
+function App() {
+  const [size, setSize] = React.useState("a4");
+  const [entries, setEntries] = React.useState(true);
+  const total = PS_ITEMS.reduce((sum, i) => sum + i.hours * i.rate, 0);
+  return /* @__PURE__ */ React.createElement("div", { className: "ps-demo" }, /* @__PURE__ */ React.createElement("div", { className: "ps-settings" }, /* @__PURE__ */ React.createElement(A.Field, { label: "Paper" }, /* @__PURE__ */ React.createElement(A.Select, { value: size, onValueChange: setSize, items: [{ value: "a4", label: "A4" }, { value: "letter", label: "US Letter" }] })), /* @__PURE__ */ React.createElement(A.Switch, { checked: entries, onCheckedChange: setEntries, label: "Time entries page" }), /* @__PURE__ */ React.createElement(A.Button, { onClick: () => window.print() }, "Print")), /* @__PURE__ */ React.createElement(
+    A.PrintSheet,
+    {
+      title: "Invoice 1042",
+      size,
+      margins: "18mm",
+      header: /* @__PURE__ */ React.createElement(A.PrintSheetHeader, null, /* @__PURE__ */ React.createElement("strong", null, "Larkspur Studio"), /* @__PURE__ */ React.createElement("span", null, "Invoice 1042 \xB7 6 November 2026")),
+      footer: /* @__PURE__ */ React.createElement(A.PrintSheetFooter, null, /* @__PURE__ */ React.createElement("span", null, "Larkspur Studio \xB7 14 Quay Street"), /* @__PURE__ */ React.createElement("span", null, "Page ", /* @__PURE__ */ React.createElement(A.PrintSheetPageNumber, null), " of ", /* @__PURE__ */ React.createElement(A.PrintSheetPageCount, null)))
+    },
+    /* @__PURE__ */ React.createElement("h1", null, "Invoice 1042"),
+    /* @__PURE__ */ React.createElement("p", null, "For Harbour Authority, work from 2 to 6 November 2026. Payment due in 30 days."),
+    /* @__PURE__ */ React.createElement("table", null, /* @__PURE__ */ React.createElement("thead", null, /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("th", null, "Work"), /* @__PURE__ */ React.createElement("th", { className: "ps-num" }, "Hours"), /* @__PURE__ */ React.createElement("th", { className: "ps-num" }, "Rate"), /* @__PURE__ */ React.createElement("th", { className: "ps-num" }, "Amount"))), /* @__PURE__ */ React.createElement("tbody", null, PS_ITEMS.map((i) => /* @__PURE__ */ React.createElement("tr", { key: i.what }, /* @__PURE__ */ React.createElement("td", null, i.what), /* @__PURE__ */ React.createElement("td", { className: "ps-num" }, i.hours), /* @__PURE__ */ React.createElement("td", { className: "ps-num" }, psMoney(i.rate)), /* @__PURE__ */ React.createElement("td", { className: "ps-num" }, psMoney(i.hours * i.rate)))), /* @__PURE__ */ React.createElement("tr", { className: "ps-total" }, /* @__PURE__ */ React.createElement("td", { colSpan: 3 }, "Total"), /* @__PURE__ */ React.createElement("td", { className: "ps-num" }, psMoney(total))))),
+    entries && /* @__PURE__ */ React.createElement(A.PrintSheetBreak, null),
+    entries && /* @__PURE__ */ React.createElement("h2", null, "Time entries"),
+    entries && /* @__PURE__ */ React.createElement("table", null, /* @__PURE__ */ React.createElement("thead", null, /* @__PURE__ */ React.createElement("tr", null, /* @__PURE__ */ React.createElement("th", null, "Day"), /* @__PURE__ */ React.createElement("th", null, "Who"), /* @__PURE__ */ React.createElement("th", null, "Work"), /* @__PURE__ */ React.createElement("th", { className: "ps-num" }, "Hours"))), /* @__PURE__ */ React.createElement("tbody", null, PS_ENTRIES.map((e, k) => /* @__PURE__ */ React.createElement("tr", { key: k }, /* @__PURE__ */ React.createElement("td", null, e.day), /* @__PURE__ */ React.createElement("td", null, e.who), /* @__PURE__ */ React.createElement("td", null, e.what), /* @__PURE__ */ React.createElement("td", { className: "ps-num" }, e.hours)))))
+  ));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
