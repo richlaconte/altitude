@@ -13,7 +13,8 @@ export interface InlineEditControl<V> {
   /** True while checking, saving or blocked by a conflict: changes are ignored until it clears. */
   readOnly: boolean;
   disabled: boolean;
-  autoFocus: true;
+  /** Request focus on intentional entry/recovery; false when a background result reopens the editor. */
+  autoFocus: boolean;
 }
 export interface InlineEditProps<V = string> {
   value: V;
@@ -530,7 +531,7 @@ export function InlineEdit<V = string>({ value, onValueChange, onSave, label, va
   const editSlot = session && (editor
     ? <div ref={editorBox} className="alt-inline-edit-slot-box alt-inline-edit-editor" data-slot="">{srLabel}{editor({
         value: session.draft, onValueChange: change, id: controlId, 'aria-describedby': describedBy, invalid: !!session.error,
-        readOnly: locked, disabled, autoFocus: true,
+        readOnly: locked, disabled, autoFocus: selectInput.current,
       })}</div>
     : <div className="alt-inline-edit-slot-box" data-slot="" data-wrapped={long ? '' : undefined}>{srLabel}{long
       ? <Textarea ref={area} id={controlId} value={session.draft as unknown as string} maxLength={maxLength} disabled={disabled} rows={1}

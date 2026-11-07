@@ -55,7 +55,7 @@ const mount = async (page, options = {}) => {
         editor: control => h(A.Select, { ...control, items: [{ value: 'a', label: 'Alpha' }, { value: 'b', label: 'Bravo' }] }),
       });
       if (options.editor === 'portal') props.editor = control => h(R.Fragment, null,
-        h(A.Input, { value: control.value, id: control.id, readOnly: control.readOnly, disabled: control.disabled, invalid: control.invalid, autoFocus: true, 'aria-describedby': control['aria-describedby'], 'aria-controls': 'inline-owned-popup', onChange: e => control.onValueChange(e.target.value) }),
+        h(A.Input, { value: control.value, id: control.id, readOnly: control.readOnly, disabled: control.disabled, invalid: control.invalid, autoFocus: control.autoFocus, 'aria-describedby': control['aria-describedby'], 'aria-controls': 'inline-owned-popup', onChange: e => control.onValueChange(e.target.value) }),
         h('button', { id: 'inline-toolbar', type: 'button' }, 'Editor toolbar'),
         window.ReactDOM.createPortal(h('div', { id: 'inline-owned-popup' },
           h('input', { id: 'inline-popup-input', 'aria-label': 'Picker value', value: control.value, readOnly: control.readOnly, onChange: e => control.onValueChange(e.target.value) }),
@@ -407,6 +407,14 @@ try {
     });
     await input(page).focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await waitState(page, 'saving');
     check((await api(page, 'calls')).length === 1, 'LS-35 a gesture without click does not suppress later keyboard departure'); await page.close(); }
+
+  for (const outcome of ['error', 'conflict']) {
+    const page = await open(); await mount(page, { leave: 'save', editor: 'portal', pending: 'value' }); await edit(page); await input(page).fill('Custom folded draft');
+    await page.locator('#elsewhere').click(); await waitState(page, 'saving'); await page.locator('#next-field').fill('Do not leave here');
+    if (outcome === 'conflict') { await page.evaluate(() => window.inlineHarness.setValue('New server value')); await page.waitForFunction(() => document.querySelector('#inline-contract .alt-inline-edit-current')); }
+    await resolveSave(page, outcome === 'error' ? { ok: false, error: 'Custom value rejected.' } : { ok: true, value: 'Custom folded draft' }); await waitState(page, outcome);
+    check(await page.locator('#next-field').evaluate(el => document.activeElement === el), `LS-37 a custom editor reopening after ${outcome} does not autofocus away from the next field`); await page.close();
+  }
 
   // actions="inline" (#486): Save and Cancel as icon buttons inside the field's trailing end.
   { const page = await open(); await mount(page, { actions: 'inline' }); await edit(page);

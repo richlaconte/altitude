@@ -41,4 +41,26 @@ No elevation tier or motion changes. The existing ground value, sunk editor, pen
 
 ## Validation record
 
-Implementation and checks are in progress. Participant evaluation has not been run.
+Local engineering validation completed on 7 November 2026 with Chromium **157.0.8103.38**, React **18.3.1** and **19.3.0**, DPR 2. Participant evaluation, real operating-system IME exercise, screen-reader testing and cross-engine testing have not been run.
+
+| Check | Observed result |
+| --- | --- |
+| `CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" node build/checks/inline-edit.mjs` | 283 assertions passed against generated React 18 previews, no page/console errors |
+| `node scripts/build-check-fixtures.mjs InlineEdit`, then the same check with `ALT_FIXTURE_ROOT="$PWD/build/test/react19"` | 283 assertions passed against React 19 production |
+| `ALT_CHECK_STRICT=1 node scripts/build-check-fixtures.mjs InlineEdit`, then the same check with `ALT_FIXTURE_ROOT="$PWD/build/test/react19-strict"` | 283 assertions passed against React 19 development StrictMode |
+| `npm run typecheck`; in `build/`, `npx tsc -p tsconfig.json` | Passed |
+| `npm run build`; `node scripts/check-actions-package.mjs`; `npm run check:guidance` | Package exports/declaration parity and 16-pattern/42-rule/217-file guidance schema/reference/version/freshness checks passed |
+| `node build/checks/examples.mjs` | 122 examples have zero public API errors; the existing check reports 190 non-gated literal-inference diagnostics |
+| In `build/`: `node build.mjs && node previews.mjs`; `CHROME=… DPR=2 node shoot.mjs InlineEdit daylight,nightfall 960` | Generated outputs committed; both renders had no browser errors |
+| Both-scheme `shoot.mjs` with `ACT` editing Release label, continuing in Next note, awaiting one confirmed write and checking canonical text/focus | Passed; the new preview uses a controlled in-memory service, not a live server |
+| `CHROME=… PHONE_FAIL=M1,M2-24,M6 node checks/phone.mjs InlineEdit` in `build/` | No overflow, targets below 24px or touch text below 16px at 320/375px; advisory 44px touch-target findings remain |
+
+The interaction suite includes normal, reduced-motion, forced-color and increased-contrast checks in both schemes. The new leave-save error/retry matrix uses 320px, checks visible instruction association and busy/status semantics, waits for existing motion, and verifies the complete error fits its surface. Screenshots are generated at `build/test/alt-05/leave-save-<scheme>-<mode>-320.png`; selected normal and forced-color captures were visually inspected. These checks establish engineering behavior, not that assistive-technology announcements were heard or understood.
+
+The new LS-02 test first failed against the baseline because leave-to-save was absent. Adversarial follow-ups also reproduced and fixed explicit Escape focus return after an automatic failure, a no-click gesture suppressing subsequent Tab departure, and custom-editor autofocus stealing focus after a folded pending write reopened. Existing tests now wait for the committed disabled state and actual read phase; merely seeing an Edit button also matched the folded pending view.
+
+Custom editor focus is an explicit request: `InlineEditControl.autoFocus` is now a boolean, true for intentional entry/recovery and false for a background reopening. Normal consumers spreading the control need no change. A custom adapter that assumed the previous literal `true` type or hardcoded autofocus must accept/honor the boolean to preserve focus. Both declarations document it, and actual React portals are exercised in both runtimes (the React 19 fixture exposes `createPortal` for this).
+
+Broader regression check: `CHROME=… node build/checks/actions-in-place.mjs` reported **115 passed, four failed** on the local browser. All four are existing CON-09 immediate visibility checks after opening a consequence dialog. Replacing only the fixture bundle with unchanged main `4378c0c` and running `ALT_FIXTURE_ROOT="$PWD/build/test/baseline615" ALT_ACTIONS_CASE="accessible mode"` reproduced the same four failures (**17 passed, four failed**). No unrelated runtime or test change is included. The PR's exact-head CI is the separate record of canonical-runner results.
+
+An independent source/test review found no blocking findings. The preference motivating this capability remains contextual; no human effectiveness or universal autosave claim follows from these checks.

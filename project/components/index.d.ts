@@ -821,7 +821,8 @@ export interface InlineEditControl<V> {
   /** True while checking, saving or blocked by a conflict. Changes are ignored until it clears. */
   readOnly: boolean;
   disabled: boolean;
-  autoFocus: true;
+  /** Request focus on intentional entry/recovery; false when a background result reopens the editor. */
+  autoFocus: boolean;
 }
 export interface InlineEditProps<V = string> {
   value: V;
