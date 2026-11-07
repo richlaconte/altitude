@@ -39,11 +39,14 @@ export function Tooltip({ content, side = 'top', delay = 450, defaultOpen = fals
   };
   const hide = () => { window.clearTimeout(timer.current); setOpen((o) => { if (o) lastTipClose = Date.now(); return false; }); };
   React.useEffect(() => () => window.clearTimeout(timer.current), []);
+  // The child keeps its own description (help, an error); the tip's id is added while open, and closing restores it exactly (#579).
+  const own: string | undefined = children.props['aria-describedby'];
+  const describedBy = open ? [...new Set([...(own ? String(own).split(/\s+/).filter(Boolean) : []), id])].join(' ') : own;
   return (
     <span className="alt-tip-anchor" onPointerEnter={show} onPointerLeave={hide}
       onFocus={() => { window.clearTimeout(timer.current); setWarm(true); setOpen(true); }} onBlur={hide}
       onKeyDown={(e) => { if (e.key === 'Escape') hide(); }}>
-      {React.cloneElement(children, { 'aria-describedby': open ? id : undefined })}
+      {React.cloneElement(children, { 'aria-describedby': describedBy })}
       {mounted && <span ref={tip} role="tooltip" id={id} className="alt-tip" data-side={side} data-state={state} data-warm={warm ? '' : undefined}>{content}</span>}
     </span>
   );
