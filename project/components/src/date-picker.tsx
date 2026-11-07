@@ -443,7 +443,7 @@ export function DatePicker({ value, defaultValue = null, onValueChange, min, max
       <button ref={button} type="button" className="alt-date-button" aria-label="Choose date" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? panelId : undefined}
         disabled={disabled} onClick={() => setOpen(!open)}><CalendarIcon /></button>
     </div>
-    {(name || required) && <NativeValue name={name} value={current ?? ''} required={required && !disabled} onInvalid={native.onInvalid(() => firstSeg.current?.focus())} />}
+    {(name || required) && <NativeValue name={name} value={current ?? ''} required={required} disabled={disabled} onInvalid={native.onInvalid(() => firstSeg.current?.focus())} />}
     <span id={formatId} hidden>Format: {segs.map((s) => SEG_HOLD[s]).join(sep.trim() || '/')}</span>
     {error && <p id={errorId} className="alt-field-error alt-date-error"><Icons.AlertCircle size={14} />{error}</p>}
     {requiredError && <p id={auto + '-required-error'} className="alt-field-error alt-date-error" role="alert"><Icons.AlertCircle size={14} />{requiredMessage}</p>}
@@ -547,8 +547,8 @@ export function DateRangePicker({ value, defaultValue, onValueChange, min, max, 
         disabled={disabled} onClick={() => setOpen(!open)}><CalendarIcon /></button>
     </div>
     {(name || required) && <>
-      <NativeValue name={name && `${name}-start`} value={current.start ?? ''} required={required && !disabled} onInvalid={onInvalid} />
-      <NativeValue name={name && `${name}-end`} value={current.end ?? ''} required={required && !disabled} onInvalid={onInvalid} />
+      <NativeValue name={name && `${name}-start`} value={current.start ?? ''} required={required} disabled={disabled} onInvalid={onInvalid} />
+      <NativeValue name={name && `${name}-end`} value={current.end ?? ''} required={required} disabled={disabled} onInvalid={onInvalid} />
     </>}
     <span id={formatId} hidden>Format: {segs.map((s) => SEG_HOLD[s]).join(sep.trim() || '/')}</span>
     {error && <p id={errorId} className="alt-field-error alt-date-error"><Icons.AlertCircle size={14} />{error}</p>}

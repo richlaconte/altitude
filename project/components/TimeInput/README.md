@@ -12,7 +12,7 @@ A time of day: when a scheduled report is sent, quiet hours, business hours, a m
 
 **Props:** `value`, `defaultValue`, `onValueChange` (`"HH:mm" | null`); `step` (minutes, default 1); `hourCycle` (`'auto' | 'h12' | 'h23'`); `min`, `max` ("HH:mm"); `timeZone`; `locale`; `invalid`; `disabled`; `required`; `requiredMessage`; `size`; `name` (submits the value with a form).
 
-`required` works as `Select`'s: an empty or partial time fails native form validation, with or without a `name`. Invalid submission focuses the hour, marks the field invalid and links a visible alert, “Enter a time.” unless `requiredMessage` says otherwise. A `Field` error takes precedence; a whole time clears it.
+`required` works as `Select`'s: an empty or partial time fails native form validation, with or without a `name`. Invalid submission focuses the hour, marks the field invalid and links a visible alert, “Enter a time.” unless `requiredMessage` says otherwise. A `Field` error takes precedence; a whole time clears it. A disabled TimeInput is excluded from validation and form data.
 
 **You provide:** a label (with `Field`), the allowed range, and the time zone when people in several zones see it.
 
