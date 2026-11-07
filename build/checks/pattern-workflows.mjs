@@ -222,6 +222,10 @@ try {
  check(await page.evaluate(() => harness.turn.stop()) === true, 'CONVO-KEEP: Stop while awaiting input reports that it stopped'); await phase('stopped');
  check(await page.evaluate(() => harness.streams[3].signal.aborted && harness.turn.text === 'Hi' && harness.turn.messageStatus === 'stopped'), 'CONVO-KEEP: Stop while awaiting input aborts the stream and keeps the partial answer');
  check(await page.evaluate(() => harness.turn.stop()) === false, 'CONVO-KEEP: Stop with nothing in flight reports that nothing stopped');
+ await page.evaluate(() => harness.turn.awaitInput(false)); await page.waitForTimeout(30);
+ check(await page.evaluate(() => harness.turn.state) === 'stopped', 'CONVO-KEEP: answering the Confirmation after Stop does not resume the stopped turn');
+ check(await page.evaluate(() => harness.turn.retry()) === true, 'CONVO-KEEP: Retry after Stop while awaiting input starts again'); await phase('submitted');
+ check(await page.evaluate(() => harness.streams.length === 5 && harness.streams[4].input === 'And now?' && !harness.streams[4].signal.aborted), 'CONVO-KEEP: Retry after Stop while awaiting input sends the kept input on a fresh stream');
  // Composed with PromptInput: Stop announces only when something stopped.
  await page.evaluate(() => {
   fixtureRoot.unmount(); const h = React.createElement, A = Altitude; const api = { calls: 0, result: true }; window.harness = api;

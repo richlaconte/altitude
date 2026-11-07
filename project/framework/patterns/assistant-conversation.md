@@ -17,7 +17,7 @@ Supply a stream that yields text as it arrives and resolves only when the provid
 | stopped | `ready` | `stopped` | the partial answer kept, "Stopped", Retry |
 | failed | `error` | `error` | the message kept in the composer; the error in words, with what to do |
 | interrupted | `ready` | `error` | after a reload: "Interrupted", Retry; never shown as complete |
-| awaiting-input | `streaming` | `streaming` | a `Confirmation` or `Question` is open; the turn waits, and Stop still ends it as stopped |
+| awaiting-input | `streaming` | `streaming` | a `Confirmation` or `Question` is open; the turn waits, and Stop still ends it as stopped: close the `Confirmation` or `Question` with it and settle any answer the stream awaits on its `signal` |
 | queued | `streaming` | — | `ConversationQueue`: written, not sent |
 
 **Never lose the person's words.** A double Enter sends once. A failed send keeps the message (`turn.input`): put it back in the composer. Stop keeps the partial answer as "Stopped", from every state the composer shows as Stop, including awaiting-input. Pass `turn.stop` to `onStop`: it returns whether anything stopped, so the composer never announces a stop that didn't happen. Regenerating and editing keep versions (`MessageActions versions`, `onEdit`); rewinding sets turns aside (`ConversationCheckpoint`) rather than deleting them.
