@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "screen-layout",
-  "version": 1,
+  "version": 2,
   "title": "Screen layout",
   "intents": [
     "screen layout",
@@ -16,7 +16,10 @@
     "report",
     "triage",
     "inbox",
-    "setup flow"
+    "setup flow",
+    "recognition cues",
+    "visual cues",
+    "quiet content"
   ],
   "purpose": "Choose a screen's frame from the person's task, the one thing that leads and the one primary action, instead of inheriting a sidebar, a top bar and a grid of cards.",
   "useWhen": [
@@ -32,7 +35,9 @@
     "the task in one sentence: who is here and what they came to do",
     "the one thing that leads the screen",
     "the one primary action, or none",
-    "what the person does next once the task is done"
+    "what the person does next once the task is done",
+    "recognition question and chosen cues with visible words and programmatic equivalents",
+    "scoped evidence: source/version, task, alternatives and order if known, absolute and comparative judgments, reasons, rejected options and uncertainty"
   ],
   "states": [
     "task-named",
@@ -49,12 +54,17 @@
   ],
   "rules": [
     "ALT-LAYOUT-001",
+    "ALT-LAYOUT-003",
     "ALT-VISUAL-002",
     "ALT-VISUAL-003"
   ],
   "sources": [
     "altitude-elevation",
-    "task-review"
+    "task-review",
+    "wcag22",
+    "guided-search-6",
+    "icon-characteristics",
+    "recognition-assessment-summary"
   ],
   "authority": "contextual-pattern",
   "applicability": "Any new screen: its frame, what leads it and where its one primary action sits.",
@@ -69,11 +79,13 @@
     "build/fixtures/patterns/screen-layout-editor.jsx",
     "build/fixtures/patterns/screen-layout-decision.jsx",
     "build/fixtures/patterns/screen-layout-report.jsx",
-    "build/fixtures/patterns/app-skeleton.jsx"
+    "build/fixtures/patterns/app-skeleton.jsx",
+    "examples/apps/support-inbox/app.tsx"
   ],
   "verification": [
     "build/checks/screen-layout-pattern.mjs",
     "build/checks/render-tells.mjs",
-    "build/checks/pattern-types.mjs"
+    "build/checks/pattern-types.mjs",
+    "build/checks/example-support-inbox.mjs"
   ]
 }

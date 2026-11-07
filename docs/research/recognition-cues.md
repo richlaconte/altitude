@@ -60,4 +60,27 @@ Settled labels, previews and status marks remain on ground. The existing live/op
 
 ## Verification record
 
-Implementation and observations will be recorded after the checks run. Participant evaluation is unrun; no people are recruited by this change.
+Reviewed 2026-11-07 on the #617 branch, package `0.31.21`, Chromium `157.0.8103.38`. This is an engineering/contextual review by an agent, with the existing seed and service outcomes unchanged. Participant evaluation and manual assistive-technology sessions are unrun; no people were recruited.
+
+| Condition | Observation | Limit |
+| --- | --- | --- |
+| Daylight and Nightfall, 1280px | Subjects lead each compact row; requester and named state occupy stable positions. Opening the invoice repeats its subject and requester beside the queue; the selected row is named as selected. | No human search time or error rate measured |
+| Both schemes, 320px | Status words and requester remain visible without page overflow. The queue gives way to the same named ticket; conversation text wraps, properties follow it, and Back returns keyboard focus to its row. The tab strip scrolls within its own region. | Long row previews and some subjects are truncated visually; the complete preview is described programmatically and full conversation is reachable after opening |
+| Forced-color media with reduced motion, 1280px and 320px | Existing borders and words preserve status, grouping and section identity; the “Internal notes · not sent to the customer” heading remains explicit. No meaning depends on watching an animation. | Chromium media emulation is not a Windows High Contrast or screen-reader user study |
+| Teammate replying | The existing presence Avatar is paired with “Maya Chen is replying” in the row's accessible name and visible detail text. | Presence is not ownership; the assignee remains a separately named property |
+
+Commands run from the repository root unless specified:
+
+- `npm run build` and `npm run typecheck`: passed.
+- `npm run check:guidance`: passed schema, reference, version and freshness checks for 16 patterns, 43 rules and 219 distributed files.
+- `CHROME='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' npm run check:framework`: passed, including packed installed-consumer guidance/rule/example discovery, actual installed workflow checks, semantics, agent setup, evaluation harness tests and measurement. The raw local log is `build/test/recognition-framework.log`.
+- `npm run check:tells-lint`: 165 files, 25 rules, no tells. No new deterministic aesthetic rule was introduced.
+- `CHROME='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' node build/checks/example-support-inbox.mjs`: **91 passed, 0 failed**, including the original adverse-state checks and six recognition presentation conditions. Twelve DPR=2 screenshots are reproducible in `build/test/recognition-cues/`. Normal-motion captures await the existing arrival animations before inspecting settled cues.
+- In `build/`, after the documented React/token setup: `CHROME='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' DPR=2 node shoot.mjs ScreenLayoutEditor,ScreenLayoutDecision,ScreenLayoutReport daylight,nightfall 960`: no page or console errors; `node checks/screen-layout-pattern.mjs` with the same `CHROME`: **24 passed, 0 failed**.
+- In `build/`, `node build.mjs && node previews.mjs`: passed; no generated component/preview changes were needed.
+
+An initial new test incorrectly expected screen-reader-only “from” text in visible `innerText`, and another queried a role after its list was intentionally hidden on mobile. Both assertions were corrected to test visible requester text and the surviving source element's selection state. An initial framework run overlapped package cleanup and failed because `dist/guidance` was temporarily absent; build and framework verification were then sequenced. These were test/setup problems, not participant outcomes.
+
+Representative inspected captures:
+
+[320px queue](recognition-cues/queue-320.png) · [Nightfall desktop detail](recognition-cues/detail-desktop.png) · [320px forced-color/reduced-motion detail](recognition-cues/detail-320-forced-reduced.png)

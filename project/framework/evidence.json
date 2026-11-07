@@ -108,6 +108,33 @@
       "status": "project-policy",
       "applicability": "Every chart, stat and meter.",
       "reviewed": "2026-11-02"
+    },
+    {
+      "id": "guided-search-6",
+      "authority": "heuristic",
+      "title": "Wolfe: Guided Search 6.0 (2021)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8965574/",
+      "status": "peer-reviewed-theoretical-model",
+      "applicability": "Visual search guidance by task, features and scene meaning; applying this model to screen composition is an inference, not an Altitude effectiveness result.",
+      "reviewed": "2026-11-07"
+    },
+    {
+      "id": "icon-characteristics",
+      "authority": "heuristic",
+      "title": "McDougall, Curry and de Bruijn: Measuring symbol and icon characteristics (1999)",
+      "url": "https://eprints.bournemouth.ac.uk/10165/1/Measuring_symbol_and_icon_characteristics_mcdougall__curry_%26_debruijn_1999.pdf",
+      "status": "peer-reviewed-rating-norms",
+      "applicability": "Familiarity, complexity and semantic distance are distinct icon characteristics; no universal icon-over-text benefit or icon-count requirement follows.",
+      "reviewed": "2026-11-07"
+    },
+    {
+      "id": "recognition-assessment-summary",
+      "authority": "experimental-hypothesis",
+      "title": "Issue 617: maintainer recognition-cue preference summary",
+      "url": "https://github.com/richlaconte/altitude/issues/617",
+      "status": "local-preference-summary; raw-sessions-not-reanalyzed",
+      "applicability": "November 6–7, 2026 personal comparisons motivate a recognition question; preserve rejected options, low-rated relative winners and uncertainty. Not population-level evidence.",
+      "reviewed": "2026-11-07"
     }
   ]
 }
