@@ -8,31 +8,47 @@
 import * as React from 'react';
 import * as A from 'altitude-design';
 // preview:start
+/** Fictional connections: the same model ID may be served by different providers. @type {import('altitude-design').ModelProvider[]} */
+const providers = [
+  { id: 'direct', label: 'Direct', models: [{ id: 'beam', label: 'Beam' }] },
+  { id: 'gateway', label: 'Gateway', models: [{ id: 'beam', label: 'Beam' }] },
+];
+/** @param {import('altitude-design').ModelSelection | undefined} model */
+function routeLabel(model) {
+  const provider = providers.find((p) => p.id === model?.providerId);
+  const choice = provider?.models.find((m) => m.id === model?.modelId);
+  return `${provider?.label ?? model?.providerId ?? 'Unknown provider'} / ${choice?.label ?? model?.modelId ?? 'Unknown model'}`;
+}
 const answer = 'The billing migration is two days behind: the invoice backfill is still running. The EU data residency review needs a decision from legal by Friday.';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 /** @typedef {'offline' | 'rate-limited' | 'context-full' | 'none'} Failure */
 /** The demo service reads its failure mode when a send starts, so a retry after recovering goes to the recovered service. @param {{ current: Failure }} mode */
 function scripted(mode) {
-  /** @param {string} _input @param {AbortSignal} signal */
-  return async function* (_input, signal) {
+  /** @param {import('altitude-design').PromptMessage} input @param {AbortSignal} signal */
+  return async function* (input, signal) {
     const failure = mode.current;
+    // Resolve the captured route, never the next-message picker. A live service revalidates access here.
+    const routeError = A.getModelSelectionError({ providers, value: input.model ?? null });
+    if (routeError) throw new A.AssistantError('outage', routeError);
+    const text = `Scripted reply from ${routeLabel(input.model)}.\n\n${answer}`;
     await wait(350);
     if (failure === 'offline') throw new A.AssistantError('offline');
     if (failure === 'rate-limited') throw new A.AssistantError('rate-limited', undefined, Date.now() + 25 * 60000);
     if (failure === 'context-full') throw new A.AssistantError('context-full');
-    for (let n = 0; n < answer.length; n += 6) { if (signal.aborted) return; await wait(45); yield answer.slice(n, n + 6); }
+    for (let n = 0; n < text.length; n += 6) { if (signal.aborted) return; await wait(45); yield text.slice(n, n + 6); }
   };
 }
-/** @param {{ restored?: { input: string, text: string, complete: boolean } }} props */
+/** @param {{ restored?: { input: import('altitude-design').PromptMessage, text: string, complete: boolean } }} props */
 function Thread({ restored }) {
   const [failure, setFailure] = React.useState(/** @type {Failure} */ ('none'));
   const mode = React.useRef(failure); mode.current = failure;
   const [draft, setDraft] = React.useState('');
+  const [model, setModel] = React.useState(/** @type {import('altitude-design').ModelSelection | null} */ ({ providerId: 'direct', modelId: 'beam' }));
   const [used, setUsed] = React.useState(64);
   const stream = React.useMemo(() => scripted(mode), []);
   const turn = A.useAssistantTurn({ stream, restored });
   // A failed send keeps the message: it goes back in the composer.
-  React.useEffect(() => { if (turn.state === 'failed' && turn.input) setDraft(turn.input); }, [turn.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { if (turn.state === 'failed' && turn.input) setDraft(turn.input.text); }, [turn.state]); // eslint-disable-line react-hooks/exhaustive-deps
   // Try again: the service is back, so send the kept input again once; the composer keeps it until the send starts.
   const retry = () => { mode.current = 'none'; setFailure('none'); if (turn.retry()) setDraft(''); };
   React.useEffect(() => { if (turn.state === 'complete') setUsed((u) => Math.min(99, u + 9)); }, [turn.state]);
@@ -40,9 +56,10 @@ function Thread({ restored }) {
     <div className="col ac">
       <A.Conversation aria-label="Assistant">
         <A.ConversationContent>
-          {turn.input !== undefined && <A.Message from="user"><A.MessageContent>{turn.input}</A.MessageContent></A.Message>}
+          {turn.input !== undefined && <A.Message from="user"><A.MessageContent>{turn.input.text}</A.MessageContent></A.Message>}
           {(turn.text || turn.state === 'streaming' || turn.state === 'interrupted') && (
             <A.Message from="assistant" status={turn.messageStatus} onRetry={turn.state === 'stopped' || turn.state === 'interrupted' ? turn.retry : undefined}>
+              <p className="ac-route" data-provider={turn.input?.model?.providerId} data-model={turn.input?.model?.modelId}>This answer: {routeLabel(turn.input?.model)}</p>
               <A.MessageContent><A.Markdown streaming={turn.state === 'streaming'}>{turn.text}</A.Markdown></A.MessageContent>
               {turn.state === 'interrupted' && <p className="ac-note">Interrupted: the page reloaded before this answer finished.</p>}
             </A.Message>
@@ -54,13 +71,16 @@ function Thread({ restored }) {
           action={turn.error?.kind === 'context-full' ? <A.Button size="sm" variant="secondary">Start a new conversation</A.Button> : <A.Button size="sm" variant="secondary" onClick={retry}>Try again</A.Button>} />
       )}
       <A.PromptInput status={turn.promptStatus === 'error' ? 'ready' : turn.promptStatus} value={draft} onValueChange={setDraft} onStop={turn.stop}
-        onSubmit={({ text }) => { turn.submit(text); }}>
+        modelPicker={{ providers, value: model, onValueChange: setModel }} onSubmit={turn.submit}>
         <A.PromptInputTextarea placeholder="Ask about the release" />
+        <p className="ac-next">For the next message</p>
+        <A.PromptInputModelSelector />
         <A.PromptInputToolbar>
           <A.Meter className="ac-context" label="Context" value={used} max={100} high={80} critical={95} format={(v) => `${v}%`} />
           <A.PromptInputSubmit />
         </A.PromptInputToolbar>
       </A.PromptInput>
+      <p className="ac-demo">Fictional providers and model; this example streams scripted text without contacting an AI service.</p>
       <details className="preview-fixtures"><summary>Example fixtures</summary>
         <A.ToggleGroup type="single" size="sm" aria-label="Make the next send fail" value={failure} onValueChange={(v) => setFailure(/** @type {any} */ (v) || 'none')}>
           <A.ToggleGroupItem value="none">Works</A.ToggleGroupItem>
@@ -78,7 +98,7 @@ function App() {
     <div className="col">
       <A.Button size="sm" variant="ghost" onClick={() => setReloaded((r) => !r)}>{reloaded ? 'Start fresh' : 'Reload mid-answer'}</A.Button>
       {reloaded
-        ? <Thread key="restored" restored={{ input: 'What are the open risks?', text: 'The billing migration is two days behind: the invoice', complete: false }} />
+        ? <Thread key="restored" restored={{ input: { text: 'What are the open risks?', files: [], model: { providerId: 'gateway', modelId: 'beam' } }, text: 'The billing migration is two days behind: the invoice', complete: false }} />
         : <Thread key="fresh" />}
     </div>
   );

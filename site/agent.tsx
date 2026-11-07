@@ -45,7 +45,7 @@ function Page() {
               <Switch checked={more} onCheckedChange={setMore} label="More contrast" />
             </div>
             <div id="moments"><Harness start={0} /></div>
-            <p className="caption">The run is a list of events shaped like an AI SDK stream; seeking folds them up to the moment you choose, so every state is reachable on demand and is the same every time. No network, no key.</p>
+            <p className="caption">The run is a list of events shaped like an AI SDK stream; seeking folds them up to the moment you choose, so every state is reachable on demand and is the same every time. Choose a demo provider and model for your next message; changing that choice leaves the recorded run unchanged. No network, no key.</p>
           </div>
         </section>
         <section className="band agent-band" aria-labelledby="orchestration-title">

@@ -153,3 +153,7 @@ The checks in `build/checks/agent-harness.mjs` now cover the view: both turns fo
 - assistant-ui, primitives (ThreadList, BranchPicker, EditComposer, Attachment): https://www.assistant-ui.com/docs/api-reference/primitives.md
 - Emily Campbell, The Shape of AI: https://www.shapeof.ai/
 - Altitude issues #150–#157, #174, #179–#181
+
+## Provider and model selection
+
+The [November 2026 provider/model research](../agent-model-selection/README.md) compares eight harnesses and chat UI systems and records the selection, availability and request-identity contracts used by the harness and composer.

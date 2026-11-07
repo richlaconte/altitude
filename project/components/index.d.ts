@@ -3683,6 +3683,41 @@ export interface TourProps {
 /** A few steps pointing at the interface: one level-3 card at a time, the target ringed; never dims, never modal. */
 export declare function Tour(props: TourProps): React.ReactElement | null;
 
+/** A model ID is scoped to a configured provider connection; both IDs are opaque. */
+export interface ModelSelection { providerId: string; modelId: string }
+export interface ModelOption {
+  id: string;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+  /** Supplying a reason also makes this option unavailable. */
+  disabledReason?: string;
+}
+export interface ModelProvider {
+  /** Identifies the configured connection, not necessarily the model's author. */
+  id: string;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+  disabledReason?: string;
+  models: readonly ModelOption[];
+}
+export interface ModelSelectorProps {
+  providers: readonly ModelProvider[];
+  /** null means no provider; an empty modelId means a provider was chosen but a model is still required. */
+  value: ModelSelection | null;
+  onValueChange: (value: ModelSelection) => void;
+  loading?: boolean;
+  error?: string | null;
+  /** Locks the controls. A complete, available selection remains valid for sending or queueing. */
+  disabled?: boolean;
+  className?: string;
+}
+/** Why this catalog/selection cannot be dispatched, or null when it identifies an available model. */
+export declare function getModelSelectionError(config: Pick<ModelSelectorProps, 'providers' | 'value' | 'loading' | 'error' | 'disabled'>): string | null;
+/** Two linked, labelled fields. Changing provider always requires an explicit model choice. */
+export declare function ModelSelector(props: ModelSelectorProps): React.ReactElement;
+
 export type PromptStatus = 'ready' | 'submitted' | 'streaming' | 'error';
 export interface PromptAttachment { id: string; file: File; name: string; status?: 'pending' }
 export interface PromptMention { id: string; label: string; kind?: 'file' | 'record' | 'person'; description?: string }
@@ -3690,24 +3725,29 @@ export interface PromptCommand { name: string; description?: string }
 export interface PromptMessage {
   text: string;
   files: File[];
+  /** Provider/model identity copied when this message was sent or queued. */
+  model?: ModelSelection;
   /** What was pointed at with @ and is still in the text. */
   mentions?: PromptMention[];
   /** The command chosen with /, without its slash; taken out of text. */
   command?: string;
 }
 export interface PromptInputProps extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'> {
-  /** Called with the text and attached files when sent. */
-  onSubmit: (message: PromptMessage) => void;
+  /** Called when sent. Return false synchronously to retain the draft; promises are not awaited. */
+  onSubmit: (message: PromptMessage) => unknown;
+  /** Opt into validated provider/model selection and a route snapshot in each submitted or queued message. */
+  modelPicker?: ModelSelectorProps;
   /** 'submitted' and 'streaming' turn Send into Stop, in the same slot. Default 'ready'. */
   status?: PromptStatus;
   /** Stops generating. Return `false` when nothing stopped, and "Generating stopped" isn't announced. */
   onStop?: () => void | boolean;
-  /** Enter while 'submitted' or 'streaming' queues the message instead of doing nothing; the button stays Stop. Show the queue with ConversationQueue. */
   /** @ opens a list of matches; a chosen one is "@label" in the text and a plate above it. A promise shows "Searching…". */
   mentionable?: (query: string) => PromptMention[] | Promise<PromptMention[]>;
   /** / at the start of an empty composer opens these. */
   commands?: PromptCommand[];
-  onQueue?: (message: PromptMessage) => void;
+  /** Enter while 'submitted' or 'streaming' queues the message instead of doing nothing; the button stays Stop. Show the queue with ConversationQueue. */
+  /** Return false synchronously to retain the draft; promises are not awaited. */
+  onQueue?: (message: PromptMessage) => unknown;
   value?: string;
   onValueChange?: (text: string) => void;
   /** A promise holds the chip as pending until it settles; a rejection removes it. */
@@ -3725,6 +3765,8 @@ export interface PromptInputTextareaProps extends Omit<React.TextareaHTMLAttribu
 export declare function PromptInputTextarea(props: PromptInputTextareaProps): React.ReactElement;
 export declare function PromptInputAttachments(props: { className?: string }): React.ReactElement | null;
 export declare function PromptInputToolbar(props: { className?: string; children?: React.ReactNode }): React.ReactElement;
+/** The provider/model fields configured by modelPicker on the enclosing PromptInput. */
+export declare function PromptInputModelSelector(props: { className?: string }): React.ReactElement;
 export declare function PromptInputAttach(props: { label?: string }): React.ReactElement;
 export declare function PromptInputSubmit(props: { className?: string }): React.ReactElement;
 export interface PromptInputDictateProps {
@@ -4439,6 +4481,7 @@ declare global {
       Trace: typeof Trace; TraceParallel: typeof TraceParallel; TraceStep: typeof TraceStep; TraceToolCall: typeof TraceToolCall; TraceReasoning: typeof TraceReasoning; TraceMemory: typeof TraceMemory; describeTally: typeof describeTally;
       Confirmation: typeof Confirmation;
       Conversation: typeof Conversation; ConversationContent: typeof ConversationContent; ConversationScrollButton: typeof ConversationScrollButton; Message: typeof Message; MessageContent: typeof MessageContent; MessageAttachments: typeof MessageAttachments; ConversationQueue: typeof ConversationQueue; ConversationCheckpoint: typeof ConversationCheckpoint; MessageActions: typeof MessageActions;
+      ModelSelector: typeof ModelSelector; getModelSelectionError: typeof getModelSelectionError; PromptInputModelSelector: typeof PromptInputModelSelector;
       PromptInput: typeof PromptInput; PromptInputTextarea: typeof PromptInputTextarea; PromptInputAttachments: typeof PromptInputAttachments; PromptInputToolbar: typeof PromptInputToolbar; PromptInputAttach: typeof PromptInputAttach; PromptInputSubmit: typeof PromptInputSubmit; PromptInputDictate: typeof PromptInputDictate;
       Tour: typeof Tour;
       CommentThread: typeof CommentThread;

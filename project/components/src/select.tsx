@@ -347,7 +347,8 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
   const sheet = useSheetPresentation(presentation === 'sheet' ? 'sheet' : 'anchored');
   const [v, set] = useControllable(value, defaultValue, onValueChange);
   const chosen = items.find((o) => o.value === v);
-  const [text, setText] = React.useState(chosen ? textOf(chosen) : '');
+  const chosenText = chosen ? textOf(chosen) : '';
+  const [text, setText] = React.useState(chosenText);
   const [typing, setTyping] = React.useState(false);
   const [open, setOpen] = React.useState(defaultOpen);
   const [active, setActive] = React.useState(() => (defaultOpen ? items.findIndex((o) => o.value === (value ?? defaultValue)) : -1));
@@ -367,7 +368,7 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
   useApproach();
   useKeyFocus();
   // A controlled value that changes from outside resets the text.
-  React.useEffect(() => { if (!typing) setText(chosen ? textOf(chosen) : ''); }, [v]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { if (!typing) setText(chosenText); }, [v, chosenText]); // eslint-disable-line react-hooks/exhaustive-deps
   // Its form's reset returns an uncontrolled value, the text and the typing state to the default, as Select's does. Reset
   // runs after the browser's default action; cancelled resets and controlled values stay with their owner.
   React.useEffect(() => {

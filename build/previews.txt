@@ -5037,21 +5037,24 @@ function Dictated() {
 function App() {
   const [status, setStatus] = React.useState('ready');
   const [last, setLast] = React.useState('');
+  const [model, setModel] = React.useState({ providerId: 'studio', modelId: 'beam' });
+  const providers = [{ id: 'studio', label: 'Studio connection', models: [{ id: 'beam', label: 'Beam' }, { id: 'arc', label: 'Arc' }] },
+    { id: 'gateway', label: 'Team gateway', models: [{ id: 'beam', label: 'Beam' }] }];
   const timer = React.useRef();
-  const send = ({ text, files }) => {
-    setLast(`Sent “${text}”${files.length ? ` with ${files.length} file${files.length > 1 ? 's' : ''}` : ''}.`);
+  const send = ({ text, files, model }) => {
+    setLast(`Sent “${text}”${files.length ? ` with ${files.length} file${files.length > 1 ? 's' : ''}` : ''}. Provider: ${model.providerId}; model: ${model.modelId}.`);
     setStatus('submitted');
     timer.current = setTimeout(() => { setStatus('streaming'); timer.current = setTimeout(() => setStatus('ready'), 2500); }, 600);
   };
   return (
     <div className="col pi">
-      <A.PromptInput onSubmit={send} status={status} onStop={() => { clearTimeout(timer.current); setStatus('ready'); }} accept="image/*,.pdf,.csv"
+      <A.PromptInput onSubmit={send} modelPicker={{ providers, value: model, onValueChange: setModel }} status={status} onStop={() => { clearTimeout(timer.current); setStatus('ready'); }} accept="image/*,.pdf,.csv"
         onAttach={() => new Promise((r) => setTimeout(r, 900))}>
         <A.PromptInputAttachments />
         <A.PromptInputTextarea placeholder="Ask about this workspace" />
         <A.PromptInputToolbar>
           <A.PromptInputAttach />
-          <A.Select size="sm" aria-label="Model" defaultValue="opus" items={[{ value: 'opus', label: 'Opus 5.5' }, { value: 'sonnet', label: 'Sonnet 5.5' }, { value: 'haiku', label: 'Haiku 5.5' }]} />
+          <A.PromptInputModelSelector />
           <A.PromptInputSubmit />
         </A.PromptInputToolbar>
       </A.PromptInput>
@@ -7481,32 +7484,50 @@ function App() {
 === AssistantConversationPattern | <!-- @dsCard group="Patterns" height=760 subtitle="Send, stream, stop, retry and recover without losing a word; each failure said in words" -->
 --- css
 .ac{max-width:680px;gap:12px}.ac .alt-convo{height:300px}.ac-note{margin:4px 0 0;font:400 12.5px/17px var(--font-sans);color:var(--critical)}.ac-context{flex:1;max-width:220px}
+.ac-route,.ac-demo,.ac-next{margin:0;font:400 12.5px/18px var(--font-sans);color:var(--ink-muted);overflow-wrap:anywhere}
+.ac-next{padding-top:8px}
 --- jsx
+/** Fictional connections: the same model ID may be served by different providers. @type {import('altitude-design').ModelProvider[]} */
+const providers = [
+  { id: 'direct', label: 'Direct', models: [{ id: 'beam', label: 'Beam' }] },
+  { id: 'gateway', label: 'Gateway', models: [{ id: 'beam', label: 'Beam' }] },
+];
+/** @param {import('altitude-design').ModelSelection | undefined} model */
+function routeLabel(model) {
+  const provider = providers.find((p) => p.id === model?.providerId);
+  const choice = provider?.models.find((m) => m.id === model?.modelId);
+  return `${provider?.label ?? model?.providerId ?? 'Unknown provider'} / ${choice?.label ?? model?.modelId ?? 'Unknown model'}`;
+}
 const answer = 'The billing migration is two days behind: the invoice backfill is still running. The EU data residency review needs a decision from legal by Friday.';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 /** @typedef {'offline' | 'rate-limited' | 'context-full' | 'none'} Failure */
 /** The demo service reads its failure mode when a send starts, so a retry after recovering goes to the recovered service. @param {{ current: Failure }} mode */
 function scripted(mode) {
-  /** @param {string} _input @param {AbortSignal} signal */
-  return async function* (_input, signal) {
+  /** @param {import('altitude-design').PromptMessage} input @param {AbortSignal} signal */
+  return async function* (input, signal) {
     const failure = mode.current;
+    // Resolve the captured route, never the next-message picker. A live service revalidates access here.
+    const routeError = A.getModelSelectionError({ providers, value: input.model ?? null });
+    if (routeError) throw new A.AssistantError('outage', routeError);
+    const text = `Scripted reply from ${routeLabel(input.model)}.\n\n${answer}`;
     await wait(350);
     if (failure === 'offline') throw new A.AssistantError('offline');
     if (failure === 'rate-limited') throw new A.AssistantError('rate-limited', undefined, Date.now() + 25 * 60000);
     if (failure === 'context-full') throw new A.AssistantError('context-full');
-    for (let n = 0; n < answer.length; n += 6) { if (signal.aborted) return; await wait(45); yield answer.slice(n, n + 6); }
+    for (let n = 0; n < text.length; n += 6) { if (signal.aborted) return; await wait(45); yield text.slice(n, n + 6); }
   };
 }
-/** @param {{ restored?: { input: string, text: string, complete: boolean } }} props */
+/** @param {{ restored?: { input: import('altitude-design').PromptMessage, text: string, complete: boolean } }} props */
 function Thread({ restored }) {
   const [failure, setFailure] = React.useState(/** @type {Failure} */ ('none'));
   const mode = React.useRef(failure); mode.current = failure;
   const [draft, setDraft] = React.useState('');
+  const [model, setModel] = React.useState(/** @type {import('altitude-design').ModelSelection | null} */ ({ providerId: 'direct', modelId: 'beam' }));
   const [used, setUsed] = React.useState(64);
   const stream = React.useMemo(() => scripted(mode), []);
   const turn = A.useAssistantTurn({ stream, restored });
   // A failed send keeps the message: it goes back in the composer.
-  React.useEffect(() => { if (turn.state === 'failed' && turn.input) setDraft(turn.input); }, [turn.state]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { if (turn.state === 'failed' && turn.input) setDraft(turn.input.text); }, [turn.state]); // eslint-disable-line react-hooks/exhaustive-deps
   // Try again: the service is back, so send the kept input again once; the composer keeps it until the send starts.
   const retry = () => { mode.current = 'none'; setFailure('none'); if (turn.retry()) setDraft(''); };
   React.useEffect(() => { if (turn.state === 'complete') setUsed((u) => Math.min(99, u + 9)); }, [turn.state]);
@@ -7514,9 +7535,10 @@ function Thread({ restored }) {
     <div className="col ac">
       <A.Conversation aria-label="Assistant">
         <A.ConversationContent>
-          {turn.input !== undefined && <A.Message from="user"><A.MessageContent>{turn.input}</A.MessageContent></A.Message>}
+          {turn.input !== undefined && <A.Message from="user"><A.MessageContent>{turn.input.text}</A.MessageContent></A.Message>}
           {(turn.text || turn.state === 'streaming' || turn.state === 'interrupted') && (
             <A.Message from="assistant" status={turn.messageStatus} onRetry={turn.state === 'stopped' || turn.state === 'interrupted' ? turn.retry : undefined}>
+              <p className="ac-route" data-provider={turn.input?.model?.providerId} data-model={turn.input?.model?.modelId}>This answer: {routeLabel(turn.input?.model)}</p>
               <A.MessageContent><A.Markdown streaming={turn.state === 'streaming'}>{turn.text}</A.Markdown></A.MessageContent>
               {turn.state === 'interrupted' && <p className="ac-note">Interrupted: the page reloaded before this answer finished.</p>}
             </A.Message>
@@ -7528,13 +7550,16 @@ function Thread({ restored }) {
           action={turn.error?.kind === 'context-full' ? <A.Button size="sm" variant="secondary">Start a new conversation</A.Button> : <A.Button size="sm" variant="secondary" onClick={retry}>Try again</A.Button>} />
       )}
       <A.PromptInput status={turn.promptStatus === 'error' ? 'ready' : turn.promptStatus} value={draft} onValueChange={setDraft} onStop={turn.stop}
-        onSubmit={({ text }) => { turn.submit(text); }}>
+        modelPicker={{ providers, value: model, onValueChange: setModel }} onSubmit={turn.submit}>
         <A.PromptInputTextarea placeholder="Ask about the release" />
+        <p className="ac-next">For the next message</p>
+        <A.PromptInputModelSelector />
         <A.PromptInputToolbar>
           <A.Meter className="ac-context" label="Context" value={used} max={100} high={80} critical={95} format={(v) => `${v}%`} />
           <A.PromptInputSubmit />
         </A.PromptInputToolbar>
       </A.PromptInput>
+      <p className="ac-demo">Fictional providers and model; this example streams scripted text without contacting an AI service.</p>
       <details className="preview-fixtures"><summary>Example fixtures</summary>
         <A.ToggleGroup type="single" size="sm" aria-label="Make the next send fail" value={failure} onValueChange={(v) => setFailure(/** @type {any} */ (v) || 'none')}>
           <A.ToggleGroupItem value="none">Works</A.ToggleGroupItem>
@@ -7552,7 +7577,7 @@ function App() {
     <div className="col">
       <A.Button size="sm" variant="ghost" onClick={() => setReloaded((r) => !r)}>{reloaded ? 'Start fresh' : 'Reload mid-answer'}</A.Button>
       {reloaded
-        ? <Thread key="restored" restored={{ input: 'What are the open risks?', text: 'The billing migration is two days behind: the invoice', complete: false }} />
+        ? <Thread key="restored" restored={{ input: { text: 'What are the open risks?', files: [], model: { providerId: 'gateway', modelId: 'beam' } }, text: 'The billing migration is two days behind: the invoice', complete: false }} />
         : <Thread key="fresh" />}
     </div>
   );
@@ -7705,12 +7730,54 @@ const THREADS = [
 ];
 const MOCKUP = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='64'%3E%3Crect width='96' height='64' fill='%23e8edf5'/%3E%3Crect x='10' y='14' width='22' height='36' rx='3' fill='%23c9d3e6'/%3E%3Crect x='37' y='10' width='22' height='44' rx='3' fill='%233b6fd8'/%3E%3Crect x='64' y='14' width='22' height='36' rx='3' fill='%23c9d3e6'/%3E%3C/svg%3E";
 
+/** Fictional, local-only connections: the same model ID can be served by two providers. */
+const HARNESS_PROVIDERS = [
+  { id: 'direct', label: 'Direct', models: [
+    { id: 'beam', label: 'Beam' }, { id: 'arc', label: 'Arc' },
+    { id: 'archive', label: 'Archive', disabled: true, disabledReason: 'Does not support tools for this task.' },
+  ] },
+  { id: 'gateway', label: 'Gateway', models: [{ id: 'beam', label: 'Beam' }] },
+  { id: 'local', label: 'Local', disabled: true, disabledReason: 'Connect a local runtime in settings.', models: [] },
+];
+const HARNESS_MODEL = { providerId: 'direct', modelId: 'beam' };
+/** @param {import('altitude-design').ModelSelection | undefined} model */
+function routeLabel(model) {
+  const provider = HARNESS_PROVIDERS.find((p) => p.id === model?.providerId);
+  return `${provider?.label ?? model?.providerId ?? 'Unknown provider'} · ${provider?.models.find((m) => m.id === model?.modelId)?.label ?? model?.modelId ?? 'Unknown model'}`;
+}
+/** @param {import('altitude-design').PromptMessage} message */
+const promptText = (message) => [message.command ? `/${message.command}` : '', message.text].filter(Boolean).join(' ');
+/** The demo stores complete messages, including the route captured by PromptInput. No network request is made. */
+function useDemoModels(complete) {
+  const [value, onValueChange] = React.useState(HARNESS_MODEL);
+  const [sent, setSent] = React.useState(/** @type {import('altitude-design').PromptMessage[]} */ ([]));
+  const [queued, setQueued] = React.useState(/** @type {{id:string,message:import('altitude-design').PromptMessage}[]} */ ([]));
+  const serial = React.useRef(0);
+  const send = (/** @type {import('altitude-design').PromptMessage} */ message) => setSent((xs) => [...xs, message]);
+  const enqueue = (/** @type {import('altitude-design').PromptMessage} */ message) => setQueued((xs) => [...xs, { id: `demo-${++serial.current}`, message }]);
+  React.useEffect(() => {
+    if (complete && queued.length) { setSent((xs) => [...xs, ...queued.map((q) => q.message)]); setQueued([]); }
+  }, [complete, queued]);
+  return { picker: { providers: HARNESS_PROVIDERS, value, onValueChange }, sent, send, enqueue,
+    queue: <A.ConversationQueue items={queued.map((q) => ({ id: q.id, text: `${promptText(q.message)} · ${routeLabel(q.message.model)}` }))}
+      onRemove={(id) => setQueued((xs) => xs.filter((q) => q.id !== id))} /> };
+}
+/** @param {{messages:import('altitude-design').PromptMessage[]}} props */
+function ModelRecords({ messages }) {
+  return <>{messages.map((message, i) => <A.Message key={i} from="user">
+    <A.MessageContent>{promptText(message)}</A.MessageContent>
+    {message.files.length > 0 && <A.MessageAttachments items={message.files.map((file) => ({ name: file.name, type: file.type }))} />}
+    <p className="ah-model-record">Recorded with {routeLabel(message.model)}</p>
+  </A.Message>)}</>;
+}
+
 /** The harness at moment `k`. */
 function Harness({ k }) {
   const s = stateAt(k);
+  const models = useDemoModels(s.finished);
   // Seeking shows the newest part of the run, as a live conversation would have followed it.
   const main = React.useRef(/** @type {HTMLDivElement | null} */ (null));
-  React.useEffect(() => { const el = main.current?.querySelector('.alt-convo-scroll'); if (el) el.scrollTop = el.scrollHeight; }, [k]);
+  React.useEffect(() => { const el = main.current?.querySelector('.alt-convo-scroll'); if (el) el.scrollTop = el.scrollHeight; }, [k, models.sent.length]);
   const working = !s.finished;
   const sub = (id) => s.subagents[id]?.status ?? 'planned';
   const testStatus = !s.command ? 'planned' : s.command.exitCode === 0 ? 'done' : 'failed';
@@ -7740,6 +7807,7 @@ function Harness({ k }) {
             {s.rewound && <A.ConversationCheckpoint label={s.rewound.label} at={Date.now() - 2 * 60000} consequence="The messages after this will be set aside. You can return to them." onRestore={() => {}} onReturn={() => {}} />}
             {k >= 1 && (
               <A.Message from="assistant" status={s.finished ? 'complete' : 'streaming'}>
+                <p className="ah-model-record">Run with {routeLabel(HARNESS_MODEL)}</p>
                 <A.Trace aria-label="Agent run">
                   <A.TraceStep title="Think it through" status={s.reasoningDone ? 'done' : 'running'} duration={s.reasoningMs}>
                     <A.TraceReasoning status={s.reasoningDone ? 'complete' : 'streaming'} duration={s.reasoningMs}>{s.reasoning}</A.TraceReasoning>
@@ -7778,13 +7846,17 @@ function Harness({ k }) {
                 )}
               </A.Message>
             )}
+            <ModelRecords messages={models.sent} />
           </A.ConversationContent>
         </A.Conversation>
         <A.ConversationQueue items={s.queued} onSendNow={() => {}} onEdit={() => {}} onRemove={() => {}} />
-        <A.PromptInput status={working && k >= 1 ? 'streaming' : 'ready'} onSubmit={() => {}} onStop={() => {}} onQueue={() => {}}>
+        {models.queue}
+        <A.PromptInput status={working && k >= 1 ? 'streaming' : 'ready'} onSubmit={models.send} onStop={() => false} onQueue={models.enqueue} modelPicker={models.picker}>
           <A.PromptInputTextarea placeholder="Ask the agent" />
+          <A.PromptInputModelSelector />
           <A.PromptInputToolbar><A.PromptInputSubmit /></A.PromptInputToolbar>
         </A.PromptInput>
+        <p className="ah-model-note">For the next message. Demo providers and models; messages are recorded locally, with no AI request.</p>
       </div>
     </A.AppShell>
   );
@@ -7799,7 +7871,9 @@ const STYLES = `.ah-views{display:grid;gap:12px;max-width:1100px}.ah-views>.alt-
 .cs-status>span:last-child{min-width:0}.cs-status .alt-badge{flex:none}
 .cs-status>svg{flex:none;color:var(--positive)}
 .cs .alt-convo{flex:1;min-height:0}
-.cs-grow{flex:1}.cs-model{width:auto;min-width:0}
+.cs-grow{flex:1}
+.ah-model-record,.ah-model-note{margin:0;font:400 12px/1.4 var(--font-sans);color:var(--ink-muted);overflow-wrap:anywhere}
+.ah-model-record{padding:4px 0}.ah-model-note{flex:none}
 .cs-context{display:flex;align-items:center;gap:2px;min-width:0;margin:0 0 -4px}
 .cs-context>.alt-pop-anchor{display:flex;min-width:0}.cs-context .alt-btn{min-width:0;gap:6px;color:var(--ink-muted);font:400 12.5px/17px var(--font-mono)}
 .cs-context .alt-btn>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cs-context .alt-btn>svg{flex:none}
@@ -7854,7 +7928,6 @@ const TURN_WRITE = 'export function turnStepsOf() {\n  return [];\n}';
 const NEW_FILE = A.diffLines('', TURN_WRITE).filter((o) => o.kind !== 'del');
 /** @type {import('altitude-design').PromptMention[]} */
 const FILES = [{ id: 'f1', label: 'web/turns.ts', kind: 'file' }, { id: 'f2', label: 'web/turn-count.ts', kind: 'file' }];
-const MODELS = [{ value: 'beam-low', label: 'Beam · low' }, { value: 'beam-high', label: 'Beam · high' }, { value: 'arc', label: 'Arc' }];
 const Glyph = ({ d }) => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
 const FOLDERS = ['lab-demo', 'pricing-site', 'altitude'];
 const BRANCHES = ['ape/aaac99cb', 'main', 'fix/turn-fold-a11y'];
@@ -7878,10 +7951,11 @@ function CodingSession() {
   const [memories, setMemories] = React.useState(/** @type {import('altitude-design').TraceMemoryItem[]} */ (MEMORIES));
   const setForgotten = (/** @type {string} */ id, /** @type {boolean} */ forgotten) => setMemories((ms) => ms.map((m) => (m.id === id ? { ...m, forgotten } : m)));
   const [approval, setApproval] = React.useState(/** @type {'requested' | 'running' | 'done' | 'rejected'} */ ('requested'));
+  const models = useDemoModels(approval === 'done' || approval === 'rejected');
   const approve = () => { setApproval('running'); setTimeout(() => setApproval('done'), 900); };
   const main = React.useRef(/** @type {HTMLDivElement | null} */ (null));
   // Open at the end of the thread, where the live turn is, as the person would find it.
-  React.useEffect(() => { const el = main.current?.querySelector('.alt-convo-scroll'); if (el) el.scrollTop = el.scrollHeight; }, [approval]);
+  React.useEffect(() => { const el = main.current?.querySelector('.alt-convo-scroll'); if (el) el.scrollTop = el.scrollHeight; }, [approval, models.sent.length]);
   const state = SESSION[approval];
   // Where the agent works: picked above the composer, and named in what the proposal will do.
   const [folder, setFolder] = React.useState(FOLDERS[0]);
@@ -7912,6 +7986,7 @@ function CodingSession() {
             <A.MessageActions onCopy onEdit={() => {}} />
           </A.Message>
           <A.Message from="assistant">
+            <p className="ah-model-record">Run with {routeLabel(HARNESS_MODEL)}</p>
             {/* A finished turn is one line: what it did, counted from its steps. The steps, their diffs and the memory
                 writes are behind the lid, one press away; nothing in them needs the person now. */}
             <A.Trace aria-label="Change the fold to count steps" collapsible>
@@ -7934,6 +8009,7 @@ function CodingSession() {
             <A.MessageActions onCopy onEdit={() => {}} />
           </A.Message>
           <A.Message from="assistant">
+            <p className="ah-model-record">Run with {routeLabel(HARNESS_MODEL)}</p>
             {/* The live turn. What ran is one folded line; the proposal is the only raised thing in the thread, outside the
                 fold so it's never behind a lid, and the header says the same in words. Approving adds the push as a step. */}
             <A.Trace aria-label="Run the suite and open a pull request" collapsible>
@@ -7947,6 +8023,7 @@ function CodingSession() {
             {approval === 'done' && <A.MessageContent><A.Markdown>{'Opened [pull request #112](#pr-112): 2 files changed, 48 tests passing.'}</A.Markdown></A.MessageContent>}
             {approval === 'rejected' && <A.MessageContent><A.Markdown>{'The suite passes. Say when you want the pull request.'}</A.Markdown></A.MessageContent>}
           </A.Message>
+          <ModelRecords messages={models.sent} />
         </A.ConversationContent>
         <A.ConversationScrollButton />
       </A.Conversation>
@@ -7954,19 +8031,21 @@ function CodingSession() {
         {picker('Folder', FOLDER, folder, FOLDERS, setFolder, 'Open another folder…')}
         {picker('Branch', BRANCH, branch, BRANCHES, setBranch, 'New branch…')}
       </div>
-      <A.PromptInput status={approval === 'running' ? 'streaming' : 'ready'} onSubmit={() => {}} onStop={() => {}} onAttach={() => {}} accept="image/*,text/*"
+      {models.queue}
+      <A.PromptInput status={approval === 'running' ? 'streaming' : 'ready'} onSubmit={models.send} onQueue={models.enqueue} modelPicker={models.picker} onStop={() => false} onAttach={() => {}} accept="image/*,text/*"
         mentionable={(q) => FILES.filter((f) => f.label.includes(q))}
         commands={[{ name: 'review', description: 'Review the changes' }, { name: 'compact', description: 'Summarise the session so far' }]}>
         <A.PromptInputTextarea placeholder="Message… @ files, / commands" aria-label="Message" rows={2} />
+        <A.PromptInputModelSelector />
         <A.Separator decorative className="cs-sep" />
         <A.PromptInputToolbar>
           <A.PromptInputAttach label="Add files" />
-          <A.Select size="sm" aria-label="Model" items={MODELS} defaultValue="beam-low" className="cs-model" />
           <span className="cs-grow" />
           <A.PromptInputDictate />
           <A.PromptInputSubmit />
         </A.PromptInputToolbar>
       </A.PromptInput>
+      <p className="ah-model-note">For the next message. Demo providers and models; messages are recorded locally, with no AI request.</p>
     </div>
   );
 }
@@ -8681,6 +8760,32 @@ function App() {
         <A.PropertyListItem label="Dates" value={`${trip.start} to ${trip.end}`} />
         <A.PropertyListItem label="Phone" value={trip.phone} emptyLabel="Add phone number" pending="value" onSave={tripSave} onValueChange={tripSet('phone')} />
       </A.PropertyList>
+    </section>
+  </div>;
+}
+
+
+=== ModelSelector | <!-- @dsCard group="Inputs" height=600 subtitle="Choose a configured provider and an available model, with explicit routing" -->
+--- css
+.ms-demo { display: grid; gap: 28px; max-width: 640px; }
+.ms-demo h3 { margin: 0 0 12px; font: 600 15px/20px var(--font-sans); }
+--- jsx
+const providers = [
+  { id: 'studio', label: 'Studio connection', models: [{ id: 'beam', label: 'Beam', description: 'General conversation' }, { id: 'arc', label: 'Arc', description: 'Code and tools' }] },
+  { id: 'gateway', label: 'Team gateway', description: 'Your workspace connection', models: [{ id: 'beam', label: 'Beam' }, { id: 'large', label: 'Large model', disabledReason: 'Not enabled for this workspace.' }] },
+  { id: 'local', label: 'Local connection', disabledReason: 'Connect a local server in Settings.', models: [] },
+];
+function App() {
+  const [value, setValue] = React.useState({ providerId: 'studio', modelId: 'beam' });
+  return <div className="ms-demo">
+    <section>
+      <h3>For the next message</h3>
+      <A.ModelSelector providers={providers} value={value} onValueChange={setValue} />
+      <p className="cap">{value.modelId ? `Selected: ${value.providerId} / ${value.modelId}` : 'Choose a model for this provider.'} Fictional catalog; no provider request is made.</p>
+    </section>
+    <section>
+      <h3>A saved model is unavailable</h3>
+      <A.ModelSelector providers={providers} value={{ providerId: 'gateway', modelId: 'retired' }} onValueChange={() => {}} />
     </section>
   </div>;
 }
