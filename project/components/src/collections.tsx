@@ -538,7 +538,7 @@ function DataTableFace<T>({ columns, rows, getRowId, getRowLabel, selectable, se
           )}</div>}
         </div>
       )}
-      <Table ref={table} data-density={dens} data-refetching={pagination?.loading ? '' : undefined} aria-busy={pagination?.loading || undefined} maxHeight={maxHeight} aria-label={rest['aria-label']} data-dragging={drag ? '' : undefined}
+      <Table ref={table} data-row-density={dens} data-refetching={pagination?.loading ? '' : undefined} aria-busy={pagination?.loading || undefined} maxHeight={maxHeight} aria-label={rest['aria-label']} data-dragging={drag ? '' : undefined}
         underlay={drag && s ? <span className="alt-table-slot" aria-hidden="true" style={{ top: slotTop + (table.current?.offsetTop ?? 0), height: h }} /> : null}>
         <TableHeader>
           <TableRow>

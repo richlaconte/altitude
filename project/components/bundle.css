@@ -4831,10 +4831,10 @@ span.alt-schedule-more { color: var(--ink-muted); cursor: default; }
    live, so it rises: the row and its region become one raised slab (elev-1, drawn by the first cell as for selected
    rows), holding a static EditRegion; the cells above keep the record identified. Sorting and reordering wait. ── */
 .alt-td-expand, .alt-th-expand { width: 40px; padding-inline: 6px; }
-/* Density: compact rows keep every target at least 24px tall (WCAG 2.5.8). Showing, hiding or reordering a column is a
-   change of layout, not of the record, so the table doesn't animate it. */
-.alt-table[data-density="compact"] .alt-td { padding-block: 4px; }
-.alt-table[data-density="compact"] .alt-th { padding-block: 6px; }
+/* Row density changes padding only; provider data-density owns the control-size tokens. Compact rows keep every
+   target at least 24px tall (WCAG 2.5.8). Showing, hiding or reordering a column changes layout, not the record. */
+.alt-table[data-row-density="compact"] .alt-td { padding-block: 4px; }
+.alt-table[data-row-density="compact"] .alt-th { padding-block: 6px; }
 .alt-table-hidden { color: var(--ink-muted); font-weight: 400; }
 /* Paging: the footer holds Pagination (or "Load more") under a line. While the next page loads the current rows stay on
    the ground at half strength, as a refetching chart does, and the page thumb is held pressed. */
