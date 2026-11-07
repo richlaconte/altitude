@@ -14,6 +14,8 @@ An editable Select: type to narrow a long list, then choose. What you type is a 
 
 `required` works as `Select`'s, on the chosen value rather than the typed text: with nothing chosen it fails native form validation, with or without a `name`. Invalid submission focuses the text field, marks it invalid and links a visible alert, “Choose an option.” unless `requiredMessage` says otherwise. A `Field` error takes precedence; choosing an option clears it. A disabled Combobox is excluded from validation and form data.
 
+**In a form.** With `name`, the chosen value is submitted. Form reset returns an uncontrolled Combobox to `defaultValue`: the value, the text in the field and any half-typed query, with the list closed, and calls `onValueChange` with that value. A controlled Combobox keeps its application-owned value; reset that state in the form's reset handler if you want it. A cancelled form reset leaves it untouched.
+
 - Do use it when the list is long enough that scrolling is slower than typing (people, countries, repositories).
 - Don't use it for free text that may not be in the list; it only accepts listed values.
 

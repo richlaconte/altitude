@@ -64,7 +64,7 @@ export function useSide(open: boolean, anchor: React.RefObject<HTMLElement | nul
  * Native required validation for a composite field, as Select does it (#571): a hidden text input carries the value,
  * so an empty required value fails the form's constraint validation (a type="hidden" input never would). Its invalid
  * event is cancelled, focus goes to the visible control, and `error` says when to show the visible required message.
- * It clears once the field holds a value, stops being required or is disabled.
+ * It clears once the field holds a value, stops being required or is disabled, or when `clear` is called (form reset).
  */
 export function useNativeRequired({ empty, required, disabled, invalid }: { empty: boolean; required?: boolean; disabled?: boolean; invalid?: boolean }) {
   const [missing, setMissing] = React.useState(false);
@@ -77,7 +77,9 @@ export function useNativeRequired({ empty, required, disabled, invalid }: { empt
     const first = element.form && Array.from(element.form.elements).find((e) => (e as HTMLInputElement).willValidate && !(e as HTMLInputElement).validity.valid);
     if (!first || first === element) focus();
   };
-  return { error: missing && !!required && !disabled && !invalid, onInvalid };
+  /** A form reset withdraws the visible required message, as Select's reset does. */
+  const clear = () => setMissing(false);
+  return { error: missing && !!required && !disabled && !invalid, onInvalid, clear };
 }
 
 /**
@@ -366,6 +368,24 @@ export function Combobox({ items, value, defaultValue = '', onValueChange, filte
   useKeyFocus();
   // A controlled value that changes from outside resets the text.
   React.useEffect(() => { if (!typing) setText(chosen ? textOf(chosen) : ''); }, [v]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Its form's reset returns an uncontrolled value, the text and the typing state to the default, as Select's does. Reset
+  // runs after the browser's default action; cancelled resets and controlled values stay with their owner.
+  React.useEffect(() => {
+    const element = input.current, form = element?.form;
+    if (!element || !form) return;
+    let resetTimer: ReturnType<typeof setTimeout>;
+    const reset = (event: Event) => { clearTimeout(resetTimer); resetTimer = setTimeout(() => {
+      if (event.defaultPrevented || !element.isConnected) return;
+      if (value === undefined) set(defaultValue);
+      const back = items.find((o) => o.value === (value ?? defaultValue));
+      setText(back ? textOf(back) : '');
+      setTyping(false);
+      setOpen(false);
+      native.clear();
+    }, 0); };
+    form.addEventListener('reset', reset);
+    return () => { clearTimeout(resetTimer); form.removeEventListener('reset', reset); };
+  }, [value, defaultValue, set, items]);
 
   const q = typing ? text.trim() : '';
   const score = (o: SelectOption) => { const s = filter ? filter(o, q) : commandScore(textOf(o), q); return typeof s === 'boolean' ? (s ? 1 : 0) : s; };
