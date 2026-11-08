@@ -1390,6 +1390,54 @@ export interface FacetFilterProps extends Omit<React.FieldsetHTMLAttributes<HTML
  * response omitted stays listed and removable.
  */
 export declare function FacetFilter(props: FacetFilterProps): React.ReactElement;
+
+interface MediaBase {
+  /** Stable id. Selection is by id, so reordering or refreshing `items` keeps it. */
+  id: string;
+  /** What the preview shows ("Turntable"). Names its thumbnail and the position line. */
+  label: string;
+  /** A small image for the thumbnail. Without one the thumbnail shows the kind's icon. */
+  thumbnail?: string;
+  caption?: React.ReactNode;
+}
+export interface MediaImage extends MediaBase { kind: 'image'; src: string; alt: string; srcSet?: string; sizes?: string }
+export interface MediaTrack { src: string; kind: 'captions' | 'subtitles' | 'descriptions'; srcLang: string; label: string; default?: boolean }
+export interface MediaVideo extends MediaBase { kind: 'video'; src: string; type?: string; poster?: string; tracks?: MediaTrack[]; transcript?: React.ReactNode }
+export interface MediaAudio extends MediaBase { kind: 'audio'; src: string; type?: string; poster?: string; transcript?: React.ReactNode }
+export interface MediaCustom extends MediaBase {
+  kind: 'custom';
+  /** A still shown while the renderer loads, if it fails, or when there's no renderer. */
+  poster?: string;
+  /** What the preview shows, in words: the alternative to the renderer. */
+  alt: string;
+  /** The kind word in the thumbnail's name ("3D model"). Default "Interactive preview". */
+  kindLabel?: string;
+}
+export type MediaItem = MediaImage | MediaVideo | MediaAudio | MediaCustom;
+export interface MediaGalleryProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
+  /** Names the gallery ("Pine forest pack previews"). Don't include the word "carousel". */
+  'aria-label': string;
+  items: MediaItem[];
+  /** The active item's id. */
+  value: string;
+  onValueChange: (id: string) => void;
+  /** Renders a custom item. Mounted only while it's active; unmounting is the signal to stop work. */
+  renderCustom?: (item: MediaCustom, state: { active: true }) => React.ReactNode;
+  /** Failures you know of, by item id. */
+  error?: Record<string, string>;
+  /** Offered as "Retry preview" when an item fails. The gallery also remounts the item. */
+  onRetry?: (id: string) => void;
+  /** Adds "View larger", opening the same gallery in a Dialog. */
+  enlargeable?: boolean;
+  /** The stage's shape, reserved before anything loads. Default '4 / 3'. */
+  aspectRatio?: string;
+}
+/**
+ * A product's images and playable previews: a stage on the ground and every thumbnail visible, with nothing that
+ * rotates or plays by itself. Only the active item is mounted, so switching stops hidden playback. You supply URLs,
+ * alternatives, transcripts and any custom renderer.
+ */
+export declare function MediaGallery(props: MediaGalleryProps): React.ReactElement;
 /** A filter's value as words (“Oct 1, 2026”, “In review”), or undefined while it has none. */
 export declare function filterValueText(field: FilterField, value: FilterValue): string | undefined;
 
@@ -4508,7 +4556,7 @@ declare global {
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
       Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; DotPlot: typeof DotPlot; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
-      Table: typeof Table; FilterBar: typeof FilterBar; FacetFilter: typeof FacetFilter; filterValueText: typeof filterValueText; filterSentence: typeof filterSentence; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
+      Table: typeof Table; FilterBar: typeof FilterBar; FacetFilter: typeof FacetFilter; MediaGallery: typeof MediaGallery; filterValueText: typeof filterValueText; filterSentence: typeof filterSentence; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;

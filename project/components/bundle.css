@@ -5038,3 +5038,61 @@ span.alt-schedule-more { color: var(--ink-muted); cursor: default; }
 .alt-facet-more[aria-expanded="true"] svg { transform: rotate(180deg); }
 @media (prefers-reduced-motion: reduce) { .alt-facet-count { animation: none; } .alt-facet-more svg { transition: none; } }
 @media (forced-colors: active) { .alt-facet-more { color: LinkText; } .alt-facet-count { color: CanvasText; } }
+
+/* ── MediaGallery (#632): a product's images and playable previews. The media is the record, on the ground, in a stage
+   whose shape is reserved before anything loads; an image still loading is an imprint (well) and a failed preview drops
+   into a trench with Retry. Thumbnails are all visible and wrap; each lifts one level when pointed at because it acts,
+   and the current one has a 2px accent-ink outline and aria-current, never more height. Selection replaces the stage in
+   place (a cross-fade), with no slide and nothing that rotates or plays by itself. */
+.alt-media { display: grid; gap: var(--space-3); min-width: 0; container-type: inline-size; }
+.alt-media-figure { margin: 0; display: grid; gap: var(--space-2); min-width: 0; }
+.alt-media-stage { position: relative; width: 100%; overflow: hidden; border-radius: var(--radius-lg); background: var(--surface-ground); box-shadow: inset 0 0 0 1px var(--line); }
+.alt-media-frame { position: absolute; inset: 0; display: grid; place-items: center; animation: alt-media-in var(--dur-travel-1) var(--ease-settle); }
+.alt-media-frame > img, .alt-media-frame > video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.alt-media-frame[data-state="loading"] { background: var(--surface-well); box-shadow: var(--well); }
+.alt-media-frame[data-state="loading"] > img { opacity: 0; }
+.alt-media-custom > * { width: 100%; height: 100%; }
+.alt-media-audio { grid-template-rows: 1fr auto; gap: var(--space-3); padding: var(--space-4); }
+.alt-media-audio > audio { width: min(100%, 420px); }
+.alt-media-audio-art { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; border-radius: var(--radius-md); }
+.alt-media-audio-icon, .alt-media-thumb-icon { display: grid; place-items: center; color: var(--ink-muted); }
+.alt-media-alt { margin: 0; padding: var(--space-5); max-width: 60ch; color: var(--ink); font: 400 14px/20px var(--font-sans); text-align: center; }
+.alt-media-failed, .alt-media-parked { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: var(--space-2); padding: var(--space-4); text-align: center; color: var(--ink); font: 400 14px/20px var(--font-sans); }
+.alt-media-failed { background: var(--surface-trench); box-shadow: var(--trench); border-radius: inherit; }
+.alt-media-failed > svg { color: var(--critical); }
+.alt-media-failed p { margin: 0; max-width: 40ch; }
+.alt-media-parked { color: var(--ink-muted); }
+.alt-media-caption { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-media-title { color: var(--ink); font-weight: 500; }
+.alt-media-text { flex-basis: 100%; }
+.alt-media-transcript { font: 400 14px/20px var(--font-sans); color: var(--ink); }
+.alt-media-transcript > summary { cursor: pointer; width: fit-content; color: var(--accent-ink); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.alt-media-transcript > summary:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-xs); }
+.alt-media-transcript-body { margin-top: var(--space-2); max-width: 70ch; }
+.alt-media-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
+.alt-media-thumbs { list-style: none; margin: 0; padding: 2px; display: flex; flex-wrap: wrap; gap: var(--space-2); flex: 0 1 auto; min-width: 0; }
+.alt-media-thumb { position: relative; display: grid; place-items: center; width: 64px; height: 48px; padding: 0; overflow: hidden; cursor: pointer;
+  border: 1px solid var(--line-control); border-radius: var(--radius-md); background: var(--surface-ground); box-shadow: var(--elev-0); color: var(--ink);
+  transition: box-shadow var(--dur-travel-1) var(--ease-settle), transform var(--dur-travel-1) var(--ease-settle), background-color var(--dur-travel-1) var(--ease-settle); }
+.alt-media-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (hover: hover) { .alt-media-thumb:hover { background: var(--surface-raised); box-shadow: var(--elev-1); transform: translateY(calc(-1px * var(--alt-travel))); } }
+.alt-media-thumb:active { box-shadow: var(--elev-0); transform: none; transition-duration: var(--dur-press); }
+.alt-media-thumb:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.alt-media-thumb[aria-current="true"] { border-color: var(--accent-ink); box-shadow: 0 0 0 1px var(--accent-ink); }
+.alt-media-thumb-kind { position: absolute; right: 3px; bottom: 3px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: var(--radius-full); background: var(--surface-ground); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-control); }
+.alt-media-enlarge { margin-left: auto; }
+.alt-media-empty { margin: 0; color: var(--ink-muted); font: 400 14px/20px var(--font-sans); }
+.alt-media-dialog .alt-media-stage { max-height: 70vh; }
+@keyframes alt-media-in { from { opacity: 0; } }
+@container (max-width: 480px) { .alt-media-thumbs { order: 5; flex-basis: 100%; } .alt-media-thumb { width: 56px; height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .alt-media-frame { animation: none; } .alt-media-thumb { transition: none; } }
+@media (forced-colors: active) {
+  .alt-media-stage { border: 1px solid CanvasText; }
+  .alt-media-thumb { border: 1px solid ButtonText; }
+  .alt-media-thumb[aria-current="true"] { border: 3px solid Highlight; }
+  .alt-media-failed { border: 3px dashed CanvasText; }
+  .alt-media-frame[data-state="loading"] { border: 1px dashed CanvasText; }
+}
+[data-contrast="more"] .alt-media-thumb { border-color: var(--ink); }
+[data-contrast="more"] .alt-media-thumb[aria-current="true"] { border-width: 2px; }
+@media (prefers-contrast: more) { .alt-media-thumb { border-color: var(--ink); } .alt-media-thumb[aria-current="true"] { border-width: 2px; } }
