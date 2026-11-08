@@ -20,6 +20,11 @@ import { events as bookingEvents, service as bookingService } from '../../exampl
 import bookingMeta from '../../examples/apps/booking/app.json';
 import '../../examples/apps/booking/app.css';
 
+import { App as DigitalStoreApp, service as storeService } from '../../examples/apps/digital-store/app';
+import { Controls as StoreControls } from '../../examples/apps/digital-store/controls';
+import storeMeta from '../../examples/apps/digital-store/app.json';
+import '../../examples/apps/digital-store/app.css';
+
 import { App as DocsEditorApp, events as docsEvents, service as docsService } from '../../examples/apps/docs-editor/app';
 import docsMeta from '../../examples/apps/docs-editor/app.json';
 import '../../examples/apps/docs-editor/app.css';
@@ -64,6 +69,7 @@ export const AdminConsole = story('Admin console', adminMeta, () => <ExampleCont
 export const Booking = story('Booking', bookingMeta, () => <ExampleContent service={bookingService} events={bookingEvents}><BookingApp /></ExampleContent>);
 export const PlanningBoard = story('Planning board', boardMeta, () => <ExampleContent service={boardService} events={boardEvents}><PlanningBoardApp /></ExampleContent>);
 export const ServiceHealth = story('Service health', healthMeta, () => { healthLive.start(); return <ExampleContent service={healthService} events={healthEvents} controls={<HealthControls />}><ServiceHealthApp /></ExampleContent>; });
+export const DigitalStore = story('Digital store', storeMeta, () => <ExampleContent service={storeService} controls={<StoreControls />}><DigitalStoreApp /></ExampleContent>);
 export const DocsEditor = story('Docs editor', docsMeta, () => <ExampleContent service={docsService} events={docsEvents} session><DocsEditorApp /></ExampleContent>);
 export const ExpenseReports = story('Expense reports', expenseMeta, () => <ExampleContent service={expenseService} events={expenseEvents} controls={<ExpenseControls />}><ExpenseApp /></ExampleContent>);
 export const SupportInbox = story('Support inbox', supportMeta, () => <ExampleContent service={supportService} events={supportEvents}><SupportApp /></ExampleContent>);
