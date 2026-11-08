@@ -58,6 +58,8 @@ export { SpanWaterfall, criticalPathOf, formatMs } from './span-waterfall';
 export type { Span, SpanWaterfallProps } from './span-waterfall';
 export { FacetFilter } from './facet-filter';
 export type { FacetFilterProps, FacetOption } from './facet-filter';
+export { MediaGallery } from './media-gallery';
+export type { MediaGalleryProps, MediaItem, MediaImage, MediaVideo, MediaAudio, MediaCustom, MediaTrack } from './media-gallery';
 export { PrintSheet, PrintSheetHeader, PrintSheetFooter, PrintSheetBreak, PrintSheetPageNumber, PrintSheetPageCount } from './print-sheet';
 export type { PrintSheetProps, PrintSheetSize } from './print-sheet';
 export type { InboxListProps, InboxItemProps, InboxListHandle } from './inbox-list';

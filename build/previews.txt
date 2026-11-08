@@ -5522,6 +5522,32 @@ function App() {
   </div>;
 }
 
+=== MediaGallery | <!-- @dsCard group="Display" height=640 subtitle="A product's images and playable previews: every thumbnail visible, the current one outlined, nothing playing by itself" -->
+--- css
+.mg { max-width: 640px; display: grid; gap: 12px; }
+--- jsx
+const mgSvg = (body) => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">${body}</svg>`);
+const MG_FOREST = mgSvg('<rect width="400" height="300" fill="#dfe8dc"/><rect y="210" width="400" height="90" fill="#8fa77f"/>' +
+  [40, 110, 170, 250, 320].map((x, i) => `<path d="M${x} ${70 + i % 2 * 20}l${36 + i * 3} 140h-${72 + i * 6}z" fill="${i % 2 ? '#3f6b4a' : '#2f5a3c'}"/><rect x="${x - 5}" y="${210 + i % 2 * 0}" width="10" height="18" fill="#6b4a32"/>`).join(''));
+const MG_BARK = mgSvg('<rect width="400" height="300" fill="#7a5a40"/>' + Array.from({ length: 14 }, (_, i) => `<path d="M${i * 30} 0c${12 - i % 3 * 6} 60 -${8 + i % 4 * 4} 120 ${6} 300" stroke="#4e3826" stroke-width="${5 + i % 3 * 3}" fill="none"/>`).join(''));
+const MG_WIRE = mgSvg('<rect width="400" height="300" fill="#e8ecf2"/><g stroke="#4a5568" stroke-width="2" fill="none"><path d="M200 40l80 190h-160z"/><path d="M200 40l30 190M200 40l-30 190M150 160h100M135 200h130"/><rect x="194" y="230" width="12" height="24"/></g>');
+const MG_SAMPLE = (() => { const rate = 8000, n = rate * 2, b = new Uint8Array(44 + n), v = new DataView(b.buffer); const w = (o, t) => [...t].forEach((c, i) => { b[o + i] = c.charCodeAt(0); });
+  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true);
+  for (let i = 0; i < n; i++) { const t = i / rate; b[44 + i] = 128 + Math.round(36 * Math.exp(-t * 1.6) * (Math.sin(2 * Math.PI * 220 * t) + 0.5 * Math.sin(2 * Math.PI * 330 * t))); }
+  return URL.createObjectURL(new Blob([b], { type: 'audio/wav' })); })();
+const MG_ITEMS = [
+  { id: 'scene', kind: 'image', label: 'Forest scene', src: MG_FOREST, thumbnail: MG_FOREST, alt: 'Five pine trees of different heights on a grassy slope, rendered with the pack’s models', caption: 'Rendered with the pack’s five tree models.' },
+  { id: 'bark', kind: 'image', label: 'Bark texture', src: MG_BARK, thumbnail: MG_BARK, alt: 'Close-up of a brown bark texture with dark vertical ridges' },
+  { id: 'ambience', kind: 'audio', label: 'Wind in the pines', src: MG_SAMPLE, type: 'audio/wav', transcript: 'Two seconds of a low, fading two-note tone standing in for wind through branches. No speech.' },
+  { id: 'model', kind: 'custom', label: 'Tall pine, wireframe', poster: MG_WIRE, thumbnail: MG_WIRE, kindLabel: 'model poster (not interactive)', alt: 'Wireframe of the tall pine model: a cone of 3 tiers over a short trunk' },
+];
+function App() {
+  const [active, setActive] = React.useState('scene');
+  return <div className="mg">
+    <A.MediaGallery aria-label="Fernhollow pine forest pack previews" items={MG_ITEMS} value={active} onValueChange={setActive} enlargeable />
+  </div>;
+}
+
 === FilterGroups | <!-- @dsCard group="Inputs" height=520 subtitle="Nested conditions (all of / any of) as brackets on the ground, for rules and segments" -->
 --- jsx
 const GF = [
