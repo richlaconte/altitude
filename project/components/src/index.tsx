@@ -56,6 +56,8 @@ export { TimeSlotPicker, TimeSlot } from './time-slot-picker';
 export type { TimeSlotPickerProps, TimeSlotProps } from './time-slot-picker';
 export { SpanWaterfall, criticalPathOf, formatMs } from './span-waterfall';
 export type { Span, SpanWaterfallProps } from './span-waterfall';
+export { FacetFilter } from './facet-filter';
+export type { FacetFilterProps, FacetOption } from './facet-filter';
 export { PrintSheet, PrintSheetHeader, PrintSheetFooter, PrintSheetBreak, PrintSheetPageNumber, PrintSheetPageCount } from './print-sheet';
 export type { PrintSheetProps, PrintSheetSize } from './print-sheet';
 export type { InboxListProps, InboxItemProps, InboxListHandle } from './inbox-list';

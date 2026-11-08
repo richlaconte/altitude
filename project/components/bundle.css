@@ -5008,3 +5008,33 @@ span.alt-schedule-more { color: var(--ink-muted); cursor: default; }
   .alt-model-selector .alt-select > .alt-input { min-height: calc(var(--size-target-min) + 4px); }
   .alt-model-selector .alt-select-toggle { min-width: var(--size-target-min); }
 }
+
+/* ── FacetFilter (#631): one named group of counted choices. The group, its labels and counts are the record, on the
+   ground; each choice is a Checkbox (trench, poured accent, raised mark). Counts are words in tabular figures that
+   cross-fade when they change, never count up, rise or reorder. Unknown says so; zero is a real 0. */
+.alt-facet { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: var(--space-2); }
+.alt-facet-legend { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); padding: 0; margin-bottom: var(--space-1); color: var(--ink); font: 600 14px/20px var(--font-sans); }
+.alt-facet-chosen { font: 500 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-facet-counts { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); margin: 0; font: 400 12px/16px var(--font-sans); color: var(--ink-muted); }
+.alt-facet-status { display: inline-flex; align-items: center; gap: var(--space-1); }
+.alt-facet-counts[data-tone="caution"] .alt-facet-status svg { color: var(--caution); }
+.alt-facet-search { margin-bottom: var(--space-1); }
+.alt-facet-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.alt-facet-item > .alt-check { display: flex; width: 100%; }
+.alt-facet-item .alt-check-text { flex: 1 1 auto; min-width: 0; }
+.alt-facet-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.alt-facet-label { min-width: 0; overflow-wrap: anywhere; }
+.alt-facet-count { flex: none; font: 500 12px/20px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-muted); animation: alt-facet-count var(--dur-travel-1) var(--ease-settle); }
+.alt-facet[data-counts="refreshing"] .alt-facet-count, .alt-facet[data-counts="stale"] .alt-facet-count { color: var(--ink-muted); text-decoration: underline dotted; text-underline-offset: 3px; }
+@keyframes alt-facet-count { from { opacity: 0.25; } }
+.alt-facet-item[data-retained] .alt-check-desc { font-style: italic; }
+.alt-facet-none { margin: 0; font: 400 13px/18px var(--font-sans); color: var(--ink-muted); }
+.alt-facet-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.alt-facet-more { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px 0; border: 0; background: none; cursor: pointer;
+  color: var(--accent-ink); font: 500 13px/20px var(--font-sans); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+@media (hover: hover) { .alt-facet-more:hover { text-decoration-thickness: 2px; } }
+.alt-facet-more:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: var(--radius-xs); }
+.alt-facet-more svg { transition: transform var(--dur-travel-1) var(--ease-settle); }
+.alt-facet-more[aria-expanded="true"] svg { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .alt-facet-count { animation: none; } .alt-facet-more svg { transition: none; } }
+@media (forced-colors: active) { .alt-facet-more { color: LinkText; } .alt-facet-count { color: CanvasText; } }
