@@ -16,6 +16,7 @@ They aren't part of the package. Each app imports `altitude-design` by name, as 
 | Travel policy editor | `docs-editor/` | the whole sync pattern in one editor: sections that save as you type and hover until they land, offline edits that wait and go in order, a conflict with someone else's save shown as both versions, a session that ends mid-save with nothing lost, details saved deliberately with EditRegion, and a review round with comments, suggested changes decided one by one, and a Publish that can't happen twice (#405) |
 | October expenses | `expense-reports/` | one report between two people, switched in the drawer: the employee imports card transactions (two bad rows fixed or skipped before anything is imported), edits cells by keyboard, attaches receipts through a Sheet, and submits once even when the response is lost; the manager approves, or returns it with a reason asked in place, and the employee sees why even mid-edit (#407) |
 | Support inbox | `support-inbox/` | a queue worked one ticket at a time in the list-and-detail frame (InboxList): new tickets arrive without moving the one you're on, a teammate's presence and reply show on the ticket and leave your draft alone, a reply hovers, fails into a trench with Retry, or waits offline and sends once, and a reassignment under you is said in an Alert that keeps your draft (#404) |
+| Lanternyard digital store | `digital-store/` | the foundation of a digital asset store (#636): a catalog of engine assets and ordinary downloads, immutable versions with the package digest and what was tested on which engine pin (no evidence reads "Not tested"), and a buyer's library and receipts, a creator's listings and statement, a moderation queue and a support lookup, each in the frame its task needs. Every protected read is authorized by the server and keyed by the account, so switching accounts in the drawer never shows the last person's records; failures, the clock and Reset are reproducible |
 
 ## Running them
 
@@ -31,6 +32,7 @@ cd build && node checks/example-service-health.mjs  # the health report's rules 
 cd build && node checks/example-docs-editor.mjs     # the docs editor driven through #405's fixtures: no text lost, nothing written twice
 cd build && node checks/example-expense-reports.mjs  # both people through #407's fixtures: import, receipts, submit once, return and approve
 cd build && node checks/example-support-inbox.mjs    # the inbox through #404's fixtures: arrivals that don't move you, drafts kept, replies sent once
+cd build && node checks/example-digital-store.mjs    # the store's routes, records and protected reads as units, then switching accounts, failures and frames in a browser
 ```
 
 `npm run typecheck` type-checks the apps along with the components.
