@@ -5484,6 +5484,44 @@ function App() {
   </div>;
 }
 
+=== FacetFilter | <!-- @dsCard group="Inputs" height=720 subtitle="Counted choices from a search service: edit a draft, apply it; unknown is never zero and a vanished choice stays removable" -->
+--- css
+.ff { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 32px; max-width: 820px; align-items: start; }
+.ff-side { display: grid; gap: 24px; }
+.ff-main { display: grid; gap: 8px; align-content: start; }
+.ff-main p { margin: 0; font: 400 14px/20px var(--font-sans); color: var(--ink); }
+@media (max-width: 560px) { .ff { grid-template-columns: minmax(0, 1fr); } }
+--- jsx
+const FF_TYPES = [
+  { value: 'model', label: '3D models', count: 38 },
+  { value: 'texture', label: 'Textures', count: 112 },
+  { value: 'audio', label: 'Audio', count: 0 },
+  { value: 'template', label: 'Document templates', count: undefined },
+  { value: 'font', label: 'Fonts', count: 9, unavailable: 'Not sold in your region' },
+];
+const FF_FORMATS = ['GLB', 'FBX', 'OBJ', 'USDZ', 'PNG', 'EXR', 'KTX2', 'TGA', 'WAV', 'FLAC', 'OGG', 'MP3', 'DOCX', 'ODT', 'PDF', 'OTF', 'TTF', 'WOFF2']
+  .map((f, i) => ({ value: f.toLowerCase(), label: f, count: [24, 19, 11, 6, 140, 48, 31, 12, 0, 0, 0, 0, 7, 5, 9, 3, 3, 3][i], countKind: i < 4 ? 'approximate' : 'exact' }));
+function App() {
+  const [types, setTypes] = React.useState(['model', 'hdri']);
+  const [formats, setFormats] = React.useState([]);
+  const [applied, setApplied] = React.useState({ types: ['model', 'hdri'], formats: [] });
+  const [counts, setCounts] = React.useState('current');
+  const changed = JSON.stringify({ types, formats }) !== JSON.stringify(applied);
+  const apply = () => { setCounts('refreshing'); setTimeout(() => { setApplied({ types, formats }); setCounts('current'); }, 700); };
+  return <div className="ff">
+    <div className="ff-side">
+      <A.FacetFilter label="Asset type" noun="asset types" options={FF_TYPES} value={types} onValueChange={setTypes}
+        retainedLabels={{ hdri: 'HDRI skies' }} counts={counts} countsLabel="Counts for your applied filters" />
+      <A.FacetFilter label="File format" noun="file formats" options={FF_FORMATS} limit={6} value={formats} onValueChange={setFormats} counts={counts} />
+      <A.Button onClick={apply} loading={counts === 'refreshing'}>Apply filters</A.Button>
+    </div>
+    <div className="ff-main" role="status">
+      <p>{counts === 'refreshing' ? 'Updating results…' : `38 products · ${applied.types.length + applied.formats.length} filters applied`}</p>
+      {changed && counts !== 'refreshing' && <p className="cap">You have changes that aren't applied yet.</p>}
+    </div>
+  </div>;
+}
+
 === FilterGroups | <!-- @dsCard group="Inputs" height=520 subtitle="Nested conditions (all of / any of) as brackets on the ground, for rules and segments" -->
 --- jsx
 const GF = [

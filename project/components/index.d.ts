@@ -1348,6 +1348,48 @@ export interface FilterBarProps {
 }
 /** A query as a row of conditions, each part edited in its own picker. Pair it with DataTable's relevance to filter in place. */
 export declare function FilterBar(props: FilterBarProps): React.ReactElement;
+
+export interface FacetOption {
+  /** Stable id. Selection is by value, so refreshed options never remount the focused box. */
+  value: string;
+  label: string;
+  /** Results for this value under the applied query. `undefined` or `null` is unknown, never zero. */
+  count?: number | null;
+  /** `approximate` reads "about 40". Default `exact`. */
+  countKind?: 'exact' | 'approximate';
+  /** Why it can't be chosen. Shown as its description; a selected one stays removable. */
+  unavailable?: string;
+}
+export interface FacetFilterProps extends Omit<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, 'onChange'> {
+  /** The group's name, drawn as its legend ("Asset type"). */
+  label: string;
+  options: FacetOption[];
+  /** The draft selection, by value. */
+  value: string[];
+  onValueChange: (next: string[]) => void;
+  /** The count snapshot as a whole. `refreshing` keeps the previous counts and says "Updating counts…". Default `current`. */
+  counts?: 'current' | 'refreshing' | 'stale' | 'unavailable';
+  /** Which query the counts describe ("Counts for your applied filters"). */
+  countsLabel?: React.ReactNode;
+  /** Labels for selected values the latest response left out. Without one, the value itself is shown. */
+  retainedLabels?: Record<string, string>;
+  /** Options shown before "Show more". Default 10; it never truncates to hide just one, and never hides a selected one. */
+  limit?: number;
+  /** A search field over the options' labels. Default: on when there are more than 15. */
+  searchable?: boolean;
+  /** The plural noun for the options ("asset types"). Default "options". */
+  noun?: string;
+  /** Called by "Clear … filters". Default: `onValueChange([])`. */
+  onClear?: () => void;
+  /** Number → words. Default `Intl.NumberFormat()`. Pass a fixed locale when you render on a server. */
+  formatCount?: (n: number) => string;
+}
+/**
+ * One named group of counted choices: a fieldset of Checkboxes whose counts come from your search service. It edits a
+ * draft selection; you fetch, apply and announce results. Unknown counts are never zero, and a selected value the latest
+ * response omitted stays listed and removable.
+ */
+export declare function FacetFilter(props: FacetFilterProps): React.ReactElement;
 /** A filter's value as words (“Oct 1, 2026”, “In review”), or undefined while it has none. */
 export declare function filterValueText(field: FilterField, value: FilterValue): string | undefined;
 
@@ -4466,7 +4508,7 @@ declare global {
       CommandPalette: typeof CommandPalette; commandScore: typeof commandScore; checkScheme: typeof checkScheme;
       Select: typeof Select; SelectItem: typeof SelectItem; Combobox: typeof Combobox; TagInput: typeof TagInput; Tag: typeof Tag; DatePicker: typeof DatePicker; DateRangePicker: typeof DateRangePicker; datePresets: typeof datePresets; Calendar: typeof Calendar; Stepper: typeof Stepper; EmptyState: typeof EmptyState; ChartContainer: typeof ChartContainer; ChartMarker: typeof ChartMarker; BarChart: typeof BarChart; LineChart: typeof LineChart; AreaChart: typeof AreaChart; Heatmap: typeof Heatmap; ScatterChart: typeof ScatterChart; DotPlot: typeof DotPlot; ChartTooltip: typeof ChartTooltip; ChartTooltipContent: typeof ChartTooltipContent; ChartLegend: typeof ChartLegend; ChartLegendContent: typeof ChartLegendContent; linePath: typeof linePath; Sparkline: typeof Sparkline; Stat: typeof Stat; StatGroup: typeof StatGroup; Meter: typeof Meter; BarList: typeof BarList; useChart: typeof useChart;
       Board: typeof Board; Schedule: typeof Schedule; BoardColumn: typeof BoardColumn; BoardCard: typeof BoardCard; HoverCard: typeof HoverCard;
-      Table: typeof Table; FilterBar: typeof FilterBar; filterValueText: typeof filterValueText; filterSentence: typeof filterSentence; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
+      Table: typeof Table; FilterBar: typeof FilterBar; FacetFilter: typeof FacetFilter; filterValueText: typeof filterValueText; filterSentence: typeof filterSentence; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       Table: typeof Table; DataGrid: typeof DataGrid; TableHeader: typeof TableHeader; TableBody: typeof TableBody; TableFooter: typeof TableFooter; TableRow: typeof TableRow; TableHead: typeof TableHead; TableCell: typeof TableCell; TableCaption: typeof TableCaption; DataTable: typeof DataTable;
       deriveAccent: typeof deriveAccent; contrast: typeof contrast;
       Await: typeof Await; RevealGroup: typeof RevealGroup; readPromised: typeof readPromised; LoadingScope: typeof LoadingScope;
