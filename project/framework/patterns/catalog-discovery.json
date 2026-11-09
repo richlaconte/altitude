@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "id": "catalog-discovery",
+  "version": 1,
+  "title": "Catalog discovery",
+  "intents": [
+    "catalog",
+    "product catalog",
+    "store",
+    "shop",
+    "marketplace",
+    "product search",
+    "faceted search",
+    "facets",
+    "product detail",
+    "product page",
+    "compare products",
+    "comparison",
+    "compatibility",
+    "asset store",
+    "digital store"
+  ],
+  "purpose": "Find a product in a public catalog, judge whether it suits from exact evidence, and inspect or compare products without losing the search.",
+  "useWhen": [
+    "A remote catalog of products is searched with counted facets, sorted, paged and opened into product detail or a comparison."
+  ],
+  "avoidWhen": [
+    "A small local collection the person may fully see: filter it in place with FilterBar and DataTable relevance.",
+    "Records a team works through (tickets, invoices): use async collection inside the records frame."
+  ],
+  "alternatives": [
+    "Async collection for service-backed records that aren't products.",
+    "Digital-goods acquisition for what happens after a product is chosen."
+  ],
+  "requiredInputs": [
+    "search adapter for the whole applied query (q, facets, sort, page or cursor) returning the person's authorized result set",
+    "per-facet counts for the applied query, and whether each is exact, approximate or unknown",
+    "public product facts: exact version, release date, formats, size, license, price with currency, publisher",
+    "compatibility evidence per version: verified or incompatible with engine, digest, date tested and limits; otherwise not tested",
+    "the signed-in person's own state (owned version), kept apart from public facts",
+    "URL serialization and history policy",
+    "ranking basis for each sort label, and how sponsored placements are marked"
+  ],
+  "states": [
+    "initial-loading",
+    "populated",
+    "draft-differs",
+    "refreshing",
+    "refresh-failed",
+    "first-load-failed",
+    "no-results",
+    "product-detail",
+    "comparison"
+  ],
+  "transitions": [
+    "draft edit → draft-differs; the URL is unchanged",
+    "Apply, search submit, sort or page → URL entry → refreshing → populated or no-results or refresh-failed",
+    "an older response arriving after a newer request → dropped",
+    "refresh-failed → Retry search repeats the current query",
+    "result link → product-detail (focus its heading) → Back restores offset and focuses the product's link",
+    "comparison checkboxes → comparison table → Back"
+  ],
+  "rules": [
+    "ALT-CATALOG-001",
+    "ALT-COLLECTION-001",
+    "ALT-STATUS-001",
+    "ALT-VISUAL-003"
+  ],
+  "sources": [
+    "nng-applying-filters",
+    "algolia-refinement-list",
+    "baymard-thumbnails",
+    "wcag22",
+    "altitude-elevation",
+    "task-review"
+  ],
+  "authority": "contextual-pattern",
+  "applicability": "Remote product catalogs with search, counted facets, product detail and comparison.",
+  "exceptions": [
+    "Only states the search service supports are required; do not fabricate counts, cursors or compatibility evidence.",
+    "A comparison limit is an application choice; four keeps columns readable at 320px with sideways scrolling."
+  ],
+  "maturity": "provisional",
+  "evidenceStatus": "engineering-fixtures; human-effectiveness-unmeasured",
+  "document": "patterns/catalog-discovery.md",
+  "implementation": "build/fixtures/patterns/catalog-discovery.jsx",
+  "examples": [
+    "build/fixtures/patterns/catalog-discovery.jsx"
+  ],
+  "verification": [
+    "build/checks/catalog-discovery-pattern.mjs",
+    "build/checks/pattern-types.mjs"
+  ]
+}

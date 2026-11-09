@@ -1,0 +1,250 @@
+<!-- @dsCard group="Patterns" height=1300 subtitle="Search a public catalog: draft facets applied to the URL, the latest response wins, one link per result, exact compatibility and a comparison table" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CatalogDiscoveryPattern — Altitude</title>
+<style>
+/* The page every preview renders on: helper classes the previews share, and the Example fixtures region.
+   One source, read by build/previews.mjs (each preview.html), scripts/build-check-fixtures.mjs (the React 19
+   check fixtures) and .storybook/preview.tsx. This is preview chrome, not Altitude: nothing in bundle.css styles it. */
+#root { padding: 20px 24px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+.cap { margin: 0; font: 500 12.5px/17px var(--font-sans); color: var(--ink-muted); }
+.body { margin: 0; font: 400 15px/23px var(--font-sans); color: var(--ink); }
+/* Preview chrome that apps copy: a disclosure's summary is a target too, at least 24px tall (WCAG 2.5.8). */
+summary { min-height: 24px; padding-block: 2px; box-sizing: border-box; cursor: pointer; }
+
+/* Example fixtures (#409): the demo's own controls (make the next save fail, change a record on the server), collapsed
+   after the example and never inside it, so a screenshot shows the product and an agent copying the preview can tell
+   the harness from the product. On the ground: flush, no shadow, muted, the same heading the example apps use. */
+.preview-fixtures { margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--line); color: var(--ink-muted); font: 400 14px/21px var(--font-sans); }
+.preview-fixtures[open] > summary { margin-bottom: var(--space-3); }
+.preview-fixtures > :not(summary) + :not(summary) { margin-top: var(--space-3); }
+.preview-fixtures-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.cd-page{max-width:960px;margin-inline:auto;display:grid;gap:20px;overflow-wrap:break-word}.cd-title{font:600 21px/28px var(--font-sans);margin:0}.cd-h{font:600 19px/26px var(--font-sans);margin:0}.cd-sub{font:600 17px/24px var(--font-sans);margin:0}
+.cd-catalog{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:24px 32px;align-items:start}.cd-side{display:grid;gap:20px}.cd-results{display:grid;gap:16px;min-width:0}
+.cd-bar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}.cd-applied{display:flex;flex-wrap:wrap;gap:8px}
+.cd-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}.cd-card{height:100%;overflow:hidden}.cd-card-body{display:grid;gap:6px;align-content:start}
+.cd-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}.cd-name{font:600 15px/21px var(--font-sans);margin:0}.cd-meta,.cd-note{margin:0;font:400 13px/19px var(--font-sans);color:var(--ink-muted)}.cd-price{margin:0;font:600 15px/21px var(--font-sans)}
+.cd-sim{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px 24px;border:1px solid var(--line);border-radius:8px;padding:12px 16px}.cd-sim legend{font:600 13px/19px var(--font-sans);padding:0 4px}
+.cd-product,.cd-compare{display:grid;gap:16px;max-width:720px}.cd-product p,.cd-compare p{margin:0}.cd-compat{display:grid;gap:6px;justify-items:start}
+.cd-scroll .alt-table{min-width:560px}.cd-diff{font-weight:400;color:var(--ink-muted)}.cd-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:640px){.cd-catalog{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var A = window.Altitude;
+const cdSvg = (fill, ink) => "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="${fill}"/><path d="M0 220 120 120l90 70 70-50 120 80v80H0z" fill="${ink}"/></svg>`);
+const TYPES = [{ value: "model", label: "3D models" }, { value: "texture", label: "Textures" }, { value: "audio", label: "Audio" }, { value: "template", label: "Document templates" }];
+const LICENSES = [{ value: "standard", label: "Standard" }, { value: "cc-by", label: "CC BY 4.0" }, { value: "extended", label: "Extended" }];
+const PRODUCTS = [
+  { id: "tidewater", name: "Tidewater stone textures", type: "texture", license: "standard", price: 1400, publisher: "Harbour Lane Studio", released: "2026-10-02", version: "1.3.0", versions: ["1.3.0", "1.2.0"], formats: "PNG, KTX2", size: "1.4 GB", engine: true, compat: { status: "verified", engine: "Ikta 0.9", digest: "sha256:9f2c\u202641ad", tested: "2026-10-04", limits: "KTX2 needs GPU compression support" }, sponsored: false },
+  { id: "pine", name: "Pine forest kit", type: "model", license: "standard", price: 2400, publisher: "Fernwood", released: "2026-09-18", version: "2.0.1", versions: ["2.0.1"], formats: "GLB, FBX", size: "820 MB", engine: true, compat: { status: "untested" } },
+  { id: "quarry", name: "Quarry rock set", type: "model", license: "cc-by", price: 0, publisher: "Open Terrain Collective", released: "2026-08-30", version: "0.4.0", versions: ["0.4.0"], formats: "GLB", size: "310 MB", engine: true, compat: { status: "incompatible", engine: "Ikta 0.9", digest: "sha256:11be\u202607c3", tested: "2026-09-02", limits: "Uses a vertex format Ikta 0.9 can\u2019t read" } },
+  { id: "harbour-ambience", name: "Harbour ambience", type: "audio", license: "standard", price: 900, publisher: "Harbour Lane Studio", released: "2026-07-11", version: "1.0.0", versions: ["1.0.0"], formats: "WAV, OGG", size: "640 MB", engine: false, compat: { status: "untested" } },
+  { id: "slate", name: "Slate roof textures", type: "texture", license: "extended", price: 3200, publisher: "Fernwood", released: "2026-10-20", version: "1.0.0", versions: ["1.0.0"], formats: "PNG, EXR", size: "2.1 GB", engine: true, compat: { status: "verified", engine: "Ikta 0.9", digest: "sha256:c0a7\u20269e12", tested: "2026-10-22" } },
+  { id: "invoice", name: "Studio invoice template", type: "template", license: "standard", price: 500, publisher: "Paperworks", released: "2026-06-01", version: "3.1.0", versions: ["3.1.0"], formats: "DOCX, ODT", size: "2 MB", engine: false, compat: { status: "untested" } },
+  { id: "cobble", name: "Cobblestone textures", type: "texture", license: "cc-by", price: 0, publisher: "Open Terrain Collective", released: "2026-05-14", version: "1.1.0", versions: ["1.1.0"], formats: "PNG", size: "540 MB", engine: true, compat: { status: "untested" } },
+  { id: "gulls", name: "Gull calls", type: "audio", license: "cc-by", price: 0, publisher: "Fieldnotes Audio", released: "2026-04-02", version: "1.0.0", versions: ["1.0.0"], formats: null, size: "90 MB", engine: false, compat: { status: "untested" } }
+];
+const OWNED = { tidewater: "1.2.0" };
+const PAGE = 4;
+const usd = (minor) => minor === 0 ? "Free" : A.formatNumber(minor, { format: "currency", currency: "USD", locale: "en-US" });
+const label = (list, v) => list.find((o) => o.value === v)?.label || v;
+const COMPAT = { verified: "Verified", incompatible: "Incompatible", untested: "Not tested" };
+const SORTS = [{ value: "relevance", label: "Relevance" }, { value: "newest", label: "Newest" }, { value: "price-asc", label: "Price: low to high" }, { value: "price-desc", label: "Price: high to low" }];
+const EMPTY = { q: "", type: [], license: [], sort: "relevance", page: 1 };
+const toHash = (s) => {
+  const p = new URLSearchParams();
+  if (s.q) p.set("q", s.q);
+  s.type.forEach((t) => p.append("type", t));
+  s.license.forEach((l) => p.append("license", l));
+  if (s.sort !== "relevance") p.set("sort", s.sort);
+  if (s.page > 1) p.set("page", String(s.page));
+  const q = p.toString();
+  return "#/catalog" + (q ? "?" + q : "");
+};
+const parse = (hash) => {
+  const [path, qs = ""] = hash.replace(/^#/, "").split("?"), p = new URLSearchParams(qs);
+  if (path.startsWith("/product/")) return { view: "product", id: path.slice(9), v: p.get("v") };
+  if (path === "/compare") return { view: "compare", ids: (p.get("ids") || "").split(",").filter(Boolean) };
+  return { view: "catalog", query: { q: p.get("q") || "", type: p.getAll("type"), license: p.getAll("license"), sort: p.get("sort") || "relevance", page: Number(p.get("page")) || 1 } };
+};
+const sim = { delay: 400, failNext: false };
+const matches = (p, q, skip) => (!q.q || (p.name + " " + p.publisher).toLowerCase().includes(q.q.toLowerCase())) && (skip === "type" || !q.type.length || q.type.includes(p.type)) && (skip === "license" || !q.license.length || q.license.includes(p.license));
+async function search(q) {
+  await new Promise((r) => setTimeout(r, sim.delay));
+  if (sim.failNext) {
+    sim.failNext = false;
+    throw new Error("The search service didn\u2019t respond.");
+  }
+  const hits = PRODUCTS.filter((p) => matches(p, q));
+  const order = { newest: (a, b) => b.released.localeCompare(a.released), "price-asc": (a, b) => a.price - b.price, "price-desc": (a, b) => b.price - a.price };
+  if (order[q.sort]) hits.sort(order[q.sort]);
+  const count = (key, opts) => opts.map((o) => ({ ...o, count: PRODUCTS.filter((p) => matches(p, q, key) && p[key] === o.value).length }));
+  return { total: hits.length, items: hits.slice((q.page - 1) * PAGE, q.page * PAGE), facets: { type: count("type", TYPES), license: count("license", LICENSES) } };
+}
+let moves = 0;
+const back = (e) => {
+  if (moves > 0) {
+    e.preventDefault();
+    history.back();
+  }
+};
+function useRoute() {
+  const [hash, setHash] = React.useState(() => location.hash || "#/catalog");
+  React.useEffect(() => {
+    const on = () => {
+      moves++;
+      setHash(location.hash || "#/catalog");
+    };
+    addEventListener("hashchange", on);
+    return () => removeEventListener("hashchange", on);
+  }, []);
+  return { route: parse(hash), hash };
+}
+function Catalog({ query, hash, compare, onCompare }) {
+  const [draft, setDraft] = React.useState(query);
+  const [result, setResult] = React.useState(
+    /** @type {Awaited<ReturnType<typeof search>> | null} */
+    null
+  );
+  const [phase, setPhase] = React.useState("loading");
+  const [error, setError] = React.useState("");
+  const [attempt, setAttempt] = React.useState(0);
+  const [failNext, setFailNext] = React.useState(false);
+  const seq = React.useRef(0);
+  const key = JSON.stringify(query);
+  React.useEffect(() => {
+    setDraft(query);
+  }, [key]);
+  React.useEffect(() => {
+    const mine = ++seq.current;
+    setPhase((p) => p === "loading" || p === "first-failed" ? "loading" : "refreshing");
+    search(query).then(
+      (r) => {
+        if (mine !== seq.current) return;
+        setResult(r);
+        setPhase("settled");
+        setError("");
+      },
+      (e) => {
+        setFailNext(sim.failNext);
+        if (mine !== seq.current) return;
+        setError(e.message);
+        setPhase((p) => p === "loading" ? "first-failed" : "failed");
+      }
+    );
+  }, [key, attempt]);
+  React.useEffect(() => {
+    if (phase !== "settled") return;
+    let saved = null;
+    try {
+      saved = JSON.parse(sessionStorage.getItem("cd-return:" + hash) || "null");
+    } catch {
+    }
+    if (!saved) return;
+    try {
+      sessionStorage.removeItem("cd-return:" + hash);
+    } catch {
+    }
+    scrollTo(0, saved.y);
+    (document.querySelector(`[data-product="${saved.id}"]`) || document.getElementById("cd-results-h"))?.focus({ preventScroll: true });
+  }, [phase, hash]);
+  const go = (next) => {
+    location.hash = toHash({ ...next, page: next.page || 1 });
+  };
+  const remember = (id) => {
+    try {
+      sessionStorage.setItem("cd-return:" + hash, JSON.stringify({ y: scrollY, id }));
+    } catch {
+    }
+  };
+  const applied = [...query.type.map((v) => ({ key: "type", v, text: label(TYPES, v) })), ...query.license.map((v) => ({ key: "license", v, text: label(LICENSES, v) }))];
+  const counts = phase === "refreshing" ? "refreshing" : phase === "failed" ? "stale" : "current";
+  const pages = result ? Math.max(1, Math.ceil(result.total / PAGE)) : 1;
+  const status = phase === "loading" || phase === "refreshing" ? "Updating results\u2026" : phase === "settled" && result ? `${result.total} ${result.total === 1 ? "product" : "products"}${query.q ? ` for \u201C${query.q}\u201D` : ""}` : "";
+  return /* @__PURE__ */ React.createElement("div", { className: "cd-catalog" }, /* @__PURE__ */ React.createElement("form", { className: "cd-side", "aria-label": "Filters", onSubmit: (e) => {
+    e.preventDefault();
+    go(draft);
+  } }, /* @__PURE__ */ React.createElement(A.Field, { label: "Search products" }, /* @__PURE__ */ React.createElement(A.Input, { type: "search", value: draft.q, onChange: (e) => setDraft({ ...draft, q: e.target.value }) })), /* @__PURE__ */ React.createElement(A.FacetFilter, { label: "Asset type", noun: "asset types", options: result?.facets.type || TYPES, value: draft.type, onValueChange: (type) => setDraft({ ...draft, type }), counts: result ? counts : "unavailable", countsLabel: "Counts for your applied search" }), /* @__PURE__ */ React.createElement(A.FacetFilter, { label: "License", noun: "licenses", options: result?.facets.license || LICENSES, value: draft.license, onValueChange: (license) => setDraft({ ...draft, license }), counts: result ? counts : "unavailable" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement(A.Button, { type: "submit", variant: "secondary" }, "Apply filters")), JSON.stringify(draft) !== key && /* @__PURE__ */ React.createElement("p", { className: "cd-note" }, "You have changes that aren\u2019t applied yet.")), /* @__PURE__ */ React.createElement("section", { className: "cd-results", "aria-labelledby": "cd-results-h" }, /* @__PURE__ */ React.createElement("div", { className: "cd-bar" }, /* @__PURE__ */ React.createElement("h2", { id: "cd-results-h", tabIndex: -1, className: "cd-sub" }, result ? `${result.total} ${result.total === 1 ? "product" : "products"}` : "Products"), /* @__PURE__ */ React.createElement(A.Field, { label: "Sort by" }, /* @__PURE__ */ React.createElement(A.Select, { value: query.sort, items: SORTS, onValueChange: (sort) => go({ ...query, sort }) }))), applied.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "cd-applied", "aria-label": "Applied filters", role: "group" }, applied.map((f) => /* @__PURE__ */ React.createElement(A.Tag, { key: f.key + f.v, label: f.text, onRemove: () => go({ ...query, [f.key]: query[f.key].filter((x) => x !== f.v) }) }, f.text))), phase === "failed" && /* @__PURE__ */ React.createElement(A.Alert, { tone: "critical", title: "We couldn\u2019t update the results", action: /* @__PURE__ */ React.createElement(A.Button, { size: "sm", onClick: () => setAttempt((n) => n + 1) }, "Retry search") }, error, " These are the results for your previous search."), phase === "first-failed" && /* @__PURE__ */ React.createElement(A.EmptyState, { title: "We couldn\u2019t load the catalog", description: error, action: /* @__PURE__ */ React.createElement(A.Button, { onClick: () => setAttempt((n) => n + 1) }, "Retry search") }), result && result.total === 0 && phase !== "refreshing" && /* @__PURE__ */ React.createElement(
+    A.EmptyState,
+    {
+      announce: true,
+      title: "No products match",
+      description: `Nothing matches ${[query.q && `\u201C${query.q}\u201D`, ...applied.map((f) => f.text)].filter(Boolean).join(", ")}. Remove a filter or clear them all.`,
+      action: /* @__PURE__ */ React.createElement(A.Button, { onClick: () => go({ ...EMPTY, sort: query.sort }) }, "Clear all filters")
+    }
+  ), result && result.total > 0 && /* @__PURE__ */ React.createElement("ul", { className: "cd-list", "aria-busy": phase === "refreshing" }, result.items.map((p) => /* @__PURE__ */ React.createElement("li", { key: p.id }, /* @__PURE__ */ React.createElement(A.Card, { className: "cd-card" }, /* @__PURE__ */ React.createElement("img", { className: "cd-thumb", src: cdSvg("#e4e8ee", "#8796a8"), alt: "" }), /* @__PURE__ */ React.createElement(A.CardContent, { className: "cd-card-body" }, /* @__PURE__ */ React.createElement("h3", { className: "cd-name" }, /* @__PURE__ */ React.createElement(A.Link, { href: `#/product/${p.id}`, "data-product": p.id, onClick: () => remember(p.id) }, p.name)), /* @__PURE__ */ React.createElement("p", { className: "cd-meta" }, label(TYPES, p.type), " \xB7 ", p.publisher, " \xB7 ", label(LICENSES, p.license)), /* @__PURE__ */ React.createElement("p", { className: "cd-price" }, usd(p.price)), p.engine && /* @__PURE__ */ React.createElement("p", { className: "cd-meta" }, "Ikta 0.9: ", COMPAT[p.compat.status]), /* @__PURE__ */ React.createElement(
+    A.Checkbox,
+    {
+      label: `Compare ${p.name}`,
+      checked: compare.includes(p.id),
+      disabled: !compare.includes(p.id) && compare.length >= 4,
+      description: !compare.includes(p.id) && compare.length >= 4 ? "Comparison holds 4 products; remove one first." : void 0,
+      onCheckedChange: (on) => onCompare(on ? [...compare, p.id] : compare.filter((x) => x !== p.id))
+    }
+  )))))), result && pages > 1 && /* @__PURE__ */ React.createElement(A.Pagination, { page: query.page, pageCount: pages, total: result.total, pageSize: PAGE, noun: "products", hrefFor: (n) => toHash({ ...query, page: n }) }), compare.length >= 2 && /* @__PURE__ */ React.createElement("p", { className: "cd-note" }, /* @__PURE__ */ React.createElement(A.Link, { href: `#/compare?ids=${compare.join(",")}` }, "Compare ", compare.length, " products"))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, { className: "cd-vh" }, status), /* @__PURE__ */ React.createElement("fieldset", { className: "cd-sim" }, /* @__PURE__ */ React.createElement("legend", null, "Simulate the service"), /* @__PURE__ */ React.createElement(A.Switch, { label: "Slow responses", onCheckedChange: (on) => {
+    sim.delay = on ? 1600 : 400;
+  } }), /* @__PURE__ */ React.createElement(A.Switch, { label: "Fail the next search", checked: failNext, onCheckedChange: (on) => {
+    sim.failNext = on;
+    setFailNext(on);
+  } })));
+}
+function Compat({ p }) {
+  if (!p.engine) return /* @__PURE__ */ React.createElement("p", { className: "cd-note" }, "Engine compatibility doesn\u2019t apply: this is a ", label(TYPES, p.type).toLowerCase(), " download.");
+  const c = p.compat;
+  return /* @__PURE__ */ React.createElement("div", { className: "cd-compat" }, /* @__PURE__ */ React.createElement(A.Badge, { tone: c.status === "verified" ? "positive" : c.status === "incompatible" ? "critical" : "neutral" }, COMPAT[c.status]), /* @__PURE__ */ React.createElement("p", { className: "cd-note" }, c.status === "untested" ? "Nobody has tested this version with Ikta 0.9. It may or may not work." : `${c.engine}, package ${c.digest}, tested ${c.tested}.${c.limits ? " " + c.limits + "." : ""}`));
+}
+function Product({ id, v }) {
+  const p = PRODUCTS.find((x) => x.id === id);
+  const [media, setMedia] = React.useState("front");
+  React.useEffect(() => {
+    document.getElementById("cd-product-h")?.focus();
+  }, [id]);
+  if (!p) return /* @__PURE__ */ React.createElement(A.EmptyState, { title: "This product isn\u2019t available", description: "It may have been withdrawn, or the link is wrong.", action: /* @__PURE__ */ React.createElement(A.Link, { href: "#/catalog" }, "Browse the catalog") });
+  const version = p.versions.includes(v) ? v : p.version, owned = OWNED[p.id];
+  return /* @__PURE__ */ React.createElement("article", { className: "cd-product", "aria-labelledby": "cd-product-h" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement(A.Link, { href: "#/catalog", onClick: back }, "Back to results")), /* @__PURE__ */ React.createElement("h2", { id: "cd-product-h", tabIndex: -1, className: "cd-h" }, p.name), owned && /* @__PURE__ */ React.createElement(A.Alert, { tone: "neutral", title: `You own ${owned}` }, owned !== p.version ? `Version ${p.version} is available.` : "This is the latest version."), /* @__PURE__ */ React.createElement(
+    A.MediaGallery,
+    {
+      "aria-label": `${p.name} previews`,
+      value: media,
+      onValueChange: setMedia,
+      aspectRatio: "16 / 9",
+      items: [{ id: "front", kind: "image", label: "Overview", src: cdSvg("#dfe6dc", "#6f8a66"), thumbnail: cdSvg("#dfe6dc", "#6f8a66"), alt: `${p.name}: overview render` }, { id: "detail", kind: "image", label: "Close-up", src: cdSvg("#ece6dc", "#9a8466"), thumbnail: cdSvg("#ece6dc", "#9a8466"), alt: `${p.name}: close-up` }]
+    }
+  ), /* @__PURE__ */ React.createElement(A.PropertyList, { "aria-label": "Facts", layout: "inline" }, /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Version", value: `${version}${version === p.version ? " (latest)" : ""}` }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Released", value: p.released }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "File formats", value: p.formats, emptyLabel: "Not stated by publisher" }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Download size", value: p.size }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "License", value: label(LICENSES, p.license) }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Publisher", value: p.publisher }), /* @__PURE__ */ React.createElement(A.PropertyListItem, { label: "Price", value: usd(p.price) })), p.versions.length > 1 && /* @__PURE__ */ React.createElement("p", { className: "cd-note" }, "Other versions: ", p.versions.filter((x) => x !== version).map((x) => /* @__PURE__ */ React.createElement(A.Link, { key: x, href: `#/product/${p.id}?v=${x}` }, x))), /* @__PURE__ */ React.createElement("section", { "aria-labelledby": "cd-compat-h" }, /* @__PURE__ */ React.createElement("h3", { id: "cd-compat-h", className: "cd-sub" }, "Compatibility with Ikta 0.9"), /* @__PURE__ */ React.createElement(Compat, { p })));
+}
+function Compare({ ids }) {
+  const items = ids.map((id) => PRODUCTS.find((p) => p.id === id)).filter(Boolean).slice(0, 4);
+  React.useEffect(() => {
+    document.getElementById("cd-compare-h")?.focus();
+  }, []);
+  const rows = [
+    { name: "Price", get: (p) => usd(p.price) },
+    { name: "License", get: (p) => label(LICENSES, p.license) },
+    { name: "Version", get: (p) => p.version },
+    { name: "File formats", get: (p) => p.formats || null },
+    { name: "Ikta 0.9", get: (p) => p.engine ? COMPAT[p.compat.status] : "Doesn\u2019t apply" },
+    { name: "Tested limits", get: (p) => !p.engine ? "Doesn\u2019t apply" : p.compat.status === "untested" ? "Not tested" : p.compat.limits || null },
+    { name: "Publisher", get: (p) => p.publisher }
+  ];
+  return /* @__PURE__ */ React.createElement("section", { className: "cd-compare", "aria-labelledby": "cd-compare-h" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement(A.Link, { href: "#/catalog", onClick: back }, "Back to results")), /* @__PURE__ */ React.createElement("h2", { id: "cd-compare-h", tabIndex: -1, className: "cd-h" }, "Compare ", items.length, " products"), /* @__PURE__ */ React.createElement("div", { className: "cd-scroll" }, /* @__PURE__ */ React.createElement(A.Table, null, /* @__PURE__ */ React.createElement(A.TableHeader, null, /* @__PURE__ */ React.createElement(A.TableRow, null, /* @__PURE__ */ React.createElement(A.TableHead, null, /* @__PURE__ */ React.createElement("span", { className: "cd-vh" }, "Attribute")), items.map((p) => /* @__PURE__ */ React.createElement(A.TableHead, { key: p.id, scope: "col" }, /* @__PURE__ */ React.createElement(A.Link, { href: `#/product/${p.id}` }, p.name))))), /* @__PURE__ */ React.createElement(A.TableBody, null, rows.map(({ name, get }) => {
+    const vals = items.map(get), same = vals.every((x) => x === vals[0]);
+    return /* @__PURE__ */ React.createElement(A.TableRow, { key: name }, /* @__PURE__ */ React.createElement(A.TableHead, { scope: "row" }, name, !same && /* @__PURE__ */ React.createElement("span", { className: "cd-diff" }, " (differs)")), vals.map((x, i) => /* @__PURE__ */ React.createElement(A.TableCell, { key: items[i].id }, x ?? "Not stated by publisher")));
+  })))));
+}
+function App() {
+  const { route, hash } = useRoute();
+  const [compare, setCompare] = React.useState([]);
+  return /* @__PURE__ */ React.createElement("main", { className: "cd-page" }, /* @__PURE__ */ React.createElement("h1", { className: "cd-title" }, "Lanternyard catalog"), route.view === "product" ? /* @__PURE__ */ React.createElement(Product, { id: route.id, v: route.v }) : route.view === "compare" ? /* @__PURE__ */ React.createElement(Compare, { ids: route.ids }) : /* @__PURE__ */ React.createElement(Catalog, { query: route.query, hash, compare, onCompare: setCompare }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(A.AltitudeProvider, null, React.createElement(App)));
+</script>
+</body>
+</html>
