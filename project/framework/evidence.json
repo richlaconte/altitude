@@ -162,6 +162,33 @@
       "status": "local-preference-summary; raw-sessions-not-reanalyzed",
       "applicability": "November 6–7, 2026 personal comparisons motivate a recognition question; preserve rejected options, low-rated relative winners and uncertainty. Not population-level evidence.",
       "reviewed": "2026-11-07"
+    },
+    {
+      "id": "nng-applying-filters",
+      "authority": "contextual-pattern",
+      "title": "Nielsen Norman Group: applying filters (batch versus interactive)",
+      "url": "https://www.nngroup.com/articles/applying-filters/",
+      "status": "practice-guidance",
+      "applicability": "Faceted search and filters; batch application with Apply when criteria are clear or responses can be slow.",
+      "reviewed": "2026-11-08"
+    },
+    {
+      "id": "algolia-refinement-list",
+      "authority": "contextual-pattern",
+      "title": "Algolia RefinementList",
+      "url": "https://www.algolia.com/doc/api-reference/widgets/refinement-list/react",
+      "status": "vendor-documentation",
+      "applicability": "Search-engine facet values and counts; selected values can vanish from a response and counts describe the current search context.",
+      "reviewed": "2026-11-08"
+    },
+    {
+      "id": "baymard-thumbnails",
+      "authority": "contextual-pattern",
+      "title": "Baymard Institute: always use thumbnails for additional product images",
+      "url": "https://baymard.com/research-articles/always-use-thumbnails-additional-images",
+      "status": "practice-guidance",
+      "applicability": "Product pages with several images or previews; benchmark of e-commerce sites, not of every catalog.",
+      "reviewed": "2026-11-08"
     }
   ]
 }

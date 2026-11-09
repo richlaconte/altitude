@@ -1044,6 +1044,33 @@
       "criteria": [],
       "reviewedAt": "2026-11-07",
       "owner": "Altitude maintainers"
+    },
+    {
+      "id": "ALT-CATALOG-001",
+      "title": "A catalog's applied query lives in the URL, its counts describe that query, each result has one link and compatibility needs evidence",
+      "authority": "contextual-pattern",
+      "diagnosticClass": "application-integration",
+      "applicability": "Remote, service-backed product catalogs with search, counted facets, product detail and comparison.",
+      "exceptions": [
+        "A small local collection the person may fully see can filter in place with FilterBar relevance instead.",
+        "Ranking, count semantics and visibility are the application's and its search service's; checks can only confirm the interface reports them faithfully."
+      ],
+      "maturity": "provisional",
+      "evidenceStatus": "requires-application-validation",
+      "sources": [
+        "nng-applying-filters",
+        "algolia-refinement-list",
+        "baymard-thumbnails",
+        "wcag22",
+        "task-review"
+      ],
+      "repair": "Edit facets as a draft and write only the applied query to the URL on Apply, sort or page; drop responses for older queries and keep previous results on a failed refresh; give each result one link (its title) with comparison outside it; restore the offset and focus on Back; state compatibility as Verified or Incompatible with engine, digest and date, or Not tested; say Not stated by publisher and Doesn't apply in words.",
+      "verification": [
+        "build/checks/catalog-discovery-pattern.mjs"
+      ],
+      "criteria": [],
+      "reviewedAt": "2026-11-08",
+      "owner": "Altitude maintainers"
     }
   ]
 }

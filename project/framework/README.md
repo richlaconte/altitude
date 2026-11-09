@@ -10,6 +10,7 @@ Composing a new screen? Choose its frame from the task with [screen layout](patt
 | --- | --- |
 | Edit a record | [Edit record](patterns/edit-record.md) |
 | Search, filter or browse records | [Async collection](patterns/async-collection.md) |
+| Search a product catalog, open a product, compare products | [Catalog discovery](patterns/catalog-discovery.md) |
 | Delete, revoke, publish or recover | [Consequential action](patterns/consequential-action.md) |
 | Review answers and finish a process | [Review and submit](patterns/review-submit.md) |
 | A settings page: apply now, save together, danger zone | [Settings](patterns/settings.md) |
