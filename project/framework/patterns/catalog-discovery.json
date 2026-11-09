@@ -29,8 +29,7 @@
     "Records a team works through (tickets, invoices): use async collection inside the records frame."
   ],
   "alternatives": [
-    "Async collection for service-backed records that aren't products.",
-    "Digital-goods acquisition for what happens after a product is chosen."
+    "Async collection for service-backed records that aren't products."
   ],
   "requiredInputs": [
     "search adapter for the whole applied query (q, facets, sort, page or cursor) returning the person's authorized result set",

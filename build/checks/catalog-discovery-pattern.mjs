@@ -30,16 +30,20 @@ const settle = (page, ms = 700) => page.waitForTimeout(ms);
   expect(await heading(page) === '8 products', `the catalog lists every product (${await heading(page)})`);
   const cards = await page.evaluate(() => [...document.querySelectorAll('.cd-list > li')].map((li) => ({
     links: li.querySelectorAll('a').length, nested: li.querySelector('a button, a input, a a') !== null,
-    box: !!li.querySelector('input[type="checkbox"]') && !li.querySelector('a input[type="checkbox"]'), clickable: li.querySelector('[role="button"], .alt-card[data-interactive]') !== null })));
+    box: !!li.querySelector('input[type="checkbox"]') && !li.querySelector('a input[type="checkbox"]'), clickable: li.querySelector('[role="button"], .alt-card.alt-lift') !== null })));
   expect(cards.length === 4 && cards.every((c) => c.links === 1 && !c.nested && c.box && !c.clickable), `each result has one link, no nested targets and its comparison checkbox outside the link (${JSON.stringify(cards[0])})`);
   const textures = page.getByRole('checkbox', { name: /^Textures/ });
-  expect(/3/.test(await textures.evaluate((b) => b.closest('label, li, div')?.textContent || '')), 'counts come from the applied query (Textures: 3)');
+  const countOf = (name) => page.getByRole('checkbox', { name }).evaluate((b) => (b.closest('label')?.parentElement?.textContent || '').replace(/\D+/g, ' ').trim());
+  expect(/\b3\b/.test(await countOf(/^Textures/)) && /\b4\b/.test(await countOf(/^Standard/)), 'counts come from the applied query (Textures 3, Standard 4)');
   await textures.check({ force: true });
+  await settle(page, 200);
+  expect(/\b4\b/.test(await countOf(/^Standard/)), 'a draft doesn’t change the counts');
   await settle(page, 200);
   expect(await hash(page) === '' && await page.getByText('You have changes that aren’t applied yet.').count() === 1, 'a draft never touches the URL, and says it isn’t applied');
   await page.getByRole('button', { name: 'Apply filters' }).click();
   await settle(page);
   expect(/type=texture/.test(await hash(page)) && await heading(page) === '3 products', `Apply writes the query to the URL and searches it (${await hash(page)}, ${await heading(page)})`);
+  expect(/\b1\b/.test(await countOf(/^Standard/)), `other facets’ counts follow the applied query (Standard: ${await countOf(/^Standard/)})`);
   expect(await page.getByRole('button', { name: 'Remove Textures' }).count() === 1, 'the applied filter is a removable tag');
   await page.goBack();
   await settle(page);
@@ -78,10 +82,38 @@ const settle = (page, ms = 700) => page.waitForTimeout(ms);
   await settle(page);
   const empty = await page.locator('.cd-results').textContent();
   expect(/No products match/.test(empty) && /“zzz”/.test(empty) && /Audio/.test(empty) && await page.locator('.cd-list').count() === 0, 'zero results names the search and filters, and shows no substitute products');
-  await page.getByRole('button', { name: 'Clear all filters' }).click();
+  await page.getByRole('button', { name: 'Clear search and filters' }).click();
   await settle(page);
-  expect(await heading(page) === '8 products' && await hash(page) === '#/catalog', 'Clear all filters returns to the whole catalog');
+  expect(await heading(page) === '8 products' && await hash(page) === '#/catalog', 'clearing returns to the whole catalog');
   expect(page.errors.length === 0, `no page errors (${page.errors.join('; ')})`);
+  await page.close();
+}
+
+{ // Page resets on a new query; removing a tag keeps focus among the tags.
+  const page = await open('#/catalog?page=2');
+  expect(await page.locator('.cd-list > li').count() === 4, 'page 2 lists the rest');
+  await page.getByRole('checkbox', { name: /^Textures/ }).check({ force: true });
+  await page.getByRole('checkbox', { name: /^Standard/ }).check({ force: true });
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await settle(page);
+  expect(!/page=/.test(await hash(page)) && await page.locator('.cd-list > li').count() === 1, `a new query starts at page 1 (${await hash(page)})`);
+  await page.getByRole('button', { name: 'Remove Textures' }).focus();
+  await page.keyboard.press('Enter');
+  await settle(page);
+  expect(await page.evaluate(() => document.activeElement?.getAttribute('aria-label') || document.activeElement?.textContent) === 'Remove Standard', 'removing a tag focuses the next tag’s remove button');
+  await page.keyboard.press('Enter');
+  await settle(page);
+  expect(await page.evaluate(() => document.activeElement?.id) === 'cd-results-h', 'removing the last one focuses the results heading');
+  await page.close();
+}
+
+{ // Back to results from a deep link and a version link goes to the catalog, not the previous product.
+  const page = await open('#/product/tidewater');
+  await page.getByRole('link', { name: '1.2.0' }).click();
+  await settle(page, 300);
+  await page.getByRole('link', { name: 'Back to results' }).click();
+  await settle(page);
+  expect(/^#\/catalog/.test(await hash(page)), `Back to results lands on the catalog (${await hash(page)})`);
   await page.close();
 }
 
