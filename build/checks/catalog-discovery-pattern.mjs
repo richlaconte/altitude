@@ -114,6 +114,11 @@ const settle = (page, ms = 700) => page.waitForTimeout(ms);
   await page.getByRole('link', { name: 'Back to results' }).click();
   await settle(page);
   expect(/^#\/catalog/.test(await hash(page)), `Back to results lands on the catalog (${await hash(page)})`);
+  await page.goBack();
+  await settle(page, 300);
+  await page.getByRole('link', { name: 'Back to results' }).click();
+  await settle(page);
+  expect(/^#\/catalog/.test(await hash(page)) && page.url().startsWith('file:'), `after a browser Back onto the product, it still lands on the catalog, not outside the app (${page.url()})`);
   await page.close();
 }
 

@@ -56,13 +56,15 @@ async function search(q) {
   return { total: hits.length, items: hits.slice((q.page - 1) * PAGE, q.page * PAGE), facets: { type: count('type', TYPES), license: count('license', LICENSES) } };
 }
 
-// "Back to results" goes back through history only when the previous entry is the catalog, so its position is restored;
-// otherwise (a deep link, a version link, the comparison) it follows its href to the last catalog URL.
-let previous = '', lastCatalog = '#/catalog';
-const back = (e) => { if (previous.startsWith('#/catalog')) { e.preventDefault(); history.back(); } };
+// "Back to results" goes back through history only when the entry it's on was opened from the catalog (marked in
+// history.state), so the catalog's position is restored; otherwise (a deep link, a version link, a browser Back onto
+// it) it follows its href to the last catalog URL.
+let opening = '', lastCatalog = '#/catalog';
+const fromCatalog = (hash) => { opening = hash; };
+const back = (e) => { if (history.state?.fromCatalog) { e.preventDefault(); history.back(); } };
 function useRoute() {
   const [hash, setHash] = React.useState(() => location.hash || '#/catalog');
-  React.useEffect(() => { const on = (e) => { previous = new URL(e.oldURL).hash; setHash(location.hash || '#/catalog'); }; addEventListener('hashchange', on); return () => removeEventListener('hashchange', on); }, []);
+  React.useEffect(() => { const on = () => { if (opening) { history.replaceState({ fromCatalog: opening }, ''); opening = ''; } setHash(location.hash || '#/catalog'); }; addEventListener('hashchange', on); return () => removeEventListener('hashchange', on); }, []);
   if (parse(hash).view === 'catalog') lastCatalog = hash;
   return { route: parse(hash), hash };
 }
@@ -102,7 +104,7 @@ function Catalog({ query, hash, compare, onCompare }) {
     (buttons[Math.min(refocus.current, buttons.length - 1)] || document.getElementById('cd-results-h'))?.focus();
     refocus.current = -1;
   }, [key, phase]);
-  const remember = (id) => { try { sessionStorage.setItem('cd-return:' + hash, JSON.stringify({ y: scrollY, id })); } catch { /* ignore */ } };
+  const remember = (id) => { fromCatalog(hash); try { sessionStorage.setItem('cd-return:' + hash, JSON.stringify({ y: scrollY, id })); } catch { /* ignore */ } };
   const applied = [...query.type.map((v) => ({ key: 'type', v, text: label(TYPES, v) })), ...query.license.map((v) => ({ key: 'license', v, text: label(LICENSES, v) }))];
   const counts = phase === 'refreshing' ? 'refreshing' : phase === 'failed' ? 'stale' : 'current';
   const pages = result ? Math.max(1, Math.ceil(result.total / PAGE)) : 1;
@@ -142,7 +144,7 @@ function Catalog({ query, hash, compare, onCompare }) {
           </A.CardContent></A.Card></li>)}
         </ul>}
         {result && pages > 1 && <A.Pagination page={query.page} pageCount={pages} total={result.total} pageSize={PAGE} noun="products" hrefFor={(n) => toHash({ ...query, page: n })} />}
-        {compare.length >= 2 && <p className="cd-note"><A.Link href={`#/compare?ids=${compare.join(',')}`}>Compare {compare.length} products</A.Link></p>}
+        {compare.length >= 2 && <p className="cd-note"><A.Link href={`#/compare?ids=${compare.join(',')}`} onClick={() => fromCatalog(hash)}>Compare {compare.length} products</A.Link></p>}
       </section>
       <A.WorkflowStatus className="cd-vh">{status}</A.WorkflowStatus>
       <fieldset className="cd-sim"><legend>Simulate the service</legend>

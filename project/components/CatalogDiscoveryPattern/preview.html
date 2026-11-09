@@ -89,9 +89,12 @@ async function search(q) {
   const count = (key, opts) => opts.map((o) => ({ ...o, count: PRODUCTS.filter((p) => matches(p, q, key) && p[key] === o.value).length }));
   return { total: hits.length, items: hits.slice((q.page - 1) * PAGE, q.page * PAGE), facets: { type: count("type", TYPES), license: count("license", LICENSES) } };
 }
-let previous = "", lastCatalog = "#/catalog";
+let opening = "", lastCatalog = "#/catalog";
+const fromCatalog = (hash) => {
+  opening = hash;
+};
 const back = (e) => {
-  if (previous.startsWith("#/catalog")) {
+  if (history.state?.fromCatalog) {
     e.preventDefault();
     history.back();
   }
@@ -99,8 +102,11 @@ const back = (e) => {
 function useRoute() {
   const [hash, setHash] = React.useState(() => location.hash || "#/catalog");
   React.useEffect(() => {
-    const on = (e) => {
-      previous = new URL(e.oldURL).hash;
+    const on = () => {
+      if (opening) {
+        history.replaceState({ fromCatalog: opening }, "");
+        opening = "";
+      }
       setHash(location.hash || "#/catalog");
     };
     addEventListener("hashchange", on);
@@ -171,6 +177,7 @@ function Catalog({ query, hash, compare, onCompare }) {
     refocus.current = -1;
   }, [key, phase]);
   const remember = (id) => {
+    fromCatalog(hash);
     try {
       sessionStorage.setItem("cd-return:" + hash, JSON.stringify({ y: scrollY, id }));
     } catch {
@@ -203,7 +210,7 @@ function Catalog({ query, hash, compare, onCompare }) {
       description: !compare.includes(p.id) && compare.length >= 4 ? "Comparison holds 4 products; remove one first." : void 0,
       onCheckedChange: (on) => onCompare(on ? [...compare, p.id] : compare.filter((x) => x !== p.id))
     }
-  )))))), result && pages > 1 && /* @__PURE__ */ React.createElement(A.Pagination, { page: query.page, pageCount: pages, total: result.total, pageSize: PAGE, noun: "products", hrefFor: (n) => toHash({ ...query, page: n }) }), compare.length >= 2 && /* @__PURE__ */ React.createElement("p", { className: "cd-note" }, /* @__PURE__ */ React.createElement(A.Link, { href: `#/compare?ids=${compare.join(",")}` }, "Compare ", compare.length, " products"))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, { className: "cd-vh" }, status), /* @__PURE__ */ React.createElement("fieldset", { className: "cd-sim" }, /* @__PURE__ */ React.createElement("legend", null, "Simulate the service"), /* @__PURE__ */ React.createElement(A.Switch, { label: "Slow responses", onCheckedChange: (on) => {
+  )))))), result && pages > 1 && /* @__PURE__ */ React.createElement(A.Pagination, { page: query.page, pageCount: pages, total: result.total, pageSize: PAGE, noun: "products", hrefFor: (n) => toHash({ ...query, page: n }) }), compare.length >= 2 && /* @__PURE__ */ React.createElement("p", { className: "cd-note" }, /* @__PURE__ */ React.createElement(A.Link, { href: `#/compare?ids=${compare.join(",")}`, onClick: () => fromCatalog(hash) }, "Compare ", compare.length, " products"))), /* @__PURE__ */ React.createElement(A.WorkflowStatus, { className: "cd-vh" }, status), /* @__PURE__ */ React.createElement("fieldset", { className: "cd-sim" }, /* @__PURE__ */ React.createElement("legend", null, "Simulate the service"), /* @__PURE__ */ React.createElement(A.Switch, { label: "Slow responses", onCheckedChange: (on) => {
     sim.delay = on ? 1600 : 400;
   } }), /* @__PURE__ */ React.createElement(A.Switch, { label: "Fail the next search", checked: failNext, onCheckedChange: (on) => {
     sim.failNext = on;
